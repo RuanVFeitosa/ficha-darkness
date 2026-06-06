@@ -224,10 +224,9 @@
 }
 
 .classes-lista {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
   gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 4px;
   transition:
     max-height 0.35s ease,
     opacity 0.25s ease;
@@ -241,7 +240,6 @@
 }
 
 .classe-card {
-  min-width: 168px;
   min-height: 86px;
   display: grid;
   gap: 5px;
@@ -364,8 +362,7 @@
   }
 
   .classes-lista {
-    flex-direction: column;
-    overflow-x: visible;
+    grid-template-columns: 1fr;
   }
 
   .foto-preview {
