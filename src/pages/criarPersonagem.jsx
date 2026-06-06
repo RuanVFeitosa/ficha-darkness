@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Icon from "@mdi/react";
-import { mdiAccountPlus, mdiChevronRight } from "@mdi/js";
+import { mdiAccountPlus, mdiChevronDown, mdiChevronRight } from "@mdi/js";
 import { criarPersonagem } from "../services/personagemApi";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
 import { estadoInicial } from "./fichaPersonagem";
@@ -184,6 +184,7 @@ const CriarPersonagem = () => {
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [classeEmFoco, setClasseEmFoco] = useState(classesPersonagem[0]);
+  const [menuClassesAberto, setMenuClassesAberto] = useState(true);
 
   const dialogoAtual =
     etapa === 0
@@ -348,7 +349,14 @@ const CriarPersonagem = () => {
   };
 
   return (
-    <main className="criacao-container">
+    <main
+      className={`criacao-container ${etapa === 4 ? "classe-fundo-ativo" : ""}`}
+      style={
+        etapa === 4
+          ? { "--classe-bg": `url(${classeEmFoco.imagem})` }
+          : undefined
+      }
+    >
       <form className="criacao-form" onSubmit={enviar}>
         <section className="criacao-dialogo">
           <p className="criacao-kicker">Voz desconhecida</p>
@@ -437,7 +445,32 @@ const CriarPersonagem = () => {
           )}
 
           {etapa === 4 && (
-            <div className="classes-etapa">
+            <div className={`classes-etapa ${menuClassesAberto ? "" : "recolhido"}`}>
+              <section className="classe-resumo">
+                <h2>{classeEmFoco.nome}</h2>
+                <p>
+                  Sanidade inicial:{" "}
+                  {classeEmFoco.sanidadeBase +
+                    calcularModificador(form.atributos.fonitude)}
+                </p>
+                <p>A cada novo nivel: {classeEmFoco.sanidadeNivel}</p>
+                <p>
+                  Esperanca inicial:{" "}
+                  {classeEmFoco.esperancaBase +
+                    calcularModificador(form.atributos.vontade)}
+                </p>
+                <p>A cada novo nivel: {classeEmFoco.esperancaNivel}</p>
+              </section>
+
+              <button
+                type="button"
+                className="classes-toggle"
+                onClick={() => setMenuClassesAberto((aberto) => !aberto)}
+              >
+                <Icon path={mdiChevronDown} size={0.9} />
+                {menuClassesAberto ? "Recolher classes" : "Escolher classe"}
+              </button>
+
               <div className="classes-lista">
                 {classesPersonagem.map((classe) => {
                   const recursos = calcularRecursosClasse(classe, form.atributos);
@@ -459,25 +492,6 @@ const CriarPersonagem = () => {
                   );
                 })}
               </div>
-
-              <aside className="classe-preview">
-                <img src={classeEmFoco.imagem} alt={classeEmFoco.nome} />
-                <div className="classe-preview-info">
-                  <h2>{classeEmFoco.nome}</h2>
-                  <p>
-                    Sanidade inicial:{" "}
-                    {classeEmFoco.sanidadeBase +
-                      calcularModificador(form.atributos.fonitude)}
-                  </p>
-                  <p>A cada novo nivel: {classeEmFoco.sanidadeNivel}</p>
-                  <p>
-                    Esperanca inicial:{" "}
-                    {classeEmFoco.esperancaBase +
-                      calcularModificador(form.atributos.vontade)}
-                  </p>
-                  <p>A cada novo nivel: {classeEmFoco.esperancaNivel}</p>
-                </div>
-              </aside>
             </div>
           )}
 
