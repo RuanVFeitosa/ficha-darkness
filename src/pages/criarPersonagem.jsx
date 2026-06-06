@@ -23,6 +23,87 @@ const membrosIntegridade = [
   { chave: "pernaEsquerda", nome: "Perna esquerda" },
 ];
 
+const classesPersonagem = [
+  {
+    id: "aniquilidador",
+    nome: "Aniquilidador",
+    imagem: "/classes/aniquilador.png",
+    sanidadeBase: 30,
+    sanidadeNivel: "7 SAN (+mod Fort)",
+    esperancaBase: 10,
+    esperancaNivel: "5 PE (+mod VON)",
+  },
+  {
+    id: "especialista",
+    nome: "Especialista",
+    imagem: "/classes/especialista.png",
+    sanidadeBase: 20,
+    sanidadeNivel: "3 SAN (+mod Fort)",
+    esperancaBase: 25,
+    esperancaNivel: "5 PE (+mod VON)",
+  },
+  {
+    id: "atirador-elite",
+    nome: "Atirador de Elite",
+    imagem: "/classes/atirador-elite.png",
+    sanidadeBase: 25,
+    sanidadeNivel: "7 SAN (+mod Fort)",
+    esperancaBase: 30,
+    esperancaNivel: "5 PE (+mod VON)",
+  },
+  {
+    id: "medico-campo",
+    nome: "Medico de Campo",
+    imagem: "/classes/medico-campo.png",
+    sanidadeBase: 20,
+    sanidadeNivel: "7 SAN (+mod Fort)",
+    esperancaBase: 40,
+    esperancaNivel: "5 PE (+mod VON)",
+  },
+  {
+    id: "renegado",
+    nome: "O Renegado",
+    imagem: "/classes/renegado.png",
+    sanidadeBase: 15,
+    sanidadeNivel: "7 SAN (+mod Fort)",
+    esperancaBase: 5,
+    esperancaNivel: "5 PE (+mod VON)",
+  },
+  {
+    id: "ocultista",
+    nome: "O Ocultista",
+    imagem: "/classes/ocultista.png",
+    sanidadeBase: 20,
+    sanidadeNivel: "2 SAN (+mod Fort)",
+    esperancaBase: 40,
+    esperancaNivel: "3 PE (+mod VON)",
+  },
+];
+
+const calcularModificador = (valor) => {
+  const numero = parseInt(valor) || 0;
+
+  if (numero >= 50) return 5;
+  if (numero >= 40) return 4;
+  if (numero >= 30) return 3;
+  if (numero >= 20) return 2;
+  if (numero >= 10) return 1;
+
+  return 0;
+};
+
+const calcularRecursosClasse = (classe, atributosForm) => {
+  const modFortitude = calcularModificador(atributosForm.fonitude);
+  const modVontade = calcularModificador(atributosForm.vontade);
+
+  return {
+    sanidade: classe.sanidadeBase + modFortitude,
+    esperanca: classe.esperancaBase + modVontade,
+    modFortitude,
+    modVontade,
+  };
+};
+
 // Escreva aqui o dialogo inicial antes das perguntas.
 const dialogoInicial =
   "Antes de comecarmos, escute com atencao. Ainda ha espaco para mais palavras aqui.";
@@ -41,7 +122,17 @@ const criarFichaInicial = (form) => ({
   pronome: form.pronome,
   classe: form.classe.trim(),
   especialidade: form.especialidade.trim(),
+  classeId: form.classeId,
+  classeDetalhes: form.classeDetalhes,
   fotoPerfil: form.fotoPerfil,
+  sanidade: {
+    atual: form.sanidadeInicial,
+    max: form.sanidadeInicial,
+  },
+  esperanca: {
+    atual: form.esperancaInicial,
+    max: form.esperancaInicial,
+  },
   rituais: [],
   inventario: [],
   membros: Object.fromEntries(
@@ -67,8 +158,12 @@ const CriarPersonagem = () => {
   const [form, setForm] = useState({
     nome: "",
     pronome: "Ele",
+    classeId: "",
     classe: "",
     especialidade: "",
+    classeDetalhes: null,
+    sanidadeInicial: 0,
+    esperancaInicial: 0,
     fotoPerfil: "",
     integridade: {
       cabeca: 100,
@@ -88,6 +183,7 @@ const CriarPersonagem = () => {
   });
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [classeEmFoco, setClasseEmFoco] = useState(classesPersonagem[0]);
 
   const dialogoAtual =
     etapa === 0
@@ -98,13 +194,11 @@ const CriarPersonagem = () => {
   const etapaValida = useMemo(() => {
     if (etapa === 1) return form.nome.trim().length > 0;
     if (etapa === 4) {
-      return (
-        form.classe.trim().length > 0 && form.especialidade.trim().length > 0
-      );
+      return form.classe.trim().length > 0;
     }
 
     return true;
-  }, [etapa, form.classe, form.especialidade, form.nome]);
+  }, [etapa, form.classe, form.nome]);
 
   useEffect(() => {
     setTextoVisivel("");
@@ -121,6 +215,26 @@ const CriarPersonagem = () => {
 
     return () => window.clearInterval(intervalo);
   }, [dialogoAtual]);
+
+  useEffect(() => {
+    if (!form.classeId) return;
+
+    const classe = classesPersonagem.find((item) => item.id === form.classeId);
+    if (!classe) return;
+
+    const recursos = calcularRecursosClasse(classe, form.atributos);
+
+    setForm((prev) => ({
+      ...prev,
+      classeDetalhes: {
+        ...(prev.classeDetalhes || {}),
+        modFortitude: recursos.modFortitude,
+        modVontade: recursos.modVontade,
+      },
+      sanidadeInicial: recursos.sanidade,
+      esperancaInicial: recursos.esperanca,
+    }));
+  }, [form.atributos, form.classeId]);
 
   const atualizarCampo = (campo, valor) => {
     setForm((prev) => ({
@@ -146,6 +260,29 @@ const CriarPersonagem = () => {
         ...prev.integridade,
         [membro]: Math.max(0, parseInt(valor) || 0),
       },
+    }));
+  };
+
+  const selecionarClasse = (classe) => {
+    const recursos = calcularRecursosClasse(classe, form.atributos);
+
+    setClasseEmFoco(classe);
+    setForm((prev) => ({
+      ...prev,
+      classeId: classe.id,
+      classe: classe.nome,
+      especialidade: "",
+      classeDetalhes: {
+        nome: classe.nome,
+        sanidadeBase: classe.sanidadeBase,
+        sanidadeNivel: classe.sanidadeNivel,
+        esperancaBase: classe.esperancaBase,
+        esperancaNivel: classe.esperancaNivel,
+        modFortitude: recursos.modFortitude,
+        modVontade: recursos.modVontade,
+      },
+      sanidadeInicial: recursos.sanidade,
+      esperancaInicial: recursos.esperanca,
     }));
   };
 
@@ -300,30 +437,47 @@ const CriarPersonagem = () => {
           )}
 
           {etapa === 4 && (
-            <div className="criacao-bloco titulos">
-              <label>
-                <span>Classe</span>
-                <input
-                  type="text"
-                  value={form.classe}
-                  onChange={(event) =>
-                    atualizarCampo("classe", event.target.value)
-                  }
-                  maxLength={30}
-                />
-              </label>
+            <div className="classes-etapa">
+              <div className="classes-lista">
+                {classesPersonagem.map((classe) => {
+                  const recursos = calcularRecursosClasse(classe, form.atributos);
+                  const selecionada = form.classeId === classe.id;
 
-              <label>
-                <span>Especialidade</span>
-                <input
-                  type="text"
-                  value={form.especialidade}
-                  onChange={(event) =>
-                    atualizarCampo("especialidade", event.target.value)
-                  }
-                  maxLength={40}
-                />
-              </label>
+                  return (
+                    <button
+                      key={classe.id}
+                      type="button"
+                      className={`classe-card ${selecionada ? "selecionada" : ""}`}
+                      onClick={() => selecionarClasse(classe)}
+                      onFocus={() => setClasseEmFoco(classe)}
+                      onMouseEnter={() => setClasseEmFoco(classe)}
+                    >
+                      <span className="classe-nome">{classe.nome}</span>
+                      <span>SAN {recursos.sanidade}</span>
+                      <span>ESP {recursos.esperanca}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <aside className="classe-preview">
+                <img src={classeEmFoco.imagem} alt={classeEmFoco.nome} />
+                <div className="classe-preview-info">
+                  <h2>{classeEmFoco.nome}</h2>
+                  <p>
+                    Sanidade inicial:{" "}
+                    {classeEmFoco.sanidadeBase +
+                      calcularModificador(form.atributos.fonitude)}
+                  </p>
+                  <p>A cada novo nivel: {classeEmFoco.sanidadeNivel}</p>
+                  <p>
+                    Esperanca inicial:{" "}
+                    {classeEmFoco.esperancaBase +
+                      calcularModificador(form.atributos.vontade)}
+                  </p>
+                  <p>A cada novo nivel: {classeEmFoco.esperancaNivel}</p>
+                </div>
+              </aside>
             </div>
           )}
 
