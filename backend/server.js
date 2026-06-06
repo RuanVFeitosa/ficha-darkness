@@ -9,9 +9,9 @@ const DATA_DIR = process.env.DATA_DIR
   : path.join(__dirname, "data");
 const BUILD_DIR = path.join(__dirname, "..", "build");
 const DEFAULT_FICHA_ID = "principal";
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const SUPABASE_TABLE = process.env.SUPABASE_TABLE || "personagens";
+const SUPABASE_URL = process.env.SUPABASE_URL?.trim();
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+const SUPABASE_TABLE = (process.env.SUPABASE_TABLE || "personagens").trim();
 const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 
 const contentTypes = {
@@ -67,7 +67,7 @@ const sanitizeFichaId = (id) => {
 const getDataFile = (id) => path.join(DATA_DIR, `${sanitizeFichaId(id)}.json`);
 
 const getSupabaseRestUrl = (pathAndQuery = "") => {
-  const baseUrl = SUPABASE_URL.replace(/\/$/, "");
+  const baseUrl = SUPABASE_URL.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "");
   return `${baseUrl}/rest/v1/${SUPABASE_TABLE}${pathAndQuery}`;
 };
 
