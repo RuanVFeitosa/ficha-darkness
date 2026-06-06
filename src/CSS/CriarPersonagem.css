@@ -1,0 +1,264 @@
+.criacao-container {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.76), rgba(0, 0, 0, 0.92)),
+    url("../assets/IMG/OAbsoluto.png") center/cover;
+  color: #f5f0e8;
+}
+
+.criacao-form {
+  width: min(820px, 100%);
+  display: grid;
+  gap: 22px;
+  padding: 28px;
+  border-radius: 8px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.55);
+}
+
+.criacao-dialogo {
+  min-height: 112px;
+  padding: 20px;
+  border-left: 3px solid #c89b5f;
+  background: rgba(255, 255, 255, 0.045);
+  text-align: left;
+}
+
+.criacao-kicker {
+  margin-bottom: 8px;
+  color: #c89b5f;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.criacao-dialogo h1 {
+  min-height: 44px;
+  font-size: 1.8rem;
+  line-height: 1.25;
+}
+
+.criacao-dialogo h1::after {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 1.1em;
+  margin-left: 4px;
+  background: #c89b5f;
+  vertical-align: -0.12em;
+  animation: cursorPisca 0.9s steps(2, start) infinite;
+}
+
+@keyframes cursorPisca {
+  50% {
+    opacity: 0;
+  }
+}
+
+.criacao-etapa {
+  min-height: 220px;
+  display: grid;
+  align-content: center;
+}
+
+.intro-etapa {
+  max-width: 620px;
+  color: #c9b9a5;
+  text-align: left;
+  line-height: 1.6;
+}
+
+.criacao-bloco,
+.criacao-integridade,
+.criacao-atributos {
+  display: grid;
+  gap: 14px;
+}
+
+.criacao-bloco.identidade,
+.criacao-bloco.titulos {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.criacao-atributos {
+  grid-template-columns: repeat(5, minmax(90px, 1fr));
+}
+
+.criacao-integridade {
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+}
+
+.criacao-form label,
+.texto-extra {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.criacao-form label span,
+.texto-extra span,
+.pronome-grupo legend {
+  color: #c9b9a5;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.criacao-form input,
+.criacao-form textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #4a3326;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  font: inherit;
+}
+
+.criacao-form textarea {
+  resize: vertical;
+}
+
+.criacao-form input:focus,
+.criacao-form textarea:focus {
+  outline: 2px solid rgba(200, 155, 95, 0.6);
+  border-color: #c89b5f;
+}
+
+.pronome-grupo {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 0;
+  border: none;
+  text-align: left;
+}
+
+.pronome-grupo legend {
+  grid-column: 1 / -1;
+  margin-bottom: 8px;
+}
+
+.pronome-grupo label {
+  cursor: pointer;
+}
+
+.pronome-grupo input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pronome-grupo label span {
+  min-height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #4a3326;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #f5f0e8;
+}
+
+.pronome-grupo input:checked + span {
+  border-color: #c89b5f;
+  background: rgba(139, 69, 19, 0.7);
+}
+
+.foto-etapa {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 22px;
+  align-items: center;
+}
+
+.foto-preview {
+  width: 180px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 2px solid #8b4513;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: #c9b9a5;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.foto-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.foto-upload input {
+  padding: 9px;
+}
+
+.criacao-erro {
+  color: #ffb4a9;
+  text-align: left;
+}
+
+.criacao-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.criacao-submit,
+.criacao-secundario {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 18px;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.criacao-submit {
+  border: 1px solid #c89b5f;
+  background: #8b4513;
+}
+
+.criacao-secundario {
+  border: 1px solid #4a3326;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.criacao-submit:disabled,
+.criacao-secundario:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (max-width: 760px) {
+  .criacao-form {
+    padding: 20px;
+  }
+
+  .criacao-bloco.identidade,
+  .criacao-bloco.titulos,
+  .criacao-integridade,
+  .criacao-atributos,
+  .foto-etapa {
+    grid-template-columns: 1fr;
+  }
+
+  .foto-preview {
+    margin: 0 auto;
+  }
+
+  .criacao-acoes {
+    flex-direction: column-reverse;
+  }
+}

@@ -10,6 +10,7 @@
 
 # production
 /build
+backend/data/*.json
 
 # misc
 .DS_Store

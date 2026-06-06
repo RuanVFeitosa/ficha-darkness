@@ -8,6 +8,8 @@ import profile from "../assets/IMG/perfil_template.jpg";
 import corpoHumano from "../assets/IMG/corpo_humano.png";
 import { descricoesHabilidades } from "../components/descricoesHabilidades";
 import ModalDescricao from "../components/modal/modalDescricao";
+import { buscarPersonagem, salvarPersonagem } from "../services/personagemApi";
+import { ULTIMA_FICHA_KEY } from "../constants/session";
 import Icon from "@mdi/react";
 import { mdiAccount } from "@mdi/js";
 import {
@@ -21,10 +23,32 @@ import {
 
 // Chave para o localStorage
 const STORAGE_KEY = "fichaRPG_personagem";
+const DEFAULT_FICHA_ID = "principal";
+
+const normalizarFichaId = (valor) => {
+  const fichaId = String(valor || DEFAULT_FICHA_ID)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return fichaId || DEFAULT_FICHA_ID;
+};
+
+const obterFichaIdDaUrl = () => {
+  const params = new URLSearchParams(window.location.search);
+  return normalizarFichaId(params.get("ficha"));
+};
 
 // Estado inicial padrão
-const estadoInicial = {
+export const estadoInicial = {
   nome: "",
+  pronome: "",
+  classe: "",
+  especialidade: "",
+  fotoPerfil: "",
+  textoExtra: "",
   atributos: {
     forca: 0,
     fonitude: 0,
@@ -114,10 +138,12 @@ const estadoInicial = {
 };
 
 const FichaPersonagem = () => {
+  const [fichaId] = useState(obterFichaIdDaUrl);
   const [personagem, setPersonagem] = useState(estadoInicial);
   const [abaAtiva, setAbaAtiva] = useState("combate");
   const [ultimoSave, setUltimoSave] = useState(null);
   const [carregado, setCarregado] = useState(false);
+  const storageKey = `${STORAGE_KEY}_${fichaId}`;
 
   // ESTADO PARA O MODAL
   const [modalAberto, setModalAberto] = useState(false);
@@ -140,7 +166,23 @@ const FichaPersonagem = () => {
 
   // CARREGAR DADOS AO INICIAR
   useEffect(() => {
-    const dadosSalvos = localStorage.getItem(STORAGE_KEY);
+    localStorage.setItem(ULTIMA_FICHA_KEY, fichaId);
+
+    buscarPersonagem(fichaId)
+      .then((personagemApi) => {
+        if (personagemApi) {
+          setPersonagem(personagemApi);
+          console.log("Dados carregados do backend");
+        }
+      })
+      .catch(() => {
+        console.warn("Backend indisponivel. Tentando carregar localStorage.");
+      })
+      .finally(() => {
+        setCarregado(true);
+      });
+
+    const dadosSalvos = localStorage.getItem(storageKey);
     if (dadosSalvos) {
       try {
         const personagemSalvo = JSON.parse(dadosSalvos);
@@ -150,13 +192,21 @@ const FichaPersonagem = () => {
         console.error("❌ Erro ao carregar dados salvos:", error);
       }
     }
-  }, []);
+  }, [fichaId, storageKey]);
 
   // SALVAR DADOS AUTOMATICAMENTE QUANDO MUDAR
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(personagem));
+    if (!carregado) {
+      return;
+    }
+
+    localStorage.setItem(storageKey, JSON.stringify(personagem));
     setUltimoSave(new Date().toLocaleTimeString());
-  }, [personagem]);
+
+    salvarPersonagem(fichaId, personagem).catch((error) => {
+      console.warn("Backend indisponivel. Dados mantidos no localStorage.", error);
+    });
+  }, [personagem, carregado, fichaId, storageKey]);
 
   // FUNÇÕES DE ATUALIZAÇÃO
   const atualizarAtributo = (atributo, valor) => {
@@ -603,11 +653,8 @@ const FichaPersonagem = () => {
               {condicoes.map((condicao, index) => (
                 <button
                   key={index}
-                  className={`
-    condicao-chip
-    ${personagem.condicoesAtivas?.includes(condicao.classe) ? "ativa" : ""}
-    ${condicao.classe}
-  `}
+                  className={` condicao-chip ${personagem.condicoesAtivas?.includes(condicao.classe) ? "ativa" : ""}
+                  ${condicao.classe}`}
                   onClick={() => {
                     setModalTitulo(condicao.nome);
                     setModalDescricao(condicao.descricao);
@@ -713,22 +760,69 @@ const FichaPersonagem = () => {
             <div className="sanidade-section">
               <div className="sanidade-container">
                 <div className="sanidade-inputs">
-                  {/* Nome do Personagem */}
-                  <input
-                    type="text"
-                    placeholder="NOME DO PERSONAGEM"
-                    value={personagem.nome}
-                    onChange={(e) =>
-                      setPersonagem((prev) => ({
-                        ...prev,
-                        nome: e.target.value,
-                      }))
-                    }
-                    className="nome-personagem"
-                    maxLength={30}
-                  />
+                  <div className="identidade-personagem">
+                    {/* Nome do Personagem */}
+                    <input
+                      type="text"
+                      placeholder="NOME DO PERSONAGEM"
+                      value={personagem.nome}
+                      onChange={(e) =>
+                        setPersonagem((prev) => ({
+                          ...prev,
+                          nome: e.target.value,
+                        }))
+                      }
+                      maxLength={30}
+                      className="nome-personagem"
+                    />
+                    <div className="dados-personagem">
+                      <input
+                        type="text"
+                        placeholder="CLASSE"
+                        value={personagem.classe || ""}
+                        onChange={(e) =>
+                          setPersonagem((prev) => ({
+                            ...prev,
+                            classe: e.target.value,
+                          }))
+                        }
+                        className="dado-personagem"
+                        maxLength={30}
+                      />
+                      <input
+                        type="text"
+                        placeholder="PRONOME"
+                        value={personagem.pronome || ""}
+                        onChange={(e) =>
+                          setPersonagem((prev) => ({
+                            ...prev,
+                            pronome: e.target.value,
+                          }))
+                        }
+                        className="dado-personagem"
+                        maxLength={10}
+                      />
+                      <input
+                        type="text"
+                        placeholder="ESPECIALIDADE"
+                        value={personagem.especialidade || ""}
+                        onChange={(e) =>
+                          setPersonagem((prev) => ({
+                            ...prev,
+                            especialidade: e.target.value,
+                          }))
+                        }
+                        className="dado-personagem"
+                        maxLength={40}
+                      />
+                    </div>
+                  </div>
                   <div className={`profile-wrapper ${primeiraCondicaoAtiva}`}>
-                    <img src={profile} alt="Perfil" className="profile" />
+                    <img
+                      src={personagem.fotoPerfil || profile}
+                      alt="Perfil"
+                      className="profile"
+                    />
 
                     <div className="profile-overlay"></div>
                   </div>

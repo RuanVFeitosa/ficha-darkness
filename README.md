@@ -14,6 +14,33 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
 
+### `npm run dev`
+
+Runs the React frontend and the local API together for development.
+Use this command when creating and saving sheets locally.
+
+### `npm run backend`
+
+Runs the local API used to save the character sheet.\
+Open [http://localhost:4000/api/health](http://localhost:4000/api/health) to check if the backend is online.
+
+The backend stores character sheets in `backend/data`.
+
+Each player can use a different sheet by opening the site with a `ficha` query parameter:
+
+- `http://localhost:3000/?ficha=ana`
+- `http://localhost:3000/?ficha=bruno`
+- `http://localhost:3000/?ficha=mestre`
+
+When the site is opened without `?ficha=...`, it shows the login screen. If the browser already has a saved sheet, it redirects to that sheet. New players can click `Cadastrar` to create a character. After creation, the backend creates a unique sheet and redirects the player to their own URL.
+
+In production, run `npm run build` first. The backend can serve the generated React app and API together, so a hosting service can use:
+
+- Build command: `npm run build`
+- Start command: `npm run backend`
+
+For public hosting, configure persistent storage for the backend data and set `DATA_DIR` to that folder. Without persistent storage, some hosts can erase saved sheets when the app redeploys or restarts.
+
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.\
