@@ -42,6 +42,8 @@ const criarFichaInicial = (form) => ({
   classe: form.classe.trim(),
   especialidade: form.especialidade.trim(),
   fotoPerfil: form.fotoPerfil,
+  rituais: [],
+  inventario: [],
   membros: Object.fromEntries(
     Object.entries(form.integridade).map(([membro, valor]) => [
       membro,

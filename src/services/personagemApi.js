@@ -33,6 +33,11 @@ export const buscarPersonagem = async (fichaId) => {
   return data.personagem;
 };
 
+export const listarPersonagens = async () => {
+  const data = await request("/personagens");
+  return data.personagens || [];
+};
+
 export const criarPersonagem = async (personagem) => {
   const data = await request("/personagens", {
     method: "POST",
@@ -49,4 +54,26 @@ export const salvarPersonagem = async (fichaId, personagem) => {
   });
 
   return data.personagem;
+};
+
+export const apagarPersonagem = async (fichaId) => {
+  const data = await request(`/personagens/${encodeURIComponent(fichaId)}`, {
+    method: "DELETE",
+  });
+
+  return data;
+};
+
+export const buscarCatalogoLoja = async () => {
+  const data = await request("/loja/catalogo");
+  return data.catalogo || [];
+};
+
+export const salvarCatalogoLoja = async (catalogo) => {
+  const data = await request("/loja/catalogo", {
+    method: "PUT",
+    body: JSON.stringify({ catalogo }),
+  });
+
+  return data.catalogo || [];
 };

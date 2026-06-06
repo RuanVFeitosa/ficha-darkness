@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Icon from "@mdi/react";
-import { mdiAccountSearch, mdiAccountPlus } from "@mdi/js";
+import { mdiAccountSearch, mdiAccountPlus, mdiShieldCrownOutline } from "@mdi/js";
 import { buscarPersonagem } from "../services/personagemApi";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
 import "../CSS/TelaInicial.css";
@@ -17,14 +17,6 @@ const TelaInicial = () => {
   const [codigo, setCodigo] = useState("");
   const [erro, setErro] = useState("");
   const [entrando, setEntrando] = useState(false);
-
-  useEffect(() => {
-    const ultimaFicha = localStorage.getItem(ULTIMA_FICHA_KEY);
-
-    if (ultimaFicha) {
-      window.location.href = `/?ficha=${encodeURIComponent(ultimaFicha)}`;
-    }
-  }, []);
 
   const entrar = async (event) => {
     event.preventDefault();
@@ -93,6 +85,17 @@ const TelaInicial = () => {
             >
               <Icon path={mdiAccountPlus} size={0.9} />
               Cadastrar
+            </button>
+
+            <button
+              className="inicio-mestre"
+              type="button"
+              onClick={() => {
+                window.location.href = "/?mestre=1";
+              }}
+            >
+              <Icon path={mdiShieldCrownOutline} size={0.9} />
+              Mestre
             </button>
           </div>
         </form>

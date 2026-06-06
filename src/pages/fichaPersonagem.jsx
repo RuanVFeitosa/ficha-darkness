@@ -13,6 +13,8 @@ import { ULTIMA_FICHA_KEY } from "../constants/session";
 import Icon from "@mdi/react";
 import { mdiAccount } from "@mdi/js";
 import {
+  mdiShieldCrownOutline,
+  mdiStorefrontOutline,
   mdiDiceD4,
   mdiDiceD6,
   mdiDiceD8,
@@ -49,6 +51,7 @@ export const estadoInicial = {
   especialidade: "",
   fotoPerfil: "",
   textoExtra: "",
+  lojaCreditos: 900,
   atributos: {
     forca: 0,
     fonitude: 0,
@@ -299,6 +302,14 @@ const FichaPersonagem = () => {
       0,
     ),
     max: Object.values(personagem.membros).reduce((acc, m) => acc + m.max, 0),
+  };
+
+  const abrirLoja = () => {
+    window.location.href = `?loja=1&ficha=${encodeURIComponent(fichaId)}`;
+  };
+
+  const abrirDashboardMestre = () => {
+    window.location.href = "?mestre=1";
   };
 
   // Componente para cada habilidade passiva
@@ -751,6 +762,22 @@ const FichaPersonagem = () => {
 
   return (
     <div className="ficha-container">
+      <button
+        className="botao-mestre-flutuante"
+        onClick={abrirDashboardMestre}
+        title="Abrir dashboard do mestre"
+      >
+        <Icon path={mdiShieldCrownOutline} size={1.2} />
+        <span>Mestre</span>
+      </button>
+      <button
+        className="botao-loja-flutuante"
+        onClick={abrirLoja}
+        title="Abrir loja da Helena"
+      >
+        <Icon path={mdiStorefrontOutline} size={1.2} />
+        <span>Loja</span>
+      </button>
       {/* Container Principal: Perfil + Atributos + Sidebar */}
       <div className="main-content">
         {/* ... (seu conteúdo existente permanece igual) ... */}

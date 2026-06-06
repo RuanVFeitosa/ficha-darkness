@@ -1,0 +1,585 @@
+.mestre-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: #090807;
+  color: #f5efe4;
+  font-family: "Courier New", monospace;
+  text-align: left;
+}
+
+.mestre-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 18px;
+  align-items: center;
+  max-width: 1500px;
+  margin: 0 auto 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+}
+
+.mestre-header span,
+.mestre-editor-topo span,
+.mestre-creditos span {
+  color: #c89b5f;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-header h1,
+.mestre-editor-topo h2 {
+  margin: 4px 0;
+  color: #fff8ea;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.mestre-voltar,
+.mestre-refresh,
+.mestre-tabs button,
+.mestre-categorias-loja button,
+.mestre-ficha-tabs button,
+.mestre-criar button,
+.mestre-acoes-ficha button,
+.mestre-creditos button,
+.mestre-inventario-form button,
+.mestre-salvar,
+.mestre-loja-form button,
+.mestre-catalogo button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 13px;
+  border: 1px solid rgba(212, 175, 55, 0.26);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f5efe4;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mestre-voltar:hover,
+.mestre-refresh:hover,
+.mestre-tabs button.ativa,
+.mestre-tabs button:hover,
+.mestre-categorias-loja button.ativa,
+.mestre-categorias-loja button:hover,
+.mestre-ficha-tabs button.ativa,
+.mestre-ficha-tabs button:hover,
+.mestre-criar button:hover,
+.mestre-acoes-ficha button:hover,
+.mestre-creditos button:hover,
+.mestre-inventario-form button:hover,
+.mestre-salvar:hover,
+.mestre-loja-form button:hover {
+  border-color: #d4af37;
+  background: #8b4513;
+}
+
+.mestre-refresh:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.mestre-mensagem {
+  max-width: 1500px;
+  margin: 0 auto 16px;
+  padding: 10px 12px;
+  border-left: 3px solid #c89b5f;
+  background: rgba(200, 155, 95, 0.09);
+  color: #e6d6bf;
+}
+
+.mestre-tabs {
+  display: flex;
+  gap: 10px;
+  max-width: 1500px;
+  margin: 0 auto 18px;
+}
+
+.mestre-grid {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 18px;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.mestre-lista,
+.mestre-editor,
+.mestre-loja {
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.mestre-lista {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 16px;
+}
+
+.mestre-criar,
+.mestre-inventario-form,
+.mestre-loja-form {
+  display: grid;
+  gap: 10px;
+}
+
+.mestre-criar h2,
+.mestre-loja-form h2,
+.mestre-inventario-form h3 {
+  margin: 0;
+  color: #d4af37;
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.mestre-duplo,
+.mestre-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mestre-page input,
+.mestre-page select,
+.mestre-page textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 10px;
+  border: 1px solid #4a3326;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  font: inherit;
+}
+
+.mestre-page textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.mestre-page label {
+  display: grid;
+  gap: 6px;
+  color: #c89b5f;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mestre-page input:focus,
+.mestre-page select:focus,
+.mestre-page textarea:focus {
+  outline: 2px solid rgba(200, 155, 95, 0.55);
+  border-color: #c89b5f;
+}
+
+.mestre-fichas {
+  display: grid;
+  gap: 8px;
+  max-height: 58vh;
+  overflow-y: auto;
+}
+
+.mestre-fichas button {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #4a3326;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #f5efe4;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mestre-fichas button.ativa {
+  border-left-color: #d4af37;
+  background: rgba(139, 69, 19, 0.22);
+}
+
+.mestre-fichas span {
+  color: #a99d8a;
+  font-size: 0.78rem;
+}
+
+.mestre-editor {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.mestre-editor-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mestre-editor-topo p {
+  color: #a99d8a;
+}
+
+.mestre-acoes-ficha {
+  display: flex;
+  gap: 10px;
+}
+
+.mestre-ficha-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mestre-ficha-tabs button {
+  min-height: 36px;
+  padding: 8px 11px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.mestre-ficha-secao {
+  display: grid;
+  gap: 16px;
+}
+
+.mestre-ficha-secao h3 {
+  margin: 0;
+  color: #d4af37;
+  font-size: 0.92rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.mestre-valores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.mestre-valores-grid.compacto {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.mestre-edit-lista {
+  display: grid;
+  gap: 10px;
+}
+
+.mestre-edit-lista > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 0.45fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.mestre-edit-lista button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255, 120, 120, 0.25);
+  border-radius: 6px;
+  background: transparent;
+  color: #f5efe4;
+  cursor: pointer;
+}
+
+.mestre-edit-lista button:hover {
+  border-color: #ff8e8e;
+  background: rgba(180, 35, 35, 0.65);
+}
+
+.mestre-lista-vazia {
+  min-height: 130px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  color: #a99d8a;
+}
+
+.mestre-corpo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.mestre-membro {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px;
+  border-left: 3px solid #2ecc71;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.mestre-membro.ferido {
+  border-left-color: #d4af37;
+}
+
+.mestre-membro.grave {
+  border-left-color: #e74c3c;
+}
+
+.mestre-membro strong {
+  grid-column: 1 / -1;
+  color: #fff8ea;
+  text-transform: uppercase;
+}
+
+.mestre-descricao {
+  min-height: 260px;
+}
+
+.mestre-acoes-ficha .perigo {
+  border-color: rgba(255, 120, 120, 0.35);
+}
+
+.mestre-acoes-ficha .perigo:hover,
+.mestre-catalogo button:hover {
+  border-color: #ff8e8e;
+  background: rgba(180, 35, 35, 0.65);
+}
+
+.mestre-creditos {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 140px auto;
+  gap: 10px;
+  align-items: end;
+  padding: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.mestre-creditos strong {
+  display: block;
+  color: #d4af37;
+  font-size: 1.6rem;
+}
+
+.mestre-inventario-form {
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+}
+
+.mestre-inventario-form h3 {
+  grid-column: 1 / -1;
+}
+
+.mestre-inventario-lista,
+.mestre-catalogo {
+  display: grid;
+  gap: 10px;
+}
+
+.mestre-catalogo-area {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mestre-categorias-loja {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mestre-categorias-loja button {
+  min-height: 38px;
+  padding: 8px 10px;
+}
+
+.mestre-categorias-loja span {
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mestre-categorias-loja strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.14);
+  color: #d4af37;
+  font-size: 0.78rem;
+}
+
+.mestre-inventario-lista div,
+.mestre-catalogo article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.mestre-inventario-lista strong {
+  display: block;
+  color: #fff8ea;
+}
+
+.mestre-inventario-lista span {
+  color: #cfc1ad;
+  font-size: 0.88rem;
+}
+
+.mestre-inventario-lista button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 120, 120, 0.25);
+  border-radius: 6px;
+  background: transparent;
+  color: #f5efe4;
+  cursor: pointer;
+}
+
+.mestre-salvar {
+  width: fit-content;
+  background: rgba(139, 69, 19, 0.55);
+}
+
+.mestre-vazio {
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  color: #a99d8a;
+}
+
+.mestre-loja {
+  display: grid;
+  grid-template-columns: 420px minmax(0, 1fr);
+  gap: 18px;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+.mestre-loja-form {
+  align-content: start;
+}
+
+.mestre-loja-form h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mestre-catalogo {
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
+.mestre-catalogo article {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.mestre-catalogo span {
+  color: #c89b5f;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mestre-catalogo h3 {
+  margin: 4px 0;
+  color: #fff8ea;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
+.mestre-catalogo p,
+.mestre-catalogo small {
+  color: #cfc1ad;
+}
+
+.mestre-catalogo strong {
+  color: #d4af37;
+}
+
+.mestre-catalogo button {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+}
+
+.mestre-catalogo-vazio {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  color: #a99d8a;
+}
+
+@media (max-width: 1080px) {
+  .mestre-grid,
+  .mestre-loja {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-fichas,
+  .mestre-catalogo {
+    max-height: none;
+  }
+}
+
+@media (max-width: 680px) {
+  .mestre-page {
+    padding: 16px;
+  }
+
+  .mestre-header,
+  .mestre-editor-topo,
+  .mestre-creditos,
+  .mestre-inventario-form,
+  .mestre-duplo,
+  .mestre-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-header,
+  .mestre-editor-topo {
+    display: grid;
+  }
+
+  .mestre-acoes-ficha,
+  .mestre-tabs,
+  .mestre-ficha-tabs,
+  .mestre-categorias-loja {
+    flex-wrap: wrap;
+  }
+
+  .mestre-categorias-loja button,
+  .mestre-ficha-tabs button {
+    width: 100%;
+  }
+
+  .mestre-edit-lista > div,
+  .mestre-membro {
+    grid-template-columns: 1fr;
+  }
+}

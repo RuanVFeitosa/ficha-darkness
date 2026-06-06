@@ -9,6 +9,7 @@ const DATA_DIR = process.env.DATA_DIR
   : path.join(__dirname, "data");
 const BUILD_DIR = path.join(__dirname, "..", "build");
 const DEFAULT_FICHA_ID = "principal";
+const SHOP_CATALOG_FILE = path.join(DATA_DIR, "loja-catalogo.json");
 const SUPABASE_URL = process.env.SUPABASE_URL?.trim();
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 const SUPABASE_TABLE = (process.env.SUPABASE_TABLE || "personagens").trim();
@@ -27,9 +28,108 @@ const contentTypes = {
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": process.env.CORS_ORIGIN || "*",
-  "Access-Control-Allow-Methods": "GET,POST,PUT,OPTIONS",
+  "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
+
+const defaultCatalogoLoja = [
+  {
+    id: "pistola-sable",
+    nome: "Pistola Sable 9mm",
+    categoria: "armas",
+    preco: 180,
+    detalhe: "Leve, discreta e confiavel em corredores apertados.",
+    entrega: "1 pente extra",
+  },
+  {
+    id: "carabina-helena",
+    nome: "Carabina Helena-7",
+    categoria: "armas",
+    preco: 460,
+    detalhe: "Precisao estavel para media distancia.",
+    entrega: "2 carregadores",
+  },
+  {
+    id: "lamina-fosca",
+    nome: "Lamina Fosca",
+    categoria: "armas",
+    preco: 135,
+    detalhe: "Faca tatica de corte silencioso.",
+    entrega: "Bainha magnetica",
+  },
+  {
+    id: "colete-kevlar",
+    nome: "Colete Kevlar II",
+    categoria: "defesas",
+    preco: 320,
+    detalhe: "Protecao corporal sem travar movimento.",
+    entrega: "+ resistencia contra perfuracao",
+  },
+  {
+    id: "placa-ceramica",
+    nome: "Placa Ceramica",
+    categoria: "defesas",
+    preco: 260,
+    detalhe: "Reforco para impacto concentrado.",
+    entrega: "Instalacao incluida",
+  },
+  {
+    id: "mascara-filtro",
+    nome: "Mascara de Filtro",
+    categoria: "defesas",
+    preco: 150,
+    detalhe: "Filtro lacrado contra poeira, gas e fuligem ritual.",
+    entrega: "2 filtros",
+  },
+  {
+    id: "kit-trauma",
+    nome: "Kit de Trauma",
+    categoria: "itens",
+    preco: 95,
+    detalhe: "Curativos, torniquete, analgesicos e selante.",
+    entrega: "3 usos",
+  },
+  {
+    id: "municao-prata",
+    nome: "Municao de Prata",
+    categoria: "itens",
+    preco: 120,
+    detalhe: "Cartuchos preparados para alvos anormais.",
+    entrega: "Caixa com 12",
+  },
+  {
+    id: "rastreador-sinal",
+    nome: "Rastreador de Sinal",
+    categoria: "itens",
+    preco: 210,
+    detalhe: "Pulso curto para localizar aparelhos ativos.",
+    entrega: "Bateria 6h",
+  },
+  {
+    id: "rito-limiar",
+    nome: "Rito Absoluto: Limiar",
+    categoria: "ritos",
+    preco: 520,
+    detalhe: "Marca uma passagem onde o real fica fino.",
+    entrega: "Custo 6 PE",
+  },
+  {
+    id: "rito-cicatriz",
+    nome: "Rito Absoluto: Cicatriz",
+    categoria: "ritos",
+    preco: 640,
+    detalhe: "Converte dor recebida em memoria armada.",
+    entrega: "Custo 8 PE",
+  },
+  {
+    id: "rito-noite-fechada",
+    nome: "Rito Absoluto: Noite Fechada",
+    categoria: "ritos",
+    preco: 780,
+    detalhe: "Apaga rastros, luzes pequenas e certezas.",
+    entrega: "Custo 10 PE",
+  },
+];
 
 const sendJson = (res, statusCode, payload) => {
   const body = statusCode === 204 ? "" : JSON.stringify(payload);
@@ -65,6 +165,25 @@ const sanitizeFichaId = (id) => {
 };
 
 const getDataFile = (id) => path.join(DATA_DIR, `${sanitizeFichaId(id)}.json`);
+
+const normalizeShopItem = (item, index = 0) => {
+  const nome = String(item?.nome || "").trim();
+  const id = sanitizeFichaId(item?.id || nome || `item-${Date.now()}-${index}`);
+  const categoria = ["armas", "defesas", "itens", "ritos"].includes(
+    item?.categoria,
+  )
+    ? item.categoria
+    : "itens";
+
+  return {
+    id,
+    nome: nome || "Item sem nome",
+    categoria,
+    preco: Math.max(0, Number(item?.preco) || 0),
+    detalhe: String(item?.detalhe || "").trim(),
+    entrega: String(item?.entrega || "").trim(),
+  };
+};
 
 const getSupabaseRestUrl = (pathAndQuery = "") => {
   const baseUrl = SUPABASE_URL.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "");
@@ -164,6 +283,97 @@ const writePersonagem = async (id, personagem) => {
   return personagem;
 };
 
+const listPersonagens = async () => {
+  if (USE_SUPABASE) {
+    const rows = await requestSupabase("?select=id,personagem,updated_at&order=id.asc");
+    return rows.map((row) => ({
+      fichaId: row.id,
+      personagem: row.personagem,
+      updatedAt: row.updated_at || null,
+    }));
+  }
+
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    const files = await fs.readdir(DATA_DIR);
+    const personagens = await Promise.all(
+      files
+        .filter((file) => file.endsWith(".json") && file !== "loja-catalogo.json")
+        .map(async (file) => {
+          const fichaId = path.basename(file, ".json");
+          const filePath = path.join(DATA_DIR, file);
+          const [raw, stats] = await Promise.all([
+            fs.readFile(filePath, "utf8"),
+            fs.stat(filePath),
+          ]);
+
+          return {
+            fichaId,
+            personagem: JSON.parse(raw),
+            updatedAt: stats.mtime.toISOString(),
+          };
+        }),
+    );
+
+    return personagens.sort((a, b) => a.fichaId.localeCompare(b.fichaId));
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return [];
+    }
+
+    throw error;
+  }
+};
+
+const deletePersonagem = async (id) => {
+  if (USE_SUPABASE) {
+    const fichaId = sanitizeFichaId(id);
+    await requestSupabase(`?id=eq.${encodeURIComponent(fichaId)}`, {
+      method: "DELETE",
+      headers: { Prefer: "return=minimal" },
+    });
+    return true;
+  }
+
+  try {
+    await fs.unlink(getDataFile(id));
+    return true;
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return false;
+    }
+
+    throw error;
+  }
+};
+
+const readShopCatalog = async () => {
+  try {
+    const raw = await fs.readFile(SHOP_CATALOG_FILE, "utf8");
+    const catalogo = JSON.parse(raw);
+    return Array.isArray(catalogo)
+      ? catalogo.map((item, index) => normalizeShopItem(item, index))
+      : defaultCatalogoLoja;
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return defaultCatalogoLoja;
+    }
+
+    throw error;
+  }
+};
+
+const writeShopCatalog = async (catalogo) => {
+  if (!Array.isArray(catalogo)) {
+    throw new Error("Catalogo invalido");
+  }
+
+  const normalized = catalogo.map((item, index) => normalizeShopItem(item, index));
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.writeFile(SHOP_CATALOG_FILE, `${JSON.stringify(normalized, null, 2)}\n`);
+  return normalized;
+};
+
 const createUniqueFichaId = async (nome) => {
   const baseId = sanitizeFichaId(nome);
   let fichaId = baseId;
@@ -192,6 +402,22 @@ const server = http.createServer(async (req, res) => {
         supabaseConfigured: USE_SUPABASE,
         table: USE_SUPABASE ? SUPABASE_TABLE : null,
       });
+    }
+
+    if (url.pathname === "/api/loja/catalogo" && req.method === "GET") {
+      const catalogo = await readShopCatalog();
+      return sendJson(res, 200, { catalogo });
+    }
+
+    if (url.pathname === "/api/loja/catalogo" && req.method === "PUT") {
+      const body = await readJsonBody(req);
+      const catalogo = await writeShopCatalog(body.catalogo);
+      return sendJson(res, 200, { catalogo });
+    }
+
+    if (url.pathname === "/api/personagens" && req.method === "GET") {
+      const personagens = await listPersonagens();
+      return sendJson(res, 200, { personagens });
     }
 
     if (url.pathname === "/api/personagens" && req.method === "POST") {
@@ -238,6 +464,15 @@ const server = http.createServer(async (req, res) => {
 
       const saved = await writePersonagem(fichaId, personagem);
       return sendJson(res, 200, { fichaId, personagem: saved });
+    }
+
+    if (personagemMatch && req.method === "DELETE") {
+      const deleted = await deletePersonagem(fichaId);
+      return sendJson(res, deleted ? 200 : 404, {
+        fichaId,
+        deleted,
+        ...(deleted ? {} : { error: "Ficha nao encontrada" }),
+      });
     }
 
     if (!url.pathname.startsWith("/api/") && req.method === "GET") {
