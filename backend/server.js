@@ -186,7 +186,12 @@ const server = http.createServer(async (req, res) => {
 
   try {
     if (url.pathname === "/api/health" && req.method === "GET") {
-      return sendJson(res, 200, { ok: true });
+      return sendJson(res, 200, {
+        ok: true,
+        storage: USE_SUPABASE ? "supabase" : "json",
+        supabaseConfigured: USE_SUPABASE,
+        table: USE_SUPABASE ? SUPABASE_TABLE : null,
+      });
     }
 
     if (url.pathname === "/api/personagens" && req.method === "POST") {
@@ -256,7 +261,10 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 404, { error: "Rota nao encontrada" });
   } catch (error) {
     console.error(error);
-    return sendJson(res, 500, { error: "Erro interno do servidor" });
+    return sendJson(res, 500, {
+      error: "Erro interno do servidor",
+      details: error.message,
+    });
   }
 });
 

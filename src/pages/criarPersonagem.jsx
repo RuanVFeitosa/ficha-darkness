@@ -202,7 +202,7 @@ const CriarPersonagem = () => {
       window.location.href = `/?ficha=${encodeURIComponent(fichaId)}`;
     } catch (error) {
       setErro(
-        "Nao foi possivel criar a ficha. Rode npm run dev ou deixe npm run backend aberto em outro terminal.",
+        `Nao foi possivel criar a ficha. ${error.message}`,
       );
       setSalvando(false);
     }

@@ -21,7 +21,8 @@ const request = async (path, options = {}) => {
   });
 
   if (!response.ok) {
-    throw new Error(`Erro na API: ${response.status}`);
+    const data = await response.json().catch(() => null);
+    throw new Error(data?.details || data?.error || `Erro na API: ${response.status}`);
   }
 
   return response.json();
