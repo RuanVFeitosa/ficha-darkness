@@ -41,6 +41,8 @@ In production, run `npm run build` first. The backend can serve the generated Re
 
 For public hosting, configure persistent storage for the backend data and set `DATA_DIR` to that folder. Without persistent storage, some hosts can erase saved sheets when the app redeploys or restarts.
 
+See [DEPLOY.md](DEPLOY.md) for the full public deploy checklist.
+
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.\
