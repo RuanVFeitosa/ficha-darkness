@@ -2,50 +2,65 @@
 
 Este projeto sobe como um unico Web Service Node: o backend serve a API e tambem entrega o build do React.
 
+## Banco gratuito com Supabase
+
+1. Crie uma conta em https://supabase.com.
+2. Crie um projeto no plano Free.
+3. Abra o SQL Editor do projeto.
+4. Rode este SQL:
+
+```sql
+create table if not exists public.personagens (
+  id text primary key,
+  personagem jsonb not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+```
+
+5. Copie a `Project URL`.
+6. Copie a chave `service_role` em `Project Settings > API Keys`.
+
+Importante: a `service_role` fica apenas no backend. Nunca coloque essa chave no frontend.
+
 ## Render
 
 1. Suba a branch `main` para o GitHub.
 2. Entre em https://dashboard.render.com.
-3. Clique em `New` e escolha `Blueprint`.
+3. Clique em `New` e escolha `Blueprint`, ou crie um `Web Service`.
 4. Selecione o repositorio `RuanVFeitosa/ficha-darkness`.
-5. Confirme o arquivo `render.yaml`.
-6. Aguarde o build e abra a URL `onrender.com` gerada.
-
-O arquivo `render.yaml` configura:
+5. Use:
 
 - Build command: `npm install && npm run build`
 - Start command: `npm run backend`
 - Node: `22`
-- Dados persistentes em `DATA_DIR=/opt/render/project/src/storage`
-- Disco persistente de 1 GB no caminho `/opt/render/project/src/storage`
 
-## Importante
+6. Configure as variaveis de ambiente:
 
-As fichas sao salvas em JSON no backend. Em hospedagem publica, use disco persistente ou banco de dados. Sem armazenamento persistente, as fichas podem sumir quando o servidor reiniciar ou redeployar.
+```txt
+SUPABASE_URL = sua Project URL do Supabase
+SUPABASE_SERVICE_ROLE_KEY = sua service_role key do Supabase
+SUPABASE_TABLE = personagens
+```
 
-Na Render, disco persistente normalmente exige plano pago. Para teste rapido sem persistencia garantida, voce pode criar um Web Service sem disco, mas nao use isso como armazenamento final da mesa.
+7. Aguarde o build e abra a URL `onrender.com` gerada.
+
+## Render gratuito
+
+Com Supabase, voce nao precisa de disco persistente na Render. Pode usar um Web Service Free para testar. O serviço gratuito pode dormir depois de ficar sem acesso, entao o primeiro carregamento pode demorar um pouco.
 
 ## Teste local antes do deploy
 
-```bash
-npm run build
-npm run backend
-```
-
-Abra:
-
-```txt
-http://localhost:4000
-```
-
-Em desenvolvimento, use:
+Sem Supabase configurado, o backend usa JSON local:
 
 ```bash
 npm run dev
 ```
 
-E abra:
+Abra:
 
 ```txt
 http://localhost:3000
 ```
+
+Para testar localmente usando Supabase, defina `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` no terminal antes de rodar `npm run backend`.

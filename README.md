@@ -39,7 +39,7 @@ In production, run `npm run build` first. The backend can serve the generated Re
 - Build command: `npm run build`
 - Start command: `npm run backend`
 
-For public hosting, configure persistent storage for the backend data and set `DATA_DIR` to that folder. Without persistent storage, some hosts can erase saved sheets when the app redeploys or restarts.
+For public hosting, configure Supabase with `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. Without Supabase configured, the backend falls back to local JSON files for development.
 
 See [DEPLOY.md](DEPLOY.md) for the full public deploy checklist.
 

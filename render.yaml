@@ -7,9 +7,9 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 22
-      - key: DATA_DIR
-        value: /opt/render/project/src/storage
-    disk:
-      name: fichas
-      mountPath: /opt/render/project/src/storage
-      sizeGB: 1
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_TABLE
+        value: personagens

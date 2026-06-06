@@ -9,6 +9,10 @@ const DATA_DIR = process.env.DATA_DIR
   : path.join(__dirname, "data");
 const BUILD_DIR = path.join(__dirname, "..", "build");
 const DEFAULT_FICHA_ID = "principal";
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_TABLE = process.env.SUPABASE_TABLE || "personagens";
+const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -62,6 +66,34 @@ const sanitizeFichaId = (id) => {
 
 const getDataFile = (id) => path.join(DATA_DIR, `${sanitizeFichaId(id)}.json`);
 
+const getSupabaseRestUrl = (pathAndQuery = "") => {
+  const baseUrl = SUPABASE_URL.replace(/\/$/, "");
+  return `${baseUrl}/rest/v1/${SUPABASE_TABLE}${pathAndQuery}`;
+};
+
+const requestSupabase = async (pathAndQuery, options = {}) => {
+  const response = await fetch(getSupabaseRestUrl(pathAndQuery), {
+    ...options,
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Erro Supabase ${response.status}: ${details}`);
+  }
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  return response.json();
+};
+
 const readJsonBody = (req) =>
   new Promise((resolve, reject) => {
     let body = "";
@@ -87,6 +119,15 @@ const readJsonBody = (req) =>
   });
 
 const readPersonagem = async (id) => {
+  if (USE_SUPABASE) {
+    const fichaId = sanitizeFichaId(id);
+    const rows = await requestSupabase(
+      `?id=eq.${encodeURIComponent(fichaId)}&select=personagem&limit=1`,
+    );
+
+    return rows[0]?.personagem || null;
+  }
+
   try {
     const dataFile = getDataFile(id);
     const raw = await fs.readFile(dataFile, "utf8");
@@ -101,6 +142,23 @@ const readPersonagem = async (id) => {
 };
 
 const writePersonagem = async (id, personagem) => {
+  if (USE_SUPABASE) {
+    const fichaId = sanitizeFichaId(id);
+    const rows = await requestSupabase("?on_conflict=id", {
+      method: "POST",
+      headers: {
+        Prefer: "resolution=merge-duplicates,return=representation",
+      },
+      body: JSON.stringify({
+        id: fichaId,
+        personagem,
+        updated_at: new Date().toISOString(),
+      }),
+    });
+
+    return rows[0]?.personagem || personagem;
+  }
+
   await fs.mkdir(DATA_DIR, { recursive: true });
   await fs.writeFile(getDataFile(id), `${JSON.stringify(personagem, null, 2)}\n`);
   return personagem;
@@ -216,5 +274,6 @@ server.on("error", (error) => {
 
 server.listen(PORT, HOST, () => {
   console.log(`Backend da ficha rodando em http://${HOST}:${PORT}`);
+  console.log(`Armazenamento: ${USE_SUPABASE ? "Supabase" : "JSON local"}`);
   console.log("Deixe este terminal aberto enquanto estiver usando o site.");
 });
