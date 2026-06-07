@@ -351,12 +351,16 @@ const CriarPersonagem = () => {
   return (
     <main
       className={`criacao-container ${etapa === 4 ? "classe-fundo-ativo" : ""}`}
-      style={
-        etapa === 4
-          ? { "--classe-bg": `url(${classeEmFoco.imagem})` }
-          : undefined
-      }
     >
+      {etapa === 4 && (
+        <img
+          key={classeEmFoco.id}
+          src={classeEmFoco.imagem}
+          alt=""
+          className="classe-bg-img"
+          aria-hidden="true"
+        />
+      )}
       <form className="criacao-form" onSubmit={enviar}>
         <section className="criacao-dialogo">
           <p className="criacao-kicker">Voz desconhecida</p>
