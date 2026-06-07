@@ -1,0 +1,267 @@
+.upgrade-page {
+  min-height: 100vh;
+  padding: 26px;
+  background:
+    linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(15, 10, 7, 0.96)),
+    url("../assets/IMG/OAbsoluto.png") center/cover fixed;
+  color: #f5f0e8;
+}
+
+.upgrade-hero {
+  position: relative;
+  min-height: 220px;
+  display: grid;
+  align-content: end;
+  gap: 10px;
+  padding: 74px 26px 26px;
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.58);
+}
+
+.upgrade-voltar {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 14px;
+  border: 1px solid #4a3326;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.upgrade-hero span,
+.upgrade-status span,
+.upgrade-pontos span {
+  color: #c89b5f;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.upgrade-hero h1 {
+  color: #fff;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.upgrade-hero p {
+  max-width: 760px;
+  color: #d7c8b8;
+  line-height: 1.55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upgrade-status,
+.upgrade-shell,
+.upgrade-tabela {
+  width: min(1180px, 100%);
+  margin: 22px auto 0;
+}
+
+.upgrade-status {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.upgrade-status div,
+.upgrade-shell,
+.upgrade-tabela {
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.58);
+}
+
+.upgrade-status div {
+  display: grid;
+  gap: 6px;
+  padding: 15px;
+}
+
+.upgrade-status strong {
+  color: #fff;
+  font-size: 1.35rem;
+}
+
+.upgrade-tabela,
+.upgrade-shell {
+  padding: 20px;
+}
+
+.upgrade-tabela h2 {
+  margin-bottom: 14px;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.upgrade-tabela-grid {
+  display: grid;
+  grid-template-columns: 80px repeat(4, 1fr);
+  gap: 0;
+  overflow-x: auto;
+}
+
+.upgrade-tabela-grid > * {
+  min-width: 120px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.16);
+  text-align: center;
+}
+
+.upgrade-tabela-grid strong {
+  color: #f2d16b;
+  text-transform: uppercase;
+}
+
+.upgrade-shell {
+  display: grid;
+  gap: 16px;
+}
+
+.upgrade-trilhas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.upgrade-trilhas button,
+.upgrade-confirmar {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid #4a3326;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.upgrade-trilhas button.ativa,
+.upgrade-confirmar {
+  border-color: #c89b5f;
+  background: #8b4513;
+}
+
+.upgrade-pontos {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid rgba(139, 69, 19, 0.7);
+  border-radius: 6px;
+  background: rgba(139, 69, 19, 0.16);
+}
+
+.upgrade-pontos strong {
+  color: #fff;
+}
+
+.upgrade-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.upgrade-lista label,
+.upgrade-habilidades-info {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(139, 69, 19, 0.68);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.upgrade-lista label span {
+  display: grid;
+  gap: 4px;
+  color: #fff;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.upgrade-lista small {
+  color: #c9b9a5;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.upgrade-lista input,
+.upgrade-habilidades-info input {
+  min-height: 38px;
+  border: 1px solid #4a3326;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font: inherit;
+  text-align: center;
+}
+
+.upgrade-habilidades-info button {
+  min-height: 42px;
+  border: 1px solid #c89b5f;
+  border-radius: 4px;
+  background: #8b4513;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.upgrade-habilidades-info h2 {
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.upgrade-habilidades-info p {
+  color: #d7c8b8;
+  line-height: 1.5;
+}
+
+.upgrade-habilidades-info label {
+  display: grid;
+  gap: 8px;
+  color: #c89b5f;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.upgrade-mensagem {
+  color: #f2d16b;
+}
+
+.upgrade-confirmar:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (max-width: 760px) {
+  .upgrade-page {
+    padding: 14px;
+  }
+
+  .upgrade-status {
+    grid-template-columns: 1fr;
+  }
+
+  .upgrade-tabela-grid {
+    grid-template-columns: 70px repeat(4, 120px);
+  }
+}

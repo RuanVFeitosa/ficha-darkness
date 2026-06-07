@@ -207,24 +207,33 @@
 
 .classes-etapa {
   display: grid;
-  gap: 14px;
+  gap: 18px;
   align-items: end;
 }
 
 .classe-resumo {
-  width: min(460px, 100%);
+  width: min(520px, 100%);
+  min-height: 220px;
   display: grid;
-  gap: 7px;
-  padding: 16px;
+  align-content: center;
+  gap: 9px;
+  padding: 22px;
   border: 1px solid rgba(200, 155, 95, 0.5);
   border-radius: 6px;
   background: rgba(0, 0, 0, 0.62);
   text-align: left;
 }
 
+.classe-contador {
+  color: #c89b5f;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .classe-resumo h2 {
   color: #fff;
-  font-size: 1.35rem;
+  font-size: 1.65rem;
   text-transform: uppercase;
 }
 
@@ -233,11 +242,18 @@
   font-size: 0.9rem;
 }
 
-.classes-toggle {
-  width: fit-content;
+.classe-navegacao {
+  width: min(520px, 100%);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.classe-nav-btn {
   min-height: 38px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 0 14px;
   border: 1px solid #4a3326;
@@ -250,58 +266,11 @@
   text-transform: uppercase;
 }
 
-.classes-etapa.recolhido .classes-toggle svg {
-  transform: rotate(-90deg);
-}
-
-.classes-lista {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(200px, 1fr));
-  gap: 10px;
-  transition:
-    max-height 0.35s ease,
-    opacity 0.25s ease;
-}
-
-.classes-etapa.recolhido .classes-lista {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  padding-bottom: 0;
-}
-
-.classe-card {
-  min-height: 86px;
-  display: grid;
-  gap: 5px;
-  padding: 12px;
-  border: 1px solid #4a3326;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.07);
-  color: #f5f0e8;
-  cursor: pointer;
-  font: inherit;
-  text-align: left;
-}
-
-.classe-card:hover,
-.classe-card:focus,
-.classe-card.selecionada {
+.classe-nav-btn:hover,
+.classe-nav-btn:focus {
   outline: none;
   border-color: #c89b5f;
   background: rgba(139, 69, 19, 0.5);
-}
-
-.classe-card span {
-  color: #d7c8b8;
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.classe-card .classe-nome {
-  color: #fff;
-  font-size: 0.9rem;
-  text-transform: uppercase;
 }
 
 .foto-etapa {
@@ -392,7 +361,7 @@
     grid-template-columns: 1fr;
   }
 
-  .classes-lista {
+  .classe-navegacao {
     grid-template-columns: 1fr;
   }
 

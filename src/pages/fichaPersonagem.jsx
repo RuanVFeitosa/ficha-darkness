@@ -4,7 +4,7 @@ import "../CSS/FichaPersonagem.css";
 import "../CSS/CondicoesProfile.css";
 
 import { condicoes } from "../components/data/condicoes";
-import profile from "../assets/IMG/perfil_template.jpg";
+import profile from "../assets/IMG/OAbsoluto.png";
 import corpoHumano from "../assets/IMG/corpo_humano.png";
 import { descricoesHabilidades } from "../components/descricoesHabilidades";
 import ModalDescricao from "../components/modal/modalDescricao";
@@ -22,6 +22,10 @@ import {
   mdiDiceD12,
   mdiDiceD20,
 } from "@mdi/js";
+import {
+  listarHabilidadesSelecionadas,
+  obterArvoreClasse,
+} from "../data/arvoresHabilidades";
 
 // Chave para o localStorage
 const STORAGE_KEY = "fichaRPG_personagem";
@@ -43,6 +47,44 @@ const obterFichaIdDaUrl = () => {
   return normalizarFichaId(params.get("ficha"));
 };
 
+const salvarLocalSeguro = (chave, valor) => {
+  try {
+    localStorage.setItem(chave, valor);
+    return true;
+  } catch (error) {
+    console.warn("Nao foi possivel salvar no localStorage.", error);
+    return false;
+  }
+};
+
+const lerLocalSeguro = (chave) => {
+  try {
+    return localStorage.getItem(chave);
+  } catch (error) {
+    console.warn("Nao foi possivel ler o localStorage.", error);
+    return null;
+  }
+};
+
+const salvarPersonagemLocalSeguro = (chave, personagem) => {
+  if (salvarLocalSeguro(chave, JSON.stringify(personagem))) {
+    return;
+  }
+
+  const personagemSemFoto = {
+    ...personagem,
+    fotoPerfil: "",
+  };
+
+  if (!salvarLocalSeguro(chave, JSON.stringify(personagemSemFoto))) {
+    try {
+      localStorage.removeItem(chave);
+    } catch (error) {
+      console.warn("Nao foi possivel limpar o salvamento local.", error);
+    }
+  }
+};
+
 // Estado inicial padrão
 export const estadoInicial = {
   nome: "",
@@ -51,7 +93,15 @@ export const estadoInicial = {
   especialidade: "",
   fotoPerfil: "",
   textoExtra: "",
-  lojaCreditos: 900,
+  lojaCreditos: 0,
+  nivel: 1,
+  pontosEvolucao: {
+    disponiveis: 0,
+    acumulados: 0,
+  },
+  pontosHabilidades: {
+    disponiveis: 0,
+  },
   atributos: {
     forca: 0,
     fonitude: 0,
@@ -69,6 +119,12 @@ export const estadoInicial = {
     bracoEsquerdo: { atual: 8, max: 500, ferido: false, grave: false },
     pernaDireita: { atual: 12, max: 500, ferido: false, grave: false },
     pernaEsquerda: { atual: 12, max: 500, ferido: false, grave: false },
+  },
+
+  classeEspecialidade: {
+    arquetipo: "",
+    classeEscolhida: "",
+    especializacao: "",
   },
   habilidadesCombate: {
     razao: 0,
@@ -131,8 +187,15 @@ export const estadoInicial = {
     { nome: "Ritual da Protecao", custo: "3 PE" },
     { nome: "Invocaçao Menor", custo: "5 PE" },
   ],
+  habilidadesClasse: {
+    habilidadeAbsoluta: "",
+    aptidoes: {},
+    especialidade: "",
+    habilidadesEspecialidade: {},
+  },
   inventario: [
     { nome: "Pistola (9mm)", detalhes: "12 balas" },
+
     { nome: "Kit Primeiros Socorros", detalhes: "3 usos" },
     { nome: "Lanterna", detalhes: "Bateria fraca" },
   ],
@@ -169,7 +232,7 @@ const FichaPersonagem = () => {
 
   // CARREGAR DADOS AO INICIAR
   useEffect(() => {
-    localStorage.setItem(ULTIMA_FICHA_KEY, fichaId);
+    salvarLocalSeguro(ULTIMA_FICHA_KEY, fichaId);
 
     buscarPersonagem(fichaId)
       .then((personagemApi) => {
@@ -185,7 +248,7 @@ const FichaPersonagem = () => {
         setCarregado(true);
       });
 
-    const dadosSalvos = localStorage.getItem(storageKey);
+    const dadosSalvos = lerLocalSeguro(storageKey);
     if (dadosSalvos) {
       try {
         const personagemSalvo = JSON.parse(dadosSalvos);
@@ -203,11 +266,14 @@ const FichaPersonagem = () => {
       return;
     }
 
-    localStorage.setItem(storageKey, JSON.stringify(personagem));
+    salvarPersonagemLocalSeguro(storageKey, personagem);
     setUltimoSave(new Date().toLocaleTimeString());
 
     salvarPersonagem(fichaId, personagem).catch((error) => {
-      console.warn("Backend indisponivel. Dados mantidos no localStorage.", error);
+      console.warn(
+        "Backend indisponivel. Dados mantidos no localStorage.",
+        error,
+      );
     });
   }, [personagem, carregado, fichaId, storageKey]);
 
@@ -306,6 +372,14 @@ const FichaPersonagem = () => {
 
   const abrirLoja = () => {
     window.location.href = `?loja=1&ficha=${encodeURIComponent(fichaId)}`;
+  };
+
+  const abrirUpgradeNivel = () => {
+    window.location.href = `?upgrade=1&ficha=${encodeURIComponent(fichaId)}`;
+  };
+
+  const abrirArvoreHabilidades = () => {
+    window.location.href = `?habilidades=1&ficha=${encodeURIComponent(fichaId)}`;
   };
 
   const abrirDashboardMestre = () => {
@@ -412,6 +486,9 @@ const FichaPersonagem = () => {
     "estado-critico": ["surto-adrenalina"],
     "surto-adrenalina": ["estado-critico"],
   };
+
+  const arvoreClasse = obterArvoreClasse(personagem);
+  const habilidadesSelecionadas = listarHabilidadesSelecionadas(personagem);
 
   // Conteúdo das abas
   const conteudoAbas = {
@@ -568,6 +645,36 @@ const FichaPersonagem = () => {
             </div>
           </div>
         </div>
+      </div>
+    ),
+
+    habilidades: (
+      <div className="conteudo-aba habilidades-resumo-aba">
+        <div className="habilidades-resumo-topo">
+          <span>Arvore da classe</span>
+          <h4>{arvoreClasse.titulo}</h4>
+          <p>{arvoreClasse.beneficio}</p>
+        </div>
+
+        {habilidadesSelecionadas.length > 0 ? (
+          <div className="habilidades-resumo-lista">
+            {habilidadesSelecionadas.map((habilidade) => (
+              <article key={habilidade.id} className="habilidade-resumo-card">
+                <span>{habilidade.grupo}</span>
+                <strong>{habilidade.nome}</strong>
+                <p>{habilidade.descricao}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="habilidades-vazio">
+            <strong>Nenhuma habilidade escolhida ainda.</strong>
+            <p>
+              Abra a arvore de habilidades para escolher sua Habilidade
+              Absoluta, aptidoes e habilidades de especialidade.
+            </p>
+          </div>
+        )}
       </div>
     ),
 
@@ -764,11 +871,11 @@ const FichaPersonagem = () => {
     <div className="ficha-container">
       <button
         className="botao-mestre-flutuante"
-        onClick={abrirDashboardMestre}
-        title="Abrir dashboard do mestre"
+        onClick={abrirUpgradeNivel}
+        title="Abrir upgrade de nivel"
       >
-        <Icon path={mdiShieldCrownOutline} size={1.2} />
-        <span>Mestre</span>
+        <Icon path={mdiDiceD20} size={1.2} />
+        <span>Upgrade</span>
       </button>
       <button
         className="botao-loja-flutuante"
@@ -789,6 +896,19 @@ const FichaPersonagem = () => {
                 <div className="sanidade-inputs">
                   <div className="identidade-personagem">
                     {/* Nome do Personagem */}
+                    <input
+                      type="text"
+                      placeholder="PRONOME"
+                      value={personagem.pronome || ""}
+                      onChange={(e) =>
+                        setPersonagem((prev) => ({
+                          ...prev,
+                          pronome: e.target.value,
+                        }))
+                      }
+                      className="dado-personagem"
+                      maxLength={10}
+                    />
                     <input
                       type="text"
                       placeholder="NOME DO PERSONAGEM"
@@ -816,19 +936,7 @@ const FichaPersonagem = () => {
                         className="dado-personagem"
                         maxLength={30}
                       />
-                      <input
-                        type="text"
-                        placeholder="PRONOME"
-                        value={personagem.pronome || ""}
-                        onChange={(e) =>
-                          setPersonagem((prev) => ({
-                            ...prev,
-                            pronome: e.target.value,
-                          }))
-                        }
-                        className="dado-personagem"
-                        maxLength={10}
-                      />
+
                       <input
                         type="text"
                         placeholder="ESPECIALIDADE"
@@ -854,6 +962,14 @@ const FichaPersonagem = () => {
                     <div className="profile-overlay"></div>
                   </div>
                   <div className="sanidade-completa">
+                    {/* ✅ NÍVEL AQUI - exatamente acima do título "Sanidade" */}
+                    <div className="nivel-acima-sanidade">
+                      <span className="nivel-label">NÍVEL</span>
+                      <span className="nivel-valor">
+                        {personagem.nivel || 1}
+                      </span>
+                    </div>
+
                     <p className="sanidade-titulo">Sanidade</p>
                     <input
                       type="number"
@@ -970,6 +1086,12 @@ const FichaPersonagem = () => {
               PASSIVA
             </button>
             <button
+              className={`aba-btn ${abaAtiva === "habilidades" ? "ativa" : ""}`}
+              onClick={() => setAbaAtiva("habilidades")}
+            >
+              HABILIDADES
+            </button>
+            <button
               className={`aba-btn ${abaAtiva === "rituais" ? "ativa" : ""}`}
               onClick={() => setAbaAtiva("rituais")}
             >
@@ -1032,10 +1154,6 @@ const Atributo = ({ nome, valor, onChange }) => {
             onChange={(e) => onChange(e.target.value)}
             className="atributo-valor"
           />
-          <div className="atributo-botoes">
-            <button onClick={() => onChange(valor - 1)}>-</button>
-            <button onClick={() => onChange(valor + 1)}>+</button>
-          </div>
         </div>
       </div>
     </div>
@@ -1068,13 +1186,30 @@ const BarraRecurso = ({ nome, atual, max, onChange, cor }) => {
 
 // COMPONENTE MembroControle
 const MembroControle = ({ nome, membro, onChange, classNameInput }) => {
+  const porcentagem = membro.max > 0 ? (membro.atual / membro.max) * 100 : 0;
   const estadoVida = membro.grave ? "grave" : membro.ferido ? "ferido" : "";
 
   return (
     <div className={`membro-controle ${estadoVida}`}>
       <span className="membro-nome">{nome}</span>
 
-      <div className="membro-inputs">
+      {/* Barra de vida */}
+      <div className="membro-barra-container">
+        <div className="membro-barra-vida">
+          <div
+            className="membro-barra-preenchimento"
+            style={{
+              width: `${Math.min(100, Math.max(0, porcentagem))}%`,
+            }}
+          />
+        </div>
+        <span className="membro-barra-texto">
+          {membro.atual}/{membro.max}
+        </span>
+      </div>
+
+      {/* Inputs escondidos */}
+      <div className="membro-inputs" style={{ display: "none" }}>
         <input
           type="number"
           value={membro.atual}
@@ -1083,23 +1218,60 @@ const MembroControle = ({ nome, membro, onChange, classNameInput }) => {
           min="0"
           max={membro.max}
         />
-
         <span>/</span>
-
         <input
           type="number"
           value={membro.max}
           className="membro-max"
           min="0"
+          readOnly
         />
       </div>
 
+      {/* Botões de ajuste rápido */}
       <div className="membro-botoes">
-        <button onClick={() => onChange(membro.atual - 1)}>-</button>
-        <button onClick={() => onChange(membro.atual + 1)}>+</button>
+        <button 
+          onClick={() => onChange(Math.max(0, membro.atual - 10))}
+          title="-10"
+          className="btn-rapido btn-menos10"
+        >
+          -10
+        </button>
+        <button 
+          onClick={() => onChange(Math.max(0, membro.atual - 5))}
+          title="-5"
+          className="btn-rapido btn-menos5"
+        >
+          -5
+        </button>
+        <button 
+          onClick={() => onChange(Math.max(0, membro.atual - 1))}
+          title="-1"
+        >
+          -
+        </button>
+        <button 
+          onClick={() => onChange(Math.min(membro.max, membro.atual + 1))}
+          title="+1"
+        >
+          +
+        </button>
+        <button 
+          onClick={() => onChange(Math.min(membro.max, membro.atual + 5))}
+          title="+5"
+          className="btn-rapido btn-mais5"
+        >
+          +5
+        </button>
+        <button 
+          onClick={() => onChange(Math.min(membro.max, membro.atual + 10))}
+          title="+10"
+          className="btn-rapido btn-mais10"
+        >
+          +10
+        </button>
       </div>
     </div>
   );
 };
-
 export default FichaPersonagem;

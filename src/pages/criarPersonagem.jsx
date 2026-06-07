@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Icon from "@mdi/react";
-import { mdiAccountPlus, mdiChevronDown, mdiChevronRight } from "@mdi/js";
+import { mdiAccountPlus, mdiChevronLeft, mdiChevronRight } from "@mdi/js";
 import { criarPersonagem } from "../services/personagemApi";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
 import { estadoInicial } from "./fichaPersonagem";
@@ -158,8 +158,8 @@ const CriarPersonagem = () => {
   const [form, setForm] = useState({
     nome: "",
     pronome: "Ele",
-    classeId: "",
-    classe: "",
+    classeId: classesPersonagem[0].id,
+    classe: classesPersonagem[0].nome,
     especialidade: "",
     classeDetalhes: null,
     sanidadeInicial: 0,
@@ -184,13 +184,16 @@ const CriarPersonagem = () => {
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [classeEmFoco, setClasseEmFoco] = useState(classesPersonagem[0]);
-  const [menuClassesAberto, setMenuClassesAberto] = useState(true);
 
   const dialogoAtual =
     etapa === 0
       ? dialogoInicial
       : perguntas[etapa - 1] || "Tudo pronto. Agora podemos criar sua ficha.";
   const ultimaEtapa = etapa > perguntas.length;
+  const indiceClasseEmFoco = Math.max(
+    classesPersonagem.findIndex((classe) => classe.id === classeEmFoco.id),
+    0,
+  );
 
   const etapaValida = useMemo(() => {
     if (etapa === 1) return form.nome.trim().length > 0;
@@ -228,7 +231,11 @@ const CriarPersonagem = () => {
     setForm((prev) => ({
       ...prev,
       classeDetalhes: {
-        ...(prev.classeDetalhes || {}),
+        nome: classe.nome,
+        sanidadeBase: classe.sanidadeBase,
+        sanidadeNivel: classe.sanidadeNivel,
+        esperancaBase: classe.esperancaBase,
+        esperancaNivel: classe.esperancaNivel,
         modFortitude: recursos.modFortitude,
         modVontade: recursos.modVontade,
       },
@@ -285,6 +292,15 @@ const CriarPersonagem = () => {
       sanidadeInicial: recursos.sanidade,
       esperancaInicial: recursos.esperanca,
     }));
+  };
+
+  const trocarClasse = (direcao) => {
+    const proximoIndice =
+      (indiceClasseEmFoco + direcao + classesPersonagem.length) %
+      classesPersonagem.length;
+
+    selecionarClasse(classesPersonagem[proximoIndice]);
+    setErro("");
   };
 
   const carregarFoto = (arquivo) => {
@@ -449,8 +465,11 @@ const CriarPersonagem = () => {
           )}
 
           {etapa === 4 && (
-            <div className={`classes-etapa ${menuClassesAberto ? "" : "recolhido"}`}>
+            <div className="classes-etapa">
               <section className="classe-resumo">
+                <p className="classe-contador">
+                  {indiceClasseEmFoco + 1} / {classesPersonagem.length}
+                </p>
                 <h2>{classeEmFoco.nome}</h2>
                 <p>
                   Sanidade inicial:{" "}
@@ -466,35 +485,24 @@ const CriarPersonagem = () => {
                 <p>A cada novo nivel: {classeEmFoco.esperancaNivel}</p>
               </section>
 
-              <button
-                type="button"
-                className="classes-toggle"
-                onClick={() => setMenuClassesAberto((aberto) => !aberto)}
-              >
-                <Icon path={mdiChevronDown} size={0.9} />
-                {menuClassesAberto ? "Recolher classes" : "Escolher classe"}
-              </button>
+              <div className="classe-navegacao">
+                <button
+                  type="button"
+                  className="classe-nav-btn"
+                  onClick={() => trocarClasse(-1)}
+                >
+                  <Icon path={mdiChevronLeft} size={0.9} />
+                  Classe anterior
+                </button>
 
-              <div className="classes-lista">
-                {classesPersonagem.map((classe) => {
-                  const recursos = calcularRecursosClasse(classe, form.atributos);
-                  const selecionada = form.classeId === classe.id;
-
-                  return (
-                    <button
-                      key={classe.id}
-                      type="button"
-                      className={`classe-card ${selecionada ? "selecionada" : ""}`}
-                      onClick={() => selecionarClasse(classe)}
-                      onFocus={() => setClasseEmFoco(classe)}
-                      onMouseEnter={() => setClasseEmFoco(classe)}
-                    >
-                      <span className="classe-nome">{classe.nome}</span>
-                      <span>SAN {recursos.sanidade}</span>
-                      <span>ESP {recursos.esperanca}</span>
-                    </button>
-                  );
-                })}
+                <button
+                  type="button"
+                  className="classe-nav-btn"
+                  onClick={() => trocarClasse(1)}
+                >
+                  Proxima classe
+                  <Icon path={mdiChevronRight} size={0.9} />
+                </button>
               </div>
             </div>
           )}

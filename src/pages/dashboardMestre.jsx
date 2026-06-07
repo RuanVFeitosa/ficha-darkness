@@ -5,6 +5,7 @@ import {
   mdiArrowLeft,
   mdiCashPlus,
   mdiDeleteOutline,
+  mdiTrendingUp,
   mdiOpenInNew,
   mdiPackageVariantClosedPlus,
   mdiRefresh,
@@ -25,6 +26,7 @@ import {
   DEFAULT_CATALOGO_LOJA,
   normalizarItemLoja,
 } from "../data/catalogoLoja";
+import { obterCustosNivel } from "../data/evolucaoPersonagem";
 
 const STORAGE_KEY = "fichaRPG_personagem";
 const CATALOGO_STORAGE_KEY = "lojaHelena_catalogo";
@@ -416,6 +418,35 @@ const DashboardMestre = () => {
     salvarFichaSelecionada(atualizado);
   };
 
+  const subirNivelJogador = () => {
+    const nivelAtual = Math.max(1, parseInt(personagem.nivel, 10) || 1);
+    const proximoNivel = Math.min(10, nivelAtual + 1);
+    const pontosGanhos = obterCustosNivel(proximoNivel).acumulado;
+
+    if (nivelAtual >= 10) {
+      setMensagem("Este personagem ja esta no NV10.");
+      return;
+    }
+
+    const atualizado = {
+      ...personagem,
+      nivel: proximoNivel,
+      pontosEvolucao: {
+        ...(personagem.pontosEvolucao || {}),
+        disponiveis:
+          (parseInt(personagem.pontosEvolucao?.disponiveis, 10) || 0) +
+          pontosGanhos,
+        acumulados:
+          (parseInt(personagem.pontosEvolucao?.acumulados, 10) || 0) +
+          pontosGanhos,
+      },
+    };
+
+    setPersonagem(atualizado);
+    salvarFichaSelecionada(atualizado);
+    setMensagem(`Jogador subiu para NV${proximoNivel} e recebeu ${pontosGanhos} pontos.`);
+  };
+
   const adicionarItemInventario = (event) => {
     event.preventDefault();
 
@@ -754,6 +785,20 @@ const DashboardMestre = () => {
                       <button onClick={adicionarCreditos}>
                         <Icon path={mdiCashPlus} size={0.85} />
                         Aplicar
+                      </button>
+                    </section>
+
+                    <section className="mestre-creditos">
+                      <div>
+                        <span>Evolucao de nivel</span>
+                        <strong>
+                          NV{personagem.nivel || 1} -{" "}
+                          {personagem.pontosEvolucao?.disponiveis || 0} pts
+                        </strong>
+                      </div>
+                      <button onClick={subirNivelJogador}>
+                        <Icon path={mdiTrendingUp} size={0.85} />
+                        Subir nivel
                       </button>
                     </section>
                   </div>
