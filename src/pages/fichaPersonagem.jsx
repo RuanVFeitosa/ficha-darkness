@@ -4,6 +4,7 @@ import "../CSS/FichaPersonagem.css";
 import "../CSS/CondicoesProfile.css";
 
 import { condicoes } from "../components/data/condicoes";
+import { receitasCriacao } from "../components/data/receitasCriacao";
 import profile from "../assets/IMG/OAbsoluto.png";
 import corpoHumano from "../assets/IMG/corpo_humano.png";
 import { descricoesHabilidades } from "../components/descricoesHabilidades";
@@ -94,6 +95,7 @@ export const estadoInicial = {
   fotoPerfil: "",
   textoExtra: "",
   lojaCreditos: 0,
+  ritosCreditos: 0,
   nivel: 1,
   pontosEvolucao: {
     disponiveis: 0,
@@ -113,12 +115,53 @@ export const estadoInicial = {
   sanidade: { atual: 50, max: 100 },
   esperanca: { atual: 30, max: 100 },
   membros: {
-    cabeca: { atual: 100, max: 100, ferido: false, grave: false },
-    torso: { atual: 500, max: 500, ferido: false, grave: false },
-    bracoDireito: { atual: 8, max: 500, ferido: false, grave: false },
-    bracoEsquerdo: { atual: 8, max: 500, ferido: false, grave: false },
-    pernaDireita: { atual: 12, max: 500, ferido: false, grave: false },
-    pernaEsquerda: { atual: 12, max: 500, ferido: false, grave: false },
+    cabeca: {
+      atual: 100,
+      max: 100,
+      defesa: 0,
+      ferido: false,
+      grave: false,
+    },
+
+    torso: {
+      atual: 500,
+      max: 500,
+      defesa: 0,
+      ferido: false,
+      grave: false,
+    },
+
+    bracoDireito: {
+      atual: 8,
+      max: 500,
+      defesa: 0,
+      ferido: false,
+      grave: false,
+    },
+
+    bracoEsquerdo: {
+      atual: 8,
+      max: 500,
+      defesa: 0,
+      ferido: false,
+      grave: false,
+    },
+
+    pernaDireita: {
+      atual: 12,
+      max: 500,
+      defesa: 0,
+      ferido: false,
+      grave: false,
+    },
+
+    pernaEsquerda: {
+      atual: 12,
+      max: 500,
+      defesa: 0,
+      ferido: false,
+      grave: false,
+    },
   },
 
   classeEspecialidade: {
@@ -191,6 +234,7 @@ export const estadoInicial = {
     habilidadeAbsoluta: "",
     aptidoes: {},
     especialidade: "",
+    especialidadeDefinida: false,
     habilidadesEspecialidade: {},
   },
   inventario: [
@@ -199,8 +243,87 @@ export const estadoInicial = {
     { nome: "Kit Primeiros Socorros", detalhes: "3 usos" },
     { nome: "Lanterna", detalhes: "Bateria fraca" },
   ],
-  descricao: "",
+  anotacao: "",
+  historia: "",
   condicoesAtivas: [],
+  habilidadesTemporarias: {},
+  materiaisCriacao: {
+    alcool: 0,
+    trapos: 0,
+    recipiente: 0,
+    explosivos: 0,
+    fita: 0,
+    laminas: 0,
+    pregos: 0,
+    madeira: 0,
+    cano: 0,
+    faca: 0,
+  },
+};
+
+const ItemRecolhivel = ({ item, tipo, acaoExtra }) => {
+  const armaStatus = item.armaStatus;
+
+  return (
+    <details className={`item-recolhivel item-${tipo}`}>
+      <summary>
+        <span>{item.nome}</span>
+        <small>{item.detalhes || item.custo || item.tipo || tipo}</small>
+      </summary>
+
+      <div className="item-recolhivel-conteudo">
+        {item.descricao && <p>{item.descricao}</p>}
+        {item.detalhe && <p>{item.detalhe}</p>}
+        {item.detalhes && <p>{item.detalhes}</p>}
+        {item.absolutismo && (
+          <p>
+            <b>Absolutismo:</b> {item.absolutismo}
+          </p>
+        )}
+        {item.durabilidade && (
+          <p>
+            <b>Durabilidade:</b> {item.durabilidade}
+          </p>
+        )}
+        {item.custo && (
+          <p>
+            <b>Custo:</b> {item.custo}
+          </p>
+        )}
+
+        {armaStatus && (
+          <div className="item-status-grid">
+            <span>
+              <b>DMG:</b> {armaStatus.dmg}
+            </span>
+            <span>
+              <b>ROF:</b> {armaStatus.rof}
+            </span>
+            <span>
+              <b>MAG:</b> {armaStatus.mag}
+            </span>
+            <span>
+              <b>Crítico:</b> {armaStatus.critico}
+            </span>
+            <span>
+              <b>Hipfire:</b> {armaStatus.hipfire}
+            </span>
+            <span>
+              <b>Precision:</b> {armaStatus.precision}
+            </span>
+            <span>
+              <b>Control:</b> {armaStatus.control}
+            </span>
+            <span>
+              <b>Mobility:</b> {armaStatus.mobility}
+            </span>
+          </div>
+        )}
+
+        {acaoExtra}
+      </div>
+    </details>
+  );
 };
 
 const FichaPersonagem = () => {
@@ -210,6 +333,9 @@ const FichaPersonagem = () => {
   const [ultimoSave, setUltimoSave] = useState(null);
   const [carregado, setCarregado] = useState(false);
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
+  const [subAbaInventario, setSubAbaInventario] = useState("mochila");
+  const [abaCriacao, setAbaCriacao] = useState("armas");
+  const [mensagemCraft, setMensagemCraft] = useState("");
 
   // ESTADO PARA O MODAL
   const [modalAberto, setModalAberto] = useState(false);
@@ -314,6 +440,49 @@ const FichaPersonagem = () => {
     }));
   };
 
+  // ESTADO CRÍTICO AUTOMÁTICO
+  // Cabeça e Torso são regiões vitais. Se qualquer uma entrar em Grave,
+  // a condição Estado Crítico é ativada automaticamente.
+  // Quando as duas deixam de estar em Grave, Estado Crítico é removido.
+  useEffect(() => {
+    if (!carregado) return;
+
+    const cabecaGrave = Boolean(personagem.membros?.cabeca?.grave);
+    const torsoGrave = Boolean(personagem.membros?.torso?.grave);
+    const deveTerEstadoCritico = cabecaGrave || torsoGrave;
+
+    const condicoesAtuais = personagem.condicoesAtivas || [];
+    const jaTemEstadoCritico = condicoesAtuais.includes("estado-critico");
+
+    if (deveTerEstadoCritico && !jaTemEstadoCritico) {
+      setPersonagem((prev) => ({
+        ...prev,
+        condicoesAtivas: [
+          ...(prev.condicoesAtivas || []).filter(
+            (condicao) => condicao !== "surto-adrenalina",
+          ),
+          "estado-critico",
+        ],
+      }));
+
+      return;
+    }
+
+    if (!deveTerEstadoCritico && jaTemEstadoCritico) {
+      setPersonagem((prev) => ({
+        ...prev,
+        condicoesAtivas: (prev.condicoesAtivas || []).filter(
+          (condicao) => condicao !== "estado-critico",
+        ),
+      }));
+    }
+  }, [
+    carregado,
+    personagem.membros?.cabeca?.grave,
+    personagem.membros?.torso?.grave,
+    personagem.condicoesAtivas,
+  ]);
+
   const atualizarVidaMembro = (membro, novoValor) => {
     setPersonagem((prev) => {
       const max = prev.membros[membro].max;
@@ -334,6 +503,64 @@ const FichaPersonagem = () => {
       };
     });
   };
+
+  const aplicarDanoMembro = (membro, dano) => {
+    setPersonagem((prev) => {
+      const dadosMembro = prev.membros[membro];
+
+      const defesa = parseInt(dadosMembro.defesa) || 0;
+
+      const danoFinal = Math.max(0, dano - defesa);
+
+      const novaVida = Math.max(0, dadosMembro.atual - danoFinal);
+
+      const porcentagemVida =
+        dadosMembro.max > 0 ? novaVida / dadosMembro.max : 0;
+
+      return {
+        ...prev,
+
+        membros: {
+          ...prev.membros,
+
+          [membro]: {
+            ...dadosMembro,
+
+            atual: novaVida,
+
+            ferido: novaVida < dadosMembro.max && porcentagemVida < 0.5,
+
+            grave: porcentagemVida <= 0.1,
+          },
+        },
+      };
+    });
+  };
+
+  const atualizarDefesaMembro = (membro, valor) => {
+    setPersonagem((prev) => ({
+      ...prev,
+      membros: {
+        ...prev.membros,
+        [membro]: {
+          ...prev.membros[membro],
+          defesa: Math.max(0, parseInt(valor) || 0),
+        },
+      },
+    }));
+  };
+
+  const atualizarMaterialCriacao = (material, valor) => {
+    setPersonagem((prev) => ({
+      ...prev,
+
+      materiaisCriacao: {
+        ...prev.materiaisCriacao,
+        [material]: Math.max(0, parseInt(valor) || 0),
+      },
+    }));
+  };
+
   const atualizarHabilidadeCombate = (habilidade, valor) => {
     setPersonagem((prev) => ({
       ...prev,
@@ -386,6 +613,111 @@ const FichaPersonagem = () => {
     window.location.href = "?mestre=1";
   };
 
+  const venderItem = (index) => {
+    setPersonagem((prev) => ({
+      ...prev,
+      inventario: prev.inventario.filter((_, i) => i !== index),
+      lojaCreditos: prev.lojaCreditos + 50,
+    }));
+  };
+  const normalizarIngrediente = (nome) => {
+    return String(nome)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\d+x\s*/g, "")
+      .trim();
+  };
+
+  const mapaIngredientes = {
+    alcool: "alcool",
+    trapos: "trapos",
+    recipiente: "recipiente",
+    explosivos: "explosivos",
+    explosivo: "explosivos",
+    fita: "fita",
+    "fita adesiva": "fita",
+    lamina: "laminas",
+    laminas: "laminas",
+    pregos: "pregos",
+    "pedaco de madeira": "madeira",
+    madeira: "madeira",
+    "pedaco de cano": "cano",
+    "cano quebrado": "cano",
+    cano: "cano",
+    faca: "faca",
+  };
+
+  const obterQuantidadeIngrediente = (nome) => {
+    const encontrado = String(nome).match(/(\d+)x/i);
+    return encontrado ? parseInt(encontrado[1], 10) : 1;
+  };
+
+  const criarItem = (receita) => {
+    const materiaisAtuais = personagem.materiaisCriacao || {};
+
+    const ingredientes = receita.ingredientes || [];
+
+    const temIngredientes = ingredientes.every((ingrediente) => {
+      const nomeIngrediente =
+        typeof ingrediente === "string" ? ingrediente : ingrediente.nome;
+
+      const chaveNormalizada = normalizarIngrediente(nomeIngrediente);
+      const chaveMaterial = mapaIngredientes[chaveNormalizada];
+      const quantidadeNecessaria = obterQuantidadeIngrediente(nomeIngrediente);
+
+      if (!chaveMaterial) return false;
+
+      return (materiaisAtuais[chaveMaterial] || 0) >= quantidadeNecessaria;
+    });
+
+    if (!temIngredientes) {
+      alert("Materiais insuficientes para criar este item.");
+      return;
+    }
+
+    const materiaisAtualizados = { ...materiaisAtuais };
+
+    ingredientes.forEach((ingrediente) => {
+      const nomeIngrediente =
+        typeof ingrediente === "string" ? ingrediente : ingrediente.nome;
+
+      const chaveNormalizada = normalizarIngrediente(nomeIngrediente);
+      const chaveMaterial = mapaIngredientes[chaveNormalizada];
+      const quantidadeNecessaria = obterQuantidadeIngrediente(nomeIngrediente);
+
+      if (chaveMaterial) {
+        materiaisAtualizados[chaveMaterial] = Math.max(
+          0,
+          (materiaisAtualizados[chaveMaterial] || 0) - quantidadeNecessaria,
+        );
+      }
+    });
+
+    setPersonagem((prev) => ({
+      ...prev,
+
+      materiaisCriacao: materiaisAtualizados,
+
+      inventario: [
+        ...(prev.inventario || []),
+
+        {
+          nome: receita.nome,
+          detalhes: `${receita.dano} | ${receita.tipo}`,
+          durabilidade: receita.durabilidade,
+          criado: true,
+        },
+      ],
+    }));
+
+    setMensagemCraft(`${receita.nome} criado com sucesso.`);
+
+    setTimeout(() => {
+      setMensagemCraft("");
+    }, 3000);
+  };
+
   // Componente para cada habilidade passiva
   const calcularModificadorAtivo = (valor) => {
     const numero = parseInt(valor) || 0;
@@ -418,7 +750,9 @@ const FichaPersonagem = () => {
   };
 
   const HabilidadePassiva = ({ nome, chave }) => {
-    const valor = personagem.habilidadesPassivas[chave] || 0;
+    const valorBase = personagem.habilidadesPassivas[chave] || 0;
+
+    const valorTemporario = personagem.habilidadesTemporarias?.[chave] || 0;
 
     return (
       <div className="habilidade-passiva-item">
@@ -429,27 +763,64 @@ const FichaPersonagem = () => {
         >
           {nome}
         </span>
-        <div className="passiva-controles">
-          <input
-            type="number"
-            value={valor}
-            onChange={(e) => atualizarHabilidadePassiva(chave, e.target.value)}
-            className="passiva-valor"
-            min="0"
-            max="100"
-          />
-          <div className="passiva-botoes">
+
+        <div className="passiva-linha">
+          {/* VALOR BASE */}
+          <div className="passiva-valor-base">({valorBase})</div>
+
+          <span className="passiva-separador">|</span>
+
+          {/* CONTROLES TEMPORÁRIOS */}
+          <div className="passiva-temp-controles">
             <button
-              onClick={() =>
-                atualizarHabilidadePassiva(chave, Math.max(0, valor - 1))
-              }
+              className="passiva-temp-btn"
+              onClick={() => {
+                setPersonagem((prev) => ({
+                  ...prev,
+
+                  habilidadesTemporarias: {
+                    ...prev.habilidadesTemporarias,
+
+                    [chave]: valorTemporario - 1,
+                  },
+                }));
+              }}
             >
               -
             </button>
+
+            <input
+              type="number"
+              value={valorTemporario}
+              onChange={(e) => {
+                const novoValor = parseInt(e.target.value) || 0;
+
+                setPersonagem((prev) => ({
+                  ...prev,
+
+                  habilidadesTemporarias: {
+                    ...prev.habilidadesTemporarias,
+
+                    [chave]: novoValor,
+                  },
+                }));
+              }}
+              className="passiva-valor-temporario"
+            />
+
             <button
-              onClick={() =>
-                atualizarHabilidadePassiva(chave, Math.min(100, valor + 1))
-              }
+              className="passiva-temp-btn"
+              onClick={() => {
+                setPersonagem((prev) => ({
+                  ...prev,
+
+                  habilidadesTemporarias: {
+                    ...prev.habilidadesTemporarias,
+
+                    [chave]: valorTemporario + 1,
+                  },
+                }));
+              }}
             >
               +
             </button>
@@ -460,34 +831,34 @@ const FichaPersonagem = () => {
   };
 
   const conflitosCondicoes = {
+    /* TEMPERATURA */
     congelado: ["em-chamas", "hipertermia"],
     "em-chamas": ["congelado"],
     hipertermia: ["congelado"],
 
-    marcado: ["exposto"],
-    exposto: ["marcado"],
-
+    /* VISÃO */
     cego: ["cegueira-temporaria"],
     "cegueira-temporaria": ["cego"],
 
-    surdo: ["silenciado"],
-    silenciado: ["surdo"],
-
-    paralisado: ["acorrentado", "restrito"],
-    acorrentado: ["paralisado"],
-    restrito: ["paralisado"],
-
-    inconsciente: ["atordoado", "confuso", "desorientado", "sob-pressao"],
-    atordoado: ["inconsciente"],
-    confuso: ["inconsciente"],
-    desorientado: ["inconsciente"],
-    "sob-pressao": ["inconsciente"],
-
+    /* STATUS OPOSTOS */
     "estado-critico": ["surto-adrenalina"],
     "surto-adrenalina": ["estado-critico"],
+
+    /* EXPOSIÇÃO */
+    marcado: ["furtivo"],
+    furtivo: ["marcado"],
   };
 
   const arvoreClasse = obterArvoreClasse(personagem);
+  if (!personagem.habilidadesClasse) {
+    personagem.habilidadesClasse = {
+      habilidadeAbsoluta: "",
+      aptidoes: {},
+      especialidade: "",
+      especialidadeDefinida: false,
+      habilidadesEspecialidade: {},
+    };
+  }
   const habilidadesSelecionadas = listarHabilidadesSelecionadas(personagem);
 
   // Conteúdo das abas
@@ -658,13 +1029,28 @@ const FichaPersonagem = () => {
 
         {habilidadesSelecionadas.length > 0 ? (
           <div className="habilidades-resumo-lista">
-            {habilidadesSelecionadas.map((habilidade) => (
-              <article key={habilidade.id} className="habilidade-resumo-card">
-                <span>{habilidade.grupo}</span>
-                <strong>{habilidade.nome}</strong>
-                <p>{habilidade.descricao}</p>
-              </article>
-            ))}
+            {habilidadesSelecionadas.map((habilidade) => {
+              const habilidadeEspecial =
+                habilidade.nome?.toUpperCase() === "ANIQUILAÇÃO ABSOLUTA" ||
+                habilidade.nome?.toUpperCase() === "ANIQUILACAO ABSOLUTA";
+
+              return (
+                <article
+                  key={habilidade.id}
+                  className={
+                    habilidadeEspecial
+                      ? "habilidade-resumo-absoluta"
+                      : "habilidade-resumo-card"
+                  }
+                >
+                  <span>{habilidade.grupo}</span>
+
+                  <strong>{habilidade.nome}</strong>
+
+                  <p>{habilidade.descricao}</p>
+                </article>
+              );
+            })}
           </div>
         ) : (
           <div className="habilidades-vazio">
@@ -679,30 +1065,376 @@ const FichaPersonagem = () => {
     ),
 
     rituais: (
-      <div className="conteudo-aba">
-        <h4>RITUAIS CONHECIDOS</h4>
+      <div className="conteudo-aba rituais-aba">
+        <div className="rituais-topo">
+          <span>Biblioteca Oculta</span>
+          <h4>RITUAIS CONHECIDOS</h4>
+        </div>
+
         <div className="lista-rituais">
           {personagem.rituais.map((ritual, index) => (
-            <div key={index} className="ritual-item">
-              <span>{ritual.nome}</span>
-              <span className="custo-ritual">{ritual.custo}</span>
-            </div>
+            <details
+              key={index}
+              className={`ritual-item item-recolhivel nivel-${ritual.nivelRito || ritual.nivel || "iniciante"}`}
+            >
+              <summary>
+                <div className="ritual-header">
+                  <div className="ritual-info">
+                    <strong>{ritual.nome}</strong>
+
+                    <small>
+                      {ritual.nivelRito || ritual.nivel
+                        ? `Nível ${ritual.nivelRito || ritual.nivel}`
+                        : "Ritual Obscuro"}
+                    </small>
+                  </div>
+
+                  <div className="ritual-tags">
+                    <span className="custo-ritual">
+                      {ritual.custo || "0 PE"}
+                    </span>
+
+                    {ritual.distancia && (
+                      <span className="ritual-tag">{ritual.distancia}</span>
+                    )}
+                  </div>
+                </div>
+              </summary>
+
+              <div className="item-descricao-recolhivel ritual-conteudo">
+                <div className="ritual-grid-info">
+                  {ritual.acao && (
+                    <div className="ritual-info-card">
+                      <span>AÇÃO</span>
+                      <strong>{ritual.acao}</strong>
+                    </div>
+                  )}
+
+                  {ritual.alvo && (
+                    <div className="ritual-info-card">
+                      <span>ALVO</span>
+                      <strong>{ritual.alvo}</strong>
+                    </div>
+                  )}
+
+                  {ritual.duracao && (
+                    <div className="ritual-info-card">
+                      <span>DURAÇÃO</span>
+                      <strong>{ritual.duracao}</strong>
+                    </div>
+                  )}
+
+                  {ritual.distancia && (
+                    <div className="ritual-info-card">
+                      <span>DISTÂNCIA</span>
+                      <strong>{ritual.distancia}</strong>
+                    </div>
+                  )}
+                </div>
+
+                {ritual.requisitos && (
+                  <div className="ritual-requisitos">
+                    <span>REQUISITOS</span>
+
+                    <p>{ritual.requisitos}</p>
+                  </div>
+                )}
+
+                {ritual.efeito && (
+                  <div className="ritual-efeito">
+                    <span>EFEITO</span>
+
+                    <p>{ritual.efeito}</p>
+                  </div>
+                )}
+              </div>
+            </details>
           ))}
         </div>
       </div>
     ),
 
     inventario: (
-      <div className="conteudo-aba">
-        <h4>INVENTÁRIO</h4>
-        <div className="lista-inventario">
-          {personagem.inventario.map((item, index) => (
-            <div key={index} className="item-inventario">
-              <span>{item.nome}</span>
-              <span>{item.detalhes}</span>
-            </div>
-          ))}
+      <div className="conteudo-aba inventario-aba">
+        <div className="inventario-subabas">
+          <button
+            className={subAbaInventario === "mochila" ? "ativa" : ""}
+            onClick={() => setSubAbaInventario("mochila")}
+          >
+            Mochila
+          </button>
+
+          <button
+            className={subAbaInventario === "criacao" ? "ativa" : ""}
+            onClick={() => setSubAbaInventario("criacao")}
+          >
+            Criação
+          </button>
         </div>
+
+        {subAbaInventario === "mochila" && (
+          <>
+            <h4>INVENTÁRIO</h4>
+
+            <div className="lista-inventario">
+              {personagem.inventario.map((item, index) => (
+                <details
+                  key={index}
+                  className="item-inventario item-recolhivel"
+                >
+                  <summary>
+                    <div className="inventario-resumo">
+                      <span className="inventario-item-nome">{item.nome}</span>
+
+                      <small className="inventario-item-tipo">
+                        {item.tipo || item.custo || item.detalhes || "Item"}
+                      </small>
+                    </div>
+
+                    <div className="inventario-acoes">
+                      <button
+                        className="btn-vender-item"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          venderItem(index);
+                        }}
+                      >
+                        Vender
+                      </button>
+                    </div>
+                  </summary>
+
+                  <div className="item-descricao-recolhivel">
+                    {item.durabilidade && (
+                      <p>
+                        <strong>Durabilidade:</strong> {item.durabilidade}
+                      </p>
+                    )}
+
+                    {item.custo && (
+                      <p>
+                        <strong>Custo:</strong> {item.custo}
+                      </p>
+                    )}
+
+                    {item.absolutismo && (
+                      <div className="bloco-absolutismo">
+                        <strong>ABSOLUTISMO</strong>
+
+                        <p>{item.absolutismo}</p>
+                      </div>
+                    )}
+
+                    {item.efeito && (
+                      <p>
+                        <strong>Efeito:</strong> {item.efeito}
+                      </p>
+                    )}
+
+                    {item.requisitos && (
+                      <p>
+                        <strong>Requisitos:</strong> {item.requisitos}
+                      </p>
+                    )}
+
+                    {item.distancia && (
+                      <p>
+                        <strong>Distância:</strong> {item.distancia}
+                      </p>
+                    )}
+
+                    {item.duracao && (
+                      <p>
+                        <strong>Duração:</strong> {item.duracao}
+                      </p>
+                    )}
+
+                    {item.alvo && (
+                      <p>
+                        <strong>Alvo:</strong> {item.alvo}
+                      </p>
+                    )}
+
+                    {item.armaStatus && (
+                      <div className="item-status-arma">
+                        <span>
+                          <strong>Tipo:</strong> {item.armaStatus.tipo}
+                        </span>
+
+                        <span>
+                          <strong>DMG:</strong> {item.armaStatus.dmg}
+                        </span>
+
+                        <span>
+                          <strong>ROF:</strong> {item.armaStatus.rof}
+                        </span>
+
+                        <span>
+                          <strong>MAG:</strong> {item.armaStatus.mag}
+                        </span>
+
+                        <span>
+                          <strong>Crítico:</strong> {item.armaStatus.critico}
+                        </span>
+
+                        <span>
+                          <strong>Dano Cabeça:</strong>{" "}
+                          {item.armaStatus.danoCabeca}
+                        </span>
+
+                        <span>
+                          <strong>Hipfire:</strong> {item.armaStatus.hipfire}
+                        </span>
+
+                        <span>
+                          <strong>Precision:</strong>{" "}
+                          {item.armaStatus.precision}
+                        </span>
+
+                        <span>
+                          <strong>Control:</strong> {item.armaStatus.control}
+                        </span>
+
+                        <span>
+                          <strong>Mobility:</strong> {item.armaStatus.mobility}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </>
+        )}
+
+        {subAbaInventario === "criacao" && (
+          <div className="criacao-itens">
+            <div className="estoque-materiais">
+              <div className="estoque-topo">
+                <span>Estoque</span>
+                <strong>Materiais de Criação</strong>
+              </div>
+              {mensagemCraft && (
+                <div className="craft-mensagem">{mensagemCraft}</div>
+              )}
+              <div className="estoque-grid">
+                {[
+                  ["alcool", "🧪"],
+                  ["trapos", "🧻"],
+                  ["recipiente", "🫙"],
+                  ["explosivos", "💣"],
+                  ["fita", "🩹"],
+                  ["laminas", "🔪"],
+                  ["pregos", "📌"],
+                  ["madeira", "🪵"],
+                  ["cano", "🔩"],
+                  ["faca", "🗡️"],
+                ].map(([chave, icon]) => (
+                  <label key={chave} className="estoque-material">
+                    <span>{icon}</span>
+
+                    <input
+                      type="number"
+                      min="0"
+                      value={personagem.materiaisCriacao?.[chave] || 0}
+                      onChange={(e) =>
+                        atualizarMaterialCriacao(chave, e.target.value)
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="criacao-abas">
+              <button
+                className={abaCriacao === "armas" ? "ativa" : ""}
+                onClick={() => setAbaCriacao("armas")}
+              >
+                Armas
+              </button>
+
+              <button
+                className={abaCriacao === "improvisados" ? "ativa" : ""}
+                onClick={() => setAbaCriacao("improvisados")}
+              >
+                Improvisados
+              </button>
+
+              <button
+                className={abaCriacao === "municoes" ? "ativa" : ""}
+                onClick={() => setAbaCriacao("municoes")}
+              >
+                Munições
+              </button>
+            </div>
+
+            {receitasCriacao
+              .filter((grupo) => {
+                if (abaCriacao === "armas") {
+                  return grupo.categoria === "Armas Aprimoráveis";
+                }
+
+                if (abaCriacao === "improvisados") {
+                  return grupo.categoria === "Itens Improvisados";
+                }
+
+                if (abaCriacao === "municoes") {
+                  return grupo.categoria === "Munições Fabricadas";
+                }
+
+                if (abaCriacao === "materiais") {
+                  return grupo.categoria === "Materiais de Criação";
+                }
+
+                return true;
+              })
+              .map((grupo) => (
+                <section key={grupo.categoria} className="criacao-grupo">
+                  <h5>{grupo.categoria}</h5>
+
+                  <div className="criacao-grid">
+                    {grupo.itens.map((receita) => (
+                      <article key={receita.nome} className="criacao-card">
+                        <span>{receita.tipo}</span>
+
+                        <div className="receita-titulo">
+                          <strong>{receita.nome}</strong>
+                        </div>
+                        <p>
+                          <b>Durabilidade:</b> {receita.durabilidade}
+                        </p>
+
+                        <p>
+                          <b>Dano:</b> {receita.dano}
+                        </p>
+
+                        <div className="receita-recursos">
+                          {receita.ingredientes.length > 0 ? (
+                            receita.ingredientes.map((ingrediente) => (
+                              <small
+                                key={ingrediente.nome}
+                                className="ingrediente-chip"
+                              >
+                                <span>{ingrediente.icone}</span>
+                                {ingrediente.nome}
+                              </small>
+                            ))
+                          ) : (
+                            <small>Item base</small>
+                          )}
+                        </div>
+
+                        <button onClick={() => criarItem(receita)}>
+                          Criar
+                        </button>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              ))}
+          </div>
+        )}
       </div>
     ),
 
@@ -711,46 +1443,67 @@ const FichaPersonagem = () => {
         <div className="sistema-membros-sidebar">
           <div className="corpo-container-sidebar">
             <div className="controles-membros-sidebar">
-              <p className="integridade">Intergridade</p>
-
               <MembroControle
                 nome="CABEÇA"
+                membroChave="cabeca"
                 membro={personagem.membros.cabeca}
                 onChange={(valor) => atualizarVidaMembro("cabeca", valor)}
+                onDamage={(dano) => aplicarDanoMembro("cabeca", dano)}
+                onDefesaChange={atualizarDefesaMembro}
                 classNameInput="cabeca-input"
               />
+
               <MembroControle
                 nome="TORSO"
+                membroChave="torso"
                 membro={personagem.membros.torso}
                 onChange={(valor) => atualizarVidaMembro("torso", valor)}
+                onDamage={(dano) => aplicarDanoMembro("torso", dano)}
+                onDefesaChange={atualizarDefesaMembro}
                 classNameInput="torso-input"
               />
+
               <MembroControle
                 nome="BRAÇO DIREITO"
+                membroChave="bracoDireito"
                 membro={personagem.membros.bracoDireito}
                 onChange={(valor) => atualizarVidaMembro("bracoDireito", valor)}
+                onDamage={(dano) => aplicarDanoMembro("bracoDireito", dano)}
+                onDefesaChange={atualizarDefesaMembro}
                 classNameInput="bracoDireito-input"
               />
+
               <MembroControle
                 nome="BRAÇO ESQUERDO"
+                membroChave="bracoEsquerdo"
                 membro={personagem.membros.bracoEsquerdo}
                 onChange={(valor) =>
                   atualizarVidaMembro("bracoEsquerdo", valor)
                 }
+                onDamage={(dano) => aplicarDanoMembro("bracoEsquerdo", dano)}
+                onDefesaChange={atualizarDefesaMembro}
                 classNameInput="bracoEsquerdo-input"
               />
+
               <MembroControle
                 nome="PERNA DIREITA"
+                membroChave="pernaDireita"
                 membro={personagem.membros.pernaDireita}
                 onChange={(valor) => atualizarVidaMembro("pernaDireita", valor)}
+                onDamage={(dano) => aplicarDanoMembro("pernaDireita", dano)}
+                onDefesaChange={atualizarDefesaMembro}
                 classNameInput="pernaDireita-input"
               />
+
               <MembroControle
                 nome="PERNA ESQUERDA"
+                membroChave="pernaEsquerda"
                 membro={personagem.membros.pernaEsquerda}
                 onChange={(valor) =>
                   atualizarVidaMembro("pernaEsquerda", valor)
                 }
+                onDamage={(dano) => aplicarDanoMembro("pernaEsquerda", dano)}
+                onDefesaChange={atualizarDefesaMembro}
                 classNameInput="pernaEsquerda-input"
               />
             </div>
@@ -767,48 +1520,70 @@ const FichaPersonagem = () => {
           <div className="condicoes-container">
             <p className="condicoes-titulo">CONDIÇÕES</p>
 
-            <div className="lista-condicoes">
-              {condicoes.map((condicao, index) => (
-                <button
-                  key={index}
-                  className={` condicao-chip ${personagem.condicoesAtivas?.includes(condicao.classe) ? "ativa" : ""}
-                  ${condicao.classe}`}
-                  onClick={() => {
-                    setModalTitulo(condicao.nome);
-                    setModalDescricao(condicao.descricao);
+            <div className="condicoes-wrapper">
+              <div className="lista-condicoes">
+                {[...condicoes]
+                  .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+                  .map((condicao, index) => (
+                    <button
+                      key={index}
+                      className={`condicao-chip ${
+                        personagem.condicoesAtivas?.includes(condicao.classe)
+                          ? "ativa"
+                          : ""
+                      } ${condicao.classe}`}
+                      onClick={() => {
+                        setPersonagem((prev) => {
+                          const atuais = prev.condicoesAtivas || [];
+                          const jaTem = atuais.includes(condicao.classe);
 
-                    setPersonagem((prev) => {
-                      const atuais = prev.condicoesAtivas || [];
-                      const jaTem = atuais.includes(condicao.classe);
+                          if (jaTem) {
+                            return {
+                              ...prev,
+                              condicoesAtivas: atuais.filter(
+                                (classe) => classe !== condicao.classe,
+                              ),
+                            };
+                          }
 
-                      if (jaTem) {
-                        return {
-                          ...prev,
-                          condicoesAtivas: atuais.filter(
-                            (classe) => classe !== condicao.classe,
-                          ),
-                        };
-                      }
+                          const conflitos =
+                            conflitosCondicoes[condicao.classe] || [];
 
-                      const conflitos =
-                        conflitosCondicoes[condicao.classe] || [];
+                          const novasCondicoes = atuais.filter(
+                            (classe) => !conflitos.includes(classe),
+                          );
 
-                      const novasCondicoes = atuais.filter(
-                        (classe) => !conflitos.includes(classe),
-                      );
+                          return {
+                            ...prev,
+                            condicoesAtivas: [
+                              ...novasCondicoes,
+                              condicao.classe,
+                            ],
+                          };
+                        });
+                      }}
+                    >
+                      {condicao.nome}
+                    </button>
+                  ))}
+              </div>
 
-                      return {
-                        ...prev,
-                        condicoesAtivas: [...novasCondicoes, condicao.classe],
-                      };
-                    });
-
-                    setModalAberto(true);
-                  }}
-                >
-                  {condicao.nome}
-                </button>
-              ))}
+              <div className="condicoes-ativas-descricao">
+                {condicoes
+                  .filter((condicao) =>
+                    personagem.condicoesAtivas?.includes(condicao.classe),
+                  )
+                  .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"))
+                  .map((condicao) => (
+                    <div
+                      key={condicao.classe}
+                      className="condicao-descricao-card"
+                    >
+                      <strong>{condicao.nome}</strong>
+                      <p>{condicao.descricao}</p>
+                    </div>
+                  ))}
+              </div>
             </div>
           </div>
         </div>
@@ -816,14 +1591,47 @@ const FichaPersonagem = () => {
     ),
 
     descricao: (
-      <div className="conteudo-aba">
-        <h4>DESCRIÇÃO & ANOTAÇÕES</h4>
+      <div className="conteudo-aba personagem-aba">
+        <label className="personagem-label">Descrição</label>
         <textarea
           className="textarea-descricao"
-          placeholder="Descreva seu personagem, anotações importantes, história..."
-          rows="8"
-          value={personagem.descricao}
-          onChange={(e) => atualizarDescricao(e.target.value)}
+          placeholder="Descreva a aparência, personalidade e detalhes do personagem..."
+          rows="5"
+          value={personagem.descricao || ""}
+          onChange={(e) =>
+            setPersonagem((prev) => ({
+              ...prev,
+              descricao: e.target.value,
+            }))
+          }
+        />
+
+        <label className="personagem-label">Anotação</label>
+        <textarea
+          className="textarea-descricao"
+          placeholder="Anotações rápidas, lembretes e observações importantes..."
+          rows="5"
+          value={personagem.anotacao || ""}
+          onChange={(e) =>
+            setPersonagem((prev) => ({
+              ...prev,
+              anotacao: e.target.value,
+            }))
+          }
+        />
+
+        <label className="personagem-label">História</label>
+        <textarea
+          className="textarea-descricao"
+          placeholder="Escreva a história do personagem..."
+          rows="7"
+          value={personagem.historia || ""}
+          onChange={(e) =>
+            setPersonagem((prev) => ({
+              ...prev,
+              historia: e.target.value,
+            }))
+          }
         />
       </div>
     ),
@@ -867,6 +1675,62 @@ const FichaPersonagem = () => {
   };
   const primeiraCondicaoAtiva = personagem.condicoesAtivas?.[0] || "";
 
+  const obterEstadoRecurso = (recurso, prefixo) => {
+    const atual = Number(recurso?.atual) || 0;
+    const max = Number(recurso?.max) || 0;
+
+    if (max <= 0 || atual <= 0) {
+      return `${prefixo}-zero`;
+    }
+
+    const porcentagem = (atual / max) * 100;
+
+    if (porcentagem <= 25) {
+      return `${prefixo}-critico`;
+    }
+
+    if (porcentagem <= 50) {
+      return `${prefixo}-metade`;
+    }
+
+    return `${prefixo}-normal`;
+  };
+
+  const estadoSanidadePerfil = obterEstadoRecurso(
+    personagem.sanidade,
+    "sanidade",
+  );
+  const estadoEsperancaPerfil = obterEstadoRecurso(
+    personagem.esperanca,
+    "esperanca",
+  );
+
+  const atualizarFotoPerfil = (event) => {
+    const arquivo = event.target.files?.[0];
+
+    if (!arquivo) {
+      return;
+    }
+
+    if (!arquivo.type.startsWith("image/")) {
+      alert("Escolha um arquivo de imagem válido.");
+      event.target.value = "";
+      return;
+    }
+
+    const leitor = new FileReader();
+
+    leitor.onload = () => {
+      setPersonagem((prev) => ({
+        ...prev,
+        fotoPerfil: leitor.result,
+      }));
+    };
+
+    leitor.readAsDataURL(arquivo);
+    event.target.value = "";
+  };
+
   return (
     <div className="ficha-container">
       <button
@@ -895,74 +1759,75 @@ const FichaPersonagem = () => {
               <div className="sanidade-container">
                 <div className="sanidade-inputs">
                   <div className="identidade-personagem">
-                    {/* Nome do Personagem */}
                     <input
                       type="text"
                       placeholder="PRONOME"
                       value={personagem.pronome || ""}
-                      onChange={(e) =>
-                        setPersonagem((prev) => ({
-                          ...prev,
-                          pronome: e.target.value,
-                        }))
-                      }
-                      className="dado-personagem"
+                      readOnly
+                      title="Informação bloqueada para jogadores"
+                      className="dado-personagem perfil-info-bloqueada"
                       maxLength={10}
                     />
                     <input
                       type="text"
                       placeholder="NOME DO PERSONAGEM"
                       value={personagem.nome}
-                      onChange={(e) =>
-                        setPersonagem((prev) => ({
-                          ...prev,
-                          nome: e.target.value,
-                        }))
-                      }
+                      readOnly
+                      title="Informação bloqueada para jogadores"
                       maxLength={30}
-                      className="nome-personagem"
+                      className="nome-personagem perfil-info-bloqueada"
                     />
                     <div className="dados-personagem">
                       <input
                         type="text"
                         placeholder="CLASSE"
                         value={personagem.classe || ""}
-                        onChange={(e) =>
-                          setPersonagem((prev) => ({
-                            ...prev,
-                            classe: e.target.value,
-                          }))
-                        }
-                        className="dado-personagem"
+                        readOnly
+                        title="Informação bloqueada para jogadores"
+                        className="dado-personagem perfil-info-bloqueada"
                         maxLength={30}
                       />
-
                       <input
                         type="text"
                         placeholder="ESPECIALIDADE"
                         value={personagem.especialidade || ""}
-                        onChange={(e) =>
-                          setPersonagem((prev) => ({
-                            ...prev,
-                            especialidade: e.target.value,
-                          }))
-                        }
-                        className="dado-personagem"
+                        readOnly
+                        title="Informação bloqueada para jogadores"
+                        className="dado-personagem perfil-info-bloqueada"
                         maxLength={40}
                       />
                     </div>
                   </div>
-                  <div className={`profile-wrapper ${primeiraCondicaoAtiva}`}>
-                    <img
-                      src={personagem.fotoPerfil || profile}
-                      alt="Perfil"
-                      className="profile"
+
+                  <div
+                    className={`profile-wrapper profile-editavel ${primeiraCondicaoAtiva} ${estadoSanidadePerfil} ${estadoEsperancaPerfil}`}
+                    title="Clique para trocar a foto de perfil"
+                  >
+                    <label
+                      className="profile-upload-label"
+                      htmlFor="foto-perfil-input"
+                    >
+                      <img
+                        src={personagem.fotoPerfil || profile}
+                        alt="Perfil"
+                        className="profile"
+                      />
+                      <span className="profile-upload-hint">Trocar foto</span>
+                    </label>
+
+                    <input
+                      id="foto-perfil-input"
+                      type="file"
+                      accept="image/*"
+                      className="profile-upload-input"
+                      onChange={atualizarFotoPerfil}
                     />
 
                     <div className="profile-overlay"></div>
                   </div>
+
+                  {/* Sanidade + Esperança empilhadas */}
                   <div className="sanidade-completa">
-                    {/* ✅ NÍVEL AQUI - exatamente acima do título "Sanidade" */}
                     <div className="nivel-acima-sanidade">
                       <span className="nivel-label">NÍVEL</span>
                       <span className="nivel-valor">
@@ -970,63 +1835,119 @@ const FichaPersonagem = () => {
                       </span>
                     </div>
 
-                    <p className="sanidade-titulo">Sanidade</p>
-                    <input
-                      type="number"
-                      value={personagem.sanidade.atual}
-                      onChange={(e) => atualizarSanidade(e.target.value)}
-                      className="sanidade-atual"
-                      min="0"
-                      max={personagem.sanidade.max}
-                    />
-                    <span className="sanidade-separador">/</span>
-                    <input
-                      type="number"
-                      value={personagem.sanidade.max}
-                      onChange={(e) =>
-                        setPersonagem((prev) => ({
-                          ...prev,
-                          sanidade: {
-                            ...prev.sanidade,
-                            max: parseInt(e.target.value) || 0,
-                          },
-                        }))
-                      }
-                      className="sanidade-max"
-                      min="0"
-                    />
-                  </div>
-                </div>
+                    <div className="barra-recurso-rpg sanidade-barra">
+                      <div className="barra-rpg-header">
+                        <span className="barra-rpg-label">Sanidade</span>
+                        <button
+                          className="barra-btn barra-btn-menos"
+                          onClick={() =>
+                            atualizarSanidade(personagem.sanidade.atual - 1)
+                          }
+                        >
+                          −
+                        </button>
+                        <span className="barra-rpg-valores">
+                          <input
+                            type="number"
+                            value={personagem.sanidade.atual}
+                            onChange={(e) => atualizarSanidade(e.target.value)}
+                            className="barra-rpg-input atual"
+                            min="0"
+                            max={personagem.sanidade.max}
+                          />
+                          <span className="barra-rpg-sep">/</span>
+                          <input
+                            type="number"
+                            value={personagem.sanidade.max}
+                            onChange={(e) =>
+                              setPersonagem((prev) => ({
+                                ...prev,
+                                sanidade: {
+                                  ...prev.sanidade,
+                                  max: parseInt(e.target.value) || 0,
+                                },
+                              }))
+                            }
+                            className="barra-rpg-input max"
+                            min="0"
+                          />
+                        </span>
+                        <button
+                          className="barra-btn barra-btn-mais"
+                          onClick={() =>
+                            atualizarSanidade(personagem.sanidade.atual + 1)
+                          }
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="barra-rpg-track">
+                        <div
+                          className="barra-rpg-fill sanidade-fill"
+                          style={{
+                            width: `${personagem.sanidade.max > 0 ? Math.min(100, (personagem.sanidade.atual / personagem.sanidade.max) * 100) : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
 
-                {/* Esperança */}
-                <div className="esperanca-section">
-                  <div className="esperanca-container">
-                    <div className="esperanca-inputs">
-                      <p className="esperanca-titulo"> Esperança </p>
-                      <input
-                        type="number"
-                        value={personagem.esperanca.atual}
-                        onChange={(e) => atualizarEsperanca(e.target.value)}
-                        className="esperanca-atual"
-                        min="0"
-                        max={personagem.esperanca.max}
-                      />
-                      <span className="esperanca-separador">/</span>
-                      <input
-                        type="number"
-                        value={personagem.esperanca.max}
-                        onChange={(e) =>
-                          setPersonagem((prev) => ({
-                            ...prev,
-                            esperanca: {
-                              ...prev.esperanca,
-                              max: parseInt(e.target.value) || 0,
-                            },
-                          }))
-                        }
-                        className="esperanca-max"
-                        min="0"
-                      />
+                    <div className="barra-recurso-rpg esperanca-barra">
+                      <div className="barra-rpg-header">
+                        <span className="barra-rpg-label esperanca-label">
+                          Esperança
+                        </span>
+                        <button
+                          className="barra-btn barra-btn-menos esperanca-btn"
+                          onClick={() =>
+                            atualizarEsperanca(personagem.esperanca.atual - 1)
+                          }
+                        >
+                          −
+                        </button>
+
+                        <span className="barra-rpg-valores">
+                          <input
+                            type="number"
+                            value={personagem.esperanca.atual}
+                            onChange={(e) => atualizarEsperanca(e.target.value)}
+                            className="barra-rpg-input atual esperanca-input"
+                            min="0"
+                            max={personagem.esperanca.max}
+                          />
+                          <span className="barra-rpg-sep">/</span>
+                          <input
+                            type="number"
+                            value={personagem.esperanca.max}
+                            onChange={(e) =>
+                              setPersonagem((prev) => ({
+                                ...prev,
+                                esperanca: {
+                                  ...prev.esperanca,
+                                  max: parseInt(e.target.value) || 0,
+                                },
+                              }))
+                            }
+                            className="barra-rpg-input max esperanca-input"
+                            min="0"
+                          />
+                        </span>
+                        <button
+                          className="barra-btn barra-btn-mais esperanca-btn"
+                          onClick={() =>
+                            atualizarEsperanca(personagem.esperanca.atual + 1)
+                          }
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="barra-rpg-track-esperanca-track">
+                        <div
+                          className="barra-rpg-fill esperanca-fill"
+                          style={{
+                            width: `${personagem.esperanca.max > 0 ? Math.min(100, (personagem.esperanca.atual / personagem.esperanca.max) * 100) : 0}%`,
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1113,7 +2034,7 @@ const FichaPersonagem = () => {
               className={`aba-btn ${abaAtiva === "descricao" ? "ativa" : ""}`}
               onClick={() => setAbaAtiva("descricao")}
             >
-              DESCRICÃO
+              PERSONAGEM
             </button>
           </div>
 
@@ -1137,22 +2058,25 @@ const calcularDadoAtributo = (valor) => {
   return mdiDiceD4;
 };
 
-const Atributo = ({ nome, valor, onChange }) => {
+const Atributo = ({ nome, valor }) => {
   const dado = calcularDadoAtributo(valor);
 
   return (
     <div className="atributoCompleto">
       <div className="atributo-dado">
         <Icon path={dado} size={2} />
-      </div>{" "}
+      </div>
+
       <div className="atributo-item">
         <span className="atributo-nome">{nome}</span>
+
         <div className="atributo-controles">
           <input
             type="number"
             value={valor}
-            onChange={(e) => onChange(e.target.value)}
-            className="atributo-valor"
+            className="atributo-valor atributo-bloqueado"
+            disabled
+            title="Atributo bloqueado. Aumente pela tela de Upgrade."
           />
         </div>
       </div>
@@ -1185,7 +2109,15 @@ const BarraRecurso = ({ nome, atual, max, onChange, cor }) => {
 };
 
 // COMPONENTE MembroControle
-const MembroControle = ({ nome, membro, onChange, classNameInput }) => {
+const MembroControle = ({
+  nome,
+  membro,
+  membroChave,
+  onChange,
+  onDamage,
+  onDefesaChange,
+  classNameInput,
+}) => {
   const porcentagem = membro.max > 0 ? (membro.atual / membro.max) * 100 : 0;
   const estadoVida = membro.grave ? "grave" : membro.ferido ? "ferido" : "";
 
@@ -1193,7 +2125,6 @@ const MembroControle = ({ nome, membro, onChange, classNameInput }) => {
     <div className={`membro-controle ${estadoVida}`}>
       <span className="membro-nome">{nome}</span>
 
-      {/* Barra de vida */}
       <div className="membro-barra-container">
         <div className="membro-barra-vida">
           <div
@@ -1203,12 +2134,23 @@ const MembroControle = ({ nome, membro, onChange, classNameInput }) => {
             }}
           />
         </div>
+
         <span className="membro-barra-texto">
           {membro.atual}/{membro.max}
         </span>
       </div>
 
-      {/* Inputs escondidos */}
+      <div className="membro-defesa">
+        <span className="membro-defesa-label">DEF</span>
+
+        <input
+          type="number"
+          value={membro.defesa || 0}
+          onChange={(e) => onDefesaChange(membroChave, e.target.value)}
+          className="membro-defesa-input"
+        />
+      </div>
+
       <div className="membro-inputs" style={{ display: "none" }}>
         <input
           type="number"
@@ -1218,7 +2160,9 @@ const MembroControle = ({ nome, membro, onChange, classNameInput }) => {
           min="0"
           max={membro.max}
         />
+
         <span>/</span>
+
         <input
           type="number"
           value={membro.max}
@@ -1228,42 +2172,43 @@ const MembroControle = ({ nome, membro, onChange, classNameInput }) => {
         />
       </div>
 
-      {/* Botões de ajuste rápido */}
       <div className="membro-botoes">
-        <button 
-          onClick={() => onChange(Math.max(0, membro.atual - 10))}
-          title="-10"
+        <button
+          onClick={() => onDamage(10)}
+          title="Dano 10"
           className="btn-rapido btn-menos10"
         >
           -10
         </button>
-        <button 
-          onClick={() => onChange(Math.max(0, membro.atual - 5))}
-          title="-5"
+
+        <button
+          onClick={() => onDamage(5)}
+          title="Dano 5"
           className="btn-rapido btn-menos5"
         >
           -5
         </button>
-        <button 
-          onClick={() => onChange(Math.max(0, membro.atual - 1))}
-          title="-1"
-        >
+
+        <button onClick={() => onDamage(1)} title="Dano 1">
           -
         </button>
-        <button 
+
+        <button
           onClick={() => onChange(Math.min(membro.max, membro.atual + 1))}
           title="+1"
         >
           +
         </button>
-        <button 
+
+        <button
           onClick={() => onChange(Math.min(membro.max, membro.atual + 5))}
           title="+5"
           className="btn-rapido btn-mais5"
         >
           +5
         </button>
-        <button 
+
+        <button
           onClick={() => onChange(Math.min(membro.max, membro.atual + 10))}
           title="+10"
           className="btn-rapido btn-mais10"
@@ -1274,4 +2219,5 @@ const MembroControle = ({ nome, membro, onChange, classNameInput }) => {
     </div>
   );
 };
+
 export default FichaPersonagem;

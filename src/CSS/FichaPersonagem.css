@@ -1,4 +1,11 @@
-/*Animations*/
+/* =========================================================
+   FichaPersonagem.css — organizado por seções
+   ========================================================= */
+
+/* =========================================================
+   01 - Animações
+   ========================================================= */
+
 @keyframes colorPulseWarning {
   0%,
   100% {
@@ -19,127 +26,19 @@
   }
 }
 
-/* WRAPPER */
-.profile-wrapper {
-  position: relative;
-
-  width: 150px;
-  height: 150px;
-
-  border-radius: 50%;
-
-  overflow: hidden;
+@keyframes barraPulseDanger {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
-/* FOTO */
-.profile {
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-
-  border-radius: 50%;
-
-  border: 3px solid #8b4513;
-
-  position: relative;
-  z-index: 1;
-}
-
-/* OVERLAY */
-.profile-overlay {
-  position: absolute;
-
-  inset: 0;
-
-  pointer-events: none;
-
-  z-index: 2;
-}
-
-/* src/CSS/FichaPersonagem.css */
-/* REMOVER BOTÕES DE INPUT NUMBER */
-.atributo-valor::-webkit-outer-spin-button,
-.atributo-valor::-webkit-inner-spin-button,
-.habilidade-valor::-webkit-outer-spin-button,
-.habilidade-valor::-webkit-inner-spin-button,
-.passiva-valor::-webkit-outer-spin-button,
-.passiva-valor::-webkit-inner-spin-button,
-.membro-atual::-webkit-outer-spin-button,
-.membro-atual::-webkit-inner-spin-button,
-.membro-max::-webkit-outer-spin-button,
-.membro-max::-webkit-inner-spin-button,
-.recurso-atual::-webkit-outer-spin-button,
-.recurso-atual::-webkit-inner-spin-button,
-.recurso-max::-webkit-outer-spin-button,
-.recurso-max::-webkit-inner-spin-button,
-.sanidade-atual::-webkit-outer-spin-button,
-.sanidade-atual::-webkit-inner-spin-button,
-.sanidade-max::-webkit-outer-spin-button,
-.sanidade-max::-webkit-inner-spin-button,
-.esperanca-atual::-webkit-outer-spin-button,
-.esperanca-atual::-webkit-inner-spin-button,
-.esperanca-max::-webkit-outer-spin-button,
-.esperanca-max::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-/* Para Firefox */
-.atributo-valor[type="number"],
-.habilidade-valor[type="number"],
-.passiva-valor[type="number"],
-.membro-atual[type="number"],
-.membro-max[type="number"],
-.recurso-atual[type="number"],
-.recurso-max[type="number"],
-.sanidade-atual[type="number"],
-.sanidade-max[type="number"],
-.esperanca-atual[type="number"],
-.esperanca-max[type="number"] {
-  -moz-appearance: textfield;
-}
-
-/* MELHORAR A APARÊNCIA DOS INPUTS SEM OS BOTÕES */
-.atributo-valor,
-.habilidade-valor,
-.passiva-valor,
-.membro-atual,
-.membro-max,
-.recurso-atual,
-.recurso-max,
-.sanidade-atual,
-.sanidade-max,
-.esperanca-atual,
-.esperanca-max {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: textfield;
-  text-align: center;
-  padding: 8px;
-  border: 1px solid #444;
-  background: rgba(255, 255, 255, 0.1);
-  color: #e8e8e8;
-  border-radius: 3px;
-  font-family: inherit;
-  font-weight: bold;
-}
-
-/* Foco nos inputs */
-.atributo-valor:focus,
-.habilidade-valor:focus,
-.passiva-valor:focus,
-.membro-atual:focus,
-.membro-max:focus,
-.recurso-atual:focus,
-.recurso-max:focus,
-.sanidade-atual:focus,
-.sanidade-max:focus,
-.esperanca-atual:focus,
-.esperanca-max:focus {
-  outline: 2px solid #8b4513;
-  background: rgba(139, 69, 19, 0.2);
-}
+/* =========================================================
+   02 - Reset e base global
+   ========================================================= */
 
 * {
   margin: 0;
@@ -152,6 +51,10 @@ body {
   color: white;
 }
 
+/* =========================================================
+   03 - Container principal e layout
+   ========================================================= */
+
 .ficha-container {
   max-width: 2000px;
   height: 100vh;
@@ -159,30 +62,71 @@ body {
   padding: 20px;
 }
 
+.main-content {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 30px;
+  align-items: flex-start;
+}
+
+.colunas-personagem {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.conteudo-inferior {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* =========================================================
+   04 - Botões flutuantes
+   ========================================================= */
+
 .botao-loja-flutuante,
 .botao-upgrade-flutuante {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
+
+  left: 24px;
+
   z-index: 30;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+
   min-width: 118px;
   min-height: 52px;
+
   padding: 12px 16px;
+
   border: 1px solid rgba(212, 175, 55, 0.45);
   border-radius: 8px;
+
   background: rgba(16, 12, 8, 0.88);
+
   color: #f5efe4;
+
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+
   font-family: "Courier New", monospace;
   font-weight: 800;
+
   letter-spacing: 1px;
+
   text-transform: uppercase;
+
   cursor: pointer;
+
   transition: 0.2s ease;
+}
+
+.botao-loja-flutuante {
+  bottom: 100px;
 }
 
 .botao-upgrade-flutuante {
@@ -223,6 +167,45 @@ body {
   transform: translateY(-2px);
 }
 
+/* =========================================================
+   05 - Perfil e identidade do personagem
+   ========================================================= */
+
+.profile-wrapper {
+  position: relative;
+
+  width: 150px;
+  height: 150px;
+
+  border-radius: 50%;
+
+  overflow: hidden;
+}
+
+.profile {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  border-radius: 50%;
+
+  border: 3px solid #8b4513;
+
+  position: relative;
+  z-index: 1;
+}
+
+.profile-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  pointer-events: none;
+
+  z-index: 2;
+}
+
 .nome-personagem {
   background: transparent;
   border: none;
@@ -237,7 +220,7 @@ body {
 
   width: 100%;
   max-width: 200px;
-  padding: -4px;
+  padding: 0; /* corrigido: padding negativo não é válido */
 
   text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
   transition: 1s all;
@@ -261,12 +244,12 @@ body {
 
 .dado-personagem {
   width: 100%;
-  padding: -20px;
+  padding: 0; /* corrigido: padding negativo não é válido */
   border: none;
   background: transparent;
   color: #e8e8e8;
   font-family: inherit;
-  font-size: 0.70rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-align: right;
   text-transform: uppercase;
@@ -277,15 +260,6 @@ body {
   border-bottom-color: #c89b5f;
 }
 
-/* LAYOUT PRINCIPAL - PERFIL | ATRIBUTOS | SIDEBAR */
-.main-content {
-  display: flex;
-  gap: 40px;
-  margin-bottom: 30px;
-  align-items: flex-start;
-}
-
-/* SEÇÃO DO PERFIL */
 .profile-section {
   flex: 0 0 auto;
 }
@@ -294,7 +268,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
 }
 
 .profile {
@@ -309,8 +283,8 @@ body {
   align-items: center;
   gap: 6px;
   margin-bottom: 4px;
-  width: 100%;          
-  flex-basis: 100%;     
+  width: 100%;
+  flex-basis: 100%;
 }
 
 .nivel-acima-sanidade .nivel-label {
@@ -326,7 +300,235 @@ body {
   color: #ffd700;
 }
 
-/* SEÇÃO DA SANIDADE */
+/* =========================================================
+   06 - Inputs e remoção dos spinners
+   ========================================================= */
+
+.atributo-valor::-webkit-outer-spin-button,
+.atributo-valor::-webkit-inner-spin-button,
+.habilidade-valor::-webkit-outer-spin-button,
+.habilidade-valor::-webkit-inner-spin-button,
+.passiva-valor::-webkit-outer-spin-button,
+.passiva-valor::-webkit-inner-spin-button,
+.membro-atual::-webkit-outer-spin-button,
+.membro-atual::-webkit-inner-spin-button,
+.membro-max::-webkit-outer-spin-button,
+.membro-max::-webkit-inner-spin-button,
+.recurso-atual::-webkit-outer-spin-button,
+.recurso-atual::-webkit-inner-spin-button,
+.recurso-max::-webkit-outer-spin-button,
+.recurso-max::-webkit-inner-spin-button,
+.sanidade-atual::-webkit-outer-spin-button,
+.sanidade-atual::-webkit-inner-spin-button,
+.sanidade-max::-webkit-outer-spin-button,
+.sanidade-max::-webkit-inner-spin-button,
+.esperanca-atual::-webkit-outer-spin-button,
+.esperanca-atual::-webkit-inner-spin-button,
+.esperanca-max::-webkit-outer-spin-button,
+.esperanca-max::-webkit-inner-spin-button,
+.passiva-valor-temporario::-webkit-outer-spin-button,
+.passiva-valor-temporario::-webkit-inner-spin-button,
+.membro-defesa-input::-webkit-outer-spin-button,
+.membro-defesa-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.atributo-valor[type="number"],
+.habilidade-valor[type="number"],
+.passiva-valor[type="number"],
+.membro-atual[type="number"],
+.membro-max[type="number"],
+.recurso-atual[type="number"],
+.recurso-max[type="number"],
+.sanidade-atual[type="number"],
+.sanidade-max[type="number"],
+.esperanca-atual[type="number"],
+.esperanca-max[type="number"],
+.passiva-valor-temporario[type="number"],
+.membro-defesa-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.barra-rpg-input::-webkit-outer-spin-button,
+.barra-rpg-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.categorias-passivas::-webkit-scrollbar {
+  width: 6px;
+}
+
+.categorias-passivas::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.categorias-passivas::-webkit-scrollbar-thumb {
+  background: #8b4513;
+  border-radius: 3px;
+}
+
+.categorias-passivas::-webkit-scrollbar-thumb:hover {
+  background: #a0522d;
+}
+
+.lista-condicoes::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lista-condicoes::-webkit-scrollbar-thumb {
+  background: #8b4513;
+  border-radius: 10px;
+}
+
+/* =========================================================
+   07 - Sanidade e Esperança
+   ========================================================= */
+
+.atributo-valor,
+.habilidade-valor,
+.passiva-valor,
+.membro-atual,
+.membro-max,
+.recurso-atual,
+.recurso-max,
+.sanidade-atual,
+.sanidade-max,
+.esperanca-atual,
+.esperanca-max {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  text-align: center;
+  padding: 8px;
+  border: 1px solid #444;
+  background: rgba(255, 255, 255, 0.1);
+  color: #e8e8e8;
+  border-radius: 3px;
+  font-family: inherit;
+  font-weight: bold;
+}
+
+.atributo-valor:focus,
+.habilidade-valor:focus,
+.passiva-valor:focus,
+.membro-atual:focus,
+.membro-max:focus,
+.recurso-atual:focus,
+.recurso-max:focus,
+.sanidade-atual:focus,
+.sanidade-max:focus,
+.esperanca-atual:focus,
+.esperanca-max:focus {
+  outline: 2px solid #8b4513;
+  background: rgba(139, 69, 19, 0.2);
+}
+
+.barra-rpg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.barra-rpg-valores {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.barra-rpg-input {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-weight: bold;
+  text-align: center;
+  color: #e8e8e8;
+  width: 36px;
+  padding: 0;
+  font-size: 0.82rem;
+}
+
+.barra-rpg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.barra-rpg-controles {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.barra-rpg-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.barra-rpg-input.max {
+  color: #555;
+  font-size: 0.75rem;
+  width: 32px;
+}
+
+.barra-rpg-input:focus {
+  outline: none;
+  color: #fff;
+}
+
+.barra-rpg-sep {
+  color: #555;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.barra-rpg-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 99px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.barra-rpg-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.sanidade-fill {
+  background: linear-gradient(90deg, #1a4fa0, #4a86e8);
+  box-shadow: 0 0 6px rgba(74, 134, 232, 0.5);
+}
+
+.barra-rpg-track-esperanca-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 99px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-left: -15px;
+}
+
+.esperanca-fill {
+  background: linear-gradient(90deg, #8b7500, #d4af37);
+  box-shadow: 0 0 6px rgba(212, 175, 55, 0.4);
+}
+
+.esperanca-section {
+  margin-left: 0 !important;
+  width: 160px;
+}
+
+.esperanca-container {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 .sanidade-section {
   display: flex;
   flex-direction: column;
@@ -344,7 +546,18 @@ body {
 
 .sanidade-completa {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+  width: 160px;
+}
+
+.sanidade-barra .barra-rpg-label {
+  font-size: 0.6rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #4a86e8;
+  text-shadow: 0 0 4px rgba(74, 134, 232, 0.5);
 }
 
 .sanidade-titulo {
@@ -402,24 +615,40 @@ body {
   font-size: 18px;
 }
 
-/* SEÇÃO DA ESPERANÇA */
+.sanidade-barra .barra-rpg-input.atual {
+  font-size: 1rem;
+  color: #4a86e8;
+  text-shadow: 0 0 4px rgba(74, 134, 232, 0.6);
+  width: 40px;
+}
+
+.sanidade-barra .barra-btn {
+  margin-left: -2px;
+  color: #4a86e8;
+}
+
+.sanidade-barra .barra-btn:hover {
+  background: rgba(74, 134, 232, 0.25);
+  transform: scale(1.15);
+}
+
 .esperanca-section {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-left: 210px;
+  align-items: flex-start;
+  width: 160px;
+  margin-left: 0 !important;
+  width: 160px;
 }
 
 .esperanca-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 15px;
-  border-radius: 8px;
-  min-width: 150px;
-  margin-top: -80px;
-  margin-left: 120px;
+  align-items: flex-start;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  min-width: unset;
 }
 
 .esperanca-titulo {
@@ -436,6 +665,15 @@ body {
 .esperanca-inputs {
   display: flex;
   align-items: center;
+}
+
+.esperanca-barra .barra-rpg-label {
+  font-size: 0.6rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #d4af37;
+  text-shadow: 0 0 4px rgba(212, 175, 55, 0.5);
 }
 
 .esperanca-atual,
@@ -476,12 +714,31 @@ body {
   font-size: 18px;
 }
 
-.colunas-personagem {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  flex: 1;
+.esperanca-label {
+  color: #d4af37;
+  text-shadow: 0 0 4px rgba(212, 175, 55, 0.5);
 }
+
+.esperanca-barra .barra-rpg-input.atual {
+  font-size: 1rem;
+  color: #d4af37;
+  text-shadow: 0 0 4px rgba(212, 175, 55, 0.6);
+  width: 40px;
+}
+
+.esperanca-barra .barra-btn {
+  margin-left: -4px;
+  color: #d4af37;
+}
+
+.esperanca-barra .barra-btn:hover {
+  background: rgba(212, 175, 55, 0.25);
+  transform: scale(1.15);
+}
+
+/* =========================================================
+   08 - Informações do personagem
+   ========================================================= */
 
 .info-coluna {
   width: 220px;
@@ -517,7 +774,10 @@ body {
   font-family: inherit;
 }
 
-/* SEÇÃO DOS ATRIBUTOS */
+/* =========================================================
+   09 - Atributos
+   ========================================================= */
+
 .atributoCompleto {
   display: flex;
   justify-content: space-between;
@@ -552,7 +812,7 @@ body {
   justify-content: center;
 
   min-width: 40px;
-  font: 200px;
+  font-size: 200px; /* corrigido: era "font", mas aqui o correto é font-size */
 
   color: #d4af37;
 
@@ -603,7 +863,10 @@ body {
   outline: 2px solid #8b4513;
 }
 
-/* SIDEBAR COM ABAS */
+/* =========================================================
+   10 - Sidebar e abas
+   ========================================================= */
+
 .sidebar-container {
   flex: 1;
   background: rgba(0, 0, 0, 0.3);
@@ -665,14 +928,71 @@ body {
   padding-bottom: 8px;
 }
 
-/* ESTILOS PARA CONTEÚDO DAS ABAS */
+.sistema-membros-sidebar {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.corpo-container-sidebar {
+  display: flex;
+  gap: 20px;
+  padding: 15px;
+  flex: 1;
+  min-height: 0;
+}
+
+.codicao-sidebar {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.corpo-humano-sidebar {
+  width: 100%;
+  height: auto;
+  max-height: 630px;
+  border-radius: 6px;
+  border: 2px solid #8b4513;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.membro-overlay-sidebar {
+  position: absolute;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 3px;
+  padding: 2px;
+}
+
+.controles-membros-sidebar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.vida-total-sidebar {
+  background: rgba(0, 0, 0, 0.4);
+  border-top: 1px solid #444;
+  padding: 12px 15px;
+}
+
+/* =========================================================
+   11 - Aba Ativos, Rituais e Inventário
+   ========================================================= */
+
 .lista-ativos {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-/* CARD */
 .ativo-item {
   position: relative;
 
@@ -696,7 +1016,6 @@ body {
   transition: 0.3s ease;
 }
 
-/* GLOW */
 .ativo-item::before {
   content: "";
 
@@ -722,7 +1041,6 @@ body {
   left: 100%;
 }
 
-/* HOVER */
 .ativo-item:hover {
   transform: translateX(4px);
 
@@ -737,7 +1055,6 @@ body {
   box-shadow: 0 0 12px rgba(139, 69, 19, 0.2);
 }
 
-/* NOME */
 .ativo-nome {
   color: #e8e8e8;
 
@@ -752,7 +1069,6 @@ body {
   text-shadow: 0 0 3px rgba(255, 255, 255, 0.15);
 }
 
-/* VALOR */
 .ativo-valor {
   display: flex;
   align-items: center;
@@ -780,7 +1096,6 @@ body {
   box-shadow: inset 0 0 8px rgba(46, 204, 113, 0.08);
 }
 
-/* CLIQUE */
 .ativo-nome.clickable {
   cursor: pointer;
   transition: 0.2s ease;
@@ -824,7 +1139,816 @@ body {
   font-weight: bold;
 }
 
-/* ABA HABILIDADES */
+.inventario-acoes {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* =========================================================
+   INVENTÁRIO / CRIAÇÃO
+   ========================================================= */
+
+.inventario-subabas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.inventario-subabas button {
+  min-height: 38px;
+  padding: 0 16px;
+
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 6px;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  color: #d6c7b0;
+
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.inventario-subabas button:hover,
+.inventario-subabas button.ativa {
+  border-color: #d4af37;
+  background: rgba(139, 69, 19, 0.34);
+  color: #d4af37;
+}
+
+.item-recolhivel {
+  overflow: hidden;
+
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-left: 3px solid #d4af37;
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.item-recolhivel summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px;
+
+  cursor: pointer;
+  list-style: none;
+}
+
+.item-recolhivel summary::-webkit-details-marker {
+  display: none;
+}
+
+.inventario-resumo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inventario-item-nome {
+  color: #fff8ea;
+
+  font-size: 0.9rem;
+  font-weight: 800;
+
+  text-transform: uppercase;
+}
+
+.inventario-item-tipo {
+  color: #d4af37;
+
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.item-descricao-recolhivel {
+  display: grid;
+  gap: 10px;
+
+  padding: 14px;
+
+  border-top: 1px solid rgba(212, 175, 55, 0.12);
+
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.item-descricao-recolhivel p {
+  color: #d2c6b2;
+
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.item-descricao-recolhivel strong {
+  color: #d4af37;
+}
+
+.item-status-arma {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  margin-top: 10px;
+}
+
+.item-status-arma span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 38px;
+  padding: 8px 12px;
+
+  border-radius: 6px;
+
+  background: rgba(255, 255, 255, 0.05);
+
+  color: #e5dccf;
+
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.bloco-absolutismo {
+  padding: 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #ffffff;
+  border-radius: 6px;
+
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.bloco-absolutismo strong {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #ffffff;
+
+  letter-spacing: 1px;
+}
+
+/* =========================================================
+   CRIAÇÃO
+   ========================================================= */
+
+.criacao-itens {
+  display: grid;
+  gap: 26px;
+}
+
+.criacao-topo {
+  padding: 18px;
+
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 8px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.82),
+    rgba(28, 20, 14, 0.95)
+  );
+}
+
+.criacao-topo span {
+  color: #8e8e8e;
+
+  font-size: 0.72rem;
+  font-weight: 800;
+
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.criacao-topo h4 {
+  margin: 10px 0 8px;
+
+  color: #fff7e7;
+
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.criacao-topo p {
+  max-width: 760px;
+
+  color: #b7ab97;
+
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   GRUPOS
+   ========================================================= */
+
+.criacao-grupo {
+  display: grid;
+  gap: 16px;
+}
+
+.criacao-grupo h5 {
+  padding-bottom: 10px;
+
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+
+  color: #d4af37;
+
+  font-size: 0.82rem;
+  font-weight: 800;
+
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   GRID
+   ========================================================= */
+
+.criacao-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* =========================================================
+   ABAS DE CRIAÇÃO
+   ========================================================= */
+
+.criacao-abas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.criacao-abas button {
+  min-height: 38px;
+  padding: 0 16px;
+
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 6px;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  color: #cfc2ae;
+
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.criacao-abas button:hover,
+.criacao-abas button.ativa {
+  border-color: #d4af37;
+  background: rgba(139, 69, 19, 0.35);
+  color: #d4af37;
+}
+.criacao-card {
+  position: relative;
+
+  display: grid;
+  gap: 10px;
+
+  min-height: 290px;
+  padding: 16px;
+
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-left: 3px solid #8b4513;
+  border-radius: 8px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.045),
+    rgba(139, 69, 19, 0.08)
+  );
+
+  overflow: hidden;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.criacao-card:hover {
+  transform: translateY(-3px);
+
+  border-left-color: #d4af37;
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.07),
+    rgba(139, 69, 19, 0.14)
+  );
+}
+
+.criacao-card span {
+  color: #8d8d8d;
+
+  font-size: 0.68rem;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.criacao-card strong {
+  color: #fff8ea;
+
+  font-size: 1rem;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.criacao-card p {
+  margin: 0;
+
+  color: #cfc2ae;
+
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.criacao-card b {
+  color: #d4af37;
+}
+
+/* =========================================================
+   INGREDIENTES
+   ========================================================= */
+.estoque-materiais {
+  display: grid;
+  gap: 14px;
+
+  padding: 16px;
+
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-left: 3px solid #d4af37;
+  border-radius: 8px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.045),
+    rgba(139, 69, 19, 0.08)
+  );
+}
+
+.estoque-topo {
+  display: grid;
+  gap: 4px;
+}
+
+.estoque-topo span {
+  color: #8d8d8d;
+
+  font-size: 0.68rem;
+  font-weight: 800;
+
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.estoque-topo strong {
+  color: #fff8ea;
+
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.estoque-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.estoque-material {
+  display: grid;
+  gap: 6px;
+
+  padding: 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+
+  background: rgba(0, 0, 0, 0.32);
+}
+
+.estoque-material span {
+  color: #d4af37;
+
+  font-size: 0.7rem;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.estoque-material input {
+  width: 100%;
+
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 5px;
+
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff8ea;
+
+  padding: 7px;
+
+  font-family: inherit;
+  font-weight: 800;
+  text-align: center;
+}
+
+.estoque-material input:focus {
+  outline: none;
+  border-color: #d4af37;
+  background: rgba(139, 69, 19, 0.22);
+}
+
+.estoque-icone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  margin: 0 auto;
+
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 8px;
+
+  background: rgba(0, 0, 0, 0.35);
+
+  font-size: 1.3rem;
+}
+
+.estoque-material {
+  place-items: center;
+  text-align: center;
+}
+
+.receita-recursos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.receita-recursos small {
+  padding: 6px 8px;
+
+  border-radius: 5px;
+
+  background: rgba(0, 0, 0, 0.38);
+
+  color: #d4af37;
+
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.craft-mensagem {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+
+  padding: 14px 18px;
+
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  border-left: 4px solid #2ecc71;
+
+  border-radius: 8px;
+
+  background: rgba(0, 0, 0, 0.88);
+
+  color: #d8ffe5;
+
+  font-weight: 700;
+  letter-spacing: 0.5px;
+
+  z-index: 9999;
+
+  animation: aparecerCraft 0.25s ease;
+}
+
+@keyframes aparecerCraft {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rituais-aba {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.rituais-topo span {
+  color: #9a9a9a;
+  font-size: 0.72rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.rituais-topo h4 {
+  margin-top: 4px;
+
+  color: #f3f3f3;
+
+  font-size: 1.4rem;
+}
+
+.lista-rituais {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ritual-item {
+  overflow: hidden;
+
+  border: 1px solid rgba(255,255,255,0.08);
+  border-left: 3px solid #cfcfcf;
+  border-radius: 10px;
+
+  background: rgba(255,255,255,0.03);
+
+  transition: 0.2s;
+}
+
+.ritual-item:hover {
+  border-left-color: #ffffff;
+
+  background: rgba(255,255,255,0.05);
+}
+
+.ritual-item summary {
+  padding: 16px;
+
+  cursor: pointer;
+
+  list-style: none;
+}
+
+.ritual-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.ritual-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.ritual-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ritual-info strong {
+  color: #ffffff;
+
+  font-size: 1rem;
+}
+
+.ritual-info small {
+  color: #9d9d9d;
+
+  font-size: 0.72rem;
+
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ritual-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.custo-ritual,
+.ritual-tag {
+  padding: 6px 10px;
+
+  border-radius: 5px;
+
+  background: rgba(255,255,255,0.06);
+
+  color: #d8d8d8;
+
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.ritual-conteudo {
+  padding: 0 16px 16px;
+}
+
+.ritual-descricao {
+  color: #d0d0d0;
+
+  line-height: 1.6;
+}
+
+.ritual-grid-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+
+  margin-top: 14px;
+}
+
+.ritual-info-card {
+  padding: 10px;
+
+  border-radius: 8px;
+
+  background: rgba(255,255,255,0.04);
+}
+
+.ritual-info-card span,
+.ritual-requisitos span,
+.ritual-efeito span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #9d9d9d;
+
+  font-size: 0.68rem;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.ritual-info-card strong {
+  color: #f0f0f0;
+
+  font-size: 0.82rem;
+}
+
+.ritual-requisitos,
+.ritual-efeito {
+  margin-top: 14px;
+  padding: 12px;
+
+  border-radius: 8px;
+
+  background: rgba(255,255,255,0.03);
+}
+
+.ritual-requisitos p,
+.ritual-efeito p {
+  color: #d0d0d0;
+
+  line-height: 1.5;
+}
+
+.nivel-1 {
+  border-left-color: #7e7e7e;
+}
+
+.nivel-2 {
+  border-left-color: #9e9e9e;
+}
+
+.nivel-3 {
+  border-left-color: #d6d6d6;
+}
+
+.nivel-4 {
+  border-left-color: #ffffff;
+}
+
+/* =========================================================
+   BOTÃO
+   ========================================================= */
+
+.criacao-card button {
+  margin-top: auto;
+
+  min-height: 38px;
+
+  border: 1px solid rgba(212, 175, 55, 0.24);
+  border-radius: 6px;
+
+  background: rgba(139, 69, 19, 0.38);
+
+  color: #f5efe4;
+
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.criacao-card button:hover {
+  border-color: #d4af37;
+  background: #8b4513;
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   RESPONSIVO
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .criacao-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inventario-subabas button {
+    width: 100%;
+  }
+}
+
+.btn-vender-item {
+  border: none;
+
+  background: rgba(139, 69, 19, 0.18);
+
+  border: 1px solid rgba(212, 175, 55, 0.25);
+
+  color: #d4af37;
+
+  padding: 5px 10px;
+
+  border-radius: 4px;
+
+  cursor: pointer;
+
+  font-family: inherit;
+
+  font-size: 0.72em;
+
+  font-weight: bold;
+
+  text-transform: uppercase;
+
+  transition: 0.2s ease;
+}
+
+.btn-vender-item:hover {
+  background: #8b4513;
+
+  border-color: #d4af37;
+
+  color: white;
+
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   12 - Aba Habilidades e Árvore
+   ========================================================= */
+
 .habilidades-resumo-aba {
   display: grid;
   gap: 14px;
@@ -835,8 +1959,11 @@ body {
   padding: 16px;
   border: 1px solid rgba(212, 175, 55, 0.35);
   border-radius: 6px;
-  background:
-    linear-gradient(135deg, rgba(139, 69, 19, 0.22), rgba(0, 0, 0, 0.35));
+  background: linear-gradient(
+    135deg,
+    rgba(139, 69, 19, 0.22),
+    rgba(0, 0, 0, 0.35)
+  );
 }
 
 .habilidades-resumo-topo span,
@@ -884,24 +2011,155 @@ body {
   text-transform: uppercase;
 }
 
+/* GRID DAS HABILIDADES */
 .habilidades-resumo-lista {
   display: grid;
-  gap: 10px;
+
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+
+  gap: 14px;
+
+  align-items: start;
 }
 
+/* CARD NORMAL */
 .habilidade-resumo-card {
-  display: grid;
-  gap: 6px;
-  padding: 12px;
-  border: 1px solid rgba(139, 69, 19, 0.72);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.045);
+  position: relative;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+
+  min-height: 150px;
+
+  padding: 14px;
+
+  border-radius: 8px;
+
+  border: 1px solid rgba(139, 69, 19, 0.55);
+
+  background: linear-gradient(
+    135deg,
+    rgba(30, 18, 10, 0.95),
+    rgba(10, 10, 10, 0.95)
+  );
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.habilidade-resumo-card strong,
-.habilidades-vazio strong {
-  color: #fff;
+.habilidade-resumo-card:hover {
+  transform: translateY(-3px);
+
+  border-color: #d4af37;
+
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.12);
+}
+
+/* TIPO */
+.habilidade-resumo-card span {
+  color: #c89b5f;
+
+  font-size: 0.72em;
+
+  font-weight: bold;
+
+  letter-spacing: 1.5px;
+
   text-transform: uppercase;
+}
+
+/* TITULO */
+.habilidade-resumo-card strong {
+  color: #fff;
+
+  font-size: 0.95em;
+
+  text-transform: uppercase;
+
+  letter-spacing: 1px;
+}
+
+/* TEXTO */
+.habilidade-resumo-card p {
+  color: #d2c6b5;
+
+  font-size: 0.78em;
+
+  line-height: 1.5;
+}
+
+/* ANIQUILAÇÃO ABSOLUTA */
+.habilidade-resumo-absoluta {
+  grid-column: 1 / -1;
+
+  padding: 18px;
+
+  border-radius: 10px;
+
+  border: 1px solid rgba(212, 175, 55, 0.55);
+
+  background: linear-gradient(
+    135deg,
+    rgba(70, 20, 20, 0.98),
+    rgba(15, 0, 0, 0.98)
+  );
+
+  box-shadow:
+    0 0 25px rgba(212, 175, 55, 0.15),
+    inset 0 0 30px rgba(139, 0, 0, 0.18);
+
+  animation: brilhoAbsoluto 3s infinite alternate;
+}
+
+.habilidade-resumo-absoluta span {
+  color: #ffd700;
+
+  font-size: 0.78em;
+
+  text-transform: uppercase;
+
+  letter-spacing: 2px;
+}
+
+.habilidade-resumo-absoluta strong {
+  display: block;
+
+  margin: 8px 0;
+
+  color: white;
+
+  font-size: 1.2em;
+
+  letter-spacing: 2px;
+
+  text-transform: uppercase;
+}
+
+.habilidade-resumo-absoluta p {
+  color: #f0d7d7;
+
+  line-height: 1.6;
+
+  font-size: 0.85em;
+}
+
+@keyframes brilhoAbsoluto {
+  from {
+    box-shadow:
+      0 0 18px rgba(212, 175, 55, 0.12),
+      inset 0 0 20px rgba(139, 0, 0, 0.12);
+  }
+
+  to {
+    box-shadow:
+      0 0 28px rgba(212, 175, 55, 0.22),
+      inset 0 0 35px rgba(139, 0, 0, 0.22);
+  }
 }
 
 .arvore-secao {
@@ -1050,170 +2308,331 @@ body {
   min-width: 180px;
 }
 
-/* ABA PASSIVA */
-.passiva-aba {
-  padding: 15px !important;
+.habilidade-nome.clickable,
+.passiva-nome.clickable {
+  border-radius: 3px;
 }
 
+/* =========================================================
+   13 - Aba Passivas
+   ========================================================= */
+
+/* =========================================================
+   PASSIVAS — CSS COMPLETO ATUALIZADO
+   ========================================================= */
+
+/* CONTAINER DAS CATEGORIAS */
 .categorias-passivas {
   display: flex;
   flex-direction: column;
-  
   gap: 20px;
-  max-height: 1000px;
+  max-height: 900px;
   overflow-y: auto;
+  padding-right: 4px;
 }
 
+/* CATEGORIA */
 .categoria-passiva {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid #444;
-  border-radius: 6px;
-  padding: 15px;
+  background: rgba(0, 0, 0, 0.22);
+
+  border: 1px solid rgba(212, 175, 55, 0.18);
+
+  border-radius: 8px;
+
+  padding: 14px;
 }
 
+/* TITULO */
 .categoria-titulo {
   color: #d4af37;
+
+  text-align: center;
+
+  font-size: 0.9em;
+
   text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 0.85em;
-  margin-bottom: 12px;
-  border-bottom: 1px solid #444;
-  padding-bottom: 6px;
-  font-weight: bold;
+
+  letter-spacing: 2px;
+
+  margin-bottom: 14px;
+
+  padding-bottom: 10px;
+
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
 }
 
+/* GRID */
 .lista-passivas {
   display: grid;
-  align-items: center;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+
   gap: 8px;
+
+  width: 100%;
 }
 
+/* CARD */
 .habilidade-passiva-item {
   display: flex;
-  justify-content: space-between;
+
+  flex-direction: column;
+
   align-items: center;
-  padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  min-width: 0;
+
+  width: 100%;
+
+  padding: 8px 6px;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  border-radius: 6px;
+
   border-left: 2px solid #8b4513;
-  transition: all 0.2s ease;
+
+  overflow: hidden;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .habilidade-passiva-item:hover {
-  background: rgba(139, 69, 19, 0.1);
-  transform: translateX(2px);
+  background: rgba(139, 69, 19, 0.12);
+
+  border-left-color: #d4af37;
+
+  transform: translateY(-1px);
 }
 
+/* NOME */
 .passiva-nome {
-  font-size: 0.8em;
-  color: #e8e8e8;
-  font-weight: 500;
-  flex: 1;
-  margin-right: 10px;
-}
+  width: 100%;
 
-.passiva-controles {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.passiva-valor {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid #444;
-  color: white;
-  width: 45px;
-  height: 25px;
   text-align: center;
-  padding: 2px;
-  border-radius: 3px;
-  font-family: inherit;
-  font-size: 0.8em;
-  font-weight: bold;
+
+  font-size: 0.66em;
+
+  color: #e8e8e8;
+
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  line-height: 1.3;
+
+  letter-spacing: 0.8px;
+
+  word-break: break-word;
 }
 
-.passiva-valor:focus {
-  outline: 2px solid #8b4513;
-  background: rgba(139, 69, 19, 0.2);
-}
-
-.passiva-botoes {
-  display: flex;
-  gap: 3px;
-}
-
-.passiva-botoes button {
-  background: #8b4513;
-  border: none;
-  color: white;
-  width: 20px;
-  height: 20px;
-  border-radius: 2px;
+.passiva-nome.clickable {
   cursor: pointer;
-  font-family: inherit;
+
+  transition: 0.2s ease;
+}
+
+.passiva-nome.clickable:hover {
+  color: #d4af37;
+
+  text-shadow: 0 0 6px rgba(212, 175, 55, 0.45);
+}
+
+/* LINHA */
+.passiva-linha {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  flex-wrap: wrap;
+
+  gap: 4px;
+
+  width: 100%;
+}
+
+/* VALOR BASE */
+.passiva-valor-base {
+  min-width: 34px;
+
+  height: 22px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 0 4px;
+
+  border-radius: 4px;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  color: #888;
+
+  font-size: 0.68em;
+
   font-weight: bold;
+
+  text-align: center;
+
+  cursor: not-allowed;
+
+  user-select: none;
+}
+
+/* SEPARADOR */
+.passiva-separador {
+  color: #555;
+
+  font-weight: bold;
+
+  font-size: 0.75em;
+}
+
+/* CONTROLES */
+.passiva-temp-controles {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 4px;
+}
+
+/* BOTÕES */
+.passiva-temp-btn {
+  width: 19px;
+
+  height: 19px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border: none;
+
+  border-radius: 4px;
+
+  background: rgba(139, 69, 19, 0.18);
+
+  border: 1px solid rgba(212, 175, 55, 0.22);
+
+  color: #d4af37;
+
   font-size: 0.7em;
-  transition: all 0.2s ease;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+  transition: 0.2s ease;
 }
 
-.passiva-botoes button:hover {
-  background: #a0522d;
-  transform: scale(1.1);
+.passiva-temp-btn:hover {
+  background: #8b4513;
+
+  border-color: #d4af37;
+
+  color: white;
+
+  transform: scale(1.05);
 }
 
-/* Scrollbar personalizada para a aba passiva */
+/* INPUT */
+.passiva-valor-temporario {
+  width: 30px;
+
+  min-width: 30px;
+
+  height: 21px;
+
+  text-align: center;
+
+  border-radius: 4px;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  border: 1px solid rgba(212, 175, 55, 0.18);
+
+  color: #d4af37;
+
+  font-size: 0.7em;
+
+  font-weight: bold;
+
+  font-family: inherit;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.passiva-valor-temporario:focus {
+  outline: none;
+
+  border-color: #d4af37;
+
+  background: rgba(212, 175, 55, 0.12);
+}
+
+/* REMOVE SETAS */
+.passiva-valor-temporario::-webkit-outer-spin-button,
+.passiva-valor-temporario::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+
+  margin: 0;
+}
+
+.passiva-valor-temporario[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* SCROLL */
 .categorias-passivas::-webkit-scrollbar {
-  width: 6px;
-}
-
-.categorias-passivas::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
+  width: 5px;
 }
 
 .categorias-passivas::-webkit-scrollbar-thumb {
   background: #8b4513;
-  border-radius: 3px;
+
+  border-radius: 999px;
 }
 
-.categorias-passivas::-webkit-scrollbar-thumb:hover {
-  background: #a0522d;
+/* =========================================================
+   14 - Textareas e descrições
+   ========================================================= */
+
+.personagem-aba {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-/* Responsivo para a aba passiva */
-@media (max-width: 768px) {
-  .lista-passivas {
-    grid-template-columns: 1fr;
-  }
-
-  .categoria-passiva {
-    padding: 10px;
-  }
-
-  .habilidade-passiva-item {
-    padding: 8px 10px;
-  }
-
-  .passiva-nome {
-    font-size: 0.75em;
-  }
-}
-
-@media (max-width: 480px) {
-  .passiva-controles {
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .passiva-botoes {
-    justify-content: center;
-  }
-
-  .passiva-botoes button {
-    width: 25px;
-    height: 18px;
-  }
+.personagem-label {
+  margin-top: 8px;
+  color: #d4af37;
+  font-size: 0.8em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
 }
 
 .textarea-descricao {
@@ -1233,15 +2652,12 @@ body {
   background: rgba(139, 69, 19, 0.1);
 }
 
-/* SISTEMA DE MEMBROS NA SIDEBAR */
+/* =========================================================
+   15 - Corpo, membros e condições
+   ========================================================= */
+
 .corpo-aba {
   padding: 0 !important;
-}
-
-.sistema-membros-sidebar {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
 .integridade {
@@ -1249,55 +2665,11 @@ body {
   font-family: inherit;
 }
 
-.corpo-container-sidebar {
-  display: flex;
-  gap: 20px;
-  padding: 15px;
-  flex: 1;
-  min-height: 0;
-}
-
-.codicao-sidebar {
-  position: relative;
-  flex: 1;
-  max-width: 400px;
-  object-fit: cover;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.corpo-humano-sidebar {
-  width: 100%;
-  height: auto;
-  max-height: 630px;
-  border-radius: 6px;
-  border: 2px solid #8b4513;
-  background: rgba(0, 0, 0, 0.5);
-}
-
-.membro-overlay-sidebar {
-  position: absolute;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 3px;
-  padding: 2px;
-}
-
-.controles-membros-sidebar {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-
-/* SISTEMA DE MEMBROS - BARRAS DE VIDA */
 .membro-controle {
   display: flex;
   align-items: center;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: none;
   border-radius: 4px;
   border-left: 3px solid #27ae60;
   transition: all 0.3s ease;
@@ -1325,7 +2697,6 @@ body {
   flex-shrink: 0;
 }
 
-/* Container da barra de vida */
 .membro-barra-container {
   flex: 1;
   display: flex;
@@ -1333,7 +2704,6 @@ body {
   gap: 8px;
 }
 
-/* Barra de vida */
 .membro-barra-vida {
   flex: 1;
   height: 20px;
@@ -1344,17 +2714,17 @@ body {
   position: relative;
 }
 
-/* Preenchimento da barra */
 .membro-barra-preenchimento {
   height: 100%;
   background: linear-gradient(90deg, #27ae60, #2ecc71);
   border-radius: 10px;
-  transition: width 0.3s ease, background 0.3s ease;
+  transition:
+    width 0.3s ease,
+    background 0.3s ease;
   position: relative;
   min-width: 0;
 }
 
-/* Cores por estado */
 .membro-controle.ferido .membro-barra-preenchimento {
   background: linear-gradient(90deg, #f39c12, #f1c40f);
 }
@@ -1364,17 +2734,6 @@ body {
   animation: barraPulseDanger 1s infinite;
 }
 
-@keyframes barraPulseDanger {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-/* Texto da porcentagem */
 .membro-barra-texto {
   min-width: 45px;
   text-align: right;
@@ -1384,7 +2743,6 @@ body {
   font-family: "Courier New", monospace;
 }
 
-/* Botões de ajuste */
 .membro-botoes {
   display: flex;
   gap: 3px;
@@ -1414,7 +2772,6 @@ body {
   transform: scale(1.1);
 }
 
-/* Botões rápidos */
 .btn-rapido {
   font-size: 0.65em !important;
   width: 30px !important;
@@ -1453,12 +2810,60 @@ body {
   background: #155724 !important;
 }
 
-/* Esconde os inputs antigos */
 .membro-inputs {
   display: none;
 }
 
-/* CONDIÇÕES */
+.membro-defesa {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 6px;
+
+  margin-top: 6px;
+}
+
+.membro-defesa-label {
+  color: #4a86e8;
+
+  font-size: 0.72em;
+
+  font-weight: bold;
+
+  letter-spacing: 1px;
+}
+
+.membro-defesa-input {
+  width: 46px;
+
+  height: 24px;
+
+  text-align: center;
+
+  border-radius: 4px;
+
+  border: 1px solid rgba(74, 134, 232, 0.25);
+
+  background: rgba(74, 134, 232, 0.08);
+
+  color: #4a86e8;
+
+  font-size: 0.78em;
+
+  font-weight: bold;
+}
+
+.membro-defesa-input:focus {
+  outline: none;
+
+  border-color: #4a86e8;
+
+  background: rgba(74, 134, 232, 0.15);
+}
+
 .condicoes-container {
   margin-top: 15px;
   padding-top: 15px;
@@ -1474,20 +2879,25 @@ body {
   text-transform: uppercase;
 }
 
+/* WRAPPER */
+.condicoes-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 12px;
+}
+
 /* LISTA */
 .lista-condicoes {
   display: flex;
   flex-wrap: wrap;
-
-  gap: 8px;
+  justify-content: center;
+  gap: 10px;
 
   max-height: 180px;
-
   overflow-y: auto;
 
-  padding-right: 5px;
-  align-items: center;
-  justify-content: center;
+  padding: 4px 6px;
 }
 
 /* CHIP */
@@ -1498,9 +2908,9 @@ body {
 
   color: #d4af37;
 
-  padding: 6px 10px;
+  padding: 8px 14px;
 
-  border-radius: 20px;
+  border-radius: 999px;
 
   font-family: inherit;
 
@@ -1515,6 +2925,19 @@ body {
   cursor: pointer;
 
   transition: 0.25s ease;
+
+  min-height: 34px;
+}
+
+/* ATIVA */
+.condicao-chip.ativa {
+  background: rgba(212, 175, 55, 0.18);
+
+  border-color: rgba(212, 175, 55, 0.55);
+
+  color: white;
+
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.18);
 }
 
 /* HOVER */
@@ -1526,8 +2949,51 @@ body {
   color: white;
 
   transform: translateY(-2px);
+}
 
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.15);
+/* DESCRIÇÕES */
+.condicoes-ativas-descricao {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+/* CARD */
+.condicao-descricao-card {
+  min-height: 95px;
+  padding: 12px 14px;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-left: 3px solid #d4af37;
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(25, 18, 12, 0.96),
+    rgba(8, 8, 8, 0.96)
+  );
+  animation: fadeCondicao 0.25s ease;
+}
+
+/* TITULO */
+.condicao-descricao-card strong {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #d4af37;
+
+  text-transform: uppercase;
+
+  letter-spacing: 1px;
+
+  font-size: 0.78em;
+}
+
+/* TEXTO */
+.condicao-descricao-card p {
+  margin: 0;
+  color: #d8cec0;
+  font-size: 0.74em;
+  line-height: 1.45;
 }
 
 /* SCROLL */
@@ -1537,16 +3003,21 @@ body {
 
 .lista-condicoes::-webkit-scrollbar-thumb {
   background: #8b4513;
-  border-radius: 10px;
+  border-radius: 999px;
 }
 
-/* Vida Total na Sidebar */
-.vida-total-sidebar {
-  background: rgba(0, 0, 0, 0.4);
-  border-top: 1px solid #444;
-  padding: 12px 15px;
-}
+/* ANIMAÇÃO */
+@keyframes fadeCondicao {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
 
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .vida-total-info {
   display: flex;
   justify-content: space-between;
@@ -1567,14 +3038,23 @@ body {
   font-size: 1.1em;
 }
 
-/* CONTEÚDO INFERIOR */
-.conteudo-inferior {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.area-vazia-lateral,
+.area-vazia-inferior,
+.sistema-membros {
+  display: none;
 }
 
-/* BARRA DE RECURSOS */
+/* =========================================================
+   16 - Recursos e controles de dados
+   ========================================================= */
+
+.barra-recurso-rpg {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
 .barra-recurso {
   display: flex;
   justify-content: space-between;
@@ -1616,14 +3096,6 @@ body {
   background: rgba(139, 69, 19, 0.2);
 }
 
-/* Remove áreas antigas */
-.area-vazia-lateral,
-.area-vazia-inferior,
-.sistema-membros {
-  display: none;
-}
-
-/* CONTROLES DE DADOS */
 .controles-dados {
   display: flex;
   justify-content: space-between;
@@ -1692,7 +3164,80 @@ body {
   background: #e74c3c;
 }
 
-/* RESPONSIVO PARA CONTROLES DE DADOS */
+/* =========================================================
+   17 - Utilitários
+   ========================================================= */
+
+.barra-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s ease;
+  padding: 0;
+}
+
+.barra-btn:active {
+  transform: scale(0.92);
+}
+
+.clickable {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.clickable:hover {
+  color: #d4af37;
+  text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+}
+
+/* =========================================================
+   18 - Responsividade
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .lista-passivas {
+    grid-template-columns: 1fr;
+  }
+
+  .categoria-passiva {
+    padding: 10px;
+  }
+
+  .habilidade-passiva-item {
+    padding: 8px 10px;
+  }
+
+  .passiva-nome {
+    font-size: 0.75em;
+  }
+}
+
+@media (max-width: 480px) {
+  .passiva-controles {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .passiva-botoes {
+    justify-content: center;
+  }
+
+  .passiva-botoes button {
+    width: 25px;
+    height: 18px;
+  }
+}
+
 @media (max-width: 768px) {
   .controles-dados {
     flex-direction: column;
@@ -1711,25 +3256,6 @@ body {
   }
 }
 
-/* Adicione ao FichaPersonagem.css */
-.clickable {
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.clickable:hover {
-  color: #d4af37;
-  text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
-}
-
-.habilidade-nome.clickable,
-.passiva-nome.clickable {
-  border-radius: 3px;
-}
-
-
-/* RESPONSIVO */
 @media (max-width: 768px) {
   .main-content {
     flex-direction: column;
@@ -1821,4 +3347,326 @@ body {
   .membro-inputs {
     justify-content: center;
   }
+}
+
+/* =========================================================
+   23 - Efeitos do perfil: Sanidade e Esperança
+   ========================================================= */
+
+@keyframes rachaduraAzulPulso {
+  0%,
+  100% {
+    opacity: 0.75;
+    filter: drop-shadow(0 0 4px rgba(74, 134, 232, 0.65));
+  }
+
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(74, 134, 232, 1));
+  }
+}
+
+@keyframes perfilTomadoRachaduras {
+  0%,
+  100% {
+    opacity: 0.92;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes esperancaMorrendo {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 0.75;
+  }
+}
+
+.profile-wrapper {
+  isolation: isolate;
+  background: #050505;
+  box-shadow: 0 0 12px rgba(139, 69, 19, 0.45);
+}
+
+.profile-wrapper .profile {
+  transition:
+    filter 0.6s ease,
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+
+/* Camada de rachaduras da Sanidade */
+.profile-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: 50%;
+  opacity: 0;
+  mix-blend-mode: screen;
+  background-repeat: no-repeat;
+  transition: opacity 0.45s ease;
+}
+
+/* Camada de perda da Esperança */
+.profile-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: 50%;
+  opacity: 0;
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 28%,
+      rgba(0, 0, 0, 0.25) 62%,
+      rgba(0, 0, 0, 0.82) 100%
+    ),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.38));
+  transition: opacity 0.45s ease;
+}
+
+/* SANIDADE: metade */
+.profile-wrapper.sanidade-metade::before {
+  opacity: 0.75;
+  background-image:
+    linear-gradient(
+      34deg,
+      transparent 0 44%,
+      rgba(74, 134, 232, 0.95) 45%,
+      transparent 47% 100%
+    ),
+    linear-gradient(
+      112deg,
+      transparent 0 52%,
+      rgba(140, 190, 255, 0.9) 53%,
+      transparent 55% 100%
+    ),
+    linear-gradient(
+      80deg,
+      transparent 0 62%,
+      rgba(74, 134, 232, 0.7) 63%,
+      transparent 65% 100%
+    );
+  background-size:
+    100% 100%,
+    70% 70%,
+    65% 65%;
+  background-position:
+    center,
+    38% 28%,
+    64% 62%;
+  animation: rachaduraAzulPulso 2.2s infinite;
+}
+
+/* SANIDADE: abaixo da metade */
+.profile-wrapper.sanidade-critico::before {
+  opacity: 0.95;
+  background-image:
+    linear-gradient(
+      25deg,
+      transparent 0 38%,
+      rgba(74, 134, 232, 1) 39%,
+      transparent 41% 100%
+    ),
+    linear-gradient(
+      112deg,
+      transparent 0 48%,
+      rgba(140, 190, 255, 1) 49%,
+      transparent 51% 100%
+    ),
+    linear-gradient(
+      72deg,
+      transparent 0 58%,
+      rgba(74, 134, 232, 0.9) 59%,
+      transparent 61% 100%
+    ),
+    linear-gradient(
+      145deg,
+      transparent 0 42%,
+      rgba(74, 134, 232, 0.85) 43%,
+      transparent 45% 100%
+    ),
+    linear-gradient(
+      5deg,
+      transparent 0 64%,
+      rgba(140, 190, 255, 0.75) 65%,
+      transparent 67% 100%
+    );
+  background-size:
+    100% 100%,
+    82% 82%,
+    78% 78%,
+    65% 65%,
+    55% 55%;
+  background-position:
+    center,
+    44% 25%,
+    55% 55%,
+    70% 45%,
+    30% 70%;
+  animation: rachaduraAzulPulso 1.45s infinite;
+}
+
+/* SANIDADE: zero */
+.profile-wrapper.sanidade-zero::before {
+  opacity: 1;
+  background-image:
+    linear-gradient(
+      24deg,
+      transparent 0 30%,
+      rgba(74, 134, 232, 1) 31%,
+      transparent 33% 100%
+    ),
+    linear-gradient(
+      112deg,
+      transparent 0 35%,
+      rgba(140, 190, 255, 1) 36%,
+      transparent 38% 100%
+    ),
+    linear-gradient(
+      78deg,
+      transparent 0 45%,
+      rgba(74, 134, 232, 1) 46%,
+      transparent 48% 100%
+    ),
+    linear-gradient(
+      150deg,
+      transparent 0 44%,
+      rgba(74, 134, 232, 0.95) 45%,
+      transparent 47% 100%
+    ),
+    linear-gradient(
+      8deg,
+      transparent 0 55%,
+      rgba(140, 190, 255, 0.9) 56%,
+      transparent 58% 100%
+    ),
+    linear-gradient(
+      132deg,
+      transparent 0 62%,
+      rgba(74, 134, 232, 0.9) 63%,
+      transparent 65% 100%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(74, 134, 232, 0.18),
+      rgba(0, 25, 70, 0.72)
+    );
+  background-size: 100% 100%;
+  background-position: center;
+  animation: perfilTomadoRachaduras 1.1s infinite;
+}
+
+/* ESPERANÇA: metade — começa a perder cor */
+.profile-wrapper.esperanca-metade .profile {
+  filter: saturate(0.55) contrast(0.96) brightness(0.9);
+}
+
+.profile-wrapper.esperanca-metade::after {
+  opacity: 0.28;
+}
+
+/* ESPERANÇA: abaixo da metade — imagem mais fria e apagada */
+.profile-wrapper.esperanca-critico .profile {
+  filter: grayscale(0.68) saturate(0.22) contrast(0.9) brightness(0.72);
+}
+
+.profile-wrapper.esperanca-critico::after {
+  opacity: 0.58;
+  animation: esperancaMorrendo 2s infinite;
+}
+
+/* ESPERANÇA: zero — cor completamente drenada */
+.profile-wrapper.esperanca-zero .profile {
+  filter: grayscale(1) saturate(0) contrast(0.82) brightness(0.48);
+  opacity: 0.72;
+}
+
+.profile-wrapper.esperanca-zero::after {
+  opacity: 0.88;
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(0, 0, 0, 0.12) 0 25%,
+      rgba(0, 0, 0, 0.66) 62%,
+      rgba(0, 0, 0, 0.96) 100%
+    ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.04) 0 2px,
+      rgba(0, 0, 0, 0.14) 2px 5px
+    );
+}
+
+/* =========================================================
+   PERFIL BLOQUEADO PARA JOGADORES
+   - Jogadores não editam nome, pronome, classe e especialidade.
+   - A foto continua editável a qualquer momento.
+========================================================= */
+.perfil-info-bloqueada {
+  cursor: not-allowed;
+  user-select: none;
+  opacity: 0.85;
+}
+
+.perfil-info-bloqueada:focus {
+  outline: none !important;
+  background: transparent !important;
+}
+
+.profile-editavel {
+  cursor: pointer;
+}
+
+.profile-upload-label {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.profile-upload-input {
+  display: none;
+}
+
+.profile-upload-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  z-index: 4;
+  transform: translateX(-50%) translateY(8px);
+  padding: 4px 8px;
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #f5efe4;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.25s ease;
+}
+
+.profile-editavel:hover .profile-upload-hint {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.profile-editavel:hover .profile {
+  filter: brightness(0.85);
 }

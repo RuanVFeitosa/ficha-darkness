@@ -19,13 +19,18 @@
   width: 100%;
   height: 100vh;
   object-fit: cover;
-  object-position: center; 
+  object-position: center;
 }
 
 .loja-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.86), rgba(0, 0, 0, 0.28) 55%, rgba(0, 0, 0, 0.66));
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.86),
+    rgba(0, 0, 0, 0.28) 55%,
+    rgba(0, 0, 0, 0.66)
+  );
 }
 
 .loja-voltar {
@@ -85,7 +90,7 @@
 }
 
 .loja-shell {
-  width: min(1420px, calc(100% - 36px));
+  width: min(1800px, calc(100% - 36px));
   margin: 0 auto;
   padding: 28px 0 44px;
 }
@@ -128,14 +133,14 @@
 
 .loja-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   gap: 22px;
   align-items: start;
 }
 
 .loja-catalogo {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -148,12 +153,20 @@
   border: 1px solid rgba(212, 175, 55, 0.16);
   border-left: 3px solid #8b4513;
   border-radius: 8px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(139, 69, 19, 0.08));
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.075),
+    rgba(139, 69, 19, 0.08)
+  );
 }
 
 .loja-item:hover {
   border-left-color: #d4af37;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(139, 69, 19, 0.16));
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(139, 69, 19, 0.16)
+  );
 }
 
 .loja-item-tipo {
@@ -307,6 +320,262 @@
   cursor: not-allowed;
 }
 
+/* =========================================================
+   STATUS DAS ARMAS
+   ========================================================= */
+
+.loja-arma {
+  min-height: 430px;
+}
+
+.arma-status-card {
+  display: grid;
+  gap: 12px;
+
+  margin-top: 14px;
+  padding: 12px;
+
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 8px;
+
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.arma-status-principais {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.arma-status-principais div {
+  padding: 8px;
+
+  border-radius: 6px;
+
+  background: rgba(255, 255, 255, 0.055);
+
+  text-align: center;
+}
+
+.arma-status-principais span,
+.arma-status-modos span,
+.arma-status-extra span {
+  display: block;
+
+  color: #8f8f8f;
+
+  font-size: 0.68rem;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.arma-status-principais strong {
+  color: #e6f3ff;
+
+  font-size: 1rem;
+}
+
+.arma-status-modos {
+  display: grid;
+  gap: 7px;
+}
+
+.arma-status-modos div {
+  display: grid;
+  gap: 4px;
+}
+
+.arma-status-modos strong {
+  color: #f5efe4;
+
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.arma-status-extra {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.arma-status-extra span {
+  padding: 6px;
+
+  border-radius: 5px;
+
+  background: rgba(139, 69, 19, 0.16);
+
+  color: #d4af37;
+
+  text-align: center;
+}
+
+/* =========================================================
+   VISUAL RITOS
+   ========================================================= */
+
+.loja-hero-ritos {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.loja-hero-ritos .loja-kicker {
+  color: #d9d9d9;
+}
+
+.loja-hero-ritos h1 {
+  color: #ffffff;
+
+  text-shadow:
+    0 0 12px rgba(255, 255, 255, 0.18),
+    0 0 32px rgba(255, 255, 255, 0.08);
+}
+
+.loja-hero-ritos p {
+  color: #cfcfcf;
+}
+
+.loja-hero-ritos .loja-voltar {
+  border-color: rgba(255, 255, 255, 0.22);
+
+  background: rgba(20, 20, 20, 0.65);
+}
+
+.loja-hero-ritos .loja-voltar:hover {
+  border-color: #ffffff;
+
+  color: #ffffff;
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-categoria.ativa {
+  border-color: #d0d0d0;
+
+  background: rgba(255, 255, 255, 0.08);
+
+  color: #ffffff;
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-item {
+  border-left-color: #8f8f8f;
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(35, 35, 35, 0.45)
+  );
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-item:hover {
+  border-left-color: #ffffff;
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(50, 50, 50, 0.55)
+  );
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-item-tipo {
+  color: #d6d6d6;
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-item h2 {
+  color: #ffffff;
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-item p {
+  color: #bdbdbd;
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-preco {
+  color: #f0f0f0;
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-item-footer button,
+.loja-hero-ritos ~ .loja-shell .loja-finalizar {
+  border-color: rgba(255, 255, 255, 0.16);
+
+  background: rgba(255, 255, 255, 0.06);
+
+  color: #f5f5f5;
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-item-footer button:hover,
+.loja-hero-ritos ~ .loja-shell .loja-finalizar:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+
+  border-color: #ffffff;
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-carrinho {
+  border-color: rgba(255, 255, 255, 0.14);
+
+  background: rgba(10, 10, 10, 0.84);
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-carrinho-topo strong,
+.loja-hero-ritos ~ .loja-shell .loja-total strong {
+  color: #ffffff;
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-carrinho-item {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.loja-hero-ritos ~ .loja-shell .loja-carrinho-item span {
+  color: #d8d8d8;
+}
+
+.ritos-subabas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  margin: -10px 0 24px;
+}
+
+.ritos-subabas button {
+  min-height: 38px;
+
+  padding: 0 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.045);
+
+  color: #cfcfcf;
+
+  cursor: pointer;
+
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  transition: 0.2s ease;
+}
+
+.ritos-subabas button:hover,
+.ritos-subabas button.ativa {
+  border-color: #ffffff;
+
+  background: rgba(255, 255, 255, 0.14);
+
+  color: #ffffff;
+
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 620px) {
+  .ritos-subabas button {
+    width: 100%;
+  }
+}
+
 @media (max-width: 960px) {
   .loja-layout {
     grid-template-columns: 1fr;
@@ -332,7 +601,7 @@
   }
 
   .loja-catalogo {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .loja-item-footer {

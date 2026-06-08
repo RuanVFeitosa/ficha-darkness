@@ -37,21 +37,49 @@ const UpgradeNivel = () => {
   const [mensagem, setMensagem] = useState("");
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
   const nivelAtual = Math.max(1, parseInt(personagem.nivel, 10) || 1);
-  const custos = obterCustosNivel(nivelAtual);
+  const passouDoNivel5 = nivelAtual > 5;
+
+  const limitesUpgrade = {
+    passivos: passouDoNivel5 ? 20 : 10,
+    atributos: passouDoNivel5 ? 100 : 50,
+  };
+
+  const pontosPorTrilha = {
+    passivos: 10,
+    atributos: 10,
+    habilidades: 20,
+  };
+  
+  const custos =
+    TABELA_EVOLUCAO.find((linha) => linha.nivel === nivelAtual) ||
+    obterCustosNivel(nivelAtual);
   const pontosEvolucaoDisponiveis = Math.max(
     0,
     parseInt(personagem.pontosEvolucao?.disponiveis, 10) || 0,
   );
-  const custoPorMelhoria = custos[trilha] || 0;
-  const pontosGastos = useMemo(
+
+  const pontosDisponiveisNaTrilha = pontosPorTrilha[trilha] || 0;
+
+  const custoPorMelhoria =
+    trilha === "passivos"
+      ? custos.passivos
+      : trilha === "atributos"
+        ? custos.atributos
+        : custos.habilidades;
+
+  const pontosDistribuidos = useMemo(
     () =>
       Object.values(distribuicao).reduce(
         (total, valor) => total + Math.max(0, parseInt(valor, 10) || 0),
         0,
-      ) * custoPorMelhoria,
-    [custoPorMelhoria, distribuicao],
+      ),
+    [distribuicao],
   );
-  const pontosRestantes = Math.max(0, pontosEvolucaoDisponiveis - pontosGastos);
+
+  const pontosRestantes = Math.max(
+    0,
+    pontosDisponiveisNaTrilha - pontosDistribuidos,
+  );
 
   useEffect(() => {
     const dadosSalvos = localStorage.getItem(storageKey);
@@ -91,13 +119,52 @@ const UpgradeNivel = () => {
 
   const atualizarDistribuicao = (chave, valor) => {
     const numero = Math.max(0, parseInt(valor, 10) || 0);
+
+    const valorAtual =
+      trilha === "atributos"
+        ? personagem.atributos?.[chave] || 0
+        : personagem.habilidadesPassivas?.[chave] || 0;
+
+    const limite =
+      trilha === "atributos"
+        ? limitesUpgrade.atributos
+        : limitesUpgrade.passivos;
+
+    const maximoPorLimite = Math.max(0, limite - valorAtual);
+
+    const outrosPontos = Object.entries(distribuicao).reduce(
+      (total, [itemChave, itemValor]) => {
+        if (itemChave === chave) return total;
+
+        return total + Math.max(0, parseInt(itemValor, 10) || 0);
+      },
+      0,
+    );
+
+    const maximoPorPontos = Math.max(
+      0,
+      pontosDisponiveisNaTrilha - outrosPontos,
+    );
+
+    const valorPermitido = Math.min(numero, maximoPorLimite, maximoPorPontos);
+
+    if (numero > valorPermitido) {
+      setMensagem(
+        `Limite atingido. ${
+          trilha === "atributos" ? "Atributos" : "Passivos"
+        } podem ir até ${limite}.`,
+      );
+    } else {
+      setMensagem("");
+    }
+
     setDistribuicao((atual) => ({
       ...atual,
-      [chave]: numero,
+      [chave]: valorPermitido,
     }));
   };
 
-  const aplicarUpgrade = () => {
+  const aplicarUpgrade = async () => {
     if (trilha === "habilidades") {
       abrirArvore();
       return;
@@ -108,52 +175,63 @@ const UpgradeNivel = () => {
       return;
     }
 
-    if (pontosGastos <= 0) {
-      setMensagem("Distribua pelo menos 1 ponto antes de confirmar.");
+    if (custoPorMelhoria > pontosEvolucaoDisponiveis) {
+      setMensagem("Voce nao possui PE suficiente para esta trilha.");
+
       return;
     }
 
-    if (pontosGastos > pontosEvolucaoDisponiveis) {
+    if (pontosDistribuidos > pontosEvolucaoDisponiveis) {
       setMensagem("Voce esta gastando mais pontos do que possui.");
       return;
     }
 
-    const atualizado = {
-      ...personagem,
-      pontosEvolucao: {
-        ...(personagem.pontosEvolucao || {}),
-        disponiveis: pontosEvolucaoDisponiveis - pontosGastos,
-      },
-      historicoUpgrades: [
-        ...(personagem.historicoUpgrades || []),
-        {
-          nivel: nivelAtual,
-          trilha,
-          pontos: distribuicao,
-          custo: pontosGastos,
-          criadoEm: new Date().toISOString(),
-        },
-      ],
+    const atualizado = structuredClone(personagem);
+
+    atualizado.pontosEvolucao = {
+      ...(atualizado.pontosEvolucao || {}),
+      disponiveis: pontosEvolucaoDisponiveis - custoPorMelhoria,
     };
 
+    atualizado.historicoUpgrades = [
+      ...(atualizado.historicoUpgrades || []),
+      {
+        nivel: nivelAtual,
+        trilha,
+        pontos: distribuicao,
+        custo: custoPorMelhoria,
+        criadoEm: new Date().toISOString(),
+      },
+    ];
+
     if (trilha === "atributos") {
-      atualizado.atributos = { ...(personagem.atributos || {}) };
+      atualizado.atributos = {
+        ...(atualizado.atributos || {}),
+      };
+
       Object.entries(distribuicao).forEach(([chave, valor]) => {
+        const atual = parseInt(atualizado.atributos[chave], 10) || 0;
+        const aumento = parseInt(valor, 10) || 0;
+
         atualizado.atributos[chave] = Math.min(
-          nivelAtual > 5 ? 100 : 50,
-          (parseInt(atualizado.atributos[chave], 10) || 0) + valor,
+          limitesUpgrade.atributos,
+          atual + aumento,
         );
       });
     }
 
     if (trilha === "passivos") {
       atualizado.habilidadesPassivas = {
-        ...(personagem.habilidadesPassivas || {}),
+        ...(atualizado.habilidadesPassivas || {}),
       };
+
       Object.entries(distribuicao).forEach(([chave, valor]) => {
+        const atual = parseInt(atualizado.habilidadesPassivas[chave], 10) || 0;
+        const aumento = parseInt(valor, 10) || 0;
+
         atualizado.habilidadesPassivas[chave] = Math.min(
-          nivelAtual > 5 ? 20 : 10,
-          (parseInt(atualizado.habilidadesPassivas[chave], 10) || 0) + valor,
+          limitesUpgrade.passivos,
+          atual + aumento,
         );
       });
     }
@@ -162,15 +240,13 @@ const UpgradeNivel = () => {
     setDistribuicao({});
     setMensagem("Upgrade aplicado. Pontos de evolucao atualizados.");
 
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(atualizado));
-    } catch (error) {
-      console.warn("Nao foi possivel salvar upgrade localmente.", error);
-    }
+    localStorage.setItem(storageKey, JSON.stringify(atualizado));
 
-    salvarPersonagem(fichaId, atualizado).catch((error) => {
+    try {
+      await salvarPersonagem(fichaId, atualizado);
+    } catch (error) {
       console.warn("Backend indisponivel. Upgrade salvo localmente.", error);
-    });
+    }
   };
 
   const opcoesPassivas = Object.keys(personagem.habilidadesPassivas || {}).map(
@@ -199,7 +275,9 @@ const UpgradeNivel = () => {
         </div>
         <div>
           <span>Proximo upgrade</span>
-          <strong>{custos.acumulado} pts ganhos no NV{nivelAtual}</strong>
+          <strong>
+            {custos.acumulado} pts ganhos no NV{nivelAtual}
+          </strong>
         </div>
         <div>
           <span>Pontos disponiveis</span>
@@ -244,7 +322,11 @@ const UpgradeNivel = () => {
         <div className="upgrade-pontos">
           <span>Pontos da trilha</span>
           <strong>
-            {pontosRestantes} restantes - custo {custoPorMelhoria} por ponto
+            <strong>
+              {pontosRestantes} restantes de {pontosDisponiveisNaTrilha} pontos
+              {" • "}
+              Custo: {custoPorMelhoria} PE
+            </strong>{" "}
           </strong>
         </div>
 
@@ -254,7 +336,9 @@ const UpgradeNivel = () => {
               <label key={atributo.chave}>
                 <span>
                   {atributo.nome}
-                  <small>Atual: {personagem.atributos?.[atributo.chave] || 0}</small>
+                  <small>
+                    Atual: {personagem.atributos?.[atributo.chave] || 0}
+                  </small>
                 </span>
                 <input
                   type="number"
@@ -276,7 +360,8 @@ const UpgradeNivel = () => {
                 <span>
                   {passiva.nome}
                   <small>
-                    Atual: {personagem.habilidadesPassivas?.[passiva.chave] || 0}
+                    Atual:{" "}
+                    {personagem.habilidadesPassivas?.[passiva.chave] || 0}
                   </small>
                 </span>
                 <input
@@ -308,7 +393,16 @@ const UpgradeNivel = () => {
 
         {mensagem && <p className="upgrade-mensagem">{mensagem}</p>}
 
-       
+        {trilha !== "habilidades" && (
+          <button
+            type="button"
+            className="upgrade-confirmar"
+            onClick={aplicarUpgrade}
+            disabled={pontosEvolucaoDisponiveis <= 0}
+          >
+            Confirmar upgrade
+          </button>
+        )}
       </section>
     </main>
   );
