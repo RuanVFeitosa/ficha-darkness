@@ -163,7 +163,7 @@
 }
 
 .mestre-page textarea {
-  min-height: 88px;
+  min-height: 100px;
   resize: vertical;
 }
 
@@ -186,7 +186,7 @@
 .mestre-fichas {
   display: grid;
   gap: 8px;
-  max-height: 58vh;
+  max-height: 60vh;
   overflow-y: auto;
 }
 
@@ -218,6 +218,76 @@
   display: grid;
   gap: 18px;
   padding: 18px;
+}
+
+.mestre-botao-editar {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mestre-botao-editar:hover {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.mestre-ritos-niveis-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -4px;
+  padding: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.mestre-ritos-niveis-tabs button {
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.055);
+  color: #f5efe4;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mestre-ritos-niveis-tabs button:hover,
+.mestre-ritos-niveis-tabs button.ativa {
+  border-color: #d4af37;
+  background: rgba(139, 69, 19, 0.42);
+  color: #d4af37;
+}
+
+.mestre-niveis-ritos-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.mestre-label-ritos {
+  color: #d4af37;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mestre-ritos-niveis-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .mestre-editor-topo {
@@ -482,6 +552,15 @@
   align-content: start;
 }
 
+.mestre-loja-form textarea {
+  min-height: 180px;
+}
+
+.mestre-loja-form textarea[name="descricao"],
+.mestre-loja-form textarea[name="detalhe"] {
+  min-height: 240px;
+}
+
 .mestre-loja-form h2 {
   display: flex;
   align-items: center;
@@ -533,6 +612,52 @@
   border: 1px dashed rgba(212, 175, 55, 0.2);
   border-radius: 8px;
   color: #a99d8a;
+}
+
+.mestre-loja-editor-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mestre-loja-editor-topo h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mestre-arma-status-editor {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.mestre-arma-status-editor h4 {
+  color: #d4af37;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mestre-loja-form-acoes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mestre-catalogo-acoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mestre-catalogo-acoes button {
+  min-height: 34px;
+  padding: 0 10px;
 }
 
 @media (max-width: 1080px) {

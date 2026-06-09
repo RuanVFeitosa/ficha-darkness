@@ -336,6 +336,8 @@ const FichaPersonagem = () => {
   const [subAbaInventario, setSubAbaInventario] = useState("mochila");
   const [abaCriacao, setAbaCriacao] = useState("armas");
   const [mensagemCraft, setMensagemCraft] = useState("");
+  const [modalRolagem, setModalRolagem] = useState(null);
+  const [rolandoDados, setRolandoDados] = useState(false);
 
   // ESTADO PARA O MODAL
   const [modalAberto, setModalAberto] = useState(false);
@@ -651,6 +653,178 @@ const FichaPersonagem = () => {
   const obterQuantidadeIngrediente = (nome) => {
     const encontrado = String(nome).match(/(\d+)x/i);
     return encontrado ? parseInt(encontrado[1], 10) : 1;
+  };
+
+  const rolarDado = (faces) => {
+    return Math.floor(Math.random() * faces) + 1;
+  };
+
+  const interpretarDano = (danoTexto) => {
+    const texto = String(danoTexto || "")
+      .toLowerCase()
+      .replace(/\s/g, "");
+    const match = texto.match(/(\d+)d(\d+)([+-]\d+)?/);
+
+    if (!match) {
+      return null;
+    }
+
+    return {
+      quantidade: parseInt(match[1], 10),
+      faces: parseInt(match[2], 10),
+      bonus: parseInt(match[3] || 0, 10),
+    };
+  };
+
+  const rolarDanoArma = (dmg, dadosExtras = 0) => {
+    const dano = interpretarDano(dmg);
+
+    if (!dano) {
+      return {
+        total: 0,
+        rolagens: [],
+        texto: "Dano inválido",
+      };
+    }
+
+    const quantidadeFinal = dano.quantidade + dadosExtras;
+
+    const rolagens = Array.from({ length: quantidadeFinal }, () =>
+      rolarDado(dano.faces),
+    );
+
+    const total =
+      rolagens.reduce((soma, valor) => soma + valor, 0) + dano.bonus;
+
+    return {
+      total,
+      rolagens,
+      texto: `${quantidadeFinal}d${dano.faces}${dano.bonus ? `+${dano.bonus}` : ""}`,
+    };
+  };
+
+  const obterDadoAtributo = (valor) => {
+    const numero = parseInt(valor) || 0;
+
+    if (numero >= 50) return 20;
+    if (numero >= 40) return 12;
+    if (numero >= 30) return 10;
+    if (numero >= 20) return 8;
+    if (numero >= 10) return 6;
+
+    return 4;
+  };
+
+  const obterModificadorAtributo = (valor) => {
+    const numero = parseInt(valor) || 0;
+
+    if (numero >= 50) return 5;
+    if (numero >= 40) return 4;
+    if (numero >= 30) return 3;
+    if (numero >= 20) return 2;
+    if (numero >= 10) return 1;
+
+    return 1;
+  };
+
+  const obterBonusPassiva = (chave) => {
+    return (
+      (personagem.habilidadesPassivas?.[chave] || 0) +
+      (personagem.habilidadesTemporarias?.[chave] || 0)
+    );
+  };
+
+  const rolarTeste = ({ atributo, ativo, passiva = 0 }) => {
+    const valorAtributo = parseInt(atributo, 10) || 0;
+    const bonusAtivo = parseInt(ativo, 10) || 0;
+    const bonusPassiva = parseInt(passiva, 10) || 0;
+
+    const quantidadeDados = obterModificadorAtributo(valorAtributo);
+    const faces = obterDadoAtributo(valorAtributo);
+
+    const rolagens = Array.from({ length: quantidadeDados }, () =>
+      rolarDado(faces),
+    );
+
+    const maiorResultado = Math.max(...rolagens);
+    const total = maiorResultado + bonusAtivo + bonusPassiva;
+
+    return {
+      quantidadeDados,
+      faces,
+      rolagens,
+      maiorResultado,
+      bonusAtivo,
+      bonusPassiva,
+      total,
+    };
+  };
+
+  const rolarAtaqueArma = (item, modo = "normal") => {
+    const arma = item.armaStatus;
+
+    if (!arma) {
+      setMensagemCraft("Este item não possui dados de arma.");
+      return;
+    }
+
+    const atributoBase = personagem.atributos.reflexos;
+    const bonusPassiva = obterBonusPassiva("precisao");
+
+    const ativos = {
+      normal: personagem.habilidadesPassivas?.precisao || 0,
+
+      violencia:
+        calcularModificadorAtivo(personagem.atributos?.forca) +
+        (personagem.habilidadesCombate?.violencia || 0),
+
+      percepcao:
+        calcularModificadorAtivo(personagem.atributos?.vontade) +
+        (personagem.habilidadesCombate?.percepcao || 0),
+
+      persistencia:
+        calcularModificadorAtivo(personagem.atributos?.vontade) +
+        (personagem.habilidadesCombate?.persistencia || 0),
+
+      firmeza:
+        calcularModificadorAtivo(personagem.atributos?.reflexos) +
+        (personagem.habilidadesCombate?.firmeza || 0),
+    };
+
+    const teste = rolarTeste({
+      atributo: atributoBase,
+      ativo: ativos[modo],
+      passiva: bonusPassiva,
+    });
+
+    const dano = rolarDanoArma(arma.dmg, modo === "violencia" ? 1 : 0);
+
+    const efeitos = {
+      normal: "Ataque de arma com Precisão.",
+      violencia: "Violência: +1 dado de dano.",
+      percepcao: "Percepção: alcance aumentado.",
+      persistencia: "Persistência: remove penalidades.",
+      firmeza: "Firmeza: pode atacar mais de um alvo.",
+    };
+
+    setRolandoDados(true);
+
+    setModalRolagem({
+      titulo: item.nome,
+      modo: efeitos[modo],
+      formula: `${teste.quantidadeDados}d${teste.faces} + ${teste.bonusAtivo} + ${teste.bonusPassiva}`,
+      dados: teste.rolagens,
+      faces: teste.faces,
+      maiorResultado: teste.maiorResultado,
+      bonusAtivo: teste.bonusAtivo,
+      bonusPassiva: teste.bonusPassiva,
+      total: teste.total,
+      dano,
+    });
+
+    setTimeout(() => {
+      setRolandoDados(false);
+    }, 1200);
   };
 
   const criarItem = (receita) => {
@@ -1256,49 +1430,80 @@ const FichaPersonagem = () => {
                     )}
 
                     {item.armaStatus && (
-                      <div className="item-status-arma">
-                        <span>
-                          <strong>Tipo:</strong> {item.armaStatus.tipo}
-                        </span>
+                      <>
+                        <div className="item-status-arma">
+                          <span>
+                            <strong>Tipo:</strong> {item.armaStatus.tipo}
+                          </span>
 
-                        <span>
-                          <strong>DMG:</strong> {item.armaStatus.dmg}
-                        </span>
+                          <span>
+                            <strong>DMG:</strong> {item.armaStatus.dmg}
+                          </span>
 
-                        <span>
-                          <strong>ROF:</strong> {item.armaStatus.rof}
-                        </span>
+                          <span>
+                            <strong>ROF:</strong> {item.armaStatus.rof}
+                          </span>
 
-                        <span>
-                          <strong>MAG:</strong> {item.armaStatus.mag}
-                        </span>
+                          <span>
+                            <strong>MAG:</strong> {item.armaStatus.mag}
+                          </span>
 
-                        <span>
-                          <strong>Crítico:</strong> {item.armaStatus.critico}
-                        </span>
+                          <span>
+                            <strong>Crítico:</strong> {item.armaStatus.critico}
+                          </span>
 
-                        <span>
-                          <strong>Dano Cabeça:</strong>{" "}
-                          {item.armaStatus.danoCabeca}
-                        </span>
+                          <span>
+                            <strong>Dano Cabeça:</strong>{" "}
+                            {item.armaStatus.danoCabeca}
+                          </span>
 
-                        <span>
-                          <strong>Hipfire:</strong> {item.armaStatus.hipfire}
-                        </span>
+                          <span>
+                            <strong>Hipfire:</strong> {item.armaStatus.hipfire}
+                          </span>
 
-                        <span>
-                          <strong>Precision:</strong>{" "}
-                          {item.armaStatus.precision}
-                        </span>
+                          <span>
+                            <strong>Precision:</strong>{" "}
+                            {item.armaStatus.precision}
+                          </span>
 
-                        <span>
-                          <strong>Control:</strong> {item.armaStatus.control}
-                        </span>
+                          <span>
+                            <strong>Control:</strong> {item.armaStatus.control}
+                          </span>
 
-                        <span>
-                          <strong>Mobility:</strong> {item.armaStatus.mobility}
-                        </span>
-                      </div>
+                          <span>
+                            <strong>Mobility:</strong>{" "}
+                            {item.armaStatus.mobility}
+                          </span>
+                        </div>
+
+                        <div className="rolagem-arma-acoes">
+                          <button
+                            onClick={() => rolarAtaqueArma(item, "violencia")}
+                          >
+                            Reflexos + Violência
+                          </button>
+
+                          <button
+                            onClick={() => rolarAtaqueArma(item, "percepcao")}
+                          >
+                            Reflexos + Percepção
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              rolarAtaqueArma(item, "persistencia")
+                            }
+                          >
+                            Reflexos + Persistência
+                          </button>
+
+                          <button
+                            onClick={() => rolarAtaqueArma(item, "firmeza")}
+                          >
+                            Reflexos + Firmeza
+                          </button>
+                        </div>
+                      </>
                     )}
                   </div>
                 </details>
@@ -2039,6 +2244,75 @@ const FichaPersonagem = () => {
           </div>
 
           <div className="sidebar-conteudo">{conteudoAbas[abaAtiva]}</div>
+
+          {/* MODAL DE ROLAGEM */}
+          {modalRolagem && (
+            <div className="modal-rolagem-overlay">
+              <div className="modal-rolagem">
+                <div className="modal-rolagem-topo">
+                  <span>Rolagem de Ataque</span>
+                  <h3>{modalRolagem.titulo}</h3>
+                  <p>{modalRolagem.modo}</p>
+                </div>
+
+                <div className="modal-rolagem-formula">
+                  {modalRolagem.formula}
+                </div>
+
+                <div className="dados-rolagem">
+                  {modalRolagem.dados.map((dado, index) => (
+                    <div
+                      key={index}
+                      className={`
+    dado-rolagem
+    d${modalRolagem.faces}
+    ${rolandoDados ? "rolando" : ""}
+    ${!rolandoDados && dado === modalRolagem.maiorResultado ? "maior" : ""}
+  `}
+                    >
+                      <span>{rolandoDados ? "?" : dado}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {!rolandoDados && (
+                  <>
+                    <div className="resultado-rolagem">
+                      <span>Maior dado</span>
+                      <strong>{modalRolagem.maiorResultado}</strong>
+                    </div>
+
+                    <div className="bonus-rolagem">
+                      <span>Ativo: +{modalRolagem.bonusAtivo}</span>
+
+                      <span>Passiva: +{modalRolagem.bonusPassiva}</span>
+                    </div>
+
+                    <div className="total-rolagem">
+                      <span>Resultado Final</span>
+                      <strong>{modalRolagem.total}</strong>
+                    </div>
+
+                    <div className="dano-rolagem">
+                      <span>Dano</span>
+
+                      <strong>
+                        {modalRolagem.dano.texto}
+                        {" ["}
+                        {modalRolagem.dano.rolagens.join(", ")}
+                        {"] = "}
+                        {modalRolagem.dano.total}
+                      </strong>
+                    </div>
+
+                    <button onClick={() => setModalRolagem(null)}>
+                      Fechar
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import {
   mdiPackageVariantClosedPlus,
   mdiRefresh,
   mdiStoreCogOutline,
+  mdiPencil,
 } from "@mdi/js";
 import "../CSS/DashboardMestre.css";
 import {
@@ -49,11 +50,27 @@ const ritoVazio = {
 };
 
 const itemLojaVazio = {
+  id: "",
   nome: "",
-  categoria: "itens",
+  categoria: "armas-fogo",
   preco: 0,
   detalhe: "",
   entrega: "",
+  nivelRito: "iniciante",
+  armaStatus: {
+    tipo: "",
+    dmg: "",
+    rof: "",
+    mag: "",
+    disparosSemDesvantagem: "",
+    recarga: "",
+    critico: "",
+    danoCabeca: "",
+    hipfire: "",
+    precision: "",
+    control: "",
+    mobility: "",
+  },
 };
 
 const abasFicha = [
@@ -173,6 +190,9 @@ const DashboardMestre = () => {
   const [aba, setAba] = useState("fichas");
   const [mensagem, setMensagem] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [abaLojaEditor, setAbaLojaEditor] = useState("armas-fogo");
+  const [itemEditandoId, setItemEditandoId] = useState(null);
+  const [nivelRitoDashboard, setNivelRitoDashboard] = useState("iniciante");
 
   const fichaAtual = useMemo(
     () => fichas.find((ficha) => ficha.fichaId === fichaSelecionada),
@@ -210,14 +230,32 @@ const DashboardMestre = () => {
           lojaCreditos: ficha.personagem?.lojaCreditos ?? 900,
         },
       }));
+      const categoriasObrigatorias = [
+        "armas-fogo",
+        "armas-corpo",
+        "defesas",
+        "itens",
+        "ritos",
+        "poderes",
+      ];
+
+      const catalogoApiAtualizado =
+        Array.isArray(catalogoApi) &&
+        categoriasObrigatorias.every((categoria) =>
+          catalogoApi.some((item) => item.categoria === categoria),
+        );
+
       const catalogoNormalizado =
-        catalogoApi.length > 0
+        catalogoApi.length > 0 && catalogoApiAtualizado
           ? catalogoApi.map(normalizarItemLoja)
-          : DEFAULT_CATALOGO_LOJA;
+          : DEFAULT_CATALOGO_LOJA.map(normalizarItemLoja);
 
       setFichas(fichasNormalizadas);
       setCatalogo(catalogoNormalizado);
-      localStorage.setItem(CATALOGO_STORAGE_KEY, JSON.stringify(catalogoNormalizado));
+      localStorage.setItem(
+        CATALOGO_STORAGE_KEY,
+        JSON.stringify(catalogoNormalizado),
+      );
 
       if (fichasNormalizadas.length > 0 && !fichaSelecionada) {
         setFichaSelecionada(fichasNormalizadas[0].fichaId);
@@ -226,6 +264,33 @@ const DashboardMestre = () => {
     } catch (error) {
       const fichasLocais = listarFichasLocais();
       const catalogoLocal = localStorage.getItem(CATALOGO_STORAGE_KEY);
+
+      if (catalogoLocal) {
+        try {
+          const catalogoParseado = JSON.parse(catalogoLocal);
+
+          const catalogoTemCategoriasNovas = catalogoParseado.some((item) =>
+            [
+              "armas-fogo",
+              "armas-corpo",
+              "defesas",
+              "itens",
+              "ritos",
+              "poderes",
+            ].includes(item.categoria),
+          );
+
+          if (catalogoTemCategoriasNovas) {
+            setCatalogo(catalogoParseado.map(normalizarItemLoja));
+          } else {
+            localStorage.removeItem(CATALOGO_STORAGE_KEY);
+            setCatalogo(DEFAULT_CATALOGO_LOJA.map(normalizarItemLoja));
+          }
+        } catch {
+          localStorage.removeItem(CATALOGO_STORAGE_KEY);
+          setCatalogo(DEFAULT_CATALOGO_LOJA.map(normalizarItemLoja));
+        }
+      }
 
       setFichas(fichasLocais);
       if (fichasLocais.length > 0 && !fichaSelecionada) {
@@ -237,15 +302,9 @@ const DashboardMestre = () => {
         });
       }
 
-      if (catalogoLocal) {
-        try {
-          setCatalogo(JSON.parse(catalogoLocal).map(normalizarItemLoja));
-        } catch (parseError) {
-          setCatalogo(DEFAULT_CATALOGO_LOJA);
-        }
-      }
-
-      setMensagem("Backend indisponivel. Mostrando dados locais deste navegador.");
+      setMensagem(
+        "Backend indisponivel. Mostrando dados locais deste navegador.",
+      );
     } finally {
       setCarregando(false);
     }
@@ -295,7 +354,8 @@ const DashboardMestre = () => {
         ...membroAtual,
         [campo]: Math.max(0, parseInt(valor, 10) || 0),
       };
-      const proporcao = atualizado.max > 0 ? atualizado.atual / atualizado.max : 0;
+      const proporcao =
+        atualizado.max > 0 ? atualizado.atual / atualizado.max : 0;
 
       return {
         ...atual,
@@ -369,7 +429,8 @@ const DashboardMestre = () => {
     };
 
     try {
-      const { fichaId, personagem: salvo } = await criarPersonagem(personagemCriado);
+      const { fichaId, personagem: salvo } =
+        await criarPersonagem(personagemCriado);
       salvarFichaLocal(fichaId, salvo);
       await carregarTudo();
       setFichaSelecionada(fichaId);
@@ -379,7 +440,10 @@ const DashboardMestre = () => {
     } catch (error) {
       const fichaId = normalizarFichaId(novaFicha.nome);
       salvarFichaLocal(fichaId, personagemCriado);
-      setFichas((atuais) => [...atuais, { fichaId, personagem: personagemCriado }]);
+      setFichas((atuais) => [
+        ...atuais,
+        { fichaId, personagem: personagemCriado },
+      ]);
       setFichaSelecionada(fichaId);
       setPersonagem(personagemCriado);
       setNovaFicha(fichaVazia);
@@ -401,7 +465,9 @@ const DashboardMestre = () => {
       setMensagem("Ficha removida localmente. Backend indisponivel.");
     }
 
-    const restantes = fichas.filter((ficha) => ficha.fichaId !== fichaSelecionada);
+    const restantes = fichas.filter(
+      (ficha) => ficha.fichaId !== fichaSelecionada,
+    );
     setFichas(restantes);
     setFichaSelecionada(restantes[0]?.fichaId || "");
     setPersonagem(restantes[0]?.personagem || null);
@@ -411,7 +477,10 @@ const DashboardMestre = () => {
     const delta = parseInt(creditosDelta, 10) || 0;
     const atualizado = {
       ...personagem,
-      lojaCreditos: Math.max(0, (parseInt(personagem.lojaCreditos, 10) || 0) + delta),
+      lojaCreditos: Math.max(
+        0,
+        (parseInt(personagem.lojaCreditos, 10) || 0) + delta,
+      ),
     };
 
     setPersonagem(atualizado);
@@ -444,7 +513,9 @@ const DashboardMestre = () => {
 
     setPersonagem(atualizado);
     salvarFichaSelecionada(atualizado);
-    setMensagem(`Jogador subiu para NV${proximoNivel} e recebeu ${pontosGanhos} pontos.`);
+    setMensagem(
+      `Jogador subiu para NV${proximoNivel} e recebeu ${pontosGanhos} pontos.`,
+    );
   };
 
   const adicionarItemInventario = (event) => {
@@ -540,7 +611,10 @@ const DashboardMestre = () => {
       return;
     }
 
-    salvarCatalogo([...catalogo, normalizarItemLoja(novoItemLoja, catalogo.length)]);
+    salvarCatalogo([
+      ...catalogo,
+      normalizarItemLoja(novoItemLoja, catalogo.length),
+    ]);
     setNovoItemLoja(itemLojaVazio);
   };
 
@@ -548,10 +622,120 @@ const DashboardMestre = () => {
     salvarCatalogo(catalogo.filter((item) => item.id !== id));
   };
 
+  const abasEditorLoja = [
+    { id: "armas-fogo", nome: "Armas de fogo" },
+    { id: "armas-corpo", nome: "Armas brancas" },
+    { id: "itens", nome: "Itens" },
+    { id: "ritos", nome: "Ritos Absolutos" },
+    { id: "poderes", nome: "Poderes Absolutos" },
+  ];
+
+  const itensEditorLoja = catalogo.filter((item) => {
+    if (item.categoria !== abaLojaEditor) {
+      return false;
+    }
+
+    if (abaLojaEditor === "ritos") {
+      return (item.nivelRito || "iniciante") === nivelRitoDashboard;
+    }
+
+    return true;
+  });
+
+  const gerarIdItemLoja = (nome, categoria) =>
+    `${categoria}-${nome}`
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9_-]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+
+  const limparEditorLoja = () => {
+    setNovoItemLoja({
+      ...itemLojaVazio,
+      categoria: abaLojaEditor,
+    });
+    setItemEditandoId(null);
+  };
+
+  const atualizarCampoLoja = (campo, valor) => {
+    setNovoItemLoja((atual) => ({
+      ...atual,
+      [campo]: valor,
+    }));
+  };
+
+  const atualizarArmaStatusLoja = (campo, valor) => {
+    setNovoItemLoja((atual) => ({
+      ...atual,
+      armaStatus: {
+        ...(atual.armaStatus || {}),
+        [campo]: valor,
+      },
+    }));
+  };
+
+  const editarItemLoja = (item) => {
+    setItemEditandoId(item.id);
+    setAbaLojaEditor(item.categoria);
+
+    if (item.categoria === "ritos") {
+      setNivelRitoDashboard(item.nivelRito || "iniciante");
+    }
+
+    setNovoItemLoja({
+      ...itemLojaVazio,
+      ...item,
+      armaStatus: {
+        ...itemLojaVazio.armaStatus,
+        ...(item.armaStatus || {}),
+      },
+    });
+  };
+
+  const salvarItemLojaEditor = (event) => {
+    event.preventDefault();
+
+    if (!novoItemLoja.nome.trim()) {
+      setMensagem("Informe o nome do item.");
+      return;
+    }
+
+    const itemBase = {
+      ...novoItemLoja,
+      categoria: abaLojaEditor,
+      id: itemEditandoId || gerarIdItemLoja(novoItemLoja.nome, abaLojaEditor),
+      preco: Math.max(0, parseInt(novoItemLoja.preco, 10) || 0),
+    };
+
+    const itemFinal = {
+      ...itemBase,
+      armaStatus: abaLojaEditor === "armas-fogo" ? itemBase.armaStatus : null,
+      nivelRito:
+        abaLojaEditor === "ritos" ? itemBase.nivelRito || "iniciante" : "",
+    };
+
+    const catalogoAtualizado = itemEditandoId
+      ? catalogo.map((item) =>
+          item.id === itemEditandoId ? normalizarItemLoja(itemFinal) : item,
+        )
+      : [...catalogo, normalizarItemLoja(itemFinal, catalogo.length)];
+
+    salvarCatalogo(catalogoAtualizado);
+    limparEditorLoja();
+  };
+
   return (
     <main className="mestre-page">
       <header className="mestre-header">
-        <button className="mestre-voltar" onClick={() => { window.location.href = "/"; }}>
+        <button
+          className="mestre-voltar"
+          onClick={() => {
+            window.location.href = "/";
+          }}
+        >
           <Icon path={mdiArrowLeft} size={0.9} />
           Inicio
         </button>
@@ -559,7 +743,11 @@ const DashboardMestre = () => {
           <span>Controle do narrador</span>
           <h1>Dashboard do Mestre</h1>
         </div>
-        <button className="mestre-refresh" onClick={carregarTudo} disabled={carregando}>
+        <button
+          className="mestre-refresh"
+          onClick={carregarTudo}
+          disabled={carregando}
+        >
           <Icon path={mdiRefresh} size={0.9} />
           {carregando ? "Carregando" : "Atualizar"}
         </button>
@@ -568,10 +756,16 @@ const DashboardMestre = () => {
       {mensagem && <p className="mestre-mensagem">{mensagem}</p>}
 
       <nav className="mestre-tabs" aria-label="Areas do dashboard">
-        <button className={aba === "fichas" ? "ativa" : ""} onClick={() => setAba("fichas")}>
+        <button
+          className={aba === "fichas" ? "ativa" : ""}
+          onClick={() => setAba("fichas")}
+        >
           Fichas
         </button>
-        <button className={aba === "loja" ? "ativa" : ""} onClick={() => setAba("loja")}>
+        <button
+          className={aba === "loja" ? "ativa" : ""}
+          onClick={() => setAba("loja")}
+        >
           Loja
         </button>
       </nav>
@@ -584,7 +778,10 @@ const DashboardMestre = () => {
               <input
                 value={novaFicha.nome}
                 onChange={(event) =>
-                  setNovaFicha((atual) => ({ ...atual, nome: event.target.value }))
+                  setNovaFicha((atual) => ({
+                    ...atual,
+                    nome: event.target.value,
+                  }))
                 }
                 placeholder="Nome"
               />
@@ -592,14 +789,20 @@ const DashboardMestre = () => {
                 <input
                   value={novaFicha.classe}
                   onChange={(event) =>
-                    setNovaFicha((atual) => ({ ...atual, classe: event.target.value }))
+                    setNovaFicha((atual) => ({
+                      ...atual,
+                      classe: event.target.value,
+                    }))
                   }
                   placeholder="Classe"
                 />
                 <input
                   value={novaFicha.pronome}
                   onChange={(event) =>
-                    setNovaFicha((atual) => ({ ...atual, pronome: event.target.value }))
+                    setNovaFicha((atual) => ({
+                      ...atual,
+                      pronome: event.target.value,
+                    }))
                   }
                   placeholder="Pronome"
                 />
@@ -644,7 +847,11 @@ const DashboardMestre = () => {
                     <p>{fichaSelecionada}</p>
                   </div>
                   <div className="mestre-acoes-ficha">
-                    <button onClick={() => { window.location.href = `/?ficha=${encodeURIComponent(fichaSelecionada)}`; }}>
+                    <button
+                      onClick={() => {
+                        window.location.href = `/?ficha=${encodeURIComponent(fichaSelecionada)}`;
+                      }}
+                    >
                       <Icon path={mdiOpenInNew} size={0.8} />
                       Abrir
                     </button>
@@ -702,7 +909,10 @@ const DashboardMestre = () => {
                         <input
                           value={personagem.especialidade || ""}
                           onChange={(event) =>
-                            atualizarPersonagem("especialidade", event.target.value)
+                            atualizarPersonagem(
+                              "especialidade",
+                              event.target.value,
+                            )
                           }
                         />
                       </label>
@@ -780,7 +990,9 @@ const DashboardMestre = () => {
                       <input
                         type="number"
                         value={creditosDelta}
-                        onChange={(event) => setCreditosDelta(event.target.value)}
+                        onChange={(event) =>
+                          setCreditosDelta(event.target.value)
+                        }
                       />
                       <button onClick={adicionarCreditos}>
                         <Icon path={mdiCashPlus} size={0.85} />
@@ -808,18 +1020,24 @@ const DashboardMestre = () => {
                   <div className="mestre-ficha-secao">
                     <h3>Atributos</h3>
                     <div className="mestre-valores-grid compacto">
-                      {Object.entries(personagem.atributos || {}).map(([chave, valor]) => (
-                        <label key={chave}>
-                          {chave}
-                          <input
-                            type="number"
-                            value={valor}
-                            onChange={(event) =>
-                              atualizarGrupoFicha("atributos", chave, event.target.value)
-                            }
-                          />
-                        </label>
-                      ))}
+                      {Object.entries(personagem.atributos || {}).map(
+                        ([chave, valor]) => (
+                          <label key={chave}>
+                            {chave}
+                            <input
+                              type="number"
+                              value={valor}
+                              onChange={(event) =>
+                                atualizarGrupoFicha(
+                                  "atributos",
+                                  chave,
+                                  event.target.value,
+                                )
+                              }
+                            />
+                          </label>
+                        ),
+                      )}
                     </div>
 
                     <h3>Ativos</h3>
@@ -829,7 +1047,9 @@ const DashboardMestre = () => {
                           {ativo.nome}
                           <input
                             type="number"
-                            value={personagem.habilidadesCombate?.[ativo.chave] || 0}
+                            value={
+                              personagem.habilidadesCombate?.[ativo.chave] || 0
+                            }
                             onChange={(event) =>
                               atualizarGrupoFicha(
                                 "habilidadesCombate",
@@ -854,7 +1074,10 @@ const DashboardMestre = () => {
                             type="number"
                             min="0"
                             max="100"
-                            value={personagem.habilidadesPassivas?.[passivo.chave] || 0}
+                            value={
+                              personagem.habilidadesPassivas?.[passivo.chave] ||
+                              0
+                            }
                             onChange={(event) =>
                               atualizarGrupoFicha(
                                 "habilidadesPassivas",
@@ -871,7 +1094,10 @@ const DashboardMestre = () => {
 
                 {abaFicha === "ritos" && (
                   <div className="mestre-ficha-secao">
-                    <form className="mestre-inventario-form" onSubmit={adicionarRito}>
+                    <form
+                      className="mestre-inventario-form"
+                      onSubmit={adicionarRito}
+                    >
                       <h3>Adicionar Rito</h3>
                       <input
                         value={novoRito.nome}
@@ -922,7 +1148,9 @@ const DashboardMestre = () => {
                         </div>
                       ))}
                       {(personagem.rituais || []).length === 0 && (
-                        <p className="mestre-lista-vazia">Nenhum Rito cadastrado.</p>
+                        <p className="mestre-lista-vazia">
+                          Nenhum Rito cadastrado.
+                        </p>
                       )}
                     </div>
                   </div>
@@ -930,7 +1158,10 @@ const DashboardMestre = () => {
 
                 {abaFicha === "inventario" && (
                   <div className="mestre-ficha-secao">
-                    <form className="mestre-inventario-form" onSubmit={adicionarItemInventario}>
+                    <form
+                      className="mestre-inventario-form"
+                      onSubmit={adicionarItemInventario}
+                    >
                       <h3>Adicionar item no inventario</h3>
                       <input
                         value={itemInventario.nome}
@@ -964,7 +1195,11 @@ const DashboardMestre = () => {
                           <input
                             value={item.nome || ""}
                             onChange={(event) =>
-                              atualizarItemInventario(index, "nome", event.target.value)
+                              atualizarItemInventario(
+                                index,
+                                "nome",
+                                event.target.value,
+                              )
                             }
                             placeholder="Item"
                           />
@@ -1060,7 +1295,10 @@ const DashboardMestre = () => {
                   </div>
                 )}
 
-                <button className="mestre-salvar" onClick={() => salvarFichaSelecionada()}>
+                <button
+                  className="mestre-salvar"
+                  onClick={() => salvarFichaSelecionada()}
+                >
                   Salvar edicoes da ficha
                 </button>
               </>
@@ -1073,122 +1311,324 @@ const DashboardMestre = () => {
 
       {aba === "loja" && (
         <section className="mestre-loja">
-          <form className="mestre-loja-form" onSubmit={adicionarItemLoja}>
+          <div className="mestre-loja-editor-topo">
             <h2>
               <Icon path={mdiStoreCogOutline} size={0.95} />
-              Adicionar item na loja
+              Editor da Loja
             </h2>
+          </div>
+
+          <nav className="mestre-ficha-tabs">
+            {abasEditorLoja.map((abaItem) => (
+              <button
+                key={abaItem.id}
+                className={abaLojaEditor === abaItem.id ? "ativa" : ""}
+                onClick={() => {
+                  setAbaLojaEditor(abaItem.id);
+
+                  setNovoItemLoja({
+                    ...itemLojaVazio,
+                    categoria: abaItem.id,
+                    nivelRito:
+                      abaItem.id === "ritos" ? nivelRitoDashboard : "iniciante",
+                  });
+
+                  setItemEditandoId(null);
+                }}
+              >
+                {abaItem.nome}
+              </button>
+            ))}
+          </nav>
+
+          <form className="mestre-loja-form" onSubmit={salvarItemLojaEditor}>
+            <h3>
+              {itemEditandoId ? "Editando" : "Adicionando"}{" "}
+              {abasEditorLoja.find((a) => a.id === abaLojaEditor)?.nome}
+            </h3>
+
             <div className="mestre-form-grid">
               <label>
                 Nome
                 <input
                   value={novoItemLoja.nome}
                   onChange={(event) =>
-                    setNovoItemLoja((atual) => ({
-                      ...atual,
-                      nome: event.target.value,
-                    }))
+                    atualizarCampoLoja("nome", event.target.value)
                   }
                 />
               </label>
+
               <label>
-                Categoria
-                <select
-                  value={novoItemLoja.categoria}
-                  onChange={(event) =>
-                    setNovoItemLoja((atual) => ({
-                      ...atual,
-                      categoria: event.target.value,
-                    }))
-                  }
-                >
-                  {CATEGORIAS_LOJA.map((categoria) => (
-                    <option key={categoria.id} value={categoria.id}>
-                      {categoria.nome}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Preco
+                Preço
                 <input
                   type="number"
                   min="0"
                   value={novoItemLoja.preco}
                   onChange={(event) =>
-                    setNovoItemLoja((atual) => ({
-                      ...atual,
-                      preco: event.target.value,
-                    }))
+                    atualizarCampoLoja("preco", event.target.value)
                   }
                 />
               </label>
+
               <label>
-                Entrega
-                <input
-                  value={novoItemLoja.entrega}
+                Entrega / Custo
+                <textarea
+                  className={
+                    abaLojaEditor === "ritos" ? "textarea-rito-descricao" : ""
+                  }
+                  value={novoItemLoja.detalhe}
                   onChange={(event) =>
-                    setNovoItemLoja((atual) => ({
-                      ...atual,
-                      entrega: event.target.value,
-                    }))
+                    atualizarCampoLoja("detalhe", event.target.value)
                   }
                 />
               </label>
+
+              {abaLojaEditor === "ritos" && (
+                <nav className="mestre-ritos-niveis-tabs">
+                  <label>Niveis do Absoluto</label>
+                  {[
+                    { id: "iniciante", nome: "I — Iniciante" },
+                    { id: "intermediario", nome: "II — Intermediário" },
+                    { id: "avancado", nome: "III — Avançado" },
+                    { id: "experiente", nome: "IV — Experiente" },
+                  ].map((nivel) => (
+                    <button
+                      key={nivel.id}
+                      type="button"
+                      className={nivelRitoDashboard === nivel.id ? "ativa" : ""}
+                      onClick={() => {
+                        setNivelRitoDashboard(nivel.id);
+                        setNovoItemLoja((atual) => ({
+                          ...atual,
+                          categoria: "ritos",
+                          nivelRito: nivel.id,
+                        }));
+                        setItemEditandoId(null);
+                      }}
+                    >
+                      {nivel.nome}
+                    </button>
+                  ))}
+                </nav>
+              )}
             </div>
+
             <label>
-              Detalhe
+              Descrição / Detalhe
               <textarea
                 value={novoItemLoja.detalhe}
                 onChange={(event) =>
-                  setNovoItemLoja((atual) => ({
-                    ...atual,
-                    detalhe: event.target.value,
-                  }))
+                  atualizarCampoLoja("detalhe", event.target.value)
                 }
               />
             </label>
-            <button type="submit">Adicionar ao catalogo</button>
+
+            {abaLojaEditor === "poderes" && (
+              <label>
+                Absolutismo
+                <textarea
+                  value={novoItemLoja.entrega}
+                  onChange={(event) =>
+                    atualizarCampoLoja("entrega", event.target.value)
+                  }
+                  placeholder="Absolutismo: ..."
+                />
+              </label>
+            )}
+
+            {abaLojaEditor === "armas-fogo" && (
+              <div className="mestre-arma-status-editor">
+                <h4>Características da arma</h4>
+
+                <div className="mestre-form-grid">
+                  <label>
+                    Tipo
+                    <input
+                      value={novoItemLoja.armaStatus?.tipo || ""}
+                      onChange={(event) =>
+                        atualizarArmaStatusLoja("tipo", event.target.value)
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    DMG
+                    <input
+                      value={novoItemLoja.armaStatus?.dmg || ""}
+                      onChange={(event) =>
+                        atualizarArmaStatusLoja("dmg", event.target.value)
+                      }
+                      placeholder="2d6"
+                    />
+                  </label>
+
+                  <label>
+                    ROF
+                    <input
+                      value={novoItemLoja.armaStatus?.rof || ""}
+                      onChange={(event) =>
+                        atualizarArmaStatusLoja("rof", event.target.value)
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    MAG
+                    <input
+                      value={novoItemLoja.armaStatus?.mag || ""}
+                      onChange={(event) =>
+                        atualizarArmaStatusLoja("mag", event.target.value)
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    Disparos sem desvantagem
+                    <input
+                      value={
+                        novoItemLoja.armaStatus?.disparosSemDesvantagem || ""
+                      }
+                      onChange={(event) =>
+                        atualizarArmaStatusLoja(
+                          "disparosSemDesvantagem",
+                          event.target.value,
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    Recarga
+                    <input
+                      value={novoItemLoja.armaStatus?.recarga || ""}
+                      onChange={(event) =>
+                        atualizarArmaStatusLoja("recarga", event.target.value)
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    Crítico
+                    <input
+                      value={novoItemLoja.armaStatus?.critico || ""}
+                      onChange={(event) =>
+                        atualizarArmaStatusLoja("critico", event.target.value)
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    Dano Cabeça
+                    <input
+                      value={novoItemLoja.armaStatus?.danoCabeca || ""}
+                      onChange={(event) =>
+                        atualizarArmaStatusLoja(
+                          "danoCabeca",
+                          event.target.value,
+                        )
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    Hipfire
+                    <input
+                      value={novoItemLoja.armaStatus?.hipfire || ""}
+                      onChange={(event) =>
+                        atualizarArmaStatusLoja("hipfire", event.target.value)
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    Precision
+                    <input
+                      value={novoItemLoja.armaStatus?.precision || ""}
+                      onChange={(event) =>
+                        atualizarArmaStatusLoja("precision", event.target.value)
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    Control
+                    <input
+                      value={novoItemLoja.armaStatus?.control || ""}
+                      onChange={(event) =>
+                        atualizarArmaStatusLoja("control", event.target.value)
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    Mobility
+                    <input
+                      value={novoItemLoja.armaStatus?.mobility || ""}
+                      onChange={(event) =>
+                        atualizarArmaStatusLoja("mobility", event.target.value)
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            <div className="mestre-loja-form-acoes">
+              <button type="submit">
+                {itemEditandoId ? "Salvar alterações" : "Adicionar ao catálogo"}
+              </button>
+
+              {itemEditandoId && (
+                <button type="button" onClick={limparEditorLoja}>
+                  Cancelar edição
+                </button>
+              )}
+            </div>
           </form>
 
           <div className="mestre-catalogo-area">
-            <div className="mestre-categorias-loja" aria-label="Categorias do catalogo">
-              {categoriasFiltroLoja.map((categoria) => {
-                const quantidade =
-                  categoria.id === "todos"
-                    ? catalogo.length
-                    : catalogo.filter((item) => item.categoria === categoria.id).length;
-
-                return (
-                  <button
-                    key={categoria.id}
-                    className={categoriaLojaAtiva === categoria.id ? "ativa" : ""}
-                    onClick={() => setCategoriaLojaAtiva(categoria.id)}
-                  >
-                    <span>{categoria.nome}</span>
-                    <strong>{quantidade}</strong>
-                  </button>
-                );
-              })}
-            </div>
-
             <div className="mestre-catalogo">
-              {catalogoFiltrado.map((item) => (
-                <article key={item.id}>
+              {itensEditorLoja.map((item) => (
+                <article key={item.id} className="mestre-catalogo-item">
                   <div>
                     <span>{item.categoria}</span>
                     <h3>{item.nome}</h3>
                     <p>{item.detalhe}</p>
                     <small>{item.entrega}</small>
+
+                    {item.armaStatus && (
+                      <small>
+                        DMG: {item.armaStatus.dmg} | MAG: {item.armaStatus.mag}{" "}
+                        | CRIT: {item.armaStatus.critico}
+                      </small>
+                    )}
+
+                    {item.nivelRito && <small>Nível: {item.nivelRito}</small>}
                   </div>
+
                   <strong>{item.preco} cr</strong>
-                  <button onClick={() => removerItemLoja(item.id)}>
-                    <Icon path={mdiDeleteOutline} size={0.8} />
-                  </button>
+
+                  <div className="mestre-catalogo-acoes">
+                    <button
+                      type="button"
+                      className="mestre-botao-editar"
+                      onClick={() => editarItemLoja(item)}
+                    >
+                      <Icon path={mdiPencil} size={0.8} color="#ffffff" />
+                    </button>
+
+                    <button
+                      type="button"
+                      className="perigo"
+                      onClick={() => removerItemLoja(item.id)}
+                    >
+                      <Icon path={mdiDeleteOutline} size={0.8} />
+                    </button>
+                  </div>
                 </article>
               ))}
 
-              {catalogoFiltrado.length === 0 && (
+              {itensEditorLoja.length === 0 && (
                 <div className="mestre-catalogo-vazio">
                   Nenhum item nesta categoria.
                 </div>
