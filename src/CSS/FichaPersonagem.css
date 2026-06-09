@@ -5,6 +5,55 @@
 /* =========================================================
    01 - Animações
    ========================================================= */
+@keyframes saidaRachadurasSanidade {
+  from {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px rgba(74, 134, 232, 1));
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.82) rotate(-4deg);
+    filter: drop-shadow(0 0 0 rgba(74, 134, 232, 0));
+  }
+}
+
+@keyframes saidaEsperanca {
+  from {
+    opacity: 0.88;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.profile-wrapper.sanidade-saindo::before {
+  opacity: 1;
+  animation: saidaRachadurasSanidade 0.5s ease forwards;
+}
+
+.profile-wrapper.esperanca-saindo::after {
+  opacity: 0.88;
+  animation: saidaEsperanca 0.5s ease forwards;
+}
+
+.profile-wrapper.esperanca-saindo .profile {
+  animation: restaurarEsperancaPerfil 0.5s ease forwards;
+}
+
+@keyframes restaurarEsperancaPerfil {
+  from {
+    filter: grayscale(1) saturate(0) contrast(0.82) brightness(0.48);
+    opacity: 0.72;
+  }
+
+  to {
+    filter: grayscale(0) saturate(1) contrast(1) brightness(1);
+    opacity: 1;
+  }
+}
 
 @keyframes colorPulseWarning {
   0%,
@@ -33,6 +82,60 @@
   }
   50% {
     opacity: 0.7;
+  }
+}
+
+@keyframes entradaRachadurasBrancas {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) rotate(-4deg);
+    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.08) rotate(2deg);
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 1));
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+  }
+}
+
+@keyframes perfilInvertidoRito {
+  from {
+    filter: invert(0) grayscale(0) contrast(1) brightness(1);
+  }
+
+  to {
+    filter: invert(1) grayscale(1) contrast(1.15) brightness(1.05);
+  }
+}
+
+@keyframes saidaRachadurasBrancas {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.82);
+    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+  }
+}
+
+@keyframes perfilSaindoInvertido {
+  from {
+    filter: invert(1) grayscale(1) contrast(1.15) brightness(1.05);
+  }
+
+  to {
+    filter: invert(0) grayscale(0) contrast(1) brightness(1);
   }
 }
 
@@ -1107,24 +1210,6 @@ body {
   text-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
 }
 
-.lista-rituais,
-.lista-inventario {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.ritual-item,
-.item-inventario {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-  border-left: 2px solid #4a86e8;
-}
-
 .ritual-item {
   border-left-color: #8b4513;
 }
@@ -1143,6 +1228,281 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+/* =========================================================
+   11.3 - RITUAIS / CARDS
+========================================================= */
+
+.rituais-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 230px));
+  gap: 16px;
+  align-items: start;
+}
+
+.ritual-card {
+  width: 230px;
+  min-height: 230px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+  padding: 18px 14px;
+
+  text-align: center;
+  cursor: pointer;
+
+  border: 1px solid rgba(212, 175, 55, 0.24);
+  border-left: 3px solid #d4af37;
+  border-radius: 10px;
+
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 55%),
+    rgba(8, 8, 8, 0.94);
+
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ritual-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.5),
+    0 0 18px rgba(255, 255, 255, 0.12);
+}
+
+.ritual-card-icone {
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+
+  background: rgba(0, 0, 0, 0.36);
+
+  font-size: 1.7rem;
+}
+
+.ritual-card-info {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+  text-align: center;
+}
+
+.ritual-card-info strong {
+  color: #fff8ea;
+
+  font-size: 0.95rem;
+  font-weight: 900;
+
+  line-height: 1.25;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ritual-card-info small {
+  color: #a8a8a8;
+
+  font-size: 0.72rem;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ritual-card-info span {
+  color: #d4af37;
+
+  font-size: 0.72rem;
+  font-weight: 900;
+
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   11.4 - RITUAIS / VISUALIZER
+========================================================= */
+
+.rito-visualizer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(5px);
+}
+
+.rito-visualizer {
+  position: relative;
+
+  width: min(760px, calc(100% - 32px));
+  max-height: 88vh;
+  overflow-y: auto;
+
+  padding: 28px;
+
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 14px;
+
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.12), transparent 45%),
+    rgba(8, 8, 8, 0.97);
+
+  color: #f5efe4;
+
+  box-shadow:
+    0 0 50px rgba(0, 0, 0, 0.85),
+    0 0 28px rgba(255, 255, 255, 0.1);
+}
+
+.rito-visualizer-topo {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  align-items: center;
+
+  width: 100%;
+  margin-bottom: 26px;
+}
+
+.rito-visualizer-icone {
+  width: 72px;
+  height: 72px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 16px;
+
+  background: rgba(0, 0, 0, 0.42);
+
+  font-size: 2.2rem;
+}
+
+.rito-visualizer-info-topo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  gap: 6px;
+}
+
+.rito-visualizer-info-topo span {
+  color: #d4af37;
+
+  font-size: 0.72rem;
+  font-weight: 900;
+
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.rito-visualizer-info-topo h2 {
+  margin: 0;
+
+  color: #fff8ea;
+
+  font-size: 1.45rem;
+  font-weight: 900;
+
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.rito-visualizer-info-topo small {
+  color: #a8a8a8;
+
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.rito-visualizer-fechar {
+  justify-self: end;
+
+  width: 34px;
+  height: 34px;
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+
+  background: rgba(0, 0, 0, 0.45);
+  color: #ffffff;
+
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.rito-visualizer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+
+  margin-bottom: 18px;
+}
+
+.rito-visualizer-grid div,
+.rito-visualizer-bloco {
+  padding: 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rito-visualizer-grid span,
+.rito-visualizer-bloco span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #d4af37;
+
+  font-size: 0.72rem;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.rito-visualizer-grid strong,
+.rito-visualizer-bloco p {
+  color: #d8d8d8;
+
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.rito-visualizer-bloco {
+  margin-top: 12px;
 }
 
 /* =========================================================
@@ -1191,7 +1551,6 @@ body {
 
 .item-recolhivel {
   overflow: hidden;
-
   border: 1px solid rgba(212, 175, 55, 0.18);
   border-left: 3px solid #d4af37;
   border-radius: 8px;
@@ -1203,7 +1562,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-
+  padding-bottom: 8px;
   padding: 12px;
 
   cursor: pointer;
@@ -1237,19 +1596,19 @@ body {
 }
 
 .item-descricao-recolhivel {
-  display: grid;
-  gap: 10px;
-
-  padding: 14px;
-
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
   border-top: 1px solid rgba(212, 175, 55, 0.12);
-
   background: rgba(0, 0, 0, 0.28);
+  padding-top: 8px;
 }
 
 .item-descricao-recolhivel p {
   color: #d2c6b2;
-
+  margin: 0;
   font-size: 0.82rem;
   line-height: 1.5;
 }
@@ -1551,6 +1910,316 @@ body {
   font-size: 1.2rem;
 }
 
+/* =========================================================
+   INVENTÁRIO EM CARDS
+========================================================= */
+
+/* =========================================================
+   11.1 - INVENTÁRIO / CARDS
+========================================================= */
+
+.lista-inventario.inventario-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 230px));
+  gap: 16px;
+  align-items: start;
+}
+
+.inventario-card {
+  width: 230px;
+  min-height: 230px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+  padding: 18px 14px;
+
+  text-align: center;
+  cursor: pointer;
+
+  border: 1px solid rgba(212, 175, 55, 0.24);
+  border-left: 3px solid #d4af37;
+  border-radius: 10px;
+
+  background:
+    radial-gradient(circle at top, rgba(139, 69, 19, 0.18), transparent 55%),
+    rgba(10, 8, 6, 0.94);
+
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.inventario-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 175, 55, 0.7);
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.5),
+    0 0 18px rgba(212, 175, 55, 0.12);
+}
+
+.inventario-card .inventario-resumo {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+  text-align: center;
+}
+
+.inventario-card-icone {
+  width: 54px;
+  height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 12px;
+
+  background: rgba(0, 0, 0, 0.36);
+
+  font-size: 1.7rem;
+}
+
+.inventario-item-nome {
+  width: 100%;
+
+  color: #fff8ea;
+
+  font-size: 0.95rem;
+  font-weight: 900;
+
+  line-height: 1.25;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.inventario-item-tipo {
+  width: 100%;
+
+  color: #d4af37;
+
+  font-size: 0.72rem;
+  font-weight: 800;
+
+  line-height: 1.3;
+  text-align: center;
+}
+
+.inventario-card .btn-vender-item {
+  margin-top: 4px;
+}
+/* =========================================================
+   11.2 - INVENTÁRIO / VISUALIZER
+========================================================= */
+
+.item-visualizer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(5px);
+}
+
+.item-visualizer {
+  position: relative;
+
+  width: min(760px, calc(100% - 32px));
+  max-height: 88vh;
+  overflow-y: auto;
+
+  padding: 28px;
+
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 14px;
+
+  background:
+    radial-gradient(circle at top, rgba(139, 69, 19, 0.24), transparent 45%),
+    rgba(8, 7, 6, 0.97);
+
+  color: #f5efe4;
+
+  box-shadow:
+    0 0 50px rgba(0, 0, 0, 0.85),
+    0 0 28px rgba(212, 175, 55, 0.12);
+}
+
+/* TOPO DO VISUALIZER */
+.item-visualizer-topo {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  align-items: center;
+
+  width: 100%;
+  margin-bottom: 26px;
+}
+
+/* ÍCONE */
+.item-visualizer-icone {
+  width: 72px;
+  height: 72px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  border-radius: 16px;
+
+  background: rgba(0, 0, 0, 0.42);
+
+  font-size: 2.2rem;
+}
+
+/* TEXTO CENTRAL */
+.visualizer-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  gap: 6px;
+}
+
+.visualizer-categoria,
+.item-visualizer-topo span {
+  color: #d4af37;
+
+  font-size: 0.72rem;
+  font-weight: 900;
+
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.visualizer-info h2,
+.item-visualizer-topo h3 {
+  margin: 0;
+
+  color: #fff8ea;
+
+  font-size: 1.45rem;
+  font-weight: 900;
+
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* BOTÃO FECHAR */
+.item-visualizer-fechar {
+  justify-self: end;
+
+  width: 34px;
+  height: 34px;
+
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 8px;
+
+  background: rgba(0, 0, 0, 0.45);
+  color: #d4af37;
+
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* INFORMAÇÕES */
+.item-visualizer-info {
+  display: grid;
+  gap: 10px;
+
+  margin-bottom: 18px;
+}
+
+.item-visualizer-info p {
+  margin: 0;
+  padding: 10px 12px;
+
+  border: 1px solid rgba(212, 175, 55, 0.12);
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  color: #d8cbb8;
+}
+
+.item-visualizer-info strong,
+.item-visualizer-status strong {
+  color: #d4af37;
+}
+
+/* STATUS DE ARMAS */
+.item-visualizer-status {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+
+  margin-bottom: 18px;
+}
+
+.item-visualizer-status span {
+  padding: 10px;
+
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.05);
+
+  color: #e5dccf;
+
+  font-size: 0.78rem;
+}
+
+/* AÇÕES */
+.item-visualizer-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.item-visualizer-acoes button {
+  min-height: 38px;
+  padding: 0 14px;
+
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 7px;
+
+  background: rgba(139, 69, 19, 0.38);
+
+  color: #f5efe4;
+
+  font-family: inherit;
+  font-weight: 800;
+  text-transform: uppercase;
+
+  cursor: pointer;
+}
+
+.item-visualizer-acoes button:hover {
+  border-color: #d4af37;
+  background: #8b4513;
+}
+
+.item-visualizer-vender {
+  margin-left: auto;
+}
 /* =========================
    D4
 ========================= */
@@ -1603,12 +2272,11 @@ body {
   border: 2px solid rgba(212, 175, 55, 0.42);
   border-radius: 14px;
 
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.12),
-      rgba(139, 69, 19, 0.18)
-    );
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.12),
+    rgba(139, 69, 19, 0.18)
+  );
 
   transform: rotate(45deg);
 
@@ -2115,12 +2783,6 @@ body {
   font-size: 1.4rem;
 }
 
-.lista-rituais {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
 .ritual-item {
   overflow: hidden;
 
@@ -2141,7 +2803,6 @@ body {
 
 .ritual-item summary {
   padding: 16px;
-
   cursor: pointer;
 
   list-style: none;
@@ -2279,6 +2940,150 @@ body {
 
 .nivel-4 {
   border-left-color: #ffffff;
+}
+
+/* =========================================================
+   RITOS ATIVOS
+========================================================= */
+
+.btn-ativar-rito,
+.rito-visualizer-acoes button {
+  min-height: 34px;
+  padding: 7px 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.btn-ativar-rito:hover,
+.rito-visualizer-acoes button:hover {
+  background: #ffffff;
+  color: #000000;
+}
+
+.ritual-card.ativo {
+  background: #ffffff;
+  border-color: #ffffff;
+  border-left-color: #000000;
+
+  color: #000000;
+
+  box-shadow:
+    0 0 22px rgba(255, 255, 255, 0.35),
+    inset 0 0 28px rgba(0, 0, 0, 0.08);
+}
+
+.ritual-card.ativo .ritual-card-icone {
+  background: #000000;
+  border-color: #000000;
+  color: #ffffff;
+}
+
+.ritual-card.ativo .ritual-card-info strong,
+.ritual-card.ativo .ritual-card-info small,
+.ritual-card.ativo .ritual-card-info span {
+  color: #000000;
+}
+
+.ritual-card.ativo .btn-ativar-rito {
+  background: #000000;
+  border-color: #000000;
+  color: #ffffff;
+}
+
+.rito-visualizer-acoes {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.rito-visualizer-acoes .btn-rito-ativo {
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
+}
+
+/* =========================================================
+   PERFIL COM RITO ATIVO
+========================================================= */
+
+.profile-wrapper.rito-ativo-perfil::before,
+.profile-wrapper.rito-desativando::before {
+  opacity: 1;
+
+  background-image:
+    linear-gradient(
+      24deg,
+      transparent 0 30%,
+      rgba(255, 255, 255, 1) 31%,
+      transparent 33% 100%
+    ),
+    linear-gradient(
+      112deg,
+      transparent 0 35%,
+      rgba(255, 255, 255, 0.95) 36%,
+      transparent 38% 100%
+    ),
+    linear-gradient(
+      78deg,
+      transparent 0 45%,
+      rgba(255, 255, 255, 0.9) 46%,
+      transparent 48% 100%
+    ),
+    linear-gradient(
+      150deg,
+      transparent 0 44%,
+      rgba(255, 255, 255, 0.85) 45%,
+      transparent 47% 100%
+    ),
+    linear-gradient(
+      8deg,
+      transparent 0 55%,
+      rgba(255, 255, 255, 0.8) 56%,
+      transparent 58% 100%
+    );
+
+  background-size:
+    100% 100%,
+    82% 82%,
+    78% 78%,
+    65% 65%,
+    55% 55%;
+
+  background-position:
+    center,
+    44% 25%,
+    55% 55%,
+    70% 45%,
+    30% 70%;
+
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+  animation:
+    entradaRachadurasBrancas 0.55s ease forwards,
+    perfilTomadoRachaduras 1.2s infinite 0.55s;
+}
+
+.profile-wrapper.rito-desativando::before {
+  animation: saidaRachadurasBrancas 0.45s ease forwards;
+}
+
+.profile-wrapper.rito-desativando .profile {
+  animation: perfilSaindoInvertido 0.45s ease forwards;
+}
+
+.profile-wrapper.rito-ativo-perfil .profile {
+  filter: invert(1) grayscale(1) contrast(1.15) brightness(1.05);
+  animation: perfilInvertidoRito 0.7s ease forwards;
 }
 
 /* =========================================================

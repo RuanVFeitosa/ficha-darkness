@@ -1,40 +1,59 @@
+/* =========================================================
+   DASHBOARD MESTRE — MINIMALISTA PRETO & BRANCO
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
 .mestre-page {
   min-height: 100vh;
   padding: 24px;
-  background: #090807;
-  color: #f5efe4;
+  background: #000;
+  color: #fff;
   font-family: "Courier New", monospace;
   text-align: left;
 }
 
+/* =========================================================
+   HEADER
+========================================================= */
+
 .mestre-header {
   display: grid;
   grid-template-columns: auto 1fr auto;
-  gap: 18px;
   align-items: center;
-  max-width: 1500px;
-  margin: 0 auto 18px;
+  gap: 18px;
+
+  max-width: 1600px;
+  margin: 0 auto 20px;
   padding-bottom: 18px;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .mestre-header span,
 .mestre-editor-topo span,
 .mestre-creditos span {
-  color: #c89b5f;
-  font-size: 0.74rem;
+  color: #aaa;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   text-transform: uppercase;
 }
 
 .mestre-header h1,
 .mestre-editor-topo h2 {
-  margin: 4px 0;
-  color: #fff8ea;
-  letter-spacing: 0;
+  margin: 4px 0 0;
+  color: #fff;
+  font-size: 1.35rem;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
+
+/* =========================================================
+   BOTÕES BASE
+========================================================= */
 
 .mestre-voltar,
 .mestre-refresh,
@@ -47,20 +66,35 @@
 .mestre-inventario-form button,
 .mestre-salvar,
 .mestre-loja-form button,
-.mestre-catalogo button {
+.mestre-catalogo button,
+.mestre-abrir-ficha {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+
   min-height: 40px;
-  padding: 9px 13px;
-  border: 1px solid rgba(212, 175, 55, 0.26);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #f5efe4;
+  padding: 9px 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+
+  background: #050505;
+  color: #fff;
+
   font: inherit;
+  font-size: 0.78rem;
   font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
   cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .mestre-voltar:hover,
@@ -76,54 +110,57 @@
 .mestre-creditos button:hover,
 .mestre-inventario-form button:hover,
 .mestre-salvar:hover,
-.mestre-loja-form button:hover {
-  border-color: #d4af37;
-  background: #8b4513;
+.mestre-loja-form button:hover,
+.mestre-catalogo button:hover,
+.mestre-abrir-ficha:hover {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+  transform: translateY(-1px);
 }
 
 .mestre-refresh:disabled {
+  opacity: 0.5;
   cursor: wait;
-  opacity: 0.6;
+  transform: none;
 }
 
+/* =========================================================
+   MENSAGEM
+========================================================= */
+
 .mestre-mensagem {
-  max-width: 1500px;
-  margin: 0 auto 16px;
-  padding: 10px 12px;
-  border-left: 3px solid #c89b5f;
-  background: rgba(200, 155, 95, 0.09);
-  color: #e6d6bf;
+  max-width: 1600px;
+  margin: 0 auto 18px;
+  padding: 12px 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-left: 3px solid #fff;
+  border-radius: 8px;
+
+  background: #080808;
+  color: #ddd;
+
+  font-size: 0.82rem;
 }
+
+/* =========================================================
+   TABS PRINCIPAIS
+========================================================= */
 
 .mestre-tabs {
   display: flex;
   gap: 10px;
-  max-width: 1500px;
-  margin: 0 auto 18px;
+
+  max-width: 1600px;
+  margin: 0 auto 22px;
 }
 
-.mestre-grid {
-  display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
-  gap: 18px;
-  max-width: 1500px;
-  margin: 0 auto;
+.mestre-tabs button.ativa {
+  background: #fff;
+  color: #000;
 }
 
-.mestre-lista,
-.mestre-editor,
-.mestre-loja {
-  border: 1px solid rgba(212, 175, 55, 0.16);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.35);
-}
-
-.mestre-lista {
-  display: grid;
-  gap: 14px;
-  align-content: start;
-  padding: 16px;
-}
 
 .mestre-criar,
 .mestre-inventario-form,
@@ -183,11 +220,141 @@
   border-color: #c89b5f;
 }
 
-.mestre-fichas {
+.mestre-dashboard-full {
   display: grid;
+  gap: 22px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.mestre-dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.mestre-card-personagem {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  background: rgba(255,255,255,0.045);
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.mestre-card-personagem:hover {
+  transform: translateY(-4px);
+  border-color: #d4af37;
+  background: rgba(212,175,55,0.06);
+}
+
+.mestre-card-personagem.ativo {
+  border-color: #d4af37;
+  box-shadow: 0 0 20px rgba(212,175,55,0.16);
+}
+
+.mestre-card-topo {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.mestre-card-foto {
+  width: 86px;
+  height: 86px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid rgba(212,175,55,0.2);
+}
+
+.mestre-card-info {
+  display: grid;
+  gap: 4px;
+}
+
+.mestre-card-info h3 {
+  margin: 0;
+  color: white;
+  font-size: 1rem;
+}
+
+.mestre-card-info span {
+  color: #c89b5f;
+}
+
+.mestre-card-info small {
+  color: #aaa;
+}
+
+.mestre-card-atributos {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
   gap: 8px;
-  max-height: 60vh;
-  overflow-y: auto;
+}
+
+.mestre-card-atributos div {
+  display: grid;
+  justify-items: center;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+}
+
+.mestre-card-atributos span {
+  font-size: 0.68rem;
+  color: #c89b5f;
+}
+
+.mestre-card-atributos strong {
+  color: white;
+}
+
+.mestre-card-barras {
+  display: grid;
+  gap: 12px;
+}
+
+.barra {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.08);
+}
+
+.barra span {
+  display: block;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.barra.vermelho span {
+  background: #c62828;
+}
+
+.barra.roxo span {
+  background: #8e24aa;
+}
+
+.barra.dourado span {
+  background: #ff9800;
+}
+
+.mestre-card-barras label {
+  display: block;
+  margin-bottom: 4px;
+  color: #c89b5f;
+  font-size: 0.72rem;
+}
+
+.mestre-card-barras small {
+  color: #ddd;
+  font-size: 0.75rem;
 }
 
 .mestre-fichas button {
@@ -218,6 +385,233 @@
   display: grid;
   gap: 18px;
   padding: 18px;
+}
+
+/* MODAL FICHA — VISUAL MINIMALISTA */
+
+.mestre-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mestre-modal-header-esquerda {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mestre-modal-foto {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+.mestre-modal-identidade {
+  display: grid;
+  gap: 4px;
+}
+
+.mestre-modal-identidade span,
+.mestre-modal-bloco > span {
+  color: #c89b5f;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.mestre-modal-identidade h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.55rem;
+  text-transform: uppercase;
+}
+
+.mestre-modal-identidade small {
+  color: #aaa;
+}
+
+.mestre-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mestre-modal-bloco {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mestre-modal-bloco.full {
+  grid-column: 1 / -1;
+}
+
+.mestre-modal-atributos,
+.mestre-passivas-grid,
+.mestre-inventario-grid,
+.mestre-corpo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.mestre-modal-atributos div,
+.mestre-passiva-item,
+.mestre-item-card,
+.mestre-corpo-item {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.mestre-modal-atributos small,
+.mestre-passiva-item small,
+.mestre-item-card small,
+.mestre-corpo-item small {
+  color: #9f9588;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
+.mestre-modal-atributos strong,
+.mestre-passiva-item strong,
+.mestre-item-card strong,
+.mestre-corpo-item strong {
+  color: #fff;
+}
+
+.mestre-barra-container {
+  display: grid;
+  gap: 8px;
+}
+
+.mestre-barra {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mestre-barra span {
+  display: block;
+  height: 100%;
+}
+
+.mestre-barra.vermelho span {
+  background: #c62828;
+}
+
+.mestre-barra.roxo span {
+  background: #8e24aa;
+}
+
+.mestre-barra.dourado span {
+  background: #ff9800;
+}
+
+.mestre-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 28px;
+
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(6px);
+}
+
+.mestre-modal-ficha {
+  width: min(1180px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+
+  display: grid;
+  gap: 20px;
+
+  padding: 26px;
+
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 18px;
+
+  background: #0c0b0a;
+  color: #f5efe4;
+
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75);
+
+  animation: abrirModalFicha 0.22s ease;
+}
+
+@keyframes abrirModalFicha {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.mestre-modal-linha-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mestre-modal-atributos.linha {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.mestre-modal-recursos {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mestre-abrir-ficha {
+  min-height: 34px;
+  padding: 7px 13px;
+  border: 1px solid rgba(212, 175, 55, 0.26);
+  border-radius: 8px;
+  background: rgba(139, 69, 19, 0.42);
+  color: #f5efe4;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mestre-abrir-ficha:hover {
+  border-color: #d4af37;
+  background: #8b4513;
+}
+
+@media (max-width: 760px) {
+  .mestre-modal-atributos.linha,
+  .mestre-modal-recursos {
+    grid-template-columns: 1fr;
+  }
 }
 
 .mestre-botao-editar {

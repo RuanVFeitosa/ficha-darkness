@@ -19,6 +19,7 @@ import {
   criarPersonagem,
   listarPersonagens,
   salvarCatalogoLoja,
+  buscarPersonagem,
   salvarPersonagem,
 } from "../services/personagemApi";
 import { estadoInicial } from "./fichaPersonagem";
@@ -172,7 +173,24 @@ const listarFichasLocais = () =>
     .sort((a, b) => a.fichaId.localeCompare(b.fichaId));
 
 const salvarFichaLocal = (fichaId, personagem) => {
-  localStorage.setItem(`${STORAGE_KEY}_${fichaId}`, JSON.stringify(personagem));
+  const chave = `${STORAGE_KEY}_${fichaId}`;
+
+  try {
+    localStorage.setItem(chave, JSON.stringify(personagem));
+  } catch (error) {
+    console.warn("LocalStorage cheio. Salvando sem foto de perfil.", error);
+
+    const personagemSemFoto = {
+      ...personagem,
+      fotoPerfil: "",
+    };
+
+    try {
+      localStorage.setItem(chave, JSON.stringify(personagemSemFoto));
+    } catch (novoErro) {
+      console.warn("Nao foi possivel salvar localmente.", novoErro);
+    }
+  }
 };
 
 const DashboardMestre = () => {
@@ -193,6 +211,8 @@ const DashboardMestre = () => {
   const [abaLojaEditor, setAbaLojaEditor] = useState("armas-fogo");
   const [itemEditandoId, setItemEditandoId] = useState(null);
   const [nivelRitoDashboard, setNivelRitoDashboard] = useState("iniciante");
+  const [editandoDashboard, setEditandoDashboard] = useState(false);
+  const [modalFichaAberto, setModalFichaAberto] = useState(false);
 
   const fichaAtual = useMemo(
     () => fichas.find((ficha) => ficha.fichaId === fichaSelecionada),
@@ -316,6 +336,43 @@ const DashboardMestre = () => {
   }, []);
 
   useEffect(() => {
+    if (!fichaSelecionada) return;
+
+    const intervalo = setInterval(async () => {
+      if (editandoDashboard) return;
+
+      try {
+        const personagemAtualizado = await buscarPersonagem(fichaSelecionada);
+
+        if (!personagemAtualizado) return;
+
+        const personagemFinal = {
+          ...estadoInicial,
+          ...personagemAtualizado,
+          lojaCreditos: personagemAtualizado.lojaCreditos ?? 900,
+        };
+
+        setPersonagem(personagemFinal);
+
+        setFichas((atuais) =>
+          atuais.map((ficha) =>
+            ficha.fichaId === fichaSelecionada
+              ? { ...ficha, personagem: personagemFinal }
+              : ficha,
+          ),
+        );
+      } catch (error) {
+        console.warn(
+          "Nao foi possivel atualizar a ficha em tempo real.",
+          error,
+        );
+      }
+    }, 2000);
+
+    return () => clearInterval(intervalo);
+  }, [fichaSelecionada, editandoDashboard]);
+
+  useEffect(() => {
     if (fichaAtual) {
       setPersonagem({
         ...estadoInicial,
@@ -392,20 +449,49 @@ const DashboardMestre = () => {
   const salvarFichaSelecionada = async (personagemAtualizado = personagem) => {
     if (!fichaSelecionada || !personagemAtualizado) return;
 
-    salvarFichaLocal(fichaSelecionada, personagemAtualizado);
+    let fichaMaisRecente = {};
+
+    try {
+      const doBackend = await buscarPersonagem(fichaSelecionada);
+      if (doBackend) fichaMaisRecente = doBackend;
+    } catch {
+      try {
+        const local = localStorage.getItem(
+          `${STORAGE_KEY}_${fichaSelecionada}`,
+        );
+        if (local) fichaMaisRecente = JSON.parse(local);
+      } catch {}
+    }
+
+    const personagemFinal = {
+      ...estadoInicial,
+      ...fichaMaisRecente,
+      ...personagemAtualizado,
+
+      // CAMPOS DO JOGADOR — NÃO SOBRESCREVER PELO DASHBOARD
+      membros: fichaMaisRecente.membros || personagemAtualizado.membros,
+      sanidade: fichaMaisRecente.sanidade || personagemAtualizado.sanidade,
+      esperanca: fichaMaisRecente.esperanca || personagemAtualizado.esperanca,
+      fotoPerfil:
+        fichaMaisRecente.fotoPerfil || personagemAtualizado.fotoPerfil,
+    };
+
+    salvarFichaLocal(fichaSelecionada, personagemFinal);
+    setPersonagem(personagemFinal);
+
     setFichas((atuais) =>
       atuais.map((ficha) =>
         ficha.fichaId === fichaSelecionada
-          ? { ...ficha, personagem: personagemAtualizado }
+          ? { ...ficha, personagem: personagemFinal }
           : ficha,
       ),
     );
 
     try {
-      await salvarPersonagem(fichaSelecionada, personagemAtualizado);
-      setMensagem("Ficha salva.");
-    } catch (error) {
-      setMensagem("Ficha salva localmente. Backend indisponivel.");
+      await salvarPersonagem(fichaSelecionada, personagemFinal);
+      setMensagem("Ficha salva. Alterações do jogador preservadas.");
+    } catch {
+      setMensagem("Ficha salva localmente sem foto. Backend indisponivel.");
     }
   };
 
@@ -771,541 +857,346 @@ const DashboardMestre = () => {
       </nav>
 
       {aba === "fichas" && (
-        <section className="mestre-grid">
-          <aside className="mestre-lista">
-            <form className="mestre-criar" onSubmit={criarNovaFicha}>
-              <h2>Adicionar ficha</h2>
-              <input
-                value={novaFicha.nome}
-                onChange={(event) =>
-                  setNovaFicha((atual) => ({
-                    ...atual,
-                    nome: event.target.value,
-                  }))
-                }
-                placeholder="Nome"
-              />
-              <div className="mestre-duplo">
-                <input
-                  value={novaFicha.classe}
-                  onChange={(event) =>
-                    setNovaFicha((atual) => ({
-                      ...atual,
-                      classe: event.target.value,
-                    }))
-                  }
-                  placeholder="Classe"
-                />
-                <input
-                  value={novaFicha.pronome}
-                  onChange={(event) =>
-                    setNovaFicha((atual) => ({
-                      ...atual,
-                      pronome: event.target.value,
-                    }))
-                  }
-                  placeholder="Pronome"
-                />
-              </div>
-              <input
-                value={novaFicha.especialidade}
-                onChange={(event) =>
-                  setNovaFicha((atual) => ({
-                    ...atual,
-                    especialidade: event.target.value,
-                  }))
-                }
-                placeholder="Especialidade"
-              />
-              <button type="submit">
-                <Icon path={mdiAccountPlus} size={0.85} />
-                Criar ficha
-              </button>
-            </form>
+        <section className="mestre-dashboard-full">
+          <div className="mestre-dashboard-cards">
+            {fichas.map((ficha) => {
+              const personagemCard = ficha.personagem || {};
+              const membros = personagemCard.membros || {};
 
-            <div className="mestre-fichas">
-              {fichas.map((ficha) => (
+              const vidaAtual = Object.values(membros).reduce(
+                (total, membro) => total + (membro?.atual || 0),
+                0,
+              );
+
+              const vidaMax = Object.values(membros).reduce(
+                (total, membro) => total + (membro?.max || 0),
+                0,
+              );
+
+              return (
                 <button
                   key={ficha.fichaId}
-                  className={fichaSelecionada === ficha.fichaId ? "ativa" : ""}
-                  onClick={() => setFichaSelecionada(ficha.fichaId)}
+                  className={`mestre-card-personagem ${
+                    fichaSelecionada === ficha.fichaId ? "ativo" : ""
+                  }`}
+                  onClick={() => {
+                    setFichaSelecionada(ficha.fichaId);
+                    setPersonagem({
+                      ...estadoInicial,
+                      ...personagemCard,
+                      lojaCreditos: personagemCard.lojaCreditos ?? 900,
+                    });
+                    setModalFichaAberto(true);
+                  }}
                 >
-                  <strong>{ficha.personagem?.nome || ficha.fichaId}</strong>
-                  <span>{ficha.fichaId}</span>
-                </button>
-              ))}
-            </div>
-          </aside>
+                  <div className="mestre-card-topo">
+                    <img
+                      src={
+                        personagemCard.fotoPerfil ||
+                        "https://placehold.co/300x300"
+                      }
+                      alt={personagemCard.nome}
+                      className="mestre-card-foto"
+                    />
 
-          <section className="mestre-editor">
-            {personagem ? (
-              <>
-                <div className="mestre-editor-topo">
-                  <div>
-                    <span>Ficha selecionada</span>
-                    <h2>{personagem.nome || fichaSelecionada}</h2>
-                    <p>{fichaSelecionada}</p>
+                    <div className="mestre-card-info">
+                      <h3>{personagemCard.nome || ficha.fichaId}</h3>
+
+                      <span>{personagemCard.classe || "Sem classe"}</span>
+
+                      <small>NV {personagemCard.nivel || 1}</small>
+                    </div>
                   </div>
-                  <div className="mestre-acoes-ficha">
+
+                  <div className="mestre-card-atributos">
+                    {Object.entries(personagemCard.atributos || {})
+                      .slice(0, 5)
+                      .map(([atributo, valor]) => (
+                        <div key={atributo}>
+                          <span>{atributo.slice(0, 3).toUpperCase()}</span>
+                          <strong>{valor}</strong>
+                        </div>
+                      ))}
+                  </div>
+
+                  <div className="mestre-card-barras">
+                    <div>
+                      <label>VIDA</label>
+
+                      <div className="barra vermelho">
+                        <span
+                          style={{
+                            width: `${
+                              vidaMax > 0 ? (vidaAtual / vidaMax) * 100 : 0
+                            }%`,
+                          }}
+                        />
+                      </div>
+
+                      <small>
+                        {vidaAtual} / {vidaMax}
+                      </small>
+                    </div>
+
+                    <div>
+                      <label>SANIDADE</label>
+
+                      <div className="barra roxo">
+                        <span
+                          style={{
+                            width: `${
+                              personagemCard.sanidade?.max > 0
+                                ? (personagemCard.sanidade?.atual /
+                                    personagemCard.sanidade?.max) *
+                                  100
+                                : 0
+                            }%`,
+                          }}
+                        />
+                      </div>
+
+                      <small>
+                        {personagemCard.sanidade?.atual || 0} /{" "}
+                        {personagemCard.sanidade?.max || 0}
+                      </small>
+                    </div>
+
+                    <div>
+                      <label>ESPERANÇA</label>
+
+                      <div className="barra dourado">
+                        <span
+                          style={{
+                            width: `${
+                              personagemCard.esperanca?.max > 0
+                                ? (personagemCard.esperanca?.atual /
+                                    personagemCard.esperanca?.max) *
+                                  100
+                                : 0
+                            }%`,
+                          }}
+                        />
+                      </div>
+
+                      <small>
+                        {personagemCard.esperanca?.atual || 0} /{" "}
+                        {personagemCard.esperanca?.max || 0}
+                      </small>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {modalFichaAberto && personagem && (
+            <div
+              className="mestre-modal-overlay"
+              onClick={() => setModalFichaAberto(false)}
+            >
+              <section
+                className="mestre-modal-ficha minimalista"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <header className="mestre-modal-header">
+                  <div className="mestre-modal-header-esquerda">
+                    <img
+                      src={
+                        personagem.fotoPerfil || "https://placehold.co/300x300"
+                      }
+                      alt={personagem.nome}
+                      className="mestre-modal-foto"
+                    />
+
+                    <div className="mestre-modal-identidade">
+                      <span>PERSONAGEM</span>
+
+                      <h2>{personagem.nome || "Sem Nome"}</h2>
+
+                      <small>
+                        {personagem.classe || "Sem Classe"} • NV{" "}
+                        {personagem.nivel || 1}
+                      </small>
+                    </div>
+                  </div>
+
+                  <button
+                    className="mestre-modal-fechar"
+                    onClick={() => setModalFichaAberto(false)}
+                  >
+                    ×
+                  </button>
+                </header>
+
+                {/* ATRIBUTOS */}
+                <section className="mestre-modal-bloco full">
+                  <div className="mestre-modal-linha-topo">
+                    <span>Atributos</span>
+
                     <button
+                      className="mestre-abrir-ficha"
                       onClick={() => {
-                        window.location.href = `/?ficha=${encodeURIComponent(fichaSelecionada)}`;
+                        window.open(
+                          `/?ficha=${encodeURIComponent(fichaSelecionada)}`,
+                          "_blank",
+                        );
                       }}
                     >
-                      <Icon path={mdiOpenInNew} size={0.8} />
-                      Abrir
-                    </button>
-                    <button className="perigo" onClick={apagarFichaSelecionada}>
-                      <Icon path={mdiDeleteOutline} size={0.8} />
-                      Apagar
+                      Abrir ficha
                     </button>
                   </div>
-                </div>
 
-                <nav className="mestre-ficha-tabs" aria-label="Areas da ficha">
-                  {abasFicha.map((abaItem) => (
-                    <button
-                      key={abaItem.id}
-                      className={abaFicha === abaItem.id ? "ativa" : ""}
-                      onClick={() => setAbaFicha(abaItem.id)}
-                    >
-                      {abaItem.nome}
-                    </button>
-                  ))}
-                </nav>
+                  <div className="mestre-modal-atributos linha">
+                    {Object.entries(personagem.atributos || {}).map(
+                      ([atributo, valor]) => (
+                        <div key={atributo}>
+                          <small>{atributo}</small>
+                          <strong>{valor}</strong>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </section>
 
-                {abaFicha === "perfil" && (
-                  <div className="mestre-ficha-secao">
-                    <div className="mestre-form-grid">
-                      <label>
-                        Nome
-                        <input
-                          value={personagem.nome || ""}
-                          onChange={(event) =>
-                            atualizarPersonagem("nome", event.target.value)
-                          }
+                {/* SANIDADE + ESPERANÇA */}
+                <section className="mestre-modal-recursos">
+                  <div className="mestre-modal-bloco">
+                    <span>Sanidade</span>
+
+                    <div className="mestre-barra-container">
+                      <div className="mestre-barra roxo">
+                        <span
+                          style={{
+                            width: `${
+                              personagem.sanidade?.max > 0
+                                ? (personagem.sanidade?.atual /
+                                    personagem.sanidade?.max) *
+                                  100
+                                : 0
+                            }%`,
+                          }}
                         />
-                      </label>
-                      <label>
-                        Pronome
-                        <input
-                          value={personagem.pronome || ""}
-                          onChange={(event) =>
-                            atualizarPersonagem("pronome", event.target.value)
-                          }
-                        />
-                      </label>
-                      <label>
-                        Classe
-                        <input
-                          value={personagem.classe || ""}
-                          onChange={(event) =>
-                            atualizarPersonagem("classe", event.target.value)
-                          }
-                        />
-                      </label>
-                      <label>
-                        Especialidade
-                        <input
-                          value={personagem.especialidade || ""}
-                          onChange={(event) =>
-                            atualizarPersonagem(
-                              "especialidade",
-                              event.target.value,
-                            )
-                          }
-                        />
-                      </label>
-                      <label>
-                        Sanidade atual
-                        <input
-                          type="number"
-                          value={personagem.sanidade?.atual || 0}
-                          onChange={(event) =>
-                            setPersonagem((atual) => ({
-                              ...atual,
-                              sanidade: {
-                                ...(atual.sanidade || {}),
-                                atual: parseInt(event.target.value, 10) || 0,
-                              },
-                            }))
-                          }
-                        />
-                      </label>
-                      <label>
-                        Sanidade maxima
-                        <input
-                          type="number"
-                          value={personagem.sanidade?.max || 0}
-                          onChange={(event) =>
-                            setPersonagem((atual) => ({
-                              ...atual,
-                              sanidade: {
-                                ...(atual.sanidade || {}),
-                                max: parseInt(event.target.value, 10) || 0,
-                              },
-                            }))
-                          }
-                        />
-                      </label>
-                      <label>
-                        Esperanca atual
-                        <input
-                          type="number"
-                          value={personagem.esperanca?.atual || 0}
-                          onChange={(event) =>
-                            setPersonagem((atual) => ({
-                              ...atual,
-                              esperanca: {
-                                ...(atual.esperanca || {}),
-                                atual: parseInt(event.target.value, 10) || 0,
-                              },
-                            }))
-                          }
-                        />
-                      </label>
-                      <label>
-                        Esperanca maxima
-                        <input
-                          type="number"
-                          value={personagem.esperanca?.max || 0}
-                          onChange={(event) =>
-                            setPersonagem((atual) => ({
-                              ...atual,
-                              esperanca: {
-                                ...(atual.esperanca || {}),
-                                max: parseInt(event.target.value, 10) || 0,
-                              },
-                            }))
-                          }
-                        />
-                      </label>
+                      </div>
+
+                      <strong>
+                        {personagem.sanidade?.atual || 0} /{" "}
+                        {personagem.sanidade?.max || 0}
+                      </strong>
                     </div>
-
-                    <section className="mestre-creditos">
-                      <div>
-                        <span>Creditos da loja</span>
-                        <strong>{personagem.lojaCreditos || 0} cr</strong>
-                      </div>
-                      <input
-                        type="number"
-                        value={creditosDelta}
-                        onChange={(event) =>
-                          setCreditosDelta(event.target.value)
-                        }
-                      />
-                      <button onClick={adicionarCreditos}>
-                        <Icon path={mdiCashPlus} size={0.85} />
-                        Aplicar
-                      </button>
-                    </section>
-
-                    <section className="mestre-creditos">
-                      <div>
-                        <span>Evolucao de nivel</span>
-                        <strong>
-                          NV{personagem.nivel || 1} -{" "}
-                          {personagem.pontosEvolucao?.disponiveis || 0} pts
-                        </strong>
-                      </div>
-                      <button onClick={subirNivelJogador}>
-                        <Icon path={mdiTrendingUp} size={0.85} />
-                        Subir nivel
-                      </button>
-                    </section>
                   </div>
-                )}
 
-                {abaFicha === "ativos" && (
-                  <div className="mestre-ficha-secao">
-                    <h3>Atributos</h3>
-                    <div className="mestre-valores-grid compacto">
-                      {Object.entries(personagem.atributos || {}).map(
-                        ([chave, valor]) => (
-                          <label key={chave}>
-                            {chave}
-                            <input
-                              type="number"
-                              value={valor}
-                              onChange={(event) =>
-                                atualizarGrupoFicha(
-                                  "atributos",
-                                  chave,
-                                  event.target.value,
-                                )
-                              }
+                  <div className="mestre-modal-bloco">
+                    <span>Esperança</span>
+
+                    <div className="mestre-barra-container">
+                      <div className="mestre-barra dourado">
+                        <span
+                          style={{
+                            width: `${
+                              personagem.esperanca?.max > 0
+                                ? (personagem.esperanca?.atual /
+                                    personagem.esperanca?.max) *
+                                  100
+                                : 0
+                            }%`,
+                          }}
+                        />
+                      </div>
+
+                      <strong>
+                        {personagem.esperanca?.atual || 0} /{" "}
+                        {personagem.esperanca?.max || 0}
+                      </strong>
+                    </div>
+                  </div>
+                </section>
+
+                {/* CORPO */}
+                <section className="mestre-modal-bloco full">
+                  <span>Integridade Corporal</span>
+
+                  <div className="mestre-corpo-grid">
+                    {Object.entries(personagem.membros || {}).map(
+                      ([membro, dados]) => (
+                        <div key={membro} className="mestre-corpo-item">
+                          <small>{membro}</small>
+
+                          <div className="mestre-barra vermelho">
+                            <span
+                              style={{
+                                width: `${
+                                  dados.max > 0
+                                    ? (dados.atual / dados.max) * 100
+                                    : 0
+                                }%`,
+                              }}
                             />
-                          </label>
-                        ),
-                      )}
-                    </div>
-
-                    <h3>Ativos</h3>
-                    <div className="mestre-valores-grid compacto">
-                      {ativosFicha.map((ativo) => (
-                        <label key={ativo.chave}>
-                          {ativo.nome}
-                          <input
-                            type="number"
-                            value={
-                              personagem.habilidadesCombate?.[ativo.chave] || 0
-                            }
-                            onChange={(event) =>
-                              atualizarGrupoFicha(
-                                "habilidadesCombate",
-                                ativo.chave,
-                                event.target.value,
-                              )
-                            }
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {abaFicha === "passivos" && (
-                  <div className="mestre-ficha-secao">
-                    <div className="mestre-valores-grid">
-                      {passivosFicha.map((passivo) => (
-                        <label key={passivo.chave}>
-                          {passivo.nome}
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={
-                              personagem.habilidadesPassivas?.[passivo.chave] ||
-                              0
-                            }
-                            onChange={(event) =>
-                              atualizarGrupoFicha(
-                                "habilidadesPassivas",
-                                passivo.chave,
-                                event.target.value,
-                              )
-                            }
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {abaFicha === "ritos" && (
-                  <div className="mestre-ficha-secao">
-                    <form
-                      className="mestre-inventario-form"
-                      onSubmit={adicionarRito}
-                    >
-                      <h3>Adicionar Rito</h3>
-                      <input
-                        value={novoRito.nome}
-                        onChange={(event) =>
-                          setNovoRito((atual) => ({
-                            ...atual,
-                            nome: event.target.value,
-                          }))
-                        }
-                        placeholder="Nome do Rito"
-                      />
-                      <input
-                        value={novoRito.custo}
-                        onChange={(event) =>
-                          setNovoRito((atual) => ({
-                            ...atual,
-                            custo: event.target.value,
-                          }))
-                        }
-                        placeholder="Custo"
-                      />
-                      <button type="submit">
-                        <Icon path={mdiPackageVariantClosedPlus} size={0.85} />
-                        Adicionar
-                      </button>
-                    </form>
-
-                    <div className="mestre-edit-lista">
-                      {(personagem.rituais || []).map((rito, index) => (
-                        <div key={`${rito.nome}-${index}`}>
-                          <input
-                            value={rito.nome || ""}
-                            onChange={(event) =>
-                              atualizarRito(index, "nome", event.target.value)
-                            }
-                            placeholder="Nome"
-                          />
-                          <input
-                            value={rito.custo || ""}
-                            onChange={(event) =>
-                              atualizarRito(index, "custo", event.target.value)
-                            }
-                            placeholder="Custo"
-                          />
-                          <button onClick={() => removerRito(index)}>
-                            <Icon path={mdiDeleteOutline} size={0.75} />
-                          </button>
-                        </div>
-                      ))}
-                      {(personagem.rituais || []).length === 0 && (
-                        <p className="mestre-lista-vazia">
-                          Nenhum Rito cadastrado.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {abaFicha === "inventario" && (
-                  <div className="mestre-ficha-secao">
-                    <form
-                      className="mestre-inventario-form"
-                      onSubmit={adicionarItemInventario}
-                    >
-                      <h3>Adicionar item no inventario</h3>
-                      <input
-                        value={itemInventario.nome}
-                        onChange={(event) =>
-                          setItemInventario((atual) => ({
-                            ...atual,
-                            nome: event.target.value,
-                          }))
-                        }
-                        placeholder="Item"
-                      />
-                      <input
-                        value={itemInventario.detalhes}
-                        onChange={(event) =>
-                          setItemInventario((atual) => ({
-                            ...atual,
-                            detalhes: event.target.value,
-                          }))
-                        }
-                        placeholder="Detalhes"
-                      />
-                      <button type="submit">
-                        <Icon path={mdiPackageVariantClosedPlus} size={0.85} />
-                        Adicionar
-                      </button>
-                    </form>
-
-                    <div className="mestre-edit-lista">
-                      {(personagem.inventario || []).map((item, index) => (
-                        <div key={`${item.nome}-${index}`}>
-                          <input
-                            value={item.nome || ""}
-                            onChange={(event) =>
-                              atualizarItemInventario(
-                                index,
-                                "nome",
-                                event.target.value,
-                              )
-                            }
-                            placeholder="Item"
-                          />
-                          <input
-                            value={item.detalhes || ""}
-                            onChange={(event) =>
-                              atualizarItemInventario(
-                                index,
-                                "detalhes",
-                                event.target.value,
-                              )
-                            }
-                            placeholder="Detalhes"
-                          />
-                          <button onClick={() => removerItemInventario(index)}>
-                            <Icon path={mdiDeleteOutline} size={0.75} />
-                          </button>
-                        </div>
-                      ))}
-                      {(personagem.inventario || []).length === 0 && (
-                        <p className="mestre-lista-vazia">Inventario vazio.</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {abaFicha === "corpo" && (
-                  <div className="mestre-ficha-secao">
-                    <div className="mestre-corpo-grid">
-                      {membrosFicha.map((membro) => {
-                        const dados = personagem.membros?.[membro.chave] || {
-                          atual: 0,
-                          max: 0,
-                          ferido: false,
-                          grave: false,
-                        };
-
-                        return (
-                          <div
-                            key={membro.chave}
-                            className={`mestre-membro ${dados.grave ? "grave" : dados.ferido ? "ferido" : ""}`}
-                          >
-                            <strong>{membro.nome}</strong>
-                            <label>
-                              Atual
-                              <input
-                                type="number"
-                                min="0"
-                                value={dados.atual}
-                                onChange={(event) =>
-                                  atualizarMembro(
-                                    membro.chave,
-                                    "atual",
-                                    event.target.value,
-                                  )
-                                }
-                              />
-                            </label>
-                            <label>
-                              Maximo
-                              <input
-                                type="number"
-                                min="0"
-                                value={dados.max}
-                                onChange={(event) =>
-                                  atualizarMembro(
-                                    membro.chave,
-                                    "max",
-                                    event.target.value,
-                                  )
-                                }
-                              />
-                            </label>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
 
-                {abaFicha === "descricao" && (
-                  <div className="mestre-ficha-secao">
-                    <label>
-                      Descricao do personagem
-                      <textarea
-                        className="mestre-descricao"
-                        value={personagem.descricao || ""}
-                        onChange={(event) =>
-                          atualizarPersonagem("descricao", event.target.value)
-                        }
-                      />
-                    </label>
+                          <strong>
+                            {dados.atual} / {dados.max}
+                          </strong>
+                        </div>
+                      ),
+                    )}
                   </div>
-                )}
+                </section>
 
-                <button
-                  className="mestre-salvar"
-                  onClick={() => salvarFichaSelecionada()}
-                >
-                  Salvar edicoes da ficha
-                </button>
-              </>
-            ) : (
-              <div className="mestre-vazio">Nenhuma ficha selecionada.</div>
-            )}
-          </section>
+                {/* PASSIVAS */}
+                <section className="mestre-modal-bloco full">
+                  <span>Passivas</span>
+
+                  <div className="mestre-passivas-grid">
+                    {Object.entries(personagem.habilidadesPassivas || {}).map(
+                      ([nome, valor]) => (
+                        <div key={nome} className="mestre-passiva-item">
+                          <small>{nome}</small>
+                          <strong>{valor}</strong>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </section>
+
+                {/* INVENTÁRIO */}
+                <section className="mestre-modal-bloco full">
+                  <span>Inventário</span>
+
+                  <div className="mestre-inventario-grid">
+                    {(personagem.inventario || []).map((item, index) => (
+                      <div
+                        key={`${item.nome}-${index}`}
+                        className="mestre-item-card"
+                      >
+                        <strong>{item.nome}</strong>
+
+                        <small>{item.tipo}</small>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* RITOS */}
+                <section className="mestre-modal-bloco full">
+                  <span>Ritos</span>
+
+                  <div className="mestre-inventario-grid">
+                    {(personagem.rituais || []).map((rito, index) => (
+                      <div
+                        key={`${rito.nome}-${index}`}
+                        className={`mestre-item-card ${
+                          rito.ativo ? "ativo" : ""
+                        }`}
+                      >
+                        <strong>{rito.nome}</strong>
+
+                        <small>{rito.nivel}</small>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              </section>
+            </div>
+          )}
         </section>
       )}
 

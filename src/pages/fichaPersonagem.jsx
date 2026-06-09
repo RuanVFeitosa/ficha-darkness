@@ -246,6 +246,7 @@ export const estadoInicial = {
   anotacao: "",
   historia: "",
   condicoesAtivas: [],
+  ritosAtivos: [],
   habilidadesTemporarias: {},
   materiaisCriacao: {
     alcool: 0,
@@ -268,6 +269,11 @@ const ItemRecolhivel = ({ item, tipo, acaoExtra }) => {
     <details className={`item-recolhivel item-${tipo}`}>
       <summary>
         <span>{item.nome}</span>
+        {item.usos && (
+          <p>
+            <strong>Usos:</strong> {item.usos}
+          </p>
+        )}
         <small>{item.detalhes || item.custo || item.tipo || tipo}</small>
       </summary>
 
@@ -338,6 +344,15 @@ const FichaPersonagem = () => {
   const [mensagemCraft, setMensagemCraft] = useState("");
   const [modalRolagem, setModalRolagem] = useState(null);
   const [rolandoDados, setRolandoDados] = useState(false);
+  const [itemVisualizado, setItemVisualizado] = useState(null);
+  const [itemVisualizadoIndex, setItemVisualizadoIndex] = useState(null);
+  const [ritoVisualizado, setRitoVisualizado] = useState(null);
+  const [ritoDesativando, setRitoDesativando] = useState(false);
+  const [sanidadeSaindo, setSanidadeSaindo] = useState(false);
+  const [esperancaSaindo, setEsperancaSaindo] = useState(false);
+  const [ultimoEstadoSanidade, setUltimoEstadoSanidade] = useState("");
+  const [ultimoEstadoEsperanca, setUltimoEstadoEsperanca] = useState("");
+  const [ritoAtivo, setRitoAtivo] = useState(false);
 
   // ESTADO PARA O MODAL
   const [modalAberto, setModalAberto] = useState(false);
@@ -797,6 +812,13 @@ const FichaPersonagem = () => {
       passiva: bonusPassiva,
     });
 
+    setRitoDesativando(true);
+
+    setTimeout(() => {
+      setRitoAtivo(false);
+      setRitoDesativando(false);
+    }, 450);
+
     const dano = rolarDanoArma(arma.dmg, modo === "violencia" ? 1 : 0);
 
     const efeitos = {
@@ -825,6 +847,216 @@ const FichaPersonagem = () => {
     setTimeout(() => {
       setRolandoDados(false);
     }, 1200);
+  };
+
+  const obterRitoId = (rito, index) => {
+    return rito.id || `${rito.nome}-${index}`;
+  };
+
+  const ritosAtivos = personagem.ritosAtivos || [];
+
+  const temRitoAtivo = ritosAtivos.length > 0;
+
+  const alternarRitoAtivo = (rito, index) => {
+    const ritoId = obterRitoId(rito, index);
+
+    const estaAtivo = (personagem.ritosAtivos || []).includes(ritoId);
+
+    if (estaAtivo) {
+      setRitoDesativando(true);
+
+      setTimeout(() => {
+        setPersonagem((prev) => ({
+          ...prev,
+          ritosAtivos: (prev.ritosAtivos || []).filter((id) => id !== ritoId),
+        }));
+
+        setRitoDesativando(false);
+      }, 450);
+
+      return;
+    }
+
+    setPersonagem((prev) => ({
+      ...prev,
+      ritosAtivos: [...(prev.ritosAtivos || []), ritoId],
+    }));
+  };
+
+  useEffect(() => {
+    if (!temRitoAtivo) return;
+
+    const intervaloSanidade = setInterval(() => {
+      setPersonagem((prev) => ({
+        ...prev,
+
+        sanidade: {
+          ...prev.sanidade,
+
+          atual: Math.max(0, (prev.sanidade?.atual || 0) - 1),
+        },
+      }));
+    }, 60000); // 1 minuto
+
+    return () => clearInterval(intervaloSanidade);
+  }, [temRitoAtivo, setPersonagem]);
+
+  const reduzirDurabilidadeItem = (indexAlvo) => {
+    let nomeItemQuebrou = null;
+
+    setPersonagem((prev) => {
+      const novoInventario = [...(prev.inventario || [])];
+      const item = novoInventario[indexAlvo];
+
+      if (!item || !item.durabilidade || item.durabilidade === "—") return prev;
+
+      const partes = item.durabilidade.split(" ");
+
+      const indiceParaMarcar = partes.findIndex((parte) => parte !== "X");
+
+      if (indiceParaMarcar === -1) return prev;
+
+      partes[indiceParaMarcar] = "X";
+
+      const acabou = partes.every((parte) => parte === "X");
+
+      if (acabou) {
+        nomeItemQuebrou = item.nome;
+        novoInventario.splice(indexAlvo, 1);
+      } else {
+        const itemAtualizado = {
+          ...item,
+          durabilidade: partes.join(" "),
+        };
+
+        novoInventario[indexAlvo] = itemAtualizado;
+
+        setItemVisualizado((atual) =>
+          atual?.index === indexAlvo
+            ? { ...itemAtualizado, index: indexAlvo }
+            : atual,
+        );
+      }
+
+      return {
+        ...prev,
+        inventario: novoInventario,
+      };
+    });
+
+    if (nomeItemQuebrou) {
+      setMensagemCraft(`⚠️ ${nomeItemQuebrou} quebrou e foi removido.`);
+      setItemVisualizado(null);
+      setTimeout(() => setMensagemCraft(""), 3000);
+    }
+  };
+
+  const reduzirUsoItem = (indexAlvo) => {
+    let nomeItemAcabou = null;
+
+    setPersonagem((prev) => {
+      const novoInventario = [...(prev.inventario || [])];
+      const item = novoInventario[indexAlvo];
+
+      if (!item || !item.usos) return prev;
+
+      const partes = item.usos.split(" ");
+      const indiceParaMarcar = partes.findIndex((parte) => parte !== "X");
+
+      if (indiceParaMarcar === -1) return prev;
+
+      partes[indiceParaMarcar] = "X";
+
+      const acabou = partes.every((parte) => parte === "X");
+
+      if (acabou) {
+        nomeItemAcabou = item.nome;
+        novoInventario.splice(indexAlvo, 1);
+      } else {
+        const itemAtualizado = {
+          ...item,
+          usos: partes.join(" "),
+        };
+
+        novoInventario[indexAlvo] = itemAtualizado;
+
+        setItemVisualizado((atual) =>
+          atual?.index === indexAlvo
+            ? { ...itemAtualizado, index: indexAlvo }
+            : atual,
+        );
+      }
+
+      return {
+        ...prev,
+        inventario: novoInventario,
+      };
+    });
+
+    if (nomeItemAcabou) {
+      setMensagemCraft(`⚠️ ${nomeItemAcabou} acabou e foi removido.`);
+      setItemVisualizado(null);
+      setTimeout(() => setMensagemCraft(""), 3000);
+    }
+  };
+
+  const rolarItem = (item) => {
+    const formula =
+      item?.rolagem?.formula ||
+      item?.dano?.match(/(\d+)d(\d+)([+-]\d+)?/i)?.[0] ||
+      item?.efeito?.match(/(\d+)d(\d+)([+-]\d+)?/i)?.[0];
+
+    if (!formula) {
+      setMensagemCraft("Este item não possui rolagem.");
+      return;
+    }
+
+    const tipoRolagem =
+      item?.rolagem?.tipo ||
+      (item?.tipo?.toLowerCase().includes("cura") ||
+      item?.efeito?.toLowerCase().includes("recupera")
+        ? "cura"
+        : "dano");
+
+    if (tipoRolagem === "cura" && item?.usos) {
+      reduzirUsoItem(item.index);
+    }
+
+    if (
+      tipoRolagem === "dano" &&
+      item?.durabilidade &&
+      item?.durabilidade !== "—"
+    ) {
+      reduzirDurabilidadeItem(item.index);
+    }
+
+    const resultado = rolarDanoArma(formula);
+
+    setRolandoDados(true);
+
+    setModalRolagem({
+      tipo: tipoRolagem,
+      titulo: item.nome,
+      modo: tipoRolagem === "cura" ? "Rolagem de Cura" : "Rolagem de Dano",
+      formula: resultado.texto,
+      dados: resultado.rolagens,
+      faces: interpretarDano(formula)?.faces || 6,
+      maiorResultado: Math.max(...resultado.rolagens),
+      bonusAtivo: 0,
+      bonusPassiva: 0,
+      total: resultado.total,
+      dano: resultado,
+    });
+
+    if (
+      tipoRolagem === "dano" &&
+      item?.durabilidade &&
+      item?.durabilidade !== "—"
+    ) {
+      reduzirDurabilidadeItem(item.index);
+    }
+
+    setTimeout(() => setRolandoDados(false), 1200);
   };
 
   const criarItem = (receita) => {
@@ -875,11 +1107,9 @@ const FichaPersonagem = () => {
 
       inventario: [
         ...(prev.inventario || []),
-
         {
-          nome: receita.nome,
-          detalhes: `${receita.dano} | ${receita.tipo}`,
-          durabilidade: receita.durabilidade,
+          ...receita,
+          detalhes: receita.efeito || receita.dano || receita.tipo || "Item",
           criado: true,
         },
       ],
@@ -1245,85 +1475,149 @@ const FichaPersonagem = () => {
           <h4>RITUAIS CONHECIDOS</h4>
         </div>
 
-        <div className="lista-rituais">
+        <div className="lista-rituais rituais-cards">
           {personagem.rituais.map((ritual, index) => (
-            <details
+            <article
               key={index}
-              className={`ritual-item item-recolhivel nivel-${ritual.nivelRito || ritual.nivel || "iniciante"}`}
+              className={`ritual-card ${
+                ritosAtivos.includes(obterRitoId(ritual, index)) ? "ativo" : ""
+              } nivel-${ritual.nivelRito || ritual.nivel || "iniciante"}`}
+              onClick={() => setRitoVisualizado({ ...ritual, index })}
             >
-              <summary>
-                <div className="ritual-header">
-                  <div className="ritual-info">
-                    <strong>{ritual.nome}</strong>
+              <div className="ritual-card-icone">{ritual.icone || "☉"}</div>
 
-                    <small>
-                      {ritual.nivelRito || ritual.nivel
-                        ? `Nível ${ritual.nivelRito || ritual.nivel}`
-                        : "Ritual Obscuro"}
-                    </small>
+              <div className="ritual-card-info">
+                <strong>{ritual.nome}</strong>
+
+                <small>
+                  {ritual.nivelRito || ritual.nivel
+                    ? `Nível ${ritual.nivelRito || ritual.nivel}`
+                    : "Ritual Obscuro"}
+                </small>
+
+                <span>{ritual.custo || "0 PE"}</span>
+              </div>
+
+              <button
+                className="btn-ativar-rito"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  alternarRitoAtivo(ritual, index);
+                }}
+              >
+                {ritosAtivos.includes(obterRitoId(ritual, index))
+                  ? "Desativar"
+                  : "Ativar"}
+              </button>
+            </article>
+          ))}
+          {ritoVisualizado && (
+            <div
+              className="rito-visualizer-overlay"
+              onClick={() => setRitoVisualizado(null)}
+            >
+              <div
+                className="rito-visualizer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="rito-visualizer-topo">
+                  <div className="rito-visualizer-icone">
+                    {ritoVisualizado.icone || "☉"}
                   </div>
 
-                  <div className="ritual-tags">
-                    <span className="custo-ritual">
-                      {ritual.custo || "0 PE"}
+                  <div className="rito-visualizer-info-topo">
+                    <span>
+                      {ritoVisualizado.nivelRito || ritoVisualizado.nivel
+                        ? `Nível ${ritoVisualizado.nivelRito || ritoVisualizado.nivel}`
+                        : "Ritual Obscuro"}
                     </span>
 
-                    {ritual.distancia && (
-                      <span className="ritual-tag">{ritual.distancia}</span>
-                    )}
+                    <h2>{ritoVisualizado.nome}</h2>
+
+                    <small>{ritoVisualizado.custo || "0 PE"}</small>
                   </div>
-                </div>
-              </summary>
 
-              <div className="item-descricao-recolhivel ritual-conteudo">
-                <div className="ritual-grid-info">
-                  {ritual.acao && (
-                    <div className="ritual-info-card">
-                      <span>AÇÃO</span>
-                      <strong>{ritual.acao}</strong>
-                    </div>
-                  )}
-
-                  {ritual.alvo && (
-                    <div className="ritual-info-card">
-                      <span>ALVO</span>
-                      <strong>{ritual.alvo}</strong>
-                    </div>
-                  )}
-
-                  {ritual.duracao && (
-                    <div className="ritual-info-card">
-                      <span>DURAÇÃO</span>
-                      <strong>{ritual.duracao}</strong>
-                    </div>
-                  )}
-
-                  {ritual.distancia && (
-                    <div className="ritual-info-card">
-                      <span>DISTÂNCIA</span>
-                      <strong>{ritual.distancia}</strong>
-                    </div>
-                  )}
+                  <button
+                    className="rito-visualizer-fechar"
+                    onClick={() => setRitoVisualizado(null)}
+                  >
+                    ×
+                  </button>
                 </div>
 
-                {ritual.requisitos && (
-                  <div className="ritual-requisitos">
-                    <span>REQUISITOS</span>
+                <div className="rito-visualizer-grid">
+                  {ritoVisualizado.acao && (
+                    <div>
+                      <span>Ação</span>
+                      <strong>{ritoVisualizado.acao}</strong>
+                    </div>
+                  )}
 
-                    <p>{ritual.requisitos}</p>
+                  {ritoVisualizado.alvo && (
+                    <div>
+                      <span>Alvo</span>
+                      <strong>{ritoVisualizado.alvo}</strong>
+                    </div>
+                  )}
+
+                  {ritoVisualizado.duracao && (
+                    <div>
+                      <span>Duração</span>
+                      <strong>{ritoVisualizado.duracao}</strong>
+                    </div>
+                  )}
+
+                  {ritoVisualizado.distancia && (
+                    <div>
+                      <span>Distância</span>
+                      <strong>{ritoVisualizado.distancia}</strong>
+                    </div>
+                  )}
+                </div>
+
+                {ritoVisualizado.requisitos && (
+                  <div className="rito-visualizer-bloco">
+                    <span>Requisitos</span>
+                    <p>{ritoVisualizado.requisitos}</p>
                   </div>
                 )}
 
-                {ritual.efeito && (
-                  <div className="ritual-efeito">
-                    <span>EFEITO</span>
+                {ritoVisualizado.efeito && (
+                  <div className="rito-visualizer-bloco">
+                    <span>Efeito</span>
+                    <p>{ritoVisualizado.efeito}</p>
+                  </div>
+                )}
 
-                    <p>{ritual.efeito}</p>
+                {ritoVisualizado.descricao && (
+                  <div className="rito-visualizer-bloco">
+                    <span>Descrição</span>
+                    <p>{ritoVisualizado.descricao}</p>
                   </div>
                 )}
               </div>
-            </details>
-          ))}
+              <div className="rito-visualizer-acoes">
+                <button
+                  className={
+                    ritosAtivos.includes(
+                      obterRitoId(ritoVisualizado, ritoVisualizado.index),
+                    )
+                      ? "btn-rito-ativo"
+                      : ""
+                  }
+                  onClick={() =>
+                    alternarRitoAtivo(ritoVisualizado, ritoVisualizado.index)
+                  }
+                >
+                  {ritosAtivos.includes(
+                    obterRitoId(ritoVisualizado, ritoVisualizado.index),
+                  )
+                    ? "Desativar Rito"
+                    : "Ativar Rito"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     ),
@@ -1350,163 +1644,26 @@ const FichaPersonagem = () => {
           <>
             <h4>INVENTÁRIO</h4>
 
-            <div className="lista-inventario">
+            <div className="lista-inventario inventario-cards">
+              {" "}
               {personagem.inventario.map((item, index) => (
-                <details
+                <article
                   key={index}
-                  className="item-inventario item-recolhivel"
+                  className="item-inventario item-recolhivel inventario-card"
+                  onClick={() => setItemVisualizado({ ...item, index })}
                 >
-                  <summary>
-                    <div className="inventario-resumo">
-                      <span className="inventario-item-nome">{item.nome}</span>
-
-                      <small className="inventario-item-tipo">
-                        {item.tipo || item.custo || item.detalhes || "Item"}
-                      </small>
+                  <div className="inventario-resumo">
+                    <div className="inventario-card-icone">
+                      {item.icone || "🎒"}
                     </div>
 
-                    <div className="inventario-acoes">
-                      <button
-                        className="btn-vender-item"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          venderItem(index);
-                        }}
-                      >
-                        Vender
-                      </button>
-                    </div>
-                  </summary>
+                    <span className="inventario-item-nome">{item.nome}</span>
 
-                  <div className="item-descricao-recolhivel">
-                    {item.durabilidade && (
-                      <p>
-                        <strong>Durabilidade:</strong> {item.durabilidade}
-                      </p>
-                    )}
-
-                    {item.custo && (
-                      <p>
-                        <strong>Custo:</strong> {item.custo}
-                      </p>
-                    )}
-
-                    {item.absolutismo && (
-                      <div className="bloco-absolutismo">
-                        <strong>ABSOLUTISMO</strong>
-
-                        <p>{item.absolutismo}</p>
-                      </div>
-                    )}
-
-                    {item.efeito && (
-                      <p>
-                        <strong>Efeito:</strong> {item.efeito}
-                      </p>
-                    )}
-
-                    {item.requisitos && (
-                      <p>
-                        <strong>Requisitos:</strong> {item.requisitos}
-                      </p>
-                    )}
-
-                    {item.distancia && (
-                      <p>
-                        <strong>Distância:</strong> {item.distancia}
-                      </p>
-                    )}
-
-                    {item.duracao && (
-                      <p>
-                        <strong>Duração:</strong> {item.duracao}
-                      </p>
-                    )}
-
-                    {item.alvo && (
-                      <p>
-                        <strong>Alvo:</strong> {item.alvo}
-                      </p>
-                    )}
-
-                    {item.armaStatus && (
-                      <>
-                        <div className="item-status-arma">
-                          <span>
-                            <strong>Tipo:</strong> {item.armaStatus.tipo}
-                          </span>
-
-                          <span>
-                            <strong>DMG:</strong> {item.armaStatus.dmg}
-                          </span>
-
-                          <span>
-                            <strong>ROF:</strong> {item.armaStatus.rof}
-                          </span>
-
-                          <span>
-                            <strong>MAG:</strong> {item.armaStatus.mag}
-                          </span>
-
-                          <span>
-                            <strong>Crítico:</strong> {item.armaStatus.critico}
-                          </span>
-
-                          <span>
-                            <strong>Dano Cabeça:</strong>{" "}
-                            {item.armaStatus.danoCabeca}
-                          </span>
-
-                          <span>
-                            <strong>Hipfire:</strong> {item.armaStatus.hipfire}
-                          </span>
-
-                          <span>
-                            <strong>Precision:</strong>{" "}
-                            {item.armaStatus.precision}
-                          </span>
-
-                          <span>
-                            <strong>Control:</strong> {item.armaStatus.control}
-                          </span>
-
-                          <span>
-                            <strong>Mobility:</strong>{" "}
-                            {item.armaStatus.mobility}
-                          </span>
-                        </div>
-
-                        <div className="rolagem-arma-acoes">
-                          <button
-                            onClick={() => rolarAtaqueArma(item, "violencia")}
-                          >
-                            Reflexos + Violência
-                          </button>
-
-                          <button
-                            onClick={() => rolarAtaqueArma(item, "percepcao")}
-                          >
-                            Reflexos + Percepção
-                          </button>
-
-                          <button
-                            onClick={() =>
-                              rolarAtaqueArma(item, "persistencia")
-                            }
-                          >
-                            Reflexos + Persistência
-                          </button>
-
-                          <button
-                            onClick={() => rolarAtaqueArma(item, "firmeza")}
-                          >
-                            Reflexos + Firmeza
-                          </button>
-                        </div>
-                      </>
-                    )}
+                    <small className="inventario-item-tipo">
+                      {item.tipo || item.custo || item.detalhes || "Item"}
+                    </small>
                   </div>
-                </details>
+                </article>
               ))}
             </div>
           </>
@@ -1910,6 +2067,48 @@ const FichaPersonagem = () => {
     "esperanca",
   );
 
+  useEffect(() => {
+    if (!ultimoEstadoSanidade) {
+      setUltimoEstadoSanidade(estadoSanidadePerfil);
+      return;
+    }
+
+    const saiuDoEfeito =
+      ultimoEstadoSanidade !== "sanidade-normal" &&
+      estadoSanidadePerfil === "sanidade-normal";
+
+    if (saiuDoEfeito) {
+      setSanidadeSaindo(true);
+
+      setTimeout(() => {
+        setSanidadeSaindo(false);
+      }, 500);
+    }
+
+    setUltimoEstadoSanidade(estadoSanidadePerfil);
+  }, [estadoSanidadePerfil]);
+
+  useEffect(() => {
+    if (!ultimoEstadoEsperanca) {
+      setUltimoEstadoEsperanca(estadoEsperancaPerfil);
+      return;
+    }
+
+    const saiuDoEfeito =
+      ultimoEstadoEsperanca !== "esperanca-normal" &&
+      estadoEsperancaPerfil === "esperanca-normal";
+
+    if (saiuDoEfeito) {
+      setEsperancaSaindo(true);
+
+      setTimeout(() => {
+        setEsperancaSaindo(false);
+      }, 500);
+    }
+
+    setUltimoEstadoEsperanca(estadoEsperancaPerfil);
+  }, [estadoEsperancaPerfil]);
+
   const atualizarFotoPerfil = (event) => {
     const arquivo = event.target.files?.[0];
 
@@ -2005,7 +2204,11 @@ const FichaPersonagem = () => {
                   </div>
 
                   <div
-                    className={`profile-wrapper profile-editavel ${primeiraCondicaoAtiva} ${estadoSanidadePerfil} ${estadoEsperancaPerfil}`}
+                    className={`profile-wrapper profile-editavel ${primeiraCondicaoAtiva} ${estadoSanidadePerfil} ${estadoEsperancaPerfil} ${
+                      temRitoAtivo ? "rito-ativo-perfil" : ""
+                    } ${ritoDesativando ? "rito-desativando" : ""} ${
+                      sanidadeSaindo ? "sanidade-saindo" : ""
+                    } ${esperancaSaindo ? "esperanca-saindo" : ""}`}
                     title="Clique para trocar a foto de perfil"
                   >
                     <label
@@ -2244,14 +2447,195 @@ const FichaPersonagem = () => {
           </div>
 
           <div className="sidebar-conteudo">{conteudoAbas[abaAtiva]}</div>
+          {itemVisualizado && (
+            <div
+              className="item-visualizer-overlay"
+              onClick={() => setItemVisualizado(null)}
+            >
+              <div
+                className="item-visualizer"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="item-visualizer-topo">
+                  <div className="item-visualizer-icone">
+                    {itemVisualizado.icone || "🎒"}
+                  </div>
+
+                  <div className="visualizer-info">
+                    <span className="visualizer-categoria">
+                      {itemVisualizado.tipo || "Item"}
+                    </span>
+
+                    <h2>{itemVisualizado.nome}</h2>
+                  </div>
+
+                  <button
+                    className="item-visualizer-fechar"
+                    onClick={() => setItemVisualizado(null)}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="item-visualizer-info">
+                  {itemVisualizado.usos && (
+                    <p>
+                      <strong>Usos:</strong> {itemVisualizado.usos}
+                    </p>
+                  )}
+
+                  {itemVisualizado.durabilidade && (
+                    <p>
+                      <strong>Durabilidade:</strong>{" "}
+                      {itemVisualizado.durabilidade}
+                    </p>
+                  )}
+
+                  {itemVisualizado.dano && (
+                    <p>
+                      <strong>Dano:</strong> {itemVisualizado.dano}
+                    </p>
+                  )}
+
+                  {itemVisualizado.detalhes && (
+                    <p>
+                      <strong>Detalhes:</strong> {itemVisualizado.detalhes}
+                    </p>
+                  )}
+
+                  {itemVisualizado.efeito && (
+                    <p>
+                      <strong>Efeito:</strong> {itemVisualizado.efeito}
+                    </p>
+                  )}
+
+                  {itemVisualizado.custo && (
+                    <p>
+                      <strong>Custo:</strong> {itemVisualizado.custo}
+                    </p>
+                  )}
+                </div>
+
+                {itemVisualizado.armaStatus && (
+                  <div className="item-visualizer-status">
+                    <span>
+                      <strong>Tipo:</strong> {itemVisualizado.armaStatus.tipo}
+                    </span>
+                    <span>
+                      <strong>DMG:</strong> {itemVisualizado.armaStatus.dmg}
+                    </span>
+                    <span>
+                      <strong>ROF:</strong> {itemVisualizado.armaStatus.rof}
+                    </span>
+                    <span>
+                      <strong>MAG:</strong> {itemVisualizado.armaStatus.mag}
+                    </span>
+                    <span>
+                      <strong>Crítico:</strong>{" "}
+                      {itemVisualizado.armaStatus.critico}
+                    </span>
+                    <span>
+                      <strong>Dano Cabeça:</strong>{" "}
+                      {itemVisualizado.armaStatus.danoCabeca}
+                    </span>
+                    <span>
+                      <strong>Hipfire:</strong>{" "}
+                      {itemVisualizado.armaStatus.hipfire}
+                    </span>
+                    <span>
+                      <strong>Precision:</strong>{" "}
+                      {itemVisualizado.armaStatus.precision}
+                    </span>
+                    <span>
+                      <strong>Control:</strong>{" "}
+                      {itemVisualizado.armaStatus.control}
+                    </span>
+                    <span>
+                      <strong>Mobility:</strong>{" "}
+                      {itemVisualizado.armaStatus.mobility}
+                    </span>
+                  </div>
+                )}
+
+                <div className="item-visualizer-acoes">
+                  {itemVisualizado.armaStatus ? (
+                    <>
+                      <button
+                        onClick={() =>
+                          rolarAtaqueArma(itemVisualizado, "violencia")
+                        }
+                      >
+                        Reflexos + Violência
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          rolarAtaqueArma(itemVisualizado, "percepcao")
+                        }
+                      >
+                        Reflexos + Percepção
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          rolarAtaqueArma(itemVisualizado, "persistencia")
+                        }
+                      >
+                        Reflexos + Persistência
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          rolarAtaqueArma(itemVisualizado, "firmeza")
+                        }
+                      >
+                        Reflexos + Firmeza
+                      </button>
+                    </>
+                  ) : (
+                    (itemVisualizado?.rolagem?.formula ||
+                      itemVisualizado?.dano?.match(/(\d+)d(\d+)([+-]\d+)?/i) ||
+                      itemVisualizado?.efeito?.match(
+                        /(\d+)d(\d+)([+-]\d+)?/i,
+                      )) && (
+                      <button onClick={() => rolarItem(itemVisualizado)}>
+                        {itemVisualizado?.tipo
+                          ?.toLowerCase()
+                          .includes("cura") ||
+                        itemVisualizado?.efeito
+                          ?.toLowerCase()
+                          .includes("recupera")
+                          ? "Rolar Cura"
+                          : "Rolar Dano"}
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* MODAL DE ROLAGEM */}
           {modalRolagem && (
-            <div className="modal-rolagem-overlay">
-              <div className="modal-rolagem">
+            <div
+              className="modal-rolagem-overlay"
+              onClick={() => !rolandoDados && setModalRolagem(null)}
+            >
+              <div
+                className="modal-rolagem"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="modal-rolagem-topo">
-                  <span>Rolagem de Ataque</span>
+                  <span>
+                    {modalRolagem.tipo === "cura"
+                      ? "Rolagem de Cura"
+                      : modalRolagem.tipo === "dano"
+                        ? "Rolagem de Dano"
+                        : "Rolagem de Ataque"}
+                  </span>
+
                   <h3>{modalRolagem.titulo}</h3>
+
                   <p>{modalRolagem.modo}</p>
                 </div>
 
@@ -2264,11 +2648,15 @@ const FichaPersonagem = () => {
                     <div
                       key={index}
                       className={`
-    dado-rolagem
-    d${modalRolagem.faces}
-    ${rolandoDados ? "rolando" : ""}
-    ${!rolandoDados && dado === modalRolagem.maiorResultado ? "maior" : ""}
-  `}
+              dado-rolagem
+              d${modalRolagem.faces}
+              ${rolandoDados ? "rolando" : ""}
+              ${
+                !rolandoDados && dado === modalRolagem.maiorResultado
+                  ? "maior"
+                  : ""
+              }
+            `}
                     >
                       <span>{rolandoDados ? "?" : dado}</span>
                     </div>
@@ -2284,7 +2672,6 @@ const FichaPersonagem = () => {
 
                     <div className="bonus-rolagem">
                       <span>Ativo: +{modalRolagem.bonusAtivo}</span>
-
                       <span>Passiva: +{modalRolagem.bonusPassiva}</span>
                     </div>
 
@@ -2294,7 +2681,9 @@ const FichaPersonagem = () => {
                     </div>
 
                     <div className="dano-rolagem">
-                      <span>Dano</span>
+                      <span>
+                        {modalRolagem.tipo === "cura" ? "Cura" : "Dano"}
+                      </span>
 
                       <strong>
                         {modalRolagem.dano.texto}
@@ -2305,7 +2694,10 @@ const FichaPersonagem = () => {
                       </strong>
                     </div>
 
-                    <button onClick={() => setModalRolagem(null)}>
+                    <button
+                      className="fechar-rolagem"
+                      onClick={() => setModalRolagem(null)}
+                    >
                       Fechar
                     </button>
                   </>

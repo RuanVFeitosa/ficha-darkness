@@ -42,9 +42,7 @@ export const receitasCriacao = [
         tipo: "Permanente",
         durabilidade: "🇴 🇴",
         dano: "4d6",
-        ingredientes: [
-          { nome: "Faca", icone: "🔪" },
-        ],
+        ingredientes: [{ nome: "Faca", icone: "🔪" }],
       },
 
       {
@@ -131,9 +129,7 @@ export const receitasCriacao = [
         tipo: "Permanente",
         durabilidade: "🇴 🇴 🇴",
         dano: "7d6",
-        ingredientes: [
-          { nome: "Faca", icone: "🔪" },
-        ],
+        ingredientes: [{ nome: "Faca", icone: "🔪" }],
       },
 
       {
@@ -166,9 +162,15 @@ export const receitasCriacao = [
       {
         nome: "Kit Médico",
         icone: "🩺",
-        tipo: "Usos: ⧬ ⧬ ⧬ ⧬ ⧬ ⧬ ⧬ ⧬",
+
+        tipo: "Cura/Tratamento",
+
+        usos: "⧬ ⧬ ⧬ ⧬ ⧬ ⧬ ⧬ ⧬",
+
         durabilidade: "—",
-        dano: "Cura/Tratamento",
+
+        efeito: "Recupera 1d6 de integridade em um membro.",
+
         ingredientes: [
           { nome: "3x Álcool", icone: "🧪" },
           { nome: "4x Trapos", icone: "🧻" },

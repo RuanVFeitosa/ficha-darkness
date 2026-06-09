@@ -276,7 +276,19 @@ const LojaHelena = () => {
         : "Compra concluida. Helena ja colocou tudo na sua ficha.",
     );
 
-    localStorage.setItem(storageKey, JSON.stringify(personagemAtualizado));
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(personagemAtualizado));
+    } catch (error) {
+      console.warn("LocalStorage cheio. Salvando sem foto.", error);
+
+      const personagemSemFoto = {
+        ...personagemAtualizado,
+        fotoPerfil: "",
+      };
+
+      localStorage.setItem(storageKey, JSON.stringify(personagemSemFoto));
+    }
+
     localStorage.setItem(saldoKey, String(personagemAtualizado.lojaCreditos));
 
     salvarPersonagem(fichaId, personagemAtualizado).catch((error) => {
