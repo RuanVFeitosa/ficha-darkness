@@ -226,6 +226,183 @@ const arvoreAniquilador = {
   ],
   especialidades: [
     {
+      id: "lutador-desarmado",
+      nome: "LUTADOR DESARMADO",
+      passiva:
+        "Especialidade focada em combate desarmado, agressividade física e domínio corporal absoluto.",
+
+      habilidades: [
+        {
+          id: "ataque-em-movimento",
+          nivel: "I",
+          nome: "Ataque em Movimento",
+          descricao:
+            "Mova-se até metade do seu deslocamento e faça um ataque corpo a corpo. Você não provoca ataques de oportunidade ao sair do alcance de um inimigo durante esse movimento.",
+        },
+
+        {
+          id: "corte-devastador",
+          nivel: "II",
+          nome: "Corte Devastador",
+          descricao:
+            "Realize um ataque corpo a corpo com +2 no teste de ataque. Se acertar, adicione o dobro do seu modificador de Força ao dano causado.",
+        },
+
+        {
+          id: "desarme-agil",
+          nivel: "III",
+          nome: "Desarme Ágil",
+          descricao:
+            "Faça um teste de ataque corpo a corpo contra um inimigo. Se acertar, o alvo deve realizar um teste de Força. Se falhar, larga a arma ou item segurado.",
+        },
+
+        {
+          id: "postura-defensiva-lutador",
+          nivel: "IV",
+          nome: "Postura Defensiva",
+          descricao:
+            "No início do turno, pode gastar uma ação bônus para receber +2 na Defesa até o próximo turno. Se um inimigo errar um ataque contra você, pode realizar um ataque corpo a corpo como reação.",
+        },
+
+        {
+          id: "golpe-relampago",
+          nivel: "V",
+          nome: "Golpe Relâmpago",
+          descricao:
+            "1x por rodada, ao realizar um ataque desarmado, pode gastar 1 PE para fazer um ataque desarmado adicional. Sua margem de ameaça e multiplicador crítico aumentam em 1.",
+        },
+
+        {
+          id: "durao",
+          nivel: "VI",
+          nome: "Durão",
+          descricao:
+            "Sua Constituição é somada na Defesa e no dano de ataques desarmados.",
+        },
+
+        {
+          id: "maos-pesadas",
+          nivel: "VII",
+          nome: "Mãos Pesadas",
+          descricao:
+            "Ao atacar desarmado, role 1d6 extra e some sua Força no dano. Soqueiras usam metade da Força como base no ataque.",
+        },
+
+        {
+          id: "golpes-consecutivos",
+          nivel: "VIII",
+          nome: "Golpes Consecutivos",
+          descricao:
+            "Sempre que acertar um ataque desarmado, pode gastar 2 PE para realizar outro golpe. Pode continuar gastando 4 PE, 6 PE e assim por diante até atingir o limite de PE da rodada.",
+        },
+
+        {
+          id: "fisico-sublime",
+          nivel: "IX",
+          nome: "Físico Sublime",
+          descricao:
+            "Seus punhos tornam-se armas absolutas. Sua margem de ameaça base passa para 18 e seu crítico torna-se 2x.",
+        },
+
+        {
+          id: "aperfeicoamento-maximo",
+          nivel: "X",
+          nome: "Aperfeiçoamento Máximo",
+          descricao:
+            "Recebe +3 em ataques desarmados, +2 na margem de ameaça e os custos de PE de Golpes Consecutivos diminuem em 1 (mínimo 1).",
+        },
+      ],
+    },
+
+    {
+      id: "esgrimista",
+      nome: "ESGRIMISTA",
+      passiva:
+        "Especialidade baseada em precisão, velocidade, elegância e domínio absoluto do florete.",
+
+      habilidades: [
+        {
+          id: "en-garde",
+          nivel: "I",
+          nome: "En Garde",
+          descricao:
+            "Gaste 2 PE para ganhar uma ação de movimento extra ou um ataque adicional com Florete.",
+        },
+
+        {
+          id: "grande-desafio",
+          nivel: "II",
+          nome: "Grande Desafio",
+          descricao:
+            "Gaste 3 PE para revelar pontos vitais. Recebe +3m de deslocamento, +1 margem de ameaça e +1x multiplicador crítico.",
+        },
+
+        {
+          id: "ataque-preciso-esgrimista",
+          nivel: "III",
+          nome: "Ataque Preciso",
+          descricao:
+            "Faça um ataque corpo a corpo com +1 no teste e ignore qualquer Redução de Dano ou Resistência.",
+        },
+
+        {
+          id: "calculos-agressivos",
+          nivel: "IV",
+          nome: "Cálculos Agressivos",
+          descricao:
+            "Ao acertar um crítico, realize dois ataques extras com o Florete. Se ambos acertarem, derruba o alvo como ação livre.",
+        },
+
+        {
+          id: "floreio-elegante",
+          nivel: "V",
+          nome: "Floreio Elegante",
+          descricao:
+            "Faça um ataque com +2 no teste. Se acertar, adicione seu modificador de Carisma ao dano e aliados recebem +1 em ataques.",
+        },
+
+        {
+          id: "parada-e-riposta",
+          nivel: "VI",
+          nome: "Parada e Riposta",
+          descricao:
+            "Quando atacado em combate corpo a corpo, use reação para resistir. Se vencer, bloqueia o ataque e contra-ataca imediatamente.",
+        },
+
+        {
+          id: "danca-das-espadas",
+          nivel: "VII",
+          nome: "Dança das Espadas",
+          descricao:
+            "Ataque até três inimigos diferentes com penalidade de -1, causando dano total em cada acerto.",
+        },
+
+        {
+          id: "postura-de-duelo",
+          nivel: "VIII",
+          nome: "Postura de Duelo",
+          descricao:
+            "Recebe +2 de Defesa e vantagem em resistências contra ataques corpo a corpo até o próximo turno.",
+        },
+
+        {
+          id: "giro-artistico",
+          nivel: "IX",
+          nome: "Giro Artístico",
+          descricao:
+            "Move-se até metade do deslocamento sem provocar ataques de oportunidade e realiza um ataque corpo a corpo com +2.",
+        },
+
+        {
+          id: "golpe-cortes",
+          nivel: "X",
+          nome: "Golpe Cortês",
+          descricao:
+            "Ao acertar um ataque, o alvo sofre dano normal e deve passar em um teste de Vontade ou ficará Fascinado até o próximo turno.",
+        },
+      ],
+    },
+    {
       id: "pugilista",
       nome: "O Pugilista",
       passiva: "Dano desarmado padrao: 3d6.",
@@ -623,9 +800,10 @@ export const obterArvoreClasse = (classeOuPersonagem = {}) => {
   const classeNormalizada = normalizarClasse(classe);
   const chave = aliasesClasse[classeNormalizada] || classeNormalizada;
 
- const todasArvores = obterTodasArvores();
+  const todasArvores = obterTodasArvores();
 
-return todasArvores[chave] || {
+  return (
+    todasArvores[chave] || {
       classe: "",
       titulo: "Árvore não encontrada",
       beneficio: `Classe recebida: ${classe || "vazia"} | Chave: ${chave}`,
@@ -634,6 +812,7 @@ return todasArvores[chave] || {
       aptidoes: [],
       especialidades: [],
     }
+  );
 };
 
 export const listarHabilidadesSelecionadas = (personagem = {}) => {
@@ -661,16 +840,33 @@ export const listarHabilidadesSelecionadas = (personagem = {}) => {
 
   const selecionadas = [];
 
-  const absoluta = (arvore.absolutas || []).find(
-    (habilidade) => habilidade.id === escolhas.habilidadeAbsoluta,
-  );
+  // =========================================
+  // HABILIDADE ABSOLUTA NOVA
+  // =========================================
 
-  if (absoluta) {
+  if (personagem?.habilidadeAbsolutaEscolhida) {
     selecionadas.push({
-      ...absoluta,
+      id: personagem.habilidadeAbsolutaEscolhida.id,
+      nome: personagem.habilidadeAbsolutaEscolhida.nome,
+      descricao: personagem.habilidadeAbsolutaEscolhida.descricao,
       grupo: "Habilidade Absoluta",
     });
+  } else {
+    const absoluta = (arvore.absolutas || []).find(
+      (habilidade) => habilidade.id === escolhas.habilidadeAbsoluta,
+    );
+
+    if (absoluta) {
+      selecionadas.push({
+        ...absoluta,
+        grupo: "Habilidade Absoluta",
+      });
+    }
   }
+
+  // =========================================
+  // HABILIDADES BASE
+  // =========================================
 
   (arvore.bases || []).forEach((habilidade) => {
     selecionadas.push({
@@ -678,6 +874,10 @@ export const listarHabilidadesSelecionadas = (personagem = {}) => {
       grupo: "Classe",
     });
   });
+
+  // =========================================
+  // APTIDÕES
+  // =========================================
 
   (arvore.aptidoes || [])
     .filter((aptidao) => escolhas.aptidoes?.[aptidao.id])
@@ -688,31 +888,40 @@ export const listarHabilidadesSelecionadas = (personagem = {}) => {
       });
     });
 
-  const especialidade = (arvore.especialidades || []).find(
-    (item) => item.id === escolhas.especialidade,
-  );
+  // =========================================
+  // TODAS AS ESPECIALIDADES
+  // =========================================
 
-  if (especialidade?.passiva || especialidade?.descricao) {
+  (arvore.especialidades || []).forEach((especialidade) => {
+    const habilidadesCompradas = (especialidade.habilidades || []).filter(
+      (habilidade) => escolhas.habilidadesEspecialidade?.[habilidade.id],
+    );
+
+    // NÃO POSSUI HABILIDADES COMPRADAS
+    if (habilidadesCompradas.length <= 0) return;
+
+    // PASSIVA DA ESPECIALIDADE
     selecionadas.push({
       id: `${especialidade.id}-passiva`,
       nome: especialidade.nome,
-      descricao: especialidade.passiva || especialidade.descricao,
-      grupo: "Passiva de especialidade",
+      descricao:
+        especialidade.passiva ||
+        especialidade.descricao ||
+        "Especialidade adquirida.",
+      grupo: "Passiva de Especialidade",
     });
-  }
 
-  (especialidade?.habilidades || [])
-    .filter((habilidade) => escolhas.habilidadesEspecialidade?.[habilidade.id])
-    .forEach((habilidade) => {
+    // HABILIDADES COMPRADAS
+    habilidadesCompradas.forEach((habilidade) => {
       selecionadas.push({
         ...habilidade,
-        grupo: habilidade.custo || "Especialidade",
+        grupo: especialidade.nome,
       });
     });
+  });
 
   return selecionadas;
 };
-
 const ARVORES_CUSTOM_KEY = "arvoresHabilidades_custom";
 
 export const carregarArvoresCustom = () => {

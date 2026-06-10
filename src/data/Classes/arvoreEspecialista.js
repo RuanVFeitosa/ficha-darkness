@@ -514,5 +514,164 @@ export const arvoreEspecialista = {
         },
       ],
     },
+    {
+      id: "operacoes-especiais",
+      nome: "Operações Especiais",
+      descricao:
+        "Especialidade voltada para combate tático, sobrevivência, coordenação de equipe e atuação em ambientes hostis.",
+
+      habilidades: [
+        {
+          id: "treinamento-tatico",
+          nome: "Treinamento Tático",
+          nivel: "I",
+          descricao:
+            "Ganha +2 em testes de Pontaria. Pode usar uma ação de movimento para analisar o campo de batalha e identificar 1 ponto estratégico, como cobertura, rota de fuga ou terreno elevado.",
+        },
+        {
+          id: "comunicacao-eficaz",
+          nome: "Comunicação Eficaz",
+          nivel: "II",
+          descricao:
+            "Você coordena aliados em combate. Aliados a até 30m que possam vê-lo ou ouvi-lo ganham +2 em Iniciativa e não sofrem penalidades por atacar em alcance amigo.",
+        },
+        {
+          id: "primeiros-socorros-avancados-operacoes",
+          nome: "Primeiros Socorros Avançados",
+          nivel: "III",
+          descricao:
+            "Com um kit médico, pode estabilizar um ser morrendo como ação padrão em vez de ação completa. Além disso, pode restaurar 1d8 + modificador de Inteligência de PI uma vez por aliado.",
+        },
+        {
+          id: "posicao-de-tiro-operacoes",
+          nome: "Posição de Tiro",
+          nivel: "IV",
+          descricao:
+            "Ao se preparar com uma ação completa, escolha uma área de 3m de raio. Enquanto permanecer nela, atira com vantagem e causa +1d6 de dano com armas de fogo.",
+        },
+        {
+          id: "analise-de-ameaca",
+          nome: "Análise de Ameaça",
+          nivel: "V",
+          descricao:
+            "Com uma ação de movimento, estuda um inimigo visível e identifica um ponto fraco. Seu próximo ataque contra esse alvo ignora 5 pontos de Redução de Dano e recebe +2 no acerto.",
+        },
+        {
+          id: "treinamento-de-resistencia",
+          nome: "Treinamento de Resistência",
+          nivel: "VI",
+          descricao:
+            "Você ganha vantagem em testes de Fortitude contra fadiga, ambiente hostil e efeitos químicos não letais, como gás lacrimogêneo.",
+        },
+        {
+          id: "coordenacao-de-ataque",
+          nome: "Coordenação de Ataque",
+          nivel: "VII",
+          descricao:
+            "Gaste uma ação padrão para designar um alvo. Todos os aliados que atacarem esse alvo até seu próximo turno ganham +1d4 no dano. Pode ser usado 3x por cena.",
+        },
+        {
+          id: "mestre-de-sobrevivencia",
+          nome: "Mestre de Sobrevivência",
+          nivel: "VIII",
+          descricao:
+            "Você pode encontrar ou criar abrigo, água potável e alimento em qualquer ambiente natural em 1d4 horas. Testes de Sobrevivência são feitos com vantagem.",
+        },
+        {
+          id: "contra-terrorismo-cqb",
+          nome: "Contra-Terrorismo/CQB",
+          nivel: "IX",
+          descricao:
+            "Em ambientes fechados, ganha +2 na Defesa e em testes de Reflexos. Inimigos surpreendidos por você em ambientes internos não agem no primeiro round de combate.",
+        },
+        {
+          id: "comandante-tatico",
+          nome: "Comandante Tático",
+          nivel: "X",
+          descricao:
+            "Uma vez por cena, pode gastar uma ação completa para dar ordens táticas. Escolha até três aliados. Cada um pode fazer uma reação imediata: mover metade do deslocamento, atacar ou usar uma habilidade de classe que normalmente exija ação padrão.",
+        },
+      ],
+    },
+
+    {
+      id: "estrategista-tatico",
+      nome: "Estrategista Tático",
+      descricao:
+        "Especialidade focada em leitura de campo, planejamento, coordenação de aliados e manipulação estratégica do combate.",
+
+      habilidades: [
+        {
+          id: "analise-rapida-estrategista",
+          nome: "Análise Rápida",
+          nivel: "I",
+          descricao:
+            "Como ação bônus, analisa um inimigo ou situação. Faça um teste de Inteligência CD 15. Se passar, você ou um aliado ganha +2 no próximo teste relacionado ao alvo.",
+        },
+        {
+          id: "coordenacao-de-equipe",
+          nome: "Coordenação de Equipe",
+          nivel: "II",
+          descricao:
+            "Quando usa a ação Ajudar, concede +4 ao aliado em vez de +2. Se o aliado acertar, causa +1d4 de dano adicional.",
+        },
+        {
+          id: "plano-b",
+          nome: "Plano B",
+          nivel: "III",
+          descricao:
+            "1x por cena, quando você ou um aliado dentro de 9m falha em um teste, pode gastar sua reação para permitir um rerrol.",
+        },
+        {
+          id: "posicionamento-tatico-estrategista",
+          nome: "Posicionamento Tático",
+          nivel: "IV",
+          descricao:
+            "Pode gastar uma ação de movimento para reposicionar aliados. Até 3 aliados dentro de 9m podem se mover até metade do deslocamento sem provocar ataques de oportunidade.",
+        },
+        {
+          id: "golpe-coordenado",
+          nome: "Golpe Coordenado",
+          nivel: "V",
+          descricao:
+            "Ao acertar um ataque, pode sinalizar um aliado. O próximo ataque desse aliado contra o mesmo alvo causa +2d6 de dano. Pode ser usado 3x por dia.",
+        },
+        {
+          id: "mente-estrategica",
+          nome: "Mente Estratégica",
+          nivel: "VI",
+          descricao:
+            "Você possui um mapa mental do campo de batalha. Não fica desprevenido e inimigos não ganham bônus de flanquear você. Aliados adjacentes também recebem esse benefício.",
+        },
+        {
+          id: "explorar-fraqueza",
+          nome: "Explorar Fraqueza",
+          nivel: "VII",
+          descricao:
+            "Após observar um inimigo por 1 rodada com uma ação padrão, identifica uma fraqueza. Seus ataques e os de aliados ignoram 5 pontos de Redução de Dano desse inimigo pelo resto do combate.",
+        },
+        {
+          id: "contingencia",
+          nome: "Contingência",
+          nivel: "VIII",
+          descricao:
+            "1x por dia, quando uma situação inesperada ocorre, como emboscada, armadilha ou reviravolta, pode declarar que já previa isso e ganhar uma ação completa extra nesse turno.",
+        },
+        {
+          id: "mestre-da-batalha",
+          nome: "Mestre da Batalha",
+          nivel: "IX",
+          descricao:
+            "Como ação completa, dá ordens táticas. Todos os aliados em 18m ganham +1 em acerto, dano e Defesa por 3 rodadas. Pode ser usado 1x por cena.",
+        },
+        {
+          id: "vitoria-por-estrategia",
+          nome: "Vitória por Estratégia",
+          nivel: "X",
+          descricao:
+            "No início de um combate importante, pode gastar um turno elaborando um plano. Todos os aliados começam com vantagem em Iniciativa e +1d6 de dano no primeiro turno. Se o plano for seguido, os efeitos duram toda a cena.",
+        },
+      ],
+    },
   ],
 };

@@ -1,4 +1,23 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  background: #000 !important;
+}
+
+body {
+  overflow-x: hidden;
+}
+
 .App {
+  min-height: 100vh;
+  background: #000 !important;
   text-align: center;
 }
 
@@ -34,5 +53,48 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+.page-transition {
+  position: fixed;
+  inset: -4px;
+  z-index: 999999;
+
+  background-color: #000;
+  background-image: url("../public/transicao.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.page-transition.active {
+  visibility: visible;
+  animation: pageTransition 1s ease-in-out forwards;
+}
+
+@keyframes pageTransition {
+  0% {
+    opacity: 1;
+    filter: brightness(0);
+  }
+
+  15% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+
+  75% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+
+  100% {
+    opacity: 1;
+    filter: brightness(0);
   }
 }

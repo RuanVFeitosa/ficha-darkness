@@ -1,247 +1,148 @@
 export const arvoreMedicoCampo = {
   id: "medico-de-campo",
+  classe: "Médico de Campo",
+  titulo: "A MEDICINA ABSOLUTA",
+  beneficio:
+    "Médico de Campo possui acesso a técnicas médicas extremas, suporte tático e procedimentos avançados em combate.",
 
-  nome: "MÉDICO DE CAMPO",
-
-  descricao:
-    "Especialistas em manter aliados vivos mesmo nas piores condições possíveis. Médicos de Campo dominam estabilização, cirurgia improvisada e controle de danos em combate.",
-
-  habilidadeAbsoluta: {
-    nome: "A MEDICINA ABSOLUTA",
-
-    descricao:
-      "Médico de Campo possui a Maleta de Campo e acesso a técnicas médicas extremas de combate.",
-  },
-
-  habilidadesAbsolutas: [
+  absolutas: [
     {
-      nome: "Diagnóstico de Combate",
-      custo: "3 PE",
-      descricao:
-        "Você identifica instantaneamente condições físicas, integridade e riscos letais de um alvo. Seu próximo teste médico contra esse alvo recebe vantagem.",
-    },
-
-    {
+      id: "intervencao-de-estabilizacao-rapida",
       nome: "Intervenção de Estabilização Rápida",
-      custo: "4 PE • Reação",
+      custo: "4 PE",
+      tipo: "Reação",
       descricao:
-        "Quando um aliado cair morrendo, você pode estabilizá-lo imediatamente e restaurar 1d4 + Inteligência em Vida.",
+        "Você age no exato momento em que a vida escapa, virando o jogo contra a morte. Quando um ser à sua vista (alcance curto) é reduzido a Morte ou sofre um golpe que o faria cair morrendo, você pode usar sua reação para estabilizá-lo instantaneamente. O alvo para de sangrar e recupera 1d4 + seu modificador de Inteligência em Vida. Esta habilidade pode salvar alguém de um dano massivo fatal.",
     },
 
     {
+      id: "comando-medico",
       nome: "Comando Médico",
       custo: "2 PE",
+      tipo: "Ação Padrão",
       descricao:
-        "Enquanto concentrado, você identifica inimigos mais feridos, melhora curas e reduz dano sofrido por aliados próximos.",
+        "Você avalia o campo de batalha como um verdadeiro médico general. Enquanto mantiver a concentração, gastando 1 PE no início de cada turno, você recebe benefícios estratégicos: identifica instantaneamente o inimigo mais ferido, aumenta curas realizadas em +1d4 de Integridade e pode conceder Redução de Dano 2 para um aliado próximo uma vez por rodada.",
     },
 
     {
+      id: "cirurgia-de-campo-absoluta",
       nome: "Cirurgia de Campo",
       custo: "4 PE",
+      tipo: "Ação Completa",
       descricao:
-        "Remove condições debilitantes e restaura Integridade em membros feridos através de procedimentos improvisados.",
+        "Você realiza uma intervenção cirúrgica crítica em um aliado incapacitado. Remove automaticamente uma condição física debilitante, como Sangramento, Envenenamento, Atordoamento ou fraturas, além de recuperar 2d8 + seu modificador de Inteligência em Integridade no membro afetado. Fora de combate, também remove doenças comuns automaticamente.",
     },
 
     {
+      id: "soro-de-adrenalina-e-recuperacao",
       nome: "Soro de Adrenalina e Recuperação",
       custo: "3 PE",
+      tipo: "Ação Padrão",
       descricao:
-        "Aplica compostos especiais que ignoram fadiga ou regeneram Integridade temporariamente.",
+        "Você prepara um coquetel médico especial. Escolha um efeito ao aplicar: Adrenalina — o alvo ignora fadiga, atordoamento e penalidades leves por 1d4+1 rodadas, recebendo +2 em testes físicos; ao final, fica Fatigado por 1 rodada. Recuperação — o alvo recupera 1d6 de Integridade no membro tratado no início de cada turno por 3 rodadas, encerrando caso sofra dano cortante ou perfurante.",
     },
   ],
 
   aptidoes: [
     {
-      nome: "Kit de Sobrevivência Aprimorado",
-      custo: "Passiva",
-      descricao: "Sua Maleta de Campo concede bônus maiores em testes médicos.",
-    },
-
-    {
-      nome: "Injeção de Analgesia",
-      custo: "1 PE",
+      id: "foco-cardiaco",
+      nome: "Foco Cardíaco",
+      custo: "10 PE",
       descricao:
-        "Remove penalidades de dor e concede vantagem contra sofrimento físico.",
+        "Seus procedimentos médicos reduzem o risco de morte imediata.",
     },
-
     {
-      nome: "Diagnóstico Preventivo",
-      custo: "Passiva",
-      descricao: "Você percebe sinais de colapso físico antes que aconteçam.",
+      id: "maos-firmes",
+      nome: "Mãos Firmes",
+      custo: "10 PE",
+      descricao: "Você ignora penalidades em procedimentos sob pressão.",
     },
-
     {
-      nome: "Química de Campo",
-      custo: "2 PE",
-      descricao:
-        "Produz antídotos, estimulantes ou compostos improvisados usando materiais básicos.",
+      id: "conhecimento-anatomico",
+      nome: "Conhecimento Anatômico",
+      custo: "10 PE",
+      descricao: "Você recebe bônus em testes envolvendo anatomia humana.",
     },
-
     {
-      nome: "Sutura Rápida",
-      custo: "1 PE • Reação",
-      descricao:
-        "Interrompe instantaneamente efeitos de sangramento em aliados.",
-    },
-
-    {
-      nome: "Controle de Pânico",
-      custo: "1 PE",
-      descricao:
-        "Aliados podem repetir testes contra medo, pânico ou confusão.",
-    },
-
-    {
-      nome: "Membro de Reserva",
-      custo: "Passiva",
-      descricao:
-        "Reduz penalidades permanentes relacionadas a membros perdidos ou ferimentos graves.",
-    },
-
-    {
-      nome: "Inoculação de Emergência",
-      custo: "3 PE",
-      descricao:
-        "Concede resistência contra doenças e venenos temporariamente.",
-    },
-
-    {
-      nome: "Posto de Atendimento Móvel",
-      custo: "Passiva",
-      descricao: "Transforma locais improvisados em enfermarias eficientes.",
-    },
-
-    {
-      nome: "Sinal Vital Oculto",
-      custo: "1 PE",
-      descricao: "Permite que aliados simulem morte ou coma perfeitamente.",
-    },
-
-    {
-      nome: "Transfusão de Campo",
-      custo: "4 PE",
-      descricao:
-        "Você sacrifica sua própria Integridade para restaurar Vida de um aliado.",
-    },
-
-    {
-      nome: "Conhecimento Anatômico Aplicado",
-      custo: "2 PE",
-      descricao:
-        "Ataques anatômicos podem atordoar ou paralisar temporariamente.",
-    },
-
-    {
-      nome: "Descontaminação Rápida",
-      custo: "2 PE",
-      descricao:
-        "Remove venenos, agentes químicos e contaminações superficiais.",
-    },
-
-    {
-      nome: "Estimulante de Recuperação Mental",
-      custo: "1 PE",
-      descricao: "Recupera Esperança, Sanidade ou remove desorientação.",
-    },
-
-    {
-      nome: "Olhar Clínico",
-      custo: "Passiva",
-      descricao:
-        "Você detecta doenças, venenos e alterações mentais apenas observando alguém.",
-    },
-
-    {
-      nome: "Protocolo de Trauma",
-      custo: "10 PE • Reação",
-      descricao: "Reduz drasticamente dano massivo sofrido por um aliado.",
-    },
-
-    {
-      nome: "Símbolo de Esperança",
-      custo: "Passiva",
-      descricao:
-        "Aliados próximos recebem bônus contra medo e recuperam mais Integridade.",
-    },
-
-    {
-      nome: "Anestésico Local",
-      custo: "1 PE",
-      descricao:
-        "Ignora penalidades de dor em um membro específico temporariamente.",
-    },
-
-    {
-      nome: "Caderno de Campo Médico",
-      custo: "Passiva",
-      descricao:
-        "Você registra ameaças biológicas e recebe vantagem ao lidar novamente com elas.",
-    },
-
-    {
-      nome: "Último Recurso",
-      custo: "5 PE",
-      descricao:
-        "Levanta instantaneamente um aliado à beira da morte, mas com consequências severas posteriores.",
+      id: "resistencia-biologica",
+      nome: "Resistência Biológica",
+      custo: "10 PE",
+      descricao: "Você possui resistência aumentada contra doenças e toxinas.",
     },
   ],
+
   especialidades: [
     {
       id: "medico-de-combate",
       nome: "Médico de Combate",
-      descricao:
-        "Especialista em manter aliados vivos no meio do combate, utilizando curas rápidas, estabilização e suporte tático.",
+      passiva: "Você pode estabilizar aliados em combate sem penalidades.",
 
       habilidades: [
         {
+          id: "pronto-socorro",
           nome: "Pronto-Socorro",
-          descricao:
-            "Em combate, pode gastar um turno para cuidar de um aliado ferido, rolando 2d6 + Medicina. O resultado determina a cura restaurada.",
+          nivel: 1,
+          descricao: "Você estabiliza rapidamente um aliado caído.",
         },
         {
+          id: "taticas-de-campo",
           nome: "Táticas de Campo",
-          descricao:
-            "Fornece instruções táticas ao grupo. Role 2d6 + Medicina para conceder bônus de Defesa até o fim do combate.",
+          nivel: 2,
+          descricao: "Aliados próximos recebem bônus defensivos após cura.",
         },
         {
+          id: "tratamento-rapido",
           nome: "Tratamento Rápido",
+          nivel: 3,
           descricao:
-            "Realiza tratamentos rápidos em combate, rolando 2d6 + Destreza para restaurar pontos de vida.",
+            "Você reduz drasticamente o tempo necessário para tratar ferimentos.",
         },
         {
+          id: "cirurgia-de-campo",
           nome: "Cirurgia de Campo",
+          nivel: 4,
           descricao:
-            "Realiza cirurgias em condições adversas com 2d6 + Medicina, acelerando a recuperação de aliados.",
+            "Você pode realizar procedimentos críticos em ambientes hostis.",
         },
         {
+          id: "estimulantes-de-combate",
           nome: "Estimulantes de Combate",
+          nivel: 5,
           descricao:
-            "Cria substâncias que concedem bônus temporários de resistência e força. Role 2d6 + Habilidade Alquímica.",
+            "Você injeta estimulantes que aumentam momentaneamente o desempenho físico.",
         },
         {
+          id: "resistencia-a-agentes-quimicos",
           nome: "Resistência a Agentes Químicos",
+          nivel: 6,
           descricao:
-            "Treinado para resistir e tratar exposição química. Role 2d6 + Resistência em ambientes contaminados.",
+            "Aliados tratados por você recebem resistência temporária a toxinas.",
         },
         {
+          id: "recuperacao-rapida",
           nome: "Recuperação Rápida",
-          descricao:
-            "Uma vez por combate, restaura vida adicional a um aliado com 2d6 + Medicina.",
+          nivel: 7,
+          descricao: "Ferimentos tratados cicatrizam com velocidade anormal.",
         },
         {
+          id: "curativo-avancado",
           nome: "Curativo Avançado",
-          descricao:
-            "Quando um aliado entra em estado crítico, pode estabilizá-lo com 2d6 + Medicina, impedindo sua morte.",
+          nivel: 8,
+          descricao: "Você reduz sangramentos críticos instantaneamente.",
         },
         {
+          id: "oposicao-a-toxinas",
           nome: "Oposição a Toxinas",
+          nivel: 9,
           descricao:
-            "Cria antídotos contra substâncias venenosas ou tóxicas encontradas em combate. Requer 2d6 + Resistência.",
+            "Você neutraliza parcialmente venenos e compostos químicos.",
         },
         {
+          id: "ressuscitacao-rapida",
           nome: "Ressuscitação Rápida",
+          nivel: 10,
           descricao:
-            "Uma vez por missão, pode reviver um aliado caído, restaurando vida considerável com 2d6 + Medicina.",
+            "Você pode trazer um aliado recém-caído de volta à consciência.",
         },
       ],
     },
@@ -249,59 +150,72 @@ export const arvoreMedicoCampo = {
     {
       id: "medico-de-resgate-urbano",
       nome: "Médico de Resgate Urbano",
-      descricao:
-        "Especialista em evacuação, triagem, resgate em áreas de risco e atendimento médico em grandes desastres.",
+      passiva:
+        "Você possui treinamento para operar em áreas colapsadas e situações críticas.",
 
       habilidades: [
         {
+          id: "resgate-em-areas-de-risco",
           nome: "Resgate em Áreas de Risco",
-          descricao:
-            "Realiza testes de 2d6 + Destreza para resgatar e evacuar vítimas em ambientes urbanos perigosos.",
+          nivel: 1,
+          descricao: "Você ignora penalidades em ambientes perigosos.",
         },
         {
+          id: "tecnico-em-trauma",
           nome: "Técnico em Trauma",
-          descricao:
-            "Realiza 2d6 + Medicina para curas eficazes e estabilização avançada.",
+          nivel: 2,
+          descricao: "Você reduz danos permanentes em aliados feridos.",
         },
         {
+          id: "operacoes-de-resgate",
           nome: "Operações de Resgate",
-          descricao:
-            "Usa 2d6 + Carisma para liderar evacuações, triagem médica e equipes de resgate.",
+          nivel: 3,
+          descricao: "Você move aliados feridos sem penalidades.",
         },
         {
+          id: "negociacao-em-crises",
           nome: "Negociação em Crises",
+          nivel: 4,
           descricao:
-            "Usa 2d6 + Carisma para garantir acesso seguro a áreas afetadas e manter organização sob pressão.",
+            "Você mantém vítimas e civis calmos em situações extremas.",
         },
         {
+          id: "treinamento-em-escavacao",
           nome: "Treinamento em Escavação",
+          nivel: 5,
           descricao:
-            "Usa 2d6 + Força para resgatar vítimas soterradas com mais eficiência.",
+            "Você localiza sobreviventes soterrados com mais facilidade.",
         },
         {
+          id: "logistica-de-emergencia",
           nome: "Logística de Emergência",
-          descricao:
-            "Usa 2d6 + Medicina para distribuir recursos médicos e de resgate durante emergências urbanas.",
+          nivel: 6,
+          descricao: "Você organiza evacuações e suprimentos rapidamente.",
         },
         {
+          id: "cuidado-pos-operatorio",
           nome: "Cuidado Pós-Operatório",
-          descricao:
-            "Usa 2d6 + Medicina para determinar recuperação e reduzir chances de infecção.",
+          nivel: 7,
+          descricao: "Aliados tratados por você recuperam mais rapidamente.",
         },
         {
+          id: "primeiros-socorros-avancados",
           nome: "Primeiros Socorros Avançados",
-          descricao:
-            "Usa 2d6 + Destreza para estabilizar vítimas antes da evacuação, reduzindo dor e hemorragias.",
+          nivel: 8,
+          descricao: "Você remove penalidades leves de aliados tratados.",
         },
         {
+          id: "assistencia-psicossocial",
           nome: "Assistência Psicossocial",
-          descricao:
-            "Usa 2d6 + Carisma para identificar trauma psicológico e oferecer alívio emocional inicial.",
+          nivel: 9,
+          descricao: "Você reduz efeitos mentais causados por trauma.",
         },
         {
+          id: "intervencao-rapida-e-eficaz",
           nome: "Intervenção Rápida e Eficaz",
+          nivel: 10,
           descricao:
-            "Em grandes desastres, usa 2d6 + Medicina ou Destreza para salvar vidas e restaurar funções vitais.",
+            "Você consegue agir instantaneamente em situações críticas.",
         },
       ],
     },
@@ -309,49 +223,56 @@ export const arvoreMedicoCampo = {
     {
       id: "cirurgiao-de-trauma",
       nome: "Cirurgião de Trauma",
-      descricao:
-        "Especialista em procedimentos médicos extremos, estabilização avançada e cirurgias emergenciais.",
+      passiva: "Você domina procedimentos invasivos e operações de alto risco.",
 
       habilidades: [
         {
+          id: "intervencao-rapida",
           nome: "Intervenção Rápida",
-          descricao:
-            "Pode realizar primeiros socorros como ação bônus. Ao estabilizar uma criatura morrendo, ela recupera 1 PV e pode agir no próximo turno.",
+          nivel: 1,
+          descricao: "Você inicia procedimentos médicos imediatamente.",
         },
         {
+          id: "diagnostico-instantaneo",
           nome: "Diagnóstico Instantâneo",
-          descricao:
-            "Com teste de Conhecimento Médico CD 15 como ação de movimento, identifica todas as condições médicas do paciente.",
+          nivel: 2,
+          descricao: "Você identifica danos internos rapidamente.",
         },
         {
+          id: "cirurgia-de-campo-trauma",
           nome: "Cirurgia de Campo",
-          descricao:
-            "Com kit cirúrgico portátil, realiza procedimentos emergenciais e remove condições como sangramento grave com CD 15.",
+          nivel: 3,
+          descricao: "Você realiza cirurgias improvisadas em combate.",
         },
         {
+          id: "transfusao-de-campo",
           nome: "Transfusão de Campo",
-          descricao:
-            "Restaura 2d8 + Inteligência de PI a um aliado ou neutraliza efeitos de anemia e hemorragia.",
+          nivel: 4,
+          descricao: "Você recupera rapidamente aliados debilitados.",
         },
         {
+          id: "tecnica-de-fechamento-rapido",
           nome: "Técnica de Fechamento Rápido",
-          descricao:
-            "Após uma batalha, trata até 6 feridos em 10 minutos. Cada um recupera PI como se tivesse descansado.",
+          nivel: 5,
+          descricao: "Você fecha ferimentos graves em poucos segundos.",
         },
         {
+          id: "monitoramento-vital-continuo",
           nome: "Monitoramento Vital Contínuo",
-          descricao:
-            "Monitora até 3 pacientes simultaneamente, sabendo seu estado exato e recebendo alertas críticos.",
+          nivel: 6,
+          descricao: "Você acompanha sinais vitais em tempo real.",
         },
         {
+          id: "procedimento-de-ressuscitacao",
           nome: "Procedimento de Ressuscitação",
-          descricao:
-            "Uma vez por missão, pode tentar reanimar alguém que morreu na última rodada com Conhecimento Médico CD 25.",
+          nivel: 7,
+          descricao: "Você reduz drasticamente o risco de morte.",
         },
         {
+          id: "mestre-do-trauma",
           nome: "Mestre do Trauma",
-          descricao:
-            "Uma vez por missão, uma cura recupera o valor máximo. Também pode remover duas condições com uma única ação.",
+          nivel: 8,
+          descricao: "Você executa procedimentos quase impossíveis.",
         },
       ],
     },
@@ -359,94 +280,158 @@ export const arvoreMedicoCampo = {
     {
       id: "bioquimico",
       nome: "Bioquímico",
-      descricao:
-        "Especialista em compostos, drogas, antídotos, estimulantes e manipulação química em campo.",
+      passiva: "Você domina substâncias químicas e compostos experimentais.",
 
       habilidades: [
         {
+          id: "sintese-de-campo",
           nome: "Síntese de Campo",
-          descricao:
-            "Cria estimulantes, analgésicos ou antídotos básicos em 10 minutos usando reagentes portáteis.",
+          nivel: 1,
+          descricao: "Você cria compostos improvisados rapidamente.",
         },
         {
+          id: "dosagem-precisa",
           nome: "Dosagem Precisa",
-          descricao:
-            "Drogas administradas por você duram 50% a mais e têm 25% menos efeitos colaterais.",
+          nivel: 2,
+          descricao: "Seus compostos possuem efeitos mais eficientes.",
         },
         {
+          id: "cocktail-de-combate",
           nome: "Cocktail de Combate",
-          descricao:
-            "Como ação bônus, administra coquetéis de combate, resistência ou foco em aliados.",
+          nivel: 3,
+          descricao: "Você cria estimulantes de combate temporários.",
         },
         {
+          id: "nano-antidotos",
           nome: "Nano-Antídotos",
-          descricao:
-            "Cria antídoto universal contra venenos conhecidos por 24 horas, com 1 hora de preparação.",
+          nivel: 4,
+          descricao: "Você neutraliza toxinas avançadas.",
         },
         {
+          id: "modulador-metabolico",
           nome: "Modulador Metabólico",
-          descricao:
-            "Cria drogas que dobram cura natural ou removem venenos e doenças.",
+          nivel: 5,
+          descricao: "Você altera temporariamente o metabolismo humano.",
         },
         {
+          id: "aerossol-medico",
           nome: "Aerossol Médico",
-          descricao:
-            "Prepara aerossóis que curam, estimulam iniciativa ou acalmam em área de 6m.",
+          nivel: 6,
+          descricao: "Você aplica substâncias em área.",
         },
         {
+          id: "mestre-farmacologo",
           nome: "Mestre Farmacólogo",
-          descricao:
-            "Suas drogas têm efeito máximo, duram o dobro e você pode criar três compostos rapidamente.",
+          nivel: 7,
+          descricao: "Você domina compostos médicos extremos.",
         },
       ],
     },
 
     {
-      id: "psicologo-de-campo",
-      nome: "Psiquiatra/Psicólogo de Campo",
-      descricao:
-        "Especialista em saúde mental, controle de crise, trauma psicológico e manipulação terapêutica.",
+      id: "psiquiatra",
+      nome: "Psiquiatra / Psicólogo",
+      passiva: "Você entende profundamente a mente humana.",
 
       habilidades: [
         {
+          id: "avaliacao-psicologica",
           nome: "Avaliação Psicológica",
-          descricao:
-            "Com 5 minutos de conversa e teste de Instinto ou Conhecimento Médico, determina o estado mental de uma pessoa.",
+          nivel: 1,
+          descricao: "Você identifica estados mentais rapidamente.",
         },
         {
+          id: "intervencao-em-crise",
           nome: "Intervenção em Crise",
-          descricao:
-            "Como ação, faz Diplomacia CD 15 para remover condições como amedrontado, confuso ou enlouquecendo.",
+          nivel: 2,
+          descricao: "Você reduz surtos e colapsos mentais.",
         },
         {
+          id: "terapia-de-campo",
           nome: "Terapia de Campo",
-          descricao:
-            "Em 2 rodadas, remove estresse ou trauma acumulado e concede +2 em Vontade pela sessão.",
+          nivel: 3,
+          descricao: "Você auxilia aliados a recuperar estabilidade emocional.",
         },
         {
+          id: "leitura-microexpressiva",
           nome: "Leitura Microexpressiva",
-          descricao:
-            "Tem vantagem em testes de Instinto para detectar mentiras e identificar emoções dominantes.",
+          nivel: 4,
+          descricao: "Você identifica emoções ocultas.",
         },
         {
+          id: "psicoprofilaxia",
           nome: "Psicoprofilaxia",
-          descricao:
-            "Aliados tratados por você recebem +5 contra medo, confusão, sugestão e efeitos similares.",
+          nivel: 5,
+          descricao: "Você reduz traumas mentais futuros.",
         },
         {
+          id: "debriefing-pos-traumatico",
           nome: "Debriefing Pós-Traumático",
-          descricao:
-            "Após eventos traumáticos, aliados não acumulam estresse daquela cena e recuperam 5 de Sanidade.",
+          nivel: 6,
+          descricao: "Você remove penalidades mentais temporárias.",
         },
         {
+          id: "manipulacao-terapeutica",
           nome: "Manipulação Terapêutica",
-          descricao:
-            "Com Diplomacia contra Vontade do alvo, pode sugerir uma ação simples.",
+          nivel: 7,
+          descricao: "Você influencia emocionalmente pessoas vulneráveis.",
         },
         {
+          id: "reconstrucao-de-memoria",
           nome: "Reconstrução de Memória",
+          nivel: 8,
+          descricao: "Você auxilia na recuperação de memórias fragmentadas.",
+        },
+      ],
+    },
+    {
+      id: "pesquisador-biomedico",
+      nome: "Pesquisador Biomédico",
+      passiva:
+        "Você domina diagnóstico, análise laboratorial, imunização e desenvolvimento de tratamentos experimentais.",
+
+      habilidades: [
+        {
+          id: "analise-de-doencas",
+          nome: "Análise de Doenças",
+          nivel: 1,
           descricao:
-            "Com 1 semana de sessões e Conhecimento Médico CD 30, remove traumas profundos. Falhas causam dano mental.",
+            "O pesquisador pode diagnosticar doenças rolando 2d6 + Medicina. O resultado determina a precisão do diagnóstico, identificando com eficácia doenças em pacientes ou criaturas.",
+        },
+        {
+          id: "desenvolvimento-de-antidotos",
+          nome: "Desenvolvimento de Antídotos",
+          nivel: 2,
+          descricao:
+            "Ao criar antídotos, o pesquisador faz um teste de 2d6 + Modificador de Química para determinar a eficácia do antídoto. Um resultado mais alto garante maior sucesso na neutralização do veneno ou doença.",
+        },
+        {
+          id: "melhorias-biologicas",
+          nome: "Melhorias Biológicas",
+          nivel: 3,
+          descricao:
+            "Para aplicar melhorias biológicas temporárias, o pesquisador faz um teste de 2d6 + Medicina. O resultado determina a duração e os benefícios das melhorias, proporcionando vantagens temporárias em atributos físicos ou mentais.",
+        },
+        {
+          id: "genetica-avancada",
+          nome: "Genética Avançada",
+          nivel: 4,
+          descricao:
+            "Manipulação genética para criar tratamentos personalizados. O pesquisador faz um teste de 2d6 + Modificador de Medicina para determinar a eficácia do tratamento, podendo curar doenças ou melhorar habilidades de forma adaptativa.",
+        },
+        {
+          id: "imunizacao-rapida",
+          nome: "Imunização Rápida",
+          nivel: 5,
+          descricao:
+            "Desenvolve técnicas para acelerar a imunização. Um teste de 2d6 + Modificador de Habilidade Alquímica determina a eficácia do processo. Resultados altos geram imunização mais eficaz e rápida contra agentes patogênicos.",
+        },
+        {
+          id: "monitoramento-biomedico",
+          nome: "Monitoramento Biomédico",
+          nivel: 6,
+          descricao:
+            "Implementa sistemas de monitoramento biomédico avançados. Um teste de 2d6 + Modificador de Medicina detecta anormalidades e fornece informações vitais em tempo real, podendo prever problemas antes de se agravarem.",
         },
       ],
     },

@@ -1,135 +1,282 @@
 .upgrade-page {
   min-height: 100vh;
   padding: 26px;
+
   background:
-    linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(15, 10, 7, 0.96)),
+    radial-gradient(
+      circle at top left,
+      rgba(255, 255, 255, 0.08),
+      transparent 32%
+    ),
+    linear-gradient(135deg, rgba(0, 0, 0, 0.96), rgba(8, 8, 8, 0.98)),
     url("../assets/IMG/OAbsoluto.png") center/cover fixed;
-  color: #f5f0e8;
+
+  color: #f5f5f5;
+  font-family: "Courier New", monospace;
 }
+
+/* =========================================================
+   HERO
+========================================================= */
 
 .upgrade-hero {
   position: relative;
-  min-height: 220px;
+  min-height: 310px;
+
   display: grid;
   align-content: end;
-  gap: 10px;
-  padding: 74px 26px 26px;
-  border: 1px solid rgba(212, 175, 55, 0.32);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.58);
+  gap: 12px;
+
+  padding: 82px 34px 32px;
+
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-left: 4px solid #d4af37;
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.9),
+      rgba(255, 255, 255, 0.04)
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(212, 175, 55, 0.1),
+      transparent 38%
+    );
+
+  overflow: hidden;
+
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.55),
+    0 0 30px rgba(212, 175, 55, 0.08);
 }
+
+.upgrade-hero::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+
+  transform: translateX(-100%);
+  animation: upgradeHeroGlow 7s infinite;
+}
+
+@keyframes upgradeHeroGlow {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  45%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* =========================================================
+   VOLTAR
+========================================================= */
 
 .upgrade-voltar {
   position: absolute;
-  top: 18px;
-  left: 18px;
-  min-height: 40px;
+  top: 20px;
+  left: 20px;
+  z-index: 2;
+
+  min-height: 42px;
+
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  padding: 0 14px;
-  border: 1px solid #4a3326;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
+
+  padding: 0 15px;
+
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 8px;
+
+  background: rgba(0, 0, 0, 0.7);
+
+  color: #ffffff;
+
   cursor: pointer;
+
   font: inherit;
   font-weight: 800;
   text-transform: uppercase;
+
+  transition: 0.22s ease;
 }
+
+.upgrade-voltar:hover {
+  border-color: #d4af37;
+
+  color: #d4af37;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 0 18px rgba(212, 175, 55, 0.18),
+    0 0 40px rgba(212, 175, 55, 0.08);
+}
+
+/* =========================================================
+   TEXTOS HERO
+========================================================= */
 
 .upgrade-hero span,
 .upgrade-status span,
 .upgrade-pontos span {
-  color: #c89b5f;
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 1.4px;
+  position: relative;
+  z-index: 1;
+
+  color: #d4af37;
+
+  font-size: 0.76rem;
+  font-weight: 900;
+
+  letter-spacing: 2px;
   text-transform: uppercase;
 }
 
 .upgrade-hero h1 {
-  color: #fff;
-  font-size: clamp(2rem, 5vw, 4rem);
+  position: relative;
+  z-index: 1;
+
+  max-width: 1000px;
+
+  color: #ffffff;
+
+  font-size: clamp(2.5rem, 6vw, 5rem);
   line-height: 0.95;
+
   text-transform: uppercase;
+
+  text-shadow:
+    0 0 25px rgba(255, 255, 255, 0.08),
+    0 0 60px rgba(212, 175, 55, 0.08);
 }
 
 .upgrade-hero p {
+  position: relative;
+  z-index: 1;
+
   max-width: 760px;
-  color: #d7c8b8;
-  line-height: 1.55;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+  color: #cfcfcf;
+
+  font-size: 0.96rem;
+  line-height: 1.6;
 }
+
+/* =========================================================
+   CONTAINERS
+========================================================= */
 
 .upgrade-status,
 .upgrade-shell,
 .upgrade-tabela {
-  width: min(1180px, 100%);
-  margin: 22px auto 0;
+  width: min(1380px, 100%);
+  margin: 26px auto 0;
 }
 
 .upgrade-status {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: 14px;
 }
 
 .upgrade-status div,
 .upgrade-shell,
 .upgrade-tabela {
-  border: 1px solid rgba(212, 175, 55, 0.28);
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.58);
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.03),
+      rgba(255, 255, 255, 0.01)
+    ),
+    rgba(0, 0, 0, 0.75);
+
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.42),
+    inset 0 0 18px rgba(255, 255, 255, 0.02);
 }
 
 .upgrade-status div {
   display: grid;
-  gap: 6px;
-  padding: 15px;
+  gap: 8px;
+  padding: 16px;
 }
 
 .upgrade-status strong {
-  color: #fff;
-  font-size: 1.35rem;
+  color: #ffffff;
+  font-size: 1.45rem;
 }
+
+/* =========================================================
+   TABELA
+========================================================= */
 
 .upgrade-tabela,
 .upgrade-shell {
-  padding: 20px;
+  padding: 22px;
+}
+
+.upgrade-tabela h2,
+.upgrade-habilidades-info h2 {
+  color: #ffffff;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .upgrade-tabela h2 {
   margin-bottom: 14px;
-  color: #fff;
-  text-transform: uppercase;
 }
 
 .upgrade-tabela-grid {
   display: grid;
   grid-template-columns: 80px repeat(4, 1fr);
-  gap: 0;
+
   overflow-x: auto;
 }
 
 .upgrade-tabela-grid > * {
   min-width: 120px;
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.16);
+
+  padding: 12px;
+
+  border-bottom: 1px solid rgba(212, 175, 55, 0.12);
+
   text-align: center;
 }
 
 .upgrade-tabela-grid strong {
-  color: #f2d16b;
+  color: #d4af37;
   text-transform: uppercase;
 }
 
+/* =========================================================
+   SHELL
+========================================================= */
+
 .upgrade-shell {
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
+
+/* =========================================================
+   TRILHAS
+========================================================= */
 
 .upgrade-trilhas {
   display: flex;
@@ -138,123 +285,203 @@
 }
 
 .upgrade-trilhas button,
-.upgrade-confirmar {
-  min-height: 42px;
-  padding: 0 16px;
-  border: 1px solid #4a3326;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+.upgrade-confirmar,
+.upgrade-habilidades-info button {
+  min-height: 44px;
+
+  padding: 0 18px;
+
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  color: #f5f5f5;
+
   cursor: pointer;
+
   font: inherit;
-  font-weight: 800;
+  font-size: 0.78rem;
+  font-weight: 900;
+
+  letter-spacing: 1px;
   text-transform: uppercase;
+
+  transition: 0.22s ease;
 }
 
+.upgrade-trilhas button:hover,
 .upgrade-trilhas button.ativa,
-.upgrade-confirmar {
-  border-color: #c89b5f;
-  background: #8b4513;
+.upgrade-confirmar,
+.upgrade-habilidades-info button:hover {
+  border-color: #d4af37;
+
+  background: rgba(212, 175, 55, 0.12);
+
+  color: #d4af37;
+
+  box-shadow:
+    0 0 16px rgba(212, 175, 55, 0.16),
+    inset 0 0 12px rgba(212, 175, 55, 0.06);
 }
+
+/* =========================================================
+   PONTOS
+========================================================= */
 
 .upgrade-pontos {
   display: flex;
   justify-content: space-between;
   gap: 16px;
+
   padding: 14px;
-  border: 1px solid rgba(139, 69, 19, 0.7);
-  border-radius: 6px;
-  background: rgba(139, 69, 19, 0.16);
+
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .upgrade-pontos strong {
-  color: #fff;
+  color: #ffffff;
 }
+
+/* =========================================================
+   LISTAS
+========================================================= */
 
 .upgrade-lista {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px;
+
+  gap: 14px;
 }
 
 .upgrade-lista label,
 .upgrade-habilidades-info {
   display: grid;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid rgba(139, 69, 19, 0.68);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.045);
+  gap: 10px;
+
+  padding: 16px;
+
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-left: 3px solid #d4af37;
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.01)
+    ),
+    rgba(0, 0, 0, 0.7);
+
+  transition: 0.22s ease;
+}
+
+.upgrade-lista label:hover,
+.upgrade-habilidades-info:hover {
+  border-color: rgba(212, 175, 55, 0.45);
+
+  box-shadow:
+    0 0 18px rgba(212, 175, 55, 0.12),
+    0 14px 28px rgba(0, 0, 0, 0.35);
+
+  transform: translateY(-2px);
 }
 
 .upgrade-lista label span {
-  display: grid;
-  gap: 4px;
-  color: #fff;
+  color: #ffffff;
+
   font-weight: 800;
+
   text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.upgrade-lista small {
-  color: #c9b9a5;
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-transform: none;
+.upgrade-lista small,
+.upgrade-habilidades-info p {
+  color: #bdbdbd;
+
+  font-size: 0.86rem;
+  line-height: 1.5;
 }
+
+/* =========================================================
+   INPUTS
+========================================================= */
 
 .upgrade-lista input,
 .upgrade-habilidades-info input {
-  min-height: 38px;
-  border: 1px solid #4a3326;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.45);
-  color: #fff;
+  min-height: 42px;
+
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 8px;
+
+  background: rgba(0, 0, 0, 0.55);
+
+  color: #ffffff;
+
   font: inherit;
   text-align: center;
+
+  transition: 0.2s ease;
 }
 
-.upgrade-habilidades-info button {
-  min-height: 42px;
-  border: 1px solid #c89b5f;
-  border-radius: 4px;
-  background: #8b4513;
-  color: #fff;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 800;
-  text-transform: uppercase;
+.upgrade-lista input:focus,
+.upgrade-habilidades-info input:focus {
+  outline: none;
+
+  border-color: #d4af37;
+
+  box-shadow:
+    0 0 16px rgba(212, 175, 55, 0.14),
+    inset 0 0 14px rgba(212, 175, 55, 0.05);
 }
 
-.upgrade-habilidades-info h2 {
-  color: #fff;
-  text-transform: uppercase;
-}
-
-.upgrade-habilidades-info p {
-  color: #d7c8b8;
-  line-height: 1.5;
-}
+/* =========================================================
+   LABELS
+========================================================= */
 
 .upgrade-habilidades-info label {
   display: grid;
   gap: 8px;
-  color: #c89b5f;
-  font-weight: 800;
+
+  color: #d4af37;
+
+  font-weight: 900;
+
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
+/* =========================================================
+   MENSAGEM
+========================================================= */
+
 .upgrade-mensagem {
-  color: #f2d16b;
+  color: #d4af37;
+  font-weight: 900;
 }
 
 .upgrade-confirmar:disabled {
-  cursor: not-allowed;
   opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
 }
+
+/* =========================================================
+   RESPONSIVO
+========================================================= */
 
 @media (max-width: 760px) {
   .upgrade-page {
     padding: 14px;
+  }
+
+  .upgrade-hero {
+    min-height: 280px;
+    padding: 78px 18px 24px;
   }
 
   .upgrade-status {
@@ -263,5 +490,9 @@
 
   .upgrade-tabela-grid {
     grid-template-columns: 70px repeat(4, 120px);
+  }
+
+  .upgrade-trilhas button {
+    width: 100%;
   }
 }

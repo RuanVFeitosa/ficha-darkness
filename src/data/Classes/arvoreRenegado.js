@@ -455,5 +455,79 @@ export const arvoreRenegado = {
         },
       ],
     },
+    {
+      id: "arquiteto-da-queda",
+      nome: "O Arquiteto da Queda",
+      descricao: "O poder que eles construíram será sua própria ruína.",
+
+      habilidades: [
+        {
+          id: "saboteador-nato",
+          nome: "Sabotador Nato",
+          descricao:
+            "Você pode gastar 2 PE para causar falha automática em dispositivos, máquinas ou armadilhas.",
+        },
+        {
+          id: "virus-mental",
+          nome: "Vírus Mental",
+          descricao:
+            "Uma vez por combate, um inimigo sofre -2 nas ações por 1 turno. O alvo pode realizar um teste de POD para resistir.",
+        },
+        {
+          id: "corrupcao-estrategica",
+          nome: "Corrupção Estratégica",
+          descricao:
+            "Sempre que um dispositivo explode ou falha próximo, inimigos próximos sofrem -1 em Defesa por 1 turno.",
+        },
+        {
+          id: "distorcer-lealdades",
+          nome: "Distorcer Lealdades",
+          descricao:
+            "Gaste 4 PE para fazer um inimigo comum hesitar. O alvo realiza um teste contra seu POD.",
+        },
+        {
+          id: "orquestrador-invisivel",
+          nome: "Orquestrador Invisível",
+          descricao:
+            "Ao criar uma distração, você ganha +2 em todas as defesas até o final da cena.",
+        },
+      ],
+    },
+
+    {
+      id: "carrasco-dos-deuses",
+      nome: "O Carrasco dos Deuses",
+      descricao: "Eles se chamam de Senhores. Eu serei sua sentença.",
+
+      habilidades: [
+        {
+          id: "golpe-implacavel",
+          nome: "Golpe Implacável",
+          descricao: "Seus ataques críticos causam +2d6 de dano adicional.",
+        },
+        {
+          id: "cacador-de-chefes",
+          nome: "Caçador de Chefes",
+          descricao:
+            "Você causa +1d8 de dano extra contra inimigos de nível superior ao seu.",
+        },
+        {
+          id: "desdem-pela-fraqueza",
+          nome: "Desdém pela Fraqueza",
+          descricao: "Sempre que derrotar um inimigo, recupera 1 PV.",
+        },
+        {
+          id: "sede-de-sangue",
+          nome: "Sede de Sangue",
+          descricao: "Sempre que eliminar um inimigo, recupere 5 PE.",
+        },
+        {
+          id: "execucao-final",
+          nome: "Execução Final",
+          descricao:
+            "Uma vez por combate, declare um ataque de execução. Se acertar, o alvo deve resistir ou morrer instantaneamente. A CD é baseada no seu POD.",
+        },
+      ],
+    }, 
   ],
 };

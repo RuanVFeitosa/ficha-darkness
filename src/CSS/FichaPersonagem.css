@@ -312,7 +312,7 @@ body {
 .nome-personagem {
   background: transparent;
   border: none;
-  border-bottom: 1px solid #8b4513;
+  border-bottom: 1px solid #ffffff;
   font-weight: bold;
   font-size: 10px;
   text-transform: uppercase;
@@ -917,7 +917,7 @@ body {
   min-width: 40px;
   font-size: 200px; /* corrigido: era "font", mas aqui o correto é font-size */
 
-  color: #d4af37;
+  color: #ffffff;
 
   filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.5));
 }
@@ -927,8 +927,9 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 12px 15px;
-  border-left: 3px solid #8b4513;
-  border-radius: 4px;
+  border-left: 2px solid #ffffff;
+
+  border-radius: 10px;
   transition: all 0.3s ease;
   gap: 10px;
 }
@@ -938,8 +939,8 @@ body {
   text-transform: uppercase;
   letter-spacing: 2px;
   font-size: 0.95em;
-  color: #d4af37;
-  text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  text-shadow: 0 0 2px rgba(63, 62, 62, 0.3);
   min-width: 120px;
 }
 
@@ -992,7 +993,7 @@ body {
   flex: 1;
   background: transparent;
   border: none;
-  color: #888;
+  color: #ffffff;
   padding: 12px 8px;
   font-family: "Courier New", monospace;
   font-weight: bold;
@@ -1005,14 +1006,14 @@ body {
 }
 
 .aba-btn:hover {
-  background: rgba(139, 69, 19, 0.2);
-  color: #d4af37;
+  background: rgb(255, 255, 255);
+  color: #000000;
 }
 
 .aba-btn.ativa {
-  background: rgba(139, 69, 19, 0.3);
-  color: #d4af37;
-  border-bottom: 2px solid #d4af37;
+  background: rgb(255, 255, 255);
+  color: #000000;
+  border-bottom: 5px solid #ffaf37;
 }
 
 .sidebar-conteudo {
@@ -1022,7 +1023,7 @@ body {
 }
 
 .conteudo-aba h4 {
-  color: #d4af37;
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 2px;
   margin-bottom: 15px;
@@ -1402,20 +1403,13 @@ body {
 
 .ativo-item {
   position: relative;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
 
   padding: 14px 18px;
 
-  background: linear-gradient(
-    90deg,
-    rgba(139, 69, 19, 0.18) 0%,
-    rgba(0, 0, 0, 0.05) 100%
-  );
-
-  border-left: 3px solid #8b4513;
+  border-left: 3px solid #ffffff;
   border-radius: 6px;
 
   overflow: hidden;
@@ -1455,7 +1449,7 @@ body {
 
   background: linear-gradient(
     90deg,
-    rgba(139, 69, 19, 0.28) 0%,
+    rgba(255, 255, 255, 0.28) 0%,
     rgba(0, 0, 0, 0.08) 100%
   );
 
@@ -2319,10 +2313,6 @@ body {
 }
 
 /* =========================================================
-   INVENTÁRIO EM CARDS
-========================================================= */
-
-/* =========================================================
    11.1 - INVENTÁRIO / CARDS
 ========================================================= */
 
@@ -2374,7 +2364,6 @@ body {
 
 .inventario-card .inventario-resumo {
   width: 100%;
-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3953,10 +3942,6 @@ body {
    13 - Aba Passivas
    ========================================================= */
 
-/* =========================================================
-   PASSIVAS — CSS COMPLETO ATUALIZADO
-   ========================================================= */
-
 /* CONTAINER DAS CATEGORIAS */
 .categorias-passivas {
   display: flex;
@@ -3969,9 +3954,9 @@ body {
 
 /* CATEGORIA */
 .categoria-passiva {
-  background: rgba(0, 0, 0, 0.22);
+  background: rgb(0, 0, 0);
 
-  border: 1px solid rgba(212, 175, 55, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 
   border-radius: 8px;
 
@@ -3980,7 +3965,7 @@ body {
 
 /* TITULO */
 .categoria-titulo {
-  color: #d4af37;
+  color: #ffffff;
 
   text-align: center;
 
@@ -3994,7 +3979,7 @@ body {
 
   padding-bottom: 10px;
 
-  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 /* GRID */
@@ -4018,9 +4003,9 @@ body {
   min-width: 0;
   width: 100%;
   padding: 8px 6px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgb(0, 0, 0);
   border-radius: 6px;
-  border-left: 2px solid #8b4513;
+  border-left: 2px solid #5c5c5c;
   overflow: hidden;
   transition:
     background 0.2s ease,
@@ -4029,11 +4014,10 @@ body {
 }
 
 .habilidade-passiva-item:hover {
-  background: rgba(139, 69, 19, 0.12);
-
-  border-left-color: #d4af37;
-
-  transform: translateY(-1px);
+  background: white;
+  border-left: 5px solid goldenrod;
+  color: black;
+  transform: translateY(-2px);
 }
 
 /* NOME */
@@ -4064,9 +4048,9 @@ body {
 }
 
 .passiva-nome.clickable:hover {
-  color: #d4af37;
+  color: #000000;
 
-  text-shadow: 0 0 6px rgba(212, 175, 55, 0.45);
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.11);
 }
 
 /* LINHA */
@@ -4129,11 +4113,8 @@ body {
 /* CONTROLES */
 .passiva-temp-controles {
   display: flex;
-
   align-items: center;
-
   justify-content: center;
-
   gap: 4px;
 }
 
@@ -4155,11 +4136,11 @@ body {
 
   border-radius: 4px;
 
-  background: rgba(139, 69, 19, 0.18);
+  background: rgba(0, 0, 0, 0.18);
 
-  border: 1px solid rgba(212, 175, 55, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.22);
 
-  color: #d4af37;
+  color: #ffffff;
 
   font-size: 0.7em;
 
@@ -4171,11 +4152,11 @@ body {
 }
 
 .passiva-temp-btn:hover {
-  background: #8b4513;
+  background: #ffffff;
 
-  border-color: #d4af37;
+  border-color: #000000;
 
-  color: white;
+  color: rgb(0, 0, 0);
 
   transform: scale(1.05);
 }
@@ -4183,27 +4164,16 @@ body {
 /* INPUT */
 .passiva-valor-temporario {
   width: 30px;
-
   min-width: 30px;
-
   height: 21px;
-
   text-align: center;
-
   border-radius: 4px;
-
   background: rgba(255, 255, 255, 0.04);
-
   border: 1px solid rgba(212, 175, 55, 0.18);
-
-  color: #d4af37;
-
+  color: white;
   font-size: 0.7em;
-
   font-weight: bold;
-
   font-family: inherit;
-
   transition:
     border-color 0.2s ease,
     background 0.2s ease;
@@ -4238,6 +4208,191 @@ body {
   background: #8b4513;
 
   border-radius: 999px;
+}
+
+/* =========================================================
+   Habilidades de Classe
+   ========================================================= */
+
+.subabas-habilidades-ficha {
+  display: flex;
+  gap: 12px;
+  margin: 25px 0;
+}
+
+.subabas-habilidades-ficha button {
+  background: transparent;
+  border: none;
+  color: #d6b24c;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: inherit;
+}
+
+.subabas-habilidades-ficha button:hover {
+  background: rgb(255, 255, 255);
+  color: #000000;
+}
+
+.subabas-habilidades-ficha button.ativa {
+  background: #fcfcfc;
+  color: black;
+}
+
+.habilidade-card-recolhivel {
+  border: 1px solid rgba(214, 178, 76, 0.3);
+  border-radius: 12px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.habilidade-card-recolhivel summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 18px;
+  font-size: 18px;
+  color: white;
+  font-weight: bold;
+}
+
+.habilidade-card-recolhivel summary::-webkit-details-marker {
+  display: none;
+}
+
+.habilidade-card-conteudo {
+  padding: 0 18px 18px;
+  color: #d4d4d4;
+  line-height: 1.7;
+}
+
+.habilidade-card-conteudo small {
+  display: inline-block;
+  margin-top: 12px;
+  color: #d6b24c;
+}
+
+.habilidade-absoluta-card {
+  text-align: center;
+  padding: 50px;
+  border-radius: 18px;
+  border: 1px solid white;
+  background: rgba(0, 0, 0, 0);
+}
+
+.habilidade-absoluta-card span {
+  color: #d6b24c;
+  letter-spacing: 4px;
+  font-size: 12px;
+}
+
+.habilidade-absoluta-card h1 {
+  font-size: 56px;
+  margin: 20px 0;
+  color: #f4e4a3;
+}
+
+.habilidade-absoluta-card p {
+  color: #ddd;
+  max-width: 850px;
+  margin: auto;
+  line-height: 1.8;
+}
+
+.custo-absoluta {
+  display: inline-block;
+  padding: 8px 16px;
+  border: 1px solid #d6b24c;
+  border-radius: 999px;
+  margin-bottom: 24px;
+  color: #d6b24c;
+}
+
+.habilidades-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 18px;
+  width: 100%;
+}
+
+.habilidade-card {
+  border: 1px solid ;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(0, 0, 0, 0.96), rgba(5, 5, 5, 0.98));
+
+  overflow: hidden;
+
+  transition: 0.25s;
+}
+
+.habilidade-card:hover {
+  transform: translateY(-4px);
+
+  border-color: rgba(212, 175, 55, 0.7);
+
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.12);
+}
+
+.habilidade-card summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.habilidade-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.habilidade-card-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 24px;
+}
+
+.habilidade-card h3 {
+  font-size: 1rem;
+  color: #f5efe4;
+  margin-top: 10px;
+}
+
+.habilidade-card-tipo {
+  font-size: 0.75rem;
+  letter-spacing: 4px;
+  color: white;
+  font-weight: 800;
+}
+
+.habilidade-card-custo {
+  padding: 8px 14px;
+
+  border-radius: 999px;
+
+  border: 1px solid rgba(212, 175, 55, 0.4);
+
+  color: #d4af37;
+  font-weight: 700;
+}
+
+.habilidade-card-descricao {
+  padding: 0 24px 24px 24px;
+
+  color: rgba(255, 255, 255, 0.78);
+
+  line-height: 1.7;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.habilidade-card:not([open]) .habilidade-card-descricao {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .habilidades-grid-cards {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* =========================================================

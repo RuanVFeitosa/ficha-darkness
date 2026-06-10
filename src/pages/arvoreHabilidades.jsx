@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiArrowLeft } from "@mdi/js";
 import "../CSS/ArvoreHabilidades.css";
@@ -46,14 +46,21 @@ const ArvoreHabilidades = () => {
   const [personagem, setPersonagem] = useState(estadoInicial);
   const [mensagem, setMensagem] = useState("");
   const [aptidaoAberta, setAptidaoAberta] = useState(null);
-  const [modalEspecialidadeAberto, setModalEspecialidadeAberto] =
-    useState(false);
+  const [arrastando, setArrastando] = useState(false);
+  const [inicioArrasto, setInicioArrasto] = useState({ x: 0, y: 0 });
+  const [posicaoMapa, setPosicaoMapa] = useState({ x: -300, y: -120 });
+
+  const mapaRef = useRef(null);
+  const animacaoRef = useRef(null);
+  const posicaoMapaRef = useRef(posicaoMapa);
+  const inicioArrastoRef = useRef(inicioArrasto);
+
   const [abaArvore, setAbaArvore] = useState("absolutas");
 
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
   const arvoreBase =
     obterArvoreClasse(personagem.classeId || personagem.classe) || {};
-    
+
   const arvore = {
     classe: "",
     titulo: "",
@@ -81,23 +88,6 @@ const ArvoreHabilidades = () => {
 
   const precisaEscolherEspecialidade =
     (arvore.especialidades || []).length > 0 && !especialidadeSelecionada;
-
-  useEffect(() => {
-    if (carregandoFicha) return;
-
-    const especialidadeJaDefinida =
-      Boolean(habilidadesClasse.especialidadeDefinida) ||
-      Boolean(habilidadesClasse.especialidade);
-
-    setModalEspecialidadeAberto(
-      (arvore.especialidades || []).length > 0 && !especialidadeJaDefinida,
-    );
-  }, [
-    carregandoFicha,
-    arvore.especialidades.length,
-    habilidadesClasse.especialidade,
-    habilidadesClasse.especialidadeDefinida,
-  ]);
 
   useEffect(() => {
     let cancelado = false;
@@ -222,19 +212,81 @@ const ArvoreHabilidades = () => {
       },
     );
 
-    setModalEspecialidadeAberto(false);
     setAbaArvore("especialidade");
+  };
+
+  const encontrarHabilidadeNaArvore = (habilidadeId) => {
+    for (const especialidade of arvore.especialidades || []) {
+      const habilidades = especialidade.habilidades || [];
+      const index = habilidades.findIndex(
+        (habilidade) => habilidade.id === habilidadeId,
+      );
+
+      if (index !== -1) {
+        return {
+          especialidade,
+          habilidades,
+          index,
+        };
+      }
+    }
+
+    return null;
+  };
+
+  const podeComprarHabilidade = (habilidade) => {
+    const dados = encontrarHabilidadeNaArvore(habilidade.id);
+
+    if (!dados) return true;
+
+    const { habilidades, index } = dados;
+
+    if (index === 0) return true;
+
+    const habilidadeAnterior = habilidades[index - 1];
+
+    return Boolean(
+      habilidadesClasse.habilidadesEspecialidade?.[habilidadeAnterior.id],
+    );
+  };
+
+  const podeVenderHabilidade = (habilidade) => {
+    const dados = encontrarHabilidadeNaArvore(habilidade.id);
+
+    if (!dados) return true;
+
+    const { habilidades, index } = dados;
+    const habilidadeDepois = habilidades[index + 1];
+
+    if (!habilidadeDepois) return true;
+
+    return !habilidadesClasse.habilidadesEspecialidade?.[habilidadeDepois.id];
   };
 
   const alternarHabilidadeEspecialidade = (habilidade) => {
     const custo = obterCustoHabilidade(habilidade, "especialidade");
     const habilidadeId = habilidade.id;
+
     const jaComprada = Boolean(
       habilidadesClasse.habilidadesEspecialidade?.[habilidadeId],
     );
 
+    if (!jaComprada && !podeComprarHabilidade(habilidade)) {
+      setMensagem(
+        "Você precisa comprar a habilidade anterior deste ramo primeiro.",
+      );
+      return;
+    }
+
+    if (jaComprada && !podeVenderHabilidade(habilidade)) {
+      setMensagem(
+        "Você precisa vender as habilidades posteriores deste ramo antes de remover esta.",
+      );
+      return;
+    }
+
     if (!jaComprada && pontosEvolucaoDisponiveis < custo) {
-      setMensagem("Pontos de evolucao insuficientes para esta habilidade.");
+      setMensagem("Pontos de evolução insuficientes para esta habilidade.");
       return;
     }
 
@@ -254,6 +306,141 @@ const ArvoreHabilidades = () => {
         },
       },
     );
+  };
+
+  const selecionarHabilidadeAbsoluta = (habilidade) => {
+    salvarAtualizacao(
+      {
+        habilidadeAbsoluta: habilidade.id,
+      },
+      {
+        habilidadeAbsolutaEscolhida: {
+          id: habilidade.id,
+          nome: habilidade.nome,
+          custo: habilidade.custo || "",
+          descricao: habilidade.descricao,
+        },
+      },
+    );
+  };
+
+  const removerHabilidadeAbsoluta = () => {
+    salvarAtualizacao(
+      {
+        habilidadeAbsoluta: "",
+      },
+      {
+        habilidadeAbsolutaEscolhida: null,
+      },
+    );
+  };
+
+  const aplicarTransformMapa = (x, y) => {
+    if (!mapaRef.current) return;
+
+    mapaRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+  };
+
+  const iniciarArrastoMapa = (event) => {
+    if (event.target.closest("button")) return;
+
+    setArrastando(true);
+
+    inicioArrastoRef.current = {
+      x: event.clientX - posicaoMapaRef.current.x,
+      y: event.clientY - posicaoMapaRef.current.y,
+    };
+  };
+
+  const moverMapa = (event) => {
+    if (!arrastando) return;
+
+    const novaPosicao = {
+      x: event.clientX - inicioArrastoRef.current.x,
+      y: event.clientY - inicioArrastoRef.current.y,
+    };
+
+    posicaoMapaRef.current = novaPosicao;
+
+    if (animacaoRef.current) return;
+
+    animacaoRef.current = requestAnimationFrame(() => {
+      aplicarTransformMapa(novaPosicao.x, novaPosicao.y);
+      animacaoRef.current = null;
+    });
+  };
+
+  const pararArrastoMapa = () => {
+    setArrastando(false);
+    setPosicaoMapa(posicaoMapaRef.current);
+  };
+
+  const MAPA_LARGURA = 2600;
+  const MAPA_ALTURA = 1600;
+  const ROOT = { x: 1300, y: 1250 };
+
+  const obterPontoHabilidade = (
+    branchIndex,
+    nodeIndex,
+    totalBranches,
+    totalHabilidades,
+  ) => {
+    const aberturaTotal = 165;
+
+    const baseAngle =
+      totalBranches === 1
+        ? 270
+        : 188 + (branchIndex * aberturaTotal) / (totalBranches - 1);
+
+    // MAIS ESPAÇO ENTRE NÓS
+    const angle = baseAngle + (nodeIndex - totalHabilidades / 2) * 4;
+
+    // AUMENTA DISTÂNCIA ENTRE CADA HABILIDADE
+    const radius = 200 + nodeIndex * 190;
+
+    const rad = (angle * Math.PI) / 180;
+
+    return {
+      x: ROOT.x + Math.cos(rad) * radius,
+      y: ROOT.y + Math.sin(rad) * radius,
+    };
+  };
+
+  const obterPontoAptidao = (index, total) => {
+    const colunas = 8;
+    const coluna = index % colunas;
+    const linha = Math.floor(index / colunas);
+
+    const inicioX = ROOT.x - 740;
+    const inicioY = ROOT.y - 850;
+
+    const espacamentoX = 320;
+    const espacamentoY = 230;
+
+    return {
+      x: inicioX + coluna * espacamentoX + (linha % 2) * 90,
+      y: inicioY + linha * espacamentoY,
+    };
+  };
+
+  const obterHabilidadesPorIndice = (indice) => {
+    return (arvore.especialidades || [])
+      .map((especialidade, branchIndex) => {
+        const habilidades = especialidade.habilidades || [];
+        if (!habilidades[indice]) return null;
+
+        return {
+          especialidade,
+          habilidade: habilidades[indice],
+          ponto: obterPontoHabilidade(
+            branchIndex,
+            indice,
+            arvore.especialidades.length,
+            habilidades.length,
+          ),
+        };
+      })
+      .filter(Boolean);
   };
 
   if (carregandoFicha) {
@@ -295,14 +482,6 @@ const ArvoreHabilidades = () => {
 
         <button
           type="button"
-          className={abaArvore === "aptidoes" ? "ativa" : ""}
-          onClick={() => setAbaArvore("aptidoes")}
-        >
-          Aptidões
-        </button>
-
-        <button
-          type="button"
           className={abaArvore === "especialidade" ? "ativa" : ""}
           onClick={() => setAbaArvore("especialidade")}
         >
@@ -321,115 +500,248 @@ const ArvoreHabilidades = () => {
       ) : (
         <section className="arvore-shell">
           {abaArvore === "absolutas" && (
-            <div className="arvore-secao arvore-obrigatoria">
-              <div className="arvore-secao-titulo">
-                <span>Inicio</span>
-                <h2>Escolha uma Habilidade Absoluta</h2>
-              </div>
+            <div className="arvore-secao arvore-skilltree">
+              {habilidadesClasse.habilidadeAbsoluta ? (
+                <section className="absoluta-selecionada-card">
+                  {(() => {
+                    const habilidadeEscolhida = (arvore.absolutas || []).find(
+                      (habilidade) =>
+                        habilidade.id === habilidadesClasse.habilidadeAbsoluta,
+                    );
 
-              <div className="arvore-grade absolutas-grade">
-                {(arvore.absolutas || []).map((habilidade) => {
-                  const selecionada =
-                    habilidadesClasse.habilidadeAbsoluta === habilidade.id;
+                    if (!habilidadeEscolhida) return null;
 
-                  return (
-                    <button
-                      key={habilidade.id}
-                      type="button"
-                      className={`arvore-no ${
-                        selecionada ? "selecionado" : ""
-                      }`}
-                      onClick={() =>
-                        salvarAtualizacao({ habilidadeAbsoluta: habilidade.id })
-                      }
-                    >
-                      <span className="arvore-no-tipo">Absoluta</span>
-                      <strong>{habilidade.nome}</strong>
-                      <p>{habilidade.descricao}</p>
+                    return (
+                      <>
+                        <span>Habilidade Absoluta Escolhida</span>
+                        <h2>{habilidadeEscolhida.nome}</h2>
+
+                        {habilidadeEscolhida.custo && (
+                          <strong>{habilidadeEscolhida.custo}</strong>
+                        )}
+
+                        <p>{habilidadeEscolhida.descricao}</p>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            salvarAtualizacao({ habilidadeAbsoluta: "" })
+                          }
+                        >
+                          Trocar Habilidade
+                        </button>
+                      </>
+                    );
+                  })()}
+                </section>
+              ) : (
+                <div className="skilltree-viewport">
+                  <div className="absolutas-tree-area">
+                    <div className="skilltree-info-fixa">
+                      <button
+                        type="button"
+                        className="absoluta-voltar-btn"
+                        onClick={() =>
+                          salvarAtualizacao({ habilidadeAbsoluta: "" })
+                        }
+                      >
+                        <Icon path={mdiArrowLeft} size={0.9} />
+                        Voltar para Upgrade
+                      </button>
+                    </div>
+
+                    <svg className="absolutas-lines" viewBox="0 0 1600 900">
+                      {(arvore.absolutas || []).map((habilidade, index) => {
+                        const total = arvore.absolutas.length;
+
+                        const root = {
+                          x: 800,
+                          y: 700,
+                        };
+
+                        const angle =
+                          205 + (index * 130) / Math.max(total - 1, 1);
+
+                        const radius = 430;
+
+                        const rad = (angle * Math.PI) / 180;
+
+                        const point = {
+                          x: root.x + Math.cos(rad) * radius,
+                          y: root.y + Math.sin(rad) * radius,
+                        };
+
+                        return (
+                          <path
+                            key={`absoluta-line-${habilidade.id}`}
+                            d={`M ${root.x} ${root.y} Q ${
+                              (root.x + point.x) / 2
+                            } ${
+                              (root.y + point.y) / 2 - 100
+                            } ${point.x} ${point.y}`}
+                            className="skilltree-path"
+                          />
+                        );
+                      })}
+                    </svg>
+
+                    <button type="button" className="absolutas-root">
+                      <strong>{arvore.classe || personagem.classe}</strong>
                     </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
 
-          {abaArvore === "aptidoes" && (
-            <div className="arvore-secao">
-              <div className="arvore-secao-titulo">
-                <span>Pontos livres</span>
-                <h2>Aptidões</h2>
-              </div>
+                    {(arvore.absolutas || []).map((habilidade, index) => {
+                      const total = arvore.absolutas.length;
 
-              <div className="arvore-grade aptidoes-grade">
-                {(arvore.aptidoes || []).map((aptidao) => {
-                  const comprada = Boolean(
-                    habilidadesClasse.aptidoes?.[aptidao.id],
-                  );
+                      const root = {
+                        x: 800,
+                        y: 700,
+                      };
 
-                  return (
-                    <button
-                      key={aptidao.id}
-                      type="button"
-                      className={`arvore-no aptidao-no ${
-                        comprada ? "selecionado" : ""
-                      }`}
-                      onClick={() => setAptidaoAberta(aptidao)}
-                    >
-                      <span className="arvore-no-tipo">{aptidao.custo}</span>
-                      <strong>{aptidao.nome}</strong>
-                      <p>{comprada ? "Adquirida" : "Ver detalhes"}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                      const angle =
+                        205 + (index * 130) / Math.max(total - 1, 1);
 
-          {abaArvore === "especialidade" && (
-            <div
-              className={`arvore-secao ${
-                precisaEscolherEspecialidade
-                  ? "arvore-especialidade-obrigatoria"
-                  : ""
-              }`}
-            >
-              <div className="arvore-secao-titulo">
-                <span>Especialidade</span>
+                      const radius = 430;
 
-                <h2>
-                  {precisaEscolherEspecialidade
-                    ? "Escolha sua especialidade para liberar a trilha"
-                    : "Trilha de especialidade"}
-                </h2>
+                      const rad = (angle * Math.PI) / 180;
 
-                <p>
-                  {precisaEscolherEspecialidade
-                    ? "A especialidade define quais habilidades avançadas ficarão disponíveis para compra."
-                    : "Sua especialidade define as habilidades exclusivas que você pode adquirir nesta trilha."}
-                </p>
-              </div>
+                      const point = {
+                        x: root.x + Math.cos(rad) * radius,
+                        y: root.y + Math.sin(rad) * radius,
+                      };
 
-              {!especialidadeSelecionada && (
-                <div className="especialidade-bloqueada">
-                  <strong>Nenhuma especialidade escolhida.</strong>
-                  <p>
-                    Escolha uma especialidade no modal inicial para revelar a
-                    passiva inicial e as habilidades disponíveis para compra.
-                  </p>
+                      return (
+                        <button
+                          key={habilidade.id}
+                          type="button"
+                          className="skilltree-node absoluta-node"
+                          style={{
+                            left: `${point.x}px`,
+                            top: `${point.y}px`,
+                          }}
+                          onClick={() =>
+                            salvarAtualizacao({
+                              habilidadeAbsoluta: habilidade.id,
+                            })
+                          }
+                        >
+                          <strong>{habilidade.nome}</strong>
+
+                          <div className="skilltree-tooltip">
+                            <h4>{habilidade.nome}</h4>
+                            <p>{habilidade.descricao}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
+            </div>
+          )}
+          {abaArvore === "especialidade" && (
+            <div className="arvore-secao arvore-skilltree">
+              <div
+                className={`skilltree-viewport ${arrastando ? "arrastando" : ""}`}
+                onMouseDown={iniciarArrastoMapa}
+                onMouseMove={moverMapa}
+                onMouseUp={pararArrastoMapa}
+                onMouseLeave={pararArrastoMapa}
+              >
+                <div
+                  ref={mapaRef}
+                  className="skilltree-area"
+                  style={{
+                    transform: `translate3d(${posicaoMapa.x}px, ${posicaoMapa.y}px, 0)`,
+                  }}
+                >
+                  <div className="skilltree-info">
+                    <span>ÁRVORE DE ESPECIALIDADE</span>
+                    <h2>
+                      {arvore.titulo || personagem.classe || arvore.classe}
+                    </h2>{" "}
+                    <p>
+                      Escolha livremente os ramos da sua build. Cada ramo
+                      pertence à classe escolhida pelo jogador.
+                    </p>
+                  </div>
 
-              {especialidadeSelecionada && (
-                <>
-                  <article className="especialidade-passiva">
-                    <span>Passiva inicial</span>
-                    <strong>{especialidadeSelecionada.nome}</strong>
-                    <p>{especialidadeSelecionada.passiva}</p>
-                  </article>
+                  <svg
+                    className="skilltree-lines"
+                    viewBox={`0 0 ${MAPA_LARGURA} ${MAPA_ALTURA}`}
+                  >
+                    {(arvore.especialidades || []).map(
+                      (especialidade, branchIndex) => {
+                        const habilidades = especialidade.habilidades || [];
+                        const totalBranches = arvore.especialidades.length;
 
-                  <div className="arvore-linha-especialidade">
-                    {(especialidadeSelecionada?.habilidades || []).map(
-                      (habilidade) => {
+                        return habilidades.map((habilidade, index) => {
+                          const atual = obterPontoHabilidade(
+                            branchIndex,
+                            index,
+                            totalBranches,
+                            habilidades.length,
+                          );
+
+                          const anterior =
+                            index === 0
+                              ? ROOT
+                              : obterPontoHabilidade(
+                                  branchIndex,
+                                  index - 1,
+                                  totalBranches,
+                                  habilidades.length,
+                                );
+
+                          return (
+                            <path
+                              key={`ramo-${especialidade.id}-${habilidade.id}`}
+                              d={`M ${anterior.x} ${anterior.y} Q ${(anterior.x + atual.x) / 2} ${
+                                (anterior.y + atual.y) / 2 - 70
+                              } ${atual.x} ${atual.y}`}
+                              className="skilltree-path"
+                            />
+                          );
+                        });
+                      },
+                    )}
+
+                    {(arvore.aptidoes || []).map((aptidao, index) => {
+                      const pontoAptidao = obterPontoAptidao(
+                        index,
+                        arvore.aptidoes.length,
+                      );
+                      const nivelLigacao = index % 5;
+                      const habilidadesAlvo =
+                        obterHabilidadesPorIndice(nivelLigacao);
+
+                      return habilidadesAlvo.map(({ habilidade, ponto }) => (
+                        <path
+                          key={`teia-${aptidao.id}-${habilidade.id}`}
+                          d={`M ${pontoAptidao.x} ${pontoAptidao.y} Q ${
+                            (pontoAptidao.x + ponto.x) / 2
+                          } ${(pontoAptidao.y + ponto.y) / 2 - 90} ${ponto.x} ${ponto.y}`}
+                          className="skilltree-web-path"
+                        />
+                      ));
+                    })}
+                  </svg>
+
+                  <button type="button" className="skilltree-root">
+                    <strong>{arvore.classe || personagem.classe}</strong>
+                  </button>
+                  {(arvore.especialidades || []).map(
+                    (especialidade, branchIndex) => {
+                      const habilidades = especialidade.habilidades || [];
+                      const totalBranches = arvore.especialidades.length;
+
+                      return habilidades.map((habilidade, index) => {
+                        const point = obterPontoHabilidade(
+                          branchIndex,
+                          index,
+                          totalBranches,
+                          habilidades.length,
+                        );
+
                         const comprada = Boolean(
                           habilidadesClasse.habilidadesEspecialidade?.[
                             habilidade.id
@@ -440,62 +752,86 @@ const ArvoreHabilidades = () => {
                           <button
                             key={habilidade.id}
                             type="button"
-                            className={`arvore-no especialidade-no ${
-                              comprada ? "selecionado" : ""
+                            className={`skilltree-node ${
+                              comprada ? "comprada" : ""
+                            } ${
+                              !comprada && !podeComprarHabilidade(habilidade)
+                                ? "bloqueada"
+                                : ""
                             }`}
+                            style={{
+                              left: `${point.x}px`,
+                              top: `${point.y}px`,
+                            }}
                             onClick={() =>
                               alternarHabilidadeEspecialidade(habilidade)
                             }
                           >
-                            <span className="arvore-no-tipo">
-                              Nivel {habilidade.nivel}
-                            </span>
                             <strong>{habilidade.nome}</strong>
-                            <p>{habilidade.descricao}</p>
+
+                            <div className="skilltree-tooltip">
+                              <h4>{habilidade.nome}</h4>
+                              <p>{habilidade.descricao}</p>
+                            </div>
                           </button>
                         );
-                      },
-                    )}
-                  </div>
-                </>
-              )}
+                      });
+                    },
+                  )}
+                  {(arvore.aptidoes || []).map((aptidao, index) => {
+                    const point = obterPontoAptidao(
+                      index,
+                      arvore.aptidoes.length,
+                    );
+
+                    const comprada = Boolean(
+                      habilidadesClasse.aptidoes?.[aptidao.id],
+                    );
+
+                    return (
+                      <button
+                        key={aptidao.id}
+                        type="button"
+                        className={`skilltree-node skilltree-aptidao-node ${
+                          comprada ? "comprada" : ""
+                        }`}
+                        style={{
+                          left: `${point.x}px`,
+                          top: `${point.y}px`,
+                        }}
+                        onClick={() => setAptidaoAberta(aptidao)}
+                      >
+                        <strong>{aptidao.nome}</strong>
+
+                        <div className="skilltree-tooltip">
+                          <h4>{aptidao.nome}</h4>
+                          <p>{aptidao.descricao}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
         </section>
       )}
 
-      {mensagem && <p className="arvore-mensagem">{mensagem}</p>}
+      <div className="arvore-acoes-flutuantes">
+        {habilidadesClasse.habilidadeAbsoluta && abaArvore === "absolutas" && (
+          <button
+            type="button"
+            className="arvore-voltar-upgrade"
+            onClick={() => {
+              window.location.href = `?ficha=${encodeURIComponent(fichaId)}`;
+            }}
+          >
+            VOLTAR PARA FICHA
+          </button>
+        )}
 
-      {modalEspecialidadeAberto && (
-        <div className="especialidade-modal-backdrop">
-          <section className="especialidade-modal">
-            <span>Escolha obrigatória</span>
-
-            <h2>Escolha sua Especialidade</h2>
-
-            <p>
-              Essa escolha define quais habilidades de especialidade ficarão
-              disponíveis para compra. Depois de escolhida, as outras trilhas
-              serão removidas da árvore.
-            </p>
-
-            <div className="especialidade-modal-lista">
-              {(arvore.especialidades || []).map((especialidade) => (
-                <button
-                  key={especialidade.id}
-                  type="button"
-                  className="especialidade-modal-card"
-                  onClick={() => selecionarEspecialidadeInicial(especialidade)}
-                >
-                  <strong>{especialidade.nome}</strong>
-                  <p>{especialidade.passiva}</p>
-                </button>
-              ))}
-            </div>
-          </section>
-        </div>
-      )}
-
+        {mensagem && <p className="arvore-mensagem">{mensagem}</p>}
+      </div>
       {aptidaoAberta && (
         <div className="aptidao-modal-backdrop" onClick={fecharAptidao}>
           <section

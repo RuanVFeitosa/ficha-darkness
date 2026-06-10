@@ -393,6 +393,8 @@ const FichaPersonagem = () => {
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
 
+  const [subAbaHabilidade, setSubAbaHabilidade] = useState("aptidoes");
+
   // FUNÇÃO PARA ABRIR MODAL
   const abrirModal = (titulo, chaveHabilidade) => {
     setModalTitulo(titulo);
@@ -1415,7 +1417,28 @@ const FichaPersonagem = () => {
       habilidadesEspecialidade: {},
     };
   }
+
   const habilidadesSelecionadas = listarHabilidadesSelecionadas(personagem);
+
+  const habilidadesAbsolutas = habilidadesSelecionadas.filter(
+    (habilidade) => habilidade.grupo === "Habilidade Absoluta",
+  );
+
+  const aptidoesSelecionadas = habilidadesSelecionadas.filter(
+    (habilidade) =>
+      habilidade.grupo !== "Habilidade Absoluta" &&
+      habilidade.grupo !== "Classe" &&
+      habilidade.grupo !== "Passiva de Especialidade" &&
+      habilidade.custo,
+  );
+
+  const habilidadesEspecialismo = habilidadesSelecionadas.filter(
+    (habilidade) =>
+      habilidade.grupo !== "Habilidade Absoluta" &&
+      habilidade.grupo !== "Classe" &&
+      habilidade.grupo !== "Passiva de Especialidade" &&
+      !habilidade.custo,
+  );
 
   const calcularValorAtivo = (atributo, ativo) => {
     const modAtributo = calcularModificadorAtivo(
@@ -1714,40 +1737,121 @@ const FichaPersonagem = () => {
           <p>{arvoreClasse.beneficio}</p>
         </div>
 
-        {habilidadesSelecionadas.length > 0 ? (
-          <div className="habilidades-resumo-lista">
-            {habilidadesSelecionadas.map((habilidade) => {
-              const habilidadeEspecial =
-                habilidade.nome?.toUpperCase() === "ANIQUILAÇÃO ABSOLUTA" ||
-                habilidade.nome?.toUpperCase() === "ANIQUILACAO ABSOLUTA";
+        <section className="grupo-habilidades-ficha">
+          <div className="subabas-habilidades-ficha">
+            <button
+              className={subAbaHabilidade === "aptidoes" ? "ativa" : ""}
+              onClick={() => setSubAbaHabilidade("aptidoes")}
+            >
+              Aptidões
+            </button>
 
-              return (
-                <article
-                  key={habilidade.id}
-                  className={
-                    habilidadeEspecial
-                      ? "habilidade-resumo-absoluta"
-                      : "habilidade-resumo-card"
-                  }
-                >
-                  <span>{habilidade.grupo}</span>
+            <button
+              className={subAbaHabilidade === "especialismo" ? "ativa" : ""}
+              onClick={() => setSubAbaHabilidade("especialismo")}
+            >
+              Especialismo
+            </button>
 
-                  <strong>{habilidade.nome}</strong>
-
-                  <p>{habilidade.descricao}</p>
-                </article>
-              );
-            })}
+            <button
+              className={subAbaHabilidade === "absoluta" ? "ativa" : ""}
+              onClick={() => setSubAbaHabilidade("absoluta")}
+            >
+              Absoluta
+            </button>
           </div>
-        ) : (
-          <div className="habilidades-vazio">
-            <strong>Nenhuma habilidade escolhida ainda.</strong>
-            <p>
-              Abra a arvore de habilidades para escolher sua Habilidade
-              Absoluta, aptidoes e habilidades de especialidade.
-            </p>
-          </div>
-        )}
+
+          {subAbaHabilidade === "aptidoes" && (
+            <section className="grupo-habilidades-ficha habilidades-grid-cards">
+              {aptidoesSelecionadas.length > 0 ? (
+                aptidoesSelecionadas.map((habilidade) => (
+                  <details key={habilidade.id} className="habilidade-card">
+                    {" "}
+                    <summary className="habilidade-card-topo">
+                      {" "}
+                      <div>
+                        <span className="habilidade-card-tipo">APTIDÃO</span>
+
+                        <h3>{habilidade.nome}</h3>
+                      </div>
+                      {habilidade.custo && (
+                        <div className="habilidade-card-custo">
+                          {habilidade.custo}
+                        </div>
+                      )}
+                    </summary>{" "}
+                    <p className="habilidade-card-descricao">
+                      {habilidade.descricao}
+                    </p>
+                  </details>
+                ))
+              ) : (
+                <p className="habilidade-vazia">Nenhuma aptidão adquirida.</p>
+              )}
+            </section>
+          )}
+
+          {subAbaHabilidade === "especialismo" && (
+            <section className="grupo-habilidades-ficha habilidades-grid-cards">
+              {habilidadesEspecialismo.length > 0 ? (
+                habilidadesEspecialismo.map((habilidade) => (
+                  <details
+                    key={habilidade.id}
+                    className="habilidade-card especialismo"
+                  >
+                    <summary className="habilidade-card-topo">
+                      {" "}
+                      <div>
+                        <span className="habilidade-card-tipo">
+                          ESPECIALISMO
+                        </span>
+
+                        <h3>{habilidade.nome}</h3>
+                      </div>
+                      {habilidade.custo && (
+                        <div className="habilidade-card-custo">
+                          {habilidade.custo}
+                        </div>
+                      )}
+                    </summary>
+
+                    <p className="habilidade-card-descricao">
+                      {habilidade.descricao}
+                    </p>
+                  </details>
+                ))
+              ) : (
+                <p className="habilidade-vazia">
+                  Nenhuma habilidade de especialismo adquirida.
+                </p>
+              )}
+            </section>
+          )}
+
+          {subAbaHabilidade === "absoluta" && (
+            <section className="grupo-habilidades-ficha">
+              {habilidadesAbsolutas.length > 0 ? (
+                habilidadesAbsolutas.map((habilidade) => (
+                  <div key={habilidade.id} className="habilidade-absoluta-card">
+                    <span>HABILIDADE ABSOLUTA</span>
+
+                    <h1>{habilidade.nome}</h1>
+
+                    {habilidade.custo && (
+                      <div className="custo-absoluta">{habilidade.custo}</div>
+                    )}
+
+                    <p>{habilidade.descricao}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="habilidade-vazia">
+                  Nenhuma habilidade absoluta adquirida.
+                </p>
+              )}
+            </section>
+          )}
+        </section>
       </div>
     ),
 
