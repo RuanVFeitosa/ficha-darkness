@@ -4,7 +4,7 @@ import { mdiArrowLeft } from "@mdi/js";
 import "../CSS/ArvoreHabilidades.css";
 import { buscarPersonagem, salvarPersonagem } from "../services/personagemApi";
 import { estadoInicial } from "./fichaPersonagem";
-import { obterArvoreClasse } from "../data/arvoresHabilidades";
+import { obterArvoreClasse } from "../data/Classes/arvoresHabilidades";
 
 const STORAGE_KEY = "fichaRPG_personagem";
 const DEFAULT_FICHA_ID = "principal";
@@ -51,8 +51,9 @@ const ArvoreHabilidades = () => {
   const [abaArvore, setAbaArvore] = useState("absolutas");
 
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
-  const arvoreBase = obterArvoreClasse(personagem) || {};
-
+  const arvoreBase =
+    obterArvoreClasse(personagem.classeId || personagem.classe) || {};
+    
   const arvore = {
     classe: "",
     titulo: "",
@@ -504,7 +505,9 @@ const ArvoreHabilidades = () => {
             aria-labelledby="aptidao-modal-titulo"
             onClick={(event) => event.stopPropagation()}
           >
-            <span className="arvore-no-tipo">10 Pontos de Evolução  || {aptidaoAberta.custo}</span>
+            <span className="arvore-no-tipo">
+              10 Pontos de Evolução || {aptidaoAberta.custo}
+            </span>
             <h2 id="aptidao-modal-titulo">{aptidaoAberta.nome}</h2>
             <p>{aptidaoAberta.descricao}</p>
 

@@ -22,11 +22,12 @@ import {
   mdiDiceD10,
   mdiDiceD12,
   mdiDiceD20,
+  mdiShieldOutline,
 } from "@mdi/js";
 import {
   listarHabilidadesSelecionadas,
   obterArvoreClasse,
-} from "../data/arvoresHabilidades";
+} from "../data/Classes/arvoresHabilidades";
 
 // Chave para o localStorage
 const STORAGE_KEY = "fichaRPG_personagem";
@@ -94,6 +95,7 @@ export const estadoInicial = {
   especialidade: "",
   fotoPerfil: "",
   textoExtra: "",
+
   lojaCreditos: 0,
   ritosCreditos: 0,
   nivel: 1,
@@ -104,6 +106,12 @@ export const estadoInicial = {
   pontosHabilidades: {
     disponiveis: 0,
   },
+  defesaGeral: 0,
+  bloqueio: 0,
+  esquiva: 0,
+  protecao: "",
+  resistencias: "",
+  proficiencias: "",
   atributos: {
     forca: 0,
     fonitude: 0,
@@ -330,6 +338,32 @@ const ItemRecolhivel = ({ item, tipo, acaoExtra }) => {
       </div>
     </details>
   );
+};
+
+const descricoesAtivos = {
+  razao:
+    "INTELIGÊNCIA | Razão\n\nMede a capacidade analítica da personagem. Uma PJ com Razão elevada é boa em coleta de informações e investigação.",
+
+  intuicao:
+    "INTELIGÊNCIA | Intuição\n\nMede a empatia e o instinto do personagem. Um PJ com Intuição elevada é bom em perceber intenções.",
+
+  percepcao:
+    "VONTADE | Percepção\n\nMede o estado de alerta do personagem. Uma PJ com Percepção elevada é boa em avaliar o ambiente e perceber o que os outros ignoram.",
+
+  firmeza:
+    "REFLEXOS | Firmeza\n\nMede o controle do personagem sob pressão. Uma PJ com Firmeza elevada é boa em furtividade, furto e outras situações que exigem decisões rápidas sob estresse.",
+
+  violencia:
+    "FORÇA | Violência\n\nMede a força bruta, habilidade de combate e ferocidade do personagem. Um PJ com Violência elevada se sobressai em infligir dano aos outros.",
+
+  carisma:
+    "VONTADE | Carisma\n\nMede o charme, a liderança e o talento retórico do personagem. Uma PJ com Carisma elevado facilmente persuade e manipula os outros.",
+
+  persistencia:
+    "VONTADE | Resiliência\n\nMede o esforço mental para aguentar situações de intenso desequilíbrio mental. Quanto maior a Resiliência, maior a resistência a danos mentais.",
+
+  resistencia:
+    "FORTITUDE | Resistência\n\nMede sua capacidade de aguentar venenos, sangramento e outros efeitos físicos. Quanto maior a Resistência, mais difícil sofrer penalidades.",
 };
 
 const FichaPersonagem = () => {
@@ -951,6 +985,18 @@ const FichaPersonagem = () => {
     }
   };
 
+  const [itemPersonalizado, setItemPersonalizado] = useState({
+    nome: "",
+    icone: "🎒",
+    tipo: "Item Personalizado",
+    durabilidade: "—",
+    usos: "",
+    efeito: "",
+    dano: "",
+    descricao: "",
+    rolagemTipo: "dano",
+  });
+
   const reduzirUsoItem = (indexAlvo) => {
     let nomeItemAcabou = null;
 
@@ -1059,6 +1105,53 @@ const FichaPersonagem = () => {
     setTimeout(() => setRolandoDados(false), 1200);
   };
 
+  const criarItemPersonalizado = (event) => {
+    event.preventDefault();
+
+    if (!itemPersonalizado.nome.trim()) {
+      setMensagemCraft("Informe o nome do item.");
+      return;
+    }
+
+    const novoItem = {
+      nome: itemPersonalizado.nome.trim(),
+      icone: itemPersonalizado.icone || "🎒",
+      tipo: itemPersonalizado.tipo || "Item Personalizado",
+      durabilidade: itemPersonalizado.durabilidade || "—",
+      usos: itemPersonalizado.usos || "",
+      efeito: itemPersonalizado.efeito || "",
+      dano: itemPersonalizado.dano || "",
+      descricao: itemPersonalizado.descricao || "",
+      personalizado: true,
+      rolagem: itemPersonalizado.dano
+        ? {
+            tipo: itemPersonalizado.rolagemTipo,
+            formula: itemPersonalizado.dano,
+          }
+        : null,
+    };
+
+    setPersonagem((prev) => ({
+      ...prev,
+      inventario: [...(prev.inventario || []), novoItem],
+    }));
+
+    setItemPersonalizado({
+      nome: "",
+      icone: "🎒",
+      tipo: "Item Personalizado",
+      durabilidade: "—",
+      usos: "",
+      efeito: "",
+      dano: "",
+      descricao: "",
+      rolagemTipo: "dano",
+    });
+
+    setMensagemCraft(`${novoItem.nome} criado e adicionado ao inventário.`);
+    setTimeout(() => setMensagemCraft(""), 3000);
+  };
+
   const criarItem = (receita) => {
     const materiaisAtuais = personagem.materiaisCriacao || {};
 
@@ -1136,23 +1229,80 @@ const FichaPersonagem = () => {
   };
 
   const Ativo = ({ nome, chave, atributoBase }) => {
-    const valor = calcularModificadorAtivo(personagem.atributos[atributoBase]);
+    const atributoValor = personagem.atributos[atributoBase];
+    const bonusAtributo = calcularModificadorAtivo(atributoValor);
+
+    const bonusAtivo =
+      (personagem.habilidadesCombate?.[chave] || 0) + bonusAtributo;
+
+    const nomesAtributos = {
+      inteligencia: "Inteligência",
+      vontade: "Vontade",
+      reflexos: "Reflexos",
+      forca: "Força",
+      fonitude: "Fortitude",
+    };
+
+    const rolarAtivo = () => {
+      const resultado = rolarTeste({
+        atributo: atributoValor,
+        ativo: bonusAtivo,
+        passiva: 0,
+      });
+
+      setRolandoDados(true);
+
+      setModalRolagem({
+        titulo: `${nomesAtributos[atributoBase]} | ${nome}`,
+        modo: "Teste de Ativo",
+        formula: `${resultado.quantidadeDados}d${resultado.faces} + ${resultado.bonusAtivo}`,
+        dados: resultado.rolagens,
+        faces: resultado.faces,
+        maiorResultado: resultado.maiorResultado,
+        bonusAtivo: resultado.bonusAtivo,
+        bonusPassiva: 0,
+        total: resultado.total,
+        dano: null,
+      });
+
+      setTimeout(() => {
+        setRolandoDados(false);
+      }, 1200);
+    };
 
     return (
       <div className="ativo-item">
-        <span
-          className="ativo-nome clickable"
-          onClick={() => abrirModal(nome, chave)}
-          title="Clique para ver descrição"
+        <button
+          type="button"
+          className="ativo-rolar-btn"
+          onClick={rolarAtivo}
+          title="Rolar teste"
         >
-          {nome}
-        </span>
+          <Icon path={mdiDiceD20} size={0.9} />
+        </button>
+        <div
+          className="ativo-info clickable"
+          onClick={() => {
+            setModalTitulo(nome);
+            setModalDescricao(
+              descricoesAtivos[chave] || "Descrição não disponível.",
+            );
+            setModalAberto(true);
+          }}
+        >
+          <span className="ativo-atributo">{nomesAtributos[atributoBase]}</span>
+          <span className="ativo-separador">|</span>
+          <span className="ativo-nome">{nome}</span>
+        </div>
 
-        <span className="ativo-valor">{valor > 0 ? `+${valor}` : "0"}</span>
+        <div className="ativo-acoes">
+          <span className="ativo-valor">
+            {bonusAtivo > 0 ? `+${bonusAtivo}` : "0"}
+          </span>{" "}
+        </div>
       </div>
     );
   };
-
   const HabilidadePassiva = ({ nome, chave }) => {
     const valorBase = personagem.habilidadesPassivas[chave] || 0;
 
@@ -1253,7 +1403,9 @@ const FichaPersonagem = () => {
     furtivo: ["marcado"],
   };
 
-  const arvoreClasse = obterArvoreClasse(personagem);
+  const arvoreClasse =
+    obterArvoreClasse(personagem.classeId || personagem.classe) || {};
+
   if (!personagem.habilidadesClasse) {
     personagem.habilidadesClasse = {
       habilidadeAbsoluta: "",
@@ -1265,36 +1417,164 @@ const FichaPersonagem = () => {
   }
   const habilidadesSelecionadas = listarHabilidadesSelecionadas(personagem);
 
+  const calcularValorAtivo = (atributo, ativo) => {
+    const modAtributo = calcularModificadorAtivo(
+      personagem.atributos?.[atributo] || 0,
+    );
+
+    const valorAtivo =
+      (parseInt(personagem.habilidadesCombate?.[ativo], 10) || 0) +
+      (parseInt(personagem.habilidadesTemporarias?.[ativo], 10) || 0);
+
+    return modAtributo + valorAtivo;
+  };
+
+  const valorPassiva = (passiva) => {
+    return (
+      (parseInt(personagem.habilidadesPassivas?.[passiva], 10) || 0) +
+      (parseInt(personagem.habilidadesTemporarias?.[passiva], 10) || 0)
+    );
+  };
+
+  const defesaBase =
+    10 + calcularModificadorAtivo(personagem.atributos?.reflexos || 0);
+
+  const bloqueio =
+    defesaBase +
+    calcularValorAtivo("forca", "violencia") +
+    valorPassiva("vitalidade");
+
+  const esquiva =
+    defesaBase +
+    calcularValorAtivo("reflexos", "firmeza") +
+    valorPassiva("velocidade");
+
   // Conteúdo das abas
   const conteudoAbas = {
     combate: (
       <div className="conteudo-aba">
         <h4>ATIVOS</h4>
 
-        <div className="lista-ativos">
-          <Ativo nome="Razão" chave="razao" atributoBase="inteligencia" />
+        <div className="ativos-layout">
+          <div className="lista-ativos">
+            <Ativo nome="Razão" chave="razao" atributoBase="inteligencia" />
+            <Ativo
+              nome="Intuição"
+              chave="intuicao"
+              atributoBase="inteligencia"
+            />
+            <Ativo nome="Percepção" chave="percepcao" atributoBase="vontade" />
+            <Ativo nome="Firmeza" chave="firmeza" atributoBase="reflexos" />
+            <Ativo nome="Violência" chave="violencia" atributoBase="forca" />
+            <Ativo nome="Carisma" chave="carisma" atributoBase="vontade" />
+            <Ativo
+              nome="Persistência"
+              chave="persistencia"
+              atributoBase="vontade"
+            />
+            <Ativo
+              nome="Resistência"
+              chave="resistencia"
+              atributoBase="fonitude"
+            />
+          </div>
 
-          <Ativo nome="Intuição" chave="intuicao" atributoBase="inteligencia" />
+          <aside className="defesa-painel">
+            <div className="defesa-linha-principal">
+              <div className="defesa-topo">
+                <div className="defesa-box defesa-base-box">
+                  <h3 className="defesa-titulo">Defesa Base</h3>
 
-          <Ativo nome="Percepção" chave="percepcao" atributoBase="vontade" />
+                  <div className="escudo-defesa">
+                    <input inputMode="numeric" value={defesaBase} />
+                  </div>
+                </div>
 
-          <Ativo nome="Firmeza" chave="firmeza" atributoBase="reflexos" />
+                <div className="defesa-info">
+                  <div className="defesa-formula"></div>
+                </div>
+              </div>
 
-          <Ativo nome="Violência" chave="violencia" atributoBase="forca" />
+              <div className="defesa-valores">
+                <label>
+                  <span>BLOQUEIO</span>
+                  <input type="text" value={bloqueio} readOnly />
+                </label>
 
-          <Ativo nome="Carisma" chave="carisma" atributoBase="vontade" />
+                <label>
+                  <span>ESQUIVA</span>
+                  <input type="text" value={esquiva} />
+                </label>
+              </div>
+            </div>
 
-          <Ativo
-            nome="Persistência"
-            chave="persistencia"
-            atributoBase="vontade"
-          />
+            <div className="defesa-campos">
+              <label>
+                <span>PROTEÇÃO</span>
+                <input
+                  value={personagem.protecao || ""}
+                  onChange={(e) =>
+                    setPersonagem((prev) => ({
+                      ...prev,
+                      protecao: e.target.value,
+                    }))
+                  }
+                />
+              </label>
 
-          <Ativo
-            nome="Resistência"
-            chave="resistencia"
-            atributoBase="fonitude"
-          />
+              <label>
+                <span>RESISTÊNCIAS</span>
+                <input
+                  value={personagem.resistencias || ""}
+                  onChange={(e) =>
+                    setPersonagem((prev) => ({
+                      ...prev,
+                      resistencias: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              <label>
+                <span>PROFICIÊNCIAS</span>
+                <input
+                  value={personagem.proficiencias || ""}
+                  onChange={(e) =>
+                    setPersonagem((prev) => ({
+                      ...prev,
+                      proficiencias: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+
+            <div className="defesa-membros">
+              {[
+                ["cabeca", "Cabeça"],
+                ["torso", "Torso"],
+                ["bracoDireito", "Braço D."],
+                ["bracoEsquerdo", "Braço E."],
+                ["pernaDireita", "Perna D."],
+                ["pernaEsquerda", "Perna E."],
+              ].map(([chave, nome]) => (
+                <label key={chave} className="defesa-membro-item">
+                  <div className="mini-escudo-defesa">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={personagem.membros?.[chave]?.defesa || 0}
+                      onChange={(e) =>
+                        atualizarDefesaMembro(chave, e.target.value)
+                      }
+                    />
+                  </div>
+
+                  <span>{nome}</span>
+                </label>
+              ))}
+            </div>
+          </aside>
         </div>
       </div>
     ),
@@ -1315,10 +1595,7 @@ const FichaPersonagem = () => {
               <HabilidadePassiva nome="Investigação" chave="investigacao" />
               <HabilidadePassiva nome="Instinto" chave="instinto" />
               <HabilidadePassiva nome="Sensibilidade" chave="sensibilidade" />
-              <HabilidadePassiva
-                nome="Instinto de Sobrevivência"
-                chave="instintoSobrevivencia"
-              />
+
               <HabilidadePassiva nome="Coragem" chave="coragem" />
               <HabilidadePassiva nome="Diplomacia" chave="diplomacia" />
               <HabilidadePassiva nome="Disciplina" chave="disciplina" />
@@ -1332,6 +1609,10 @@ const FichaPersonagem = () => {
               <HabilidadePassiva nome="Empatia" chave="empatia" />
               <HabilidadePassiva nome="Lealdade" chave="lealdade" />
               <HabilidadePassiva nome="Fé" chave="fe" />
+              <HabilidadePassiva nome="Manipulação" chave="manipulacao" />
+              <HabilidadePassiva nome="Intimidação" chave="intimidacao" />
+
+              <HabilidadePassiva nome="Sedução" chave="seducao" />
             </div>
           </div>
 
@@ -1350,7 +1631,6 @@ const FichaPersonagem = () => {
                 nome="Resistência Física"
                 chave="resistenciaFisica"
               />
-              <HabilidadePassiva nome="Furtividade" chave="furtividade" />
             </div>
           </div>
 
@@ -1410,9 +1690,12 @@ const FichaPersonagem = () => {
 
             <div className="lista-passivas">
               <HabilidadePassiva nome="Crime" chave="crime" />
-              <HabilidadePassiva nome="Manipulação" chave="manipulacao" />
-              <HabilidadePassiva nome="Intimidação" chave="intimidacao" />
-              <HabilidadePassiva nome="Sedução" chave="seducao" />
+              <HabilidadePassiva nome="Furtividade" chave="furtividade" />
+              <HabilidadePassiva
+                nome="Instinto de Sobrevivência"
+                chave="instintoSobrevivencia"
+              />
+
               <HabilidadePassiva
                 nome="Resistência Mental"
                 chave="resistenciaMental"
@@ -1638,6 +1921,12 @@ const FichaPersonagem = () => {
           >
             Criação
           </button>
+          <button
+            className={subAbaInventario === "personalizado" ? "ativa" : ""}
+            onClick={() => setSubAbaInventario("personalizado")}
+          >
+            Personalizado
+          </button>
         </div>
 
         {subAbaInventario === "mochila" && (
@@ -1795,6 +2084,167 @@ const FichaPersonagem = () => {
                   </div>
                 </section>
               ))}
+          </div>
+        )}
+        {subAbaInventario === "personalizado" && (
+          <div className="criacao-itens">
+            <section className="criacao-grupo">
+              <h5>Criar Item Personalizado</h5>
+
+              <form
+                className="item-personalizado-form"
+                onSubmit={criarItemPersonalizado}
+              >
+                <label>
+                  Ícone
+                  <input
+                    type="text"
+                    value={itemPersonalizado.icone}
+                    onChange={(e) =>
+                      setItemPersonalizado((prev) => ({
+                        ...prev,
+                        icone: e.target.value,
+                      }))
+                    }
+                    placeholder="🎒"
+                  />
+                </label>
+
+                <label>
+                  Nome
+                  <input
+                    type="text"
+                    value={itemPersonalizado.nome}
+                    onChange={(e) =>
+                      setItemPersonalizado((prev) => ({
+                        ...prev,
+                        nome: e.target.value,
+                      }))
+                    }
+                    placeholder="Ex: Rádio Quebrado"
+                  />
+                </label>
+
+                <label>
+                  Tipo
+                  <input
+                    type="text"
+                    value={itemPersonalizado.tipo}
+                    onChange={(e) =>
+                      setItemPersonalizado((prev) => ({
+                        ...prev,
+                        tipo: e.target.value,
+                      }))
+                    }
+                    placeholder="Item, Arma, Cura, Ferramenta..."
+                  />
+                </label>
+
+                <label>
+                  Durabilidade
+                  <select
+                    value={itemPersonalizado.durabilidade}
+                    onChange={(e) =>
+                      setItemPersonalizado({
+                        ...itemPersonalizado,
+                        durabilidade: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="—">Sem Durabilidade</option>
+                    <option value="10/10">10/10</option>
+                    <option value="20/20">20/20</option>
+                    <option value="30/30">30/30</option>
+                    <option value="50/50">50/50</option>
+                    <option value="100/100">100/100</option>
+                    <option value="∞">Infinita</option>
+                  </select>
+                </label>
+
+                <label>
+                  Usos
+                  <select
+                    value={itemPersonalizado.usos}
+                    onChange={(e) =>
+                      setItemPersonalizado({
+                        ...itemPersonalizado,
+                        usos: e.target.value,
+                      })
+                    }
+                  >
+                    <option value="">Sem Usos</option>
+                    <option value="1">1 Uso</option>
+                    <option value="2">2 Usos</option>
+                    <option value="3">3 Usos</option>
+                    <option value="5">5 Usos</option>
+                    <option value="10">10 Usos</option>
+                    <option value="20">20 Usos</option>
+                    <option value="∞">Infinitos</option>
+                  </select>
+                </label>
+
+                <label>
+                  Fórmula da rolagem
+                  <input
+                    type="text"
+                    value={itemPersonalizado.dano}
+                    onChange={(e) =>
+                      setItemPersonalizado((prev) => ({
+                        ...prev,
+                        dano: e.target.value,
+                      }))
+                    }
+                    placeholder="1d6, 2d8+2..."
+                  />
+                </label>
+
+                <label>
+                  Tipo da rolagem
+                  <select
+                    value={itemPersonalizado.rolagemTipo}
+                    onChange={(e) =>
+                      setItemPersonalizado((prev) => ({
+                        ...prev,
+                        rolagemTipo: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="dano">Dano</option>
+                    <option value="cura">Cura</option>
+                  </select>
+                </label>
+
+                <label className="full">
+                  Efeito
+                  <textarea
+                    value={itemPersonalizado.efeito}
+                    onChange={(e) =>
+                      setItemPersonalizado((prev) => ({
+                        ...prev,
+                        efeito: e.target.value,
+                      }))
+                    }
+                    placeholder="Descreva o efeito mecânico do item..."
+                  />
+                </label>
+
+                <label className="full">
+                  Descrição
+                  <textarea
+                    value={itemPersonalizado.descricao}
+                    onChange={(e) =>
+                      setItemPersonalizado((prev) => ({
+                        ...prev,
+                        descricao: e.target.value,
+                      }))
+                    }
+                    placeholder="Descrição narrativa do item..."
+                  />
+                </label>
+
+                <button type="submit">Adicionar ao Inventário</button>
+              </form>
+            </section>
           </div>
         )}
       </div>
@@ -2680,19 +3130,21 @@ const FichaPersonagem = () => {
                       <strong>{modalRolagem.total}</strong>
                     </div>
 
-                    <div className="dano-rolagem">
-                      <span>
-                        {modalRolagem.tipo === "cura" ? "Cura" : "Dano"}
-                      </span>
+                    {modalRolagem.dano && (
+                      <div className="dano-rolagem">
+                        <span>
+                          {modalRolagem.tipo === "cura" ? "Cura" : "Dano"}
+                        </span>
 
-                      <strong>
-                        {modalRolagem.dano.texto}
-                        {" ["}
-                        {modalRolagem.dano.rolagens.join(", ")}
-                        {"] = "}
-                        {modalRolagem.dano.total}
-                      </strong>
-                    </div>
+                        <strong>
+                          {modalRolagem.dano.texto}
+                          {" ["}
+                          {modalRolagem.dano.rolagens.join(", ")}
+                          {"] = "}
+                          {modalRolagem.dano.total}
+                        </strong>
+                      </div>
+                    )}
 
                     <button
                       className="fechar-rolagem"
@@ -2706,6 +3158,22 @@ const FichaPersonagem = () => {
             </div>
           )}
         </div>
+        {modalAberto && (
+          <div className="modal-descricao-overlay" onClick={fecharModal}>
+            <div
+              className="modal-descricao"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button className="modal-fechar" onClick={fecharModal}>
+                ×
+              </button>
+
+              <h2>{modalTitulo}</h2>
+
+              <p style={{ whiteSpace: "pre-line" }}>{modalDescricao}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2810,7 +3278,7 @@ const MembroControle = ({
         <span className="membro-defesa-label">DEF</span>
 
         <input
-          type="number"
+          inputMode="numeric"
           value={membro.defesa || 0}
           onChange={(e) => onDefesaChange(membroChave, e.target.value)}
           className="membro-defesa-input"

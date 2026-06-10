@@ -1,3 +1,9 @@
+import { arvoreEspecialista } from "./arvoreEspecialista";
+import { arvoreAtiradorElite } from "./arvoreAtiradorElite";
+import { arvoreMedicoCampo } from "./arvoreMedicoCampo";
+import { arvoreRenegado } from "./arvoreRenegado";
+import { arvoreOcultista } from "./arvoreOcultista";
+
 const criarArvoreVazia = (nome) => ({
   classe: nome,
   titulo: nome,
@@ -8,8 +14,8 @@ const criarArvoreVazia = (nome) => ({
   especialidades: [],
 });
 const arvoreAniquilador = {
-  classe: "Aniquilidador",
-  titulo: "A ANIQUILACAO ABSOLUTA",
+  classe: "Aniquilador",
+  titulo: "A ANIQUILAÇÃO ABSOLUTA",
   beneficio: "Todos os danos de seus ataques aumentam em +1 dado.",
   absolutas: [
     {
@@ -568,53 +574,66 @@ const arvoreAniquilador = {
   ],
 };
 export const arvoresHabilidades = {
-  aniquilidador: arvoreAniquilador,
-  especialista: criarArvoreVazia("Especialista"),
-  "atirador-elite": criarArvoreVazia("Atirador de Elite"),
-  "medico-campo": criarArvoreVazia("Medico de Campo"),
-  renegado: criarArvoreVazia("O Renegado"),
-  ocultista: criarArvoreVazia("O Ocultista"),
+  aniquilador: arvoreAniquilador,
+  especialista: arvoreEspecialista,
+  atiradorElite: arvoreAtiradorElite,
+  medicoDeCampo: arvoreMedicoCampo,
+  renegado: arvoreRenegado,
+  ocultista: arvoreOcultista,
 };
 
-const normalizarTexto = (valor) =>
-  String(valor || "")
+const normalizarClasse = (classe) =>
+  String(classe || "")
     .trim()
-    .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/([a-z])([A-Z])/g, "$1-$2")
+    .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
 
 const aliasesClasse = {
-  aniquilador: "aniquilidador",
-  aniquilidador: "aniquilidador",
+  aniquilador: "aniquilador",
+  aniquilidador: "aniquilador",
+
   especialista: "especialista",
-  "atirador-de-elite": "atirador-elite",
-  "atirador-elite": "atirador-elite",
-  "medico-de-campo": "medico-campo",
-  "medico-campo": "medico-campo",
+
+  atiradorelite: "atiradorElite",
+  "atirador-elite": "atiradorElite",
+  "atirador-de-elite": "atiradorElite",
+
+  medicodecampo: "medicoDeCampo",
+  "medico-campo": "medicoDeCampo",
+  "medico-de-campo": "medicoDeCampo",
+
   renegado: "renegado",
   "o-renegado": "renegado",
+
   ocultista: "ocultista",
   "o-ocultista": "ocultista",
 };
 
-export const obterIdArvoreClasse = (personagem = {}) => {
-  const idDireto = personagem.classeId || personagem.classeDetalhes?.id;
-  const normalizadoDireto = normalizarTexto(idDireto);
+export const obterArvoreClasse = (classeOuPersonagem = {}) => {
+  const classe =
+    typeof classeOuPersonagem === "object"
+      ? classeOuPersonagem?.classeId || classeOuPersonagem?.classe
+      : classeOuPersonagem;
 
-  if (arvoresHabilidades[normalizadoDireto]) {
-    return normalizadoDireto;
-  }
+  const classeNormalizada = normalizarClasse(classe);
+  const chave = aliasesClasse[classeNormalizada] || classeNormalizada;
 
-  const nomeNormalizado = normalizarTexto(personagem.classe);
-  return aliasesClasse[nomeNormalizado] || "aniquilidador";
-};
+ const todasArvores = obterTodasArvores();
 
-export const obterArvoreClasse = (personagem = {}) => {
-  const id = obterIdArvoreClasse(personagem);
-  return arvoresHabilidades[id] || arvoresHabilidades.aniquilidador;
+return todasArvores[chave] || {
+      classe: "",
+      titulo: "Árvore não encontrada",
+      beneficio: `Classe recebida: ${classe || "vazia"} | Chave: ${chave}`,
+      absolutas: [],
+      bases: [],
+      aptidoes: [],
+      especialidades: [],
+    }
 };
 
 export const listarHabilidadesSelecionadas = (personagem = {}) => {
@@ -673,11 +692,11 @@ export const listarHabilidadesSelecionadas = (personagem = {}) => {
     (item) => item.id === escolhas.especialidade,
   );
 
-  if (especialidade?.passiva) {
+  if (especialidade?.passiva || especialidade?.descricao) {
     selecionadas.push({
       id: `${especialidade.id}-passiva`,
       nome: especialidade.nome,
-      descricao: especialidade.passiva,
+      descricao: especialidade.passiva || especialidade.descricao,
       grupo: "Passiva de especialidade",
     });
   }
@@ -687,9 +706,28 @@ export const listarHabilidadesSelecionadas = (personagem = {}) => {
     .forEach((habilidade) => {
       selecionadas.push({
         ...habilidade,
-        grupo: `Nível ${habilidade.nivel}`,
+        grupo: habilidade.custo || "Especialidade",
       });
     });
 
   return selecionadas;
 };
+
+const ARVORES_CUSTOM_KEY = "arvoresHabilidades_custom";
+
+export const carregarArvoresCustom = () => {
+  try {
+    return JSON.parse(localStorage.getItem(ARVORES_CUSTOM_KEY)) || {};
+  } catch {
+    return {};
+  }
+};
+
+export const salvarArvoresCustom = (arvores) => {
+  localStorage.setItem(ARVORES_CUSTOM_KEY, JSON.stringify(arvores));
+};
+
+export const obterTodasArvores = () => ({
+  ...arvoresHabilidades,
+  ...carregarArvoresCustom(),
+});

@@ -1,3 +1,48 @@
+/* Remove setinhas do input number */
+
+/* Remove setinhas dos inputs number */
+/* REMOVE SETINHAS — INIMIGOS */
+.inimigo-ficha-bloco input[type="number"],
+.inimigo-identidade input[type="number"],
+.mestre-corpo-item input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.inimigo-ficha-bloco input[type="number"]::-webkit-outer-spin-button,
+.inimigo-ficha-bloco input[type="number"]::-webkit-inner-spin-button,
+.inimigo-identidade input[type="number"]::-webkit-outer-spin-button,
+.inimigo-identidade input[type="number"]::-webkit-inner-spin-button,
+.mestre-corpo-item input[type="number"]::-webkit-outer-spin-button,
+.mestre-corpo-item input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* REMOVE SETINHAS — LOJA */
+.mestre-loja-form input[type="number"],
+.mestre-arma-status-editor input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.mestre-loja-form input[type="number"]::-webkit-outer-spin-button,
+.mestre-loja-form input[type="number"]::-webkit-inner-spin-button,
+.mestre-arma-status-editor input[type="number"]::-webkit-outer-spin-button,
+.mestre-arma-status-editor input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.mestre-header-admin-grupo input::-webkit-outer-spin-button,
+.mestre-header-admin-grupo input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.mestre-header-admin-grupo input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 /* =========================================================
    DASHBOARD MESTRE — MINIMALISTA PRETO & BRANCO
 ========================================================= */
@@ -67,6 +112,10 @@
 .mestre-salvar,
 .mestre-loja-form button,
 .mestre-catalogo button,
+.criarInimigo-button,
+.ataqueButton,
+.habilidadeButton,
+.duplicarButton,
 .mestre-abrir-ficha {
   display: inline-flex;
   align-items: center;
@@ -91,7 +140,6 @@
   cursor: pointer;
 
   transition:
-    background 0.2s ease,
     color 0.2s ease,
     border-color 0.2s ease,
     transform 0.2s ease;
@@ -112,6 +160,10 @@
 .mestre-salvar:hover,
 .mestre-loja-form button:hover,
 .mestre-catalogo button:hover,
+.criarInimigo-button:hover,
+.ataqueButton:hover,
+.habilidadeButton:hover,
+.duplicarButton:hover,
 .mestre-abrir-ficha:hover {
   background: #fff;
   color: #000;
@@ -160,7 +212,6 @@
   background: #fff;
   color: #000;
 }
-
 
 .mestre-criar,
 .mestre-inventario-form,
@@ -234,34 +285,128 @@
 }
 
 .mestre-card-personagem {
-  display: grid;
-  gap: 18px;
-  padding: 18px;
-  border-radius: 14px;
-  border: 1px solid rgba(212, 175, 55, 0.14);
-  background: rgba(255,255,255,0.045);
-  cursor: pointer;
-  transition:
-    transform 0.2s ease,
-    border-color 0.2s ease,
-    background 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  min-height: 560px;
+  padding: 0 !important;
+  border-radius: 18px;
+  background-size: contain;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-color: #030303;
+  transition: none;
 }
 
-.mestre-card-personagem:hover {
-  transform: translateY(-4px);
-  border-color: #d4af37;
-  background: rgba(212,175,55,0.06);
+.mestre-card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(
+      to top,
+      #000 0%,
+      rgba(0, 0, 0, 0.92) 30%,
+      rgba(0, 0, 0, 0.45) 68%,
+      rgba(0, 0, 0, 0.12) 100%
+    ),
+    radial-gradient(
+      circle at center,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.75) 100%
+    );
+}
+
+.mestre-card-conteudo {
+  position: relative;
+  z-index: 2;
+  min-height: 560px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.mestre-card-info,
+.mestre-card-atributos,
+.mestre-card-barras {
+  position: relative;
+  z-index: 3;
+}
+
+.mestre-card-info {
+  margin-bottom: 12px;
+}
+
+.mestre-card-atributos,
+.mestre-card-barras {
+  backdrop-filter: blur(3px);
+}
+
+.mestre-card-foto,
+.mestre-card-topo {
+  display: none !important;
+}
+
+.mestre-card-membros {
+  display: grid;
+  gap: 8px;
+}
+
+.mestre-card-membro-mini {
+  display: grid;
+  grid-template-columns: 92px 1fr 58px;
+  align-items: center;
+  gap: 8px;
+}
+
+.mestre-card-membro-mini span {
+  color: #aaa;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mestre-card-membro-mini small {
+  color: #ddd;
+  font-size: 0.66rem;
+  text-align: right;
+}
+
+.mestre-personagem-recursos {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.mestre-personagem-recursos span {
+  padding: 6px 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  color: #dcdcdc;
+
+  font-size: 0.7rem;
+  font-weight: 800;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
 .mestre-card-personagem.ativo {
   border-color: #d4af37;
-  box-shadow: 0 0 20px rgba(212,175,55,0.16);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.16);
 }
 
 .mestre-card-topo {
   display: flex;
   gap: 14px;
   align-items: center;
+  text-align: left;
 }
 
 .mestre-card-foto {
@@ -269,7 +414,7 @@
   height: 86px;
   object-fit: cover;
   border-radius: 12px;
-  border: 2px solid rgba(212,175,55,0.2);
+  border: 2px solid rgba(212, 175, 55, 0.2);
 }
 
 .mestre-card-info {
@@ -280,7 +425,72 @@
 .mestre-card-info h3 {
   margin: 0;
   color: white;
-  font-size: 1rem;
+  font-size: 1.25rem;
+}
+
+.mestre-modal-header-acoes,
+.mestre-header-admin,
+.mestre-header-admin-grupo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mestre-header-admin-grupo input {
+  width: 76px;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 900;
+  text-align: center;
+}
+
+.mestre-header-admin button,
+.mestre-btn-apagar,
+.mestre-modal-fechar {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mestre-header-admin button:hover {
+  background: #fff;
+  color: #000;
+}
+
+.mestre-btn-apagar {
+  border-color: rgba(255, 80, 80, 0.35);
+  color: #ffb3b3;
+}
+
+.mestre-btn-apagar:hover {
+  background: #8b0000;
+  color: #fff;
+  border-color: #ff4d4d;
+}
+
+.mestre-modal-fechar {
+  width: 40px;
+  padding: 0;
+  font-size: 1.2rem;
+}
+
+.mestre-modal-fechar:hover {
+  background: #fff;
+  color: #000;
 }
 
 .mestre-card-info span {
@@ -302,7 +512,7 @@
   justify-items: center;
   padding: 8px;
   border-radius: 8px;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .mestre-card-atributos span {
@@ -324,7 +534,7 @@
   height: 12px;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .barra span {
@@ -550,7 +760,7 @@
   border: 1px solid rgba(212, 175, 55, 0.18);
   border-radius: 18px;
 
-  background: #0c0b0a;
+  background: black;
   color: #f5efe4;
 
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75);
@@ -1052,6 +1262,115 @@
 .mestre-catalogo-acoes button {
   min-height: 34px;
   padding: 0 10px;
+}
+
+.inimigo-ficha-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #8b0000;
+}
+
+.inimigo-foto-editavel {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  cursor: pointer;
+}
+
+.inimigo-foto-editavel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 2px solid #8b0000;
+}
+
+.inimigo-foto-editavel input {
+  display: none;
+}
+
+.inimigo-foto-editavel span {
+  position: absolute;
+  inset: auto 4px 4px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 0.62rem;
+  text-align: center;
+  opacity: 0;
+}
+
+.inimigo-foto-editavel:hover span {
+  opacity: 1;
+}
+
+.inimigo-identidade {
+  flex: 1;
+  display: grid;
+  gap: 6px;
+}
+
+.inimigo-identidade label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-weight: 900;
+}
+
+.inimigo-identidade label input {
+  width: 54px;
+}
+
+.inimigo-nome-input {
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 2rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.inimigo-nome-input:focus {
+  outline: none;
+  border-bottom: 1px solid #8b0000;
+}
+
+.inimigo-ficha-bloco {
+  margin-top: 16px;
+  padding: 12px;
+  border-top: 2px solid #8b0000;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.inimigo-ficha-bloco h3 {
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.inimigo-bloco-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.inimigo-ataque-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.inimigo-ataque-card input,
+.inimigo-ataque-card textarea,
+.inimigo-ficha-bloco input {
+  width: 100%;
+  padding: 8px;
+  background: #050505;
+  border: 1px solid #333;
+  color: white;
 }
 
 @media (max-width: 1080px) {

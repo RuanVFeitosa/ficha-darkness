@@ -25,7 +25,7 @@ const membrosIntegridade = [
 
 const classesPersonagem = [
   {
-    id: "aniquilidador",
+    id: "aniquilador",
     nome: "Aniquilidador",
     imagem: "/classes/aniquilador.png",
     sanidadeBase: 30,
@@ -43,7 +43,7 @@ const classesPersonagem = [
     esperancaNivel: "5 PE (+mod VON)",
   },
   {
-    id: "atirador-elite",
+    id: "atiradorElite",
     nome: "Atirador de Elite",
     imagem: "/classes/atirador-elite.png",
     sanidadeBase: 25,
@@ -52,7 +52,7 @@ const classesPersonagem = [
     esperancaNivel: "5 PE (+mod VON)",
   },
   {
-    id: "medico-campo",
+    id: "medicoDeCampo",
     nome: "Medico de Campo",
     imagem: "/classes/medico-campo.png",
     sanidadeBase: 20,
@@ -118,34 +118,51 @@ const perguntas = [
 
 const criarFichaInicial = (form) => ({
   ...estadoInicial,
+
   nome: form.nome.trim(),
   pronome: form.pronome,
-  classe: form.classe.trim(),
-  especialidade: form.especialidade.trim(),
+
+  classe: form.classe,
   classeId: form.classeId,
+  especialidade: form.especialidade || "",
   classeDetalhes: form.classeDetalhes,
+
+  habilidadesClasse: {
+    habilidadeAbsoluta: "",
+    aptidoes: {},
+    especialidade: "",
+    habilidadesEspecialidade: {},
+    especialidadeDefinida: false,
+  },
+
   fotoPerfil: form.fotoPerfil,
+
   sanidade: {
     atual: form.sanidadeInicial,
     max: form.sanidadeInicial,
   },
+
   esperanca: {
     atual: form.esperancaInicial,
     max: form.esperancaInicial,
   },
+
   rituais: [],
   inventario: [],
+
   membros: Object.fromEntries(
     Object.entries(form.integridade).map(([membro, valor]) => [
       membro,
       {
         atual: valor,
         max: valor,
+        defesa: 0,
         ferido: false,
         grave: false,
       },
     ]),
   ),
+
   atributos: {
     ...estadoInicial.atributos,
     ...form.atributos,
@@ -357,9 +374,7 @@ const CriarPersonagem = () => {
       localStorage.setItem(ULTIMA_FICHA_KEY, fichaId);
       window.location.href = `/?ficha=${encodeURIComponent(fichaId)}`;
     } catch (error) {
-      setErro(
-        `Nao foi possivel criar a ficha. ${error.message}`,
-      );
+      setErro(`Nao foi possivel criar a ficha. ${error.message}`);
       setSalvando(false);
     }
   };

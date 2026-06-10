@@ -314,7 +314,7 @@ body {
   border: none;
   border-bottom: 1px solid #8b4513;
   font-weight: bold;
-  font-size: 20px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 5px;
   color: white;
@@ -1089,6 +1089,310 @@ body {
 /* =========================================================
    11 - Aba Ativos, Rituais e Inventário
    ========================================================= */
+.ativos-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 18px;
+  align-items: start;
+}
+
+.defesa-painel {
+  width: 100%;
+  padding: 18px;
+  background: black;
+
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* TOPO */
+
+.defesa-linha-principal {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.defesa-topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.escudo-defesa {
+  width: 64px;
+  height: 72px;
+  background: url("data:image/svg+xml,%3Csvg width='80' height='92' viewBox='0 0 80 92' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 4L72 16V42C72 64 58 80 40 88C22 80 8 64 8 42V16L40 4Z' stroke='white' stroke-width='5' fill='none'/%3E%3C/svg%3E")
+    center/contain no-repeat;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.defesa-base-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.defesa-titulo {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #cfcfcf;
+  margin: 0;
+}
+
+.defesa-valor {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.escudo-defesa input {
+  width: 38px;
+
+  background: transparent;
+  border: none;
+  outline: none;
+
+  color: white;
+  text-align: center;
+
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.defesa-info strong {
+  display: block;
+
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.defesa-formula {
+  margin-top: 2px;
+
+  color: rgba(255, 255, 255, 0.85);
+
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.defesa-subformula {
+  margin-top: 4px;
+
+  display: flex;
+  gap: 10px;
+
+  color: #c9a15d;
+  font-size: 0.72rem;
+}
+
+/* BLOQUEIO / ESQUIVA */
+
+.defesa-valores {
+  margin-right: 30px;
+  display: flex;
+  gap: 18px;
+}
+
+.defesa-valores label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.defesa-valores span {
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.defesa-valores input {
+  width: 52px;
+
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+
+  background: transparent;
+
+  color: white;
+  text-align: center;
+
+  font-size: 1.7rem;
+  font-weight: 900;
+
+  outline: none;
+}
+
+/* CAMPOS */
+
+.defesa-campos {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.defesa-campos label {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.defesa-campos span {
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.defesa-campos input {
+  width: 100%;
+
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+
+  color: white;
+
+  padding-bottom: 4px;
+
+  outline: none;
+}
+
+/* MEMBROS */
+
+.defesa-membros {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px 14px;
+}
+
+.defesa-membro-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+  padding: 8px 4px;
+}
+
+.defesa-membro-item span {
+  color: #f2f2f2;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.4px;
+}
+
+.mini-escudo-defesa {
+  width: 34px;
+  height: 40px;
+
+  background: url("data:image/svg+xml,%3Csvg width='80' height='92' viewBox='0 0 80 92' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 4L72 16V42C72 64 58 80 40 88C22 80 8 64 8 42V16L40 4Z' stroke='white' stroke-width='5' fill='none'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-escudo-defesa input {
+  width: 22px;
+  background: transparent;
+  border: none;
+  outline: none;
+
+  color: #fff;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.ativo-info {
+  position: relative;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  gap: 6px;
+}
+
+.ativo-atributo {
+  color: #7d7d7d;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ativo-separador {
+  color: #555;
+}
+
+.ativo-nome {
+  color: #fff;
+  font-weight: 700;
+}
+
+.ativo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-descricao-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-descricao {
+  width: min(520px, 90vw);
+  background: #0b0b0b;
+  border: 1px solid #ffffff33;
+  color: #fff;
+  padding: 28px;
+  border-radius: 16px;
+  position: relative;
+}
+
+.modal-descricao h2 {
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.modal-descricao p {
+  line-height: 1.6;
+  color: #d6d6d6;
+}
+
+.modal-fechar {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+}
 
 .lista-ativos {
   display: flex;
@@ -1176,27 +1480,49 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-
   min-width: 52px;
   height: 34px;
-
   padding: 0 10px;
-
-  border-radius: 4px;
-
-  background: rgba(46, 204, 113, 0.12);
-
-  border: 1px solid rgba(46, 204, 113, 0.35);
-
-  color: #2ecc71;
-
+  border-radius: 10px;
+  border: 1px solid #ffffff33;
+  background: #111;
+  color: #fff;
   font-weight: bold;
-
   font-size: 1.05em;
-
   text-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
-
   box-shadow: inset 0 0 8px rgba(46, 204, 113, 0.08);
+}
+
+.ativo-acoes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ativo-rolar-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  padding-right: -50px;
+  margin-right: -550px;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.ativo-rolar-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+.ativo-rolar-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .ativo-nome.clickable {
@@ -1228,6 +1554,88 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.item-personalizado-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+
+  padding: 16px;
+
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.item-personalizado-form label {
+  display: grid;
+  gap: 7px;
+
+  color: #d4af37;
+
+  font-size: 0.72rem;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.item-personalizado-form label.full {
+  grid-column: 1 / -1;
+}
+
+.item-personalizado-form input,
+.item-personalizado-form select,
+.item-personalizado-form textarea {
+  width: 100%;
+
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 7px;
+
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff8ea;
+
+  padding: 10px;
+
+  font-family: inherit;
+}
+
+.item-personalizado-form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.item-personalizado-form input:focus,
+.item-personalizado-form select:focus,
+.item-personalizado-form textarea:focus {
+  outline: none;
+  border-color: #d4af37;
+  background: rgba(139, 69, 19, 0.18);
+}
+
+.item-personalizado-form button {
+  grid-column: 1 / -1;
+
+  min-height: 42px;
+
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 7px;
+
+  background: rgba(139, 69, 19, 0.42);
+  color: #f5efe4;
+
+  font-family: inherit;
+  font-weight: 900;
+
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.item-personalizado-form button:hover {
+  border-color: #d4af37;
+  background: #8b4513;
 }
 
 /* =========================================================
@@ -3603,29 +4011,17 @@ body {
 /* CARD */
 .habilidade-passiva-item {
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
-
   justify-content: center;
-
-  gap: 8px;
-
+  gap: 5px;
   min-width: 0;
-
   width: 100%;
-
   padding: 8px 6px;
-
   background: rgba(255, 255, 255, 0.04);
-
   border-radius: 6px;
-
   border-left: 2px solid #8b4513;
-
   overflow: hidden;
-
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
