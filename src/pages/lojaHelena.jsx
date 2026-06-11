@@ -176,6 +176,24 @@ const LojaHelena = () => {
         console.warn("Backend indisponivel. Loja usando localStorage.");
       });
   }, [fichaId, saldoKey, storageKey]);
+  const temMaletaDeCampo = (personagem.inventario || []).some(
+    (item) => item.nome === "Maleta de Campo",
+  );
+
+  const itemMaletaDeCampo = {
+    id: "maleta-de-campo",
+    nome: "Maleta de Campo",
+    categoria: "itens",
+    preco: ehMedicoDeCampo ? 0 : 500,
+    entrega: "Equipamento Médico",
+    detalhe:
+      "A Maleta de Campo é o coração operacional de todo agente em missão. Permite instalar até 3 aprimoramentos ativos.",
+    tipo: "Item Especial",
+    icone: "🩺",
+    descricao:
+      "A Maleta de Campo representa preparo, sobrevivência e adaptação diante do desconhecido.",
+    maletaCampo: true,
+  };
 
   const aprimoramentosMaletaLoja = useMemo(() => {
     const mapear = (lista, tipoMaleta) =>
@@ -202,6 +220,10 @@ const LojaHelena = () => {
 
   const itensFiltrados = useMemo(() => {
     if (categoriaAtiva === "maleta-campo") {
+      if (!ehMedicoDeCampo && !temMaletaDeCampo) {
+        return [];
+      }
+
       return aprimoramentosMaletaLoja[subAbaMaleta] || [];
     }
 
@@ -214,7 +236,15 @@ const LojaHelena = () => {
       );
     }
 
-    return catalogo.filter((item) => item.categoria === categoriaAtiva);
+    const itensBase = catalogo.filter(
+      (item) => item.categoria === categoriaAtiva,
+    );
+
+    if (categoriaAtiva === "itens" && !temMaletaDeCampo && !ehMedicoDeCampo) {
+      return [itemMaletaDeCampo, ...itensBase];
+    }
+
+    return itensBase;
   }, [
     categoriaAtiva,
     catalogo,
@@ -290,53 +320,70 @@ const LojaHelena = () => {
           item.categoria !== "poderes" &&
           item.categoria !== "maleta-campo",
       )
-      .map((item) => ({
-        nome: item.nome,
-        detalhes: item.entrega,
-        armaStatus: item.armaStatus || null,
-      }));
+      .map((item) =>
+        item.maletaCampo
+          ? {
+              nome: "Maleta de Campo",
+              tipo: "Item Especial",
+              icone: "🩺",
+              detalhes: "Equipamento Médico",
+              descricao: item.descricao || item.detalhe,
+              compartimentos: {
+                medicinal: [],
+                combate: [],
+                geral: [],
+              },
+              aprimoramentosAtivos: [],
+              personalizado: false,
+            }
+          : {
+              nome: item.nome,
+              detalhes: item.entrega,
+              armaStatus: item.armaStatus || null,
+            },
+      );
 
     const novosAprimoramentosMaleta = carrinho.filter(
-  (item) => item.categoria === "maleta-campo",
-);
+      (item) => item.categoria === "maleta-campo",
+    );
 
-const aprimoramentosAtuais =
-  personagem.maletaCampo?.aprimoramentosAtivos || [];
+    const aprimoramentosAtuais =
+      personagem.maletaCampo?.aprimoramentosAtivos || [];
 
-if (aprimoramentosAtuais.length + novosAprimoramentosMaleta.length > 3) {
-  setMensagem("A Maleta de Campo só pode ter até 3 aprimoramentos ativos.");
-  return;
-}
+    if (aprimoramentosAtuais.length + novosAprimoramentosMaleta.length > 3) {
+      setMensagem("A Maleta de Campo só pode ter até 3 aprimoramentos ativos.");
+      return;
+    }
 
-const personagemAtualizado = {
-  ...personagem,
+    const personagemAtualizado = {
+      ...personagem,
 
-  lojaCreditos: usandoLojaAbsoluto ? saldo : saldo - totalCarrinho,
-  ritosCreditos: usandoLojaAbsoluto
-    ? saldoMementos - totalCarrinho
-    : saldoMementos,
+      lojaCreditos: usandoLojaAbsoluto ? saldo : saldo - totalCarrinho,
+      ritosCreditos: usandoLojaAbsoluto
+        ? saldoMementos - totalCarrinho
+        : saldoMementos,
 
-  rituais: [...(personagem.rituais || []), ...novosRitos],
-  poderesAbsolutos: [
-    ...(personagem.poderesAbsolutos || []),
-    ...novosPoderes,
-  ],
+      rituais: [...(personagem.rituais || []), ...novosRitos],
+      poderesAbsolutos: [
+        ...(personagem.poderesAbsolutos || []),
+        ...novosPoderes,
+      ],
 
-  inventario: [...(personagem.inventario || []), ...novosItens],
+      inventario: [...(personagem.inventario || []), ...novosItens],
 
-  maletaCampo: {
-    ...(personagem.maletaCampo || {}),
-    aprimoramentosAtivos: [
-      ...(personagem.maletaCampo?.aprimoramentosAtivos || []),
-      ...novosAprimoramentosMaleta,
-    ],
-    aprimoramentoMedicoGratisUsado:
-      personagem.maletaCampo?.aprimoramentoMedicoGratisUsado ||
-      novosAprimoramentosMaleta.some(
-        (item) => item.tipoMaleta === "medicinal" && item.preco === 0,
-      ),
-  },
-};
+      maletaCampo: {
+        ...(personagem.maletaCampo || {}),
+        aprimoramentosAtivos: [
+          ...(personagem.maletaCampo?.aprimoramentosAtivos || []),
+          ...novosAprimoramentosMaleta,
+        ],
+        aprimoramentoMedicoGratisUsado:
+          personagem.maletaCampo?.aprimoramentoMedicoGratisUsado ||
+          novosAprimoramentosMaleta.some(
+            (item) => item.tipoMaleta === "medicinal" && item.preco === 0,
+          ),
+      },
+    };
     setPersonagem(personagemAtualizado);
     setCarrinho([]);
 

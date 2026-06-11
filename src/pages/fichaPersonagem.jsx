@@ -619,6 +619,28 @@ const FichaPersonagem = () => {
     });
   };
 
+  const atualizarMaxMembro = (membro, novoValor) => {
+    setPersonagem((prev) => {
+      const max = Math.max(1, parseInt(novoValor) || 1);
+      const atual = Math.min(prev.membros[membro].atual, max);
+      const porcentagemVida = max > 0 ? atual / max : 0;
+
+      return {
+        ...prev,
+        membros: {
+          ...prev.membros,
+          [membro]: {
+            ...prev.membros[membro],
+            max,
+            atual,
+            ferido: atual < max && porcentagemVida < 0.5,
+            grave: porcentagemVida <= 0.1,
+          },
+        },
+      };
+    });
+  };
+
   const aplicarDanoMembro = (membro, dano) => {
     setPersonagem((prev) => {
       const dadosMembro = prev.membros[membro];
@@ -1006,13 +1028,51 @@ const FichaPersonagem = () => {
       const novoInventario = [...(prev.inventario || [])];
       const item = novoInventario[indexAlvo];
 
-      if (!item || !item.durabilidade || item.durabilidade === "—") return prev;
+      if (!item || !item.durabilidade || item.durabilidade === "—") {
+        return prev;
+      }
 
-      const partes = item.durabilidade.split(" ");
+      const durabilidadeTexto = String(item.durabilidade).trim();
 
+      // Formato numérico: 10/10, 20/20, 30/30...
+      if (durabilidadeTexto.includes("/")) {
+        const [atualTexto, maxTexto] = durabilidadeTexto.split("/");
+        const atual = parseInt(atualTexto, 10) || 0;
+        const max = parseInt(maxTexto, 10) || atual;
+
+        const novaDurabilidade = Math.max(0, atual - 1);
+
+        if (novaDurabilidade <= 0) {
+          nomeItemQuebrou = item.nome;
+          novoInventario.splice(indexAlvo, 1);
+        } else {
+          const itemAtualizado = {
+            ...item,
+            durabilidade: `${novaDurabilidade}/${max}`,
+          };
+
+          novoInventario[indexAlvo] = itemAtualizado;
+
+          setItemVisualizado((atualItem) =>
+            atualItem?.index === indexAlvo
+              ? { ...itemAtualizado, index: indexAlvo }
+              : atualItem,
+          );
+        }
+
+        return {
+          ...prev,
+          inventario: novoInventario,
+        };
+      }
+
+      // Formato por marcadores: O O O O O
+      const partes = durabilidadeTexto.split(" ");
       const indiceParaMarcar = partes.findIndex((parte) => parte !== "X");
 
-      if (indiceParaMarcar === -1) return prev;
+      if (indiceParaMarcar === -1) {
+        return prev;
+      }
 
       partes[indiceParaMarcar] = "X";
 
@@ -1029,10 +1089,10 @@ const FichaPersonagem = () => {
 
         novoInventario[indexAlvo] = itemAtualizado;
 
-        setItemVisualizado((atual) =>
-          atual?.index === indexAlvo
+        setItemVisualizado((atualItem) =>
+          atualItem?.index === indexAlvo
             ? { ...itemAtualizado, index: indexAlvo }
-            : atual,
+            : atualItem,
         );
       }
 
@@ -1110,6 +1170,24 @@ const FichaPersonagem = () => {
     }
   };
 
+  const itemVaiQuebrar = (item) => {
+    if (!item?.durabilidade || item.durabilidade === "—") return false;
+
+    const texto = String(item.durabilidade).trim();
+
+    if (texto.includes("/")) {
+      const [atualTexto] = texto.split("/");
+      const atual = parseInt(atualTexto, 10) || 0;
+
+      return atual <= 1;
+    }
+
+    const partes = texto.split(" ");
+    const partesNaoQuebradas = partes.filter((parte) => parte !== "X");
+
+    return partesNaoQuebradas.length <= 1;
+  };
+
   const rolarItem = (item) => {
     const formula =
       item?.rolagem?.formula ||
@@ -1128,16 +1206,14 @@ const FichaPersonagem = () => {
         ? "cura"
         : "dano");
 
-    if (tipoRolagem === "cura" && item?.usos) {
-      reduzirUsoItem(item.index);
-    }
-
-    if (
+    const quebrouComEssaRolagem =
       tipoRolagem === "dano" &&
       item?.durabilidade &&
-      item?.durabilidade !== "—"
-    ) {
-      reduzirDurabilidadeItem(item.index);
+      item?.durabilidade !== "—" &&
+      itemVaiQuebrar(item);
+
+    if (tipoRolagem === "cura" && item?.usos) {
+      reduzirUsoItem(item.index);
     }
 
     const resultado = rolarDanoArma(formula);
@@ -1156,6 +1232,7 @@ const FichaPersonagem = () => {
       bonusPassiva: 0,
       total: resultado.total,
       dano: resultado,
+      itemQuebrou: quebrouComEssaRolagem,
     });
 
     if (
@@ -1167,6 +1244,14 @@ const FichaPersonagem = () => {
     }
 
     setTimeout(() => setRolandoDados(false), 1200);
+  };
+
+  const fecharModalRolagem = () => {
+    if (modalRolagem?.itemQuebrou) {
+      setItemVisualizado(null);
+    }
+
+    setModalRolagem(null);
   };
 
   const criarItemPersonalizado = (event) => {
@@ -2221,19 +2306,21 @@ const FichaPersonagem = () => {
               )}
               <div className="estoque-grid">
                 {[
-                  ["alcool", "🧪"],
-                  ["trapos", "🧻"],
-                  ["recipiente", "🫙"],
-                  ["explosivos", "💣"],
-                  ["fita", "🩹"],
-                  ["laminas", "🔪"],
-                  ["pregos", "📌"],
-                  ["madeira", "🪵"],
-                  ["cano", "🔩"],
-                  ["faca", "🗡️"],
-                ].map(([chave, icon]) => (
+                  ["alcool", "🧪", "Álcool"],
+                  ["trapos", "🧻", "Trapos"],
+                  ["recipiente", "🫙", "Recipiente"],
+                  ["explosivos", "💣", "Explosivos"],
+                  ["fita", "🩹", "Fita"],
+                  ["laminas", "🔪", "Lâminas"],
+                  ["pregos", "📌", "Pregos"],
+                  ["madeira", "🪵", "Madeira"],
+                  ["cano", "🔩", "Cano"],
+                  ["faca", "🗡️", "Faca"],
+                ].map(([chave, icon, nome]) => (
                   <label key={chave} className="estoque-material">
-                    <span>{icon}</span>
+                    <span className="material-icon">{icon}</span>
+
+                    <span className="material-nome">{nome}</span>
 
                     <input
                       type="number"
@@ -2560,6 +2647,7 @@ const FichaPersonagem = () => {
                 nome="CABEÇA"
                 membroChave="cabeca"
                 membro={personagem.membros.cabeca}
+                onMaxChange={atualizarMaxMembro}
                 onChange={(valor) => atualizarVidaMembro("cabeca", valor)}
                 onDamage={(dano) => aplicarDanoMembro("cabeca", dano)}
                 onDefesaChange={atualizarDefesaMembro}
@@ -2570,6 +2658,7 @@ const FichaPersonagem = () => {
                 nome="TORSO"
                 membroChave="torso"
                 membro={personagem.membros.torso}
+                onMaxChange={atualizarMaxMembro}
                 onChange={(valor) => atualizarVidaMembro("torso", valor)}
                 onDamage={(dano) => aplicarDanoMembro("torso", dano)}
                 onDefesaChange={atualizarDefesaMembro}
@@ -2580,6 +2669,7 @@ const FichaPersonagem = () => {
                 nome="BRAÇO DIREITO"
                 membroChave="bracoDireito"
                 membro={personagem.membros.bracoDireito}
+                onMaxChange={atualizarMaxMembro}
                 onChange={(valor) => atualizarVidaMembro("bracoDireito", valor)}
                 onDamage={(dano) => aplicarDanoMembro("bracoDireito", dano)}
                 onDefesaChange={atualizarDefesaMembro}
@@ -2590,6 +2680,7 @@ const FichaPersonagem = () => {
                 nome="BRAÇO ESQUERDO"
                 membroChave="bracoEsquerdo"
                 membro={personagem.membros.bracoEsquerdo}
+                onMaxChange={atualizarMaxMembro}
                 onChange={(valor) =>
                   atualizarVidaMembro("bracoEsquerdo", valor)
                 }
@@ -2602,6 +2693,7 @@ const FichaPersonagem = () => {
                 nome="PERNA DIREITA"
                 membroChave="pernaDireita"
                 membro={personagem.membros.pernaDireita}
+                onMaxChange={atualizarMaxMembro}
                 onChange={(valor) => atualizarVidaMembro("pernaDireita", valor)}
                 onDamage={(dano) => aplicarDanoMembro("pernaDireita", dano)}
                 onDefesaChange={atualizarDefesaMembro}
@@ -2612,6 +2704,7 @@ const FichaPersonagem = () => {
                 nome="PERNA ESQUERDA"
                 membroChave="pernaEsquerda"
                 membro={personagem.membros.pernaEsquerda}
+                onMaxChange={atualizarMaxMembro}
                 onChange={(valor) =>
                   atualizarVidaMembro("pernaEsquerda", valor)
                 }
@@ -3379,7 +3472,7 @@ const FichaPersonagem = () => {
           {modalRolagem && (
             <div
               className="modal-rolagem-overlay"
-              onClick={() => !rolandoDados && setModalRolagem(null)}
+              onClick={() => !rolandoDados && fecharModalRolagem()}
             >
               <div
                 className="modal-rolagem"
@@ -3458,7 +3551,7 @@ const FichaPersonagem = () => {
 
                     <button
                       className="fechar-rolagem"
-                      onClick={() => setModalRolagem(null)}
+                      onClick={fecharModalRolagem}
                     >
                       Fechar
                     </button>
@@ -3631,10 +3724,18 @@ const MembroControle = ({
   onChange,
   onDamage,
   onDefesaChange,
+  onMaxChange,
   classNameInput,
 }) => {
   const porcentagem = membro.max > 0 ? (membro.atual / membro.max) * 100 : 0;
   const estadoVida = membro.grave ? "grave" : membro.ferido ? "ferido" : "";
+
+  const classeVida =
+  porcentagem <= 10
+    ? "vida-critica"
+    : porcentagem <= 50
+      ? "vida-alerta"
+      : "vida-normal";
 
   return (
     <div className={`membro-controle ${estadoVida}`}>
@@ -3643,16 +3744,43 @@ const MembroControle = ({
       <div className="membro-barra-container">
         <div className="membro-barra-vida">
           <div
-            className="membro-barra-preenchimento"
+            className={`membro-barra-preenchimento ${classeVida}`}
             style={{
               width: `${Math.min(100, Math.max(0, porcentagem))}%`,
             }}
           />
-        </div>
 
-        <span className="membro-barra-texto">
-          {membro.atual}/{membro.max}
-        </span>
+          <input
+            type="range"
+            min="0"
+            max={membro.max}
+            value={membro.atual}
+            onChange={(e) => onChange(e.target.value)}
+            className="membro-slider"
+          />
+        </div>
+        <div className="membro-vida-inputs">
+          <input
+            type="text"
+            inputMode="numeric"
+            value={membro.atual}
+            min="0"
+            max={membro.max}
+            onChange={(e) => onChange(e.target.value)}
+            className="membro-vida-input"
+          />
+
+          <span>/</span>
+
+          <input
+            type="text"
+            inputMode="numeric"
+            value={membro.max}
+            min="1"
+            onChange={(e) => onMaxChange(membroChave, e.target.value)}
+            className="membro-vida-input"
+          />
+        </div>
       </div>
 
       <div className="membro-defesa">
@@ -3663,27 +3791,6 @@ const MembroControle = ({
           value={membro.defesa || 0}
           onChange={(e) => onDefesaChange(membroChave, e.target.value)}
           className="membro-defesa-input"
-        />
-      </div>
-
-      <div className="membro-inputs" style={{ display: "none" }}>
-        <input
-          type="number"
-          value={membro.atual}
-          onChange={(e) => onChange(parseInt(e.target.value) || 0)}
-          className={`membro-atual ${classNameInput}`}
-          min="0"
-          max={membro.max}
-        />
-
-        <span>/</span>
-
-        <input
-          type="number"
-          value={membro.max}
-          className="membro-max"
-          min="0"
-          readOnly
         />
       </div>
 
