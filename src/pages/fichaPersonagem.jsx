@@ -87,6 +87,14 @@ const salvarPersonagemLocalSeguro = (chave, personagem) => {
   }
 };
 
+const TEMA_PADRAO_FICHA = {
+  primaria: "#ffffff",
+  secundaria: "#000000",
+  texto: "#ffffff",
+  fundo: "#000000",
+  borda: "#ffffff",
+};
+
 // Estado inicial padrão
 export const estadoInicial = {
   nome: "",
@@ -268,6 +276,9 @@ export const estadoInicial = {
     cano: 0,
     faca: 0,
   },
+  temaFicha: {
+    ...TEMA_PADRAO_FICHA,
+  },
 };
 
 const ItemRecolhivel = ({ item, tipo, acaoExtra }) => {
@@ -387,6 +398,7 @@ const FichaPersonagem = () => {
   const [ultimoEstadoSanidade, setUltimoEstadoSanidade] = useState("");
   const [ultimoEstadoEsperanca, setUltimoEstadoEsperanca] = useState("");
   const [ritoAtivo, setRitoAtivo] = useState(false);
+  const [customizacaoAberta, setCustomizacaoAberta] = useState(false);
 
   // ESTADO PARA O MODAL
   const [modalAberto, setModalAberto] = useState(false);
@@ -1217,6 +1229,35 @@ const FichaPersonagem = () => {
     }, 3000);
   };
 
+  const atualizarTemaFicha = (campo, valor) => {
+    setPersonagem((prev) => ({
+      ...prev,
+      temaFicha: {
+        ...(prev.temaFicha || estadoInicial.temaFicha),
+        [campo]: valor,
+      },
+    }));
+  };
+
+  const restaurarTemaPadrao = () => {
+    setPersonagem((prev) => ({
+      ...prev,
+      temaFicha: {
+        ...TEMA_PADRAO_FICHA,
+      },
+    }));
+  };
+
+  const restaurarCorPadrao = (campo) => {
+    setPersonagem((prev) => ({
+      ...prev,
+      temaFicha: {
+        ...(prev.temaFicha || TEMA_PADRAO_FICHA),
+        [campo]: TEMA_PADRAO_FICHA[campo],
+      },
+    }));
+  };
+
   // Componente para cada habilidade passiva
   const calcularModificadorAtivo = (valor) => {
     const numero = parseInt(valor) || 0;
@@ -1419,6 +1460,34 @@ const FichaPersonagem = () => {
   }
 
   const habilidadesSelecionadas = listarHabilidadesSelecionadas(personagem);
+  const arquetipoDetalhes =
+    personagem.classeEspecialidade?.arquetipoDetalhes || null;
+
+  const arquetipoNome =
+    personagem.classeEspecialidade?.arquetipo || personagem.arquetipo || "";
+
+  const arquetipoItens = arquetipoDetalhes
+    ? [
+        {
+          id: `${arquetipoDetalhes.id}-habilidade-principal`,
+          nome: "Habilidade Principal",
+          descricao: arquetipoDetalhes.habilidadePrincipal,
+          tipo: "Arquétipo",
+        },
+        {
+          id: `${arquetipoDetalhes.id}-vantagens`,
+          nome: "Vantagens",
+          descricao: (arquetipoDetalhes.vantagens || []).join("\n"),
+          tipo: "Arquétipo",
+        },
+        {
+          id: `${arquetipoDetalhes.id}-desvantagem`,
+          nome: "Desvantagem",
+          descricao: arquetipoDetalhes.desvantagem,
+          tipo: "Arquétipo",
+        },
+      ]
+    : [];
 
   const habilidadesAbsolutas = habilidadesSelecionadas.filter(
     (habilidade) => habilidade.grupo === "Habilidade Absoluta",
@@ -1740,6 +1809,12 @@ const FichaPersonagem = () => {
         <section className="grupo-habilidades-ficha">
           <div className="subabas-habilidades-ficha">
             <button
+              className={subAbaHabilidade === "arquetipo" ? "ativa" : ""}
+              onClick={() => setSubAbaHabilidade("arquetipo")}
+            >
+              Arquétipo
+            </button>
+            <button
               className={subAbaHabilidade === "aptidoes" ? "ativa" : ""}
               onClick={() => setSubAbaHabilidade("aptidoes")}
             >
@@ -1760,6 +1835,32 @@ const FichaPersonagem = () => {
               Absoluta
             </button>
           </div>
+
+          {subAbaHabilidade === "arquetipo" && (
+            <section className="grupo-habilidades-ficha habilidades-grid-cards">
+              {arquetipoItens.length > 0 ? (
+                arquetipoItens.map((item) => (
+                  <details key={item.id} className="habilidade-card arquetipo">
+                    <summary className="habilidade-card-topo">
+                      <div>
+                        <span className="habilidade-card-tipo">
+                          {item.tipo}
+                        </span>
+
+                        <h3>{item.nome}</h3>
+                      </div>
+                    </summary>
+
+                    <p className="habilidade-card-descricao">
+                      {item.descricao}
+                    </p>
+                  </details>
+                ))
+              ) : (
+                <p className="habilidade-vazia">Nenhum arquétipo escolhido.</p>
+              )}
+            </section>
+          )}
 
           {subAbaHabilidade === "aptidoes" && (
             <section className="grupo-habilidades-ficha habilidades-grid-cards">
@@ -2690,7 +2791,16 @@ const FichaPersonagem = () => {
   };
 
   return (
-    <div className="ficha-container">
+    <div
+      className="ficha-container"
+      style={{
+        "--cor-primaria": personagem.temaFicha?.primaria,
+        "--cor-secundaria": personagem.temaFicha?.secundaria,
+        "--cor-texto": personagem.temaFicha?.texto,
+        "--cor-fundo": personagem.temaFicha?.fundo,
+        "--cor-borda": personagem.temaFicha?.borda,
+      }}
+    >
       <button
         className="botao-mestre-flutuante"
         onClick={abrirUpgradeNivel}
@@ -2747,8 +2857,8 @@ const FichaPersonagem = () => {
                       />
                       <input
                         type="text"
-                        placeholder="ESPECIALIDADE"
-                        value={personagem.especialidade || ""}
+                        placeholder="ARQUÉTIPO"
+                        value={arquetipoNome}
                         readOnly
                         title="Informação bloqueada para jogadores"
                         className="dado-personagem perfil-info-bloqueada"
@@ -3279,6 +3389,77 @@ const FichaPersonagem = () => {
           </div>
         )}
       </div>
+      <button
+        type="button"
+        className="botao-customizacao-flutuante"
+        onClick={() => setCustomizacaoAberta(true)}
+      >
+        Customizar
+      </button>
+
+      {customizacaoAberta && (
+        <div
+          className="customizacao-overlay"
+          onClick={() => setCustomizacaoAberta(false)}
+        >
+          <section
+            className="customizacao-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="customizacao-topo">
+              <span>Ficha</span>
+              <h2>Customização</h2>
+
+              <button
+                type="button"
+                onClick={() => setCustomizacaoAberta(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            {[
+              ["primaria", "Cor principal"],
+              ["secundaria", "Cor secundária"],
+              ["texto", "Texto"],
+              ["fundo", "Fundo"],
+              ["borda", "Bordas"],
+            ].map(([campo, label]) => (
+              <label key={campo} className="customizacao-linha">
+                <span>{label}</span>
+
+                <div className="customizacao-controles-cor">
+                  <input
+                    type="color"
+                    value={
+                      personagem.temaFicha?.[campo] || TEMA_PADRAO_FICHA[campo]
+                    }
+                    onChange={(event) =>
+                      atualizarTemaFicha(campo, event.target.value)
+                    }
+                  />
+
+                  <button
+                    type="button"
+                    className="customizacao-restaurar-cor"
+                    onClick={() => restaurarCorPadrao(campo)}
+                  >
+                    Restaurar cor
+                  </button>
+                </div>
+              </label>
+            ))}
+
+            <button
+              type="button"
+              className="customizacao-restaurar"
+              onClick={restaurarTemaPadrao}
+            >
+              Restaurar tudo para o padrão
+            </button>
+          </section>
+        </div>
+      )}
     </div>
   );
 };
