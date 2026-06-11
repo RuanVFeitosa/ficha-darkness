@@ -95,6 +95,22 @@ const TEMA_PADRAO_FICHA = {
   borda: "#ffffff",
 };
 
+const MALETA_DE_CAMPO = {
+  nome: "Maleta de Campo",
+  tipo: "Item de Classe",
+  icone: "🩺",
+  detalhes: "Equipamento Médico",
+  descricao:
+    "A Maleta de Campo é o coração operacional de todo agente em missão. Mais do que um simples recipiente, ela representa preparo, sobrevivência e adaptação diante do desconhecido.",
+  compartimentos: {
+    medicinal: [],
+    combate: [],
+    geral: [],
+  },
+  aprimoramentosAtivos: [],
+  personalizado: false,
+};
+
 // Estado inicial padrão
 export const estadoInicial = {
   nome: "",
@@ -279,6 +295,12 @@ export const estadoInicial = {
   temaFicha: {
     ...TEMA_PADRAO_FICHA,
   },
+  maletaCampo: {
+    aprimoramentosAtivos: [],
+    medicinal: [],
+    combate: [],
+    geral: [],
+  },
 };
 
 const ItemRecolhivel = ({ item, tipo, acaoExtra }) => {
@@ -399,13 +421,14 @@ const FichaPersonagem = () => {
   const [ultimoEstadoEsperanca, setUltimoEstadoEsperanca] = useState("");
   const [ritoAtivo, setRitoAtivo] = useState(false);
   const [customizacaoAberta, setCustomizacaoAberta] = useState(false);
+  const [subAbaMaleta, setSubAbaMaleta] = useState("medicinal");
 
   // ESTADO PARA O MODAL
   const [modalAberto, setModalAberto] = useState(false);
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
 
-  const [subAbaHabilidade, setSubAbaHabilidade] = useState("aptidoes");
+  const [subAbaHabilidade, setSubAbaHabilidade] = useState("arquetipo");
 
   // FUNÇÃO PARA ABRIR MODAL
   const abrirModal = (titulo, chaveHabilidade) => {
@@ -421,6 +444,16 @@ const FichaPersonagem = () => {
     setModalAberto(false);
   };
 
+  const classeAtual = personagem.classeId || personagem.classe || "";
+
+  const ehMedicoDeCampo =
+    classeAtual.toLowerCase().includes("medico") ||
+    classeAtual.toLowerCase().includes("médico");
+
+  const temMaletaDeCampo = (personagem.inventario || []).some(
+    (item) => item.nome === "Maleta de Campo",
+  );
+
   // CARREGAR DADOS AO INICIAR
   useEffect(() => {
     salvarLocalSeguro(ULTIMA_FICHA_KEY, fichaId);
@@ -428,7 +461,24 @@ const FichaPersonagem = () => {
     buscarPersonagem(fichaId)
       .then((personagemApi) => {
         if (personagemApi) {
+          const classeAtual =
+            personagemApi.classeId || personagemApi.classe || "";
+
+          const jaTemMaleta = (personagemApi.inventario || []).some(
+            (item) => item.nome === "Maleta de Campo",
+          );
+
+          if (classeAtual.toLowerCase().includes("medico") && !jaTemMaleta) {
+            personagemApi.inventario = [
+              ...(personagemApi.inventario || []),
+              {
+                ...MALETA_DE_CAMPO,
+              },
+            ];
+          }
+
           setPersonagem(personagemApi);
+
           console.log("Dados carregados do backend");
         }
       })
@@ -1494,19 +1544,11 @@ const FichaPersonagem = () => {
   );
 
   const aptidoesSelecionadas = habilidadesSelecionadas.filter(
-    (habilidade) =>
-      habilidade.grupo !== "Habilidade Absoluta" &&
-      habilidade.grupo !== "Classe" &&
-      habilidade.grupo !== "Passiva de Especialidade" &&
-      habilidade.custo,
+    (habilidade) => habilidade.grupo === "Aptidão",
   );
 
   const habilidadesEspecialismo = habilidadesSelecionadas.filter(
-    (habilidade) =>
-      habilidade.grupo !== "Habilidade Absoluta" &&
-      habilidade.grupo !== "Classe" &&
-      habilidade.grupo !== "Passiva de Especialidade" &&
-      !habilidade.custo,
+    (habilidade) => habilidade.grupo === "Especialismo",
   );
 
   const calcularValorAtivo = (atributo, ativo) => {
@@ -1540,6 +1582,43 @@ const FichaPersonagem = () => {
     defesaBase +
     calcularValorAtivo("reflexos", "firmeza") +
     valorPassiva("velocidade");
+
+  const CardHabilidadeRecolhivel = ({
+    habilidade,
+    tipo = "APTIDÃO",
+    classeExtra = "",
+  }) => {
+    const [aberto, setAberto] = useState(false);
+
+    const descricao =
+      habilidade.descricao ||
+      habilidade.habilidadePrincipal ||
+      habilidade.detalhes ||
+      "Descrição não disponível.";
+
+    return (
+      <article
+        className={`habilidade-expandivel ${classeExtra} ${aberto ? "aberto" : ""}`}
+      >
+        <button
+          type="button"
+          className="habilidade-expandivel-topo"
+          onClick={() => setAberto((prev) => !prev)}
+        >
+          <div>
+            <span>{tipo}</span>
+            <h3>{habilidade.nome}</h3>
+          </div>
+
+          {habilidade.custo && <strong>{habilidade.custo}</strong>}
+        </button>
+
+        <div className="habilidade-expandivel-corpo">
+          <p>{descricao}</p>
+        </div>
+      </article>
+    );
+  };
 
   // Conteúdo das abas
   const conteudoAbas = {
@@ -1840,21 +1919,12 @@ const FichaPersonagem = () => {
             <section className="grupo-habilidades-ficha habilidades-grid-cards">
               {arquetipoItens.length > 0 ? (
                 arquetipoItens.map((item) => (
-                  <details key={item.id} className="habilidade-card arquetipo">
-                    <summary className="habilidade-card-topo">
-                      <div>
-                        <span className="habilidade-card-tipo">
-                          {item.tipo}
-                        </span>
-
-                        <h3>{item.nome}</h3>
-                      </div>
-                    </summary>
-
-                    <p className="habilidade-card-descricao">
-                      {item.descricao}
-                    </p>
-                  </details>
+                  <CardHabilidadeRecolhivel
+                    key={item.id}
+                    habilidade={item}
+                    tipo={item.tipo}
+                    classeExtra="arquetipo"
+                  />
                 ))
               ) : (
                 <p className="habilidade-vazia">Nenhum arquétipo escolhido.</p>
@@ -1866,25 +1936,11 @@ const FichaPersonagem = () => {
             <section className="grupo-habilidades-ficha habilidades-grid-cards">
               {aptidoesSelecionadas.length > 0 ? (
                 aptidoesSelecionadas.map((habilidade) => (
-                  <details key={habilidade.id} className="habilidade-card">
-                    {" "}
-                    <summary className="habilidade-card-topo">
-                      {" "}
-                      <div>
-                        <span className="habilidade-card-tipo">APTIDÃO</span>
-
-                        <h3>{habilidade.nome}</h3>
-                      </div>
-                      {habilidade.custo && (
-                        <div className="habilidade-card-custo">
-                          {habilidade.custo}
-                        </div>
-                      )}
-                    </summary>{" "}
-                    <p className="habilidade-card-descricao">
-                      {habilidade.descricao}
-                    </p>
-                  </details>
+                  <CardHabilidadeRecolhivel
+                    key={habilidade.id}
+                    habilidade={habilidade}
+                    tipo="APTIDÃO"
+                  />
                 ))
               ) : (
                 <p className="habilidade-vazia">Nenhuma aptidão adquirida.</p>
@@ -1896,30 +1952,12 @@ const FichaPersonagem = () => {
             <section className="grupo-habilidades-ficha habilidades-grid-cards">
               {habilidadesEspecialismo.length > 0 ? (
                 habilidadesEspecialismo.map((habilidade) => (
-                  <details
+                  <CardHabilidadeRecolhivel
                     key={habilidade.id}
-                    className="habilidade-card especialismo"
-                  >
-                    <summary className="habilidade-card-topo">
-                      {" "}
-                      <div>
-                        <span className="habilidade-card-tipo">
-                          ESPECIALISMO
-                        </span>
-
-                        <h3>{habilidade.nome}</h3>
-                      </div>
-                      {habilidade.custo && (
-                        <div className="habilidade-card-custo">
-                          {habilidade.custo}
-                        </div>
-                      )}
-                    </summary>
-
-                    <p className="habilidade-card-descricao">
-                      {habilidade.descricao}
-                    </p>
-                  </details>
+                    habilidade={habilidade}
+                    tipo="ESPECIALISMO"
+                    classeExtra="especialismo"
+                  />
                 ))
               ) : (
                 <p className="habilidade-vazia">
@@ -2132,6 +2170,14 @@ const FichaPersonagem = () => {
           >
             Personalizado
           </button>
+          {ehMedicoDeCampo && (
+            <button
+              className={subAbaInventario === "maleta" ? "ativa" : ""}
+              onClick={() => setSubAbaInventario("maleta")}
+            >
+              Maleta de Campo
+            </button>
+          )}
         </div>
 
         {subAbaInventario === "mochila" && (
@@ -2450,6 +2496,56 @@ const FichaPersonagem = () => {
                 <button type="submit">Adicionar ao Inventário</button>
               </form>
             </section>
+          </div>
+        )}
+        {subAbaInventario === "maleta" && ehMedicoDeCampo && (
+          <div className="maleta-campo-container">
+            <div className="maleta-aprimoramentos-ativos">
+              <div className="maleta-aprimoramentos-topo">
+                <span>Aprimoramentos Ativos</span>
+
+                <strong>
+                  {(personagem.maletaCampo?.aprimoramentosAtivos || []).length}
+                  /3
+                </strong>
+              </div>
+
+              <div className="maleta-aprimoramentos-grid">
+                {(personagem.maletaCampo?.aprimoramentosAtivos || []).length >
+                0 ? (
+                  personagem.maletaCampo.aprimoramentosAtivos.map(
+                    (aprimoramento, index) => (
+                      <article
+                        key={aprimoramento.id || index}
+                        className={`maleta-aprimoramento-card ${
+                          aprimoramento.tipoMaleta || "geral"
+                        }`}
+                      >
+                        <span className="maleta-tipo">
+                          {aprimoramento.tipoMaleta === "medicinal"
+                            ? "Medicinal"
+                            : aprimoramento.tipoMaleta === "combate"
+                              ? "Combate"
+                              : "Geral"}
+                        </span>
+
+                        <h5>{aprimoramento.nome}</h5>
+
+                        <p>
+                          {aprimoramento.descricao ||
+                            aprimoramento.efeito ||
+                            aprimoramento.detalhe}
+                        </p>
+                      </article>
+                    ),
+                  )
+                ) : (
+                  <p className="maleta-vazia">
+                    Nenhum aprimoramento instalado.
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

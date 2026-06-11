@@ -216,7 +216,6 @@ body {
 
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
 
-  font-family: "Courier New", monospace;
   font-weight: 800;
 
   letter-spacing: 1px;
@@ -253,7 +252,6 @@ body {
   background: rgba(16, 12, 8, 0.82);
   color: #f5efe4;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
-  font-family: "Courier New", monospace;
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -1008,7 +1006,6 @@ body {
 
   padding: 12px 8px;
 
-  font-family: "Courier New", monospace;
 
   font-weight: bold;
 
@@ -2343,6 +2340,161 @@ body {
   z-index: 2;
 
   font-size: 1.2rem;
+}
+
+.maleta-campo-aba {
+  display: grid;
+  gap: 18px;
+}
+
+.maleta-campo-topo {
+  padding: 22px;
+  border: 1px solid var(--cor-borda, #ffffff);
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.72);
+  text-align: left;
+}
+
+.maleta-campo-topo span,
+.maleta-campo-status strong,
+.maleta-compartimentos h5 {
+  color: var(--cor-primaria, #d4af37);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.maleta-campo-topo h4 {
+  margin: 10px 0;
+  color: var(--cor-texto, #ffffff);
+  font-size: 1.8rem;
+}
+
+.maleta-campo-topo p,
+.maleta-compartimentos p {
+  color: var(--cor-texto, #ffffff);
+  line-height: 1.6;
+}
+
+.maleta-campo-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  border: 1px solid var(--cor-borda, #ffffff);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.maleta-campo-status span {
+  color: var(--cor-primaria, #d4af37);
+  font-weight: 900;
+}
+
+.maleta-compartimentos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.maleta-compartimentos article {
+  min-height: 160px;
+  padding: 18px;
+  border: 1px solid var(--cor-borda, #ffffff);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.72);
+  text-align: left;
+}
+
+@media (max-width: 900px) {
+  .maleta-compartimentos {
+    grid-template-columns: 1fr;
+  }
+}
+
+.maleta-aprimoramentos-ativos {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.maleta-aprimoramentos-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px 16px;
+
+  border: 1px solid var(--cor-borda, #ffffff);
+  border-radius: 14px;
+
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.maleta-aprimoramentos-topo span {
+  color: var(--cor-primaria, #d4af37);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.maleta-aprimoramentos-topo strong {
+  color: var(--cor-texto, #ffffff);
+  font-size: 1.1rem;
+}
+
+.maleta-aprimoramentos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.maleta-aprimoramento-card {
+  display: grid;
+  gap: 10px;
+
+  padding: 16px;
+
+  border: 1px solid var(--cor-borda, #ffffff);
+  border-left: 4px solid var(--cor-primaria, #d4af37);
+  border-radius: 16px;
+
+  background: rgba(0, 0, 0, 0.72);
+  text-align: left;
+}
+
+.maleta-aprimoramento-card span {
+  color: var(--cor-primaria, #d4af37);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.maleta-aprimoramento-card h5 {
+  margin: 0;
+  color: var(--cor-texto, #ffffff);
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.maleta-aprimoramento-card p,
+.maleta-vazia {
+  margin: 0;
+  color: var(--cor-texto, #ffffff);
+  line-height: 1.55;
+}
+
+.maleta-aprimoramento-card.medicinal {
+  border-left-color: #7ddf9b;
+}
+
+.maleta-aprimoramento-card.combate {
+  border-left-color: #ff7a7a;
+}
+
+.maleta-aprimoramento-card.geral {
+  border-left-color: #d4af37;
 }
 
 /* =========================================================
@@ -4047,9 +4199,7 @@ body {
 }
 
 .habilidade-passiva-item:hover {
-  background: white;
   border-left: 5px solid goldenrod;
-  color: black;
   transform: translateY(-2px);
 }
 
@@ -4081,8 +4231,7 @@ body {
 }
 
 .passiva-nome.clickable:hover {
-  color: #000000;
-
+  color: goldenrod;
   text-shadow: 0 0 6px rgba(0, 0, 0, 0.11);
 }
 
@@ -4185,12 +4334,8 @@ body {
 }
 
 .passiva-temp-btn:hover {
-  background: #ffffff;
-
   border-color: #000000;
-
   color: rgb(0, 0, 0);
-
   transform: scale(1.05);
 }
 
@@ -4214,8 +4359,8 @@ body {
 
 .passiva-valor-temporario:focus {
   outline: none;
-
   border-color: #d4af37;
+  color: goldenrod;
 
   background: rgba(212, 175, 55, 0.12);
 }
@@ -4362,9 +4507,9 @@ body {
 
 .habilidades-grid-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 18px;
-  width: 100%;
+  align-items: start;
 }
 
 .habilidade-card {
@@ -4372,8 +4517,9 @@ body {
   border-radius: 18px;
   background: linear-gradient(145deg, rgba(0, 0, 0, 0.96), rgba(5, 5, 5, 0.98));
 
+   height: fit-content;
+  align-self: start;
   overflow: hidden;
-
   transition: 0.25s;
 }
 
@@ -4386,8 +4532,8 @@ body {
 }
 
 .habilidade-card summary {
-  list-style: none;
   cursor: pointer;
+  list-style: none;
 }
 
 .habilidade-card summary::-webkit-details-marker {
@@ -4395,10 +4541,22 @@ body {
 }
 
 .habilidade-card-topo {
+    width: 100%;
+  min-height: 118px;
+  padding: 22px;
+
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  padding: 24px;
+  justify-content: space-between;
+  gap: 14px;
+
+  border: none;
+  background: transparent;
+  color: inherit;
+
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .habilidade-card h3 {
@@ -4425,24 +4583,170 @@ body {
   font-weight: 700;
 }
 
-.habilidade-card-descricao {
-  padding: 0 24px 24px 24px;
-
-  color: rgba(255, 255, 255, 0.78);
-
-  line-height: 1.7;
-
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+.habilidades-grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+  align-items: start;
 }
 
-.habilidade-card:not([open]) .habilidade-card-descricao {
-  display: none;
+.habilidade-expandivel {
+  height: auto;
+  overflow: hidden;
+
+  border: 1px solid var(--cor-borda, #ffffff);
+  border-radius: 18px;
+
+  background: rgba(0, 0, 0, 0.72);
 }
 
-@media (max-width: 900px) {
-  .habilidades-grid-cards {
-    grid-template-columns: 1fr;
-  }
+.habilidade-expandivel-topo {
+  width: 100%;
+  min-height: 120px;
+  padding: 22px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+
+  border: none;
+  background: transparent;
+  color: var(--cor-texto, #ffffff);
+
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.habilidade-expandivel-topo span {
+  display: block;
+  margin-bottom: 10px;
+
+  color: var(--cor-primaria, #d4af37);
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+.habilidade-expandivel-topo h3 {
+  margin: 0;
+  color: var(--cor-texto, #ffffff);
+}
+
+.habilidade-expandivel-topo strong {
+  padding: 6px 10px;
+
+  border: 1px solid var(--cor-primaria, #d4af37);
+  border-radius: 999px;
+
+  color: var(--cor-primaria, #d4af37);
+  font-size: 0.75rem;
+}
+
+.habilidade-expandivel-corpo {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+
+  padding: 0 22px;
+
+  transform: translateY(-8px);
+
+  transition:
+    max-height 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.35s ease,
+    transform 0.35s ease,
+    padding 0.35s ease;
+}
+
+.habilidade-expandivel.aberto .habilidade-expandivel-corpo {
+  max-height: 900px;
+  opacity: 1;
+
+  padding: 0 22px 24px;
+
+  transform: translateY(0);
+}
+
+.habilidade-expandivel-corpo p {
+  margin: 0;
+
+  color: var(--cor-texto, #ffffff);
+  white-space: pre-line;
+  line-height: 1.65;
+}
+
+.habilidades-grid-cards {
+  position: relative;
+  overflow: visible;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.habilidade-expandivel {
+  position: relative;
+  overflow: visible;
+  z-index: 1;
+}
+
+.habilidade-expandivel.aberto {
+  z-index: 50;
+}
+
+.habilidade-expandivel-corpo {
+  position: absolute;
+  top: calc(100% - 20px);
+  left: 18px;
+  right: 18px;
+
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+
+  padding: 0 18px;
+
+  background: #000;
+  border: 1px solid var(--cor-borda, #ffffff);
+  border-top: none;
+
+  transform: translateY(-8px);
+
+  transition:
+    max-height 0.45s ease,
+    opacity 0.28s ease,
+    transform 0.28s ease,
+    padding 0.28s ease;
+}
+
+.habilidade-expandivel.aberto .habilidade-expandivel-corpo {
+  max-height: 600px;
+  opacity: 1;
+  padding: 18px;
+  transform: translateY(0);
+}
+
+.habilidade-expandivel-corpo p {
+  margin: 0;
+  color: var(--cor-texto, #ffffff);
+  white-space: pre-line;
+  line-height: 1.65;
+}
+
+.sidebar-container,
+.sidebar-conteudo,
+.habilidades-resumo-aba,
+.grupo-habilidades-ficha,
+.habilidades-grid-cards {
+  overflow: visible !important;
+}
+
+.habilidade-expandivel-corpo {
+  z-index: 999;
 }
 
 /* =========================================================
@@ -4471,7 +4775,6 @@ body {
   color: white;
   padding: 12px;
   border-radius: 4px;
-  font-family: "Courier New", monospace;
   resize: vertical;
   min-height: 150px;
 }
@@ -4569,7 +4872,6 @@ body {
   font-size: 0.75em;
   font-weight: bold;
   color: #e8e8e8;
-  font-family: "Courier New", monospace;
 }
 
 .membro-botoes {
@@ -4587,7 +4889,6 @@ body {
   height: 26px;
   border-radius: 3px;
   cursor: pointer;
-  font-family: "Courier New", monospace;
   font-weight: bold;
   transition: all 0.2s ease;
   font-size: 0.75em;
@@ -4954,7 +5255,6 @@ body {
   padding: 8px 15px;
   border-radius: 4px;
   cursor: pointer;
-  font-family: "Courier New", monospace;
   font-size: 0.85em;
   font-weight: bold;
   transition: all 0.3s ease;
@@ -5516,7 +5816,6 @@ body {
   background: rgba(16, 12, 8, 0.9);
   color: var(--cor-primaria, #d4af37);
 
-  font-family: "Courier New", monospace;
   font-weight: 900;
   text-transform: uppercase;
   cursor: pointer;
@@ -5945,7 +6244,6 @@ body {
   background: color-mix(in srgb, var(--cor-secundaria, #8b4513) 45%, transparent);
   color: var(--cor-primaria, #d4af37);
 
-  font-family: "Courier New", monospace;
   font-weight: 900;
   text-transform: uppercase;
 
@@ -5975,7 +6273,6 @@ body {
   background: rgba(255, 255, 255, 0.06);
   color: var(--cor-texto, #ffffff);
 
-  font-family: "Courier New", monospace;
   font-size: 0.68rem;
   font-weight: 900;
   text-transform: uppercase;
@@ -5999,7 +6296,6 @@ body {
   background: rgba(255, 255, 255, 0.06);
   color: var(--cor-texto, #ffffff);
 
-  font-family: "Courier New", monospace;
   font-weight: 900;
   text-transform: uppercase;
 

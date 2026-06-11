@@ -23,7 +23,7 @@ import {
   normalizarItemLoja,
 } from "../data/catalogoLoja";
 import { estadoInicial } from "./fichaPersonagem";
-
+import { APRIMORAMENTOS_MALETA } from "../data/Catalogo/aprimoramentoMaleta";
 const STORAGE_KEY = "fichaRPG_personagem";
 const CATALOGO_STORAGE_KEY = "lojaHelena_catalogo";
 const DEFAULT_FICHA_ID = "principal";
@@ -35,6 +35,7 @@ const categorias = [
   { id: "itens", nome: "Itens", icon: mdiTools },
   { id: "ritos", nome: "Ritos Absolutos", icon: mdiCreationOutline },
   { id: "poderes", nome: "Poderes Absolutos", icon: mdiCreation },
+  { id: "maleta-campo", nome: "Maleta de Campo", icon: mdiTools },
 ];
 
 const normalizarFichaId = (valor) => {
@@ -59,6 +60,7 @@ const LojaHelena = () => {
   const [catalogo, setCatalogo] = useState(DEFAULT_CATALOGO_LOJA);
   const [categoriaAtiva, setCategoriaAtiva] = useState("armas-fogo");
   const [nivelRitoAtivo, setNivelRitoAtivo] = useState("iniciante");
+  const [subAbaMaleta, setSubAbaMaleta] = useState("medicinal");
   const [carrinho, setCarrinho] = useState([]);
   const [mensagem, setMensagem] = useState("");
 
@@ -74,6 +76,14 @@ const LojaHelena = () => {
   const usandoRitos = categoriaAtiva === "ritos";
   const usandoPoderes = categoriaAtiva === "poderes";
   const usandoLojaAbsoluto = usandoRitos || usandoPoderes;
+  const classeAtual = personagem.classeId || personagem.classe || "";
+
+  const ehMedicoDeCampo =
+    classeAtual.toLowerCase().includes("medico") ||
+    classeAtual.toLowerCase().includes("médico");
+
+  const aprimoramentoMedicoGratisUsado =
+    personagem.maletaCampo?.aprimoramentoMedicoGratisUsado || false;
 
   useEffect(() => {
     const catalogoSalvo = localStorage.getItem(CATALOGO_STORAGE_KEY);
@@ -167,7 +177,34 @@ const LojaHelena = () => {
       });
   }, [fichaId, saldoKey, storageKey]);
 
+  const aprimoramentosMaletaLoja = useMemo(() => {
+    const mapear = (lista, tipoMaleta) =>
+      lista.map((item) => ({
+        ...item,
+        categoria: "maleta-campo",
+        tipoMaleta,
+        preco:
+          tipoMaleta === "medicinal" &&
+          ehMedicoDeCampo &&
+          !aprimoramentoMedicoGratisUsado
+            ? 0
+            : 250,
+        detalhe: item.efeito,
+        entrega: item.nome,
+      }));
+
+    return {
+      medicinal: mapear(APRIMORAMENTOS_MALETA.medicinal, "medicinal"),
+      combate: mapear(APRIMORAMENTOS_MALETA.combate, "combate"),
+      geral: mapear(APRIMORAMENTOS_MALETA.geral, "geral"),
+    };
+  }, [ehMedicoDeCampo, aprimoramentoMedicoGratisUsado]);
+
   const itensFiltrados = useMemo(() => {
+    if (categoriaAtiva === "maleta-campo") {
+      return aprimoramentosMaletaLoja[subAbaMaleta] || [];
+    }
+
     if (categoriaAtiva === "todos") return catalogo;
 
     if (categoriaAtiva === "ritos") {
@@ -178,8 +215,13 @@ const LojaHelena = () => {
     }
 
     return catalogo.filter((item) => item.categoria === categoriaAtiva);
-  }, [categoriaAtiva, catalogo, nivelRitoAtivo]);
-
+  }, [
+    categoriaAtiva,
+    catalogo,
+    nivelRitoAtivo,
+    aprimoramentosMaletaLoja,
+    subAbaMaleta,
+  ]);
   const totalCarrinho = carrinho.reduce((acc, item) => acc + item.preco, 0);
   const saldoAtual = usandoLojaAbsoluto ? saldoMementos : saldo;
   const podeComprar = carrinho.length > 0 && totalCarrinho <= saldoAtual;
@@ -243,7 +285,10 @@ const LojaHelena = () => {
 
     const novosItens = carrinho
       .filter(
-        (item) => item.categoria !== "ritos" && item.categoria !== "poderes",
+        (item) =>
+          item.categoria !== "ritos" &&
+          item.categoria !== "poderes" &&
+          item.categoria !== "maleta-campo",
       )
       .map((item) => ({
         nome: item.nome,
@@ -251,22 +296,47 @@ const LojaHelena = () => {
         armaStatus: item.armaStatus || null,
       }));
 
-    const personagemAtualizado = {
-      ...personagem,
+    const novosAprimoramentosMaleta = carrinho.filter(
+  (item) => item.categoria === "maleta-campo",
+);
 
-      lojaCreditos: usandoLojaAbsoluto ? saldo : saldo - totalCarrinho,
-      ritosCreditos: usandoLojaAbsoluto
-        ? saldoMementos - totalCarrinho
-        : saldoMementos,
+const aprimoramentosAtuais =
+  personagem.maletaCampo?.aprimoramentosAtivos || [];
 
-      rituais: [...(personagem.rituais || []), ...novosRitos],
-      poderesAbsolutos: [
-        ...(personagem.poderesAbsolutos || []),
-        ...novosPoderes,
-      ],
-      inventario: [...(personagem.inventario || []), ...novosItens],
-    };
+if (aprimoramentosAtuais.length + novosAprimoramentosMaleta.length > 3) {
+  setMensagem("A Maleta de Campo só pode ter até 3 aprimoramentos ativos.");
+  return;
+}
 
+const personagemAtualizado = {
+  ...personagem,
+
+  lojaCreditos: usandoLojaAbsoluto ? saldo : saldo - totalCarrinho,
+  ritosCreditos: usandoLojaAbsoluto
+    ? saldoMementos - totalCarrinho
+    : saldoMementos,
+
+  rituais: [...(personagem.rituais || []), ...novosRitos],
+  poderesAbsolutos: [
+    ...(personagem.poderesAbsolutos || []),
+    ...novosPoderes,
+  ],
+
+  inventario: [...(personagem.inventario || []), ...novosItens],
+
+  maletaCampo: {
+    ...(personagem.maletaCampo || {}),
+    aprimoramentosAtivos: [
+      ...(personagem.maletaCampo?.aprimoramentosAtivos || []),
+      ...novosAprimoramentosMaleta,
+    ],
+    aprimoramentoMedicoGratisUsado:
+      personagem.maletaCampo?.aprimoramentoMedicoGratisUsado ||
+      novosAprimoramentosMaleta.some(
+        (item) => item.tipoMaleta === "medicinal" && item.preco === 0,
+      ),
+  },
+};
     setPersonagem(personagemAtualizado);
     setCarrinho([]);
 
@@ -393,6 +463,31 @@ const LojaHelena = () => {
               onClick={() => setNivelRitoAtivo("experiente")}
             >
               IV — Experiente
+            </button>
+          </div>
+        )}
+
+        {categoriaAtiva === "maleta-campo" && (
+          <div className="ritos-subabas maleta-subabas">
+            <button
+              className={subAbaMaleta === "medicinal" ? "ativa" : ""}
+              onClick={() => setSubAbaMaleta("medicinal")}
+            >
+              Medicina
+            </button>
+
+            <button
+              className={subAbaMaleta === "combate" ? "ativa" : ""}
+              onClick={() => setSubAbaMaleta("combate")}
+            >
+              Combate
+            </button>
+
+            <button
+              className={subAbaMaleta === "geral" ? "ativa" : ""}
+              onClick={() => setSubAbaMaleta("geral")}
+            >
+              Gerais
             </button>
           </div>
         )}

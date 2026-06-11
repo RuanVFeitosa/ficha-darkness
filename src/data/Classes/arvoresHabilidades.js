@@ -815,110 +815,67 @@ export const obterArvoreClasse = (classeOuPersonagem = {}) => {
   );
 };
 
-export const listarHabilidadesSelecionadas = (personagem = {}) => {
-  const arvoreOriginal = obterArvoreClasse(personagem) || {};
+export const listarHabilidadesSelecionadas = (personagem) => {
+  const arvore = obterArvoreClasse(personagem.classeId || personagem.classe);
 
-  const arvore = {
-    classe: "",
-    titulo: "",
-    beneficio: "",
-    absolutas: [],
-    bases: [],
-    aptidoes: [],
-    especialidades: [],
-    ...arvoreOriginal,
-  };
+  if (!arvore) return [];
 
-  const escolhas = {
-    habilidadeAbsoluta: "",
-    aptidoes: {},
-    especialidade: "",
-    especialidadeDefinida: false,
-    habilidadesEspecialidade: {},
-    ...(personagem.habilidadesClasse || {}),
-  };
+  const habilidadesClasse = personagem.habilidadesClasse || {};
 
   const selecionadas = [];
 
-  // =========================================
-  // HABILIDADE ABSOLUTA NOVA
-  // =========================================
-
-  if (personagem?.habilidadeAbsolutaEscolhida) {
-    selecionadas.push({
-      id: personagem.habilidadeAbsolutaEscolhida.id,
-      nome: personagem.habilidadeAbsolutaEscolhida.nome,
-      descricao: personagem.habilidadeAbsolutaEscolhida.descricao,
-      grupo: "Habilidade Absoluta",
-    });
-  } else {
-    const absoluta = (arvore.absolutas || []).find(
-      (habilidade) => habilidade.id === escolhas.habilidadeAbsoluta,
+  // HABILIDADE ABSOLUTA
+  if (habilidadesClasse.habilidadeAbsoluta) {
+    const habilidade = (arvore.absolutas || []).find(
+      (item) => item.id === habilidadesClasse.habilidadeAbsoluta,
     );
 
-    if (absoluta) {
+    if (habilidade) {
       selecionadas.push({
-        ...absoluta,
+        ...habilidade,
         grupo: "Habilidade Absoluta",
       });
     }
   }
 
-  // =========================================
-  // HABILIDADES BASE
-  // =========================================
-
-  (arvore.bases || []).forEach((habilidade) => {
-    selecionadas.push({
-      ...habilidade,
-      grupo: "Classe",
-    });
-  });
-
-  // =========================================
   // APTIDÕES
-  // =========================================
+  Object.entries(habilidadesClasse.aptidoes || {}).forEach(
+    ([aptidaoId, ativa]) => {
+      if (!ativa) return;
 
-  (arvore.aptidoes || [])
-    .filter((aptidao) => escolhas.aptidoes?.[aptidao.id])
-    .forEach((aptidao) => {
-      selecionadas.push({
-        ...aptidao,
-        grupo: aptidao.custo || "Aptidão",
-      });
-    });
+      const aptidao = (arvore.aptidoes || []).find(
+        (item) => item.id === aptidaoId,
+      );
 
-  // =========================================
-  // TODAS AS ESPECIALIDADES
-  // =========================================
+      if (aptidao) {
+        selecionadas.push({
+          ...aptidao,
+          grupo: "Aptidão",
+        });
+      }
+    },
+  );
 
-  (arvore.especialidades || []).forEach((especialidade) => {
-    const habilidadesCompradas = (especialidade.habilidades || []).filter(
-      (habilidade) => escolhas.habilidadesEspecialidade?.[habilidade.id],
-    );
+  // ESPECIALIDADE
+  Object.entries(habilidadesClasse.habilidadesEspecialidade || {}).forEach(
+    ([habilidadeId, ativa]) => {
+      if (!ativa) return;
 
-    // NÃO POSSUI HABILIDADES COMPRADAS
-    if (habilidadesCompradas.length <= 0) return;
+      for (const especialidade of arvore.especialidades || []) {
+        const habilidade = (especialidade.habilidades || []).find(
+          (item) => item.id === habilidadeId,
+        );
 
-    // PASSIVA DA ESPECIALIDADE
-    selecionadas.push({
-      id: `${especialidade.id}-passiva`,
-      nome: especialidade.nome,
-      descricao:
-        especialidade.passiva ||
-        especialidade.descricao ||
-        "Especialidade adquirida.",
-      grupo: "Passiva de Especialidade",
-    });
-
-    // HABILIDADES COMPRADAS
-    habilidadesCompradas.forEach((habilidade) => {
-      selecionadas.push({
-        ...habilidade,
-        grupo: especialidade.nome,
-      });
-    });
-  });
+        if (habilidade) {
+          selecionadas.push({
+            ...habilidade,
+            grupo: "Especialismo",
+            especialidade: especialidade.nome,
+          });
+        }
+      }
+    },
+  );
 
   return selecionadas;
 };

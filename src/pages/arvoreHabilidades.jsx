@@ -31,11 +31,12 @@ const estadoHabilidadesInicial = {
   especialidade: "",
   habilidadesEspecialidade: {},
   especialidadeDefinida: false,
+  pontosEspecialidade: 10,
 };
 
 const obterCustoHabilidade = (habilidade = {}, tipo = "aptidao") => {
   if (tipo === "especialidade") {
-    return 20;
+    return 10;
   }
   return 10;
 };
@@ -77,6 +78,11 @@ const ArvoreHabilidades = () => {
     ...(personagem.habilidadesClasse || {}),
   };
 
+  const pontosEspecialidadeDisponiveis = Math.max(
+    0,
+    parseInt(habilidadesClasse.pontosEspecialidade, 10) || 0,
+  );
+
   const pontosEvolucaoDisponiveis = Math.max(
     0,
     parseInt(personagem.pontosEvolucao?.disponiveis, 10) || 0,
@@ -117,8 +123,22 @@ const ArvoreHabilidades = () => {
         console.warn("Backend indisponivel. Arvore usando localStorage.");
       }
 
+      const personagemFinal = personagemCarregado || estadoInicial;
+
+      personagemFinal.habilidadesClasse = {
+        ...estadoHabilidadesInicial,
+        ...(personagemFinal.habilidadesClasse || {}),
+      };
+
+      if (
+        personagemFinal.habilidadesClasse.pontosEspecialidade === undefined ||
+        personagemFinal.habilidadesClasse.pontosEspecialidade === null
+      ) {
+        personagemFinal.habilidadesClasse.pontosEspecialidade = 10;
+      }
+
       if (!cancelado) {
-        setPersonagem(personagemCarregado || estadoInicial);
+        setPersonagem(personagemFinal);
         setCarregandoFicha(false);
       }
     };
@@ -163,27 +183,20 @@ const ArvoreHabilidades = () => {
     const aptidaoId = aptidao.id;
     const jaComprada = Boolean(habilidadesClasse.aptidoes?.[aptidaoId]);
 
-    if (!jaComprada && pontosEvolucaoDisponiveis < custo) {
+    if (!jaComprada && pontosEspecialidadeDisponiveis < custo) {
       setMensagem("Pontos de evolucao insuficientes para esta habilidade.");
       return;
     }
 
-    salvarAtualizacao(
-      {
-        aptidoes: {
-          ...habilidadesClasse.aptidoes,
-          [aptidaoId]: !jaComprada,
-        },
+    salvarAtualizacao({
+      aptidoes: {
+        ...habilidadesClasse.aptidoes,
+        [aptidaoId]: !jaComprada,
       },
-      {
-        pontosEvolucao: {
-          ...(personagem.pontosEvolucao || {}),
-          disponiveis: jaComprada
-            ? pontosEvolucaoDisponiveis + custo
-            : pontosEvolucaoDisponiveis - custo,
-        },
-      },
-    );
+      pontosEspecialidade: jaComprada
+        ? pontosEspecialidadeDisponiveis + custo
+        : pontosEspecialidadeDisponiveis - custo,
+    });
   };
 
   const fecharAptidao = () => {
@@ -271,7 +284,7 @@ const ArvoreHabilidades = () => {
       habilidadesClasse.habilidadesEspecialidade?.[habilidadeId],
     );
 
-    if (!jaComprada && !podeComprarHabilidade(habilidade)) {
+    if (!jaComprada && pontosEspecialidadeDisponiveis < custo) {
       setMensagem(
         "Você precisa comprar a habilidade anterior deste ramo primeiro.",
       );
@@ -285,27 +298,29 @@ const ArvoreHabilidades = () => {
       return;
     }
 
-    if (!jaComprada && pontosEvolucaoDisponiveis < custo) {
-      setMensagem("Pontos de evolução insuficientes para esta habilidade.");
+    if (!jaComprada && !podeComprarHabilidade(habilidade)) {
+      setMensagem(
+        "Você precisa comprar a habilidade anterior deste ramo primeiro.",
+      );
       return;
     }
 
-    salvarAtualizacao(
-      {
-        habilidadesEspecialidade: {
-          ...habilidadesClasse.habilidadesEspecialidade,
-          [habilidadeId]: !jaComprada,
-        },
+    if (!jaComprada && pontosEspecialidadeDisponiveis < custo) {
+      setMensagem(
+        "Pontos de especialidade insuficientes para esta habilidade.",
+      );
+      return;
+    }
+
+    salvarAtualizacao({
+      habilidadesEspecialidade: {
+        ...habilidadesClasse.habilidadesEspecialidade,
+        [habilidadeId]: !jaComprada,
       },
-      {
-        pontosEvolucao: {
-          ...(personagem.pontosEvolucao || {}),
-          disponiveis: jaComprada
-            ? pontosEvolucaoDisponiveis + custo
-            : pontosEvolucaoDisponiveis - custo,
-        },
-      },
-    );
+      pontosEspecialidade: jaComprada
+        ? pontosEspecialidadeDisponiveis + custo
+        : pontosEspecialidadeDisponiveis - custo,
+    });
   };
 
   const selecionarHabilidadeAbsoluta = (habilidade) => {
@@ -320,6 +335,60 @@ const ArvoreHabilidades = () => {
           custo: habilidade.custo || "",
           descricao: habilidade.descricao,
         },
+      },
+    );
+  };
+  const contarCompradas = (objeto = {}) => {
+    return Object.values(objeto).filter(Boolean).length;
+  };
+
+  const removerHabilidadesEspecialidade = () => {
+    const quantidade = contarCompradas(
+      habilidadesClasse.habilidadesEspecialidade,
+    );
+    const pontosDevolver =
+      quantidade * obterCustoHabilidade({}, "especialidade");
+
+    salvarAtualizacao(
+      {
+        habilidadesEspecialidade: {},
+      },
+      {
+        pontosEspecialidade: pontosEspecialidadeDisponiveis + pontosDevolver,
+      },
+    );
+  };
+
+  const removerAptidoes = () => {
+    const quantidade = contarCompradas(habilidadesClasse.aptidoes);
+    const pontosDevolver = quantidade * obterCustoHabilidade({}, "aptidao");
+
+    salvarAtualizacao({
+      aptidoes: {},
+      pontosEspecialidade: pontosEspecialidadeDisponiveis + pontosDevolver,
+    });
+  };
+
+  const removerTudoTrilha = () => {
+    const totalHabilidades =
+      contarCompradas(habilidadesClasse.habilidadesEspecialidade) *
+      obterCustoHabilidade({}, "especialidade");
+
+    const totalAptidoes =
+      contarCompradas(habilidadesClasse.aptidoes) *
+      obterCustoHabilidade({}, "aptidao");
+
+    salvarAtualizacao(
+      {
+        aptidoes: {},
+        habilidadesEspecialidade: {},
+        especialidade: "",
+        especialidadeDefinida: false,
+        pontosEspecialidade:
+          pontosEspecialidadeDisponiveis + totalHabilidades + totalAptidoes,
+      },
+      {
+        especialidade: "",
       },
     );
   };
@@ -467,7 +536,7 @@ const ArvoreHabilidades = () => {
         <p>{arvore.beneficio}</p>
 
         <strong className="arvore-pontos">
-          Pontos de evolucao: {pontosEvolucaoDisponiveis}
+          Pontos de Especialidade: {pontosEspecialidadeDisponiveis}
         </strong>
       </section>
 
@@ -541,12 +610,10 @@ const ArvoreHabilidades = () => {
                       <button
                         type="button"
                         className="absoluta-voltar-btn"
-                        onClick={() =>
-                          salvarAtualizacao({ habilidadeAbsoluta: "" })
-                        }
+                        onClick={voltarParaFicha}
                       >
                         <Icon path={mdiArrowLeft} size={0.9} />
-                        Voltar para Upgrade
+                        Voltar para Ficha
                       </button>
                     </div>
 
@@ -647,6 +714,29 @@ const ArvoreHabilidades = () => {
                 onMouseUp={pararArrastoMapa}
                 onMouseLeave={pararArrastoMapa}
               >
+                <strong className="trilha-pontos">
+                  Pontos de Especialidade: {pontosEspecialidadeDisponiveis}
+                </strong>
+                <div className="trilha-acoes-flutuantes">
+                  <button
+                    type="button"
+                    onClick={removerHabilidadesEspecialidade}
+                  >
+                    Remover Habilidades
+                  </button>
+
+                  <button type="button" onClick={removerAptidoes}>
+                    Remover Aptidões
+                  </button>
+
+                  <button
+                    type="button"
+                    className="perigo"
+                    onClick={removerTudoTrilha}
+                  >
+                    Remover Tudo
+                  </button>
+                </div>
                 <div
                   ref={mapaRef}
                   className="skilltree-area"
@@ -841,8 +931,9 @@ const ArvoreHabilidades = () => {
             aria-labelledby="aptidao-modal-titulo"
             onClick={(event) => event.stopPropagation()}
           >
+            
             <span className="arvore-no-tipo">
-              10 Pontos de Evolução || {aptidaoAberta.custo}
+              10 Pontos de Especialidade || {aptidaoAberta.custo}{" "}
             </span>
             <h2 id="aptidao-modal-titulo">{aptidaoAberta.nome}</h2>
             <p>{aptidaoAberta.descricao}</p>
