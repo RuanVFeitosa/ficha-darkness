@@ -9,7 +9,7 @@ const getApiUrl = () => {
   return isCraDevServer ? "http://localhost:4000/api" : "/api";
 };
 
-const API_URL = getApiUrl();
+const API_URL = "https://ficha-darkness.vercel.app/api";
 
 const request = async (path, options = {}) => {
   const response = await fetch(`${API_URL}${path}`, {
@@ -22,7 +22,10 @@ const request = async (path, options = {}) => {
 
   if (!response.ok) {
     const data = await response.json().catch(() => null);
-    throw new Error(data?.details || data?.error || `Erro na API: ${response.status}`);
+
+    throw new Error(
+      data?.details || data?.error || `Erro na API: ${response.status}`,
+    );
   }
 
   return response.json();
@@ -39,12 +42,10 @@ export const listarPersonagens = async () => {
 };
 
 export const criarPersonagem = async (personagem) => {
-  const data = await request("/personagens", {
+  return request("/personagens", {
     method: "POST",
     body: JSON.stringify(personagem),
   });
-
-  return data;
 };
 
 export const salvarPersonagem = async (fichaId, personagem) => {
@@ -57,11 +58,9 @@ export const salvarPersonagem = async (fichaId, personagem) => {
 };
 
 export const apagarPersonagem = async (fichaId) => {
-  const data = await request(`/personagens/${encodeURIComponent(fichaId)}`, {
+  return request(`/personagens/${encodeURIComponent(fichaId)}`, {
     method: "DELETE",
   });
-
-  return data;
 };
 
 export const buscarCatalogoLoja = async () => {
