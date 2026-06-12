@@ -400,7 +400,7 @@ const descricoesAtivos = {
 };
 
 const FichaPersonagem = () => {
-  const [fichaId] = useState(() => obterFichaIdDaUrl());
+  const fichaId = obterFichaIdDaUrl();
   const [personagem, setPersonagem] = useState(estadoInicial);
   const [abaAtiva, setAbaAtiva] = useState("combate");
   const [ultimoSave, setUltimoSave] = useState(null);
@@ -460,37 +460,19 @@ const FichaPersonagem = () => {
     let ativo = true;
 
     const carregarFicha = async () => {
-      try {
-        salvarLocalSeguro(ULTIMA_FICHA_KEY, fichaId);
+      setCarregado(false);
 
+      try {
         const personagemApi = await buscarPersonagem(fichaId);
 
         if (!ativo) return;
 
         if (personagemApi) {
-          const classeAtual =
-            personagemApi.classeId || personagemApi.classe || "";
-
-          const jaTemMaleta = (personagemApi.inventario || []).some(
-            (item) => item.nome === "Maleta de Campo",
-          );
-
-          if (classeAtual.toLowerCase().includes("medico") && !jaTemMaleta) {
-            personagemApi.inventario = [
-              ...(personagemApi.inventario || []),
-              {
-                ...MALETA_DE_CAMPO,
-              },
-            ];
-          }
-
           setPersonagem(personagemApi);
-          console.log("BACKEND:", personagemApi);
-
-          console.log("✅ Dados carregados do backend");
+          console.log("✅ BACKEND:", personagemApi);
         }
       } catch (error) {
-        console.warn("Erro ao carregar backend:", error);
+        console.error("❌ Erro ao carregar backend:", error);
       } finally {
         if (ativo) {
           setCarregado(true);
@@ -503,7 +485,7 @@ const FichaPersonagem = () => {
     return () => {
       ativo = false;
     };
-  }, [fichaId, storageKey]);
+  }, [fichaId]);
 
   // SALVAR DADOS AUTOMATICAMENTE QUANDO MUDAR
   useEffect(() => {
@@ -515,7 +497,7 @@ const FichaPersonagem = () => {
       return;
     }
 
-    salvarPersonagemLocalSeguro(storageKey, personagem);
+    // salvarPersonagemLocalSeguro(storageKey, personagem);
     setUltimoSave(new Date().toLocaleTimeString());
 
     salvarPersonagem(fichaId, personagem).catch((error) => {
