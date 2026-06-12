@@ -456,6 +456,10 @@ const FichaPersonagem = () => {
 
   // CARREGAR DADOS AO INICIAR
   useEffect(() => {
+    let ativo = true;
+    let personagemCarregado = null;
+
+    setCarregado(false);
     salvarLocalSeguro(ULTIMA_FICHA_KEY, fichaId);
 
     buscarPersonagem(fichaId)
@@ -477,7 +481,7 @@ const FichaPersonagem = () => {
             ];
           }
 
-          setPersonagem(personagemApi);
+          personagemCarregado = personagemApi;
 
           console.log("Dados carregados do backend");
         }
@@ -486,24 +490,42 @@ const FichaPersonagem = () => {
         console.warn("Backend indisponivel. Tentando carregar localStorage.");
       })
       .finally(() => {
+        if (!personagemCarregado) {
+          const dadosSalvos = lerLocalSeguro(storageKey);
+
+          if (dadosSalvos) {
+            try {
+              personagemCarregado = JSON.parse(dadosSalvos);
+              console.log("Dados carregados do salvamento anterior");
+            } catch (error) {
+              console.error("Erro ao carregar dados salvos:", error);
+            }
+          }
+        }
+
+        if (ativo && personagemCarregado) {
+          setPersonagem(personagemCarregado);
+        }
+
+        if (!ativo) {
+          return;
+        }
+
         setCarregado(true);
       });
 
-    const dadosSalvos = lerLocalSeguro(storageKey);
-    if (dadosSalvos) {
-      try {
-        const personagemSalvo = JSON.parse(dadosSalvos);
-        setPersonagem(personagemSalvo);
-        console.log("✅ Dados carregados do salvamento anterior");
-      } catch (error) {
-        console.error("❌ Erro ao carregar dados salvos:", error);
-      }
-    }
+    return () => {
+      ativo = false;
+    };
   }, [fichaId, storageKey]);
 
   // SALVAR DADOS AUTOMATICAMENTE QUANDO MUDAR
   useEffect(() => {
     if (!carregado) {
+      return;
+    }
+
+    if (fichaId !== DEFAULT_FICHA_ID && !String(personagem.nome || "").trim()) {
       return;
     }
 
