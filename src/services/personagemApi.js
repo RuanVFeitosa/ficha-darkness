@@ -1,14 +1,3 @@
-const getApiUrl = () => {
-  if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
-  }
-
-  const isCraDevServer =
-    window.location.hostname === "localhost" && window.location.port === "3000";
-
-  return isCraDevServer ? "http://localhost:4000/api" : "/api";
-};
-
 const API_URL = "https://ficha-darkness.vercel.app/api";
 
 const request = async (path, options = {}) => {

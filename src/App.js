@@ -7,7 +7,6 @@ import LojaHelena from "./pages/lojaHelena";
 import TelaInicial from "./pages/telaInicial";
 import UpgradeNivel from "./pages/upgradeNivel";
 import "./App.css";
-import "./CSS/Responsive.css";
 
 function PageTransition({ active }) {
   return <div className={`page-transition ${active ? "active" : ""}`} />;

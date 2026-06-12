@@ -400,7 +400,7 @@ const descricoesAtivos = {
 };
 
 const FichaPersonagem = () => {
-  const [fichaId] = useState(obterFichaIdDaUrl);
+  const [fichaId] = useState(() => obterFichaIdDaUrl());
   const [personagem, setPersonagem] = useState(estadoInicial);
   const [abaAtiva, setAbaAtiva] = useState("combate");
   const [ultimoSave, setUltimoSave] = useState(null);
@@ -485,25 +485,12 @@ const FichaPersonagem = () => {
           }
 
           setPersonagem(personagemApi);
+          console.log("BACKEND:", personagemApi);
 
           console.log("✅ Dados carregados do backend");
         }
       } catch (error) {
-        console.warn("⚠️ Backend indisponível. Tentando localStorage.", error);
-
-        const dadosSalvos = lerLocalSeguro(storageKey);
-
-        if (dadosSalvos && ativo) {
-          try {
-            const personagemSalvo = JSON.parse(dadosSalvos);
-
-            setPersonagem(personagemSalvo);
-
-            console.log("⚠️ Dados carregados do localStorage");
-          } catch (erro) {
-            console.error("Erro ao carregar localStorage:", erro);
-          }
-        }
+        console.warn("Erro ao carregar backend:", error);
       } finally {
         if (ativo) {
           setCarregado(true);
