@@ -6,6 +6,8 @@ import { ULTIMA_FICHA_KEY } from "../constants/session";
 import { estadoInicial } from "./fichaPersonagem";
 import "../CSS/CriarPersonagem.css";
 
+const STORAGE_KEY = "fichaRPG_personagem";
+
 const atributos = [
   { chave: "forca", nome: "Forca" },
   { chave: "fonitude", nome: "Fortitude" },
@@ -867,8 +869,14 @@ const CriarPersonagem = () => {
     setSalvando(true);
 
     try {
-      const { fichaId } = await criarPersonagem(criarFichaInicial(form));
+      const fichaInicial = criarFichaInicial(form);
+      const { fichaId, personagem } = await criarPersonagem(fichaInicial);
+
       localStorage.setItem(ULTIMA_FICHA_KEY, fichaId);
+      localStorage.setItem(
+        `${STORAGE_KEY}_${fichaId}`,
+        JSON.stringify(personagem || fichaInicial),
+      );
       window.location.href = `/?ficha=${encodeURIComponent(fichaId)}`;
     } catch (error) {
       setErro(`Nao foi possivel criar a ficha. ${error.message}`);

@@ -213,8 +213,20 @@ const requestSupabase = async (pathAndQuery, options = {}) => {
   return response.json();
 };
 
-const readJsonBody = (req) =>
-  new Promise((resolve, reject) => {
+const readJsonBody = (req) => {
+  if (req.body && typeof req.body === "object" && !Buffer.isBuffer(req.body)) {
+    return Promise.resolve(req.body);
+  }
+
+  if (typeof req.body === "string") {
+    try {
+      return Promise.resolve(req.body ? JSON.parse(req.body) : {});
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
+  return new Promise((resolve, reject) => {
     let body = "";
 
     req.on("data", (chunk) => {
@@ -236,6 +248,7 @@ const readJsonBody = (req) =>
 
     req.on("error", reject);
   });
+};
 
 const readPersonagem = async (id) => {
   if (USE_SUPABASE) {
@@ -460,6 +473,12 @@ const handleRequest = async (req, res) => {
         Array.isArray(personagem)
       ) {
         return sendJson(res, 400, { error: "Personagem invalido" });
+      }
+
+      if (personagemMatch && !String(personagem.nome || "").trim()) {
+        return sendJson(res, 400, {
+          error: "Nao e permitido sobrescrever uma ficha com personagem vazio",
+        });
       }
 
       const saved = await writePersonagem(fichaId, personagem);
