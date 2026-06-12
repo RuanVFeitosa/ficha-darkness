@@ -31,19 +31,32 @@ const estadoHabilidadesInicial = {
   especialidade: "",
   habilidadesEspecialidade: {},
   especialidadeDefinida: false,
-  pontosEspecialidade: 10,
 };
 
-const obterCustoHabilidade = (habilidade = {}, tipo = "aptidao") => {
-  if (tipo === "especialidade") {
-    return 10;
+const obterCustoHabilidade = (habilidade = {}) => {
+  const textoCusto = String(habilidade.custo || "");
+  const textoDescricao = String(habilidade.descricao || "");
+  const texto = `${textoCusto} ${textoDescricao}`;
+
+  if (/passiva|rea[cç][aã]o|especial|n[ií]vel/i.test(textoCusto)) {
+    const custoComPe = texto.match(/(\d+)\s*(?:pe|pontos?)/i);
+    return custoComPe ? Number(custoComPe[1]) : 0;
   }
-  return 10;
+
+  const custo = texto.match(/(\d+)\s*(?:pe|pontos?)/i);
+  return custo ? Number(custo[1]) : 0;
 };
+
+const CUSTO_APTIDAO = 10;
+const CUSTO_HABILIDADE_ESPECIALIDADE = 20;
+
+const obterCustoAptidao = () => CUSTO_APTIDAO;
+const obterCustoHabilidadeEspecialidade = () =>
+  CUSTO_HABILIDADE_ESPECIALIDADE;
 
 const ArvoreHabilidades = () => {
   const [carregandoFicha, setCarregandoFicha] = useState(true);
-  const [fichaId] = useState(obterFichaIdDaUrl);
+  const [fichaId] = useState(() => obterFichaIdDaUrl());
   const [personagem, setPersonagem] = useState(estadoInicial);
   const [mensagem, setMensagem] = useState("");
   const [aptidaoAberta, setAptidaoAberta] = useState(null);
@@ -77,11 +90,6 @@ const ArvoreHabilidades = () => {
     ...estadoHabilidadesInicial,
     ...(personagem.habilidadesClasse || {}),
   };
-
-  const pontosEspecialidadeDisponiveis = Math.max(
-    0,
-    parseInt(habilidadesClasse.pontosEspecialidade, 10) || 0,
-  );
 
   const pontosEvolucaoDisponiveis = Math.max(
     0,
@@ -130,13 +138,6 @@ const ArvoreHabilidades = () => {
         ...(personagemFinal.habilidadesClasse || {}),
       };
 
-      if (
-        personagemFinal.habilidadesClasse.pontosEspecialidade === undefined ||
-        personagemFinal.habilidadesClasse.pontosEspecialidade === null
-      ) {
-        personagemFinal.habilidadesClasse.pontosEspecialidade = 10;
-      }
-
       if (!cancelado) {
         setPersonagem(personagemFinal);
         setCarregandoFicha(false);
@@ -178,12 +179,17 @@ const ArvoreHabilidades = () => {
     window.location.href = `?ficha=${encodeURIComponent(fichaId)}`;
   };
 
+  const criarPontosEvolucaoAtualizados = (novoSaldo) => ({
+    ...(personagem.pontosEvolucao || {}),
+    disponiveis: Math.max(0, novoSaldo),
+  });
+
   const alternarAptidao = (aptidao) => {
-    const custo = obterCustoHabilidade(aptidao, "aptidao");
+    const custo = obterCustoAptidao();
     const aptidaoId = aptidao.id;
     const jaComprada = Boolean(habilidadesClasse.aptidoes?.[aptidaoId]);
 
-    if (!jaComprada && pontosEspecialidadeDisponiveis < custo) {
+    if (!jaComprada && pontosEvolucaoDisponiveis < custo) {
       setMensagem("Pontos de evolucao insuficientes para esta habilidade.");
       return;
     }
@@ -193,9 +199,12 @@ const ArvoreHabilidades = () => {
         ...habilidadesClasse.aptidoes,
         [aptidaoId]: !jaComprada,
       },
-      pontosEspecialidade: jaComprada
-        ? pontosEspecialidadeDisponiveis + custo
-        : pontosEspecialidadeDisponiveis - custo,
+    }, {
+      pontosEvolucao: criarPontosEvolucaoAtualizados(
+        jaComprada
+          ? pontosEvolucaoDisponiveis + custo
+          : pontosEvolucaoDisponiveis - custo,
+      ),
     });
   };
 
@@ -277,16 +286,16 @@ const ArvoreHabilidades = () => {
   };
 
   const alternarHabilidadeEspecialidade = (habilidade) => {
-    const custo = obterCustoHabilidade(habilidade, "especialidade");
+    const custo = obterCustoHabilidadeEspecialidade();
     const habilidadeId = habilidade.id;
 
     const jaComprada = Boolean(
       habilidadesClasse.habilidadesEspecialidade?.[habilidadeId],
     );
 
-    if (!jaComprada && pontosEspecialidadeDisponiveis < custo) {
+    if (!jaComprada && pontosEvolucaoDisponiveis < custo) {
       setMensagem(
-        "Você precisa comprar a habilidade anterior deste ramo primeiro.",
+        "Pontos de evolucao insuficientes para esta habilidade.",
       );
       return;
     }
@@ -305,9 +314,9 @@ const ArvoreHabilidades = () => {
       return;
     }
 
-    if (!jaComprada && pontosEspecialidadeDisponiveis < custo) {
+    if (!jaComprada && pontosEvolucaoDisponiveis < custo) {
       setMensagem(
-        "Pontos de especialidade insuficientes para esta habilidade.",
+        "Pontos de evolucao insuficientes para esta habilidade.",
       );
       return;
     }
@@ -317,9 +326,12 @@ const ArvoreHabilidades = () => {
         ...habilidadesClasse.habilidadesEspecialidade,
         [habilidadeId]: !jaComprada,
       },
-      pontosEspecialidade: jaComprada
-        ? pontosEspecialidadeDisponiveis + custo
-        : pontosEspecialidadeDisponiveis - custo,
+    }, {
+      pontosEvolucao: criarPontosEvolucaoAtualizados(
+        jaComprada
+          ? pontosEvolucaoDisponiveis + custo
+          : pontosEvolucaoDisponiveis - custo,
+      ),
     });
   };
 
@@ -338,45 +350,69 @@ const ArvoreHabilidades = () => {
       },
     );
   };
-  const contarCompradas = (objeto = {}) => {
-    return Object.values(objeto).filter(Boolean).length;
-  };
+  const somarCustosComprados = (compradas = {}, itens = [], obterCusto) =>
+    Object.entries(compradas).reduce((total, [itemId, comprado]) => {
+      if (!comprado) return total;
+
+      const item = itens.find((habilidade) => habilidade.id === itemId);
+      return total + obterCusto(item || {});
+    }, 0);
+
+  const obterHabilidadesEspecialidade = () =>
+    (arvore.especialidades || []).flatMap(
+      (especialidade) => especialidade.habilidades || [],
+    );
 
   const removerHabilidadesEspecialidade = () => {
-    const quantidade = contarCompradas(
+    const totalDevolver = somarCustosComprados(
       habilidadesClasse.habilidadesEspecialidade,
+      obterHabilidadesEspecialidade(),
+      obterCustoHabilidadeEspecialidade,
     );
-    const pontosDevolver =
-      quantidade * obterCustoHabilidade({}, "especialidade");
 
     salvarAtualizacao(
       {
         habilidadesEspecialidade: {},
       },
       {
-        pontosEspecialidade: pontosEspecialidadeDisponiveis + pontosDevolver,
+        pontosEvolucao: criarPontosEvolucaoAtualizados(
+          pontosEvolucaoDisponiveis + totalDevolver,
+        ),
       },
     );
   };
 
   const removerAptidoes = () => {
-    const quantidade = contarCompradas(habilidadesClasse.aptidoes);
-    const pontosDevolver = quantidade * obterCustoHabilidade({}, "aptidao");
+    const totalDevolver = somarCustosComprados(
+      habilidadesClasse.aptidoes,
+      arvore.aptidoes || [],
+      obterCustoAptidao,
+    );
 
-    salvarAtualizacao({
-      aptidoes: {},
-      pontosEspecialidade: pontosEspecialidadeDisponiveis + pontosDevolver,
-    });
+    salvarAtualizacao(
+      {
+        aptidoes: {},
+      },
+      {
+        pontosEvolucao: criarPontosEvolucaoAtualizados(
+          pontosEvolucaoDisponiveis + totalDevolver,
+        ),
+      },
+    );
   };
 
   const removerTudoTrilha = () => {
-    const totalHabilidades =
-      contarCompradas(habilidadesClasse.habilidadesEspecialidade) *
-      obterCustoHabilidade({}, "especialidade");
+    const totalHabilidades = somarCustosComprados(
+      habilidadesClasse.habilidadesEspecialidade,
+      obterHabilidadesEspecialidade(),
+      obterCustoHabilidadeEspecialidade,
+    );
 
-    const totalAptidoes =
-      contarCompradas(habilidadesClasse.aptidoes) *
-      obterCustoHabilidade({}, "aptidao");
+    const totalAptidoes = somarCustosComprados(
+      habilidadesClasse.aptidoes,
+      arvore.aptidoes || [],
+      obterCustoAptidao,
+    );
 
     salvarAtualizacao(
       {
@@ -384,10 +420,11 @@ const ArvoreHabilidades = () => {
         habilidadesEspecialidade: {},
         especialidade: "",
         especialidadeDefinida: false,
-        pontosEspecialidade:
-          pontosEspecialidadeDisponiveis + totalHabilidades + totalAptidoes,
       },
       {
+        pontosEvolucao: criarPontosEvolucaoAtualizados(
+          pontosEvolucaoDisponiveis + totalHabilidades + totalAptidoes,
+        ),
         especialidade: "",
       },
     );
@@ -536,7 +573,7 @@ const ArvoreHabilidades = () => {
         <p>{arvore.beneficio}</p>
 
         <strong className="arvore-pontos">
-          Pontos de Especialidade: {pontosEspecialidadeDisponiveis}
+          Pontos disponiveis: {pontosEvolucaoDisponiveis}
         </strong>
       </section>
 
@@ -715,7 +752,7 @@ const ArvoreHabilidades = () => {
                 onMouseLeave={pararArrastoMapa}
               >
                 <strong className="trilha-pontos">
-                  Pontos de Especialidade: {pontosEspecialidadeDisponiveis}
+                  Pontos disponiveis: {pontosEvolucaoDisponiveis}
                 </strong>
                 <div className="trilha-acoes-flutuantes">
                   <button
@@ -931,9 +968,9 @@ const ArvoreHabilidades = () => {
             aria-labelledby="aptidao-modal-titulo"
             onClick={(event) => event.stopPropagation()}
           >
-            
             <span className="arvore-no-tipo">
-              10 Pontos de Especialidade || {aptidaoAberta.custo}{" "}
+              Custo: {obterCustoAptidao()} pontos ||{" "}
+              {aptidaoAberta.custo || "Sem custo"}
             </span>
             <h2 id="aptidao-modal-titulo">{aptidaoAberta.nome}</h2>
             <p>{aptidaoAberta.descricao}</p>

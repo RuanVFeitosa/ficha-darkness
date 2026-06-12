@@ -800,9 +800,9 @@
 .mestre-abrir-ficha {
   min-height: 34px;
   padding: 7px 13px;
-  border: 1px solid rgba(212, 175, 55, 0.26);
+  border: 1px solid rgb(255, 255, 255);
   border-radius: 8px;
-  background: rgba(139, 69, 19, 0.42);
+  background: black;
   color: #f5efe4;
   font: inherit;
   font-size: 0.72rem;
@@ -812,8 +812,9 @@
 }
 
 .mestre-abrir-ficha:hover {
-  border-color: #d4af37;
-  background: #8b4513;
+  border-color: #000000;
+  background: #ffffff;
+  color: #000;
 }
 
 @media (max-width: 760px) {

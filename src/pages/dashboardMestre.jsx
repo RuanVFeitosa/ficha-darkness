@@ -1291,6 +1291,12 @@ const DashboardMestre = () => {
           Fichas
         </button>
         <button
+          className={aba === "inimigos" ? "ativa" : ""}
+          onClick={() => setAba("inimigos")}
+        >
+          Inimigos
+        </button>
+        <button
           className={aba === "loja" ? "ativa" : ""}
           onClick={() => setAba("loja")}
         >
@@ -1301,12 +1307,6 @@ const DashboardMestre = () => {
           onClick={() => setAba("habilidades")}
         >
           Habilidades
-        </button>
-        <button
-          className={aba === "inimigos" ? "ativa" : ""}
-          onClick={() => setAba("inimigos")}
-        >
-          Inimigos
         </button>
       </nav>
 
@@ -1566,6 +1566,476 @@ const DashboardMestre = () => {
               </section>
             </div>
           )}
+        </section>
+      )}
+
+      {aba === "inimigos" && (
+        <section className="mestre-dashboard-full">
+          <div className="mestre-modal-linha-topo">
+            <h2>Inimigos</h2>
+
+            <button
+              className="criarInimigo-button"
+              type="button"
+              onClick={criarNovoInimigo}
+            >
+              Criar inimigo
+            </button>
+          </div>
+
+          <div className="mestre-dashboard-cards">
+            {inimigos.map((inimigo) => renderCardFicha(inimigo, "inimigo"))}
+            {inimigoEditando && (
+              <div
+                className="mestre-modal-overlay"
+                onClick={() => setInimigoEditando(null)}
+              >
+                <section
+                  className="mestre-modal-ficha minimalista"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {(() => {
+                    const inimigo = inimigos.find(
+                      (i) => i.id === inimigoEditando,
+                    );
+
+                    if (!inimigo) return null;
+
+                    const atualizarCampoInimigo = (campo, valor) => {
+                      atualizarInimigo(inimigo.id, {
+                        [campo]: valor,
+                      });
+                    };
+
+                    const atualizarGrupoInimigo = (grupo, chave, valor) => {
+                      atualizarInimigo(inimigo.id, {
+                        [grupo]: {
+                          ...(inimigo[grupo] || {}),
+                          [chave]: parseInt(valor, 10) || 0,
+                        },
+                      });
+                    };
+
+                    return (
+                      <>
+                        <header className="inimigo-ficha-header">
+                          <label className="inimigo-foto-editavel">
+                            <img
+                              src={
+                                inimigo.fotoPerfil ||
+                                "https://placehold.co/300x300"
+                              }
+                              alt={inimigo.nome}
+                            />
+
+                            <span>Editar imagem</span>
+
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(event) => {
+                                const arquivo = event.target.files?.[0];
+                                if (!arquivo) return;
+
+                                const reader = new FileReader();
+
+                                reader.onload = () => {
+                                  atualizarCampoInimigo(
+                                    "fotoPerfil",
+                                    reader.result,
+                                  );
+                                };
+
+                                reader.readAsDataURL(arquivo);
+                              }}
+                            />
+                          </label>
+
+                          <div className="inimigo-identidade">
+                            <label>
+                              NV
+                              <input
+                                type="number"
+                                value={inimigo.nivel || 1}
+                                onChange={(e) =>
+                                  atualizarCampoInimigo(
+                                    "nivel",
+                                    parseInt(e.target.value, 10) || 1,
+                                  )
+                                }
+                              />
+                            </label>
+
+                            <input
+                              className="inimigo-nome-input"
+                              value={inimigo.nome || ""}
+                              onChange={(e) =>
+                                atualizarCampoInimigo("nome", e.target.value)
+                              }
+                            />
+                          </div>
+
+                          <div className="mestre-modal-header-acoes">
+                            <button
+                              className="duplicarButton"
+                              onClick={() => duplicarInimigo(inimigo)}
+                            >
+                              Duplicar
+                            </button>
+
+                            <button
+                              className="mestre-btn-apagar"
+                              onClick={() => {
+                                excluirInimigo(inimigo.id);
+                                setInimigoEditando(null);
+                              }}
+                            >
+                              Apagar
+                            </button>
+
+                            <button
+                              className="mestre-modal-fechar"
+                              onClick={() => setInimigoEditando(null)}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </header>
+
+                        <section className="mestre-modal-bloco full">
+                          <span>Atributos</span>
+
+                          <div className="mestre-modal-atributos linha">
+                            {Object.entries(inimigo.atributos || {}).map(
+                              ([atributo, valor]) => (
+                                <label key={atributo}>
+                                  {atributo}
+
+                                  <input
+                                    type="number"
+                                    value={valor}
+                                    onChange={(e) =>
+                                      atualizarGrupoInimigo(
+                                        "atributos",
+                                        atributo,
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+                                </label>
+                              ),
+                            )}
+                          </div>
+                        </section>
+                        {/* SANIDADE */}
+                        <section className="inimigo-ficha-bloco">
+                          <h3>Sanidade</h3>
+
+                          <div className="mestre-form-grid">
+                            <label>
+                              Atual
+                              <input
+                                type="number"
+                                value={inimigo.sanidade?.atual || 0}
+                                onChange={(e) =>
+                                  atualizarCampoInimigo("sanidade", {
+                                    ...(inimigo.sanidade || {}),
+                                    atual: parseInt(e.target.value, 10) || 0,
+                                  })
+                                }
+                              />
+                            </label>
+
+                            <label>
+                              Máxima
+                              <input
+                                type="number"
+                                value={inimigo.sanidade?.max || 0}
+                                onChange={(e) =>
+                                  atualizarCampoInimigo("sanidade", {
+                                    ...(inimigo.sanidade || {}),
+                                    max: parseInt(e.target.value, 10) || 0,
+                                  })
+                                }
+                              />
+                            </label>
+                          </div>
+                        </section>
+
+                        {/* DEFESA */}
+                        <section className="inimigo-ficha-bloco">
+                          <h3>Defesa</h3>
+
+                          <input
+                            type="number"
+                            value={inimigo.defesa || 0}
+                            onChange={(e) =>
+                              atualizarCampoInimigo(
+                                "defesa",
+                                parseInt(e.target.value, 10) || 0,
+                              )
+                            }
+                          />
+                        </section>
+
+                        {/* MEMBROS */}
+                        <section className="inimigo-ficha-bloco">
+                          <h3>Membros</h3>
+
+                          <div className="mestre-corpo-grid">
+                            {membrosFicha.map(({ chave, nome }) => {
+                              const dados = inimigo.membros?.[chave] || {
+                                atual: 0,
+                                max: 0,
+                                defesa: 0,
+                              };
+
+                              const atualizarMembroInimigo = (campo, valor) => {
+                                atualizarCampoInimigo("membros", {
+                                  ...(inimigo.membros || {}),
+                                  [chave]: {
+                                    ...dados,
+                                    [campo]: Math.max(
+                                      0,
+                                      parseInt(valor, 10) || 0,
+                                    ),
+                                  },
+                                });
+                              };
+
+                              return (
+                                <div key={chave} className="mestre-corpo-item">
+                                  <strong>{nome}</strong>
+
+                                  <label>
+                                    Atual
+                                    <input
+                                      type="number"
+                                      value={dados.atual || 0}
+                                      onChange={(e) =>
+                                        atualizarMembroInimigo(
+                                          "atual",
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+                                  </label>
+
+                                  <label>
+                                    Máx
+                                    <input
+                                      type="number"
+                                      value={dados.max || 0}
+                                      onChange={(e) =>
+                                        atualizarMembroInimigo(
+                                          "max",
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+                                  </label>
+
+                                  <label>
+                                    DEF
+                                    <input
+                                      type="number"
+                                      value={dados.defesa || 0}
+                                      onChange={(e) =>
+                                        atualizarMembroInimigo(
+                                          "defesa",
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+                                  </label>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </section>
+
+                        {/* ATAQUES */}
+                        <section className="inimigo-ficha-bloco">
+                          <div className="inimigo-bloco-topo">
+                            <h3>Ataques</h3>
+
+                            <button
+                              className="ataqueButton"
+                              type="button"
+                              onClick={() =>
+                                atualizarCampoInimigo("ataques", [
+                                  ...(inimigo.ataques || []),
+                                  {
+                                    nome: "Novo Ataque",
+                                    alcance: "Corpo a Corpo",
+                                    dano: "1d6",
+                                    efeito: "",
+                                  },
+                                ])
+                              }
+                            >
+                              + Ataque
+                            </button>
+                          </div>
+
+                          {(inimigo.ataques || []).map((ataque, index) => (
+                            <div key={index} className="inimigo-ataque-card">
+                              <input
+                                value={ataque.nome || ""}
+                                placeholder="Nome do ataque"
+                                onChange={(e) => {
+                                  const ataques = [...(inimigo.ataques || [])];
+                                  ataques[index] = {
+                                    ...ataque,
+                                    nome: e.target.value,
+                                  };
+                                  atualizarCampoInimigo("ataques", ataques);
+                                }}
+                              />
+
+                              <input
+                                value={ataque.alcance || ""}
+                                placeholder="Alcance"
+                                onChange={(e) => {
+                                  const ataques = [...(inimigo.ataques || [])];
+                                  ataques[index] = {
+                                    ...ataque,
+                                    alcance: e.target.value,
+                                  };
+                                  atualizarCampoInimigo("ataques", ataques);
+                                }}
+                              />
+
+                              <input
+                                value={ataque.dano || ""}
+                                placeholder="Dano: 2d6 + 3"
+                                onChange={(e) => {
+                                  const ataques = [...(inimigo.ataques || [])];
+                                  ataques[index] = {
+                                    ...ataque,
+                                    dano: e.target.value,
+                                  };
+                                  atualizarCampoInimigo("ataques", ataques);
+                                }}
+                              />
+
+                              <textarea
+                                value={ataque.efeito || ""}
+                                placeholder="Efeito do ataque"
+                                onChange={(e) => {
+                                  const ataques = [...(inimigo.ataques || [])];
+                                  ataques[index] = {
+                                    ...ataque,
+                                    efeito: e.target.value,
+                                  };
+                                  atualizarCampoInimigo("ataques", ataques);
+                                }}
+                              />
+
+                              <button
+                                type="button"
+                                className="mestre-btn-apagar"
+                                onClick={() =>
+                                  atualizarCampoInimigo(
+                                    "ataques",
+                                    (inimigo.ataques || []).filter(
+                                      (_, i) => i !== index,
+                                    ),
+                                  )
+                                }
+                              >
+                                Remover
+                              </button>
+                            </div>
+                          ))}
+                        </section>
+
+                        {/* HABILIDADES */}
+                        <section className="inimigo-ficha-bloco">
+                          <div className="inimigo-bloco-topo">
+                            <h3>Habilidades</h3>
+
+                            <button
+                              className="habilidadeButton"
+                              type="button"
+                              onClick={() =>
+                                atualizarCampoInimigo("habilidades", [
+                                  ...(inimigo.habilidades || []),
+                                  {
+                                    nome: "Nova Habilidade",
+                                    descricao: "",
+                                  },
+                                ])
+                              }
+                            >
+                              + Habilidade
+                            </button>
+                          </div>
+
+                          {(inimigo.habilidades || []).map(
+                            (habilidade, index) => (
+                              <div key={index} className="inimigo-ataque-card">
+                                <input
+                                  value={habilidade.nome || ""}
+                                  placeholder="Nome da habilidade"
+                                  onChange={(e) => {
+                                    const habilidades = [
+                                      ...(inimigo.habilidades || []),
+                                    ];
+                                    habilidades[index] = {
+                                      ...habilidade,
+                                      nome: e.target.value,
+                                    };
+                                    atualizarCampoInimigo(
+                                      "habilidades",
+                                      habilidades,
+                                    );
+                                  }}
+                                />
+
+                                <textarea
+                                  value={habilidade.descricao || ""}
+                                  placeholder="Descrição da habilidade"
+                                  onChange={(e) => {
+                                    const habilidades = [
+                                      ...(inimigo.habilidades || []),
+                                    ];
+                                    habilidades[index] = {
+                                      ...habilidade,
+                                      descricao: e.target.value,
+                                    };
+                                    atualizarCampoInimigo(
+                                      "habilidades",
+                                      habilidades,
+                                    );
+                                  }}
+                                />
+
+                                <button
+                                  type="button"
+                                  className="mestre-btn-apagar"
+                                  onClick={() =>
+                                    atualizarCampoInimigo(
+                                      "habilidades",
+                                      (inimigo.habilidades || []).filter(
+                                        (_, i) => i !== index,
+                                      ),
+                                    )
+                                  }
+                                >
+                                  Remover
+                                </button>
+                              </div>
+                            ),
+                          )}
+                        </section>
+                      </>
+                    );
+                  })()}
+                </section>
+              </div>
+            )}
+          </div>
         </section>
       )}
 
@@ -2053,476 +2523,6 @@ const DashboardMestre = () => {
                 ));
               })()}
             </div>
-          </div>
-        </section>
-      )}
-
-      {aba === "inimigos" && (
-        <section className="mestre-dashboard-full">
-          <div className="mestre-modal-linha-topo">
-            <h2>Inimigos</h2>
-
-            <button
-              className="criarInimigo-button"
-              type="button"
-              onClick={criarNovoInimigo}
-            >
-              Criar inimigo
-            </button>
-          </div>
-
-          <div className="mestre-dashboard-cards">
-            {inimigos.map((inimigo) => renderCardFicha(inimigo, "inimigo"))}
-            {inimigoEditando && (
-              <div
-                className="mestre-modal-overlay"
-                onClick={() => setInimigoEditando(null)}
-              >
-                <section
-                  className="mestre-modal-ficha minimalista"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {(() => {
-                    const inimigo = inimigos.find(
-                      (i) => i.id === inimigoEditando,
-                    );
-
-                    if (!inimigo) return null;
-
-                    const atualizarCampoInimigo = (campo, valor) => {
-                      atualizarInimigo(inimigo.id, {
-                        [campo]: valor,
-                      });
-                    };
-
-                    const atualizarGrupoInimigo = (grupo, chave, valor) => {
-                      atualizarInimigo(inimigo.id, {
-                        [grupo]: {
-                          ...(inimigo[grupo] || {}),
-                          [chave]: parseInt(valor, 10) || 0,
-                        },
-                      });
-                    };
-
-                    return (
-                      <>
-                        <header className="inimigo-ficha-header">
-                          <label className="inimigo-foto-editavel">
-                            <img
-                              src={
-                                inimigo.fotoPerfil ||
-                                "https://placehold.co/300x300"
-                              }
-                              alt={inimigo.nome}
-                            />
-
-                            <span>Editar imagem</span>
-
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(event) => {
-                                const arquivo = event.target.files?.[0];
-                                if (!arquivo) return;
-
-                                const reader = new FileReader();
-
-                                reader.onload = () => {
-                                  atualizarCampoInimigo(
-                                    "fotoPerfil",
-                                    reader.result,
-                                  );
-                                };
-
-                                reader.readAsDataURL(arquivo);
-                              }}
-                            />
-                          </label>
-
-                          <div className="inimigo-identidade">
-                            <label>
-                              NV
-                              <input
-                                type="number"
-                                value={inimigo.nivel || 1}
-                                onChange={(e) =>
-                                  atualizarCampoInimigo(
-                                    "nivel",
-                                    parseInt(e.target.value, 10) || 1,
-                                  )
-                                }
-                              />
-                            </label>
-
-                            <input
-                              className="inimigo-nome-input"
-                              value={inimigo.nome || ""}
-                              onChange={(e) =>
-                                atualizarCampoInimigo("nome", e.target.value)
-                              }
-                            />
-                          </div>
-
-                          <div className="mestre-modal-header-acoes">
-                            <button
-                              className="duplicarButton"
-                              onClick={() => duplicarInimigo(inimigo)}
-                            >
-                              Duplicar
-                            </button>
-
-                            <button
-                              className="mestre-btn-apagar"
-                              onClick={() => {
-                                excluirInimigo(inimigo.id);
-                                setInimigoEditando(null);
-                              }}
-                            >
-                              Apagar
-                            </button>
-
-                            <button
-                              className="mestre-modal-fechar"
-                              onClick={() => setInimigoEditando(null)}
-                            >
-                              ×
-                            </button>
-                          </div>
-                        </header>
-
-                        <section className="mestre-modal-bloco full">
-                          <span>Atributos</span>
-
-                          <div className="mestre-modal-atributos linha">
-                            {Object.entries(inimigo.atributos || {}).map(
-                              ([atributo, valor]) => (
-                                <label key={atributo}>
-                                  {atributo}
-
-                                  <input
-                                    type="number"
-                                    value={valor}
-                                    onChange={(e) =>
-                                      atualizarGrupoInimigo(
-                                        "atributos",
-                                        atributo,
-                                        e.target.value,
-                                      )
-                                    }
-                                  />
-                                </label>
-                              ),
-                            )}
-                          </div>
-                        </section>
-                        {/* SANIDADE */}
-                        <section className="inimigo-ficha-bloco">
-                          <h3>Sanidade</h3>
-
-                          <div className="mestre-form-grid">
-                            <label>
-                              Atual
-                              <input
-                                type="number"
-                                value={inimigo.sanidade?.atual || 0}
-                                onChange={(e) =>
-                                  atualizarCampoInimigo("sanidade", {
-                                    ...(inimigo.sanidade || {}),
-                                    atual: parseInt(e.target.value, 10) || 0,
-                                  })
-                                }
-                              />
-                            </label>
-
-                            <label>
-                              Máxima
-                              <input
-                                type="number"
-                                value={inimigo.sanidade?.max || 0}
-                                onChange={(e) =>
-                                  atualizarCampoInimigo("sanidade", {
-                                    ...(inimigo.sanidade || {}),
-                                    max: parseInt(e.target.value, 10) || 0,
-                                  })
-                                }
-                              />
-                            </label>
-                          </div>
-                        </section>
-
-                        {/* DEFESA */}
-                        <section className="inimigo-ficha-bloco">
-                          <h3>Defesa</h3>
-
-                          <input
-                            type="number"
-                            value={inimigo.defesa || 0}
-                            onChange={(e) =>
-                              atualizarCampoInimigo(
-                                "defesa",
-                                parseInt(e.target.value, 10) || 0,
-                              )
-                            }
-                          />
-                        </section>
-
-                        {/* MEMBROS */}
-                        <section className="inimigo-ficha-bloco">
-                          <h3>Membros</h3>
-
-                          <div className="mestre-corpo-grid">
-                            {membrosFicha.map(({ chave, nome }) => {
-                              const dados = inimigo.membros?.[chave] || {
-                                atual: 0,
-                                max: 0,
-                                defesa: 0,
-                              };
-
-                              const atualizarMembroInimigo = (campo, valor) => {
-                                atualizarCampoInimigo("membros", {
-                                  ...(inimigo.membros || {}),
-                                  [chave]: {
-                                    ...dados,
-                                    [campo]: Math.max(
-                                      0,
-                                      parseInt(valor, 10) || 0,
-                                    ),
-                                  },
-                                });
-                              };
-
-                              return (
-                                <div key={chave} className="mestre-corpo-item">
-                                  <strong>{nome}</strong>
-
-                                  <label>
-                                    Atual
-                                    <input
-                                      type="number"
-                                      value={dados.atual || 0}
-                                      onChange={(e) =>
-                                        atualizarMembroInimigo(
-                                          "atual",
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </label>
-
-                                  <label>
-                                    Máx
-                                    <input
-                                      type="number"
-                                      value={dados.max || 0}
-                                      onChange={(e) =>
-                                        atualizarMembroInimigo(
-                                          "max",
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </label>
-
-                                  <label>
-                                    DEF
-                                    <input
-                                      type="number"
-                                      value={dados.defesa || 0}
-                                      onChange={(e) =>
-                                        atualizarMembroInimigo(
-                                          "defesa",
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </label>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </section>
-
-                        {/* ATAQUES */}
-                        <section className="inimigo-ficha-bloco">
-                          <div className="inimigo-bloco-topo">
-                            <h3>Ataques</h3>
-
-                            <button
-                              className="ataqueButton"
-                              type="button"
-                              onClick={() =>
-                                atualizarCampoInimigo("ataques", [
-                                  ...(inimigo.ataques || []),
-                                  {
-                                    nome: "Novo Ataque",
-                                    alcance: "Corpo a Corpo",
-                                    dano: "1d6",
-                                    efeito: "",
-                                  },
-                                ])
-                              }
-                            >
-                              + Ataque
-                            </button>
-                          </div>
-
-                          {(inimigo.ataques || []).map((ataque, index) => (
-                            <div key={index} className="inimigo-ataque-card">
-                              <input
-                                value={ataque.nome || ""}
-                                placeholder="Nome do ataque"
-                                onChange={(e) => {
-                                  const ataques = [...(inimigo.ataques || [])];
-                                  ataques[index] = {
-                                    ...ataque,
-                                    nome: e.target.value,
-                                  };
-                                  atualizarCampoInimigo("ataques", ataques);
-                                }}
-                              />
-
-                              <input
-                                value={ataque.alcance || ""}
-                                placeholder="Alcance"
-                                onChange={(e) => {
-                                  const ataques = [...(inimigo.ataques || [])];
-                                  ataques[index] = {
-                                    ...ataque,
-                                    alcance: e.target.value,
-                                  };
-                                  atualizarCampoInimigo("ataques", ataques);
-                                }}
-                              />
-
-                              <input
-                                value={ataque.dano || ""}
-                                placeholder="Dano: 2d6 + 3"
-                                onChange={(e) => {
-                                  const ataques = [...(inimigo.ataques || [])];
-                                  ataques[index] = {
-                                    ...ataque,
-                                    dano: e.target.value,
-                                  };
-                                  atualizarCampoInimigo("ataques", ataques);
-                                }}
-                              />
-
-                              <textarea
-                                value={ataque.efeito || ""}
-                                placeholder="Efeito do ataque"
-                                onChange={(e) => {
-                                  const ataques = [...(inimigo.ataques || [])];
-                                  ataques[index] = {
-                                    ...ataque,
-                                    efeito: e.target.value,
-                                  };
-                                  atualizarCampoInimigo("ataques", ataques);
-                                }}
-                              />
-
-                              <button
-                                type="button"
-                                className="mestre-btn-apagar"
-                                onClick={() =>
-                                  atualizarCampoInimigo(
-                                    "ataques",
-                                    (inimigo.ataques || []).filter(
-                                      (_, i) => i !== index,
-                                    ),
-                                  )
-                                }
-                              >
-                                Remover
-                              </button>
-                            </div>
-                          ))}
-                        </section>
-
-                        {/* HABILIDADES */}
-                        <section className="inimigo-ficha-bloco">
-                          <div className="inimigo-bloco-topo">
-                            <h3>Habilidades</h3>
-
-                            <button
-                              className="habilidadeButton"
-                              type="button"
-                              onClick={() =>
-                                atualizarCampoInimigo("habilidades", [
-                                  ...(inimigo.habilidades || []),
-                                  {
-                                    nome: "Nova Habilidade",
-                                    descricao: "",
-                                  },
-                                ])
-                              }
-                            >
-                              + Habilidade
-                            </button>
-                          </div>
-
-                          {(inimigo.habilidades || []).map(
-                            (habilidade, index) => (
-                              <div key={index} className="inimigo-ataque-card">
-                                <input
-                                  value={habilidade.nome || ""}
-                                  placeholder="Nome da habilidade"
-                                  onChange={(e) => {
-                                    const habilidades = [
-                                      ...(inimigo.habilidades || []),
-                                    ];
-                                    habilidades[index] = {
-                                      ...habilidade,
-                                      nome: e.target.value,
-                                    };
-                                    atualizarCampoInimigo(
-                                      "habilidades",
-                                      habilidades,
-                                    );
-                                  }}
-                                />
-
-                                <textarea
-                                  value={habilidade.descricao || ""}
-                                  placeholder="Descrição da habilidade"
-                                  onChange={(e) => {
-                                    const habilidades = [
-                                      ...(inimigo.habilidades || []),
-                                    ];
-                                    habilidades[index] = {
-                                      ...habilidade,
-                                      descricao: e.target.value,
-                                    };
-                                    atualizarCampoInimigo(
-                                      "habilidades",
-                                      habilidades,
-                                    );
-                                  }}
-                                />
-
-                                <button
-                                  type="button"
-                                  className="mestre-btn-apagar"
-                                  onClick={() =>
-                                    atualizarCampoInimigo(
-                                      "habilidades",
-                                      (inimigo.habilidades || []).filter(
-                                        (_, i) => i !== index,
-                                      ),
-                                    )
-                                  }
-                                >
-                                  Remover
-                                </button>
-                              </div>
-                            ),
-                          )}
-                        </section>
-                      </>
-                    );
-                  })()}
-                </section>
-              </div>
-            )}
           </div>
         </section>
       )}

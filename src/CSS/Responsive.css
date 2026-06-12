@@ -1,0 +1,509 @@
+/* Responsive safety layer loaded after the page-specific styles. */
+
+html {
+  overflow-x: hidden;
+}
+
+body,
+#root,
+.App {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+.App {
+  min-height: 100svh;
+}
+
+@media (max-width: 1180px) {
+  .ficha-container,
+  .criacao-container,
+  .loja-page,
+  .arvore-page,
+  .upgrade-page,
+  .mestre-page {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .main-content,
+  .loja-layout,
+  .mestre-loja,
+  .mestre-modal-recursos,
+  .mestre-modal-header,
+  .inimigo-ficha-header {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .loja-carrinho,
+  .mestre-catalogo,
+  .mestre-catalogo-area {
+    position: static;
+    width: 100%;
+    max-height: none;
+  }
+
+  .mestre-modal-ficha {
+    width: min(100%, 980px);
+  }
+}
+
+@media (max-width: 900px) {
+  .ficha-container {
+    height: auto;
+    min-height: 100svh;
+    padding: 14px;
+  }
+
+  .main-content,
+  .colunas-personagem {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .profile-section,
+  .profile-container,
+  .sanidade-section,
+  .sanidade-container,
+  .atributoCompleto,
+  .atributos-coluna,
+  .sidebar-container {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .profile-container,
+  .sanidade-inputs {
+    align-items: center;
+  }
+
+  .sanidade-inputs {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .identidade-personagem {
+    width: min(100%, 360px);
+    order: 1;
+  }
+
+  .profile-wrapper {
+    width: clamp(118px, 34vw, 150px);
+    height: clamp(118px, 34vw, 150px);
+    order: 2;
+  }
+
+  .sanidade-completa {
+    width: min(100%, 320px);
+    order: 3;
+  }
+
+  .nome-personagem,
+  .dado-personagem {
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .atributos-linha {
+    width: 100%;
+    max-width: 640px;
+    margin-inline: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .atributoCompleto {
+    justify-content: center;
+  }
+
+  .atributo-item {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .sidebar-abas {
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 8px;
+    scroll-snap-type: x proximity;
+    background: color-mix(in srgb, var(--cor-fundo, #000) 88%, transparent);
+    backdrop-filter: blur(8px);
+  }
+
+  .aba-btn {
+    flex: 0 0 auto;
+    min-width: max-content;
+    scroll-snap-align: start;
+  }
+
+  .sidebar-conteudo {
+    min-height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .botao-loja-flutuante,
+  .botao-upgrade-flutuante,
+  .botao-mestre-flutuante,
+  .botao-customizacao-flutuante {
+    position: static;
+    width: 100%;
+    min-height: 44px;
+    margin: 0 0 8px;
+    transform: none;
+  }
+
+  .loja-hero,
+  .upgrade-hero,
+  .arvore-hero {
+    min-height: auto;
+    padding: 86px 20px 28px;
+  }
+
+  .loja-shell,
+  .upgrade-shell,
+  .arvore-shell,
+  .upgrade-status,
+  .upgrade-tabela {
+    width: min(100%, calc(100vw - 24px));
+  }
+
+  .loja-toolbar,
+  .ritos-subabas,
+  .upgrade-trilhas,
+  .arvore-abas,
+  .mestre-tabs,
+  .mestre-ficha-tabs,
+  .mestre-categorias-loja,
+  .mestre-ritos-niveis-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 6px;
+  }
+
+  .loja-toolbar > *,
+  .ritos-subabas > *,
+  .upgrade-trilhas > *,
+  .arvore-abas > *,
+  .mestre-tabs > *,
+  .mestre-ficha-tabs > *,
+  .mestre-categorias-loja > *,
+  .mestre-ritos-niveis-tabs > * {
+    flex: 0 0 auto;
+  }
+
+  .loja-catalogo,
+  .mestre-dashboard-cards,
+  .mestre-form-grid,
+  .mestre-duplo,
+  .mestre-passivas-grid,
+  .mestre-inventario-grid,
+  .mestre-corpo-grid,
+  .mestre-modal-atributos,
+  .upgrade-status,
+  .upgrade-lista,
+  .criacao-grid,
+  .estoque-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  }
+
+  .mestre-header,
+  .mestre-editor-topo,
+  .mestre-loja-editor-topo,
+  .mestre-modal-linha-topo,
+  .mestre-catalogo article,
+  .mestre-edit-lista > div,
+  .mestre-header-admin,
+  .mestre-modal-header-acoes {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mestre-modal-overlay {
+    padding: 14px;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .mestre-modal-ficha {
+    max-height: none;
+    padding: 18px;
+  }
+}
+
+@media (max-width: 760px) {
+  .inicio-container,
+  .criacao-container,
+  .loja-page,
+  .upgrade-page,
+  .arvore-page,
+  .mestre-page {
+    padding: 12px;
+  }
+
+  .inicio-painel,
+  .criacao-form,
+  .mestre-loja-form,
+  .mestre-criar,
+  .mestre-inventario-form,
+  .mestre-modal-ficha,
+  .customizacao-modal,
+  .aptidao-modal,
+  .item-visualizer,
+  .modal-rolagem,
+  .modal-descricao {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .criacao-dialogo {
+    min-height: 112px;
+    padding: 18px;
+  }
+
+  .criacao-dialogo h1 {
+    font-size: clamp(1.2rem, 6vw, 2rem);
+    overflow-wrap: anywhere;
+  }
+
+  .criacao-bloco.identidade,
+  .criacao-integridade,
+  .criacao-atributos,
+  .foto-etapa,
+  .classes-etapa,
+  .mestre-loja-form-acoes,
+  .mestre-catalogo-acoes,
+  .item-personalizado-form,
+  .inimigo-identidade,
+  .inimigo-ataque-card {
+    grid-template-columns: 1fr;
+  }
+
+  .arquetipos-etapa {
+    grid-template-columns: 1fr;
+    max-height: 60svh;
+  }
+
+  .classe-bg-img {
+    width: 100%;
+    opacity: 0.18;
+    object-position: center bottom;
+  }
+
+  .classe-navegacao,
+  .criacao-acoes,
+  .inicio-acoes,
+  .aptidao-modal-acoes,
+  .item-visualizer-acoes {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .criacao-acoes button,
+  .inicio-acoes button,
+  .classe-nav-btn,
+  .aptidao-modal-acoes button,
+  .item-visualizer-acoes button,
+  .loja-finalizar,
+  .upgrade-confirmar {
+    width: 100%;
+  }
+
+  .loja-hero-copy {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .loja-catalogo {
+    grid-template-columns: 1fr;
+  }
+
+  .loja-item-footer,
+  .loja-carrinho-item,
+  .mestre-card-conteudo,
+  .mestre-card-topo,
+  .mestre-modal-header-esquerda,
+  .inimigo-ficha-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mestre-card-personagem {
+    min-height: auto;
+  }
+
+  .mestre-card-conteudo {
+    min-height: auto;
+    padding: 18px;
+  }
+
+  .mestre-card-foto,
+  .mestre-modal-foto,
+  .inimigo-foto-editavel {
+    width: 76px;
+    height: 76px;
+  }
+
+  .upgrade-tabela {
+    overflow-x: auto;
+  }
+
+  .upgrade-tabela-grid {
+    min-width: 620px;
+  }
+
+  .arvore-page:has(.arvore-skilltree) {
+    padding: 0;
+  }
+
+  .arvore-page:has(.arvore-skilltree) .arvore-abas {
+    position: sticky;
+    top: 0;
+    left: auto;
+    transform: none;
+    width: 100%;
+    border-radius: 0;
+  }
+
+  .arvore-skilltree,
+  .skilltree-viewport {
+    height: calc(100svh - 64px);
+  }
+
+  .skilltree-viewport {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .skilltree-area,
+  .absolutas-tree-area {
+    transform-origin: top left;
+  }
+
+  .aptidao-modal-backdrop,
+  .item-visualizer-overlay,
+  .modal-rolagem-overlay,
+  .modal-descricao-overlay,
+  .customizacao-overlay {
+    padding: 12px;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .profile-container,
+  .sanidade-inputs {
+    display: grid;
+    justify-items: center;
+  }
+
+  .barra-recurso-rpg,
+  .sanidade-completa {
+    width: 100%;
+  }
+
+  .barra-rpg-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto auto;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .barra-rpg-label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .barra-rpg-input {
+    width: 42px;
+  }
+
+  .atributoCompleto,
+  .atributo-item,
+  .atributo-controles,
+  .membro-controle,
+  .membro-vida-inputs,
+  .membro-botoes {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .membro-botoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .conteudo-aba,
+  .personagem-aba,
+  .criacao-itens,
+  .maleta-campo-container,
+  .sistema-membros-sidebar,
+  .condicoes-wrapper {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .lista-condicoes,
+  .condicoes-ativas-descricao,
+  .inventario-cards,
+  .criacao-grid,
+  .maleta-aprimoramentos-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .loja-hero,
+  .upgrade-hero,
+  .arvore-hero {
+    padding: 76px 16px 24px;
+  }
+
+  .loja-hero h1,
+  .upgrade-hero h1,
+  .arvore-hero h1 {
+    line-height: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .foto-preview {
+    width: min(180px, 62vw);
+  }
+
+  .mestre-page input,
+  .mestre-page select,
+  .mestre-page textarea,
+  .criacao-form input,
+  .criacao-form select,
+  .criacao-form textarea {
+    font-size: 16px;
+  }
+}

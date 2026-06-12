@@ -47,7 +47,6 @@ const UpgradeNivel = () => {
   const pontosPorTrilha = {
     passivos: 10,
     atributos: 10,
-    habilidades: 20,
   };
   
   const custos =
@@ -58,7 +57,10 @@ const UpgradeNivel = () => {
     parseInt(personagem.pontosEvolucao?.disponiveis, 10) || 0,
   );
 
-  const pontosDisponiveisNaTrilha = pontosPorTrilha[trilha] || 0;
+  const pontosDisponiveisNaTrilha =
+    trilha === "habilidades"
+      ? pontosEvolucaoDisponiveis
+      : pontosPorTrilha[trilha] || 0;
 
   const custoPorMelhoria =
     trilha === "passivos"
@@ -152,7 +154,7 @@ const UpgradeNivel = () => {
       setMensagem(
         `Limite atingido. ${
           trilha === "atributos" ? "Atributos" : "Passivos"
-        } podem ir até ${limite}.`,
+        } podem ir atÃ© ${limite}.`,
       );
     } else {
       setMensagem("");
@@ -320,13 +322,15 @@ const UpgradeNivel = () => {
         </div>
 
         <div className="upgrade-pontos">
-          <span>Pontos da trilha</span>
+          <span>
+            {trilha === "habilidades"
+              ? "Saldo para habilidades"
+              : "Pontos da trilha"}
+          </span>
           <strong>
-            <strong>
-              {pontosRestantes} restantes de {pontosDisponiveisNaTrilha} pontos
-              {" • "}
-              Custo: {custoPorMelhoria} PE
-            </strong>{" "}
+            {trilha === "habilidades"
+              ? `${pontosEvolucaoDisponiveis} pontos disponiveis`
+              : `${pontosRestantes} restantes de ${pontosDisponiveisNaTrilha} pontos - Custo: ${custoPorMelhoria} PE`} 
           </strong>
         </div>
 
@@ -382,8 +386,8 @@ const UpgradeNivel = () => {
             <h2>Habilidades Absolutas</h2>
             <p>
               As habilidades e aptidoes usam o proprio preco em PE como custo.
-              Abra a arvore para adquirir cada uma usando seus pontos de
-              evolucao disponiveis.
+              A arvore usa o saldo de pontos disponiveis desta ficha:{" "}
+              <strong>{pontosEvolucaoDisponiveis} pontos</strong>.
             </p>
             <button type="button" onClick={abrirArvore}>
               Abrir arvore de habilidades

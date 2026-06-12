@@ -400,7 +400,7 @@ const descricoesAtivos = {
 };
 
 const FichaPersonagem = () => {
-  const fichaId = obterFichaIdDaUrl();
+  const [fichaId] = useState(() => obterFichaIdDaUrl());
   const [personagem, setPersonagem] = useState(estadoInicial);
   const [abaAtiva, setAbaAtiva] = useState("combate");
   const [ultimoSave, setUltimoSave] = useState(null);
@@ -409,7 +409,6 @@ const FichaPersonagem = () => {
   const [subAbaInventario, setSubAbaInventario] = useState("mochila");
   const [abaCriacao, setAbaCriacao] = useState("armas");
   const [mensagemCraft, setMensagemCraft] = useState("");
-  const [modalRolagem, setModalRolagem] = useState(null);
   const [rolandoDados, setRolandoDados] = useState(false);
   const [itemVisualizado, setItemVisualizado] = useState(null);
   const [itemVisualizadoIndex, setItemVisualizadoIndex] = useState(null);
@@ -427,6 +426,14 @@ const FichaPersonagem = () => {
   const [modalAberto, setModalAberto] = useState(false);
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
+  const [modalRolagem, setModalRolagem] = useState(null);
+  const [subAbaPersonalizacao, setSubAbaPersonalizacao] =
+    useState("customizacao");
+  const [formulaDadoPersonalizado, setFormulaDadoPersonalizado] = useState("");
+  const [erroRolagemPersonalizada, setErroRolagemPersonalizada] = useState("");
+  const [modificadorDadosRolagem, setModificadorDadosRolagem] = useState(0);
+  const [ativoPassivaSelecionado, setAtivoPassivaSelecionado] =
+    useState("razao");
 
   const [subAbaHabilidade, setSubAbaHabilidade] = useState("arquetipo");
 
@@ -460,19 +467,52 @@ const FichaPersonagem = () => {
     let ativo = true;
 
     const carregarFicha = async () => {
-      setCarregado(false);
-
       try {
+        salvarLocalSeguro(ULTIMA_FICHA_KEY, fichaId);
+
         const personagemApi = await buscarPersonagem(fichaId);
 
         if (!ativo) return;
 
         if (personagemApi) {
+          const classeAtual =
+            personagemApi.classeId || personagemApi.classe || "";
+
+          const jaTemMaleta = (personagemApi.inventario || []).some(
+            (item) => item.nome === "Maleta de Campo",
+          );
+
+          if (classeAtual.toLowerCase().includes("medico") && !jaTemMaleta) {
+            personagemApi.inventario = [
+              ...(personagemApi.inventario || []),
+              {
+                ...MALETA_DE_CAMPO,
+              },
+            ];
+          }
+
           setPersonagem(personagemApi);
-          console.log("✅ BACKEND:", personagemApi);
+          console.log("BACKEND:", personagemApi);
+
+          console.log("✅ Dados carregados do backend");
         }
       } catch (error) {
-        console.error("❌ Erro ao carregar backend:", error);
+        console.warn("⚠️ Backend indisponível. Tentando localStorage.", error);
+
+        const dadosSalvos = lerLocalSeguro(storageKey);
+
+        if (dadosSalvos && ativo) {
+          try {
+            const personagemSalvo = JSON.parse(dadosSalvos);
+
+            setPersonagem(personagemSalvo);
+            console.log("LOCAL STORAGE:", personagemSalvo);
+
+            console.log("⚠️ Dados carregados do localStorage");
+          } catch (erro) {
+            console.error("Erro ao carregar localStorage:", erro);
+          }
+        }
       } finally {
         if (ativo) {
           setCarregado(true);
@@ -485,7 +525,7 @@ const FichaPersonagem = () => {
     return () => {
       ativo = false;
     };
-  }, [fichaId]);
+  }, [fichaId, storageKey]);
 
   // SALVAR DADOS AUTOMATICAMENTE QUANDO MUDAR
   useEffect(() => {
@@ -497,7 +537,7 @@ const FichaPersonagem = () => {
       return;
     }
 
-    // salvarPersonagemLocalSeguro(storageKey, personagem);
+    salvarPersonagemLocalSeguro(storageKey, personagem);
     setUltimoSave(new Date().toLocaleTimeString());
 
     salvarPersonagem(fichaId, personagem).catch((error) => {
@@ -859,25 +899,47 @@ const FichaPersonagem = () => {
     );
   };
 
-  const rolarTeste = ({ atributo, ativo, passiva = 0 }) => {
+  const rolarTeste = ({
+    atributo,
+    ativo,
+    passiva = 0,
+    modificadorDados = 0,
+  }) => {
     const valorAtributo = parseInt(atributo, 10) || 0;
     const bonusAtivo = parseInt(ativo, 10) || 0;
     const bonusPassiva = parseInt(passiva, 10) || 0;
 
-    const quantidadeDados = obterModificadorAtributo(valorAtributo);
+    const quantidadeBase = obterModificadorAtributo(valorAtributo);
+    const quantidadeDados = Math.max(1, quantidadeBase + modificadorDados);
     const faces = obterDadoAtributo(valorAtributo);
 
     const rolagens = Array.from({ length: quantidadeDados }, () =>
       rolarDado(faces),
     );
 
-    const maiorResultado = Math.max(...rolagens);
-    const total = maiorResultado + bonusAtivo + bonusPassiva;
+    const rolagensOrdenadas = [...rolagens].sort((a, b) => b - a);
+    const finais = rolagens.filter((valor) => valor === faces).length;
+
+    const maiorResultado = rolagensOrdenadas[0] || 0;
+
+    const resultadosExtras = rolagensOrdenadas.slice(1, 1 + finais);
+    const bonusFinais = resultadosExtras.reduce(
+      (soma, valor) => soma + valor,
+      0,
+    );
+
+    const total = maiorResultado + bonusFinais + bonusAtivo + bonusPassiva;
 
     return {
+      quantidadeBase,
+      modificadorDados,
       quantidadeDados,
       faces,
       rolagens,
+      rolagensOrdenadas,
+      finais,
+      resultadosExtras,
+      bonusFinais,
       maiorResultado,
       bonusAtivo,
       bonusPassiva,
@@ -1416,8 +1478,8 @@ const FichaPersonagem = () => {
         atributo: atributoValor,
         ativo: bonusAtivo,
         passiva: 0,
+        modificadorDados: modificadorDadosRolagem,
       });
-
       setRolandoDados(true);
 
       setModalRolagem({
@@ -1427,6 +1489,11 @@ const FichaPersonagem = () => {
         dados: resultado.rolagens,
         faces: resultado.faces,
         maiorResultado: resultado.maiorResultado,
+        quantidadeBase: resultado.quantidadeBase,
+        finais: resultado.finais,
+        resultadosExtras: resultado.resultadosExtras,
+        bonusFinais: resultado.bonusFinais,
+        modificadorDados: resultado.modificadorDados,
         bonusAtivo: resultado.bonusAtivo,
         bonusPassiva: 0,
         total: resultado.total,
@@ -1475,16 +1542,30 @@ const FichaPersonagem = () => {
     const valorBase = personagem.habilidadesPassivas[chave] || 0;
 
     const valorTemporario = personagem.habilidadesTemporarias?.[chave] || 0;
-
+    const chaveAtivo = ativosParaPassiva[chave];
+    const nomeAtivo = dadosAtivos[chaveAtivo]?.nome || "Ativo";
     return (
       <div className="habilidade-passiva-item">
-        <span
-          className="passiva-nome clickable"
-          onClick={() => abrirModal(nome, chave)}
-          title="Clique para ver descrição"
+        <button
+          type="button"
+          className="passiva-rolar-btn"
+          onClick={() => rolarPassiva(nome, chave)}
+          title="Rolar passiva"
         >
-          {nome}
-        </span>
+          <Icon path={mdiDiceD20} size={0.75} />
+        </button>
+
+        <div className="passiva-identidade">
+          <span className="passiva-ativo-vinculado">{nomeAtivo}</span>
+
+          <span
+            className="passiva-nome clickable"
+            onClick={() => abrirModal(nome, chave)}
+            title="Clique para ver descrição"
+          >
+            {nome}
+          </span>
+        </div>
 
         <div className="passiva-linha">
           {/* VALOR BASE */}
@@ -1550,6 +1631,156 @@ const FichaPersonagem = () => {
         </div>
       </div>
     );
+  };
+
+  const ativosParaPassiva = {
+    enganacao: "carisma",
+    raciocinioLogico: "razao",
+    investigacao: "razao",
+    instinto: "intuicao",
+    sensibilidade: "persistencia",
+    coragem: "persistencia",
+
+    diplomacia: "carisma",
+    disciplina: "razao",
+    autocontrole: "persistencia",
+    intimidacaoPassiva: "violencia",
+    presenca: "carisma",
+    memoria: "razao",
+    empatia: "intuicao",
+    lealdade: "persistencia",
+    fe: "persistencia",
+
+    vitalidade: "resistencia",
+    folego: "resistencia",
+    equilibrio: "firmeza",
+    velocidade: "firmeza",
+    precisao: "percepcao",
+    lutar: "violencia",
+    resistenciaFisica: "resistencia",
+    primeirosSocorros: "razao",
+
+    conhecimentoMedico: "razao",
+    conhecimentoTecnico: "razao",
+    conhecimentoHistorico: "razao",
+    conhecimentoOculto: "razao",
+    tecnologia: "razao",
+    tatica: "razao",
+
+    percepcaoAuditiva: "percepcao",
+    percepcaoVisual: "percepcao",
+    percepcaoOlfativa: "percepcao",
+
+    crime: "firmeza",
+    manipulacao: "carisma",
+    intimidacao: "violencia",
+    seducao: "carisma",
+    resistenciaMental: "persistencia",
+
+    furtividade: "firmeza",
+    instintoSobrevivencia: "intuicao",
+  };
+
+  const dadosAtivos = {
+    razao: {
+      nome: "Razão",
+      atributo: "inteligencia",
+    },
+
+    intuicao: {
+      nome: "Intuição",
+      atributo: "inteligencia",
+    },
+
+    percepcao: {
+      nome: "Percepção",
+      atributo: "vontade",
+    },
+
+    firmeza: {
+      nome: "Firmeza",
+      atributo: "reflexos",
+    },
+
+    violencia: {
+      nome: "Violência",
+      atributo: "forca",
+    },
+
+    carisma: {
+      nome: "Carisma",
+      atributo: "vontade",
+    },
+
+    persistencia: {
+      nome: "Persistência",
+      atributo: "vontade",
+    },
+
+    resistencia: {
+      nome: "Resistência",
+      atributo: "fontitude",
+    },
+  };
+
+  const obterValorAtivoSelecionado = () => {
+    const ativo = ativosParaPassiva[ativoPassivaSelecionado];
+
+    if (!ativo) return 0;
+
+    const valorAtributo = personagem.atributos?.[ativo.atributo] || 0;
+    const bonusAtributo = calcularModificadorAtivo(valorAtributo);
+    const bonusAtivo =
+      personagem.habilidadesCombate?.[ativoPassivaSelecionado] || 0;
+
+    return bonusAtributo + bonusAtivo;
+  };
+
+  const rolarPassiva = (nome, chave) => {
+    const valorPassiva = obterBonusPassiva(chave);
+
+    const chaveAtivo = ativosParaPassiva[chave];
+    const ativoInfo = dadosAtivos[chaveAtivo];
+
+    const valorAtributo = personagem.atributos?.[ativoInfo?.atributo] || 0;
+
+    const bonusAtributo = calcularModificadorAtivo(valorAtributo);
+
+    const bonusAtivo =
+      (personagem.habilidadesCombate?.[chaveAtivo] || 0) + bonusAtributo;
+
+    const teste = rolarTeste({
+      atributo: valorAtributo,
+      ativo: bonusAtivo,
+      passiva: valorPassiva,
+      modificadorDados: modificadorDadosRolagem,
+    });
+
+    setRolandoDados(true);
+
+    setModalRolagem({
+      titulo: `${ativoInfo?.nome || "Ativo"} + ${nome}`,
+      modo: "Teste de Passiva",
+
+      formula: `${teste.quantidadeDados}d${teste.faces} + ${teste.bonusAtivo} + ${teste.bonusPassiva}`,
+
+      dados: teste.rolagens,
+      faces: teste.faces,
+      maiorResultado: teste.maiorResultado,
+
+      bonusAtivo: teste.bonusAtivo,
+      bonusPassiva: teste.bonusPassiva,
+      finais: teste.finais,
+      resultadosExtras: teste.resultadosExtras,
+      bonusFinais: teste.bonusFinais,
+
+      total: teste.total,
+      dano: null,
+    });
+
+    setTimeout(() => {
+      setRolandoDados(false);
+    }, 1200);
   };
 
   const conflitosCondicoes = {
@@ -1695,11 +1926,139 @@ const FichaPersonagem = () => {
     );
   };
 
+  const rolarFormulaPersonalizada = () => {
+  const formula = formulaDadoPersonalizado.replace(/\s/g, "");
+
+  if (!formula.trim()) {
+    setErroRolagemPersonalizada("Digite uma fórmula.");
+    return;
+  }
+
+  const partes = formula.match(/[+-]?[^+-]+/g) || [];
+
+  let total = 0;
+  const dados = [];
+
+  for (const parte of partes) {
+    const sinal = parte.startsWith("-") ? -1 : 1;
+    const texto = parte.replace(/^[+-]/, "");
+
+    const dadoMatch = texto.match(/^(\d*)d(\d+)$/i);
+
+    if (dadoMatch) {
+      const quantidade = parseInt(dadoMatch[1] || "1", 10);
+      const faces = parseInt(dadoMatch[2], 10);
+
+      if (quantidade <= 0 || faces <= 0) {
+        setErroRolagemPersonalizada("Fórmula inválida.");
+        return;
+      }
+
+      for (let i = 0; i < quantidade; i++) {
+        const valorOriginal = rolarDado(faces);
+        const valor = valorOriginal * sinal;
+
+        dados.push({
+          valor,
+          valorOriginal,
+          faces,
+          sinal,
+          origem: `${sinal < 0 ? "-" : ""}d${faces}`,
+        });
+
+        total += valor;
+      }
+
+      continue;
+    }
+
+    const numero = parseInt(texto, 10);
+
+    if (!Number.isNaN(numero)) {
+      total += numero * sinal;
+      continue;
+    }
+
+    setErroRolagemPersonalizada("Use fórmulas como 3d20+5d100-2.");
+    return;
+  }
+
+  const dadosPositivos = dados.filter((dado) => dado.sinal > 0);
+
+  const finais = dadosPositivos.filter(
+    (dado) => dado.valorOriginal === dado.faces,
+  ).length;
+
+  const valoresOrdenados = dadosPositivos
+    .map((dado) => dado.valorOriginal)
+    .sort((a, b) => b - a);
+
+  const resultadosExtras = valoresOrdenados.slice(1, 1 + finais);
+
+  const bonusFinais = resultadosExtras.reduce(
+    (soma, valor) => soma + valor,
+    0,
+  );
+
+  total += bonusFinais;
+
+  setErroRolagemPersonalizada("");
+  setRolandoDados(true);
+
+  setModalRolagem({
+    titulo: "Rolagem Personalizada",
+    modo: formulaDadoPersonalizado,
+    formula: formulaDadoPersonalizado,
+    dados: dados.map((dado) => dado.valor),
+    faces: 20,
+    maiorResultado: dados.length
+      ? Math.max(...dados.map((dado) => dado.valor))
+      : total,
+    bonusAtivo: 0,
+    bonusPassiva: 0,
+    finais,
+    resultadosExtras,
+    bonusFinais,
+    total,
+    dano: null,
+  });
+
+  setTimeout(() => {
+    setRolandoDados(false);
+  }, 1200);
+};
+
   // Conteúdo das abas
   const conteudoAbas = {
     combate: (
       <div className="conteudo-aba">
         <h4>ATIVOS</h4>
+        <div className="controle-dados-pre-rolagem">
+          <button
+            type="button"
+            onClick={() =>
+              setModificadorDadosRolagem((prev) => Math.max(-4, prev - 1))
+            }
+          >
+            -1D
+          </button>
+
+          <span>
+            Dados da rolagem: {modificadorDadosRolagem >= 0 ? "+" : ""}
+            {modificadorDadosRolagem}
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setModificadorDadosRolagem((prev) => prev + 1)}
+          >
+            +1D
+          </button>
+
+          <button type="button" onClick={() => setModificadorDadosRolagem(0)}>
+            Reset
+          </button>
+        </div>
 
         <div className="ativos-layout">
           <div className="lista-ativos">
@@ -1827,6 +2186,32 @@ const FichaPersonagem = () => {
 
     passivas: (
       <div className="conteudo-aba passiva-aba">
+        <div className="controle-dados-pre-rolagem">
+          <button
+            type="button"
+            onClick={() =>
+              setModificadorDadosRolagem((prev) => Math.max(-4, prev - 1))
+            }
+          >
+            -1D
+          </button>
+
+          <span>
+            Dados da rolagem: {modificadorDadosRolagem >= 0 ? "+" : ""}
+            {modificadorDadosRolagem}
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setModificadorDadosRolagem((prev) => prev + 1)}
+          >
+            +1D
+          </button>
+
+          <button type="button" onClick={() => setModificadorDadosRolagem(0)}>
+            Reset
+          </button>
+        </div>
         <div className="categorias-passivas">
           {/* MENTAIS & SOCIAIS */}
           <div className="categoria-passiva">
@@ -2832,6 +3217,98 @@ const FichaPersonagem = () => {
       </div>
     ),
 
+    personalizacao: (
+      <div className="conteudo-aba personalizacao-aba">
+        <div className="personalizacao-subabas">
+          <button
+            className={subAbaPersonalizacao === "customizacao" ? "ativa" : ""}
+            onClick={() => setSubAbaPersonalizacao("customizacao")}
+          >
+            Customização
+          </button>
+
+          <button
+            className={subAbaPersonalizacao === "dados" ? "ativa" : ""}
+            onClick={() => setSubAbaPersonalizacao("dados")}
+          >
+            Dados Personalizados
+          </button>
+        </div>
+
+        {subAbaPersonalizacao === "customizacao" && (
+          <div className="customizacao-bloco">
+            <h4>Customização da Ficha</h4>
+
+            <div className="customizacao-grid">
+              {[
+                ["primaria", "Cor Primária"],
+                ["secundaria", "Cor Secundária"],
+                ["texto", "Cor do Texto"],
+                ["fundo", "Cor do Fundo"],
+                ["borda", "Cor da Borda"],
+              ].map(([campo, label]) => (
+                <label key={campo} className="customizacao-cor-item">
+                  <span>{label}</span>
+
+                  <input
+                    type="color"
+                    value={
+                      personagem.temaFicha?.[campo] || TEMA_PADRAO_FICHA[campo]
+                    }
+                    onChange={(e) => atualizarTemaFicha(campo, e.target.value)}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => restaurarCorPadrao(campo)}
+                  >
+                    Reset
+                  </button>
+                </label>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="btn-restaurar-tema"
+              onClick={restaurarTemaPadrao}
+            >
+              Restaurar Tema Padrão
+            </button>
+          </div>
+        )}
+
+        {subAbaPersonalizacao === "dados" && (
+          <div className="rolagem-personalizada-bloco">
+            <h4>Rolagem de Dados Personalizada</h4>
+
+            <p>
+              Monte qualquer combinação. Exemplos: 3d20+5d100, 2d6+10,
+              1d20+4d8-3.
+            </p>
+
+            <div className="rolagem-personalizada-form">
+              <input
+                value={formulaDadoPersonalizado}
+                onChange={(e) => setFormulaDadoPersonalizado(e.target.value)}
+                placeholder="Ex: 3d20+5d100"
+              />
+
+              <button type="button" onClick={rolarFormulaPersonalizada}>
+                Rolar
+              </button>
+            </div>
+
+            {erroRolagemPersonalizada && (
+              <span className="erro-rolagem-personalizada">
+                {erroRolagemPersonalizada}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    ),
+
     condicoes: (
       <div className="conteudo-aba">
         <h4>CONDIÇÕES</h4>
@@ -3287,6 +3764,12 @@ const FichaPersonagem = () => {
             >
               PERSONAGEM
             </button>
+            <button
+              className={`aba-btn ${abaAtiva === "personalizacao" ? "ativa" : ""}`}
+              onClick={() => setAbaAtiva("personalizacao")}
+            >
+              Personalização
+            </button>
           </div>
 
           <div className="sidebar-conteudo">{conteudoAbas[abaAtiva]}</div>
@@ -3517,6 +4000,15 @@ const FichaPersonagem = () => {
                       <span>Ativo: +{modalRolagem.bonusAtivo}</span>
                       <span>Passiva: +{modalRolagem.bonusPassiva}</span>
                     </div>
+                    {modalRolagem.finais > 0 && (
+                      <div className="bonus-finais">
+                        <span>Finais: {modalRolagem.finais}</span>
+                        <strong>+{modalRolagem.bonusFinais}</strong>
+                        <small>
+                          Extras: {modalRolagem.resultadosExtras?.join(", ")}
+                        </small>
+                      </div>
+                    )}
 
                     <div className="total-rolagem">
                       <span>Resultado Final</span>
@@ -3568,77 +4060,6 @@ const FichaPersonagem = () => {
           </div>
         )}
       </div>
-      <button
-        type="button"
-        className="botao-customizacao-flutuante"
-        onClick={() => setCustomizacaoAberta(true)}
-      >
-        Customizar
-      </button>
-
-      {customizacaoAberta && (
-        <div
-          className="customizacao-overlay"
-          onClick={() => setCustomizacaoAberta(false)}
-        >
-          <section
-            className="customizacao-modal"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="customizacao-topo">
-              <span>Ficha</span>
-              <h2>Customização</h2>
-
-              <button
-                type="button"
-                onClick={() => setCustomizacaoAberta(false)}
-              >
-                ×
-              </button>
-            </div>
-
-            {[
-              ["primaria", "Cor principal"],
-              ["secundaria", "Cor secundária"],
-              ["texto", "Texto"],
-              ["fundo", "Fundo"],
-              ["borda", "Bordas"],
-            ].map(([campo, label]) => (
-              <label key={campo} className="customizacao-linha">
-                <span>{label}</span>
-
-                <div className="customizacao-controles-cor">
-                  <input
-                    type="color"
-                    value={
-                      personagem.temaFicha?.[campo] || TEMA_PADRAO_FICHA[campo]
-                    }
-                    onChange={(event) =>
-                      atualizarTemaFicha(campo, event.target.value)
-                    }
-                  />
-
-                  <button
-                    type="button"
-                    className="customizacao-restaurar-cor"
-                    onClick={() => restaurarCorPadrao(campo)}
-                  >
-                    Restaurar cor
-                  </button>
-                </div>
-              </label>
-            ))}
-
-            <button
-              type="button"
-              className="customizacao-restaurar"
-              onClick={restaurarTemaPadrao}
-            >
-              Restaurar tudo para o padrão
-            </button>
-          </section>
-        </div>
-      )}
     </div>
   );
 };
