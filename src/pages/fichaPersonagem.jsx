@@ -455,16 +455,19 @@ const FichaPersonagem = () => {
   );
 
   // CARREGAR DADOS AO INICIAR
+  // CARREGAR DADOS AO INICIAR
   useEffect(() => {
     let ativo = true;
-    let personagemCarregado = null;
 
-    setCarregado(false);
-    salvarLocalSeguro(ULTIMA_FICHA_KEY, fichaId);
+    const carregarFicha = async () => {
+      try {
+        salvarLocalSeguro(ULTIMA_FICHA_KEY, fichaId);
 
-    buscarPersonagem(fichaId)
-      .then((personagemApi) => {
-        if (personagemApi && String(personagemApi.nome || "").trim()) {
+        const personagemApi = await buscarPersonagem(fichaId);
+
+        if (!ativo) return;
+
+        if (personagemApi) {
           const classeAtual =
             personagemApi.classeId || personagemApi.classe || "";
 
@@ -481,38 +484,34 @@ const FichaPersonagem = () => {
             ];
           }
 
-          personagemCarregado = personagemApi;
+          setPersonagem(personagemApi);
 
-          console.log("Dados carregados do backend");
+          console.log("✅ Dados carregados do backend");
         }
-      })
-      .catch(() => {
-        console.warn("Backend indisponivel. Tentando carregar localStorage.");
-      })
-      .finally(() => {
-        if (!personagemCarregado) {
-          const dadosSalvos = lerLocalSeguro(storageKey);
+      } catch (error) {
+        console.warn("⚠️ Backend indisponível. Tentando localStorage.", error);
 
-          if (dadosSalvos) {
-            try {
-              personagemCarregado = JSON.parse(dadosSalvos);
-              console.log("Dados carregados do salvamento anterior");
-            } catch (error) {
-              console.error("Erro ao carregar dados salvos:", error);
-            }
+        const dadosSalvos = lerLocalSeguro(storageKey);
+
+        if (dadosSalvos && ativo) {
+          try {
+            const personagemSalvo = JSON.parse(dadosSalvos);
+
+            setPersonagem(personagemSalvo);
+
+            console.log("⚠️ Dados carregados do localStorage");
+          } catch (erro) {
+            console.error("Erro ao carregar localStorage:", erro);
           }
         }
-
-        if (ativo && personagemCarregado) {
-          setPersonagem(personagemCarregado);
+      } finally {
+        if (ativo) {
+          setCarregado(true);
         }
+      }
+    };
 
-        if (!ativo) {
-          return;
-        }
-
-        setCarregado(true);
-      });
+    carregarFicha();
 
     return () => {
       ativo = false;
@@ -3753,11 +3752,11 @@ const MembroControle = ({
   const estadoVida = membro.grave ? "grave" : membro.ferido ? "ferido" : "";
 
   const classeVida =
-  porcentagem <= 10
-    ? "vida-critica"
-    : porcentagem <= 50
-      ? "vida-alerta"
-      : "vida-normal";
+    porcentagem <= 10
+      ? "vida-critica"
+      : porcentagem <= 50
+        ? "vida-alerta"
+        : "vida-normal";
 
   return (
     <div className={`membro-controle ${estadoVida}`}>
