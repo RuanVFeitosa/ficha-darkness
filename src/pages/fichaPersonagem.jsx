@@ -464,7 +464,7 @@ const FichaPersonagem = () => {
 
     buscarPersonagem(fichaId)
       .then((personagemApi) => {
-        if (personagemApi) {
+        if (personagemApi && String(personagemApi.nome || "").trim()) {
           const classeAtual =
             personagemApi.classeId || personagemApi.classe || "";
 

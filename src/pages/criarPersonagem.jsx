@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiAccountPlus, mdiChevronLeft, mdiChevronRight } from "@mdi/js";
-import { criarPersonagem } from "../services/personagemApi";
+import { criarPersonagem, salvarPersonagem } from "../services/personagemApi";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
 import { estadoInicial } from "./fichaPersonagem";
 import "../CSS/CriarPersonagem.css";
@@ -871,11 +871,16 @@ const CriarPersonagem = () => {
     try {
       const fichaInicial = criarFichaInicial(form);
       const { fichaId, personagem } = await criarPersonagem(fichaInicial);
+      const personagemCriado = personagem?.nome ? personagem : fichaInicial;
+
+      if (!personagem?.nome) {
+        await salvarPersonagem(fichaId, fichaInicial);
+      }
 
       localStorage.setItem(ULTIMA_FICHA_KEY, fichaId);
       localStorage.setItem(
         `${STORAGE_KEY}_${fichaId}`,
-        JSON.stringify(personagem || fichaInicial),
+        JSON.stringify(personagemCriado),
       );
       window.location.href = `/?ficha=${encodeURIComponent(fichaId)}`;
     } catch (error) {
