@@ -1,6 +1,6 @@
 # Deploy da Ficha Darkness
 
-Este projeto sobe como um unico Web Service Node: o backend serve a API e tambem entrega o build do React.
+Este projeto pode subir na Render como um unico Web Service Node ou na Vercel com React estatico e funcoes em `/api`.
 
 ## Banco gratuito com Supabase
 
@@ -64,3 +64,34 @@ http://localhost:3000
 ```
 
 Para testar localmente usando Supabase, defina `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` no terminal antes de rodar `npm run backend`.
+
+## Vercel
+
+Na Vercel, o React e publicado como site estatico e o backend roda como funcoes em `/api`.
+
+1. Suba a branch `main` para o GitHub.
+2. Entre em https://vercel.com e importe o repositorio.
+3. Use estas configuracoes:
+
+```txt
+Framework Preset: Create React App
+Install Command: npm install
+Build Command: npm run build
+Output Directory: build
+```
+
+4. Configure as variaveis de ambiente em `Settings > Environment Variables`:
+
+```txt
+SUPABASE_URL = sua Project URL do Supabase
+SUPABASE_SERVICE_ROLE_KEY = sua service_role key do Supabase
+SUPABASE_TABLE = personagens
+```
+
+5. Depois do deploy, teste:
+
+```txt
+https://seu-projeto.vercel.app/api/health
+```
+
+O retorno esperado deve mostrar `ok: true` e `storage: "supabase"`. Se aparecer `storage: "json"`, as variaveis do Supabase nao foram configuradas no ambiente do deploy.

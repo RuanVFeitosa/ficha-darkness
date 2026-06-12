@@ -387,7 +387,7 @@ const createUniqueFichaId = async (nome) => {
   return fichaId;
 };
 
-const server = http.createServer(async (req, res) => {
+const handleRequest = async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
 
   if (req.method === "OPTIONS") {
@@ -501,22 +501,30 @@ const server = http.createServer(async (req, res) => {
       details: error.message,
     });
   }
-});
+};
 
-server.on("error", (error) => {
-  if (error.code === "EADDRINUSE") {
-    console.error(
-      `A porta ${PORT} ja esta em uso. Feche o outro backend ou use PORT=4001 npm run backend.`,
-    );
+const server = http.createServer(handleRequest);
+
+if (require.main === module) {
+  server.on("error", (error) => {
+    if (error.code === "EADDRINUSE") {
+      console.error(
+        `A porta ${PORT} ja esta em uso. Feche o outro backend ou use PORT=4001 npm run backend.`,
+      );
+      process.exit(1);
+    }
+
+    console.error("Nao foi possivel iniciar o backend:", error);
     process.exit(1);
-  }
+  });
 
-  console.error("Nao foi possivel iniciar o backend:", error);
-  process.exit(1);
-});
+  server.listen(PORT, HOST, () => {
+    console.log(`Backend da ficha rodando em http://${HOST}:${PORT}`);
+    console.log(`Armazenamento: ${USE_SUPABASE ? "Supabase" : "JSON local"}`);
+    console.log("Deixe este terminal aberto enquanto estiver usando o site.");
+  });
+}
 
-server.listen(PORT, HOST, () => {
-  console.log(`Backend da ficha rodando em http://${HOST}:${PORT}`);
-  console.log(`Armazenamento: ${USE_SUPABASE ? "Supabase" : "JSON local"}`);
-  console.log("Deixe este terminal aberto enquanto estiver usando o site.");
-});
+module.exports = {
+  handleRequest,
+};
