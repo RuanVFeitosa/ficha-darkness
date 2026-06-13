@@ -2262,3 +2262,45 @@
   }
 }
 
+/* =========================================================
+   MOBILE - ARRASTAR ÁRVORE COM TOUCH
+========================================================= */
+
+@media screen and (max-width: 768px) {
+  .arvore-skilltree {
+    height: 100svh !important;
+    overflow: hidden !important;
+  }
+
+  .skilltree-viewport {
+    height: 100svh !important;
+    overflow: hidden !important;
+
+    touch-action: none !important;
+    user-select: none !important;
+    cursor: grab;
+  }
+
+  .skilltree-viewport.arrastando {
+    cursor: grabbing;
+  }
+
+  .skilltree-area {
+    position: absolute !important;
+
+    width: 2600px !important;
+    height: 1600px !important;
+
+    display: block !important;
+
+    overflow: visible !important;
+
+    will-change: transform;
+  }
+
+  .skilltree-node,
+  .skilltree-root,
+  .skilltree-aptidao-node {
+    position: absolute !important;
+  }
+}

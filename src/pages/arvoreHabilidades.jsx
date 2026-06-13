@@ -52,8 +52,7 @@ const CUSTO_APTIDAO = 10;
 const CUSTO_HABILIDADE_ESPECIALIDADE = 20;
 
 const obterCustoAptidao = () => CUSTO_APTIDAO;
-const obterCustoHabilidadeEspecialidade = () =>
-  CUSTO_HABILIDADE_ESPECIALIDADE;
+const obterCustoHabilidadeEspecialidade = () => CUSTO_HABILIDADE_ESPECIALIDADE;
 
 const ArvoreHabilidades = () => {
   const [carregandoFicha, setCarregandoFicha] = useState(true);
@@ -195,18 +194,21 @@ const ArvoreHabilidades = () => {
       return;
     }
 
-    salvarAtualizacao({
-      aptidoes: {
-        ...habilidadesClasse.aptidoes,
-        [aptidaoId]: !jaComprada,
+    salvarAtualizacao(
+      {
+        aptidoes: {
+          ...habilidadesClasse.aptidoes,
+          [aptidaoId]: !jaComprada,
+        },
       },
-    }, {
-      pontosEvolucao: criarPontosEvolucaoAtualizados(
-        jaComprada
-          ? pontosEvolucaoDisponiveis + custo
-          : pontosEvolucaoDisponiveis - custo,
-      ),
-    });
+      {
+        pontosEvolucao: criarPontosEvolucaoAtualizados(
+          jaComprada
+            ? pontosEvolucaoDisponiveis + custo
+            : pontosEvolucaoDisponiveis - custo,
+        ),
+      },
+    );
   };
 
   const fecharAptidao = () => {
@@ -295,9 +297,7 @@ const ArvoreHabilidades = () => {
     );
 
     if (!jaComprada && pontosEvolucaoDisponiveis < custo) {
-      setMensagem(
-        "Pontos de evolucao insuficientes para esta habilidade.",
-      );
+      setMensagem("Pontos de evolucao insuficientes para esta habilidade.");
       return;
     }
 
@@ -316,24 +316,25 @@ const ArvoreHabilidades = () => {
     }
 
     if (!jaComprada && pontosEvolucaoDisponiveis < custo) {
-      setMensagem(
-        "Pontos de evolucao insuficientes para esta habilidade.",
-      );
+      setMensagem("Pontos de evolucao insuficientes para esta habilidade.");
       return;
     }
 
-    salvarAtualizacao({
-      habilidadesEspecialidade: {
-        ...habilidadesClasse.habilidadesEspecialidade,
-        [habilidadeId]: !jaComprada,
+    salvarAtualizacao(
+      {
+        habilidadesEspecialidade: {
+          ...habilidadesClasse.habilidadesEspecialidade,
+          [habilidadeId]: !jaComprada,
+        },
       },
-    }, {
-      pontosEvolucao: criarPontosEvolucaoAtualizados(
-        jaComprada
-          ? pontosEvolucaoDisponiveis + custo
-          : pontosEvolucaoDisponiveis - custo,
-      ),
-    });
+      {
+        pontosEvolucao: criarPontosEvolucaoAtualizados(
+          jaComprada
+            ? pontosEvolucaoDisponiveis + custo
+            : pontosEvolucaoDisponiveis - custo,
+        ),
+      },
+    );
   };
 
   const selecionarHabilidadeAbsoluta = (habilidade) => {
@@ -450,6 +451,8 @@ const ArvoreHabilidades = () => {
 
   const iniciarArrastoMapa = (event) => {
     if (event.target.closest("button")) return;
+
+    event.currentTarget.setPointerCapture?.(event.pointerId);
 
     setArrastando(true);
 
@@ -747,10 +750,11 @@ const ArvoreHabilidades = () => {
             <div className="arvore-secao arvore-skilltree">
               <div
                 className={`skilltree-viewport ${arrastando ? "arrastando" : ""}`}
-                onMouseDown={iniciarArrastoMapa}
-                onMouseMove={moverMapa}
-                onMouseUp={pararArrastoMapa}
-                onMouseLeave={pararArrastoMapa}
+                onPointerDown={iniciarArrastoMapa}
+                onPointerMove={moverMapa}
+                onPointerUp={pararArrastoMapa}
+                onPointerCancel={pararArrastoMapa}
+                onPointerLeave={pararArrastoMapa}
               >
                 <strong className="trilha-pontos">
                   Pontos disponiveis: {pontosEvolucaoDisponiveis}
