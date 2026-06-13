@@ -24,9 +24,7 @@ const request = async (path, options = {}) => {
     const data = await response.json().catch(() => null);
 
     throw new Error(
-      data?.details ||
-        data?.error ||
-        `Erro na API: ${response.status} em ${path}`,
+      data?.details || data?.error || `Erro na API: ${response.status}`,
     );
   }
 
@@ -77,104 +75,4 @@ export const salvarCatalogoLoja = async (catalogo) => {
   });
 
   return data.catalogo || [];
-};
-
-export const criarParty = async (fichaId, personagem) => {
-  const data = await request("/parties", {
-    method: "POST",
-    body: JSON.stringify({ fichaId, personagem }),
-  });
-
-  return data.party;
-};
-
-export const buscarParty = async (partyCode) => {
-  const data = await request(`/parties?code=${encodeURIComponent(partyCode)}`);
-  return data.party;
-};
-
-export const entrarParty = async (partyCode, fichaId, personagem) => {
-  const data = await request("/parties", {
-    method: "POST",
-    body: JSON.stringify({
-      action: "join",
-      code: partyCode,
-      fichaId,
-      personagem,
-    }),
-  });
-
-  return data.party;
-};
-
-export const atualizarStatusParty = async (partyCode, fichaId, personagem) => {
-  const data = await request("/parties", {
-    method: "POST",
-    body: JSON.stringify({
-      action: "status",
-      code: partyCode,
-      fichaId,
-      personagem,
-    }),
-  });
-
-  return data.party;
-};
-
-export const enviarNotaParty = async (partyCode, fichaId, texto) => {
-  const data = await request("/parties", {
-    method: "POST",
-    body: JSON.stringify({
-      action: "note",
-      code: partyCode,
-      fichaId,
-      texto,
-    }),
-  });
-
-  return data.party;
-};
-
-export const enviarRolagemParty = async (partyCode, fichaId, roll) => {
-  const data = await request("/parties", {
-    method: "POST",
-    body: JSON.stringify({
-      action: "roll",
-      code: partyCode,
-      fichaId,
-      roll,
-    }),
-  });
-
-  return data.party;
-};
-
-export const transferirItemParty = async (
-  partyCode,
-  fromFichaId,
-  toFichaId,
-  itemIndex,
-) => {
-  const data = await request("/parties", {
-    method: "POST",
-    body: JSON.stringify({
-      action: "item",
-      code: partyCode,
-      fromFichaId,
-      toFichaId,
-      itemIndex,
-    }),
-  });
-
-  return data.party;
-};
-
-export const encerrarParty = async (partyCode) => {
-  return request("/parties", {
-    method: "POST",
-    body: JSON.stringify({
-      action: "delete",
-      code: partyCode,
-    }),
-  });
 };

@@ -1,5 +1,5 @@
 // src/components/FichaPersonagem.jsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import "../CSS/FichaPersonagem.css";
 import "../CSS/CondicoesProfile.css";
 
@@ -9,20 +9,11 @@ import profile from "../assets/IMG/OAbsoluto.png";
 import corpoHumano from "../assets/IMG/corpo_humano.png";
 import { descricoesHabilidades } from "../components/descricoesHabilidades";
 import ModalDescricao from "../components/modal/modalDescricao";
-import {
-  buscarPersonagem,
-  salvarPersonagem,
-  atualizarStatusParty,
-  buscarParty,
-  enviarNotaParty,
-  enviarRolagemParty,
-  transferirItemParty,
-} from "../services/personagemApi";
+import { buscarPersonagem, salvarPersonagem } from "../services/personagemApi";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
 import Icon from "@mdi/react";
 import { mdiAccount } from "@mdi/js";
 import {
-  mdiAccountGroup,
   mdiShieldCrownOutline,
   mdiStorefrontOutline,
   mdiDiceD4,
@@ -56,14 +47,6 @@ const normalizarFichaId = (valor) => {
 const obterFichaIdDaUrl = () => {
   const params = new URLSearchParams(window.location.search);
   return normalizarFichaId(params.get("ficha"));
-};
-
-const obterPartyCodeDaUrl = () => {
-  const params = new URLSearchParams(window.location.search);
-
-  return String(params.get("party") || "")
-    .trim()
-    .toUpperCase();
 };
 
 const salvarLocalSeguro = (chave, valor) => {
@@ -423,8 +406,6 @@ const FichaPersonagem = () => {
   const [ultimoSave, setUltimoSave] = useState(null);
   const [carregado, setCarregado] = useState(false);
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
-  const salvandoRef = useRef(false);
-  const ultimaVersaoLocalRef = useRef("");
   const [subAbaInventario, setSubAbaInventario] = useState("mochila");
   const [abaCriacao, setAbaCriacao] = useState("armas");
   const [mensagemCraft, setMensagemCraft] = useState("");
@@ -455,15 +436,6 @@ const FichaPersonagem = () => {
     useState("razao");
 
   const [subAbaHabilidade, setSubAbaHabilidade] = useState("arquetipo");
-  const [subAbaPersonagem, setSubAbaPersonagem] = useState("anotacoes");
-
-  const [partyCode, setPartyCode] = useState("");
-  const [party, setParty] = useState(null);
-  const [partyNota, setPartyNota] = useState("");
-  const [partyFormula, setPartyFormula] = useState("d20");
-  const [partyItemIndex, setPartyItemIndex] = useState("");
-  const [partyDestinoItem, setPartyDestinoItem] = useState("");
-  const [partyMensagem, setPartyMensagem] = useState("");
 
   // FUNÇÃO PARA ABRIR MODAL
   const abrirModal = (titulo, chaveHabilidade) => {
@@ -489,6 +461,7 @@ const FichaPersonagem = () => {
     (item) => item.nome === "Maleta de Campo",
   );
 
+  // CARREGAR DADOS AO INICIAR
   // CARREGAR DADOS AO INICIAR
   useEffect(() => {
     let ativo = true;
@@ -518,18 +491,7 @@ const FichaPersonagem = () => {
             ];
           }
 
-          setPersonagem({
-            ...estadoInicial,
-            ...personagemApi,
-            rituais: personagemApi.rituais || [],
-            inventario: personagemApi.inventario || [],
-            condicoesAtivas: personagemApi.condicoesAtivas || [],
-            ritosAtivos: personagemApi.ritosAtivos || [],
-            membros: {
-              ...estadoInicial.membros,
-              ...(personagemApi.membros || {}),
-            },
-          });
+          setPersonagem(personagemApi);
           console.log("BACKEND:", personagemApi);
 
           console.log("✅ Dados carregados do backend");
@@ -575,74 +537,16 @@ const FichaPersonagem = () => {
       return;
     }
 
-    const versaoAtual = JSON.stringify(personagem);
-    ultimaVersaoLocalRef.current = versaoAtual;
-
     salvarPersonagemLocalSeguro(storageKey, personagem);
     setUltimoSave(new Date().toLocaleTimeString());
 
-    const timeout = setTimeout(() => {
-      salvandoRef.current = true;
-
-      salvarPersonagem(fichaId, personagem)
-        .catch((error) => {
-          console.warn(
-            "Backend indisponivel. Dados mantidos no localStorage.",
-            error,
-          );
-        })
-        .finally(() => {
-          salvandoRef.current = false;
-        });
-    }, 900);
-
-    return () => clearTimeout(timeout);
+    salvarPersonagem(fichaId, personagem).catch((error) => {
+      console.warn(
+        "Backend indisponivel. Dados mantidos no localStorage.",
+        error,
+      );
+    });
   }, [personagem, carregado, fichaId, storageKey]);
-
-  useEffect(() => {
-    if (!carregado) {
-      return undefined;
-    }
-
-    let cancelado = false;
-
-    const sincronizarFicha = async () => {
-      if (salvandoRef.current) {
-        return;
-      }
-
-      try {
-        const personagemApi = await buscarPersonagem(fichaId);
-
-        if (!personagemApi || cancelado) {
-          return;
-        }
-
-        const versaoApi = JSON.stringify(personagemApi);
-
-        if (versaoApi !== ultimaVersaoLocalRef.current) {
-          ultimaVersaoLocalRef.current = versaoApi;
-
-          setPersonagem((atual) => ({
-            ...estadoInicial,
-            ...atual,
-            ...personagemApi,
-          }));
-
-          salvarPersonagemLocalSeguro(storageKey, personagemApi);
-        }
-      } catch (error) {
-        console.warn("Não foi possível sincronizar a ficha.", error);
-      }
-    };
-
-    const intervalo = setInterval(sincronizarFicha, 12000);
-
-    return () => {
-      cancelado = true;
-      clearInterval(intervalo);
-    };
-  }, [carregado, fichaId, storageKey]);
 
   // FUNÇÕES DE ATUALIZAÇÃO
   const atualizarAtributo = (atributo, valor) => {
@@ -866,10 +770,6 @@ const FichaPersonagem = () => {
 
   const abrirUpgradeNivel = () => {
     window.location.href = `?upgrade=1&ficha=${encodeURIComponent(fichaId)}`;
-  };
-
-  const abrirParty = () => {
-    window.location.href = `?party=&ficha=${encodeURIComponent(fichaId)}`;
   };
 
   const abrirArvoreHabilidades = () => {
@@ -2128,165 +2028,6 @@ const FichaPersonagem = () => {
     }, 1200);
   };
 
-  const jogadoresParty = Object.values(party?.players || {});
-
-  const outrosJogadoresParty = jogadoresParty.filter(
-    (jogador) => jogador.fichaId !== fichaId,
-  );
-
-  const rolarFormulaParty = (formula) => {
-    const texto = String(formula || "")
-      .trim()
-      .toLowerCase()
-      .replace(/\s/g, "");
-
-    const match = texto.match(/^(\d*)d(\d+)([+-]\d+)?$/);
-
-    if (!match) {
-      throw new Error("Use fórmulas como d20, 2d6 ou 1d12+4.");
-    }
-
-    const quantidade = Math.min(40, Math.max(1, Number(match[1]) || 1));
-    const faces = Math.min(1000, Math.max(2, Number(match[2]) || 20));
-    const bonus = Number(match[3] || 0);
-
-    const dados = Array.from(
-      { length: quantidade },
-      () => Math.floor(Math.random() * faces) + 1,
-    );
-
-    return {
-      formula: texto,
-      dados,
-      bonus,
-      total: dados.reduce((soma, dado) => soma + dado, 0) + bonus,
-    };
-  };
-
-  const executarAcaoParty = async (acao) => {
-    try {
-      setPartyMensagem("");
-      return await acao();
-    } catch (error) {
-      setPartyMensagem(error?.message || "Não foi possível atualizar a party.");
-      return null;
-    }
-  };
-
-  const enviarNotaFichaParty = async () => {
-    if (!partyCode || !partyNota.trim()) return;
-
-    const texto = partyNota.trim();
-    const notaOtimista = {
-      id: `local-${Date.now()}`,
-      fichaId,
-      autor: personagem.nome || fichaId,
-      texto,
-      createdAt: new Date().toISOString(),
-    };
-
-    setParty((atual) => ({
-      ...(atual || {}),
-      notes: [notaOtimista, ...((atual?.notes) || [])],
-    }));
-    setPartyNota("");
-
-    const partyAtualizada = await executarAcaoParty(() =>
-      enviarNotaParty(partyCode, fichaId, texto),
-    );
-
-    if (!partyAtualizada) return;
-
-    setParty(partyAtualizada);
-  };
-
-  const rolarDadosFichaParty = async () => {
-    if (!partyCode) return;
-
-    try {
-      const roll = rolarFormulaParty(partyFormula);
-      const rolagemOtimista = {
-        id: `local-${Date.now()}`,
-        fichaId,
-        autor: personagem.nome || fichaId,
-        ...roll,
-        createdAt: new Date().toISOString(),
-      };
-
-      setParty((atual) => ({
-        ...(atual || {}),
-        rolls: [rolagemOtimista, ...((atual?.rolls) || [])],
-      }));
-
-      const partyAtualizada = await executarAcaoParty(() =>
-        enviarRolagemParty(partyCode, fichaId, roll),
-      );
-
-      if (!partyAtualizada) return;
-
-      setParty(partyAtualizada);
-    } catch (error) {
-      setPartyMensagem(error.message);
-    }
-  };
-
-  const enviarItemFichaParty = async () => {
-    if (!partyCode || !partyDestinoItem || partyItemIndex === "") {
-      setPartyMensagem("Escolha o item e o jogador de destino.");
-      return;
-    }
-
-    const index = Number(partyItemIndex);
-    const inventarioAntes = Array.isArray(personagem.inventario)
-      ? [...personagem.inventario]
-      : [];
-    const item = inventarioAntes[index];
-    const destino = jogadoresParty.find(
-      (jogador) => jogador.fichaId === partyDestinoItem,
-    );
-
-    if (!item) {
-      setPartyMensagem("Item nao encontrado no inventario.");
-      return;
-    }
-
-    setPersonagem((atual) => ({
-      ...atual,
-      inventario: (atual.inventario || []).filter((_, i) => i !== index),
-    }));
-    setParty((atual) => ({
-      ...(atual || {}),
-      itemTransfers: [
-        {
-          id: `local-${Date.now()}`,
-          fromFichaId: fichaId,
-          toFichaId: partyDestinoItem,
-          from: personagem.nome || fichaId,
-          to: destino?.nome || partyDestinoItem,
-          item,
-          createdAt: new Date().toISOString(),
-        },
-        ...((atual?.itemTransfers) || []),
-      ],
-    }));
-    setPartyItemIndex("");
-    setPartyDestinoItem("");
-
-    const partyAtualizada = await executarAcaoParty(() =>
-      transferirItemParty(partyCode, fichaId, partyDestinoItem, index),
-    );
-
-    if (!partyAtualizada) {
-      setPersonagem((atual) => ({
-        ...atual,
-        inventario: inventarioAntes,
-      }));
-      return;
-    }
-
-    setParty(partyAtualizada);
-  };
-
   // Conteúdo das abas
   const conteudoAbas = {
     combate: (
@@ -3432,275 +3173,50 @@ const FichaPersonagem = () => {
 
     descricao: (
       <div className="conteudo-aba personagem-aba">
-        <div className="personagem-subabas">
-          <button
-            type="button"
-            className={subAbaPersonagem === "anotacoes" ? "ativa" : ""}
-            onClick={() => setSubAbaPersonagem("anotacoes")}
-          >
-            Anotações
-          </button>
+        <label className="personagem-label">Descrição</label>
+        <textarea
+          className="textarea-descricao"
+          placeholder="Descreva a aparência, personalidade e detalhes do personagem..."
+          rows="5"
+          value={personagem.descricao || ""}
+          onChange={(e) =>
+            setPersonagem((prev) => ({
+              ...prev,
+              descricao: e.target.value,
+            }))
+          }
+        />
 
-          <button
-            type="button"
-            className={subAbaPersonagem === "party" ? "ativa" : ""}
-            onClick={() => setSubAbaPersonagem("party")}
-          >
-            Party
-          </button>
-        </div>
+        <label className="personagem-label">Anotação</label>
+        <textarea
+          className="textarea-descricao"
+          placeholder="Anotações rápidas, lembretes e observações importantes..."
+          rows="5"
+          value={personagem.anotacao || ""}
+          onChange={(e) =>
+            setPersonagem((prev) => ({
+              ...prev,
+              anotacao: e.target.value,
+            }))
+          }
+        />
 
-        {subAbaPersonagem === "anotacoes" && (
-          <div className="personagem-anotacoes">
-            <h4>ANOTAÇÕES</h4>
-
-            <textarea
-              value={personagem.anotacao || ""}
-              onChange={(event) =>
-                setPersonagem((prev) => ({
-                  ...prev,
-                  anotacao: event.target.value,
-                }))
-              }
-              placeholder="Anotações do personagem..."
-            />
-
-            <h4>HISTÓRIA</h4>
-
-            <textarea
-              value={personagem.historia || ""}
-              onChange={(event) =>
-                setPersonagem((prev) => ({
-                  ...prev,
-                  historia: event.target.value,
-                }))
-              }
-              placeholder="História, traumas, objetivos..."
-            />
-          </div>
-        )}
-
-        {subAbaPersonagem === "party" && (
-          <div className="ficha-party-area">
-            {!partyCode ? (
-              <section className="ficha-party-empty">
-                <Icon path={mdiAccountGroup} size={1.4} />
-
-                <h4>SEM PARTY</h4>
-
-                <p>
-                  Você ainda não está vinculado a uma party. Depois, o mestre
-                  vai criar a party pelo dashboard e ela aparecerá aqui.
-                </p>
-              </section>
-            ) : (
-              <>
-                <div className="ficha-party-topo">
-                  <span>PARTY ATIVA</span>
-                  <strong>{partyCode}</strong>
-                </div>
-
-                <div className="ficha-party-grid">
-                  <section className="ficha-party-jogadores">
-                    {jogadoresParty.map((jogador) => (
-                      <article
-                        key={jogador.fichaId}
-                        className="ficha-party-card"
-                      >
-                        <img src={jogador.fotoPerfil || profile} alt="" />
-
-                        <div>
-                          <span>NV{jogador.nivel || 1}</span>
-                          <h3>{jogador.nome || "Sem nome"}</h3>
-                          <p>{jogador.classe || "Sem classe"}</p>
-                        </div>
-
-                        <div className="ficha-party-status sanidade">
-                          <small>Sanidade</small>
-                          <strong>
-                            {jogador.sanidade?.atual || 0} /{" "}
-                            {jogador.sanidade?.max || 0}
-                          </strong>
-                        </div>
-
-                        <div className="ficha-party-status esperanca">
-                          <small>Esperança</small>
-                          <strong>
-                            {jogador.esperanca?.atual || 0} /{" "}
-                            {jogador.esperanca?.max || 0}
-                          </strong>
-                        </div>
-
-                        <div className="ficha-party-membros">
-                          {[
-                            ["cabeca", "Cabeça"],
-                            ["torso", "Torso"],
-                            ["bracoDireito", "Braço D."],
-                            ["bracoEsquerdo", "Braço E."],
-                            ["pernaDireita", "Perna D."],
-                            ["pernaEsquerda", "Perna E."],
-                          ].map(([chave, nome]) => {
-                            const membro = jogador.membros?.[chave] || {
-                              atual: 0,
-                              max: 0,
-                            };
-                            const porcentagem =
-                              membro.max > 0
-                                ? Math.min(
-                                    100,
-                                    Math.max(
-                                      0,
-                                      (membro.atual / membro.max) * 100,
-                                    ),
-                                  )
-                                : 0;
-
-                            return (
-                              <div key={chave} className="ficha-party-membro">
-                                <div>
-                                  <small>{nome}</small>
-                                  <strong>
-                                    {membro.atual || 0} / {membro.max || 0}
-                                  </strong>
-                                </div>
-
-                                <i
-                                  className={
-                                    porcentagem <= 10
-                                      ? "grave"
-                                      : porcentagem <= 50
-                                        ? "ferido"
-                                        : "normal"
-                                  }
-                                  style={{ width: `${porcentagem}%` }}
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </article>
-                    ))}
-                  </section>
-
-                  <aside className="ficha-party-painel">
-                    <section className="ficha-party-box">
-                      <h4>Anotações da Party</h4>
-
-                      <textarea
-                        value={partyNota}
-                        onChange={(event) => setPartyNota(event.target.value)}
-                        placeholder="Escreva uma anotação para a party..."
-                      />
-
-                      <button type="button" onClick={enviarNotaFichaParty}>
-                        Enviar anotação
-                      </button>
-
-                      <div className="ficha-party-feed">
-                        {(party?.notes || []).map((item) => (
-                          <article key={item.id}>
-                            <strong>{item.autor}</strong>
-                            <p>{item.texto}</p>
-                          </article>
-                        ))}
-                      </div>
-                    </section>
-
-                    <section className="ficha-party-box">
-                      <h4>Rolagens</h4>
-
-                      <div className="ficha-party-inline">
-                        <input
-                          value={partyFormula}
-                          onChange={(event) =>
-                            setPartyFormula(event.target.value)
-                          }
-                          placeholder="d20"
-                        />
-
-                        <button type="button" onClick={rolarDadosFichaParty}>
-                          Rolar
-                        </button>
-                      </div>
-
-                      <div className="ficha-party-feed">
-                        {(party?.rolls || []).map((roll) => (
-                          <article key={roll.id}>
-                            <strong>{roll.autor}</strong>
-                            <p>
-                              {roll.formula}: {roll.dados?.join(", ")}
-                              {roll.bonus
-                                ? ` ${roll.bonus > 0 ? "+" : ""}${roll.bonus}`
-                                : ""}{" "}
-                              = <b>{roll.total}</b>
-                            </p>
-                          </article>
-                        ))}
-                      </div>
-                    </section>
-
-                    <section className="ficha-party-box">
-                      <h4>Enviar item</h4>
-
-                      <select
-                        value={partyItemIndex}
-                        onChange={(event) =>
-                          setPartyItemIndex(event.target.value)
-                        }
-                      >
-                        <option value="">Escolha um item</option>
-
-                        {(personagem.inventario || []).map((item, index) => (
-                          <option key={`${item.nome}-${index}`} value={index}>
-                            {item.nome}
-                          </option>
-                        ))}
-                      </select>
-
-                      <select
-                        value={partyDestinoItem}
-                        onChange={(event) =>
-                          setPartyDestinoItem(event.target.value)
-                        }
-                      >
-                        <option value="">Enviar para...</option>
-
-                        {outrosJogadoresParty.map((jogador) => (
-                          <option key={jogador.fichaId} value={jogador.fichaId}>
-                            {jogador.nome}
-                          </option>
-                        ))}
-                      </select>
-
-                      <button type="button" onClick={enviarItemFichaParty}>
-                        Enviar item
-                      </button>
-
-                      <div className="ficha-party-feed">
-                        {(party?.itemTransfers || []).map((transferencia) => (
-                          <article key={transferencia.id}>
-                            <strong>
-                              {transferencia.from || "Origem"} →{" "}
-                              {transferencia.to || "Destino"}
-                            </strong>
-
-                            <p>{transferencia.item?.nome || "Item"}</p>
-                          </article>
-                        ))}
-                      </div>
-                    </section>
-                  </aside>
-                </div>
-              </>
-            )}
-
-            {partyMensagem && (
-              <p className="ficha-party-mensagem">{partyMensagem}</p>
-            )}
-          </div>
-        )}
+        <label className="personagem-label">História</label>
+        <textarea
+          className="textarea-descricao"
+          placeholder="Escreva a história do personagem..."
+          rows="7"
+          value={personagem.historia || ""}
+          onChange={(e) =>
+            setPersonagem((prev) => ({
+              ...prev,
+              historia: e.target.value,
+            }))
+          }
+        />
       </div>
     ),
+
     personalizacao: (
       <div className="conteudo-aba personalizacao-aba">
         <div className="personalizacao-subabas">
@@ -3882,66 +3398,6 @@ const FichaPersonagem = () => {
 
     setUltimoEstadoSanidade(estadoSanidadePerfil);
   }, [estadoSanidadePerfil]);
-
-  useEffect(() => {
-    const codigoUrl = obterPartyCodeDaUrl();
-    const codigoFicha = personagem?.partyCode || "";
-    const codigoSalvo =
-      codigoUrl || codigoFicha || localStorage.getItem(`party_${fichaId}`) || "";
-
-    if (codigoSalvo) {
-      setPartyCode(codigoSalvo);
-      setSubAbaPersonagem("party");
-      localStorage.setItem(`party_${fichaId}`, codigoSalvo);
-    }
-  }, [fichaId, personagem?.partyCode]);
-
-  useEffect(() => {
-    if (!partyCode) return undefined;
-
-    let cancelado = false;
-
-    const sincronizarParty = async () => {
-      try {
-        const partyAtualizada = await buscarParty(partyCode);
-
-        if (!cancelado) {
-          setParty(partyAtualizada);
-        }
-      } catch (error) {
-        if (!cancelado) {
-          setPartyMensagem(error.message);
-        }
-      }
-    };
-
-    sincronizarParty();
-
-    const interval = setInterval(sincronizarParty, 7000);
-
-    return () => {
-      cancelado = true;
-      clearInterval(interval);
-    };
-  }, [partyCode]);
-
-  useEffect(() => {
-    if (!partyCode || !personagem?.nome) return undefined;
-
-    const atualizar = () => {
-      atualizarStatusParty(partyCode, fichaId, personagem)
-        .then(setParty)
-        .catch((error) =>
-          console.warn("Não foi possível atualizar party.", error),
-        );
-    };
-
-    atualizar();
-
-    const interval = setInterval(atualizar, 15000);
-
-    return () => clearInterval(interval);
-  }, [partyCode, fichaId, personagem]);
 
   useEffect(() => {
     if (!ultimoEstadoEsperanca) {
