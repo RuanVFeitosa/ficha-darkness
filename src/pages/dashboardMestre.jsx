@@ -455,7 +455,7 @@ const DashboardMestre = () => {
 
     sincronizarParty();
 
-    const intervalo = setInterval(sincronizarParty, 2500);
+    const intervalo = setInterval(sincronizarParty, 7000);
 
     return () => {
       cancelado = true;
@@ -495,7 +495,7 @@ const DashboardMestre = () => {
           error,
         );
       }
-    }, 2000);
+    }, 10000);
 
     return () => clearInterval(intervalo);
   }, [fichaSelecionada, editandoDashboard]);

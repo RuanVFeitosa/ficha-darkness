@@ -180,7 +180,7 @@ const Party = () => {
     };
 
     sincronizar();
-    const interval = setInterval(sincronizar, 3500);
+    const interval = setInterval(sincronizar, 7000);
 
     return () => {
       cancelado = true;
@@ -200,7 +200,7 @@ const Party = () => {
     };
 
     atualizar();
-    const interval = setInterval(atualizar, 6000);
+    const interval = setInterval(atualizar, 15000);
 
     return () => clearInterval(interval);
   }, [partyCode, fichaId, personagem]);

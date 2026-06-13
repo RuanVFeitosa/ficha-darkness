@@ -581,18 +581,22 @@ const FichaPersonagem = () => {
     salvarPersonagemLocalSeguro(storageKey, personagem);
     setUltimoSave(new Date().toLocaleTimeString());
 
-    salvandoRef.current = true;
+    const timeout = setTimeout(() => {
+      salvandoRef.current = true;
 
-    salvarPersonagem(fichaId, personagem)
-      .catch((error) => {
-        console.warn(
-          "Backend indisponivel. Dados mantidos no localStorage.",
-          error,
-        );
-      })
-      .finally(() => {
-        salvandoRef.current = false;
-      });
+      salvarPersonagem(fichaId, personagem)
+        .catch((error) => {
+          console.warn(
+            "Backend indisponivel. Dados mantidos no localStorage.",
+            error,
+          );
+        })
+        .finally(() => {
+          salvandoRef.current = false;
+        });
+    }, 900);
+
+    return () => clearTimeout(timeout);
   }, [personagem, carregado, fichaId, storageKey]);
 
   useEffect(() => {
@@ -632,9 +636,7 @@ const FichaPersonagem = () => {
       }
     };
 
-    sincronizarFicha();
-
-    const intervalo = setInterval(sincronizarFicha, 2000);
+    const intervalo = setInterval(sincronizarFicha, 12000);
 
     return () => {
       cancelado = true;
@@ -3856,7 +3858,7 @@ const FichaPersonagem = () => {
 
     sincronizarParty();
 
-    const interval = setInterval(sincronizarParty, 3500);
+    const interval = setInterval(sincronizarParty, 7000);
 
     return () => {
       cancelado = true;
@@ -3877,7 +3879,7 @@ const FichaPersonagem = () => {
 
     atualizar();
 
-    const interval = setInterval(atualizar, 6000);
+    const interval = setInterval(atualizar, 15000);
 
     return () => clearInterval(interval);
   }, [partyCode, fichaId, personagem]);
