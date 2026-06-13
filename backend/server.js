@@ -9,21 +9,11 @@ const DATA_DIR = process.env.DATA_DIR
   : path.join(__dirname, "data");
 const BUILD_DIR = path.join(__dirname, "..", "build");
 const DEFAULT_FICHA_ID = "principal";
-const PARTY_PREFIX = "party-";
 const SHOP_CATALOG_FILE = path.join(DATA_DIR, "loja-catalogo.json");
 const SUPABASE_URL = process.env.SUPABASE_URL?.trim();
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 const SUPABASE_TABLE = (process.env.SUPABASE_TABLE || "personagens").trim();
 const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
-const IS_VERCEL = Boolean(process.env.VERCEL);
-
-const assertStorageConfigured = () => {
-  if (IS_VERCEL && !USE_SUPABASE) {
-    throw new Error(
-      "Supabase nao configurado na Vercel. Adicione SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY e SUPABASE_TABLE=personagens nas Environment Variables.",
-    );
-  }
-};
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -176,34 +166,6 @@ const sanitizeFichaId = (id) => {
 
 const getDataFile = (id) => path.join(DATA_DIR, `${sanitizeFichaId(id)}.json`);
 
-const gerarCodigoParty = () =>
-  `P${Math.floor(100000 + Math.random() * 900000)}`;
-
-const normalizarCodigoParty = (code) =>
-  String(code || "")
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9_-]/g, "")
-    .slice(0, 24);
-
-const getPartyId = (code) => `${PARTY_PREFIX}${sanitizeFichaId(code)}`;
-
-const resumirPersonagemParty = (fichaId, personagem = {}) => ({
-  fichaId: sanitizeFichaId(fichaId),
-  nome: String(personagem.nome || "Sem nome").trim() || "Sem nome",
-  pronome: personagem.pronome || "",
-  classe: personagem.classe || "",
-  especialidade: personagem.especialidade || personagem.arquetipo || "",
-  nivel: Number(personagem.nivel) || 1,
-  fotoPerfil: personagem.fotoPerfil || personagem.imagem || "",
-  sanidade: personagem.sanidade || { atual: 0, max: 0 },
-  esperanca: personagem.esperanca || { atual: 0, max: 0 },
-  integridade: personagem.integridade || personagem.vida || null,
-  membros: personagem.membros || {},
-  atributos: personagem.atributos || {},
-  updatedAt: new Date().toISOString(),
-});
-
 const normalizeShopItem = (item, index = 0) => {
   const nome = String(item?.nome || "").trim();
   const id = sanitizeFichaId(item?.id || nome || `item-${Date.now()}-${index}`);
@@ -298,8 +260,6 @@ const readPersonagem = async (id) => {
     return rows[0]?.personagem || null;
   }
 
-  assertStorageConfigured();
-
   try {
     const dataFile = getDataFile(id);
     const raw = await fs.readFile(dataFile, "utf8");
@@ -331,8 +291,6 @@ const writePersonagem = async (id, personagem) => {
     return rows[0]?.personagem || personagem;
   }
 
-  assertStorageConfigured();
-
   await fs.mkdir(DATA_DIR, { recursive: true });
   await fs.writeFile(getDataFile(id), `${JSON.stringify(personagem, null, 2)}\n`);
   return personagem;
@@ -340,35 +298,20 @@ const writePersonagem = async (id, personagem) => {
 
 const listPersonagens = async () => {
   if (USE_SUPABASE) {
-    const rows = await requestSupabase(
-      `?select=id,personagem,updated_at&id=not.like.${PARTY_PREFIX}%25&order=id.asc`,
-    );
-    return rows
-      .filter(
-        (row) =>
-          !String(row.id || "").startsWith(PARTY_PREFIX) &&
-          row.personagem?.tipo !== "party",
-      )
-      .map((row) => ({
-        fichaId: row.id,
-        personagem: row.personagem,
-        updatedAt: row.updated_at || null,
-      }));
+    const rows = await requestSupabase("?select=id,personagem,updated_at&order=id.asc");
+    return rows.map((row) => ({
+      fichaId: row.id,
+      personagem: row.personagem,
+      updatedAt: row.updated_at || null,
+    }));
   }
-
-  assertStorageConfigured();
 
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
     const files = await fs.readdir(DATA_DIR);
     const personagens = await Promise.all(
       files
-        .filter(
-          (file) =>
-            file.endsWith(".json") &&
-            file !== "loja-catalogo.json" &&
-            !file.startsWith(PARTY_PREFIX),
-        )
+        .filter((file) => file.endsWith(".json") && file !== "loja-catalogo.json")
         .map(async (file) => {
           const fichaId = path.basename(file, ".json");
           const filePath = path.join(DATA_DIR, file);
@@ -405,8 +348,6 @@ const deletePersonagem = async (id) => {
     return true;
   }
 
-  assertStorageConfigured();
-
   try {
     await fs.unlink(getDataFile(id));
     return true;
@@ -419,284 +360,7 @@ const deletePersonagem = async (id) => {
   }
 };
 
-const limparPartiesAntigas = async (codeParaManter = "") => {
-  const partyIdParaManter = codeParaManter
-    ? getPartyId(normalizarCodigoParty(codeParaManter))
-    : "";
-
-  if (USE_SUPABASE) {
-    const filtroManter = partyIdParaManter
-      ? `&id=neq.${encodeURIComponent(partyIdParaManter)}`
-      : "";
-
-    await requestSupabase(`?id=like.${PARTY_PREFIX}%25${filtroManter}`, {
-      method: "DELETE",
-      headers: { Prefer: "return=minimal" },
-    });
-
-    return true;
-  }
-
-  assertStorageConfigured();
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  const files = await fs.readdir(DATA_DIR);
-
-  await Promise.all(
-    files
-      .filter((file) => file.startsWith(PARTY_PREFIX) && file.endsWith(".json"))
-      .filter((file) => path.basename(file, ".json") !== partyIdParaManter)
-      .map((file) => fs.unlink(path.join(DATA_DIR, file)).catch(() => null)),
-  );
-
-  return true;
-};
-
-const readParty = async (code) => {
-  const partyCode = normalizarCodigoParty(code);
-  if (!partyCode) return null;
-
-  const party = await readPersonagem(getPartyId(partyCode));
-  return party?.tipo === "party" ? party : null;
-};
-
-const writeParty = async (party) => {
-  const partyCode = normalizarCodigoParty(party?.code);
-
-  if (!partyCode) {
-    throw new Error("Codigo de party invalido");
-  }
-
-  const atualizado = {
-    ...party,
-    tipo: "party",
-    code: partyCode,
-    updatedAt: new Date().toISOString(),
-  };
-
-  await writePersonagem(getPartyId(partyCode), atualizado);
-  return atualizado;
-};
-
-const vincularPersonagemAParty = async (fichaId, personagem, partyCode) => {
-  const personagemId = sanitizeFichaId(fichaId);
-  const existente = await readPersonagem(personagemId);
-  const base =
-    existente && existente.tipo !== "party" && typeof existente === "object"
-      ? existente
-      : {};
-
-  const atualizado = {
-    ...base,
-    ...(personagem && typeof personagem === "object" ? personagem : {}),
-    partyCode: normalizarCodigoParty(partyCode),
-  };
-
-  await writePersonagem(personagemId, atualizado);
-  return atualizado;
-};
-
-const desvincularPersonagensDaParty = async (party) => {
-  const partyCode = normalizarCodigoParty(party?.code);
-  const players = Object.values(party?.players || {});
-
-  await Promise.all(
-    players.map(async (player) => {
-      const fichaId = sanitizeFichaId(player.fichaId);
-      const personagem = await readPersonagem(fichaId);
-
-      if (!personagem || personagem.tipo === "party") return;
-
-      if (normalizarCodigoParty(personagem.partyCode) !== partyCode) return;
-
-      const atualizado = { ...personagem };
-      delete atualizado.partyCode;
-      await writePersonagem(fichaId, atualizado);
-    }),
-  );
-};
-
-const criarParty = async ({ fichaId, personagem }) => {
-  let code = gerarCodigoParty();
-  let tentativas = 0;
-
-  while ((await readParty(code)) && tentativas < 12) {
-    code = gerarCodigoParty();
-    tentativas += 1;
-  }
-
-  const party = {
-    tipo: "party",
-    code,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    players: {},
-    notes: [],
-    rolls: [],
-    itemTransfers: [],
-  };
-
-  party.players[sanitizeFichaId(fichaId)] = resumirPersonagemParty(
-    fichaId,
-    personagem,
-  );
-
-  const partyAtualizada = await writeParty(party);
-  await limparPartiesAntigas(code);
-  await vincularPersonagemAParty(fichaId, personagem, code);
-  return partyAtualizada;
-};
-
-const encerrarParty = async (code) => {
-  const party = await readParty(code);
-
-  if (!party) return false;
-
-  await desvincularPersonagensDaParty(party);
-  await deletePersonagem(getPartyId(party.code));
-  return true;
-};
-
-const entrarParty = async ({ code, fichaId, personagem }) => {
-  const party = await readParty(code);
-
-  if (!party) return null;
-
-  const personagemAtualizado = await vincularPersonagemAParty(
-    fichaId,
-    personagem,
-    party.code,
-  );
-
-  party.players = {
-    ...(party.players || {}),
-    [sanitizeFichaId(fichaId)]: resumirPersonagemParty(
-      fichaId,
-      personagemAtualizado,
-    ),
-  };
-
-  return writeParty(party);
-};
-
-const atualizarStatusParty = async ({ code, fichaId, personagem }) => {
-  const party = await readParty(code);
-
-  if (!party) return null;
-
-  party.players = {
-    ...(party.players || {}),
-    [sanitizeFichaId(fichaId)]: resumirPersonagemParty(fichaId, personagem),
-  };
-
-  return writeParty(party);
-};
-
-const adicionarNotaParty = async ({ code, fichaId, texto }) => {
-  const party = await readParty(code);
-
-  if (!party) return null;
-
-  const autor = party.players?.[sanitizeFichaId(fichaId)]?.nome || fichaId;
-
-  party.notes = [
-    {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      fichaId: sanitizeFichaId(fichaId),
-      autor,
-      texto: String(texto || "").trim().slice(0, 1200),
-      createdAt: new Date().toISOString(),
-    },
-    ...(party.notes || []),
-  ].slice(0, 40);
-
-  return writeParty(party);
-};
-
-const adicionarRolagemParty = async ({ code, fichaId, roll }) => {
-  const party = await readParty(code);
-
-  if (!party) return null;
-
-  const autor = party.players?.[sanitizeFichaId(fichaId)]?.nome || fichaId;
-
-  party.rolls = [
-    {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      fichaId: sanitizeFichaId(fichaId),
-      autor,
-      formula: String(roll?.formula || "").trim().slice(0, 80),
-      dados: Array.isArray(roll?.dados) ? roll.dados.slice(0, 40) : [],
-      bonus: Number(roll?.bonus) || 0,
-      total: Number(roll?.total) || 0,
-      createdAt: new Date().toISOString(),
-    },
-    ...(party.rolls || []),
-  ].slice(0, 40);
-
-  return writeParty(party);
-};
-
-const transferirItemParty = async ({ code, fromFichaId, toFichaId, itemIndex }) => {
-  const party = await readParty(code);
-
-  if (!party) return null;
-
-  const origemId = sanitizeFichaId(fromFichaId);
-  const destinoId = sanitizeFichaId(toFichaId);
-  const origem = await readPersonagem(origemId);
-  const destino = await readPersonagem(destinoId);
-
-  if (!origem || !destino) {
-    throw new Error("Ficha de origem ou destino nao encontrada");
-  }
-
-  const inventarioOrigem = Array.isArray(origem.inventario)
-    ? [...origem.inventario]
-    : [];
-  const index = Math.max(0, Number(itemIndex) || 0);
-  const [item] = inventarioOrigem.splice(index, 1);
-
-  if (!item) {
-    throw new Error("Item nao encontrado no inventario");
-  }
-
-  const origemAtualizada = {
-    ...origem,
-    inventario: inventarioOrigem,
-  };
-  const destinoAtualizado = {
-    ...destino,
-    inventario: [...(destino.inventario || []), item],
-  };
-
-  await writePersonagem(origemId, origemAtualizada);
-  await writePersonagem(destinoId, destinoAtualizado);
-
-  party.players = {
-    ...(party.players || {}),
-    [origemId]: resumirPersonagemParty(origemId, origemAtualizada),
-    [destinoId]: resumirPersonagemParty(destinoId, destinoAtualizado),
-  };
-
-  party.itemTransfers = [
-    {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      fromFichaId: origemId,
-      toFichaId: destinoId,
-      from: party.players?.[origemId]?.nome || origemId,
-      to: party.players?.[destinoId]?.nome || destinoId,
-      item,
-      createdAt: new Date().toISOString(),
-    },
-    ...(party.itemTransfers || []),
-  ].slice(0, 40);
-
-  return writeParty(party);
-};
-
 const readShopCatalog = async () => {
-  assertStorageConfigured();
-
   try {
     const raw = await fs.readFile(SHOP_CATALOG_FILE, "utf8");
     const catalogo = JSON.parse(raw);
@@ -716,8 +380,6 @@ const writeShopCatalog = async (catalogo) => {
   if (!Array.isArray(catalogo)) {
     throw new Error("Catalogo invalido");
   }
-
-  assertStorageConfigured();
 
   const normalized = catalogo.map((item, index) => normalizeShopItem(item, index));
   await fs.mkdir(DATA_DIR, { recursive: true });
@@ -786,167 +448,6 @@ const handleRequest = async (req, res) => {
       const fichaId = await createUniqueFichaId(personagem.nome);
       const saved = await writePersonagem(fichaId, personagem);
       return sendJson(res, 201, { fichaId, personagem: saved });
-    }
-
-    if (url.pathname === "/api/parties" && req.method === "GET") {
-      const code = url.searchParams.get("code");
-
-      if (code) {
-        const party = await readParty(code);
-        return sendJson(res, party ? 200 : 404, {
-          party,
-          ...(party ? {} : { error: "Party nao encontrada" }),
-        });
-      }
-
-      return sendJson(res, 200, {
-        ok: true,
-        endpoint: "parties",
-        message: "Use POST /api/parties para criar uma party.",
-      });
-    }
-
-    if (url.pathname === "/api/parties" && req.method === "POST") {
-      const body = await readJsonBody(req);
-      const action = String(body?.action || "create").trim().toLowerCase();
-
-      if (action === "join") {
-        const party = await entrarParty(body);
-        return sendJson(res, party ? 200 : 404, {
-          party,
-          ...(party ? {} : { error: "Party nao encontrada" }),
-        });
-      }
-
-      if (action === "status") {
-        const party = await atualizarStatusParty(body);
-        return sendJson(res, party ? 200 : 404, {
-          party,
-          ...(party ? {} : { error: "Party nao encontrada" }),
-        });
-      }
-
-      if (action === "note") {
-        const party = await adicionarNotaParty(body);
-        return sendJson(res, party ? 201 : 404, {
-          party,
-          ...(party ? {} : { error: "Party nao encontrada" }),
-        });
-      }
-
-      if (action === "roll") {
-        const party = await adicionarRolagemParty(body);
-        return sendJson(res, party ? 201 : 404, {
-          party,
-          ...(party ? {} : { error: "Party nao encontrada" }),
-        });
-      }
-
-      if (action === "item") {
-        const party = await transferirItemParty(body);
-        return sendJson(res, party ? 201 : 404, {
-          party,
-          ...(party ? {} : { error: "Party nao encontrada" }),
-        });
-      }
-
-      if (action === "delete" || action === "close") {
-        const deleted = await encerrarParty(body.code);
-        return sendJson(res, deleted ? 200 : 404, {
-          deleted,
-          ...(deleted ? {} : { error: "Party nao encontrada" }),
-        });
-      }
-
-      if (!body?.fichaId || !body?.personagem) {
-        return sendJson(res, 400, { error: "Ficha e personagem sao obrigatorios" });
-      }
-
-      const party = await criarParty(body);
-      return sendJson(res, 201, { party });
-    }
-
-    const partyMatch = url.pathname.match(/^\/api\/parties\/([^/]+)$/);
-    const partyJoinMatch = url.pathname.match(/^\/api\/parties\/([^/]+)\/join$/);
-    const partyStatusMatch = url.pathname.match(
-      /^\/api\/parties\/([^/]+)\/players\/([^/]+)$/,
-    );
-    const partyNotesMatch = url.pathname.match(/^\/api\/parties\/([^/]+)\/notes$/);
-    const partyRollsMatch = url.pathname.match(/^\/api\/parties\/([^/]+)\/rolls$/);
-    const partyItemsMatch = url.pathname.match(/^\/api\/parties\/([^/]+)\/items$/);
-
-    if (partyMatch && req.method === "GET") {
-      const party = await readParty(decodeURIComponent(partyMatch[1]));
-      return sendJson(res, party ? 200 : 404, {
-        party,
-        ...(party ? {} : { error: "Party nao encontrada" }),
-      });
-    }
-
-    if (partyJoinMatch && req.method === "POST") {
-      const body = await readJsonBody(req);
-      const party = await entrarParty({
-        code: decodeURIComponent(partyJoinMatch[1]),
-        ...body,
-      });
-
-      return sendJson(res, party ? 200 : 404, {
-        party,
-        ...(party ? {} : { error: "Party nao encontrada" }),
-      });
-    }
-
-    if (partyStatusMatch && req.method === "PUT") {
-      const body = await readJsonBody(req);
-      const party = await atualizarStatusParty({
-        code: decodeURIComponent(partyStatusMatch[1]),
-        fichaId: decodeURIComponent(partyStatusMatch[2]),
-        personagem: body.personagem,
-      });
-
-      return sendJson(res, party ? 200 : 404, {
-        party,
-        ...(party ? {} : { error: "Party nao encontrada" }),
-      });
-    }
-
-    if (partyNotesMatch && req.method === "POST") {
-      const body = await readJsonBody(req);
-      const party = await adicionarNotaParty({
-        code: decodeURIComponent(partyNotesMatch[1]),
-        ...body,
-      });
-
-      return sendJson(res, party ? 201 : 404, {
-        party,
-        ...(party ? {} : { error: "Party nao encontrada" }),
-      });
-    }
-
-    if (partyRollsMatch && req.method === "POST") {
-      const body = await readJsonBody(req);
-      const party = await adicionarRolagemParty({
-        code: decodeURIComponent(partyRollsMatch[1]),
-        ...body,
-      });
-
-      return sendJson(res, party ? 201 : 404, {
-        party,
-        ...(party ? {} : { error: "Party nao encontrada" }),
-      });
-    }
-
-    if (partyItemsMatch && req.method === "POST") {
-      const body = await readJsonBody(req);
-      const party = await transferirItemParty({
-        code: decodeURIComponent(partyItemsMatch[1]),
-        ...body,
-      });
-
-      return sendJson(res, party ? 201 : 404, {
-        party,
-        ...(party ? {} : { error: "Party nao encontrada" }),
-      });
     }
 
     const legacyPersonagemRoute = url.pathname === "/api/personagem";
