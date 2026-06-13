@@ -9,7 +9,7 @@
   from {
     opacity: 1;
     transform: scale(1);
-    filter: drop-shadow(0 0 10px rgba(74, 134, 232, 1));
+    filter: drop-shadow(0 0 10px rgba(74, 135, 232, 0.966));
   }
 
   to {
