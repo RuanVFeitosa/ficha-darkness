@@ -421,7 +421,6 @@ const DashboardMestre = () => {
     setArvoresEditor(obterTodasArvores());
   }, []);
 
- 
   useEffect(() => {
     if (!fichaSelecionada) return;
 
@@ -1442,7 +1441,6 @@ const DashboardMestre = () => {
 
         <div className="mestre-card-conteudo">
           <div className="mestre-card-info">
-           
             <small>
               NV{" "}
               {tipo === "inimigo"
@@ -1605,10 +1603,7 @@ const DashboardMestre = () => {
           Habilidades
         </button>
       </nav>
-      {false && (
-        <section className="mestre-dashboard-full">
-        </section>
-      )}
+      {false && <section className="mestre-dashboard-full"></section>}
 
       {aba === "campanha" && (
         <section className="mestre-dashboard-full campanha-dashboard">
@@ -1845,6 +1840,25 @@ const DashboardMestre = () => {
             )}
           </div>
 
+          {subAbaFichas === "jogadores" && (
+            <div className="mestre-dashboard-cards">
+              {fichas.length > 0 ? (
+                fichas.map((ficha) => renderCardFicha(ficha, "jogador"))
+              ) : (
+                <div className="mestre-vazio">Nenhuma ficha encontrada.</div>
+              )}
+            </div>
+          )}
+
+          {subAbaFichas === "npcs" && (
+            <div className="mestre-dashboard-cards">
+              {npcs.length > 0 ? (
+                npcs.map((npc) => renderCardFicha(npc, "npc"))
+              ) : (
+                <div className="mestre-vazio">Nenhum NPC criado.</div>
+              )}
+            </div>
+          )}
 
           {modalFichaAberto && personagem && (
             <div
