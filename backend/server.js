@@ -694,6 +694,14 @@ const handleRequest = async (req, res) => {
       return sendJson(res, 201, { fichaId, personagem: saved });
     }
 
+    if (url.pathname === "/api/parties" && req.method === "GET") {
+      return sendJson(res, 200, {
+        ok: true,
+        endpoint: "parties",
+        message: "Use POST /api/parties para criar uma party.",
+      });
+    }
+
     if (url.pathname === "/api/parties" && req.method === "POST") {
       const body = await readJsonBody(req);
 
