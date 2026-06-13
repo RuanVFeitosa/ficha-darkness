@@ -76,3 +76,70 @@ export const salvarCatalogoLoja = async (catalogo) => {
 
   return data.catalogo || [];
 };
+
+export const criarParty = async (fichaId, personagem) => {
+  const data = await request("/parties", {
+    method: "POST",
+    body: JSON.stringify({ fichaId, personagem }),
+  });
+
+  return data.party;
+};
+
+export const buscarParty = async (partyCode) => {
+  const data = await request(`/parties/${encodeURIComponent(partyCode)}`);
+  return data.party;
+};
+
+export const entrarParty = async (partyCode, fichaId, personagem) => {
+  const data = await request(`/parties/${encodeURIComponent(partyCode)}/join`, {
+    method: "POST",
+    body: JSON.stringify({ fichaId, personagem }),
+  });
+
+  return data.party;
+};
+
+export const atualizarStatusParty = async (partyCode, fichaId, personagem) => {
+  const data = await request(
+    `/parties/${encodeURIComponent(partyCode)}/players/${encodeURIComponent(fichaId)}`,
+    {
+      method: "PUT",
+      body: JSON.stringify({ personagem }),
+    },
+  );
+
+  return data.party;
+};
+
+export const enviarNotaParty = async (partyCode, fichaId, texto) => {
+  const data = await request(`/parties/${encodeURIComponent(partyCode)}/notes`, {
+    method: "POST",
+    body: JSON.stringify({ fichaId, texto }),
+  });
+
+  return data.party;
+};
+
+export const enviarRolagemParty = async (partyCode, fichaId, roll) => {
+  const data = await request(`/parties/${encodeURIComponent(partyCode)}/rolls`, {
+    method: "POST",
+    body: JSON.stringify({ fichaId, roll }),
+  });
+
+  return data.party;
+};
+
+export const transferirItemParty = async (
+  partyCode,
+  fromFichaId,
+  toFichaId,
+  itemIndex,
+) => {
+  const data = await request(`/parties/${encodeURIComponent(partyCode)}/items`, {
+    method: "POST",
+    body: JSON.stringify({ fromFichaId, toFichaId, itemIndex }),
+  });
+
+  return data.party;
+};

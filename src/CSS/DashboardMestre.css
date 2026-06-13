@@ -283,6 +283,13 @@
   gap: 20px;
 }
 
+.mestre-fichas-com-party {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+  align-items: start;
+  gap: 22px;
+}
+
 .mestre-card-personagem {
   position: relative;
   overflow: hidden;
@@ -1636,4 +1643,305 @@
 .mestre-popup-acoes .perigo {
   background: #8b0000;
   border-color: #ff4d4d;
+}
+
+/* =========================================================
+   DASHBOARD - PARTY
+========================================================= */
+
+.mestre-party-embed {
+  width: 100%;
+  margin-bottom: 22px;
+  padding: 18px;
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(16, 13, 9, 0.92), rgba(4, 4, 4, 0.94));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+}
+
+.mestre-party-embed.lateral {
+  position: sticky;
+  top: 18px;
+  max-height: calc(100vh - 36px);
+  margin-bottom: 0;
+  overflow: auto;
+}
+
+.mestre-party-acoes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mestre-party-acoes button,
+.mestre-party-ficha button {
+  min-height: 42px;
+  padding: 0 16px;
+
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  border-radius: 8px;
+
+  background: rgba(0, 0, 0, 0.58);
+  color: #f5efe4;
+
+  cursor: pointer;
+
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-party-acoes button:hover,
+.mestre-party-ficha button:hover {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.14);
+  color: #d4af37;
+}
+
+.mestre-party-ficha button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mestre-party-codigo {
+  width: fit-content;
+
+  display: grid;
+  gap: 4px;
+
+  margin: 16px 0;
+  padding: 12px 16px;
+
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 12px;
+
+  background: rgba(0, 0, 0, 0.58);
+}
+
+.mestre-party-codigo span {
+  color: #d4af37;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.mestre-party-codigo strong {
+  color: #fff;
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+}
+
+.mestre-party-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.mestre-party-layout.lateral {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.mestre-party-lista {
+  display: grid;
+  gap: 10px;
+}
+
+.mestre-party-lista.compacta {
+  max-height: 240px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.mestre-party-ficha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 12px;
+
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 12px;
+
+  background: rgba(0, 0, 0, 0.48);
+}
+
+.mestre-party-ficha.ativo {
+  justify-content: flex-start;
+  border-color: rgba(212, 175, 55, 0.34);
+}
+
+.mestre-party-ficha img {
+  width: 46px;
+  height: 46px;
+
+  object-fit: cover;
+
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 50%;
+}
+
+.mestre-party-ficha strong {
+  display: block;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.mestre-party-ficha small {
+  color: #d7c8b8;
+}
+
+.mestre-party-recursos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.mestre-party-recursos span {
+  padding: 4px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f5efe4;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+}
+
+.mestre-party-feed {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.mestre-party-feed article {
+  padding: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.mestre-party-feed strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #d4af37;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-party-feed p,
+.mestre-party-vazio {
+  margin: 0;
+  color: #f5efe4;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+  .mestre-fichas-com-party {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-party-embed.lateral {
+    position: static;
+    max-height: none;
+  }
+
+  .mestre-party-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-party-ficha {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mestre-party-ficha button {
+    width: 100%;
+  }
+}
+
+.ficha-party-membros {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ficha-party-membro {
+  display: grid;
+  gap: 5px;
+}
+
+.ficha-party-membro div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ficha-party-membro small {
+  color: #d7c8b8;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ficha-party-membro strong {
+  color: #fff;
+  font-size: 0.72rem;
+}
+
+.ficha-party-membro i {
+  display: block;
+  height: 7px;
+  border-radius: 999px;
+
+  transition:
+    width 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+/* NORMAL */
+
+.ficha-party-membro i.normal {
+  background: #2ecc71;
+
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.25);
+}
+
+/* FERIDO */
+
+.ficha-party-membro i.ferido {
+  background: #d4af37;
+
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.28);
+}
+
+/* GRAVE */
+
+.ficha-party-membro i.grave {
+  background: #c0392b;
+
+  box-shadow: 0 0 14px rgba(192, 57, 43, 0.4);
+
+  animation: partyMembroGrave 1s infinite alternate;
+}
+
+@keyframes partyMembroGrave {
+  from {
+    opacity: 0.65;
+  }
+
+  to {
+    opacity: 1;
+  }
 }

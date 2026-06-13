@@ -23,6 +23,9 @@ import {
   salvarCatalogoLoja,
   buscarPersonagem,
   salvarPersonagem,
+  criarParty,
+  buscarParty,
+  entrarParty,
 } from "../services/personagemApi";
 import { estadoInicial } from "./fichaPersonagem";
 import {
@@ -231,6 +234,9 @@ const DashboardMestre = () => {
 
   const [inimigos, setInimigos] = useState([]);
   const [inimigoEditando, setInimigoEditando] = useState(null);
+  const [party, setParty] = useState(null);
+  const [partyCode, setPartyCode] = useState("");
+  const [partyMensagem, setPartyMensagem] = useState("");
 
   const [popup, setPopup] = useState(null);
 
@@ -404,6 +410,43 @@ const DashboardMestre = () => {
   useEffect(() => {
     setArvoresEditor(obterTodasArvores());
   }, []);
+
+  useEffect(() => {
+    const codigoSalvo = localStorage.getItem("party_mestre_codigo");
+
+    if (codigoSalvo) {
+      setPartyCode(codigoSalvo);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!partyCode) return undefined;
+
+    let cancelado = false;
+
+    const sincronizarParty = async () => {
+      try {
+        const partyAtualizada = await buscarParty(partyCode);
+
+        if (!cancelado) {
+          setParty(partyAtualizada);
+        }
+      } catch (error) {
+        if (!cancelado) {
+          setPartyMensagem(error?.message || "Nao foi possivel atualizar a party.");
+        }
+      }
+    };
+
+    sincronizarParty();
+
+    const intervalo = setInterval(sincronizarParty, 2500);
+
+    return () => {
+      cancelado = true;
+      clearInterval(intervalo);
+    };
+  }, [partyCode]);
 
   useEffect(() => {
     if (!fichaSelecionada) return;
@@ -1217,12 +1260,324 @@ const DashboardMestre = () => {
     return resultado;
   };
 
+  const criarPartyMestre = async () => {
+  if (!fichaSelecionada || !personagem) {
+    setPartyMensagem("Selecione uma ficha para iniciar a party.");
+    return;
+  }
+
+  try {
+    const novaParty = await criarParty(fichaSelecionada, personagem);
+
+    setParty(novaParty);
+    setPartyCode(novaParty.code);
+
+    localStorage.setItem("party_mestre_codigo", novaParty.code);
+    localStorage.setItem(`party_${fichaSelecionada}`, novaParty.code);
+
+    setPartyMensagem(`Party criada: ${novaParty.code}`);
+  } catch (error) {
+    setPartyMensagem(error?.message || "Não foi possível criar a party.");
+  }
+};
+
+const adicionarFichaNaParty = async (ficha) => {
+  if (!partyCode) {
+    setPartyMensagem("Crie uma party primeiro.");
+    return;
+  }
+
+  try {
+    const partyAtualizada = await entrarParty(
+      partyCode,
+      ficha.fichaId,
+      ficha.personagem,
+    );
+
+    setParty(partyAtualizada);
+    localStorage.setItem(`party_${ficha.fichaId}`, partyCode);
+
+    setPartyMensagem(
+      `${ficha.personagem?.nome || ficha.fichaId} entrou na party.`,
+    );
+  } catch (error) {
+    setPartyMensagem(error?.message || "Não foi possível adicionar a ficha.");
+  }
+};
+
+const carregarPartyMestre = async () => {
+  const codigoSalvo = localStorage.getItem("party_mestre_codigo");
+
+  if (!codigoSalvo) {
+    setPartyMensagem("Nenhuma party salva.");
+    return;
+  }
+
+  try {
+    const partyAtualizada = await buscarParty(codigoSalvo);
+
+    setParty(partyAtualizada);
+    setPartyCode(codigoSalvo);
+    setPartyMensagem(`Party carregada: ${codigoSalvo}`);
+  } catch (error) {
+    setPartyMensagem(error?.message || "Não foi possível carregar a party.");
+  }
+};
+
+  const renderPainelPartyMestre = () => (
+    <div className="mestre-party-embed">
+      <div className="mestre-modal-linha-topo">
+        <h2>Party</h2>
+
+        <div className="mestre-party-acoes">
+          <button type="button" onClick={criarPartyMestre}>
+            Criar Party
+          </button>
+
+          <button type="button" onClick={carregarPartyMestre}>
+            Carregar Party
+          </button>
+        </div>
+      </div>
+
+      {partyCode && (
+        <div className="mestre-party-codigo">
+          <span>Código da Party</span>
+          <strong>{partyCode}</strong>
+        </div>
+      )}
+
+      {partyMensagem && <p className="mestre-mensagem">{partyMensagem}</p>}
+
+      <div className="mestre-party-layout">
+        <section className="mestre-modal-bloco full">
+          <span>Fichas disponíveis</span>
+
+          <div className="mestre-party-lista">
+            {fichas.map((ficha) => {
+              const p = ficha.personagem || {};
+
+              return (
+                <article key={ficha.fichaId} className="mestre-party-ficha">
+                  <div>
+                    <strong>{p.nome || ficha.fichaId}</strong>
+                    <small>
+                      {p.classe || "Sem classe"} • NV {p.nivel || 1}
+                    </small>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => adicionarFichaNaParty(ficha)}
+                    disabled={!partyCode}
+                  >
+                    Adicionar
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="mestre-modal-bloco full">
+          <span>Jogadores na Party</span>
+
+          <div className="mestre-party-lista">
+            {Object.values(party?.players || {}).map((jogador) => (
+              <article key={jogador.fichaId} className="mestre-party-ficha ativo">
+                <img
+                  src={jogador.fotoPerfil || "https://placehold.co/100x100"}
+                  alt=""
+                />
+
+                <div>
+                  <strong>{jogador.nome || jogador.fichaId}</strong>
+                  <small>
+                    {jogador.classe || "Sem classe"} • NV {jogador.nivel || 1}
+                  </small>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+
+  const renderPainelPartyLateral = () => {
+    const jogadores = Object.values(party?.players || {});
+    const notas = party?.notes || [];
+    const rolagens = party?.rolls || [];
+    const itensEnviados = party?.itemTransfers || [];
+
+    return (
+      <aside className="mestre-party-embed lateral">
+        <div className="mestre-modal-linha-topo">
+          <h2>Party</h2>
+
+          <div className="mestre-party-acoes">
+            <button type="button" onClick={criarPartyMestre}>
+              Criar
+            </button>
+
+            <button type="button" onClick={carregarPartyMestre}>
+              Carregar
+            </button>
+          </div>
+        </div>
+
+        {partyCode && (
+          <div className="mestre-party-codigo">
+            <span>Codigo da Party</span>
+            <strong>{partyCode}</strong>
+          </div>
+        )}
+
+        {partyMensagem && <p className="mestre-mensagem">{partyMensagem}</p>}
+
+        <div className="mestre-party-layout lateral">
+          <section className="mestre-modal-bloco full">
+            <span>Jogadores na Party</span>
+
+            <div className="mestre-party-lista">
+              {jogadores.length ? (
+                jogadores.map((jogador) => (
+                  <article
+                    key={jogador.fichaId}
+                    className="mestre-party-ficha ativo"
+                  >
+                    <img
+                      src={jogador.fotoPerfil || "https://placehold.co/100x100"}
+                      alt=""
+                    />
+
+                    <div>
+                      <strong>{jogador.nome || jogador.fichaId}</strong>
+                      <small>
+                        {jogador.classe || "Sem classe"} • NV{" "}
+                        {jogador.nivel || 1}
+                      </small>
+
+                      <div className="mestre-party-recursos">
+                        <span>
+                          SAN {jogador.sanidade?.atual || 0}/
+                          {jogador.sanidade?.max || 0}
+                        </span>
+                        <span>
+                          ESP {jogador.esperanca?.atual || 0}/
+                          {jogador.esperanca?.max || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <p className="mestre-party-vazio">Nenhum jogador na party.</p>
+              )}
+            </div>
+          </section>
+
+          <section className="mestre-modal-bloco full">
+            <span>Adicionar ficha</span>
+
+            <div className="mestre-party-lista compacta">
+              {fichas.map((ficha) => {
+                const p = ficha.personagem || {};
+
+                return (
+                  <article key={ficha.fichaId} className="mestre-party-ficha">
+                    <div>
+                      <strong>{p.nome || ficha.fichaId}</strong>
+                      <small>
+                        {p.classe || "Sem classe"} • NV {p.nivel || 1}
+                      </small>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => adicionarFichaNaParty(ficha)}
+                      disabled={!partyCode}
+                    >
+                      Add
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="mestre-modal-bloco full">
+            <span>Anotacoes</span>
+
+            <div className="mestre-party-feed">
+              {notas.length ? (
+                notas.map((nota) => (
+                  <article key={nota.id}>
+                    <strong>{nota.autor || nota.fichaId || "Jogador"}</strong>
+                    <p>{nota.texto}</p>
+                  </article>
+                ))
+              ) : (
+                <p className="mestre-party-vazio">Sem anotacoes ainda.</p>
+              )}
+            </div>
+          </section>
+
+          <section className="mestre-modal-bloco full">
+            <span>Rolagens</span>
+
+            <div className="mestre-party-feed">
+              {rolagens.length ? (
+                rolagens.map((roll) => (
+                  <article key={roll.id}>
+                    <strong>{roll.autor || roll.fichaId || "Jogador"}</strong>
+                    <p>
+                      {roll.formula}: {roll.dados?.join(", ")}
+                      {roll.bonus
+                        ? ` ${roll.bonus > 0 ? "+" : ""}${roll.bonus}`
+                        : ""}{" "}
+                      = <b>{roll.total}</b>
+                    </p>
+                  </article>
+                ))
+              ) : (
+                <p className="mestre-party-vazio">Nenhuma rolagem feita.</p>
+              )}
+            </div>
+          </section>
+
+          <section className="mestre-modal-bloco full">
+            <span>Itens enviados</span>
+
+            <div className="mestre-party-feed">
+              {itensEnviados.length ? (
+                itensEnviados.map((transferencia) => (
+                  <article key={transferencia.id}>
+                    <strong>
+                      {transferencia.from || "Origem"} →{" "}
+                      {transferencia.to || "Destino"}
+                    </strong>
+                    <p>{transferencia.item?.nome || "Item"}</p>
+                  </article>
+                ))
+              ) : (
+                <p className="mestre-party-vazio">Nenhum item enviado.</p>
+              )}
+            </div>
+          </section>
+        </div>
+      </aside>
+    );
+  };
+
   const renderCardFicha = (ficha, tipo = "jogador") => {
     const personagemCard = ficha.personagem || ficha;
     const membros = personagemCard.membros || {};
     const imagem =
       personagemCard.fotoPerfil || "https://placehold.co/600x800?text=Sem+Foto";
 
+
+    
     return (
       <article
         key={ficha.fichaId || ficha.id}
@@ -1399,12 +1754,92 @@ const DashboardMestre = () => {
           Habilidades
         </button>
       </nav>
+      {false && (
+  <section className="mestre-dashboard-full">
+    <div className="mestre-modal-linha-topo">
+      <h2>Party</h2>
+
+      <div className="mestre-party-acoes">
+        <button type="button" onClick={criarPartyMestre}>
+          Criar Party
+        </button>
+
+        <button type="button" onClick={carregarPartyMestre}>
+          Carregar Party
+        </button>
+      </div>
+    </div>
+
+    {partyCode && (
+      <div className="mestre-party-codigo">
+        <span>Código da Party</span>
+        <strong>{partyCode}</strong>
+      </div>
+    )}
+
+    {partyMensagem && <p className="mestre-mensagem">{partyMensagem}</p>}
+
+    <div className="mestre-party-layout">
+      <section className="mestre-modal-bloco full">
+        <span>Fichas disponíveis</span>
+
+        <div className="mestre-party-lista">
+          {fichas.map((ficha) => {
+            const p = ficha.personagem || {};
+
+            return (
+              <article key={ficha.fichaId} className="mestre-party-ficha">
+                <div>
+                  <strong>{p.nome || ficha.fichaId}</strong>
+                  <small>{p.classe || "Sem classe"} • NV {p.nivel || 1}</small>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => adicionarFichaNaParty(ficha)}
+                  disabled={!partyCode}
+                >
+                  Adicionar
+                </button>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="mestre-modal-bloco full">
+        <span>Jogadores na Party</span>
+
+        <div className="mestre-party-lista">
+          {Object.values(party?.players || {}).map((jogador) => (
+            <article key={jogador.fichaId} className="mestre-party-ficha ativo">
+              <img
+                src={jogador.fotoPerfil || "https://placehold.co/100x100"}
+                alt=""
+              />
+
+              <div>
+                <strong>{jogador.nome || jogador.fichaId}</strong>
+                <small>{jogador.classe || "Sem classe"} • NV {jogador.nivel || 1}</small>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </div>
+  </section>
+)}
 
       {aba === "fichas" && (
         <section className="mestre-dashboard-full">
-          <div className="mestre-dashboard-cards">
-            {fichas.map((ficha) => renderCardFicha(ficha, "jogador"))}
+          <div className="mestre-fichas-com-party">
+            <div className="mestre-dashboard-cards">
+              {fichas.map((ficha) => renderCardFicha(ficha, "jogador"))}
+            </div>
+
+            {renderPainelPartyLateral()}
           </div>
+
           {modalFichaAberto && personagem && (
             <div
               className="mestre-modal-overlay"
@@ -2624,7 +3059,9 @@ const DashboardMestre = () => {
               className={`mestre-popup ${popup.tipo === "perigo" ? "perigo" : ""}`}
               onClick={(e) => e.stopPropagation()}
             >
-              <span>{popup.tipo === "perigo" ? "CONFIRMAÇÃO" : "ABSOLUTO"}</span>
+              <span>
+                {popup.tipo === "perigo" ? "CONFIRMAÇÃO" : "ABSOLUTO"}
+              </span>
 
               <h2>{popup.titulo}</h2>
 

@@ -168,6 +168,7 @@ button {
 
   .botao-loja-flutuante,
   .botao-upgrade-flutuante,
+  .botao-party-flutuante,
   .botao-mestre-flutuante,
   .botao-customizacao-flutuante {
     position: static;
@@ -540,6 +541,7 @@ button {
   .ficha-container .botao-mestre-flutuante,
   .ficha-container .botao-loja-flutuante,
   .ficha-container .botao-upgrade-flutuante,
+  .ficha-container .botao-party-flutuante,
   .ficha-container .botao-customizacao-flutuante {
     position: fixed;
     top: 10px;
@@ -566,6 +568,12 @@ button {
     width: 118px;
   }
 
+  .ficha-container .botao-party-flutuante {
+    left: 298px;
+    right: auto;
+    width: 118px;
+  }
+
   .ficha-container .botao-upgrade-flutuante,
   .ficha-container .botao-customizacao-flutuante {
     left: 50%;
@@ -582,6 +590,7 @@ button {
   .ficha-container .botao-mestre-flutuante,
   .ficha-container .botao-loja-flutuante,
   .ficha-container .botao-upgrade-flutuante,
+  .ficha-container .botao-party-flutuante,
   .ficha-container .botao-customizacao-flutuante {
     min-height: 40px;
     padding-inline: 8px;
@@ -592,12 +601,18 @@ button {
 @media (max-width: 640px) {
   .ficha-container .botao-mestre-flutuante {
     left: 10px;
-    right: calc(50% + 5px);
+    right: calc(66.666% + 3px);
     width: auto;
   }
 
   .ficha-container .botao-loja-flutuante {
-    left: calc(50% + 5px);
+    left: calc(33.333% + 3px);
+    right: calc(33.333% + 3px);
+    width: auto;
+  }
+
+  .ficha-container .botao-party-flutuante {
+    left: calc(66.666% + 3px);
     right: 10px;
     width: auto;
   }
