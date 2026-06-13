@@ -507,3 +507,294 @@ button {
     font-size: 16px;
   }
 }
+
+@media (max-width: 640px) {
+  .upgrade-trilhas,
+  .loja-toolbar,
+  .ritos-subabas {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .upgrade-trilhas > *,
+  .loja-toolbar > *,
+  .ritos-subabas > * {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .loja-catalogo,
+  .upgrade-lista,
+  .mestre-dashboard-cards,
+  .mestre-form-grid,
+  .mestre-duplo,
+  .mestre-passivas-grid,
+  .mestre-inventario-grid,
+  .estoque-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .ficha-container .botao-mestre-flutuante,
+  .ficha-container .botao-loja-flutuante,
+  .ficha-container .botao-upgrade-flutuante,
+  .ficha-container .botao-customizacao-flutuante {
+    position: fixed;
+    top: 10px;
+    bottom: auto;
+    z-index: 80;
+    width: auto;
+    min-width: 0;
+    min-height: 42px;
+    margin: 0;
+    padding: 9px 12px;
+    transform: none;
+    font-size: 0.7rem;
+  }
+
+  .ficha-container .botao-mestre-flutuante {
+    left: 10px;
+    right: auto;
+    width: 150px;
+  }
+
+  .ficha-container .botao-loja-flutuante {
+    left: 170px;
+    right: auto;
+    width: 118px;
+  }
+
+  .ficha-container .botao-upgrade-flutuante,
+  .ficha-container .botao-customizacao-flutuante {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+
+  .ficha-container {
+    padding-top: 64px;
+  }
+}
+
+@media (max-width: 520px) {
+  .ficha-container .botao-mestre-flutuante,
+  .ficha-container .botao-loja-flutuante,
+  .ficha-container .botao-upgrade-flutuante,
+  .ficha-container .botao-customizacao-flutuante {
+    min-height: 40px;
+    padding-inline: 8px;
+    font-size: 0.64rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .ficha-container .botao-mestre-flutuante {
+    left: 10px;
+    right: calc(50% + 5px);
+    width: auto;
+  }
+
+  .ficha-container .botao-loja-flutuante {
+    left: calc(50% + 5px);
+    right: 10px;
+    width: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .ficha-container .atributos-linha {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    width: 100%;
+    min-width: 100%;
+    justify-items: stretch;
+  }
+
+  .ficha-container .atributoCompleto {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+  }
+
+  .ficha-container .atributo-dado {
+    width: 58px;
+    min-width: 0;
+    height: 58px;
+    display: grid;
+    place-items: center;
+  }
+
+  .ficha-container .atributo-dado svg {
+    width: 42px;
+    height: 42px;
+  }
+
+  .ficha-container .atributo-item {
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 92px;
+    align-items: center;
+    justify-items: stretch;
+    gap: 10px;
+    padding: 12px;
+    text-align: left;
+  }
+
+  .ficha-container .atributo-nome {
+    min-width: 0;
+    text-align: left;
+    font-size: 0.78rem;
+    letter-spacing: 1.4px;
+    overflow-wrap: anywhere;
+  }
+
+  .ficha-container .atributo-controles {
+    width: auto;
+    justify-content: flex-end;
+  }
+
+  .ficha-container .atributo-valor {
+    width: 86px;
+    max-width: 86px;
+  }
+
+  .ficha-container .sidebar-abas {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .ficha-container .sidebar-abas::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ficha-container .ativos-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .ficha-container .defesa-painel {
+    min-width: 0;
+    padding: 14px 10px;
+    overflow: hidden;
+  }
+
+  .ficha-container .defesa-linha-principal {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 14px;
+  }
+
+  .ficha-container .defesa-valores {
+    width: 100%;
+    margin-right: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .ficha-container .defesa-campos label {
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .ficha-container .defesa-membros {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 8px;
+  }
+
+  .ficha-container .ativo-rolar-btn {
+    width: 32px;
+    height: 32px;
+    margin-right: 0;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .ficha-container .atributoCompleto {
+    grid-template-columns: 50px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .ficha-container .atributo-dado {
+    width: 50px;
+    height: 50px;
+  }
+
+  .ficha-container .atributo-dado svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .ficha-container .atributo-item {
+    grid-template-columns: 1fr;
+  }
+
+  .ficha-container .atributo-controles {
+    justify-content: stretch;
+  }
+
+  .ficha-container .atributo-valor {
+    width: 100%;
+    max-width: none;
+  }
+
+  .ficha-container .defesa-valores,
+  .ficha-container .defesa-membros {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .ficha-container .profile-container > .atributoCompleto {
+    display: block;
+    width: 100%;
+    padding: 0;
+  }
+
+  .ficha-container .atributos-linha > .atributoCompleto {
+    width: 100%;
+    min-width: 100%;
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr);
+    align-items: center;
+    justify-self: stretch;
+    gap: 12px;
+    padding: 10px 0;
+  }
+
+  .ficha-container .atributos-linha > .atributoCompleto .atributo-item {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 92px;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .ficha-container .atributos-coluna,
+  .ficha-container .atributos-linha {
+    width: 100%;
+    min-width: 100%;
+    justify-items: stretch;
+  }
+
+  .ficha-container .atributos-linha > .atributoCompleto {
+    grid-template-columns: 50px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .ficha-container .atributos-linha > .atributoCompleto .atributo-item {
+    grid-template-columns: minmax(0, 1fr) 82px;
+  }
+}

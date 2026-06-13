@@ -33,6 +33,7 @@ const estadoHabilidadesInicial = {
   especialidadeDefinida: false,
 };
 
+// eslint-disable-next-line no-unused-vars
 const obterCustoHabilidade = (habilidade = {}) => {
   const textoCusto = String(habilidade.custo || "");
   const textoDescricao = String(habilidade.descricao || "");

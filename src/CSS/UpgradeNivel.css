@@ -495,3 +495,114 @@
     width: 100%;
   }
 }
+
+@media (max-width: 980px) {
+  .upgrade-page {
+    padding: 18px;
+  }
+
+  .upgrade-hero {
+    min-height: 260px;
+    padding: 78px 22px 26px;
+  }
+
+  .upgrade-status {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .upgrade-status strong {
+    font-size: 1.18rem;
+    overflow-wrap: anywhere;
+  }
+
+  .upgrade-tabela {
+    overflow-x: auto;
+  }
+
+  .upgrade-tabela-grid {
+    min-width: 680px;
+  }
+
+  .upgrade-shell,
+  .upgrade-tabela {
+    padding: 18px;
+  }
+
+  .upgrade-pontos {
+    display: grid;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .upgrade-page {
+    padding: 12px;
+  }
+
+  .upgrade-hero {
+    min-height: auto;
+    padding: 76px 16px 24px;
+  }
+
+  .upgrade-voltar {
+    top: 14px;
+    left: 14px;
+  }
+
+  .upgrade-hero h1 {
+    font-size: clamp(2rem, 13vw, 3.3rem);
+    overflow-wrap: anywhere;
+  }
+
+  .upgrade-status {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .upgrade-status,
+  .upgrade-shell,
+  .upgrade-tabela {
+    margin-top: 14px;
+  }
+
+  .upgrade-tabela,
+  .upgrade-shell {
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .upgrade-tabela-grid {
+    min-width: 560px;
+    grid-template-columns: 64px repeat(4, 124px);
+  }
+
+  .upgrade-tabela-grid > * {
+    min-width: 0;
+    padding: 10px 8px;
+    font-size: 0.82rem;
+  }
+
+  .upgrade-trilhas {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .upgrade-lista {
+    grid-template-columns: 1fr;
+  }
+
+  .upgrade-lista label,
+  .upgrade-habilidades-info {
+    padding: 14px;
+  }
+
+  .upgrade-lista label:hover,
+  .upgrade-habilidades-info:hover {
+    transform: none;
+  }
+
+  .upgrade-confirmar,
+  .upgrade-habilidades-info button {
+    width: 100%;
+  }
+}

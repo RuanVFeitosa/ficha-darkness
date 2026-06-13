@@ -330,7 +330,7 @@ const UpgradeNivel = () => {
           <strong>
             {trilha === "habilidades"
               ? `${pontosEvolucaoDisponiveis} pontos disponiveis`
-              : `${pontosRestantes} restantes de ${pontosDisponiveisNaTrilha} pontos - Custo: ${custoPorMelhoria} PE`} 
+              : `${pontosRestantes} restantes de ${pontosDisponiveisNaTrilha} pontos - Custo: ${custoPorMelhoria} pontos`}
           </strong>
         </div>
 
@@ -385,7 +385,8 @@ const UpgradeNivel = () => {
           <div className="upgrade-habilidades-info">
             <h2>Habilidades Absolutas</h2>
             <p>
-              As habilidades e aptidoes usam o proprio preco em PE como custo.
+              Na arvore, aptidoes custam 10 pontos e habilidades de
+              especialidade custam 20 pontos.
               A arvore usa o saldo de pontos disponiveis desta ficha:{" "}
               <strong>{pontosEvolucaoDisponiveis} pontos</strong>.
             </p>
