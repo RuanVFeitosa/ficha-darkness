@@ -837,8 +837,6 @@ const DashboardMestre = () => {
     localStorage.setItem(STORAGE_NPCS, JSON.stringify(novaLista));
   };
 
-  
-
   const criarNovoNpc = () => {
     const novo = {
       id: crypto.randomUUID(),
@@ -1456,19 +1454,24 @@ const DashboardMestre = () => {
   };
 
   const criarPartyMestre = async () => {
-    if (!fichaSelecionada || !personagem) {
-      setPartyMensagem("Selecione uma ficha para iniciar a party.");
+    const fichaBase = fichas[0];
+
+    if (!fichaBase?.fichaId || !fichaBase?.personagem) {
+      setPartyMensagem("Crie ou carregue pelo menos uma ficha antes da party.");
       return;
     }
 
     try {
-      const novaParty = await criarParty(fichaSelecionada, personagem);
+      const novaParty = await criarParty(
+        fichaBase.fichaId,
+        fichaBase.personagem,
+      );
 
       setParty(novaParty);
       setPartyCode(novaParty.code);
 
       localStorage.setItem("party_mestre_codigo", novaParty.code);
-      localStorage.setItem(`party_${fichaSelecionada}`, novaParty.code);
+      localStorage.setItem(`party_${fichaBase.fichaId}`, novaParty.code);
 
       setPartyMensagem(`Party criada: ${novaParty.code}`);
     } catch (error) {
@@ -1550,16 +1553,19 @@ const DashboardMestre = () => {
 
     try {
       await encerrarParty(partyCode);
-      localStorage.removeItem("party_mestre_codigo");
-      Object.keys(localStorage)
-        .filter((key) => key.startsWith("party_"))
-        .forEach((key) => localStorage.removeItem(key));
-      setParty(null);
-      setPartyCode("");
-      setPartyMensagem("Party encerrada.");
     } catch (error) {
-      setPartyMensagem(error?.message || "Nao foi possivel encerrar a party.");
+      console.warn("Party encerrada localmente.", error);
     }
+
+    localStorage.removeItem("party_mestre_codigo");
+
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith("party_"))
+      .forEach((key) => localStorage.removeItem(key));
+
+    setParty(null);
+    setPartyCode("");
+    setPartyMensagem("Party encerrada.");
   };
 
   const renderPainelPartyMestre = () => (
@@ -1706,11 +1712,24 @@ const DashboardMestre = () => {
           </div>
         </div>
 
+        {partyCode && (
+          <div className="mestre-party-codigo">
+            <span>Codigo da Party</span>
+            <strong>{partyCode}</strong>
+          </div>
+        )}
+
         {partyMensagem && <p className="mestre-mensagem">{partyMensagem}</p>}
 
         <div className="mestre-party-layout lateral">
           <section className="mestre-modal-bloco full">
             <span>Party</span>
+
+            {!partyCode && (
+              <p className="mestre-party-vazio">
+                Nenhuma party ativa. Crie uma nova sessão para adicionar fichas.
+              </p>
+            )}
 
             <div className="mestre-party-lista mestre-party-cards">
               {jogadores.length ? (
@@ -1964,9 +1983,9 @@ const DashboardMestre = () => {
     );
   };
 
-  const deveMostrarPartyLateral =
-    partyCode && !["loja", "habilidades"].includes(aba);
-
+  const deveMostrarPartyLateral = !["loja", "habilidades", "campanha"].includes(
+    aba,
+  );
   return (
     <main className="mestre-page">
       <header className="mestre-header">
