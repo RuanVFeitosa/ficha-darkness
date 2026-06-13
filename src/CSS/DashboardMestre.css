@@ -283,6 +283,40 @@
   gap: 20px;
 }
 
+.mestre-card-party-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 5;
+
+  min-height: 36px;
+  padding: 0 12px;
+
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.72);
+  color: #d4af37;
+
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  cursor: pointer;
+}
+
+.mestre-card-party-btn:hover {
+  background: #d4af37;
+  color: #000;
+}
+
+.mestre-card-party-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .mestre-fichas-com-party {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
@@ -1650,19 +1684,19 @@
 ========================================================= */
 
 .mestre-party-embed {
-  width: 100%;
+  width: 120%;
   margin-bottom: 22px;
   padding: 18px;
-  border: 1px solid rgba(212, 175, 55, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.18);
   border-radius: 8px;
-  background: linear-gradient(180deg, rgba(16, 13, 9, 0.92), rgba(4, 4, 4, 0.94));
+  background: linear-gradient(180deg, rgba(104, 104, 104, 0.322), rgba(4, 4, 4, 0.94));
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
 }
 
 .mestre-party-embed.lateral {
   position: sticky;
   top: 18px;
-  max-height: calc(100vh - 36px);
+  max-height: calc(100vh - 30px);
   margin-bottom: 0;
   overflow: auto;
 }
@@ -1678,7 +1712,7 @@
   min-height: 42px;
   padding: 0 16px;
 
-  border: 1px solid rgba(212, 175, 55, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.32);
   border-radius: 8px;
 
   background: rgba(0, 0, 0, 0.58);
@@ -1695,9 +1729,9 @@
 
 .mestre-party-acoes button:hover,
 .mestre-party-ficha button:hover {
-  border-color: #d4af37;
-  background: rgba(212, 175, 55, 0.14);
-  color: #d4af37;
+  border-color: #000000;
+  background: rgb(255, 255, 255);
+  color: #000000;
 }
 
 .mestre-party-ficha button:disabled {
@@ -1714,14 +1748,14 @@
   margin: 16px 0;
   padding: 12px 16px;
 
-  border: 1px solid rgba(212, 175, 55, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 12px;
 
   background: rgba(0, 0, 0, 0.58);
 }
 
 .mestre-party-codigo span {
-  color: #d4af37;
+  color: #ffffff;
   font-size: 0.7rem;
   font-weight: 900;
   letter-spacing: 2px;
@@ -1745,15 +1779,73 @@
   gap: 14px;
 }
 
-.mestre-party-lista {
+.mestre-party-status-topo {
   display: grid;
-  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 12px;
+  margin: 14px 0 18px;
 }
 
-.mestre-party-lista.compacta {
-  max-height: 240px;
-  overflow: auto;
-  padding-right: 4px;
+.mestre-party-status-topo .mestre-party-codigo {
+  margin: 0;
+}
+
+.mestre-party-mensagem-inline {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+
+  margin: 0;
+  padding: 12px 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-left: 3px solid #fff;
+  border-radius: 10px;
+
+  background: #050505;
+  color: #fff;
+
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.mestre-party-lista.cards {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.mestre-party-lista.cards .mestre-party-ficha.ativo {
+  min-height: 150px;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+
+  padding: 16px;
+
+  border-radius: 16px;
+}
+
+.mestre-party-lista.cards .mestre-party-ficha.ativo img {
+  width: 56px;
+  height: 56px;
+}
+
+.mestre-party-lista.cards .mestre-party-ficha.ativo strong {
+  font-size: 1rem;
+}
+
+.mestre-party-lista.cards .mestre-party-recursos {
+  margin-top: 10px;
+}
+
+@media (max-width: 620px) {
+  .mestre-party-status-topo {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-party-lista.cards {
+    grid-template-columns: 1fr;
+  }
 }
 
 .mestre-party-ficha {
@@ -1764,7 +1856,7 @@
 
   padding: 12px;
 
-  border: 1px solid rgba(212, 175, 55, 0.14);
+  border: 1px solid rgb(255, 255, 255);
   border-radius: 12px;
 
   background: rgba(0, 0, 0, 0.48);
@@ -1772,7 +1864,7 @@
 
 .mestre-party-ficha.ativo {
   justify-content: flex-start;
-  border-color: rgba(212, 175, 55, 0.34);
+  border-color: rgba(255, 255, 255, 0.34);
 }
 
 .mestre-party-ficha img {
@@ -1781,7 +1873,7 @@
 
   object-fit: cover;
 
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 50%;
 }
 
@@ -1804,7 +1896,7 @@
 
 .mestre-party-recursos span {
   padding: 4px 7px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.493);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   color: #f5efe4;
@@ -1844,6 +1936,36 @@
   color: #f5efe4;
   font-size: 0.78rem;
   line-height: 1.45;
+}
+
+.mestre-status-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 14px;
+}
+
+.mestre-status-lateral {
+  display: grid;
+  gap: 14px;
+}
+
+.mestre-corpo-grid.novo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mestre-corpo-grid.novo .mestre-corpo-item {
+  min-height: 90px;
+  align-content: center;
+}
+
+@media (max-width: 900px) {
+  .mestre-status-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-corpo-grid.novo {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1943,5 +2065,744 @@
 
   to {
     opacity: 1;
+  }
+}
+
+.mestre-subtabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mestre-subtabs button {
+  min-height: 40px;
+  padding: 9px 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+
+  background: #050505;
+  color: #fff;
+
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  cursor: pointer;
+}
+
+.mestre-subtabs button:hover,
+.mestre-subtabs button.ativa {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+
+.mestre-card-acoes-flutuantes {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 6;
+
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mestre-card-acoes-flutuantes button {
+  min-height: 32px;
+  padding: 0 10px;
+
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+
+  font: inherit;
+  font-size: 0.64rem;
+  font-weight: 900;
+  text-transform: uppercase;
+
+  cursor: pointer;
+}
+
+.mestre-card-acoes-flutuantes button:hover {
+  background: #fff;
+  color: #000;
+}
+
+.mestre-card-acoes-flutuantes button.perigo {
+  border-color: rgba(255, 80, 80, 0.55);
+  color: #ffb3b3;
+}
+
+.mestre-card-acoes-flutuantes button.perigo:hover {
+  background: #8b0000;
+  color: #fff;
+}
+
+/* =========================================================
+   MODAL DE EDIÇÃO — NPCS
+========================================================= */
+
+.mestre-modal-ficha.minimalista .inimigo-ficha-header {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+
+  padding-bottom: 18px;
+
+  border-bottom: 1px solid rgba(212, 175, 55, 0.28);
+}
+
+.mestre-modal-ficha.minimalista .inimigo-foto-editavel {
+  width: 104px;
+  height: 104px;
+
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-foto-editavel img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  border: 1px solid rgba(212, 175, 55, 0.42);
+  border-radius: 12px;
+
+  background: #111;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-foto-editavel span {
+  inset: auto 8px 8px;
+
+  border-radius: 6px;
+
+  background: rgba(0, 0, 0, 0.82);
+  color: #d4af37;
+
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-identidade {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  gap: 10px;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-identidade label {
+  display: grid;
+  gap: 6px;
+
+  color: #d4af37;
+
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-identidade label input {
+  width: 74px;
+  min-height: 42px;
+
+  text-align: center;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-nome-input {
+  min-height: 42px;
+  padding: 0 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.045);
+  color: #fff;
+
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-nome-input:focus {
+  border-color: #d4af37;
+  outline: none;
+
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.2);
+}
+
+/* BLOCOS */
+
+.mestre-modal-ficha.minimalista .mestre-modal-bloco {
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  border-left: 3px solid rgba(212, 175, 55, 0.6);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(212, 175, 55, 0.055),
+      rgba(255, 255, 255, 0.025)
+    ),
+    rgba(0, 0, 0, 0.62);
+}
+
+.mestre-modal-ficha.minimalista .mestre-modal-bloco > span,
+.mestre-modal-ficha.minimalista .mestre-modal-linha-topo > span {
+  color: #d4af37;
+
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ATRIBUTOS DO NPC */
+
+.mestre-modal-ficha.minimalista .mestre-modal-atributos.linha {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.mestre-modal-ficha.minimalista .mestre-modal-atributos label {
+  display: grid;
+  gap: 8px;
+
+  padding: 12px;
+
+  border-radius: 10px;
+
+  background: rgba(0, 0, 0, 0.42);
+
+  color: #aaa;
+
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-modal-ficha.minimalista .mestre-modal-atributos input,
+.mestre-modal-ficha.minimalista .mestre-duplo input,
+.mestre-modal-ficha.minimalista .mestre-modal-bloco.full > input,
+.mestre-modal-ficha.minimalista .mestre-membro input,
+.mestre-modal-ficha.minimalista .mestre-edit-lista input {
+  min-height: 42px;
+
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+
+  background: #030303;
+  color: #fff;
+
+  font-weight: 900;
+}
+
+.mestre-modal-ficha.minimalista input:focus,
+.mestre-modal-ficha.minimalista textarea:focus {
+  outline: none;
+
+  border-color: #d4af37;
+
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.18);
+}
+
+/* SANIDADE / DEFESA */
+
+.mestre-modal-ficha.minimalista .mestre-duplo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mestre-modal-ficha.minimalista .mestre-duplo label {
+  display: grid;
+  gap: 8px;
+
+  color: #aaa;
+
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* MEMBROS */
+
+.mestre-modal-ficha.minimalista .mestre-corpo-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mestre-modal-ficha.minimalista .mestre-membro {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 10px;
+
+  padding: 14px;
+
+  border-left: 3px solid #d4af37;
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.045),
+      rgba(255, 255, 255, 0.015)
+    ),
+    rgba(0, 0, 0, 0.55);
+}
+
+.mestre-modal-ficha.minimalista .mestre-membro strong {
+  grid-column: 1 / -1;
+
+  color: #fff;
+
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.mestre-modal-ficha.minimalista .mestre-membro label {
+  display: grid;
+  gap: 6px;
+
+  color: #aaa;
+
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ATAQUES / HABILIDADES */
+
+.mestre-modal-ficha.minimalista .mestre-modal-linha-topo button {
+  min-height: 38px;
+  padding: 0 14px;
+
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.64);
+  color: #d4af37;
+
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  cursor: pointer;
+}
+
+.mestre-modal-ficha.minimalista .mestre-modal-linha-topo button:hover {
+  background: #d4af37;
+  color: #000;
+}
+
+.mestre-modal-ficha.minimalista .mestre-edit-lista {
+  display: grid;
+  gap: 10px;
+}
+
+.mestre-modal-ficha.minimalista .mestre-edit-lista > div {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.55fr) minmax(0, 1fr) 42px;
+  gap: 10px;
+
+  padding: 12px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.mestre-modal-ficha.minimalista .mestre-edit-lista button {
+  width: 42px;
+  height: 42px;
+
+  border: 1px solid rgba(255, 80, 80, 0.48);
+  border-radius: 8px;
+
+  background: rgba(90, 0, 0, 0.35);
+  color: #ffb3b3;
+
+  font-size: 1.1rem;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.mestre-modal-ficha.minimalista .mestre-edit-lista button:hover {
+  background: #8b0000;
+  color: #fff;
+}
+
+/* BOTÕES TOPO */
+
+.mestre-modal-ficha.minimalista .mestre-modal-header-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mestre-modal-ficha.minimalista .duplicarButton,
+.mestre-modal-ficha.minimalista .mestre-btn-apagar,
+.mestre-modal-ficha.minimalista .mestre-modal-fechar {
+  min-height: 42px;
+
+  border-radius: 8px;
+}
+
+.mestre-modal-ficha.minimalista .duplicarButton {
+  border-color: rgba(212, 175, 55, 0.35);
+  color: #d4af37;
+}
+
+.mestre-modal-ficha.minimalista .duplicarButton:hover {
+  background: #d4af37;
+  color: #000;
+}
+
+.mestre-modal-ficha.minimalista .mestre-btn-apagar {
+  border-color: rgba(255, 80, 80, 0.45);
+  color: #ffb3b3;
+}
+
+.mestre-modal-ficha.minimalista .mestre-btn-apagar:hover {
+  background: #8b0000;
+  color: #fff;
+}
+
+/* RESPONSIVO NPC */
+
+@media (max-width: 980px) {
+  .mestre-modal-ficha.minimalista .inimigo-ficha-header {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+
+  .mestre-modal-ficha.minimalista .mestre-modal-header-acoes {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+
+  .mestre-modal-ficha.minimalista .mestre-modal-atributos.linha,
+  .mestre-modal-ficha.minimalista .mestre-corpo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .mestre-modal-overlay {
+    padding: 10px;
+  }
+
+  .mestre-modal-ficha.minimalista {
+    max-height: 92vh;
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .mestre-modal-ficha.minimalista .inimigo-ficha-header {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-modal-ficha.minimalista .inimigo-foto-editavel {
+    width: 100%;
+    height: 180px;
+  }
+
+  .mestre-modal-ficha.minimalista .inimigo-identidade,
+  .mestre-modal-ficha.minimalista .mestre-duplo,
+  .mestre-modal-ficha.minimalista .mestre-modal-atributos.linha,
+  .mestre-modal-ficha.minimalista .mestre-corpo-grid,
+  .mestre-modal-ficha.minimalista .mestre-membro,
+  .mestre-modal-ficha.minimalista .mestre-edit-lista > div {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-modal-ficha.minimalista .mestre-modal-header-acoes button {
+    width: 100%;
+  }
+}
+.mestre-card-acoes-flutuantes button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mestre-party-lista.mestre-party-cards {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.mestre-party-lista.mestre-party-cards .mestre-party-ficha.card {
+  min-height: 170px;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  align-content: start;
+  justify-items: start;
+  gap: 12px;
+
+  padding: 14px;
+
+  border-radius: 16px;
+}
+
+.mestre-party-lista.mestre-party-cards .mestre-party-ficha.card img {
+  width: 58px;
+  height: 58px;
+}
+
+@media (max-width: 520px) {
+  .mestre-party-lista.mestre-party-cards {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* =========================================================
+   ABA CAMPANHA
+========================================================= */
+
+.campanha-dashboard {
+  gap: 18px;
+}
+
+.campanha-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: end;
+
+  padding: 22px;
+
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 16px;
+
+  background:
+    radial-gradient(circle at top left, rgba(212, 175, 55, 0.12), transparent 35%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.campanha-hero span,
+.campanha-card small {
+  color: #d4af37;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.campanha-hero h2 {
+  margin: 6px 0;
+  color: #fff;
+  font-size: clamp(2rem, 5vw, 4rem);
+  text-transform: uppercase;
+}
+
+.campanha-hero p {
+  max-width: 720px;
+  color: #bdbdbd;
+  line-height: 1.6;
+}
+
+.campanha-acoes,
+.campanha-filtros {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.campanha-acoes button,
+.campanha-filtros button,
+.campanha-card button {
+  min-height: 40px;
+  padding: 9px 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+
+  background: #050505;
+  color: #fff;
+
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  cursor: pointer;
+}
+
+.campanha-acoes button:hover,
+.campanha-filtros button:hover,
+.campanha-filtros button.ativa,
+.campanha-card button:hover {
+  background: #fff;
+  color: #000;
+}
+
+.campanha-card button.perigo {
+  border-color: rgba(255, 80, 80, 0.45);
+  color: #ffb3b3;
+}
+
+.campanha-card button.perigo:hover {
+  background: #8b0000;
+  color: #fff;
+}
+
+.campanha-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 460px);
+  gap: 18px;
+  align-items: start;
+}
+
+.campanha-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.campanha-card {
+  min-height: 220px;
+  display: grid;
+  align-content: space-between;
+  gap: 12px;
+
+  padding: 18px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid rgba(212, 175, 55, 0.45);
+  border-radius: 14px;
+
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.35)),
+    #050505;
+
+  cursor: pointer;
+}
+
+.campanha-card.importante {
+  border-color: rgba(212, 175, 55, 0.75);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.12);
+}
+
+.campanha-card h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.15rem;
+  text-transform: uppercase;
+}
+
+.campanha-card p {
+  color: #cfcfcf;
+  line-height: 1.5;
+}
+
+.campanha-card-footer {
+  display: grid;
+  gap: 12px;
+}
+
+.campanha-card-footer span {
+  color: #aaa;
+  font-size: 0.72rem;
+}
+
+.campanha-card-footer div {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.campanha-editor {
+  position: sticky;
+  top: 18px;
+
+  display: grid;
+  gap: 12px;
+
+  padding: 18px;
+
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.campanha-editor-vazio {
+  min-height: 300px;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  text-align: center;
+  color: #aaa;
+}
+
+.campanha-editor-vazio h3 {
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.campanha-check {
+  display: flex !important;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.campanha-check input {
+  width: auto;
+  min-height: auto;
+}
+
+.campanha-textarea {
+  min-height: 420px !important;
+  line-height: 1.6;
+}
+
+.campanha-vazia {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+
+  border: 1px dashed rgba(212, 175, 55, 0.22);
+  border-radius: 14px;
+
+  color: #aaa;
+}
+
+@media (max-width: 980px) {
+  .campanha-hero,
+  .campanha-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .campanha-editor {
+    position: static;
+  }
+}
+
+@media (max-width: 620px) {
+  .campanha-lista {
+    grid-template-columns: 1fr;
+  }
+
+  .campanha-acoes button,
+  .campanha-filtros button {
+    width: 100%;
   }
 }

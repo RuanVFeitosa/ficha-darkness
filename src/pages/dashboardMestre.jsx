@@ -215,7 +215,7 @@ const DashboardMestre = () => {
   const [novoItemLoja, setNovoItemLoja] = useState(itemLojaVazio);
   const [categoriaLojaAtiva, setCategoriaLojaAtiva] = useState("todos");
   const [abaFicha, setAbaFicha] = useState("perfil");
-  const [aba, setAba] = useState("fichas");
+  const [aba, setAba] = useState("campanha");
   const [mensagem, setMensagem] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [abaLojaEditor, setAbaLojaEditor] = useState("armas-fogo");
@@ -234,9 +234,22 @@ const DashboardMestre = () => {
 
   const [inimigos, setInimigos] = useState([]);
   const [inimigoEditando, setInimigoEditando] = useState(null);
+
+  const STORAGE_NPCS = "darkness_npcs";
+
+  const [subAbaFichas, setSubAbaFichas] = useState("jogadores");
+  const [npcs, setNpcs] = useState([]);
+  const [npcEditando, setNpcEditando] = useState(null);
+
   const [party, setParty] = useState(null);
   const [partyCode, setPartyCode] = useState("");
   const [partyMensagem, setPartyMensagem] = useState("");
+
+  const STORAGE_CAMPANHA = "darkness_campanha";
+
+  const [campanhaItens, setCampanhaItens] = useState([]);
+  const [campanhaEditando, setCampanhaEditando] = useState(null);
+  const [filtroCampanha, setFiltroCampanha] = useState("todos");
 
   const [popup, setPopup] = useState(null);
 
@@ -395,7 +408,7 @@ const DashboardMestre = () => {
       }
 
       setMensagem(
-        "Backend indisponivel. Mostrando dados locais deste navegador.",
+        `Backend indisponivel: ${error?.message || "erro desconhecido"}. Mostrando dados locais deste navegador.`,
       );
     } finally {
       setCarregando(false);
@@ -433,7 +446,9 @@ const DashboardMestre = () => {
         }
       } catch (error) {
         if (!cancelado) {
-          setPartyMensagem(error?.message || "Nao foi possivel atualizar a party.");
+          setPartyMensagem(
+            error?.message || "Nao foi possivel atualizar a party.",
+          );
         }
       }
     };
@@ -731,6 +746,185 @@ const DashboardMestre = () => {
       setInimigos([]);
     }
   }, []);
+
+  useEffect(() => {
+    try {
+      const dados = JSON.parse(localStorage.getItem(STORAGE_NPCS)) || [];
+      setNpcs(dados);
+    } catch {
+      setNpcs([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      const dados = JSON.parse(localStorage.getItem(STORAGE_CAMPANHA)) || [];
+      setCampanhaItens(dados);
+    } catch {
+      setCampanhaItens([]);
+    }
+  }, []);
+
+  const salvarCampanha = (novaLista) => {
+    setCampanhaItens(novaLista);
+    localStorage.setItem(STORAGE_CAMPANHA, JSON.stringify(novaLista));
+  };
+
+  const criarItemCampanha = (tipo = "documento") => {
+    const novo = {
+      id: crypto.randomUUID(),
+      tipo,
+      titulo: "Novo documento",
+      subtitulo: "",
+      conteudo: "",
+      tags: "",
+      importante: false,
+      criadoEm: new Date().toISOString(),
+      atualizadoEm: new Date().toISOString(),
+    };
+
+    salvarCampanha([novo, ...campanhaItens]);
+    setCampanhaEditando(novo.id);
+  };
+
+  const atualizarItemCampanha = (id, dados) => {
+    salvarCampanha(
+      campanhaItens.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              ...dados,
+              atualizadoEm: new Date().toISOString(),
+            }
+          : item,
+      ),
+    );
+  };
+
+  const duplicarItemCampanha = (item) => {
+    const copia = {
+      ...structuredClone(item),
+      id: crypto.randomUUID(),
+      titulo: `${item.titulo} (Cópia)`,
+      criadoEm: new Date().toISOString(),
+      atualizadoEm: new Date().toISOString(),
+    };
+
+    salvarCampanha([copia, ...campanhaItens]);
+  };
+
+  const excluirItemCampanha = (id) => {
+    abrirPopup({
+      tipo: "perigo",
+      titulo: "Excluir registro da campanha",
+      mensagem: "Deseja excluir este conteúdo da campanha permanentemente?",
+      confirmarTexto: "Excluir",
+      onConfirmar: () => {
+        salvarCampanha(campanhaItens.filter((item) => item.id !== id));
+        setCampanhaEditando(null);
+      },
+    });
+  };
+
+  const campanhaFiltrada =
+    filtroCampanha === "todos"
+      ? campanhaItens
+      : campanhaItens.filter((item) => item.tipo === filtroCampanha);
+
+  const salvarListaNpcs = (novaLista) => {
+    setNpcs(novaLista);
+    localStorage.setItem(STORAGE_NPCS, JSON.stringify(novaLista));
+  };
+
+  
+
+  const criarNovoNpc = () => {
+    const novo = {
+      id: crypto.randomUUID(),
+      nome: "Novo NPC",
+      classe: "NPC",
+      nivel: 1,
+
+      atributos: {
+        forca: 0,
+        fortitude: 0,
+        inteligencia: 0,
+        vontade: 0,
+        reflexos: 0,
+      },
+
+      defesa: 10,
+
+      membros: {
+        cabeca: { atual: 100, max: 100, defesa: 0 },
+        torso: { atual: 500, max: 500, defesa: 0 },
+        bracoDireito: { atual: 500, max: 500, defesa: 0 },
+        bracoEsquerdo: { atual: 500, max: 500, defesa: 0 },
+        pernaDireita: { atual: 500, max: 500, defesa: 0 },
+        pernaEsquerda: { atual: 500, max: 500, defesa: 0 },
+      },
+
+      sanidade: {
+        atual: 10,
+        max: 10,
+      },
+
+      ataques: [],
+      habilidades: [],
+      inventario: [],
+      rituais: [],
+      descricao: "",
+    };
+
+    salvarListaNpcs([...npcs, novo]);
+    setNpcEditando(novo.id);
+  };
+
+  const excluirNpc = (id) => {
+    abrirPopup({
+      tipo: "perigo",
+      titulo: "Excluir NPC",
+      mensagem: "Deseja excluir este NPC permanentemente?",
+      confirmarTexto: "Excluir",
+      onConfirmar: () => {
+        salvarListaNpcs(npcs.filter((npc) => npc.id !== id));
+        setNpcEditando(null);
+
+        abrirPopup({
+          titulo: "NPC excluído",
+          mensagem: "O NPC foi removido com sucesso.",
+        });
+      },
+    });
+  };
+
+  const duplicarNpc = (npc) => {
+    const copia = {
+      ...structuredClone(npc),
+      id: crypto.randomUUID(),
+      nome: `${npc.nome} (Cópia)`,
+    };
+
+    salvarListaNpcs([...npcs, copia]);
+
+    abrirPopup({
+      titulo: "NPC duplicado",
+      mensagem: `${copia.nome} foi criado com base no NPC original.`,
+    });
+  };
+
+  const atualizarNpc = (id, dados) => {
+    salvarListaNpcs(
+      npcs.map((npc) =>
+        npc.id === id
+          ? {
+              ...npc,
+              ...dados,
+            }
+          : npc,
+      ),
+    );
+  };
 
   const salvarListaInimigos = (novaLista) => {
     setInimigos(novaLista);
@@ -1261,68 +1455,91 @@ const DashboardMestre = () => {
   };
 
   const criarPartyMestre = async () => {
-  if (!fichaSelecionada || !personagem) {
-    setPartyMensagem("Selecione uma ficha para iniciar a party.");
-    return;
-  }
+    if (!fichaSelecionada || !personagem) {
+      setPartyMensagem("Selecione uma ficha para iniciar a party.");
+      return;
+    }
 
-  try {
-    const novaParty = await criarParty(fichaSelecionada, personagem);
+    try {
+      const novaParty = await criarParty(fichaSelecionada, personagem);
 
-    setParty(novaParty);
-    setPartyCode(novaParty.code);
+      setParty(novaParty);
+      setPartyCode(novaParty.code);
 
-    localStorage.setItem("party_mestre_codigo", novaParty.code);
-    localStorage.setItem(`party_${fichaSelecionada}`, novaParty.code);
+      localStorage.setItem("party_mestre_codigo", novaParty.code);
+      localStorage.setItem(`party_${fichaSelecionada}`, novaParty.code);
 
-    setPartyMensagem(`Party criada: ${novaParty.code}`);
-  } catch (error) {
-    setPartyMensagem(error?.message || "Não foi possível criar a party.");
-  }
-};
+      setPartyMensagem(`Party criada: ${novaParty.code}`);
+    } catch (error) {
+      setPartyMensagem(error?.message || "Não foi possível criar a party.");
+    }
+  };
 
-const adicionarFichaNaParty = async (ficha) => {
-  if (!partyCode) {
-    setPartyMensagem("Crie uma party primeiro.");
-    return;
-  }
+  const adicionarFichaNaParty = async (ficha) => {
+    if (!partyCode) {
+      setPartyMensagem("Crie uma party primeiro.");
+      return;
+    }
 
-  try {
-    const partyAtualizada = await entrarParty(
-      partyCode,
-      ficha.fichaId,
-      ficha.personagem,
-    );
+    try {
+      const partyAtualizada = await entrarParty(
+        partyCode,
+        ficha.fichaId,
+        ficha.personagem,
+      );
 
-    setParty(partyAtualizada);
-    localStorage.setItem(`party_${ficha.fichaId}`, partyCode);
+      setParty(partyAtualizada);
+      localStorage.setItem(`party_${ficha.fichaId}`, partyCode);
 
-    setPartyMensagem(
-      `${ficha.personagem?.nome || ficha.fichaId} entrou na party.`,
-    );
-  } catch (error) {
-    setPartyMensagem(error?.message || "Não foi possível adicionar a ficha.");
-  }
-};
+      setPartyMensagem(
+        `${ficha.personagem?.nome || ficha.fichaId} entrou na party.`,
+      );
+    } catch (error) {
+      setPartyMensagem(error?.message || "Não foi possível adicionar a ficha.");
+    }
+  };
 
-const carregarPartyMestre = async () => {
-  const codigoSalvo = localStorage.getItem("party_mestre_codigo");
+  const adicionarNpcNaParty = async (npc) => {
+    if (!partyCode) {
+      setPartyMensagem("Crie uma party primeiro.");
+      return;
+    }
 
-  if (!codigoSalvo) {
-    setPartyMensagem("Nenhuma party salva.");
-    return;
-  }
+    try {
+      const npcFichaId = `npc-${npc.id}`;
 
-  try {
-    const partyAtualizada = await buscarParty(codigoSalvo);
+      const partyAtualizada = await entrarParty(partyCode, npcFichaId, {
+        ...npc,
+        fichaId: npcFichaId,
+      });
 
-    setParty(partyAtualizada);
-    setPartyCode(codigoSalvo);
-    setPartyMensagem(`Party carregada: ${codigoSalvo}`);
-  } catch (error) {
-    setPartyMensagem(error?.message || "Não foi possível carregar a party.");
-  }
-};
+      setParty(partyAtualizada);
+      localStorage.setItem(`party_${npcFichaId}`, partyCode);
+
+      setPartyMensagem(`${npc.nome || "NPC"} entrou na party.`);
+    } catch (error) {
+      setPartyMensagem(error?.message || "Não foi possível adicionar o NPC.");
+    }
+  };
+
+  const carregarPartyMestre = async () => {
+    const codigoSalvo = localStorage.getItem("party_mestre_codigo");
+
+    if (!codigoSalvo) {
+      setPartyMensagem("Nenhuma party salva.");
+      return;
+    }
+
+    try {
+      const partyAtualizada = await buscarParty(codigoSalvo);
+
+      setParty(partyAtualizada);
+      setPartyCode(codigoSalvo);
+      setPartyMensagem(`Party carregada: ${codigoSalvo}`);
+    } catch (error) {
+      setPartyMensagem(error?.message || "Não foi possível carregar a party.");
+    }
+  };
 
   const renderPainelPartyMestre = () => (
     <div className="mestre-party-embed">
@@ -1340,14 +1557,18 @@ const carregarPartyMestre = async () => {
         </div>
       </div>
 
-      {partyCode && (
-        <div className="mestre-party-codigo">
-          <span>Código da Party</span>
-          <strong>{partyCode}</strong>
-        </div>
-      )}
+      <div className="mestre-party-status-topo">
+        {partyCode && (
+          <div className="mestre-party-codigo">
+            <span>Codigo da Party</span>
+            <strong>{partyCode}</strong>
+          </div>
+        )}
 
-      {partyMensagem && <p className="mestre-mensagem">{partyMensagem}</p>}
+        {partyMensagem && (
+          <p className="mestre-party-mensagem-inline">{partyMensagem}</p>
+        )}
+      </div>
 
       <div className="mestre-party-layout">
         <section className="mestre-modal-bloco full">
@@ -1382,22 +1603,42 @@ const carregarPartyMestre = async () => {
         <section className="mestre-modal-bloco full">
           <span>Jogadores na Party</span>
 
-          <div className="mestre-party-lista">
-            {Object.values(party?.players || {}).map((jogador) => (
-              <article key={jogador.fichaId} className="mestre-party-ficha ativo">
-                <img
-                  src={jogador.fotoPerfil || "https://placehold.co/100x100"}
-                  alt=""
-                />
+          <div className="mestre-party-lista mestre-party-cards">
+            {Object.values(party?.players || {}).length ? (
+              Object.values(party?.players || {}).map((jogador) => (
+                <article
+                  key={jogador.fichaId}
+                  className="mestre-party-ficha ativo card"
+                >
+                  <img
+                    src={jogador.fotoPerfil || "https://placehold.co/100x100"}
+                    alt=""
+                  />
 
-                <div>
-                  <strong>{jogador.nome || jogador.fichaId}</strong>
-                  <small>
-                    {jogador.classe || "Sem classe"} • NV {jogador.nivel || 1}
-                  </small>
-                </div>
-              </article>
-            ))}
+                  <div>
+                    <strong>{jogador.nome || jogador.fichaId}</strong>
+
+                    <small>
+                      {jogador.classe || "Sem classe"} • NV {jogador.nivel || 1}
+                    </small>
+
+                    <div className="mestre-party-recursos">
+                      <span>
+                        SAN {jogador.sanidade?.atual || 0}/
+                        {jogador.sanidade?.max || 0}
+                      </span>
+
+                      <span>
+                        ESP {jogador.esperanca?.atual || 0}/
+                        {jogador.esperanca?.max || 0}
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <p className="mestre-party-vazio">Nenhum jogador na party.</p>
+            )}
           </div>
         </section>
       </div>
@@ -1426,20 +1667,13 @@ const carregarPartyMestre = async () => {
           </div>
         </div>
 
-        {partyCode && (
-          <div className="mestre-party-codigo">
-            <span>Codigo da Party</span>
-            <strong>{partyCode}</strong>
-          </div>
-        )}
-
         {partyMensagem && <p className="mestre-mensagem">{partyMensagem}</p>}
 
         <div className="mestre-party-layout lateral">
           <section className="mestre-modal-bloco full">
-            <span>Jogadores na Party</span>
+            <span>Party</span>
 
-            <div className="mestre-party-lista">
+            <div className="mestre-party-lista mestre-party-cards">
               {jogadores.length ? (
                 jogadores.map((jogador) => (
                   <article
@@ -1457,52 +1691,12 @@ const carregarPartyMestre = async () => {
                         {jogador.classe || "Sem classe"} • NV{" "}
                         {jogador.nivel || 1}
                       </small>
-
-                      <div className="mestre-party-recursos">
-                        <span>
-                          SAN {jogador.sanidade?.atual || 0}/
-                          {jogador.sanidade?.max || 0}
-                        </span>
-                        <span>
-                          ESP {jogador.esperanca?.atual || 0}/
-                          {jogador.esperanca?.max || 0}
-                        </span>
-                      </div>
                     </div>
                   </article>
                 ))
               ) : (
                 <p className="mestre-party-vazio">Nenhum jogador na party.</p>
               )}
-            </div>
-          </section>
-
-          <section className="mestre-modal-bloco full">
-            <span>Adicionar ficha</span>
-
-            <div className="mestre-party-lista compacta">
-              {fichas.map((ficha) => {
-                const p = ficha.personagem || {};
-
-                return (
-                  <article key={ficha.fichaId} className="mestre-party-ficha">
-                    <div>
-                      <strong>{p.nome || ficha.fichaId}</strong>
-                      <small>
-                        {p.classe || "Sem classe"} • NV {p.nivel || 1}
-                      </small>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => adicionarFichaNaParty(ficha)}
-                      disabled={!partyCode}
-                    >
-                      Add
-                    </button>
-                  </article>
-                );
-              })}
             </div>
           </section>
 
@@ -1576,8 +1770,6 @@ const carregarPartyMestre = async () => {
     const imagem =
       personagemCard.fotoPerfil || "https://placehold.co/600x800?text=Sem+Foto";
 
-
-    
     return (
       <article
         key={ficha.fichaId || ficha.id}
@@ -1591,6 +1783,8 @@ const carregarPartyMestre = async () => {
               lojaCreditos: personagemCard.lojaCreditos ?? 900,
             });
             setModalFichaAberto(true);
+          } else if (tipo === "npc") {
+            setNpcEditando(personagemCard.id);
           } else {
             setInimigoEditando(personagemCard.id);
           }
@@ -1601,6 +1795,37 @@ const carregarPartyMestre = async () => {
 
         <div className="mestre-card-conteudo">
           <div className="mestre-card-info">
+            {tipo === "jogador" && (
+              <button
+                type="button"
+                className="mestre-card-party-btn"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  adicionarFichaNaParty(ficha);
+                }}
+                disabled={!partyCode}
+              >
+                {party?.players?.[ficha.fichaId]
+                  ? "Na Party"
+                  : "Adicionar à Party"}
+              </button>
+            )}
+            {tipo === "npc" && (
+              <div className="mestre-card-acoes-flutuantes">
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    adicionarNpcNaParty(personagemCard);
+                  }}
+                  disabled={!partyCode}
+                >
+                  {party?.players?.[`npc-${personagemCard.id}`]
+                    ? "Na Party"
+                    : "Adicionar à Party"}
+                </button>
+              </div>
+            )}
             <small>
               NV{" "}
               {tipo === "inimigo"
@@ -1700,6 +1925,9 @@ const carregarPartyMestre = async () => {
     );
   };
 
+  const deveMostrarPartyLateral =
+    partyCode && !["loja", "habilidades"].includes(aba);
+
   return (
     <main className="mestre-page">
       <header className="mestre-header">
@@ -1730,6 +1958,12 @@ const carregarPartyMestre = async () => {
 
       <nav className="mestre-tabs" aria-label="Areas do dashboard">
         <button
+          className={aba === "campanha" ? "ativa" : ""}
+          onClick={() => setAba("campanha")}
+        >
+          Campanha
+        </button>
+        <button
           className={aba === "fichas" ? "ativa" : ""}
           onClick={() => setAba("fichas")}
         >
@@ -1755,90 +1989,342 @@ const carregarPartyMestre = async () => {
         </button>
       </nav>
       {false && (
-  <section className="mestre-dashboard-full">
-    <div className="mestre-modal-linha-topo">
-      <h2>Party</h2>
+        <section className="mestre-dashboard-full">
+          <div className="mestre-modal-linha-topo">
+            <h2>Party</h2>
 
-      <div className="mestre-party-acoes">
-        <button type="button" onClick={criarPartyMestre}>
-          Criar Party
-        </button>
+            <div className="mestre-party-acoes">
+              <button type="button" onClick={criarPartyMestre}>
+                Criar Party
+              </button>
 
-        <button type="button" onClick={carregarPartyMestre}>
-          Carregar Party
-        </button>
-      </div>
-    </div>
+              <button type="button" onClick={carregarPartyMestre}>
+                Carregar Party
+              </button>
+            </div>
+          </div>
 
-    {partyCode && (
-      <div className="mestre-party-codigo">
-        <span>Código da Party</span>
-        <strong>{partyCode}</strong>
-      </div>
-    )}
+          {partyCode && (
+            <div className="mestre-party-codigo">
+              <span>Código da Party</span>
+              <strong>{partyCode}</strong>
+            </div>
+          )}
 
-    {partyMensagem && <p className="mestre-mensagem">{partyMensagem}</p>}
+          {partyMensagem && <p className="mestre-mensagem">{partyMensagem}</p>}
 
-    <div className="mestre-party-layout">
-      <section className="mestre-modal-bloco full">
-        <span>Fichas disponíveis</span>
+          <div className="mestre-party-layout">
+            <section className="mestre-modal-bloco full">
+              <span>Fichas disponíveis</span>
 
-        <div className="mestre-party-lista">
-          {fichas.map((ficha) => {
-            const p = ficha.personagem || {};
+              <div className="mestre-party-lista">
+                {fichas.map((ficha) => {
+                  const p = ficha.personagem || {};
 
-            return (
-              <article key={ficha.fichaId} className="mestre-party-ficha">
-                <div>
-                  <strong>{p.nome || ficha.fichaId}</strong>
-                  <small>{p.classe || "Sem classe"} • NV {p.nivel || 1}</small>
-                </div>
+                  return (
+                    <article key={ficha.fichaId} className="mestre-party-ficha">
+                      <div>
+                        <strong>{p.nome || ficha.fichaId}</strong>
+                        <small>
+                          {p.classe || "Sem classe"} • NV {p.nivel || 1}
+                        </small>
+                      </div>
 
-                <button
-                  type="button"
-                  onClick={() => adicionarFichaNaParty(ficha)}
-                  disabled={!partyCode}
-                >
-                  Adicionar
-                </button>
-              </article>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="mestre-modal-bloco full">
-        <span>Jogadores na Party</span>
-
-        <div className="mestre-party-lista">
-          {Object.values(party?.players || {}).map((jogador) => (
-            <article key={jogador.fichaId} className="mestre-party-ficha ativo">
-              <img
-                src={jogador.fotoPerfil || "https://placehold.co/100x100"}
-                alt=""
-              />
-
-              <div>
-                <strong>{jogador.nome || jogador.fichaId}</strong>
-                <small>{jogador.classe || "Sem classe"} • NV {jogador.nivel || 1}</small>
+                      <button
+                        type="button"
+                        onClick={() => adicionarFichaNaParty(ficha)}
+                        disabled={!partyCode}
+                      >
+                        Adicionar
+                      </button>
+                    </article>
+                  );
+                })}
               </div>
-            </article>
-          ))}
-        </div>
-      </section>
-    </div>
-  </section>
-)}
+            </section>
+
+            <section className="mestre-modal-bloco full">
+              <span>Jogadores na Party</span>
+
+              <div className="mestre-party-lista">
+                {Object.values(party?.players || {}).map((jogador) => (
+                  <article
+                    key={jogador.fichaId}
+                    className="mestre-party-ficha ativo"
+                  >
+                    <img
+                      src={jogador.fotoPerfil || "https://placehold.co/100x100"}
+                      alt=""
+                    />
+
+                    <div>
+                      <strong>{jogador.nome || jogador.fichaId}</strong>
+                      <small>
+                        {jogador.classe || "Sem classe"} • NV{" "}
+                        {jogador.nivel || 1}
+                      </small>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
+        </section>
+      )}
+
+      {aba === "campanha" && (
+        <section className="mestre-dashboard-full campanha-dashboard">
+          <div className="campanha-hero">
+            <div>
+              <span>Arquivo do Narrador</span>
+              <h2>Campanha</h2>
+              <p>
+                Organize documentos, narrações, locais, segredos, pistas e tudo
+                que você precisa para mestrar.
+              </p>
+            </div>
+
+            <div className="campanha-acoes">
+              <button
+                type="button"
+                onClick={() => criarItemCampanha("documento")}
+              >
+                + Documento
+              </button>
+
+              <button
+                type="button"
+                onClick={() => criarItemCampanha("narracao")}
+              >
+                + Narração
+              </button>
+
+              <button type="button" onClick={() => criarItemCampanha("local")}>
+                + Local
+              </button>
+
+              <button
+                type="button"
+                onClick={() => criarItemCampanha("segredo")}
+              >
+                + Segredo
+              </button>
+            </div>
+          </div>
+
+          <div className="campanha-filtros">
+            {["todos", "documento", "narracao", "local", "npc", "segredo"].map(
+              (tipo) => (
+                <button
+                  key={tipo}
+                  type="button"
+                  className={filtroCampanha === tipo ? "ativa" : ""}
+                  onClick={() => setFiltroCampanha(tipo)}
+                >
+                  {tipo}
+                </button>
+              ),
+            )}
+          </div>
+
+          <div className="campanha-layout">
+            <section className="campanha-lista">
+              {campanhaFiltrada.length ? (
+                campanhaFiltrada.map((item) => (
+                  <article
+                    key={item.id}
+                    className={`campanha-card ${item.importante ? "importante" : ""}`}
+                    onClick={() => setCampanhaEditando(item.id)}
+                  >
+                    <small>{item.tipo}</small>
+                    <h3>{item.titulo || "Sem título"}</h3>
+
+                    {item.subtitulo && <p>{item.subtitulo}</p>}
+
+                    <div className="campanha-card-footer">
+                      <span>{item.tags || "Sem tags"}</span>
+
+                      <div>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            duplicarItemCampanha(item);
+                          }}
+                        >
+                          Duplicar
+                        </button>
+
+                        <button
+                          type="button"
+                          className="perigo"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            excluirItemCampanha(item.id);
+                          }}
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))
+              ) : (
+                <div className="campanha-vazia">
+                  Nenhum conteúdo criado para esta categoria.
+                </div>
+              )}
+            </section>
+
+            <aside className="campanha-editor">
+              {(() => {
+                const item = campanhaItens.find(
+                  (doc) => doc.id === campanhaEditando,
+                );
+
+                if (!item) {
+                  return (
+                    <div className="campanha-editor-vazio">
+                      <h3>Nenhum documento selecionado</h3>
+                      <p>Crie ou selecione um item para editar.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <>
+                    <label>
+                      Tipo
+                      <select
+                        value={item.tipo}
+                        onChange={(e) =>
+                          atualizarItemCampanha(item.id, {
+                            tipo: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="documento">Documento</option>
+                        <option value="narracao">Narração</option>
+                        <option value="local">Local</option>
+                        <option value="npc">NPC / Personagem</option>
+                        <option value="segredo">Segredo</option>
+                      </select>
+                    </label>
+
+                    <label>
+                      Título
+                      <input
+                        value={item.titulo || ""}
+                        onChange={(e) =>
+                          atualizarItemCampanha(item.id, {
+                            titulo: e.target.value,
+                          })
+                        }
+                      />
+                    </label>
+
+                    <label>
+                      Subtítulo
+                      <input
+                        value={item.subtitulo || ""}
+                        onChange={(e) =>
+                          atualizarItemCampanha(item.id, {
+                            subtitulo: e.target.value,
+                          })
+                        }
+                      />
+                    </label>
+
+                    <label>
+                      Tags
+                      <input
+                        value={item.tags || ""}
+                        placeholder="ex: Brasil, Lincoln, Chave 1"
+                        onChange={(e) =>
+                          atualizarItemCampanha(item.id, {
+                            tags: e.target.value,
+                          })
+                        }
+                      />
+                    </label>
+
+                    <label className="campanha-check">
+                      <input
+                        type="checkbox"
+                        checked={!!item.importante}
+                        onChange={(e) =>
+                          atualizarItemCampanha(item.id, {
+                            importante: e.target.checked,
+                          })
+                        }
+                      />
+                      Importante
+                    </label>
+
+                    <label>
+                      Conteúdo
+                      <textarea
+                        className="campanha-textarea"
+                        value={item.conteudo || ""}
+                        onChange={(e) =>
+                          atualizarItemCampanha(item.id, {
+                            conteudo: e.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                  </>
+                );
+              })()}
+            </aside>
+          </div>
+        </section>
+      )}
 
       {aba === "fichas" && (
         <section className="mestre-dashboard-full">
-          <div className="mestre-fichas-com-party">
-            <div className="mestre-dashboard-cards">
-              {fichas.map((ficha) => renderCardFicha(ficha, "jogador"))}
-            </div>
+          <div className="mestre-subtabs">
+            <button
+              type="button"
+              className={subAbaFichas === "jogadores" ? "ativa" : ""}
+              onClick={() => setSubAbaFichas("jogadores")}
+            >
+              Jogadores
+            </button>
 
-            {renderPainelPartyLateral()}
+            <button
+              type="button"
+              className={subAbaFichas === "npcs" ? "ativa" : ""}
+              onClick={() => setSubAbaFichas("npcs")}
+            >
+              NPCs
+            </button>
+
+            {subAbaFichas === "npcs" && (
+              <button type="button" onClick={criarNovoNpc}>
+                Criar NPC
+              </button>
+            )}
           </div>
+
+          {subAbaFichas === "jogadores" && (
+            <div className="mestre-fichas-com-party">
+              <div className="mestre-dashboard-cards">
+                {fichas.map((ficha) => renderCardFicha(ficha, "jogador"))}
+              </div>
+              {deveMostrarPartyLateral && renderPainelPartyLateral()}{" "}
+            </div>
+          )}
+
+          {subAbaFichas === "npcs" && (
+            <div className="mestre-fichas-com-party">
+              <div className="mestre-dashboard-cards">
+                {npcs.map((npc) => renderCardFicha(npc, "npc"))}
+              </div>
+
+              {deveMostrarPartyLateral && renderPainelPartyLateral()}
+            </div>
+          )}
 
           {modalFichaAberto && personagem && (
             <div
@@ -1952,88 +2438,86 @@ const carregarPartyMestre = async () => {
                 </section>
 
                 {/* SANIDADE + ESPERANÇA */}
-                <section className="mestre-modal-recursos">
+                <div className="mestre-status-layout">
                   <div className="mestre-modal-bloco">
-                    <span>Sanidade</span>
+                    <span>Integridade Corporal</span>
 
-                    <div className="mestre-barra-container">
-                      <div className="mestre-barra roxo">
-                        <span
-                          style={{
-                            width: `${
-                              personagem.sanidade?.max > 0
-                                ? (personagem.sanidade?.atual /
-                                    personagem.sanidade?.max) *
-                                  100
-                                : 0
-                            }%`,
-                          }}
-                        />
-                      </div>
+                    <div className="mestre-corpo-grid novo">
+                      {membrosFicha.map((membro) => {
+                        const dados = personagem?.membros?.[membro.chave];
 
-                      <strong>
-                        {personagem.sanidade?.atual || 0} /{" "}
-                        {personagem.sanidade?.max || 0}
-                      </strong>
-                    </div>
-                  </div>
+                        return (
+                          <div key={membro.chave} className="mestre-corpo-item">
+                            <small>{membro.nome}</small>
 
-                  <div className="mestre-modal-bloco">
-                    <span>Esperança</span>
+                            <div className="mestre-barra vermelho">
+                              <span
+                                style={{
+                                  width: `${
+                                    ((dados?.atual || 0) / (dados?.max || 1)) *
+                                    100
+                                  }%`,
+                                }}
+                              />
+                            </div>
 
-                    <div className="mestre-barra-container">
-                      <div className="mestre-barra dourado">
-                        <span
-                          style={{
-                            width: `${
-                              personagem.esperanca?.max > 0
-                                ? (personagem.esperanca?.atual /
-                                    personagem.esperanca?.max) *
-                                  100
-                                : 0
-                            }%`,
-                          }}
-                        />
-                      </div>
-
-                      <strong>
-                        {personagem.esperanca?.atual || 0} /{" "}
-                        {personagem.esperanca?.max || 0}
-                      </strong>
-                    </div>
-                  </div>
-                </section>
-
-                {/* CORPO */}
-                <section className="mestre-modal-bloco full">
-                  <span>Integridade Corporal</span>
-
-                  <div className="mestre-corpo-grid">
-                    {Object.entries(personagem.membros || {}).map(
-                      ([membro, dados]) => (
-                        <div key={membro} className="mestre-corpo-item">
-                          <small>{membro}</small>
-
-                          <div className="mestre-barra vermelho">
-                            <span
-                              style={{
-                                width: `${
-                                  dados.max > 0
-                                    ? (dados.atual / dados.max) * 100
-                                    : 0
-                                }%`,
-                              }}
-                            />
+                            <strong>
+                              {dados?.atual || 0} / {dados?.max || 0}
+                            </strong>
                           </div>
-
-                          <strong>
-                            {dados.atual} / {dados.max}
-                          </strong>
-                        </div>
-                      ),
-                    )}
+                        );
+                      })}
+                    </div>
                   </div>
-                </section>
+
+                  <div className="mestre-status-lateral">
+                    <div className="mestre-modal-bloco">
+                      <span>Sanidade</span>
+
+                      <div className="mestre-barra-container">
+                        <div className="mestre-barra roxo">
+                          <span
+                            style={{
+                              width: `${
+                                ((personagem?.sanidade?.atual || 0) /
+                                  (personagem?.sanidade?.max || 1)) *
+                                100
+                              }%`,
+                            }}
+                          />
+                        </div>
+
+                        <strong>
+                          {personagem?.sanidade?.atual || 0} /{" "}
+                          {personagem?.sanidade?.max || 0}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="mestre-modal-bloco">
+                      <span>Esperança</span>
+
+                      <div className="mestre-barra-container">
+                        <div className="mestre-barra dourado">
+                          <span
+                            style={{
+                              width: `${
+                                ((personagem?.esperanca?.atual || 0) /
+                                  (personagem?.esperanca?.max || 1)) *
+                                100
+                              }%`,
+                            }}
+                          />
+                        </div>
+
+                        <strong>
+                          {personagem?.esperanca?.atual || 0} /{" "}
+                          {personagem?.esperanca?.max || 0}
+                        </strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {/* PASSIVAS */}
                 <section className="mestre-modal-bloco full">
@@ -2091,6 +2575,437 @@ const carregarPartyMestre = async () => {
               </section>
             </div>
           )}
+          {npcEditando && (
+            <div
+              className="mestre-modal-overlay"
+              onClick={() => setNpcEditando(null)}
+            >
+              <section
+                className="mestre-modal-ficha minimalista"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {(() => {
+                  const npc = npcs.find((item) => item.id === npcEditando);
+
+                  if (!npc) return null;
+
+                  const atualizarCampoNpc = (campo, valor) => {
+                    atualizarNpc(npc.id, {
+                      [campo]: valor,
+                    });
+                  };
+
+                  const atualizarGrupoNpc = (grupo, chave, valor) => {
+                    atualizarNpc(npc.id, {
+                      [grupo]: {
+                        ...(npc[grupo] || {}),
+                        [chave]: parseInt(valor, 10) || 0,
+                      },
+                    });
+                  };
+
+                  const atualizarMembroNpc = (membro, campo, valor) => {
+                    atualizarNpc(npc.id, {
+                      membros: {
+                        ...(npc.membros || {}),
+                        [membro]: {
+                          ...(npc.membros?.[membro] || {}),
+                          [campo]: Math.max(0, parseInt(valor, 10) || 0),
+                        },
+                      },
+                    });
+                  };
+
+                  const adicionarAtaqueNpc = () => {
+                    atualizarNpc(npc.id, {
+                      ataques: [
+                        ...(npc.ataques || []),
+                        {
+                          id: crypto.randomUUID(),
+                          nome: "Novo Ataque",
+                          dano: "",
+                          descricao: "",
+                        },
+                      ],
+                    });
+                  };
+
+                  const atualizarAtaqueNpc = (ataqueId, campo, valor) => {
+                    atualizarNpc(npc.id, {
+                      ataques: (npc.ataques || []).map((ataque) =>
+                        ataque.id === ataqueId
+                          ? {
+                              ...ataque,
+                              [campo]: valor,
+                            }
+                          : ataque,
+                      ),
+                    });
+                  };
+
+                  const removerAtaqueNpc = (ataqueId) => {
+                    atualizarNpc(npc.id, {
+                      ataques: (npc.ataques || []).filter(
+                        (ataque) => ataque.id !== ataqueId,
+                      ),
+                    });
+                  };
+
+                  const adicionarHabilidadeNpc = () => {
+                    atualizarNpc(npc.id, {
+                      habilidades: [
+                        ...(npc.habilidades || []),
+                        {
+                          id: crypto.randomUUID(),
+                          nome: "Nova Habilidade",
+                          descricao: "",
+                        },
+                      ],
+                    });
+                  };
+
+                  const atualizarHabilidadeNpc = (
+                    habilidadeId,
+                    campo,
+                    valor,
+                  ) => {
+                    atualizarNpc(npc.id, {
+                      habilidades: (npc.habilidades || []).map((habilidade) =>
+                        habilidade.id === habilidadeId
+                          ? {
+                              ...habilidade,
+                              [campo]: valor,
+                            }
+                          : habilidade,
+                      ),
+                    });
+                  };
+
+                  const removerHabilidadeNpc = (habilidadeId) => {
+                    atualizarNpc(npc.id, {
+                      habilidades: (npc.habilidades || []).filter(
+                        (habilidade) => habilidade.id !== habilidadeId,
+                      ),
+                    });
+                  };
+
+                  return (
+                    <>
+                      <header className="inimigo-ficha-header">
+                        <label className="inimigo-foto-editavel">
+                          <img
+                            src={
+                              npc.fotoPerfil || "https://placehold.co/300x300"
+                            }
+                            alt={npc.nome}
+                          />
+
+                          <span>Editar imagem</span>
+
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(event) => {
+                              const arquivo = event.target.files?.[0];
+
+                              if (!arquivo) return;
+
+                              const reader = new FileReader();
+
+                              reader.onload = () => {
+                                atualizarCampoNpc("fotoPerfil", reader.result);
+                              };
+
+                              reader.readAsDataURL(arquivo);
+                            }}
+                          />
+                        </label>
+
+                        <div className="inimigo-identidade">
+                          <label>
+                            NV
+                            <input
+                              type="number"
+                              value={npc.nivel || 1}
+                              onChange={(e) =>
+                                atualizarCampoNpc(
+                                  "nivel",
+                                  parseInt(e.target.value, 10) || 1,
+                                )
+                              }
+                            />
+                          </label>
+
+                          <input
+                            className="inimigo-nome-input"
+                            value={npc.nome || ""}
+                            onChange={(e) =>
+                              atualizarCampoNpc("nome", e.target.value)
+                            }
+                          />
+                        </div>
+
+                        <div className="mestre-modal-header-acoes">
+                          <button
+                            className="duplicarButton"
+                            onClick={() => duplicarNpc(npc)}
+                          >
+                            Duplicar
+                          </button>
+
+                          <button
+                            className="mestre-btn-apagar"
+                            onClick={() => excluirNpc(npc.id)}
+                          >
+                            Apagar
+                          </button>
+
+                          <button
+                            className="mestre-modal-fechar"
+                            onClick={() => setNpcEditando(null)}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </header>
+
+                      <section className="mestre-modal-bloco full">
+                        <span>Atributos</span>
+
+                        <div className="mestre-modal-atributos linha">
+                          {Object.entries(npc.atributos || {}).map(
+                            ([atributo, valor]) => (
+                              <label key={atributo}>
+                                {atributo}
+                                <input
+                                  type="number"
+                                  value={valor || 0}
+                                  onChange={(e) =>
+                                    atualizarGrupoNpc(
+                                      "atributos",
+                                      atributo,
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                              </label>
+                            ),
+                          )}
+                        </div>
+                      </section>
+
+                      <section className="mestre-modal-bloco full">
+                        <span>Sanidade</span>
+
+                        <div className="mestre-duplo">
+                          <label>
+                            Atual
+                            <input
+                              type="number"
+                              value={npc.sanidade?.atual || 0}
+                              onChange={(e) =>
+                                atualizarCampoNpc("sanidade", {
+                                  ...(npc.sanidade || {}),
+                                  atual: parseInt(e.target.value, 10) || 0,
+                                })
+                              }
+                            />
+                          </label>
+
+                          <label>
+                            Máxima
+                            <input
+                              type="number"
+                              value={npc.sanidade?.max || 0}
+                              onChange={(e) =>
+                                atualizarCampoNpc("sanidade", {
+                                  ...(npc.sanidade || {}),
+                                  max: parseInt(e.target.value, 10) || 0,
+                                })
+                              }
+                            />
+                          </label>
+                        </div>
+                      </section>
+
+                      <section className="mestre-modal-bloco full">
+                        <span>Defesa</span>
+
+                        <input
+                          type="number"
+                          value={npc.defesa || 0}
+                          onChange={(e) =>
+                            atualizarCampoNpc(
+                              "defesa",
+                              parseInt(e.target.value, 10) || 0,
+                            )
+                          }
+                        />
+                      </section>
+
+                      <section className="mestre-modal-bloco full">
+                        <span>Membros</span>
+
+                        <div className="mestre-corpo-grid">
+                          {membrosFicha.map((membro) => {
+                            const dados = npc.membros?.[membro.chave] || {
+                              atual: 0,
+                              max: 0,
+                              defesa: 0,
+                            };
+
+                            return (
+                              <div key={membro.chave} className="mestre-membro">
+                                <strong>{membro.nome}</strong>
+
+                                <label>
+                                  Atual
+                                  <input
+                                    type="number"
+                                    value={dados.atual || 0}
+                                    onChange={(e) =>
+                                      atualizarMembroNpc(
+                                        membro.chave,
+                                        "atual",
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+                                </label>
+
+                                <label>
+                                  Máx
+                                  <input
+                                    type="number"
+                                    value={dados.max || 0}
+                                    onChange={(e) =>
+                                      atualizarMembroNpc(
+                                        membro.chave,
+                                        "max",
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+                                </label>
+
+                                <label>
+                                  Def
+                                  <input
+                                    type="number"
+                                    value={dados.defesa || 0}
+                                    onChange={(e) =>
+                                      atualizarMembroNpc(
+                                        membro.chave,
+                                        "defesa",
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+                                </label>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </section>
+
+                      <section className="mestre-modal-bloco full">
+                        <div className="mestre-modal-linha-topo">
+                          <span>Ataques</span>
+
+                          <button type="button" onClick={adicionarAtaqueNpc}>
+                            + Ataque
+                          </button>
+                        </div>
+
+                        <div className="mestre-edit-lista">
+                          {(npc.ataques || []).map((ataque) => (
+                            <div key={ataque.id}>
+                              <input
+                                value={ataque.nome || ""}
+                                onChange={(e) =>
+                                  atualizarAtaqueNpc(
+                                    ataque.id,
+                                    "nome",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+
+                              <input
+                                value={ataque.dano || ""}
+                                onChange={(e) =>
+                                  atualizarAtaqueNpc(
+                                    ataque.id,
+                                    "dano",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+
+                              <button
+                                onClick={() => removerAtaqueNpc(ataque.id)}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="mestre-modal-bloco full">
+                        <div className="mestre-modal-linha-topo">
+                          <span>Habilidades</span>
+
+                          <button
+                            type="button"
+                            onClick={adicionarHabilidadeNpc}
+                          >
+                            + Habilidade
+                          </button>
+                        </div>
+
+                        <div className="mestre-edit-lista">
+                          {(npc.habilidades || []).map((habilidade) => (
+                            <div key={habilidade.id}>
+                              <input
+                                value={habilidade.nome || ""}
+                                onChange={(e) =>
+                                  atualizarHabilidadeNpc(
+                                    habilidade.id,
+                                    "nome",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+
+                              <input
+                                value={habilidade.descricao || ""}
+                                onChange={(e) =>
+                                  atualizarHabilidadeNpc(
+                                    habilidade.id,
+                                    "descricao",
+                                    e.target.value,
+                                  )
+                                }
+                              />
+
+                              <button
+                                onClick={() =>
+                                  removerHabilidadeNpc(habilidade.id)
+                                }
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    </>
+                  );
+                })()}
+              </section>
+            </div>
+          )}
         </section>
       )}
 
@@ -2108,8 +3023,12 @@ const carregarPartyMestre = async () => {
             </button>
           </div>
 
-          <div className="mestre-dashboard-cards">
-            {inimigos.map((inimigo) => renderCardFicha(inimigo, "inimigo"))}
+          <div className="mestre-fichas-com-party">
+            <div className="mestre-dashboard-cards">
+              {inimigos.map((inimigo) => renderCardFicha(inimigo, "inimigo"))}
+            </div>
+
+            {deveMostrarPartyLateral && renderPainelPartyLateral()}
             {inimigoEditando && (
               <div
                 className="mestre-modal-overlay"

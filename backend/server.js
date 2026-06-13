@@ -15,6 +15,15 @@ const SUPABASE_URL = process.env.SUPABASE_URL?.trim();
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 const SUPABASE_TABLE = (process.env.SUPABASE_TABLE || "personagens").trim();
 const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+const IS_VERCEL = Boolean(process.env.VERCEL);
+
+const assertStorageConfigured = () => {
+  if (IS_VERCEL && !USE_SUPABASE) {
+    throw new Error(
+      "Supabase nao configurado na Vercel. Adicione SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY e SUPABASE_TABLE=personagens nas Environment Variables.",
+    );
+  }
+};
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -289,6 +298,8 @@ const readPersonagem = async (id) => {
     return rows[0]?.personagem || null;
   }
 
+  assertStorageConfigured();
+
   try {
     const dataFile = getDataFile(id);
     const raw = await fs.readFile(dataFile, "utf8");
@@ -320,6 +331,8 @@ const writePersonagem = async (id, personagem) => {
     return rows[0]?.personagem || personagem;
   }
 
+  assertStorageConfigured();
+
   await fs.mkdir(DATA_DIR, { recursive: true });
   await fs.writeFile(getDataFile(id), `${JSON.stringify(personagem, null, 2)}\n`);
   return personagem;
@@ -340,6 +353,8 @@ const listPersonagens = async () => {
         updatedAt: row.updated_at || null,
       }));
   }
+
+  assertStorageConfigured();
 
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
@@ -387,6 +402,8 @@ const deletePersonagem = async (id) => {
     });
     return true;
   }
+
+  assertStorageConfigured();
 
   try {
     await fs.unlink(getDataFile(id));
@@ -584,6 +601,8 @@ const transferirItemParty = async ({ code, fromFichaId, toFichaId, itemIndex }) 
 };
 
 const readShopCatalog = async () => {
+  assertStorageConfigured();
+
   try {
     const raw = await fs.readFile(SHOP_CATALOG_FILE, "utf8");
     const catalogo = JSON.parse(raw);
@@ -603,6 +622,8 @@ const writeShopCatalog = async (catalogo) => {
   if (!Array.isArray(catalogo)) {
     throw new Error("Catalogo invalido");
   }
+
+  assertStorageConfigured();
 
   const normalized = catalogo.map((item, index) => normalizeShopItem(item, index));
   await fs.mkdir(DATA_DIR, { recursive: true });
