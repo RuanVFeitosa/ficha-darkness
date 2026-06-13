@@ -443,6 +443,24 @@ const writeParty = async (party) => {
   return atualizado;
 };
 
+const vincularPersonagemAParty = async (fichaId, personagem, partyCode) => {
+  const personagemId = sanitizeFichaId(fichaId);
+  const existente = await readPersonagem(personagemId);
+  const base =
+    existente && existente.tipo !== "party" && typeof existente === "object"
+      ? existente
+      : {};
+
+  const atualizado = {
+    ...base,
+    ...(personagem && typeof personagem === "object" ? personagem : {}),
+    partyCode: normalizarCodigoParty(partyCode),
+  };
+
+  await writePersonagem(personagemId, atualizado);
+  return atualizado;
+};
+
 const criarParty = async ({ fichaId, personagem }) => {
   let code = gerarCodigoParty();
   let tentativas = 0;
@@ -468,7 +486,9 @@ const criarParty = async ({ fichaId, personagem }) => {
     personagem,
   );
 
-  return writeParty(party);
+  const partyAtualizada = await writeParty(party);
+  await vincularPersonagemAParty(fichaId, personagem, code);
+  return partyAtualizada;
 };
 
 const entrarParty = async ({ code, fichaId, personagem }) => {
@@ -476,9 +496,18 @@ const entrarParty = async ({ code, fichaId, personagem }) => {
 
   if (!party) return null;
 
+  const personagemAtualizado = await vincularPersonagemAParty(
+    fichaId,
+    personagem,
+    party.code,
+  );
+
   party.players = {
     ...(party.players || {}),
-    [sanitizeFichaId(fichaId)]: resumirPersonagemParty(fichaId, personagem),
+    [sanitizeFichaId(fichaId)]: resumirPersonagemParty(
+      fichaId,
+      personagemAtualizado,
+    ),
   };
 
   return writeParty(party);

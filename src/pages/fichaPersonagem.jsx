@@ -3824,14 +3824,16 @@ const FichaPersonagem = () => {
 
   useEffect(() => {
     const codigoUrl = obterPartyCodeDaUrl();
-    const codigoSalvo = codigoUrl || localStorage.getItem(`party_${fichaId}`) || "";
+    const codigoFicha = personagem?.partyCode || "";
+    const codigoSalvo =
+      codigoUrl || codigoFicha || localStorage.getItem(`party_${fichaId}`) || "";
 
     if (codigoSalvo) {
       setPartyCode(codigoSalvo);
       setSubAbaPersonagem("party");
       localStorage.setItem(`party_${fichaId}`, codigoSalvo);
     }
-  }, [fichaId]);
+  }, [fichaId, personagem?.partyCode]);
 
   useEffect(() => {
     if (!partyCode) return undefined;
