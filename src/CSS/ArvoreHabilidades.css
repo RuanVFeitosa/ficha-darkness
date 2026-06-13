@@ -1840,244 +1840,26 @@
   color: #ff9b9b;
 }
 
-
-/* RESPONSIVO */
-@media (max-width: 760px) {
-  .arvore-page {
-    padding: 14px;
-  }
-
-  .arvore-hero {
-    min-height: 280px;
-    padding: 78px 18px 24px;
-  }
-
-  .arvore-secao {
-    padding: 15px;
-  }
-
-  .absolutas-grade,
-  .base-grade,
-  .aptidoes-grade {
-    grid-template-columns: 1fr;
-  }
-
-  .arvore-linha-especialidade {
-    grid-template-columns: 1fr;
-  }
-
-  .especialidade-no {
-    min-width: 0;
-  }
-
-  .aptidao-modal-acoes {
-    flex-direction: column;
-  }
-
-  .aptidao-modal-acoes button {
-    width: 100%;
-  }
-}
-
-@media (max-width: 980px) {
-  .arvore-page {
-    padding: 18px;
-  }
-
-  .arvore-hero {
-    min-height: 260px;
-    padding: 78px 22px 26px;
-  }
-
-  .arvore-page:has(.arvore-skilltree) {
-    padding: 0;
-  }
-
-  .arvore-page:has(.arvore-skilltree) .arvore-abas {
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    transform: none;
-    width: auto;
-    max-width: none;
-    overflow-x: auto;
-    border-radius: 14px;
-  }
-
-  .arvore-page:has(.arvore-skilltree) .arvore-abas button {
-    width: auto;
-    min-width: max-content;
-  }
-
-  .arvore-skilltree,
-  .skilltree-viewport {
-    height: 100svh;
-  }
-
-  .skilltree-viewport {
-    overflow: auto;
-    touch-action: pan-x pan-y;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .skilltree-node {
-    width: 88px;
-    height: 88px;
-  }
-
-  .skilltree-aptidao-node {
-    width: 72px;
-    height: 72px;
-  }
-
-  .skilltree-root {
-    width: 108px;
-    height: 108px;
-  }
-
-  .skilltree-node strong {
-    max-width: 66px;
-    font-size: 0.5rem;
-  }
-
-  .skilltree-root strong {
-    max-width: 76px;
-    font-size: 0.58rem;
-  }
-
-  .trilha-pontos {
-    top: 70px;
-    left: 12px;
-    right: 12px;
-    width: auto;
-    text-align: center;
-    border-radius: 12px;
-  }
-
-  .trilha-acoes-flutuantes {
-    top: auto;
-    right: 12px;
-    bottom: 12px;
-    left: 12px;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .trilha-acoes-flutuantes button {
-    min-width: 0;
-    min-height: 42px;
-    padding: 0 8px;
-    font-size: 0.62rem;
-  }
-
-  .arvore-acoes-flutuantes {
-    left: 12px;
-    right: 12px;
-    bottom: 66px;
-    display: grid;
-    gap: 8px;
-  }
-
-  .arvore-voltar-upgrade,
-  .arvore-mensagem {
-    width: 100%;
-  }
-
-  .skilltree-tooltip {
-    width: min(320px, calc(100vw - 32px));
-    max-height: 240px;
-  }
-
-  .aptidao-modal {
-    max-height: calc(100svh - 24px);
-    overflow-y: auto;
-  }
-}
-
-@media (max-width: 560px) {
-  .arvore-page {
-    padding: 12px;
-  }
-
-  .arvore-hero h1 {
-    font-size: clamp(1.9rem, 12vw, 3rem);
-    overflow-wrap: anywhere;
-  }
-
-  .arvore-hero p {
-    font-size: 0.9rem;
-  }
-
-  .arvore-abas {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .arvore-abas button {
-    width: 100%;
-  }
-
-  .arvore-page:has(.arvore-skilltree) .arvore-abas {
-    display: flex;
-    grid-template-columns: none;
-  }
-
-  .absoluta-voltar-btn {
-    top: 76px;
-    left: 12px;
-    min-height: 40px;
-    padding: 0 12px;
-  }
-
-  .absolutas-tree-area {
-    width: 1200px;
-    height: 760px;
-  }
-
-  .absolutas-lines {
-    width: 1200px;
-    height: 760px;
-  }
-
-  .absoluta-selecionada-card {
-    min-height: 100svh;
-    padding: 88px 18px 28px;
-  }
-
-  .absoluta-selecionada-card h2 {
-    font-size: clamp(2rem, 13vw, 3.4rem);
-  }
-
-  .trilha-acoes-flutuantes {
-    grid-template-columns: 1fr;
-  }
-
-  .arvore-acoes-flutuantes {
-    bottom: 160px;
-  }
-}
-
-@media (hover: none) and (pointer: coarse) {
-  .skilltree-node:hover {
-    transform: translate(-50%, -50%);
-  }
-
-  .skilltree-node:hover .skilltree-tooltip {
-    opacity: 0;
-    pointer-events: none;
-  }
-}
-
 /* =========================================================
-   MOBILE FINAL - HABILIDADES ABSOLUTAS
+   RESPONSIVO FINAL — ÁRVORE DE HABILIDADES
 ========================================================= */
 
-@media screen and (max-width: 768px) {
-  .arvore-page:has(.arvore-skilltree) {
+@media screen and (max-width: 980px) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  .arvore-page {
     padding: 0 !important;
     overflow-x: hidden !important;
   }
 
+  /* =====================================================
+     ABAS
+  ===================================================== */
+
+  .arvore-abas,
   .arvore-page:has(.arvore-skilltree) .arvore-abas {
     position: sticky !important;
     top: 0 !important;
@@ -2085,167 +1867,36 @@
     right: auto !important;
     transform: none !important;
 
+    z-index: 9999;
+
     width: 100% !important;
     max-width: 100% !important;
 
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    gap: 8px !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
+    gap: 8px;
+
+    padding: 10px;
+
+    margin: 0 !important;
+
+    overflow: visible !important;
 
     border-radius: 0 !important;
-    padding: 8px !important;
+
+    background: rgba(0, 0, 0, 0.96) !important;
+    backdrop-filter: blur(8px);
   }
 
+  .arvore-abas button,
   .arvore-page:has(.arvore-skilltree) .arvore-abas button {
-    flex: 0 0 auto !important;
-    width: auto !important;
-    min-width: max-content !important;
-  }
-
-  .arvore-skilltree,
-  .skilltree-viewport {
-    height: auto !important;
-    min-height: 100vh !important;
-    overflow: visible !important;
-  }
-
-  .skilltree-viewport {
-    padding: 82px 10px 20px !important;
-    background: #000 !important;
-  }
-
-  .absolutas-tree-area {
-    position: static !important;
-
-    width: 100% !important;
-    height: auto !important;
-    min-height: auto !important;
-
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 14px !important;
-
-    margin: 0 !important;
-    padding: 0 !important;
-
-    background: transparent !important;
-    overflow: visible !important;
-  }
-
-  .absolutas-lines {
-    display: none !important;
-  }
-
-  .absolutas-root,
-  .absoluta-node {
-    position: static !important;
-    transform: none !important;
-
-    width: 100% !important;
-    height: auto !important;
-    min-height: 84px !important;
-
-    border-radius: 14px !important;
-
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-
-    padding: 14px !important;
-
-    text-align: center !important;
-  }
-
-  .absolutas-root strong,
-  .absoluta-node strong {
-    max-width: 100% !important;
-    font-size: 0.78rem !important;
-    line-height: 1.25 !important;
-  }
-
-  .absoluta-voltar-btn {
-    position: static !important;
-
-    width: 100% !important;
-    min-height: 42px !important;
-
-    margin-bottom: 14px !important;
-
-    justify-content: center !important;
-  }
-
-  .arvore-acoes-flutuantes {
-    position: static !important;
-
-    display: grid !important;
-    gap: 10px !important;
-
-    width: 100% !important;
-
-    padding: 10px !important;
-  }
-
-  .arvore-voltar-upgrade,
-  .arvore-mensagem {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-}
-
-@media screen and (max-width: 430px) {
-  .skilltree-viewport {
-    padding: 76px 8px 18px !important;
-  }
-
-  .absolutas-root,
-  .absoluta-node {
-    min-height: 76px !important;
-  }
-
-  .absolutas-root strong,
-  .absoluta-node strong {
-    font-size: 0.7rem !important;
-  }
-}
-
-/* =========================================================
-   MOBILE - ABAS DA ÁRVORE SEM SCROLL
-========================================================= */
-
-@media screen and (max-width: 768px) {
-  .arvore-page:has(.arvore-skilltree) .arvore-abas,
-  .arvore-abas {
-    position: sticky !important;
-    top: 0 !important;
-    left: auto !important;
-    right: auto !important;
-    transform: none !important;
-
-    width: 100% !important;
-    max-width: 100% !important;
-
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-
-    padding: 8px !important;
-    margin: 0 !important;
-
-    overflow: visible !important;
-
-    border-radius: 0 !important;
-    background: #000 !important;
-  }
-
-  .arvore-page:has(.arvore-skilltree) .arvore-abas button,
-  .arvore-abas button {
     width: 100% !important;
     min-width: 0 !important;
 
-    padding: 10px 6px !important;
+    min-height: 42px !important;
+
+    padding: 8px 10px !important;
 
     font-size: 0.58rem !important;
     line-height: 1.1 !important;
@@ -2253,32 +1904,53 @@
     white-space: normal !important;
     text-align: center !important;
   }
-}
 
-@media screen and (max-width: 430px) {
-  .arvore-page:has(.arvore-skilltree) .arvore-abas,
-  .arvore-abas {
-    grid-template-columns: 1fr !important;
+  /* =====================================================
+     HERO
+  ===================================================== */
+
+  .arvore-hero {
+    min-height: auto;
+    padding: 90px 18px 24px;
   }
-}
 
-/* =========================================================
-   MOBILE - ARRASTAR ÁRVORE COM TOUCH
-========================================================= */
+  .arvore-hero h1 {
+    font-size: clamp(2rem, 10vw, 3rem);
+  }
 
-@media screen and (max-width: 768px) {
+  .arvore-hero p {
+    font-size: 0.9rem;
+  }
+
+  /* =====================================================
+     TRILHA
+  ===================================================== */
+
   .arvore-skilltree {
     height: 100svh !important;
     overflow: hidden !important;
   }
 
   .skilltree-viewport {
+    position: relative;
+
+    width: 100%;
     height: 100svh !important;
+
     overflow: hidden !important;
 
     touch-action: none !important;
     user-select: none !important;
+
     cursor: grab;
+
+    background:
+      radial-gradient(
+        circle at center,
+        rgba(255,255,255,0.08),
+        transparent 38%
+      ),
+      linear-gradient(145deg, #04070c, #000);
   }
 
   .skilltree-viewport.arrastando {
@@ -2291,16 +1963,332 @@
     width: 2600px !important;
     height: 1600px !important;
 
-    display: block !important;
-
     overflow: visible !important;
 
     will-change: transform;
+    transform: translate3d(0, 0, 0);
+  }
+
+  .skilltree-lines {
+    width: 2600px !important;
+    height: 1600px !important;
   }
 
   .skilltree-node,
   .skilltree-root,
   .skilltree-aptidao-node {
     position: absolute !important;
+  }
+
+  .skilltree-node {
+    width: 86px;
+    height: 86px;
+  }
+
+  .skilltree-root {
+    width: 106px;
+    height: 106px;
+  }
+
+  .skilltree-aptidao-node {
+    width: 72px;
+    height: 72px;
+  }
+
+  .skilltree-node strong {
+    max-width: 62px;
+    font-size: 0.48rem;
+  }
+
+  .skilltree-root strong {
+    max-width: 72px;
+    font-size: 0.56rem;
+  }
+
+  /* =====================================================
+     TOOLTIP
+  ===================================================== */
+
+  .skilltree-tooltip {
+    display: none !important;
+  }
+
+  /* =====================================================
+     PONTOS / AÇÕES
+  ===================================================== */
+
+  .trilha-pontos {
+    position: fixed !important;
+
+    top: auto !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 70px !important;
+
+    width: auto !important;
+
+    text-align: center;
+
+    border-radius: 12px;
+  }
+
+  .trilha-acoes-flutuantes {
+    position: fixed !important;
+
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    top: auto !important;
+
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 8px;
+  }
+
+  .trilha-acoes-flutuantes button {
+    width: 100%;
+
+    min-height: 42px;
+
+    padding: 0 8px;
+
+    font-size: 0.6rem;
+  }
+
+  /* =====================================================
+     HABILIDADES ABSOLUTAS
+  ===================================================== */
+
+  .absolutas-tree-area {
+    position: static !important;
+
+    width: 100% !important;
+    height: auto !important;
+
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+
+    gap: 14px;
+
+    padding: 16px;
+
+    overflow: visible !important;
+
+    background: transparent !important;
+  }
+
+  .absolutas-lines {
+    display: none !important;
+  }
+
+  .absolutas-root,
+  .absoluta-node {
+    position: static !important;
+    transform: none !important;
+
+    width: 100% !important;
+    min-height: 84px !important;
+    height: auto !important;
+
+    border-radius: 16px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 16px !important;
+
+    text-align: center !important;
+  }
+
+  .absolutas-root strong,
+  .absoluta-node strong {
+    max-width: 100% !important;
+
+    font-size: 0.76rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .absoluta-voltar-btn {
+    position: static !important;
+
+    width: 100% !important;
+
+    margin-bottom: 12px !important;
+
+    justify-content: center !important;
+  }
+
+  /* =====================================================
+     MODAIS
+  ===================================================== */
+
+  .aptidao-modal,
+  .especialidade-modal {
+    width: calc(100% - 20px);
+    max-height: calc(100svh - 20px);
+
+    overflow-y: auto;
+
+    padding: 18px;
+  }
+
+  .especialidade-modal-lista {
+    grid-template-columns: 1fr;
+  }
+
+  /* =====================================================
+     MENSAGEM
+  ===================================================== */
+
+  .arvore-acoes-flutuantes {
+    position: fixed !important;
+
+    left: 12px;
+    right: 12px;
+
+    bottom: 170px;
+
+    display: grid;
+    gap: 8px;
+  }
+
+  .arvore-voltar-upgrade,
+  .arvore-mensagem {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* =========================================================
+   CELULAR PEQUENO
+========================================================= */
+
+@media screen and (max-width: 430px) {
+  .arvore-abas,
+  .arvore-page:has(.arvore-skilltree) .arvore-abas {
+    grid-template-columns: 1fr !important;
+  }
+
+  .skilltree-node {
+    width: 78px;
+    height: 78px;
+  }
+
+  .skilltree-root {
+    width: 96px;
+    height: 96px;
+  }
+
+  .skilltree-aptidao-node {
+    width: 66px;
+    height: 66px;
+  }
+
+  .skilltree-node strong {
+    font-size: 0.42rem;
+  }
+
+  .absolutas-root,
+  .absoluta-node {
+    min-height: 76px !important;
+  }
+
+  .absolutas-root strong,
+  .absoluta-node strong {
+    font-size: 0.68rem !important;
+  }
+
+  .trilha-acoes-flutuantes {
+    grid-template-columns: 1fr;
+  }
+
+  .arvore-acoes-flutuantes {
+    bottom: 220px;
+  }
+}
+
+/* =========================================================
+   MOBILE - CARD DE HABILIDADE ABSOLUTA ESCOLHIDA
+========================================================= */
+
+@media screen and (max-width: 768px) {
+  .absoluta-selecionada-card {
+    min-height: 100svh !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+
+    gap: 16px !important;
+
+    padding: 72px 18px 28px !important;
+
+    overflow-y: auto !important;
+  }
+
+  .absoluta-selecionada-card span {
+    font-size: 0.7rem !important;
+    letter-spacing: 3px !important;
+    text-align: center !important;
+  }
+
+  .absoluta-selecionada-card h2 {
+    font-size: clamp(2.4rem, 14vw, 4rem) !important;
+    line-height: 0.95 !important;
+    text-align: center !important;
+  }
+
+  .absoluta-selecionada-card strong {
+    width: fit-content !important;
+    max-width: 100% !important;
+
+    padding: 8px 14px !important;
+
+    position: static !important;
+  }
+
+  .absoluta-selecionada-card p {
+    width: 100% !important;
+    max-width: 320px !important;
+
+    padding: 16px !important;
+
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    border-radius: 14px;
+
+    background: rgba(0, 0, 0, 0.55);
+
+    font-size: 0.88rem !important;
+    line-height: 1.75 !important;
+    text-align: center !important;
+  }
+
+  .absoluta-selecionada-card button {
+    width: 100% !important;
+    max-width: 260px !important;
+
+    position: static !important;
+
+    margin-top: 4px !important;
+  }
+
+  .arvore-acoes-flutuantes {
+    position: static !important;
+    width: 100% !important;
+    padding: 0 18px 18px !important;
+  }
+
+  .arvore-mensagem {
+    position: static !important;
+
+    width: 100% !important;
+    max-width: 320px !important;
+
+    margin: 0 auto !important;
+
+    text-align: center !important;
   }
 }
