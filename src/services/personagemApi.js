@@ -168,3 +168,13 @@ export const transferirItemParty = async (
 
   return data.party;
 };
+
+export const encerrarParty = async (partyCode) => {
+  return request("/parties", {
+    method: "POST",
+    body: JSON.stringify({
+      action: "delete",
+      code: partyCode,
+    }),
+  });
+};

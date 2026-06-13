@@ -25,6 +25,7 @@ import {
   salvarPersonagem,
   criarParty,
   buscarParty,
+  encerrarParty,
   entrarParty,
 } from "../services/personagemApi";
 import { estadoInicial } from "./fichaPersonagem";
@@ -1541,6 +1542,26 @@ const DashboardMestre = () => {
     }
   };
 
+  const encerrarPartyMestre = async () => {
+    if (!partyCode) {
+      setPartyMensagem("Nenhuma party ativa para encerrar.");
+      return;
+    }
+
+    try {
+      await encerrarParty(partyCode);
+      localStorage.removeItem("party_mestre_codigo");
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith("party_"))
+        .forEach((key) => localStorage.removeItem(key));
+      setParty(null);
+      setPartyCode("");
+      setPartyMensagem("Party encerrada.");
+    } catch (error) {
+      setPartyMensagem(error?.message || "Nao foi possivel encerrar a party.");
+    }
+  };
+
   const renderPainelPartyMestre = () => (
     <div className="mestre-party-embed">
       <div className="mestre-modal-linha-topo">
@@ -1553,6 +1574,15 @@ const DashboardMestre = () => {
 
           <button type="button" onClick={carregarPartyMestre}>
             Carregar Party
+          </button>
+
+          <button
+            type="button"
+            className="perigo"
+            onClick={encerrarPartyMestre}
+            disabled={!partyCode}
+          >
+            Encerrar
           </button>
         </div>
       </div>
@@ -1663,6 +1693,15 @@ const DashboardMestre = () => {
 
             <button type="button" onClick={carregarPartyMestre}>
               Carregar
+            </button>
+
+            <button
+              type="button"
+              className="perigo"
+              onClick={encerrarPartyMestre}
+              disabled={!partyCode}
+            >
+              Encerrar
             </button>
           </div>
         </div>

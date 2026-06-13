@@ -419,6 +419,38 @@ const deletePersonagem = async (id) => {
   }
 };
 
+const limparPartiesAntigas = async (codeParaManter = "") => {
+  const partyIdParaManter = codeParaManter
+    ? getPartyId(normalizarCodigoParty(codeParaManter))
+    : "";
+
+  if (USE_SUPABASE) {
+    const filtroManter = partyIdParaManter
+      ? `&id=neq.${encodeURIComponent(partyIdParaManter)}`
+      : "";
+
+    await requestSupabase(`?id=like.${PARTY_PREFIX}%25${filtroManter}`, {
+      method: "DELETE",
+      headers: { Prefer: "return=minimal" },
+    });
+
+    return true;
+  }
+
+  assertStorageConfigured();
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  const files = await fs.readdir(DATA_DIR);
+
+  await Promise.all(
+    files
+      .filter((file) => file.startsWith(PARTY_PREFIX) && file.endsWith(".json"))
+      .filter((file) => path.basename(file, ".json") !== partyIdParaManter)
+      .map((file) => fs.unlink(path.join(DATA_DIR, file)).catch(() => null)),
+  );
+
+  return true;
+};
+
 const readParty = async (code) => {
   const partyCode = normalizarCodigoParty(code);
   if (!partyCode) return null;
@@ -463,6 +495,26 @@ const vincularPersonagemAParty = async (fichaId, personagem, partyCode) => {
   return atualizado;
 };
 
+const desvincularPersonagensDaParty = async (party) => {
+  const partyCode = normalizarCodigoParty(party?.code);
+  const players = Object.values(party?.players || {});
+
+  await Promise.all(
+    players.map(async (player) => {
+      const fichaId = sanitizeFichaId(player.fichaId);
+      const personagem = await readPersonagem(fichaId);
+
+      if (!personagem || personagem.tipo === "party") return;
+
+      if (normalizarCodigoParty(personagem.partyCode) !== partyCode) return;
+
+      const atualizado = { ...personagem };
+      delete atualizado.partyCode;
+      await writePersonagem(fichaId, atualizado);
+    }),
+  );
+};
+
 const criarParty = async ({ fichaId, personagem }) => {
   let code = gerarCodigoParty();
   let tentativas = 0;
@@ -489,8 +541,19 @@ const criarParty = async ({ fichaId, personagem }) => {
   );
 
   const partyAtualizada = await writeParty(party);
+  await limparPartiesAntigas(code);
   await vincularPersonagemAParty(fichaId, personagem, code);
   return partyAtualizada;
+};
+
+const encerrarParty = async (code) => {
+  const party = await readParty(code);
+
+  if (!party) return false;
+
+  await desvincularPersonagensDaParty(party);
+  await deletePersonagem(getPartyId(party.code));
+  return true;
 };
 
 const entrarParty = async ({ code, fichaId, personagem }) => {
@@ -784,6 +847,14 @@ const handleRequest = async (req, res) => {
         return sendJson(res, party ? 201 : 404, {
           party,
           ...(party ? {} : { error: "Party nao encontrada" }),
+        });
+      }
+
+      if (action === "delete" || action === "close") {
+        const deleted = await encerrarParty(body.code);
+        return sendJson(res, deleted ? 200 : 404, {
+          deleted,
+          ...(deleted ? {} : { error: "Party nao encontrada" }),
         });
       }
 
