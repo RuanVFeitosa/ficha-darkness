@@ -276,18 +276,45 @@ const Party = () => {
   const enviarNota = async () => {
     if (!nota.trim()) return;
 
+    const texto = nota.trim();
+    const notaOtimista = {
+      id: `local-${Date.now()}`,
+      fichaId,
+      autor: personagem.nome || fichaId,
+      texto,
+      createdAt: new Date().toISOString(),
+    };
+
+    setParty((atual) => ({
+      ...(atual || {}),
+      notes: [notaOtimista, ...((atual?.notes) || [])],
+    }));
+    setNota("");
+
     const partyAtualizada = await executarAcaoParty(() =>
-      enviarNotaParty(partyCode, fichaId, nota),
+      enviarNotaParty(partyCode, fichaId, texto),
     );
     if (!partyAtualizada) return;
 
     setParty(partyAtualizada);
-    setNota("");
   };
 
   const rolarDados = async () => {
     try {
       const roll = rolarFormula(formula);
+      const rolagemOtimista = {
+        id: `local-${Date.now()}`,
+        fichaId,
+        autor: personagem.nome || fichaId,
+        ...roll,
+        createdAt: new Date().toISOString(),
+      };
+
+      setParty((atual) => ({
+        ...(atual || {}),
+        rolls: [rolagemOtimista, ...((atual?.rolls) || [])],
+      }));
+
       const partyAtualizada = await executarAcaoParty(() =>
         enviarRolagemParty(partyCode, fichaId, roll),
       );
@@ -306,21 +333,52 @@ const Party = () => {
       return;
     }
 
+    const index = Number(itemIndex);
+    const inventarioAntes = Array.isArray(personagem.inventario)
+      ? [...personagem.inventario]
+      : [];
+    const item = inventarioAntes[index];
+    const destino = jogadores.find((jogador) => jogador.fichaId === destinoItem);
+
+    if (!item) {
+      setMensagem("Item nao encontrado no inventario.");
+      return;
+    }
+
+    setPersonagem((atual) => ({
+      ...atual,
+      inventario: (atual.inventario || []).filter((_, i) => i !== index),
+    }));
+    setParty((atual) => ({
+      ...(atual || {}),
+      itemTransfers: [
+        {
+          id: `local-${Date.now()}`,
+          fromFichaId: fichaId,
+          toFichaId: destinoItem,
+          from: personagem.nome || fichaId,
+          to: destino?.nome || destinoItem,
+          item,
+          createdAt: new Date().toISOString(),
+        },
+        ...((atual?.itemTransfers) || []),
+      ],
+    }));
+    setItemIndex("");
+    setDestinoItem("");
+
     const partyAtualizada = await executarAcaoParty(() =>
-      transferirItemParty(partyCode, fichaId, destinoItem, itemIndex),
+      transferirItemParty(partyCode, fichaId, destinoItem, index),
     );
-    if (!partyAtualizada) return;
-
-    const atualizado = await buscarPersonagem(fichaId);
-
-    if (atualizado) {
-      setPersonagem(atualizado);
-      localStorage.setItem(storageKey, JSON.stringify(atualizado));
+    if (!partyAtualizada) {
+      setPersonagem((atual) => ({
+        ...atual,
+        inventario: inventarioAntes,
+      }));
+      return;
     }
 
     setParty(partyAtualizada);
-    setItemIndex("");
-    setDestinoItem("");
   };
 
   if (carregando) {

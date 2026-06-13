@@ -340,7 +340,9 @@ const writePersonagem = async (id, personagem) => {
 
 const listPersonagens = async () => {
   if (USE_SUPABASE) {
-    const rows = await requestSupabase("?select=id,personagem,updated_at&order=id.asc");
+    const rows = await requestSupabase(
+      `?select=id,personagem,updated_at&id=not.like.${PARTY_PREFIX}%25&order=id.asc`,
+    );
     return rows
       .filter(
         (row) =>
@@ -542,7 +544,7 @@ const adicionarNotaParty = async ({ code, fichaId, texto }) => {
       createdAt: new Date().toISOString(),
     },
     ...(party.notes || []),
-  ].slice(0, 80);
+  ].slice(0, 40);
 
   return writeParty(party);
 };
@@ -566,7 +568,7 @@ const adicionarRolagemParty = async ({ code, fichaId, roll }) => {
       createdAt: new Date().toISOString(),
     },
     ...(party.rolls || []),
-  ].slice(0, 80);
+  ].slice(0, 40);
 
   return writeParty(party);
 };
@@ -624,7 +626,7 @@ const transferirItemParty = async ({ code, fromFichaId, toFichaId, itemIndex }) 
       createdAt: new Date().toISOString(),
     },
     ...(party.itemTransfers || []),
-  ].slice(0, 80);
+  ].slice(0, 40);
 
   return writeParty(party);
 };
