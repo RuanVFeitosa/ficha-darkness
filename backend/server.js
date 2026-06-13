@@ -695,6 +695,16 @@ const handleRequest = async (req, res) => {
     }
 
     if (url.pathname === "/api/parties" && req.method === "GET") {
+      const code = url.searchParams.get("code");
+
+      if (code) {
+        const party = await readParty(code);
+        return sendJson(res, party ? 200 : 404, {
+          party,
+          ...(party ? {} : { error: "Party nao encontrada" }),
+        });
+      }
+
       return sendJson(res, 200, {
         ok: true,
         endpoint: "parties",
@@ -704,6 +714,47 @@ const handleRequest = async (req, res) => {
 
     if (url.pathname === "/api/parties" && req.method === "POST") {
       const body = await readJsonBody(req);
+      const action = String(body?.action || "create").trim().toLowerCase();
+
+      if (action === "join") {
+        const party = await entrarParty(body);
+        return sendJson(res, party ? 200 : 404, {
+          party,
+          ...(party ? {} : { error: "Party nao encontrada" }),
+        });
+      }
+
+      if (action === "status") {
+        const party = await atualizarStatusParty(body);
+        return sendJson(res, party ? 200 : 404, {
+          party,
+          ...(party ? {} : { error: "Party nao encontrada" }),
+        });
+      }
+
+      if (action === "note") {
+        const party = await adicionarNotaParty(body);
+        return sendJson(res, party ? 201 : 404, {
+          party,
+          ...(party ? {} : { error: "Party nao encontrada" }),
+        });
+      }
+
+      if (action === "roll") {
+        const party = await adicionarRolagemParty(body);
+        return sendJson(res, party ? 201 : 404, {
+          party,
+          ...(party ? {} : { error: "Party nao encontrada" }),
+        });
+      }
+
+      if (action === "item") {
+        const party = await transferirItemParty(body);
+        return sendJson(res, party ? 201 : 404, {
+          party,
+          ...(party ? {} : { error: "Party nao encontrada" }),
+        });
+      }
 
       if (!body?.fichaId || !body?.personagem) {
         return sendJson(res, 400, { error: "Ficha e personagem sao obrigatorios" });

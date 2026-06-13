@@ -87,44 +87,61 @@ export const criarParty = async (fichaId, personagem) => {
 };
 
 export const buscarParty = async (partyCode) => {
-  const data = await request(`/parties/${encodeURIComponent(partyCode)}`);
+  const data = await request(`/parties?code=${encodeURIComponent(partyCode)}`);
   return data.party;
 };
 
 export const entrarParty = async (partyCode, fichaId, personagem) => {
-  const data = await request(`/parties/${encodeURIComponent(partyCode)}/join`, {
+  const data = await request("/parties", {
     method: "POST",
-    body: JSON.stringify({ fichaId, personagem }),
+    body: JSON.stringify({
+      action: "join",
+      code: partyCode,
+      fichaId,
+      personagem,
+    }),
   });
 
   return data.party;
 };
 
 export const atualizarStatusParty = async (partyCode, fichaId, personagem) => {
-  const data = await request(
-    `/parties/${encodeURIComponent(partyCode)}/players/${encodeURIComponent(fichaId)}`,
-    {
-      method: "PUT",
-      body: JSON.stringify({ personagem }),
-    },
-  );
+  const data = await request("/parties", {
+    method: "POST",
+    body: JSON.stringify({
+      action: "status",
+      code: partyCode,
+      fichaId,
+      personagem,
+    }),
+  });
 
   return data.party;
 };
 
 export const enviarNotaParty = async (partyCode, fichaId, texto) => {
-  const data = await request(`/parties/${encodeURIComponent(partyCode)}/notes`, {
+  const data = await request("/parties", {
     method: "POST",
-    body: JSON.stringify({ fichaId, texto }),
+    body: JSON.stringify({
+      action: "note",
+      code: partyCode,
+      fichaId,
+      texto,
+    }),
   });
 
   return data.party;
 };
 
 export const enviarRolagemParty = async (partyCode, fichaId, roll) => {
-  const data = await request(`/parties/${encodeURIComponent(partyCode)}/rolls`, {
+  const data = await request("/parties", {
     method: "POST",
-    body: JSON.stringify({ fichaId, roll }),
+    body: JSON.stringify({
+      action: "roll",
+      code: partyCode,
+      fichaId,
+      roll,
+    }),
   });
 
   return data.party;
@@ -136,9 +153,15 @@ export const transferirItemParty = async (
   toFichaId,
   itemIndex,
 ) => {
-  const data = await request(`/parties/${encodeURIComponent(partyCode)}/items`, {
+  const data = await request("/parties", {
     method: "POST",
-    body: JSON.stringify({ fromFichaId, toFichaId, itemIndex }),
+    body: JSON.stringify({
+      action: "item",
+      code: partyCode,
+      fromFichaId,
+      toFichaId,
+      itemIndex,
+    }),
   });
 
   return data.party;
