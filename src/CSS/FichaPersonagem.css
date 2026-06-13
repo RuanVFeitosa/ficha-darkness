@@ -7720,3 +7720,101 @@ body {
     font-size: 0.66rem !important;
   }
 }
+
+/* =========================================================
+   MOBILE - SANIDADE E ESPERANÇA
+========================================================= */
+
+@media screen and (max-width: 768px) {
+  .sanidade-completa {
+    width: 100% !important;
+    max-width: 100% !important;
+
+    gap: 16px !important;
+  }
+
+  .sanidade-barra,
+  .esperanca-barra {
+    width: 100% !important;
+  }
+
+  .barra-rpg-header {
+    gap: 12px !important;
+  }
+
+  .barra-rpg-label {
+    font-size: 0.72rem !important;
+    letter-spacing: 2px !important;
+  }
+
+  .barra-rpg-controles {
+    gap: 8px !important;
+  }
+
+  /* BOTÕES + E - */
+
+  .barra-btn {
+    width: 34px !important;
+    height: 34px !important;
+
+    min-width: 34px !important;
+
+    border-radius: 10px !important;
+
+    font-size: 1.2rem !important;
+    font-weight: 900 !important;
+  }
+
+  /* VALORES */
+
+  .barra-rpg-input.atual,
+  .sanidade-atual,
+  .esperanca-atual {
+    width: 40px !important;
+
+    font-size: 1rem !important;
+    font-weight: 900 !important;
+  }
+
+  .barra-rpg-input.max,
+  .sanidade-max,
+  .esperanca-max {
+    width: 30px !important;
+
+    font-size: 1.2rem !important;
+    font-weight: 800 !important;
+  }
+
+  .barra-rpg-sep,
+  .sanidade-separador,
+  .esperanca-separador {
+    font-size: 1rem !important;
+  }
+
+  .barra-rpg-track,
+  .barra-rpg-track-esperanca-track {
+    height: 12px !important;
+    border-radius: 999px !important;
+  }
+}
+
+@media screen and (max-width: 430px) {
+  .barra-btn {
+    width: 40px !important;
+    height: 40px !important;
+
+    font-size: 1.35rem !important;
+  }
+
+  .barra-rpg-input.atual,
+  .sanidade-atual,
+  .esperanca-atual {
+    font-size: 1.5rem !important;
+  }
+
+  .barra-rpg-input.max,
+  .sanidade-max,
+  .esperanca-max {
+    font-size: 1.15rem !important;
+  }
+}

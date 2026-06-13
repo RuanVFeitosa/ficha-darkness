@@ -1927,106 +1927,106 @@ const FichaPersonagem = () => {
   };
 
   const rolarFormulaPersonalizada = () => {
-  const formula = formulaDadoPersonalizado.replace(/\s/g, "");
+    const formula = formulaDadoPersonalizado.replace(/\s/g, "");
 
-  if (!formula.trim()) {
-    setErroRolagemPersonalizada("Digite uma fórmula.");
-    return;
-  }
-
-  const partes = formula.match(/[+-]?[^+-]+/g) || [];
-
-  let total = 0;
-  const dados = [];
-
-  for (const parte of partes) {
-    const sinal = parte.startsWith("-") ? -1 : 1;
-    const texto = parte.replace(/^[+-]/, "");
-
-    const dadoMatch = texto.match(/^(\d*)d(\d+)$/i);
-
-    if (dadoMatch) {
-      const quantidade = parseInt(dadoMatch[1] || "1", 10);
-      const faces = parseInt(dadoMatch[2], 10);
-
-      if (quantidade <= 0 || faces <= 0) {
-        setErroRolagemPersonalizada("Fórmula inválida.");
-        return;
-      }
-
-      for (let i = 0; i < quantidade; i++) {
-        const valorOriginal = rolarDado(faces);
-        const valor = valorOriginal * sinal;
-
-        dados.push({
-          valor,
-          valorOriginal,
-          faces,
-          sinal,
-          origem: `${sinal < 0 ? "-" : ""}d${faces}`,
-        });
-
-        total += valor;
-      }
-
-      continue;
+    if (!formula.trim()) {
+      setErroRolagemPersonalizada("Digite uma fórmula.");
+      return;
     }
 
-    const numero = parseInt(texto, 10);
+    const partes = formula.match(/[+-]?[^+-]+/g) || [];
 
-    if (!Number.isNaN(numero)) {
-      total += numero * sinal;
-      continue;
+    let total = 0;
+    const dados = [];
+
+    for (const parte of partes) {
+      const sinal = parte.startsWith("-") ? -1 : 1;
+      const texto = parte.replace(/^[+-]/, "");
+
+      const dadoMatch = texto.match(/^(\d*)d(\d+)$/i);
+
+      if (dadoMatch) {
+        const quantidade = parseInt(dadoMatch[1] || "1", 10);
+        const faces = parseInt(dadoMatch[2], 10);
+
+        if (quantidade <= 0 || faces <= 0) {
+          setErroRolagemPersonalizada("Fórmula inválida.");
+          return;
+        }
+
+        for (let i = 0; i < quantidade; i++) {
+          const valorOriginal = rolarDado(faces);
+          const valor = valorOriginal * sinal;
+
+          dados.push({
+            valor,
+            valorOriginal,
+            faces,
+            sinal,
+            origem: `${sinal < 0 ? "-" : ""}d${faces}`,
+          });
+
+          total += valor;
+        }
+
+        continue;
+      }
+
+      const numero = parseInt(texto, 10);
+
+      if (!Number.isNaN(numero)) {
+        total += numero * sinal;
+        continue;
+      }
+
+      setErroRolagemPersonalizada("Use fórmulas como 3d20+5d100-2.");
+      return;
     }
 
-    setErroRolagemPersonalizada("Use fórmulas como 3d20+5d100-2.");
-    return;
-  }
+    const dadosPositivos = dados.filter((dado) => dado.sinal > 0);
 
-  const dadosPositivos = dados.filter((dado) => dado.sinal > 0);
+    const finais = dadosPositivos.filter(
+      (dado) => dado.valorOriginal === dado.faces,
+    ).length;
 
-  const finais = dadosPositivos.filter(
-    (dado) => dado.valorOriginal === dado.faces,
-  ).length;
+    const valoresOrdenados = dadosPositivos
+      .map((dado) => dado.valorOriginal)
+      .sort((a, b) => b - a);
 
-  const valoresOrdenados = dadosPositivos
-    .map((dado) => dado.valorOriginal)
-    .sort((a, b) => b - a);
+    const resultadosExtras = valoresOrdenados.slice(1, 1 + finais);
 
-  const resultadosExtras = valoresOrdenados.slice(1, 1 + finais);
+    const bonusFinais = resultadosExtras.reduce(
+      (soma, valor) => soma + valor,
+      0,
+    );
 
-  const bonusFinais = resultadosExtras.reduce(
-    (soma, valor) => soma + valor,
-    0,
-  );
+    total += bonusFinais;
 
-  total += bonusFinais;
+    setErroRolagemPersonalizada("");
+    setRolandoDados(true);
 
-  setErroRolagemPersonalizada("");
-  setRolandoDados(true);
+    setModalRolagem({
+      titulo: "Rolagem Personalizada",
+      modo: formulaDadoPersonalizado,
+      formula: formulaDadoPersonalizado,
+      dados: dados.map((dado) => dado.valor),
+      faces: 20,
+      maiorResultado: dados.length
+        ? Math.max(...dados.map((dado) => dado.valor))
+        : total,
+      bonusAtivo: 0,
+      bonusPassiva: 0,
+      finais,
+      resultadosExtras,
+      bonusFinais,
+      total,
+      dano: null,
+    });
 
-  setModalRolagem({
-    titulo: "Rolagem Personalizada",
-    modo: formulaDadoPersonalizado,
-    formula: formulaDadoPersonalizado,
-    dados: dados.map((dado) => dado.valor),
-    faces: 20,
-    maiorResultado: dados.length
-      ? Math.max(...dados.map((dado) => dado.valor))
-      : total,
-    bonusAtivo: 0,
-    bonusPassiva: 0,
-    finais,
-    resultadosExtras,
-    bonusFinais,
-    total,
-    dano: null,
-  });
-
-  setTimeout(() => {
-    setRolandoDados(false);
-  }, 1200);
-};
+    setTimeout(() => {
+      setRolandoDados(false);
+    }, 1200);
+  };
 
   // Conteúdo das abas
   const conteudoAbas = {
@@ -3496,10 +3496,14 @@ const FichaPersonagem = () => {
                       type="text"
                       placeholder="NOME DO PERSONAGEM"
                       value={personagem.nome}
-                      readOnly
-                      title="Informação bloqueada para jogadores"
+                      onChange={(e) =>
+                        setPersonagem((prev) => ({
+                          ...prev,
+                          nome: e.target.value,
+                        }))
+                      }
                       maxLength={30}
-                      className="nome-personagem perfil-info-bloqueada"
+                      className="nome-personagem"
                     />
                     <div className="dados-personagem">
                       <input

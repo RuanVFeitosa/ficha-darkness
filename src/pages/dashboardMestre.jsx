@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import Icon from "@mdi/react";
 import {
   mdiAccountPlus,
@@ -230,6 +231,36 @@ const DashboardMestre = () => {
 
   const [inimigos, setInimigos] = useState([]);
   const [inimigoEditando, setInimigoEditando] = useState(null);
+
+  const [popup, setPopup] = useState(null);
+
+  const abrirPopup = ({
+    tipo = "info",
+    titulo,
+    mensagem,
+    confirmarTexto = "Confirmar",
+    onConfirmar,
+  }) => {
+    setPopup({
+      tipo,
+      titulo,
+      mensagem,
+      confirmarTexto,
+      onConfirmar,
+    });
+  };
+
+  const fecharPopup = () => setPopup(null);
+
+  const confirmarPopup = () => {
+    const acao = popup?.onConfirmar;
+
+    fecharPopup();
+
+    setTimeout(() => {
+      if (acao) acao();
+    }, 0);
+  };
 
   const [formHabilidade, setFormHabilidade] = useState({
     id: "",
@@ -578,8 +609,47 @@ const DashboardMestre = () => {
   };
 
   const excluirHabilidadeEditor = (habilidadeId) => {
-    const confirmado = window.confirm("Deseja excluir esta habilidade?");
-    if (!confirmado) return;
+    abrirPopup({
+      tipo: "perigo",
+      titulo: "Excluir habilidade",
+      mensagem: "Deseja excluir esta habilidade permanentemente?",
+      confirmarTexto: "Excluir",
+      onConfirmar: () => {
+        const arvoreAtual = arvoresEditor[classeArvoreAtiva];
+        const novasArvores = { ...arvoresEditor };
+
+        if (tipoHabilidadeEditor === "especialidade") {
+          novasArvores[classeArvoreAtiva] = {
+            ...arvoreAtual,
+            especialidades: (arvoreAtual.especialidades || []).map((esp) =>
+              esp.id === especialidadeEditorId
+                ? {
+                    ...esp,
+                    habilidades: (esp.habilidades || []).filter(
+                      (hab) => hab.id !== habilidadeId,
+                    ),
+                  }
+                : esp,
+            ),
+          };
+        } else {
+          novasArvores[classeArvoreAtiva] = {
+            ...arvoreAtual,
+            [tipoHabilidadeEditor]: (
+              arvoreAtual[tipoHabilidadeEditor] || []
+            ).filter((hab) => hab.id !== habilidadeId),
+          };
+        }
+
+        salvarArvoresEditor(novasArvores);
+        abrirPopup({
+          titulo: "Habilidade excluída",
+          mensagem: "A habilidade foi removida com sucesso.",
+        });
+      },
+    });
+
+    return;
 
     const arvoreAtual = arvoresEditor[classeArvoreAtiva];
     const novasArvores = { ...arvoresEditor };
@@ -670,17 +740,24 @@ const DashboardMestre = () => {
   };
 
   const excluirInimigo = (id) => {
-    const confirmado = window.confirm("Deseja excluir este inimigo?");
+    abrirPopup({
+      tipo: "perigo",
+      titulo: "Excluir inimigo",
+      mensagem: "Deseja eliminar este inimigo permanentemente?",
+      confirmarTexto: "Excluir",
 
-    if (!confirmado) return;
+      onConfirmar: () => {
+        const novaLista = inimigos.filter((inimigo) => inimigo.id !== id);
 
-    const novaLista = inimigos.filter((inimigo) => inimigo.id !== id);
+        salvarListaInimigos(novaLista);
+        setInimigoEditando(null);
 
-    salvarListaInimigos(novaLista);
-
-    if (inimigoEditando === id) {
-      setInimigoEditando(null);
-    }
+        abrirPopup({
+          titulo: "MORTO",
+          mensagem: "O inimigo foi eliminado com sucesso.",
+        });
+      },
+    });
   };
 
   const duplicarInimigo = (inimigo) => {
@@ -695,6 +772,10 @@ const DashboardMestre = () => {
     const novaLista = [...inimigos, copia];
 
     salvarListaInimigos(novaLista);
+    abrirPopup({
+      titulo: "Inimigo duplicado",
+      mensagem: `${copia.nome} foi criado com base no inimigo original.`,
+    });
   };
 
   const atualizarInimigo = (id, dados) => {
@@ -804,28 +885,37 @@ const DashboardMestre = () => {
   const apagarFichaSelecionada = async () => {
     if (!fichaSelecionada) return;
 
-    const confirmado = window.confirm("Você deseja remover o personagem?");
+    abrirPopup({
+      tipo: "perigo",
+      titulo: "Excluir ficha",
+      mensagem: "Deseja remover este personagem permanentemente?",
+      confirmarTexto: "Excluir",
+      onConfirmar: async () => {
+        localStorage.removeItem(`${STORAGE_KEY}_${fichaSelecionada}`);
 
-    if (!confirmado) return;
+        try {
+          await apagarPersonagem(fichaSelecionada);
+        } catch (error) {
+          setMensagem("Ficha removida localmente. Backend indisponivel.");
+        }
+
+        const restantes = fichas.filter(
+          (ficha) => ficha.fichaId !== fichaSelecionada,
+        );
+
+        setFichas(restantes);
+        setFichaSelecionada(restantes[0]?.fichaId || "");
+        setPersonagem(restantes[0]?.personagem || null);
+        setModalFichaAberto(false);
+
+        abrirPopup({
+          titulo: "INIEXISTIDO",
+          mensagem: "O personagem não existe mais....",
+        });
+      },
+    });
 
     localStorage.removeItem(`${STORAGE_KEY}_${fichaSelecionada}`);
-
-    try {
-      await apagarPersonagem(fichaSelecionada);
-    } catch (error) {
-      setMensagem("Ficha removida localmente. Backend indisponivel.");
-    }
-
-    const restantes = fichas.filter(
-      (ficha) => ficha.fichaId !== fichaSelecionada,
-    );
-
-    setFichas(restantes);
-    setFichaSelecionada(restantes[0]?.fichaId || "");
-    setPersonagem(restantes[0]?.personagem || null);
-    setModalFichaAberto(false);
-
-    setMensagem("Personagem removido.");
   };
 
   const adicionarCreditos = () => {
@@ -1685,9 +1775,10 @@ const DashboardMestre = () => {
 
                             <button
                               className="mestre-btn-apagar"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 excluirInimigo(inimigo.id);
-                                setInimigoEditando(null);
                               }}
                             >
                               Apagar
@@ -2526,6 +2617,38 @@ const DashboardMestre = () => {
           </div>
         </section>
       )}
+      {popup &&
+        createPortal(
+          <div className="mestre-popup-overlay" onClick={fecharPopup}>
+            <section
+              className={`mestre-popup ${popup.tipo === "perigo" ? "perigo" : ""}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span>{popup.tipo === "perigo" ? "CONFIRMAÇÃO" : "ABSOLUTO"}</span>
+
+              <h2>{popup.titulo}</h2>
+
+              <p>{popup.mensagem}</p>
+
+              <div className="mestre-popup-acoes">
+                {popup.onConfirmar && (
+                  <button type="button" onClick={fecharPopup}>
+                    Cancelar
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  className={popup.tipo === "perigo" ? "perigo" : "primario"}
+                  onClick={popup.onConfirmar ? confirmarPopup : fecharPopup}
+                >
+                  {popup.onConfirmar ? popup.confirmarTexto : "Ok"}
+                </button>
+              </div>
+            </section>
+          </div>,
+          document.body,
+        )}
     </main>
   );
 };
