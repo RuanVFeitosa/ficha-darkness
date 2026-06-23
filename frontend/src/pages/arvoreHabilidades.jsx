@@ -786,16 +786,6 @@ const ArvoreHabilidades = () => {
                     transform: `translate3d(${posicaoMapa.x}px, ${posicaoMapa.y}px, 0)`,
                   }}
                 >
-                  <div className="skilltree-info">
-                    <span>ÁRVORE DE ESPECIALIDADE</span>
-                    <h2>
-                      {arvore.titulo || personagem.classe || arvore.classe}
-                    </h2>{" "}
-                    <p>
-                      Escolha livremente os ramos da sua build. Cada ramo
-                      pertence à classe escolhida pelo jogador.
-                    </p>
-                  </div>
 
                   <svg
                     className="skilltree-lines"

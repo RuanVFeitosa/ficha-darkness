@@ -9,6 +9,8 @@ import UpgradeNivel from "./pages/upgradeNivel";
 import "./App.css";
 import "./CSS/Responsive.css";
 
+const MESTRE_AUTH_KEY = "darkness_mestre_autorizado";
+
 function PageTransition({ active }) {
   return <div className={`page-transition ${active ? "active" : ""}`} />;
 }
@@ -59,12 +61,14 @@ function App() {
   const estaNaArvoreHabilidades = params.get("habilidades") === "1";
   const estaNoUpgrade = params.get("upgrade") === "1";
   const estaNoDashboardMestre = params.get("mestre") === "1";
+  const mestreAutorizado =
+    sessionStorage.getItem(MESTRE_AUTH_KEY) === "true";
 
   return (
     <div className="App">
       <PageTransition active={transitionActive} />
 
-      {estaNoDashboardMestre ? (
+      {estaNoDashboardMestre && mestreAutorizado ? (
         <DashboardMestre />
       ) : estaNaArvoreHabilidades ? (
         <ArvoreHabilidades />

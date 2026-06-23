@@ -1,12 +1,21 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiAccountPlus, mdiChevronLeft, mdiChevronRight } from "@mdi/js";
-import { criarPersonagem, salvarPersonagem } from "../services/personagemApi";
+import {
+  buscarPersonagem,
+  criarPersonagem,
+  salvarPersonagem,
+} from "../services/personagemApi";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
 import { estadoInicial } from "./fichaPersonagem";
 import "../CSS/CriarPersonagem.css";
 
 const STORAGE_KEY = "fichaRPG_personagem";
+
+const normalizarCodigoFicha = (valor) =>
+  String(valor || "")
+    .replace(/\D/g, "")
+    .slice(0, 8);
 
 const atributos = [
   { chave: "forca", nome: "Forca" },
@@ -668,6 +677,7 @@ const CriarPersonagem = () => {
     sanidadeInicial: 0,
     esperancaInicial: 0,
     fotoPerfil: "",
+    codigoFicha: "",
     integridade: {
       cabeca: 100,
       torso: 500,
@@ -704,8 +714,10 @@ const CriarPersonagem = () => {
       return form.classe.trim().length > 0;
     }
 
+    if (etapa === 6) return form.codigoFicha.length >= 4;
+
     return true;
-  }, [etapa, form.classe, form.nome]);
+  }, [etapa, form.classe, form.codigoFicha, form.nome]);
 
   useEffect(() => {
     setTextoVisivel("");
@@ -752,6 +764,10 @@ const CriarPersonagem = () => {
       ...prev,
       [campo]: valor,
     }));
+  };
+
+  const atualizarCodigoFicha = (valor) => {
+    atualizarCampo("codigoFicha", normalizarCodigoFicha(valor));
   };
 
   const atualizarAtributo = (atributo, valor) => {
@@ -866,11 +882,34 @@ const CriarPersonagem = () => {
       return;
     }
 
+    if (form.codigoFicha.length < 4) {
+      setErro("Informe um codigo numerico da ficha com pelo menos 4 digitos.");
+      setEtapa(6);
+      return;
+    }
+
     setSalvando(true);
 
     try {
       const fichaInicial = criarFichaInicial(form);
-      const { fichaId, personagem } = await criarPersonagem(fichaInicial);
+      const codigoFicha = normalizarCodigoFicha(form.codigoFicha);
+      const fichaExistente = await buscarPersonagem(codigoFicha);
+
+      if (fichaExistente) {
+        setErro("Ja existe uma ficha com esse codigo. Escolha outro numero.");
+        setEtapa(6);
+        setSalvando(false);
+        return;
+      }
+
+      const resposta = codigoFicha
+        ? {
+            fichaId: codigoFicha,
+            personagem: await salvarPersonagem(codigoFicha, fichaInicial),
+          }
+        : await criarPersonagem(fichaInicial);
+
+      const { fichaId, personagem } = resposta;
       const personagemCriado = personagem?.nome ? personagem : fichaInicial;
 
       if (!personagem?.nome) {
@@ -1086,6 +1125,19 @@ const CriarPersonagem = () => {
                   type="file"
                   accept="image/*"
                   onChange={(event) => carregarFoto(event.target.files?.[0])}
+                />
+              </label>
+
+              <label className="codigo-ficha-cadastro">
+                <span>Codigo numerico da ficha</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={8}
+                  value={form.codigoFicha}
+                  onChange={(event) => atualizarCodigoFicha(event.target.value)}
+                  placeholder="ex: 1234"
                 />
               </label>
             </div>

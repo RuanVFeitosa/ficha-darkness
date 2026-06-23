@@ -693,6 +693,10 @@
   padding: 9px;
 }
 
+.codigo-ficha-cadastro {
+  grid-column: 2;
+}
+
 /* ===============================
    ERRO E AÇÕES
 ================================ */
@@ -832,5 +836,148 @@
   .criacao-submit,
   .criacao-secundario {
     width: 100%;
+  }
+}
+
+
+@media (max-width: 600px) {
+  .ficha-container {
+    width: 100%;
+    min-height: 100vh;
+    padding: 76px 10px 20px;
+    overflow-x: hidden;
+  }
+
+  .main-content,
+  .colunas-personagem,
+  .conteudo-inferior {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100%;
+    gap: 16px;
+  }
+
+  .atributos-coluna,
+  .sidebar-container,
+  .sidebar-conteudo,
+  .conteudo-aba {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .atributo-item {
+    display: grid;
+    grid-template-columns: 42px 1fr 82px;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .atributo-nome {
+    min-width: 0;
+    font-size: 0.68rem;
+    letter-spacing: 1px;
+    word-break: break-word;
+  }
+
+  .atributo-valor {
+    width: 82px;
+    height: 34px;
+  }
+
+  .sidebar-abas {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .aba-btn {
+    min-width: 0 !important;
+    width: 100%;
+    padding: 12px 6px;
+    font-size: 0.62rem;
+    border: 1px solid #ffffff33;
+    border-radius: 999px;
+  }
+
+  .sidebar-conteudo {
+    padding: 14px 10px;
+  }
+
+  .controle-dados-pre-rolagem {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr 1fr;
+    gap: 8px;
+  }
+
+  .controle-dados-pre-rolagem button,
+  .controle-dados-pre-rolagem span {
+    width: 100%;
+    font-size: 0.65rem;
+    text-align: center;
+  }
+
+  .controle-dados-pre-rolagem button:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .ativos-layout {
+    display: block !important;
+  }
+
+  .lista-ativos {
+    gap: 12px;
+  }
+
+  .ativo-item {
+    display: grid !important;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    min-height: 118px;
+  }
+
+  .ativo-info {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .ativo-atributo,
+  .ativo-nome {
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .ativo-nome {
+    font-size: 0.78rem;
+    line-height: 1.2;
+    letter-spacing: 1px;
+  }
+
+  .ativo-valor {
+    min-width: 48px;
+    height: 34px;
+  }
+
+  .botao-mestre-flutuante,
+  .botao-loja-flutuante,
+  .botao-upgrade-flutuante,
+  .botao-party-flutuante {
+    top: 10px;
+    bottom: auto;
+    min-height: 42px;
+    padding: 8px 10px;
+    font-size: 0.62rem;
+  }
+
+  .botao-mestre-flutuante {
+    left: 10px;
+  }
+
+  .botao-loja-flutuante {
+    right: 10px;
   }
 }

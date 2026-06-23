@@ -27,7 +27,8 @@
 }
 
 .inicio-dialogo p,
-.inicio-form label span {
+.inicio-form label span,
+.inicio-codigo-area > span {
   color: #c89b5f;
   font-size: 0.78rem;
   font-weight: 800;
@@ -48,6 +49,53 @@
 .inicio-form label {
   display: grid;
   gap: 8px;
+}
+
+.inicio-codigo-area {
+  display: grid;
+  gap: 10px;
+}
+
+.inicio-codigo-display {
+  min-height: 46px;
+  display: grid;
+  place-items: center;
+  padding: 10px 12px;
+  border: 1px solid #4a3326;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.inicio-teclado {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.inicio-teclado button {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #4a3326;
+  border-radius: 4px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.08rem;
+  font-weight: 900;
+}
+
+.inicio-teclado-confirmar {
+  border-color: #c89b5f !important;
+  background: #8b4513 !important;
+  font-size: 0.9rem !important;
+  text-transform: uppercase;
 }
 
 .inicio-form input {
@@ -111,6 +159,111 @@
 .inicio-entrar:disabled {
   cursor: wait;
   opacity: 0.65;
+}
+
+.mestre-senha-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.76);
+  backdrop-filter: blur(8px);
+}
+
+.mestre-senha-painel {
+  width: min(360px, 100%);
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid rgba(200, 155, 95, 0.58);
+  border-radius: 8px;
+  background: rgba(10, 8, 7, 0.98);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.72);
+}
+
+.mestre-senha-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mestre-senha-topo span {
+  color: #c89b5f;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.mestre-senha-topo h2 {
+  margin: 4px 0 0;
+  font-size: 1.45rem;
+}
+
+.mestre-senha-topo button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(200, 155, 95, 0.35);
+  border-radius: 4px;
+  color: #f5f0e8;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+
+.mestre-senha-display {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+}
+
+.mestre-senha-display span {
+  height: 12px;
+  border: 1px solid rgba(200, 155, 95, 0.55);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mestre-senha-display span.preenchido {
+  background: #c89b5f;
+}
+
+.mestre-senha-erro {
+  margin: 0;
+  color: #ffb4a9;
+  font-weight: 700;
+  text-align: center;
+}
+
+.mestre-teclado {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.mestre-teclado button {
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #4a3326;
+  border-radius: 4px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.mestre-teclado-confirmar {
+  border-color: #c89b5f !important;
+  background: #8b4513 !important;
+  font-size: 0.95rem !important;
+  text-transform: uppercase;
 }
 
 @media (max-width: 560px) {

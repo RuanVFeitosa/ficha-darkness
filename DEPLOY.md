@@ -6,6 +6,8 @@ Arquitetura recomendada quando o servidor precisa ficar sempre ligado:
 - Backend Node: Render, Railway, Fly.io ou outro host com processo persistente
 - Banco: Supabase
 
+Para hospedar em uma VPS Always Free da Oracle Cloud, veja tambem `ORACLE_CLOUD_DEPLOY.md`.
+
 A Vercel continua servindo o site React. O backend fica em uma URL propria e o frontend usa `REACT_APP_API_URL` para chamar essa API.
 
 ## Banco gratuito com Supabase

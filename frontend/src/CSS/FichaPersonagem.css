@@ -8159,7 +8159,401 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .ficha-party-box button {
+.ficha-party-box button {
     width: 100%;
+  }
+}
+
+/* =========================================================
+   Responsividade final da ficha
+   ========================================================= */
+
+.ficha-container {
+  width: min(100%, 2000px);
+  min-height: 100svh;
+  height: auto;
+  overflow-x: hidden;
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: clamp(360px, 31vw, 520px) minmax(0, 1fr);
+  gap: clamp(18px, 2vw, 34px);
+  align-items: start;
+}
+
+.colunas-personagem,
+.sidebar-container,
+.sidebar-conteudo,
+.conteudo-aba {
+  min-width: 0;
+}
+
+.colunas-personagem {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.9fr) minmax(220px, 1fr);
+  gap: clamp(12px, 1.5vw, 20px);
+}
+
+.sanidade-inputs {
+  min-width: 0;
+}
+
+.atributos-linha > .atributoCompleto {
+  min-width: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.atributo-dado {
+  width: 58px;
+  min-width: 58px;
+  display: grid;
+  place-items: center;
+}
+
+.atributo-dado svg {
+  width: 44px;
+  height: 44px;
+}
+
+.atributo-item {
+  min-width: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 70px;
+  align-items: center;
+  gap: 12px;
+}
+
+.atributo-nome {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+
+.atributo-controles {
+  width: 70px;
+  justify-content: flex-end;
+}
+
+.atributo-valor {
+  width: 70px;
+}
+
+.sidebar-abas {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.aba-btn {
+  flex: 0 0 auto;
+  min-width: max-content;
+  white-space: nowrap;
+}
+
+.ativos-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+}
+
+.ativo-item {
+  display: grid !important;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  min-width: 0;
+  gap: 14px;
+  padding-inline: 16px;
+}
+
+.ativo-info {
+  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.ativo-nome {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ativo-acoes {
+  flex: 0 0 auto;
+  justify-self: end;
+}
+
+.ativo-rolar-btn {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  flex: 0 0 28px;
+}
+
+.defesa-painel {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.defesa-linha-principal,
+.defesa-campos label {
+  min-width: 0;
+}
+
+.defesa-campos input {
+  min-width: 0;
+}
+
+@media (max-width: 1500px) {
+  .ficha-container {
+    padding: 16px;
+  }
+
+  .main-content {
+    grid-template-columns: minmax(330px, 470px) minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .colunas-personagem {
+    grid-template-columns: minmax(110px, 0.78fr) minmax(210px, 1fr);
+  }
+
+  .profile-wrapper,
+  .profile {
+    width: 132px;
+    height: 132px;
+  }
+
+  .identidade-personagem {
+    width: 185px;
+  }
+
+  .sanidade-completa,
+  .esperanca-section {
+    width: 146px;
+  }
+
+  .atributos-linha > .atributoCompleto {
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 12px;
+    padding: 9px 0;
+  }
+
+  .atributo-dado {
+    width: 54px;
+    min-width: 54px;
+  }
+
+  .atributo-dado svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .atributo-item {
+    grid-template-columns: minmax(0, 1fr) 62px;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .atributo-nome {
+    font-size: 0.82rem;
+    letter-spacing: 1.4px;
+  }
+
+  .atributo-valor {
+    width: 62px;
+  }
+
+  .atributo-controles {
+    width: 62px;
+  }
+
+  .sidebar-conteudo {
+    padding: 16px;
+  }
+
+  .ativos-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 310px);
+    gap: 14px;
+  }
+
+  .defesa-painel {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+
+  .colunas-personagem {
+    grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .profile-container {
+    align-items: stretch;
+  }
+
+  .sanidade-inputs {
+    justify-content: center;
+  }
+
+  .atributos-linha {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(130px, 1fr));
+    gap: 10px;
+  }
+
+  .atributos-linha > .atributoCompleto {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    padding: 0;
+  }
+
+  .atributo-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 62px;
+    justify-items: stretch;
+    text-align: left;
+  }
+}
+
+@media (max-width: 1100px) {
+  .colunas-personagem {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-container {
+    align-items: center;
+  }
+
+  .sanidade-inputs {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    justify-items: center;
+    gap: 16px;
+  }
+
+  .identidade-personagem {
+    width: min(100%, 320px);
+  }
+
+  .atributos-linha {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+
+  .ativos-layout {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    align-items: stretch;
+  }
+
+  .lista-ativos {
+    width: 100% !important;
+  }
+
+  .defesa-linha-principal {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+  }
+
+  .defesa-valores {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .sidebar-abas {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x proximity;
+  }
+
+  .sidebar-abas .aba-btn {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: max-content !important;
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 760px) {
+  .ficha-container {
+    padding: 64px 12px 16px !important;
+  }
+
+  .main-content,
+  .colunas-personagem {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100%;
+  }
+
+  .sanidade-inputs {
+    grid-template-columns: 1fr;
+  }
+
+  .atributos-linha {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-abas {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+  }
+
+  .sidebar-abas .aba-btn {
+    width: auto !important;
+    min-width: max-content !important;
+    padding-inline: 12px !important;
+    font-size: 0.64rem !important;
+  }
+
+  .ativo-item {
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+  }
+
+  .defesa-linha-principal {
+    grid-template-columns: 1fr;
+  }
+
+  .defesa-campos label,
+  .defesa-valores {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 430px) {
+  .ficha-container {
+    padding-inline: 8px !important;
+  }
+
+  .sidebar-conteudo {
+    padding: 10px;
+  }
+
+  .ativo-item {
+    grid-template-columns: 36px minmax(0, 1fr);
+  }
+
+  .ativo-acoes {
+    grid-column: 2;
+    justify-self: start;
+    justify-content: flex-start;
+  }
+
+  .defesa-membros {
+    grid-template-columns: 1fr;
   }
 }
