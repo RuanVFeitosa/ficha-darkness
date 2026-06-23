@@ -7,7 +7,8 @@ const HOST = process.env.HOST || "0.0.0.0";
 const DATA_DIR = process.env.DATA_DIR
   ? path.resolve(process.env.DATA_DIR)
   : path.join(__dirname, "data");
-const BUILD_DIR = path.join(__dirname, "..", "build");
+const BUILD_DIR = path.join(__dirname, "..", "frontend", "build");
+const SERVE_FRONTEND = process.env.SERVE_FRONTEND !== "false";
 const DEFAULT_FICHA_ID = "principal";
 const SHOP_CATALOG_FILE = path.join(DATA_DIR, "loja-catalogo.json");
 const SUPABASE_URL = process.env.SUPABASE_URL?.trim();
@@ -495,6 +496,14 @@ const handleRequest = async (req, res) => {
     }
 
     if (!url.pathname.startsWith("/api/") && req.method === "GET") {
+      if (!SERVE_FRONTEND) {
+        return sendJson(res, 200, {
+          ok: true,
+          service: "ficha-darkness-backend",
+          health: "/api/health",
+        });
+      }
+
       const requestedPath = url.pathname === "/" ? "/index.html" : url.pathname;
       const filePath = path.normalize(path.join(BUILD_DIR, requestedPath));
       const isInsideBuild = filePath.startsWith(BUILD_DIR);

@@ -1,12 +1,16 @@
 services:
   - type: web
-    name: ficha-darkness
+    name: ficha-darkness-backend
     runtime: node
-    buildCommand: npm install && npm run build
+    buildCommand: npm install
     startCommand: npm run backend
     envVars:
       - key: NODE_VERSION
         value: 22
+      - key: SERVE_FRONTEND
+        value: false
+      - key: CORS_ORIGIN
+        value: "*"
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY

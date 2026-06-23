@@ -11,10 +11,10 @@ const run = (command, args, options = {}) =>
 
 const runNpmStart = () => {
   if (isWindows) {
-    return run("cmd.exe", ["/d", "/s", "/c", "npm start"]);
+    return run("cmd.exe", ["/d", "/s", "/c", "npm run frontend"]);
   }
 
-  return run("npm", ["start"]);
+  return run("npm", ["run", "frontend"]);
 };
 
 const processes = [

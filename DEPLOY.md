@@ -1,6 +1,6 @@
 # Deploy da Ficha Darkness
 
-Este projeto pode subir na Render como um unico Web Service Node ou na Vercel com React estatico e funcoes em `/api`.
+Este projeto pode subir com backend e frontend separados. O backend roda como Web Service Node e o frontend pode consumir a API publicada.
 
 ## Banco gratuito com Supabase
 
@@ -23,7 +23,7 @@ create table if not exists public.personagens (
 
 Importante: a `service_role` fica apenas no backend. Nunca coloque essa chave no frontend.
 
-## Render
+## Render: backend
 
 1. Suba a branch `main` para o GitHub.
 2. Entre em https://dashboard.render.com.
@@ -31,13 +31,15 @@ Importante: a `service_role` fica apenas no backend. Nunca coloque essa chave no
 4. Selecione o repositorio `RuanVFeitosa/ficha-darkness`.
 5. Use:
 
-- Build command: `npm install && npm run build`
+- Build command: `npm install`
 - Start command: `npm run backend`
 - Node: `22`
 
 6. Configure as variaveis de ambiente:
 
 ```txt
+SERVE_FRONTEND = false
+CORS_ORIGIN = *
 SUPABASE_URL = sua Project URL do Supabase
 SUPABASE_SERVICE_ROLE_KEY = sua service_role key do Supabase
 SUPABASE_TABLE = personagens
@@ -65,9 +67,9 @@ http://localhost:3000
 
 Para testar localmente usando Supabase, defina `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` no terminal antes de rodar `npm run backend`.
 
-## Vercel
+## Vercel: frontend
 
-Na Vercel, o React e publicado como site estatico e o backend roda como funcoes em `/api`.
+Na Vercel, publique o React como site estatico e aponte o frontend para a URL do backend.
 
 1. Suba a branch `main` para o GitHub.
 2. Entre em https://vercel.com e importe o repositorio.
@@ -77,21 +79,19 @@ Na Vercel, o React e publicado como site estatico e o backend roda como funcoes 
 Framework Preset: Create React App
 Install Command: npm install
 Build Command: npm run build
-Output Directory: build
+Output Directory: frontend/build
 ```
 
-4. Configure as variaveis de ambiente em `Settings > Environment Variables`:
+4. Configure a variavel de ambiente em `Settings > Environment Variables`:
 
 ```txt
-SUPABASE_URL = sua Project URL do Supabase
-SUPABASE_SERVICE_ROLE_KEY = sua service_role key do Supabase
-SUPABASE_TABLE = personagens
+REACT_APP_API_URL = https://seu-backend.onrender.com/api
 ```
 
 5. Depois do deploy, teste:
 
 ```txt
-https://seu-projeto.vercel.app/api/health
+https://seu-backend.onrender.com/api/health
 ```
 
-O retorno esperado deve mostrar `ok: true` e `storage: "supabase"`. Se aparecer `storage: "json"`, as variaveis do Supabase nao foram configuradas no ambiente do deploy.
+O retorno esperado deve mostrar `ok: true` e `storage: "supabase"`. Se aparecer `storage: "json"`, as variaveis do Supabase nao foram configuradas no ambiente do backend.
