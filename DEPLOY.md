@@ -1,6 +1,6 @@
 # Deploy da Ficha Darkness
 
-Este projeto pode subir com backend e frontend separados. O backend roda como Web Service Node e o frontend pode consumir a API publicada.
+Este projeto esta configurado para deploy na Vercel com frontend estatico e backend em Functions dentro de `/api`.
 
 ## Banco gratuito com Supabase
 
@@ -23,34 +23,6 @@ create table if not exists public.personagens (
 
 Importante: a `service_role` fica apenas no backend. Nunca coloque essa chave no frontend.
 
-## Render: backend
-
-1. Suba a branch `main` para o GitHub.
-2. Entre em https://dashboard.render.com.
-3. Clique em `New` e escolha `Blueprint`, ou crie um `Web Service`.
-4. Selecione o repositorio `RuanVFeitosa/ficha-darkness`.
-5. Use:
-
-- Build command: `npm install`
-- Start command: `npm run backend`
-- Node: `22`
-
-6. Configure as variaveis de ambiente:
-
-```txt
-SERVE_FRONTEND = false
-CORS_ORIGIN = *
-SUPABASE_URL = sua Project URL do Supabase
-SUPABASE_SERVICE_ROLE_KEY = sua service_role key do Supabase
-SUPABASE_TABLE = personagens
-```
-
-7. Aguarde o build e abra a URL `onrender.com` gerada.
-
-## Render gratuito
-
-Com Supabase, voce nao precisa de disco persistente na Render. Pode usar um Web Service Free para testar. O serviço gratuito pode dormir depois de ficar sem acesso, entao o primeiro carregamento pode demorar um pouco.
-
 ## Teste local antes do deploy
 
 Sem Supabase configurado, o backend usa JSON local:
@@ -67,9 +39,9 @@ http://localhost:3000
 
 Para testar localmente usando Supabase, defina `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` no terminal antes de rodar `npm run backend`.
 
-## Vercel: frontend
+## Vercel
 
-Na Vercel, publique o React como site estatico e aponte o frontend para a URL do backend.
+Na Vercel, o React e publicado como site estatico e os arquivos em `api/` viram Functions. O frontend usa `/api` automaticamente em producao, entao nao precisa configurar `REACT_APP_API_URL` quando tudo esta no mesmo projeto Vercel.
 
 1. Suba a branch `main` para o GitHub.
 2. Entre em https://vercel.com e importe o repositorio.
@@ -82,16 +54,32 @@ Build Command: npm run build
 Output Directory: frontend/build
 ```
 
-4. Configure a variavel de ambiente em `Settings > Environment Variables`:
+4. Configure as variaveis de ambiente em `Settings > Environment Variables`:
 
 ```txt
-REACT_APP_API_URL = https://seu-backend.onrender.com/api
+SUPABASE_URL = sua Project URL do Supabase
+SUPABASE_SERVICE_ROLE_KEY = sua service_role key do Supabase
+SUPABASE_TABLE = personagens
 ```
 
-5. Depois do deploy, teste:
+5. Depois do deploy, teste o backend:
 
 ```txt
-https://seu-backend.onrender.com/api/health
+https://seu-projeto.vercel.app/api/health
 ```
 
-O retorno esperado deve mostrar `ok: true` e `storage: "supabase"`. Se aparecer `storage: "json"`, as variaveis do Supabase nao foram configuradas no ambiente do backend.
+O retorno esperado deve mostrar `ok: true` e `storage: "supabase"`. Se aparecer `storage: "json"`, as variaveis do Supabase nao foram configuradas no ambiente da Vercel.
+
+## Backend na Vercel
+
+As rotas do backend ficam disponiveis sob `/api`:
+
+```txt
+/api/health
+/api/personagens
+/api/personagens/:id
+/api/personagem
+/api/loja/catalogo
+```
+
+Os arquivos em `api/` apenas encaminham as requisicoes para `backend/server.js`, mantendo a logica do backend separada do frontend.
