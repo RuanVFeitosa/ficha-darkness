@@ -48,7 +48,7 @@ const UpgradeNivel = () => {
     passivos: 10,
     atributos: 10,
   };
-  
+
   const custos =
     TABELA_EVOLUCAO.find((linha) => linha.nivel === nivelAtual) ||
     obterCustosNivel(nivelAtual);
@@ -251,9 +251,58 @@ const UpgradeNivel = () => {
     }
   };
 
-  const opcoesPassivas = Object.keys(personagem.habilidadesPassivas || {}).map(
-    (chave) => ({ chave, nome: chave }),
-  );
+  const NOMES_PASSIVAS = {
+  enganacao: "Enganação",
+  raciocinioLogico: "Raciocínio Lógico",
+  investigacao: "Investigação",
+  instinto: "Instinto",
+  sensibilidade: "Sensibilidade",
+  instintoSobrevivencia: "Instinto de Sobrevivência",
+  coragem: "Coragem",
+  diplomacia: "Diplomacia",
+  disciplina: "Disciplina",
+  autocontrole: "Autocontrole",
+  intimidacaoPassiva: "Intimidação Passiva",
+  presenca: "Presença",
+  memoria: "Memória",
+  empatia: "Empatia",
+  lealdade: "Lealdade",
+  fe: "Fé",
+
+  vitalidade: "Vitalidade",
+  folego: "Fôlego",
+  equilibrio: "Equilíbrio",
+  velocidade: "Velocidade",
+  precisao: "Precisão",
+  lutar: "Lutar",
+  resistenciaFisica: "Resistência Física",
+  primeirosSocorros: "Primeiros Socorros",
+  furtividade: "Furtividade",
+
+  conhecimentoMedico: "Conhecimento Médico",
+  conhecimentoTecnico: "Conhecimento Técnico",
+  conhecimentoHistorico: "Conhecimento Histórico",
+  conhecimentoOculto: "Conhecimento Oculto",
+  tecnologia: "Tecnologia",
+  tatica: "Tática",
+
+  percepcaoAuditiva: "Percepção Auditiva",
+  percepcaoVisual: "Percepção Visual",
+  percepcaoOlfativa: "Percepção Olfativa",
+
+  crime: "Crime",
+  manipulacao: "Manipulação",
+  intimidacao: "Intimidação",
+  seducao: "Sedução",
+  resistenciaMental: "Resistência Mental",
+};
+
+const opcoesPassivas = Object.keys(personagem.habilidadesPassivas || {}).map(
+  (chave) => ({
+    chave,
+    nome: NOMES_PASSIVAS[chave] || chave,
+  }),
+);
 
   return (
     <main className="upgrade-page">
@@ -338,12 +387,11 @@ const UpgradeNivel = () => {
           <div className="upgrade-lista">
             {ATRIBUTOS_UPGRADE.map((atributo) => (
               <label key={atributo.chave}>
-                <span>
-                  {atributo.nome}
-                  <small>
-                    Atual: {personagem.atributos?.[atributo.chave] || 0}
-                  </small>
-                </span>
+                <span className="upgrade-item-nome">{atributo.nome}</span>
+
+                <small className="upgrade-item-atual">
+                  Atual: {personagem.atributos?.[atributo.chave] || 0}
+                </small>
                 <input
                   type="number"
                   min="0"
@@ -361,13 +409,11 @@ const UpgradeNivel = () => {
           <div className="upgrade-lista">
             {opcoesPassivas.map((passiva) => (
               <label key={passiva.chave}>
-                <span>
-                  {passiva.nome}
-                  <small>
-                    Atual:{" "}
-                    {personagem.habilidadesPassivas?.[passiva.chave] || 0}
-                  </small>
-                </span>
+                <span className="upgrade-item-nome">{passiva.nome}</span>
+
+                <small className="upgrade-item-atual">
+                  Atual: {personagem.habilidadesPassivas?.[passiva.chave] || 0}
+                </small>
                 <input
                   type="number"
                   min="0"
@@ -386,8 +432,8 @@ const UpgradeNivel = () => {
             <h2>Habilidades Absolutas</h2>
             <p>
               Na arvore, aptidoes custam 10 pontos e habilidades de
-              especialidade custam 20 pontos.
-              A arvore usa o saldo de pontos disponiveis desta ficha:{" "}
+              especialidade custam 20 pontos. A arvore usa o saldo de pontos
+              disponiveis desta ficha:{" "}
               <strong>{pontosEvolucaoDisponiveis} pontos</strong>.
             </p>
             <button type="button" onClick={abrirArvore}>

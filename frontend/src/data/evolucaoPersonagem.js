@@ -17,9 +17,9 @@ export const obterCustosNivel = (nivel) => {
 };
 
 export const ATRIBUTOS_UPGRADE = [
-  { chave: "forca", nome: "Forca" },
+  { chave: "forca", nome: "Força" },
   { chave: "fonitude", nome: "Fortitude" },
-  { chave: "inteligencia", nome: "Inteligencia" },
+  { chave: "inteligencia", nome: "Inteligência" },
   { chave: "reflexos", nome: "Reflexos" },
   { chave: "vontade", nome: "Vontade" },
 ];

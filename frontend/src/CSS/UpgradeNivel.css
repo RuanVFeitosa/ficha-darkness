@@ -23,8 +23,8 @@
   min-height: 310px;
 
   display: grid;
-  align-content: end;
   gap: 12px;
+  justify-content: center;
 
   padding: 82px 34px 32px;
 
@@ -352,8 +352,27 @@
 .upgrade-lista {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  justify-content: center;
+  align-items: center;
 
   gap: 14px;
+}
+
+.upgrade-lista label {
+  grid-template-rows: auto auto auto;
+}
+
+.upgrade-item-nome {
+  display: block;
+  text-align: center;
+  word-break: break-word;
+}
+
+.upgrade-item-atual {
+  display: block;
+  text-align: center;
+  color: #bdbdbd;
+  font-size: 0.75rem;
 }
 
 .upgrade-lista label,
