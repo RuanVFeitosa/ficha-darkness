@@ -57,4 +57,4 @@ http://localhost:3000/?ficha=mestre
 
 ## Deploy
 
-Veja [DEPLOY.md](DEPLOY.md) para Vercel e Supabase.
+Veja [DEPLOY.md](DEPLOY.md) para usar frontend na Vercel e backend sempre ligado em um host Node.

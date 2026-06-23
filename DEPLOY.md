@@ -1,6 +1,12 @@
 # Deploy da Ficha Darkness
 
-Este projeto esta configurado para deploy na Vercel com frontend estatico e backend em Functions dentro de `/api`.
+Arquitetura recomendada quando o servidor precisa ficar sempre ligado:
+
+- Frontend: Vercel
+- Backend Node: Render, Railway, Fly.io ou outro host com processo persistente
+- Banco: Supabase
+
+A Vercel continua servindo o site React. O backend fica em uma URL propria e o frontend usa `REACT_APP_API_URL` para chamar essa API.
 
 ## Banco gratuito com Supabase
 
@@ -23,7 +29,62 @@ create table if not exists public.personagens (
 
 Importante: a `service_role` fica apenas no backend. Nunca coloque essa chave no frontend.
 
-## Teste local antes do deploy
+## Backend sempre ligado
+
+Use o `render.yaml` deste repositorio para criar o backend na Render.
+
+Configuracao do Web Service:
+
+```txt
+Build Command: npm install
+Start Command: npm run backend
+Node: 22
+```
+
+Variaveis de ambiente do backend:
+
+```txt
+SERVE_FRONTEND = false
+CORS_ORIGIN = https://seu-projeto.vercel.app
+SUPABASE_URL = sua Project URL do Supabase
+SUPABASE_SERVICE_ROLE_KEY = sua service_role key do Supabase
+SUPABASE_TABLE = personagens
+```
+
+Durante testes, `CORS_ORIGIN = *` funciona. Para producao, prefira a URL exata da Vercel.
+
+Depois do deploy, teste:
+
+```txt
+https://seu-backend.onrender.com/api/health
+```
+
+O retorno esperado deve mostrar `ok: true` e `storage: "supabase"`.
+
+Observacao: planos gratuitos de alguns hosts podem dormir. Para servidor realmente sempre ligado, use um plano pago ou um provedor que garanta processo persistente no plano escolhido.
+
+## Frontend na Vercel
+
+Na Vercel, publique apenas o React estatico.
+
+Configuracoes:
+
+```txt
+Framework Preset: Create React App
+Install Command: npm install
+Build Command: npm run build
+Output Directory: frontend/build
+```
+
+Variavel de ambiente do frontend:
+
+```txt
+REACT_APP_API_URL = https://seu-backend.onrender.com/api
+```
+
+Depois de salvar essa variavel, faca um novo deploy do frontend na Vercel. O React embute variaveis `REACT_APP_*` no momento do build.
+
+## Teste local
 
 Sem Supabase configurado, o backend usa JSON local:
 
@@ -38,48 +99,3 @@ http://localhost:3000
 ```
 
 Para testar localmente usando Supabase, defina `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` no terminal antes de rodar `npm run backend`.
-
-## Vercel
-
-Na Vercel, o React e publicado como site estatico e os arquivos em `api/` viram Functions. O frontend usa `/api` automaticamente em producao, entao nao precisa configurar `REACT_APP_API_URL` quando tudo esta no mesmo projeto Vercel.
-
-1. Suba a branch `main` para o GitHub.
-2. Entre em https://vercel.com e importe o repositorio.
-3. Use estas configuracoes:
-
-```txt
-Framework Preset: Create React App
-Install Command: npm install
-Build Command: npm run build
-Output Directory: frontend/build
-```
-
-4. Configure as variaveis de ambiente em `Settings > Environment Variables`:
-
-```txt
-SUPABASE_URL = sua Project URL do Supabase
-SUPABASE_SERVICE_ROLE_KEY = sua service_role key do Supabase
-SUPABASE_TABLE = personagens
-```
-
-5. Depois do deploy, teste o backend:
-
-```txt
-https://seu-projeto.vercel.app/api/health
-```
-
-O retorno esperado deve mostrar `ok: true` e `storage: "supabase"`. Se aparecer `storage: "json"`, as variaveis do Supabase nao foram configuradas no ambiente da Vercel.
-
-## Backend na Vercel
-
-As rotas do backend ficam disponiveis sob `/api`:
-
-```txt
-/api/health
-/api/personagens
-/api/personagens/:id
-/api/personagem
-/api/loja/catalogo
-```
-
-Os arquivos em `api/` apenas encaminham as requisicoes para `backend/server.js`, mantendo a logica do backend separada do frontend.
