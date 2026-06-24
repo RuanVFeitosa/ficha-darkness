@@ -9,7 +9,11 @@ import profile from "../assets/IMG/OAbsoluto.png";
 import corpoHumano from "../assets/IMG/corpo_humano.png";
 import { descricoesHabilidades } from "../components/descricoesHabilidades";
 import ModalDescricao from "../components/modal/modalDescricao";
-import { buscarPersonagem, salvarPersonagem } from "../services/personagemApi";
+import {
+  buscarArvoresHabilidades,
+  buscarPersonagem,
+  salvarPersonagem,
+} from "../services/personagemApi";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
 import Icon from "@mdi/react";
 import { mdiAccount } from "@mdi/js";
@@ -27,6 +31,7 @@ import {
 import {
   listarHabilidadesSelecionadas,
   obterArvoreClasse,
+  salvarArvoresCustom,
 } from "../data/Classes/arvoresHabilidades";
 
 // Chave para o localStorage
@@ -470,9 +475,22 @@ const FichaPersonagem = () => {
       try {
         salvarLocalSeguro(ULTIMA_FICHA_KEY, fichaId);
 
-        const personagemApi = await buscarPersonagem(fichaId);
+        const [personagemApi, arvoresApi] = await Promise.all([
+          buscarPersonagem(fichaId),
+          buscarArvoresHabilidades().catch((error) => {
+            console.warn(
+              "Nao foi possivel carregar arvores de habilidades.",
+              error,
+            );
+            return null;
+          }),
+        ]);
 
         if (!ativo) return;
+
+        if (arvoresApi && Object.keys(arvoresApi).length > 0) {
+          salvarArvoresCustom(arvoresApi);
+        }
 
         if (personagemApi) {
           const classeAtual =

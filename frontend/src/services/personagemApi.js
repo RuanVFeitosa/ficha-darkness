@@ -76,3 +76,17 @@ export const salvarCatalogoLoja = async (catalogo) => {
 
   return data.catalogo || [];
 };
+
+export const buscarArvoresHabilidades = async () => {
+  const data = await request("/arvores-habilidades");
+  return data.arvores || {};
+};
+
+export const salvarArvoresHabilidades = async (arvores) => {
+  const data = await request("/arvores-habilidades", {
+    method: "PUT",
+    body: JSON.stringify({ arvores }),
+  });
+
+  return data.arvores || {};
+};

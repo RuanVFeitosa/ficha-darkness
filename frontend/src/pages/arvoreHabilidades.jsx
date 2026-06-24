@@ -2,9 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiArrowLeft } from "@mdi/js";
 import "../CSS/ArvoreHabilidades.css";
-import { buscarPersonagem, salvarPersonagem } from "../services/personagemApi";
+import {
+  buscarArvoresHabilidades,
+  buscarPersonagem,
+  salvarPersonagem,
+} from "../services/personagemApi";
 import { estadoInicial } from "./fichaPersonagem";
-import { obterArvoreClasse } from "../data/Classes/arvoresHabilidades";
+import {
+  obterArvoreClasse,
+  salvarArvoresCustom,
+} from "../data/Classes/arvoresHabilidades";
 
 const STORAGE_KEY = "fichaRPG_personagem";
 const DEFAULT_FICHA_ID = "principal";
@@ -122,10 +129,23 @@ const ArvoreHabilidades = () => {
       }
 
       try {
-        const personagemApi = await buscarPersonagem(fichaId);
+        const [personagemApi, arvoresApi] = await Promise.all([
+          buscarPersonagem(fichaId),
+          buscarArvoresHabilidades().catch((error) => {
+            console.warn(
+              "Nao foi possivel carregar arvores de habilidades.",
+              error,
+            );
+            return null;
+          }),
+        ]);
 
         if (personagemApi) {
           personagemCarregado = personagemApi;
+        }
+
+        if (arvoresApi && Object.keys(arvoresApi).length > 0) {
+          salvarArvoresCustom(arvoresApi);
         }
       } catch (error) {
         console.warn("Backend indisponivel. Arvore usando localStorage.");

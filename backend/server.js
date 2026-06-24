@@ -11,6 +11,7 @@ const BUILD_DIR = path.join(__dirname, "..", "frontend", "build");
 const SERVE_FRONTEND = process.env.SERVE_FRONTEND !== "false";
 const DEFAULT_FICHA_ID = "principal";
 const SHOP_CATALOG_FILE = path.join(DATA_DIR, "loja-catalogo.json");
+const SKILL_TREES_FILE = path.join(DATA_DIR, "arvores-habilidades.json");
 const SUPABASE_URL = process.env.SUPABASE_URL?.trim();
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 const SUPABASE_TABLE = (process.env.SUPABASE_TABLE || "personagens").trim();
@@ -388,6 +389,37 @@ const writeShopCatalog = async (catalogo) => {
   return normalized;
 };
 
+const normalizeSkillTrees = (arvores) => {
+  if (!arvores || typeof arvores !== "object" || Array.isArray(arvores)) {
+    throw new Error("Arvores de habilidades invalidas");
+  }
+
+  return arvores;
+};
+
+const readSkillTrees = async () => {
+  try {
+    const raw = await fs.readFile(SKILL_TREES_FILE, "utf8");
+    return normalizeSkillTrees(JSON.parse(raw));
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return {};
+    }
+
+    throw error;
+  }
+};
+
+const writeSkillTrees = async (arvores) => {
+  const normalized = normalizeSkillTrees(arvores);
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.writeFile(
+    SKILL_TREES_FILE,
+    `${JSON.stringify(normalized, null, 2)}\n`,
+  );
+  return normalized;
+};
+
 const createUniqueFichaId = async (nome) => {
   const baseId = sanitizeFichaId(nome);
   let fichaId = baseId;
@@ -427,6 +459,17 @@ const handleRequest = async (req, res) => {
       const body = await readJsonBody(req);
       const catalogo = await writeShopCatalog(body.catalogo);
       return sendJson(res, 200, { catalogo });
+    }
+
+    if (url.pathname === "/api/arvores-habilidades" && req.method === "GET") {
+      const arvores = await readSkillTrees();
+      return sendJson(res, 200, { arvores });
+    }
+
+    if (url.pathname === "/api/arvores-habilidades" && req.method === "PUT") {
+      const body = await readJsonBody(req);
+      const arvores = await writeSkillTrees(body.arvores);
+      return sendJson(res, 200, { arvores });
     }
 
     if (url.pathname === "/api/personagens" && req.method === "GET") {

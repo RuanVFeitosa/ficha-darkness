@@ -17,15 +17,18 @@ import {
 import "../CSS/DashboardMestre.css";
 import {
   apagarPersonagem,
+  buscarArvoresHabilidades,
   buscarCatalogoLoja,
   criarPersonagem,
   listarPersonagens,
+  salvarArvoresHabilidades,
   salvarCatalogoLoja,
   buscarPersonagem,
   salvarPersonagem,
 } from "../services/personagemApi";
 import { estadoInicial } from "./fichaPersonagem";
 import {
+  carregarArvoresCustom,
   obterTodasArvores,
   salvarArvoresCustom,
 } from "../data/Classes/arvoresHabilidades";
@@ -311,9 +314,10 @@ const DashboardMestre = () => {
     setMensagem("");
 
     try {
-      const [fichasApi, catalogoApi] = await Promise.all([
+      const [fichasApi, catalogoApi, arvoresApi] = await Promise.all([
         listarPersonagens(),
         buscarCatalogoLoja(),
+        buscarArvoresHabilidades(),
       ]);
 
       const novo = {
@@ -355,8 +359,24 @@ const DashboardMestre = () => {
           ? catalogoApi.map(normalizarItemLoja)
           : DEFAULT_CATALOGO_LOJA.map(normalizarItemLoja);
 
+      const arvoresLocais = carregarArvoresCustom();
+      const arvoresCompartilhadas =
+        Object.keys(arvoresApi || {}).length > 0 ? arvoresApi : arvoresLocais;
+
       setFichas(fichasNormalizadas);
       setCatalogo(catalogoNormalizado);
+      salvarArvoresCustom(arvoresCompartilhadas);
+      setArvoresEditor(obterTodasArvores());
+
+      if (
+        Object.keys(arvoresApi || {}).length === 0 &&
+        Object.keys(arvoresLocais).length > 0
+      ) {
+        salvarArvoresHabilidades(arvoresLocais).catch((error) => {
+          console.warn("Nao foi possivel publicar arvores locais.", error);
+        });
+      }
+
       localStorage.setItem(
         CATALOGO_STORAGE_KEY,
         JSON.stringify(catalogoNormalizado),
@@ -369,6 +389,7 @@ const DashboardMestre = () => {
     } catch (error) {
       const fichasLocais = listarFichasLocais();
       const catalogoLocal = localStorage.getItem(CATALOGO_STORAGE_KEY);
+      setArvoresEditor(obterTodasArvores());
 
       if (catalogoLocal) {
         try {
@@ -418,10 +439,6 @@ const DashboardMestre = () => {
   useEffect(() => {
     carregarTudo();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    setArvoresEditor(obterTodasArvores());
   }, []);
 
   useEffect(() => {
@@ -548,6 +565,10 @@ const DashboardMestre = () => {
   const salvarArvoresEditor = (novasArvores) => {
     setArvoresEditor(novasArvores);
     salvarArvoresCustom(novasArvores);
+    salvarArvoresHabilidades(novasArvores).catch((error) => {
+      console.warn("Backend indisponivel. Arvore salva localmente.", error);
+      setMensagem("Arvore salva localmente. Backend indisponivel.");
+    });
     setMensagem("Árvore de habilidades salva.");
   };
 
@@ -987,13 +1008,9 @@ const DashboardMestre = () => {
     salvarListaInimigos(novaLista);
   };
 
-  const salvarFichaSelecionada = async (
-    personagemAtualizado = personagem,
-    opcoes = {},
-  ) => {
+  const salvarFichaSelecionada = async (personagemAtualizado = personagem) => {
     if (!fichaSelecionada || !personagemAtualizado) return;
 
-    const { preservarRecursosJogador = true } = opcoes;
     let fichaMaisRecente = {};
 
     try {
@@ -1013,16 +1030,6 @@ const DashboardMestre = () => {
       ...fichaMaisRecente,
       ...personagemAtualizado,
 
-      // CAMPOS DO JOGADOR — NÃO SOBRESCREVER PELO DASHBOARD
-      membros: fichaMaisRecente.membros || personagemAtualizado.membros,
-      sanidade: preservarRecursosJogador
-        ? fichaMaisRecente.sanidade || personagemAtualizado.sanidade
-        : personagemAtualizado.sanidade,
-      esperanca: preservarRecursosJogador
-        ? fichaMaisRecente.esperanca || personagemAtualizado.esperanca
-        : personagemAtualizado.esperanca,
-      fotoPerfil:
-        fichaMaisRecente.fotoPerfil || personagemAtualizado.fotoPerfil,
     };
 
     salvarFichaLocal(fichaSelecionada, personagemFinal);
@@ -1195,9 +1202,80 @@ const DashboardMestre = () => {
     };
 
     setPersonagem(atualizado);
-    salvarFichaSelecionada(atualizado, { preservarRecursosJogador: false });
+    salvarFichaSelecionada(atualizado);
     setMensagem(
       `Jogador subiu para NV${proximoNivel}, recebeu ${pontosGanhos} pontos, +${recursosGanhos.sanidade} SAN e +${recursosGanhos.esperanca} PE.`,
+    );
+  };
+
+  const diminuirNivelJogador = () => {
+    const nivelAtual = Math.max(1, parseInt(personagem.nivel, 10) || 1);
+    const proximoNivel = Math.max(1, nivelAtual - 1);
+    const pontosRemovidos = obterCustosNivel(nivelAtual).acumulado;
+    const recursosRemovidos = calcularGanhoRecursosNivel(personagem);
+
+    if (nivelAtual <= 1) {
+      setMensagem("Este personagem ja esta no NV1.");
+      return;
+    }
+
+    const sanidadeMaxAtual = parseInt(personagem.sanidade?.max, 10) || 0;
+    const esperancaMaxAtual = parseInt(personagem.esperanca?.max, 10) || 0;
+    const sanidadeNovoMax = Math.max(
+      0,
+      sanidadeMaxAtual - recursosRemovidos.sanidade,
+    );
+    const esperancaNovoMax = Math.max(
+      0,
+      esperancaMaxAtual - recursosRemovidos.esperanca,
+    );
+
+    const atualizado = {
+      ...personagem,
+      nivel: proximoNivel,
+      pontosEvolucao: {
+        ...(personagem.pontosEvolucao || {}),
+        disponiveis: Math.max(
+          0,
+          (parseInt(personagem.pontosEvolucao?.disponiveis, 10) || 0) -
+            pontosRemovidos,
+        ),
+        acumulados: Math.max(
+          0,
+          (parseInt(personagem.pontosEvolucao?.acumulados, 10) || 0) -
+            pontosRemovidos,
+        ),
+      },
+      sanidade: {
+        ...(personagem.sanidade || {}),
+        atual: Math.min(
+          sanidadeNovoMax,
+          Math.max(
+            0,
+            (parseInt(personagem.sanidade?.atual, 10) || 0) -
+              recursosRemovidos.sanidade,
+          ),
+        ),
+        max: sanidadeNovoMax,
+      },
+      esperanca: {
+        ...(personagem.esperanca || {}),
+        atual: Math.min(
+          esperancaNovoMax,
+          Math.max(
+            0,
+            (parseInt(personagem.esperanca?.atual, 10) || 0) -
+              recursosRemovidos.esperanca,
+          ),
+        ),
+        max: esperancaNovoMax,
+      },
+    };
+
+    setPersonagem(atualizado);
+    salvarFichaSelecionada(atualizado);
+    setMensagem(
+      `Jogador voltou para NV${proximoNivel}, perdeu ${pontosRemovidos} pontos, -${recursosRemovidos.sanidade} SAN e -${recursosRemovidos.esperanca} PE.`,
     );
   };
 
@@ -1952,7 +2030,10 @@ const DashboardMestre = () => {
                         </button>
                       </div>
 
+                      <button onClick={diminuirNivelJogador}>Diminuir NV</button>
+
                       <button onClick={subirNivelJogador}>Subir NV</button>
+
                     </div>
 
                     <button

@@ -881,16 +881,30 @@ export const listarHabilidadesSelecionadas = (personagem) => {
 };
 const ARVORES_CUSTOM_KEY = "arvoresHabilidades_custom";
 
+let arvoresCustomCache = null;
+
 export const carregarArvoresCustom = () => {
+  if (arvoresCustomCache) {
+    return arvoresCustomCache;
+  }
+
   try {
-    return JSON.parse(localStorage.getItem(ARVORES_CUSTOM_KEY)) || {};
+    arvoresCustomCache = JSON.parse(localStorage.getItem(ARVORES_CUSTOM_KEY)) || {};
+    return arvoresCustomCache;
   } catch {
+    arvoresCustomCache = {};
     return {};
   }
 };
 
 export const salvarArvoresCustom = (arvores) => {
-  localStorage.setItem(ARVORES_CUSTOM_KEY, JSON.stringify(arvores));
+  arvoresCustomCache = arvores || {};
+
+  try {
+    localStorage.setItem(ARVORES_CUSTOM_KEY, JSON.stringify(arvoresCustomCache));
+  } catch (error) {
+    console.warn("Nao foi possivel salvar arvores customizadas localmente.", error);
+  }
 };
 
 export const obterTodasArvores = () => ({
