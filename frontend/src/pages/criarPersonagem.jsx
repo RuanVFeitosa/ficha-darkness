@@ -8,6 +8,7 @@ import {
 } from "../services/personagemApi";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
 import { estadoInicial } from "./fichaPersonagem";
+import { calcularModificador } from "../data/evolucaoPersonagem";
 import "../CSS/CriarPersonagem.css";
 
 const STORAGE_KEY = "fichaRPG_personagem";
@@ -40,34 +41,34 @@ const classesPersonagem = [
     nome: "Aniquilidador",
     imagem: "/classes/aniquilador.png",
     sanidadeBase: 30,
-    sanidadeNivel: "7 SAN (+mod Fort)",
+    sanidadeNivel: "5 SAN (+mod Fort)",
     esperancaBase: 10,
-    esperancaNivel: "5 PE (+mod VON)",
+    esperancaNivel: "2 PE (+mod VON)",
   },
   {
     id: "especialista",
     nome: "Especialista",
     imagem: "/classes/especialista.png",
     sanidadeBase: 20,
-    sanidadeNivel: "3 SAN (+mod Fort)",
+    sanidadeNivel: "2 SAN (+mod Fort)",
     esperancaBase: 25,
-    esperancaNivel: "5 PE (+mod VON)",
+    esperancaNivel: "7 PE (+mod VON)",
   },
   {
     id: "atiradorElite",
     nome: "Atirador de Elite",
     imagem: "/classes/atirador-elite.png",
     sanidadeBase: 25,
-    sanidadeNivel: "7 SAN (+mod Fort)",
+    sanidadeNivel: "3 SAN (+mod Fort)",
     esperancaBase: 30,
-    esperancaNivel: "5 PE (+mod VON)",
+    esperancaNivel: "3 PE (+mod VON)",
   },
   {
     id: "medicoDeCampo",
     nome: "Medico de Campo",
     imagem: "/classes/medica.png",
     sanidadeBase: 20,
-    sanidadeNivel: "7 SAN (+mod Fort)",
+    sanidadeNivel: "5 SAN (+mod Fort)",
     esperancaBase: 40,
     esperancaNivel: "5 PE (+mod VON)",
   },
@@ -76,9 +77,9 @@ const classesPersonagem = [
     nome: "O Renegado",
     imagem: "/classes/renegado.png",
     sanidadeBase: 15,
-    sanidadeNivel: "7 SAN (+mod Fort)",
+    sanidadeNivel: "3 SAN (+mod Fort)",
     esperancaBase: 5,
-    esperancaNivel: "5 PE (+mod VON)",
+    esperancaNivel: "3 PE (+mod VON)",
   },
   {
     id: "ocultista",
@@ -560,18 +561,6 @@ const arquetiposPersonagem = [
       "Desafio Mortal: Uma vez por combate, foca em um oponente e recebe +4 contra ele.",
   },
 ];
-
-const calcularModificador = (valor) => {
-  const numero = parseInt(valor) || 0;
-
-  if (numero >= 50) return 5;
-  if (numero >= 40) return 4;
-  if (numero >= 30) return 3;
-  if (numero >= 20) return 2;
-  if (numero >= 10) return 1;
-
-  return 0;
-};
 
 const calcularRecursosClasse = (classe, atributosForm) => {
   const modFortitude = calcularModificador(atributosForm.fonitude);

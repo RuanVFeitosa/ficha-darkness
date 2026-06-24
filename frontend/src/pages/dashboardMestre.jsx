@@ -34,7 +34,10 @@ import {
   DEFAULT_CATALOGO_LOJA,
   normalizarItemLoja,
 } from "../data/catalogoLoja";
-import { obterCustosNivel } from "../data/evolucaoPersonagem";
+import {
+  calcularGanhoRecursosNivel,
+  obterCustosNivel,
+} from "../data/evolucaoPersonagem";
 
 const STORAGE_KEY = "fichaRPG_personagem";
 const CATALOGO_STORAGE_KEY = "lojaHelena_catalogo";
@@ -984,9 +987,13 @@ const DashboardMestre = () => {
     salvarListaInimigos(novaLista);
   };
 
-  const salvarFichaSelecionada = async (personagemAtualizado = personagem) => {
+  const salvarFichaSelecionada = async (
+    personagemAtualizado = personagem,
+    opcoes = {},
+  ) => {
     if (!fichaSelecionada || !personagemAtualizado) return;
 
+    const { preservarRecursosJogador = true } = opcoes;
     let fichaMaisRecente = {};
 
     try {
@@ -1008,8 +1015,12 @@ const DashboardMestre = () => {
 
       // CAMPOS DO JOGADOR — NÃO SOBRESCREVER PELO DASHBOARD
       membros: fichaMaisRecente.membros || personagemAtualizado.membros,
-      sanidade: fichaMaisRecente.sanidade || personagemAtualizado.sanidade,
-      esperanca: fichaMaisRecente.esperanca || personagemAtualizado.esperanca,
+      sanidade: preservarRecursosJogador
+        ? fichaMaisRecente.sanidade || personagemAtualizado.sanidade
+        : personagemAtualizado.sanidade,
+      esperanca: preservarRecursosJogador
+        ? fichaMaisRecente.esperanca || personagemAtualizado.esperanca
+        : personagemAtualizado.esperanca,
       fotoPerfil:
         fichaMaisRecente.fotoPerfil || personagemAtualizado.fotoPerfil,
     };
@@ -1144,6 +1155,7 @@ const DashboardMestre = () => {
     const nivelAtual = Math.max(1, parseInt(personagem.nivel, 10) || 1);
     const proximoNivel = Math.min(10, nivelAtual + 1);
     const pontosGanhos = obterCustosNivel(proximoNivel).acumulado;
+    const recursosGanhos = calcularGanhoRecursosNivel(personagem);
 
     if (nivelAtual >= 10) {
       setMensagem("Este personagem ja esta no NV10.");
@@ -1162,12 +1174,30 @@ const DashboardMestre = () => {
           (parseInt(personagem.pontosEvolucao?.acumulados, 10) || 0) +
           pontosGanhos,
       },
+      sanidade: {
+        ...(personagem.sanidade || {}),
+        atual:
+          (parseInt(personagem.sanidade?.atual, 10) || 0) +
+          recursosGanhos.sanidade,
+        max:
+          (parseInt(personagem.sanidade?.max, 10) || 0) +
+          recursosGanhos.sanidade,
+      },
+      esperanca: {
+        ...(personagem.esperanca || {}),
+        atual:
+          (parseInt(personagem.esperanca?.atual, 10) || 0) +
+          recursosGanhos.esperanca,
+        max:
+          (parseInt(personagem.esperanca?.max, 10) || 0) +
+          recursosGanhos.esperanca,
+      },
     };
 
     setPersonagem(atualizado);
-    salvarFichaSelecionada(atualizado);
+    salvarFichaSelecionada(atualizado, { preservarRecursosJogador: false });
     setMensagem(
-      `Jogador subiu para NV${proximoNivel} e recebeu ${pontosGanhos} pontos.`,
+      `Jogador subiu para NV${proximoNivel}, recebeu ${pontosGanhos} pontos, +${recursosGanhos.sanidade} SAN e +${recursosGanhos.esperanca} PE.`,
     );
   };
 
