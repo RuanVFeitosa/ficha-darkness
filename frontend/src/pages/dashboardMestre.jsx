@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import Icon from "@mdi/react";
 import {
@@ -26,6 +26,12 @@ import {
   buscarPersonagem,
   salvarPersonagem,
 } from "../services/personagemApi";
+import {
+  notificarArvoresAtualizadas,
+  notificarPersonagemAtualizado,
+  ouvirArvoresAtualizadas,
+  ouvirPersonagemAtualizado,
+} from "../services/syncEvents";
 import { estadoInicial } from "./fichaPersonagem";
 import {
   carregarArvoresCustom,
@@ -157,6 +163,146 @@ const membrosFicha = [
   { chave: "pernaDireita", nome: "Perna direita" },
   { chave: "pernaEsquerda", nome: "Perna esquerda" },
 ];
+
+const numeroRomanoDashboard = (numero) => {
+  const romanos = [
+    ["M", 1000],
+    ["CM", 900],
+    ["D", 500],
+    ["CD", 400],
+    ["C", 100],
+    ["XC", 90],
+    ["L", 50],
+    ["XL", 40],
+    ["X", 10],
+    ["IX", 9],
+    ["V", 5],
+    ["IV", 4],
+    ["I", 1],
+  ];
+
+  let n = Math.max(1, parseInt(numero, 10) || 1);
+  let resultado = "";
+
+  romanos.forEach(([letra, valor]) => {
+    while (n >= valor) {
+      resultado += letra;
+      n -= valor;
+    }
+  });
+
+  return resultado;
+};
+
+const porcentagemRecurso = (atual = 0, max = 0) =>
+  max > 0 ? `${Math.min(100, Math.max(0, (atual / max) * 100))}%` : "0%";
+
+const DashboardFichaCard = memo(({ ficha, tipo = "jogador", onAbrir }) => {
+  const personagemCard = ficha.personagem || ficha;
+  const membros = personagemCard.membros || {};
+  const imagem =
+    personagemCard.fotoPerfil || "https://placehold.co/600x800?text=Sem+Foto";
+
+  return (
+    <article
+      className="mestre-card-personagem"
+      onClick={() => onAbrir(ficha, tipo)}
+      style={{ backgroundImage: `url(${imagem})` }}
+    >
+      <div className="mestre-card-overlay" />
+
+      <div className="mestre-card-conteudo">
+        <div className="mestre-card-info">
+          <small>
+            NV{" "}
+            {tipo === "inimigo"
+              ? numeroRomanoDashboard(personagemCard.nivel)
+              : personagemCard.nivel || 1}
+          </small>{" "}
+          <h3>{personagemCard.nome || "Sem nome"}</h3>
+          <span>{personagemCard.classe || "Sem classe"}</span>
+        </div>
+
+        <div className="mestre-card-atributos">
+          {Object.entries(personagemCard.atributos || {})
+            .slice(0, 5)
+            .map(([atributo, valor]) => (
+              <div key={atributo}>
+                <span>{atributo.slice(0, 3).toUpperCase()}</span>
+                <strong>{valor}</strong>
+              </div>
+            ))}
+        </div>
+
+        <div className="mestre-card-barras">
+          <div className="mestre-card-membros">
+            <label>INTEGRIDADE</label>
+
+            {membrosFicha.map(({ chave, nome }) => {
+              const dados = membros[chave] || { atual: 0, max: 0 };
+
+              return (
+                <div key={chave} className="mestre-card-membro-mini">
+                  <span>{nome}</span>
+
+                  <div className="barra vermelho">
+                    <span
+                      style={{
+                        width: porcentagemRecurso(dados.atual, dados.max),
+                      }}
+                    />
+                  </div>
+
+                  <small>
+                    {dados.atual || 0} / {dados.max || 0}
+                  </small>
+                </div>
+              );
+            })}
+          </div>
+
+          <div>
+            <label>SANIDADE</label>
+            <div className="barra roxo">
+              <span
+                style={{
+                  width: porcentagemRecurso(
+                    personagemCard.sanidade?.atual,
+                    personagemCard.sanidade?.max,
+                  ),
+                }}
+              />
+            </div>
+            <small>
+              {personagemCard.sanidade?.atual || 0} /{" "}
+              {personagemCard.sanidade?.max || 0}
+            </small>
+          </div>
+
+          {tipo === "jogador" && (
+            <div>
+              <label>ESPERANCA</label>
+              <div className="barra dourado">
+                <span
+                  style={{
+                    width: porcentagemRecurso(
+                      personagemCard.esperanca?.atual,
+                      personagemCard.esperanca?.max,
+                    ),
+                  }}
+                />
+              </div>
+              <small>
+                {personagemCard.esperanca?.atual || 0} /{" "}
+                {personagemCard.esperanca?.max || 0}
+              </small>
+            </div>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+});
 
 const normalizarFichaId = (valor) =>
   String(valor || "")
@@ -444,7 +590,10 @@ const DashboardMestre = () => {
   useEffect(() => {
     if (!fichaSelecionada) return;
 
-    const intervalo = setInterval(async () => {
+    const sincronizarFichaSelecionada = async ({
+      fichaId: fichaAtualizada,
+    } = {}) => {
+      if (fichaAtualizada && fichaAtualizada !== fichaSelecionada) return;
       if (editandoDashboard) return;
 
       try {
@@ -473,10 +622,89 @@ const DashboardMestre = () => {
           error,
         );
       }
-    }, 10000);
+    };
 
-    return () => clearInterval(intervalo);
+    const intervalo = setInterval(sincronizarFichaSelecionada, 8000);
+    const pararPersonagem = ouvirPersonagemAtualizado(
+      sincronizarFichaSelecionada,
+    );
+
+    return () => {
+      clearInterval(intervalo);
+      pararPersonagem();
+    };
   }, [fichaSelecionada, editandoDashboard]);
+
+  useEffect(() => {
+    let cancelado = false;
+
+    const sincronizarListas = async () => {
+      try {
+        const [fichasApi, arvoresApi] = await Promise.all([
+          listarPersonagens(),
+          buscarArvoresHabilidades().catch(() => null),
+        ]);
+
+        if (cancelado) return;
+
+        setFichas(
+          fichasApi.map((ficha) => ({
+            ...ficha,
+            personagem: {
+              ...estadoInicial,
+              ...(ficha.personagem || {}),
+              lojaCreditos: ficha.personagem?.lojaCreditos ?? 900,
+            },
+          })),
+        );
+
+        if (arvoresApi && Object.keys(arvoresApi).length > 0) {
+          salvarArvoresCustom(arvoresApi);
+          setArvoresEditor(obterTodasArvores());
+        }
+      } catch (error) {
+        console.warn("Nao foi possivel sincronizar o dashboard.", error);
+      }
+    };
+
+    const sincronizarArvores = async ({ arvores } = {}) => {
+      if (arvores && Object.keys(arvores).length > 0) {
+        salvarArvoresCustom(arvores);
+        setArvoresEditor(obterTodasArvores());
+        return;
+      }
+
+      try {
+        const arvoresApi = await buscarArvoresHabilidades();
+        if (!cancelado && arvoresApi && Object.keys(arvoresApi).length > 0) {
+          salvarArvoresCustom(arvoresApi);
+          setArvoresEditor(obterTodasArvores());
+        }
+      } catch (error) {
+        console.warn("Nao foi possivel sincronizar arvores.", error);
+      }
+    };
+
+    const pararPersonagem = ouvirPersonagemAtualizado(sincronizarListas);
+    const pararArvores = ouvirArvoresAtualizadas(sincronizarArvores);
+    const intervalo = setInterval(sincronizarListas, 15000);
+
+    const aoVoltarFoco = () => {
+      if (!document.hidden) {
+        sincronizarListas();
+      }
+    };
+
+    document.addEventListener("visibilitychange", aoVoltarFoco);
+
+    return () => {
+      cancelado = true;
+      pararPersonagem();
+      pararArvores();
+      clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", aoVoltarFoco);
+    };
+  }, []);
 
   useEffect(() => {
     if (fichaAtual) {
@@ -565,7 +793,10 @@ const DashboardMestre = () => {
   const salvarArvoresEditor = (novasArvores) => {
     setArvoresEditor(novasArvores);
     salvarArvoresCustom(novasArvores);
-    salvarArvoresHabilidades(novasArvores).catch((error) => {
+    notificarArvoresAtualizadas(novasArvores);
+    salvarArvoresHabilidades(novasArvores).then((arvoresSalvas) => {
+      notificarArvoresAtualizadas(arvoresSalvas || novasArvores);
+    }).catch((error) => {
       console.warn("Backend indisponivel. Arvore salva localmente.", error);
       setMensagem("Arvore salva localmente. Backend indisponivel.");
     });
@@ -1032,6 +1263,7 @@ const DashboardMestre = () => {
     };
 
     salvarFichaLocal(fichaSelecionada, personagemFinal);
+    notificarPersonagemAtualizado(fichaSelecionada, personagemFinal);
     setPersonagem(personagemFinal);
 
     setFichas((atuais) =>
@@ -1043,7 +1275,14 @@ const DashboardMestre = () => {
     );
 
     try {
-      await salvarPersonagem(fichaSelecionada, personagemFinal);
+      const personagemSalvo = await salvarPersonagem(
+        fichaSelecionada,
+        personagemFinal,
+      );
+      notificarPersonagemAtualizado(
+        fichaSelecionada,
+        personagemSalvo || personagemFinal,
+      );
       setMensagem("Ficha salva. Alterações do jogador preservadas.");
     } catch {
       setMensagem("Ficha salva localmente sem foto. Backend indisponivel.");
@@ -1487,36 +1726,30 @@ const DashboardMestre = () => {
     limparEditorLoja();
   };
 
-  const numeroRomano = (numero) => {
-    const romanos = [
-      ["M", 1000],
-      ["CM", 900],
-      ["D", 500],
-      ["CD", 400],
-      ["C", 100],
-      ["XC", 90],
-      ["L", 50],
-      ["XL", 40],
-      ["X", 10],
-      ["IX", 9],
-      ["V", 5],
-      ["IV", 4],
-      ["I", 1],
-    ];
+  const abrirCardFicha = useCallback((ficha, tipo = "jogador") => {
+    const personagemCard = ficha.personagem || ficha;
 
-    let n = Math.max(1, parseInt(numero, 10) || 1);
-    let resultado = "";
+    if (tipo === "jogador") {
+      setFichaSelecionada(ficha.fichaId);
+      setPersonagem({
+        ...estadoInicial,
+        ...personagemCard,
+        lojaCreditos: personagemCard.lojaCreditos ?? 900,
+      });
+      setModalFichaAberto(true);
+      return;
+    }
 
-    romanos.forEach(([letra, valor]) => {
-      while (n >= valor) {
-        resultado += letra;
-        n -= valor;
-      }
-    });
+    if (tipo === "npc") {
+      setNpcEditando(personagemCard.id);
+      return;
+    }
 
-    return resultado;
-  };
+    setInimigoEditando(personagemCard.id);
+  }, []);
 
+  // Mantido temporariamente para comparar o card antigo durante a migração de performance.
+  // eslint-disable-next-line no-unused-vars
   const renderCardFicha = (ficha, tipo = "jogador") => {
     const personagemCard = ficha.personagem || ficha;
     const membros = personagemCard.membros || {};
@@ -1551,7 +1784,7 @@ const DashboardMestre = () => {
             <small>
               NV{" "}
               {tipo === "inimigo"
-                ? numeroRomano(personagemCard.nivel)
+                ? numeroRomanoDashboard(personagemCard.nivel)
                 : personagemCard.nivel || 1}
             </small>{" "}
             <h3>{personagemCard.nome || "Sem nome"}</h3>
@@ -1950,7 +2183,14 @@ const DashboardMestre = () => {
           {subAbaFichas === "jogadores" && (
             <div className="mestre-dashboard-cards">
               {fichas.length > 0 ? (
-                fichas.map((ficha) => renderCardFicha(ficha, "jogador"))
+                fichas.map((ficha) => (
+                  <DashboardFichaCard
+                    key={ficha.fichaId || ficha.id}
+                    ficha={ficha}
+                    tipo="jogador"
+                    onAbrir={abrirCardFicha}
+                  />
+                ))
               ) : (
                 <div className="mestre-vazio">Nenhuma ficha encontrada.</div>
               )}
@@ -1960,7 +2200,14 @@ const DashboardMestre = () => {
           {subAbaFichas === "npcs" && (
             <div className="mestre-dashboard-cards">
               {npcs.length > 0 ? (
-                npcs.map((npc) => renderCardFicha(npc, "npc"))
+                npcs.map((npc) => (
+                  <DashboardFichaCard
+                    key={npc.fichaId || npc.id}
+                    ficha={npc}
+                    tipo="npc"
+                    onAbrir={abrirCardFicha}
+                  />
+                ))
               ) : (
                 <div className="mestre-vazio">Nenhum NPC criado.</div>
               )}
@@ -2748,7 +2995,14 @@ const DashboardMestre = () => {
 
           <div className="mestre-fichas-com-party">
             <div className="mestre-dashboard-cards">
-              {inimigos.map((inimigo) => renderCardFicha(inimigo, "inimigo"))}
+              {inimigos.map((inimigo) => (
+                <DashboardFichaCard
+                  key={inimigo.fichaId || inimigo.id}
+                  ficha={inimigo}
+                  tipo="inimigo"
+                  onAbrir={abrirCardFicha}
+                />
+              ))}
             </div>
             {inimigoEditando && (
               <div

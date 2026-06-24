@@ -7,6 +7,11 @@ import {
   buscarPersonagem,
   salvarPersonagem,
 } from "../services/personagemApi";
+import {
+  notificarPersonagemAtualizado,
+  ouvirArvoresAtualizadas,
+  ouvirPersonagemAtualizado,
+} from "../services/syncEvents";
 import { estadoInicial } from "./fichaPersonagem";
 import {
   obterArvoreClasse,
@@ -171,6 +176,71 @@ const ArvoreHabilidades = () => {
     };
   }, [fichaId, storageKey]);
 
+  useEffect(() => {
+    let cancelado = false;
+
+    const recarregarPersonagem = async ({ fichaId: fichaAtualizada } = {}) => {
+      if (fichaAtualizada && fichaAtualizada !== fichaId) return;
+
+      try {
+        const personagemApi = await buscarPersonagem(fichaId);
+        if (!cancelado && personagemApi) {
+          personagemApi.habilidadesClasse = {
+            ...estadoHabilidadesInicial,
+            ...(personagemApi.habilidadesClasse || {}),
+          };
+          setPersonagem(personagemApi);
+        }
+      } catch (error) {
+        const dadosSalvos = localStorage.getItem(storageKey);
+        if (!cancelado && dadosSalvos) {
+          try {
+            const personagemLocal = JSON.parse(dadosSalvos);
+            personagemLocal.habilidadesClasse = {
+              ...estadoHabilidadesInicial,
+              ...(personagemLocal.habilidadesClasse || {}),
+            };
+            setPersonagem(personagemLocal);
+          } catch {
+            console.warn("Nao foi possivel sincronizar a arvore local.");
+          }
+        }
+      }
+    };
+
+    const recarregarArvores = async ({ arvores } = {}) => {
+      if (arvores && Object.keys(arvores).length > 0) {
+        salvarArvoresCustom(arvores);
+        setPersonagem((atual) => ({ ...atual }));
+        return;
+      }
+
+      try {
+        const arvoresApi = await buscarArvoresHabilidades();
+        if (!cancelado && arvoresApi && Object.keys(arvoresApi).length > 0) {
+          salvarArvoresCustom(arvoresApi);
+          setPersonagem((atual) => ({ ...atual }));
+        }
+      } catch (error) {
+        console.warn("Nao foi possivel sincronizar arvores.", error);
+      }
+    };
+
+    const pararPersonagem = ouvirPersonagemAtualizado(recarregarPersonagem);
+    const pararArvores = ouvirArvoresAtualizadas(recarregarArvores);
+    const intervalo = setInterval(() => {
+      recarregarPersonagem();
+      recarregarArvores();
+    }, 12000);
+
+    return () => {
+      cancelado = true;
+      pararPersonagem();
+      pararArvores();
+      clearInterval(intervalo);
+    };
+  }, [fichaId, storageKey]);
+
   const salvarAtualizacao = (atualizacao, extras = {}) => {
     const atualizado = {
       ...personagem,
@@ -186,11 +256,14 @@ const ArvoreHabilidades = () => {
 
     try {
       localStorage.setItem(storageKey, JSON.stringify(atualizado));
+      notificarPersonagemAtualizado(fichaId, atualizado);
     } catch (error) {
       console.warn("Nao foi possivel salvar a arvore localmente.", error);
     }
 
-    salvarPersonagem(fichaId, atualizado).catch((error) => {
+    salvarPersonagem(fichaId, atualizado).then((personagemSalvo) => {
+      notificarPersonagemAtualizado(fichaId, personagemSalvo || atualizado);
+    }).catch((error) => {
       console.warn("Backend indisponivel. Arvore salva localmente.", error);
     });
   };

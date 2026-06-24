@@ -3,6 +3,7 @@ import Icon from "@mdi/react";
 import { mdiArrowLeft } from "@mdi/js";
 import "../CSS/UpgradeNivel.css";
 import { buscarPersonagem, salvarPersonagem } from "../services/personagemApi";
+import { notificarPersonagemAtualizado } from "../services/syncEvents";
 import { estadoInicial } from "./fichaPersonagem";
 import {
   ATRIBUTOS_UPGRADE,
@@ -243,9 +244,11 @@ const UpgradeNivel = () => {
     setMensagem("Upgrade aplicado. Pontos de evolucao atualizados.");
 
     localStorage.setItem(storageKey, JSON.stringify(atualizado));
+    notificarPersonagemAtualizado(fichaId, atualizado);
 
     try {
-      await salvarPersonagem(fichaId, atualizado);
+      const personagemSalvo = await salvarPersonagem(fichaId, atualizado);
+      notificarPersonagemAtualizado(fichaId, personagemSalvo || atualizado);
     } catch (error) {
       console.warn("Backend indisponivel. Upgrade salvo localmente.", error);
     }

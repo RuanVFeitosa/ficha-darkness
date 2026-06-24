@@ -1,5 +1,5 @@
 // src/components/FichaPersonagem.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../CSS/FichaPersonagem.css";
 import "../CSS/CondicoesProfile.css";
 
@@ -14,6 +14,11 @@ import {
   buscarPersonagem,
   salvarPersonagem,
 } from "../services/personagemApi";
+import {
+  notificarPersonagemAtualizado,
+  ouvirArvoresAtualizadas,
+  ouvirPersonagemAtualizado,
+} from "../services/syncEvents";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
 import Icon from "@mdi/react";
 import { mdiAccount } from "@mdi/js";
@@ -439,6 +444,7 @@ const FichaPersonagem = () => {
   const [modificadorDadosRolagem, setModificadorDadosRolagem] = useState(0);
   const [ativoPassivaSelecionado, setAtivoPassivaSelecionado] =
     useState("razao");
+  const ignorarProximoSalvamentoRef = useRef(false);
 
   const [subAbaHabilidade, setSubAbaHabilidade] = useState("arquetipo");
 
@@ -545,6 +551,67 @@ const FichaPersonagem = () => {
     };
   }, [fichaId, storageKey]);
 
+  useEffect(() => {
+    let cancelado = false;
+
+    const recarregarPersonagem = async ({ fichaId: fichaAtualizada } = {}) => {
+      if (fichaAtualizada && fichaAtualizada !== fichaId) return;
+
+      try {
+        const personagemApi = await buscarPersonagem(fichaId);
+        if (!cancelado && personagemApi) {
+          ignorarProximoSalvamentoRef.current = true;
+          setPersonagem(personagemApi);
+        }
+      } catch (error) {
+        const dadosSalvos = lerLocalSeguro(storageKey);
+
+        if (!cancelado && dadosSalvos) {
+          try {
+            ignorarProximoSalvamentoRef.current = true;
+            setPersonagem(JSON.parse(dadosSalvos));
+          } catch {
+            console.warn("Nao foi possivel sincronizar a ficha local.");
+          }
+        }
+      }
+    };
+
+    const recarregarArvores = async () => {
+      try {
+        const arvoresApi = await buscarArvoresHabilidades();
+        if (!cancelado && arvoresApi && Object.keys(arvoresApi).length > 0) {
+          salvarArvoresCustom(arvoresApi);
+          ignorarProximoSalvamentoRef.current = true;
+          setPersonagem((atual) => ({ ...atual }));
+        }
+      } catch (error) {
+        console.warn("Nao foi possivel sincronizar arvores.", error);
+      }
+    };
+
+    const pararPersonagem = ouvirPersonagemAtualizado(recarregarPersonagem);
+    const pararArvores = ouvirArvoresAtualizadas(recarregarArvores);
+    const intervalo = setInterval(recarregarPersonagem, 12000);
+
+    const aoVoltarFoco = () => {
+      if (!document.hidden) {
+        recarregarPersonagem();
+        recarregarArvores();
+      }
+    };
+
+    document.addEventListener("visibilitychange", aoVoltarFoco);
+
+    return () => {
+      cancelado = true;
+      pararPersonagem();
+      pararArvores();
+      clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", aoVoltarFoco);
+    };
+  }, [fichaId, storageKey]);
+
   // SALVAR DADOS AUTOMATICAMENTE QUANDO MUDAR
   useEffect(() => {
     if (!carregado) {
@@ -555,10 +622,19 @@ const FichaPersonagem = () => {
       return;
     }
 
+    if (ignorarProximoSalvamentoRef.current) {
+      ignorarProximoSalvamentoRef.current = false;
+      salvarPersonagemLocalSeguro(storageKey, personagem);
+      return;
+    }
+
     salvarPersonagemLocalSeguro(storageKey, personagem);
+    notificarPersonagemAtualizado(fichaId, personagem);
     setUltimoSave(new Date().toLocaleTimeString());
 
-    salvarPersonagem(fichaId, personagem).catch((error) => {
+    salvarPersonagem(fichaId, personagem).then((personagemSalvo) => {
+      notificarPersonagemAtualizado(fichaId, personagemSalvo || personagem);
+    }).catch((error) => {
       console.warn(
         "Backend indisponivel. Dados mantidos no localStorage.",
         error,

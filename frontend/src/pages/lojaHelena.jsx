@@ -19,6 +19,10 @@ import {
   salvarPersonagem,
 } from "../services/personagemApi";
 import {
+  notificarPersonagemAtualizado,
+  ouvirPersonagemAtualizado,
+} from "../services/syncEvents";
+import {
   DEFAULT_CATALOGO_LOJA,
   normalizarItemLoja,
 } from "../data/catalogoLoja";
@@ -176,6 +180,44 @@ const LojaHelena = () => {
         console.warn("Backend indisponivel. Loja usando localStorage.");
       });
   }, [fichaId, saldoKey, storageKey]);
+
+  useEffect(() => {
+    let cancelado = false;
+
+    const sincronizarPersonagem = async ({ fichaId: fichaAtualizada } = {}) => {
+      if (fichaAtualizada && fichaAtualizada !== fichaId) return;
+
+      try {
+        const personagemApi = await buscarPersonagem(fichaId);
+        if (!cancelado && personagemApi) {
+          setPersonagem({
+            ...estadoInicial,
+            ...personagemApi,
+            lojaCreditos: personagemApi.lojaCreditos ?? 900,
+          });
+        }
+      } catch (error) {
+        const dadosSalvos = localStorage.getItem(storageKey);
+
+        if (!cancelado && dadosSalvos) {
+          try {
+            setPersonagem(JSON.parse(dadosSalvos));
+          } catch {
+            console.warn("Nao foi possivel sincronizar a loja local.");
+          }
+        }
+      }
+    };
+
+    const pararPersonagem = ouvirPersonagemAtualizado(sincronizarPersonagem);
+    const intervalo = setInterval(sincronizarPersonagem, 12000);
+
+    return () => {
+      cancelado = true;
+      pararPersonagem();
+      clearInterval(intervalo);
+    };
+  }, [fichaId, storageKey]);
   const temMaletaDeCampo = (personagem.inventario || []).some(
     (item) => item.nome === "Maleta de Campo",
   );
@@ -407,8 +449,14 @@ const LojaHelena = () => {
     }
 
     localStorage.setItem(saldoKey, String(personagemAtualizado.lojaCreditos));
+    notificarPersonagemAtualizado(fichaId, personagemAtualizado);
 
-    salvarPersonagem(fichaId, personagemAtualizado).catch((error) => {
+    salvarPersonagem(fichaId, personagemAtualizado).then((personagemSalvo) => {
+      notificarPersonagemAtualizado(
+        fichaId,
+        personagemSalvo || personagemAtualizado,
+      );
+    }).catch((error) => {
       console.warn("Backend indisponivel. Compra salva localmente.", error);
     });
   };

@@ -281,59 +281,23 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 20px;
+  contain: layout paint;
 }
 
-.mestre-card-party-btn {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  z-index: 5;
-
-  min-height: 36px;
-  padding: 0 12px;
-
-  border: 1px solid rgba(212, 175, 55, 0.45);
-  border-radius: 999px;
-
-  background: rgba(0, 0, 0, 0.72);
-  color: #d4af37;
-
-  font: inherit;
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-
-  cursor: pointer;
-}
-
-.mestre-card-party-btn:hover {
-  background: #d4af37;
-  color: #000;
-}
-
-.mestre-card-party-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.mestre-fichas-com-party {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
-  align-items: start;
-  gap: 22px;
-}
 
 .mestre-card-personagem {
   position: relative;
   overflow: hidden;
-  min-height: 560px;
+  min-height: 500px;
   padding: 0 !important;
   border-radius: 18px;
   background-size: contain;
   background-position: center top;
   background-repeat: no-repeat;
   background-color: #030303;
+  contain: layout paint style;
+  content-visibility: auto;
+  contain-intrinsic-size: 560px 360px;
   transition: none;
 }
 
@@ -354,13 +318,13 @@
       rgba(0, 0, 0, 0) 0%,
       rgba(0, 0, 0, 0.75) 100%
     );
-}
+  }
 
 .mestre-card-conteudo {
   position: relative;
   z-index: 2;
   min-height: 560px;
-  padding: 24px;
+  padding: 25px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -379,7 +343,8 @@
 
 .mestre-card-atributos,
 .mestre-card-barras {
-  backdrop-filter: blur(3px);
+  background: rgba(0, 0, 0, 0.38);
+  border-radius: 5px;
 }
 
 .mestre-card-foto,
@@ -700,6 +665,7 @@
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.045);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  contain: layout paint style;
 }
 
 .mestre-modal-bloco.full {
@@ -724,6 +690,7 @@
   padding: 10px;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.28);
+  contain: layout paint style;
 }
 
 .mestre-modal-atributos small,
@@ -784,13 +751,15 @@
   padding: 28px;
 
   background: rgba(0, 0, 0, 0.82);
-  backdrop-filter: blur(6px);
+  contain: layout paint style;
 }
 
 .mestre-modal-ficha {
   width: min(1180px, 100%);
   max-height: 90vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 
   display: grid;
   gap: 20px;
@@ -804,6 +773,8 @@
   color: #f5efe4;
 
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75);
+  contain: layout paint style;
+  will-change: transform, opacity;
 
   animation: abrirModalFicha 0.22s ease;
 }
@@ -1525,7 +1496,7 @@
   padding: 20px;
 
   background: rgba(0, 0, 0, 0.82);
-  backdrop-filter: blur(6px);
+  contain: layout paint style;
 }
 
 .mestre-popup {
@@ -1545,6 +1516,8 @@
     #050505;
 
   color: #fff;
+  contain: layout paint style;
+  will-change: transform, opacity;
 
   box-shadow:
     0 24px 80px rgba(0, 0, 0, 0.8),
@@ -1639,6 +1612,7 @@
   display: grid !important;
   place-items: center !important;
   background: rgba(0, 0, 0, 0.86);
+  contain: layout paint style;
 }
 
 .mestre-popup {
@@ -1651,6 +1625,7 @@
   border-radius: 16px;
   background: #050505;
   color: #fff;
+  contain: layout paint style;
 }
 
 .mestre-popup.perigo {
