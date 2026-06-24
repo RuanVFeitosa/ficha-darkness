@@ -72,6 +72,7 @@ const ArvoreHabilidades = () => {
   const [personagem, setPersonagem] = useState(estadoInicial);
   const [mensagem, setMensagem] = useState("");
   const [aptidaoAberta, setAptidaoAberta] = useState(null);
+  const [habilidadeAberta, setHabilidadeAberta] = useState(null);
   const [arrastando, setArrastando] = useState(false);
   const [inicioArrasto, setInicioArrasto] = useState({ x: 0, y: 0 });
   const [posicaoMapa, setPosicaoMapa] = useState({ x: -300, y: -120 });
@@ -308,6 +309,14 @@ const ArvoreHabilidades = () => {
     setAptidaoAberta(null);
   };
 
+  const fecharHabilidade = () => {
+    setHabilidadeAberta(null);
+  };
+
+  const impedirArrastoAoTocarNoNo = (event) => {
+    event.stopPropagation();
+  };
+
   const selecionarEspecialidadeInicial = (especialidade) => {
     const habilidadesPermitidas = (especialidade.habilidades || []).map(
       (habilidade) => habilidade.id,
@@ -428,6 +437,12 @@ const ArvoreHabilidades = () => {
         ),
       },
     );
+  };
+
+  const confirmarHabilidadeAberta = () => {
+    if (!habilidadeAberta) return;
+
+    alternarHabilidadeEspecialidade(habilidadeAberta);
   };
 
   const selecionarHabilidadeAbsoluta = (habilidade) => {
@@ -824,6 +839,7 @@ const ArvoreHabilidades = () => {
                               habilidadeAbsoluta: habilidade.id,
                             })
                           }
+                          onPointerDown={impedirArrastoAoTocarNoNo}
                         >
                           <strong>{habilidade.nome}</strong>
 
@@ -978,9 +994,8 @@ const ArvoreHabilidades = () => {
                               left: `${point.x}px`,
                               top: `${point.y}px`,
                             }}
-                            onClick={() =>
-                              alternarHabilidadeEspecialidade(habilidade)
-                            }
+                            onClick={() => setHabilidadeAberta(habilidade)}
+                            onPointerDown={impedirArrastoAoTocarNoNo}
                           >
                             <strong>{habilidade.nome}</strong>
 
@@ -1015,6 +1030,7 @@ const ArvoreHabilidades = () => {
                           top: `${point.y}px`,
                         }}
                         onClick={() => setAptidaoAberta(aptidao)}
+                        onPointerDown={impedirArrastoAoTocarNoNo}
                       >
                         <strong>{aptidao.nome}</strong>
 
@@ -1076,6 +1092,46 @@ const ArvoreHabilidades = () => {
                 {habilidadesClasse.aptidoes?.[aptidaoAberta.id]
                   ? "Remover aptidao"
                   : "Pegar aptidao"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+      {habilidadeAberta && (
+        <div
+          className="aptidao-modal-backdrop habilidade-modal-backdrop"
+          onClick={fecharHabilidade}
+        >
+          <section
+            className="aptidao-modal habilidade-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="habilidade-modal-titulo"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <span className="arvore-no-tipo">
+              Custo: {obterCustoHabilidadeEspecialidade()} pontos
+              {habilidadeAberta.custo ? ` || ${habilidadeAberta.custo}` : ""}
+            </span>
+
+            <h2 id="habilidade-modal-titulo">{habilidadeAberta.nome}</h2>
+            <p>{habilidadeAberta.descricao}</p>
+
+            <div className="aptidao-modal-acoes habilidade-modal-acoes">
+              <button type="button" onClick={fecharHabilidade}>
+                Voltar
+              </button>
+
+              <button
+                type="button"
+                className="primario"
+                onClick={confirmarHabilidadeAberta}
+              >
+                {habilidadesClasse.habilidadesEspecialidade?.[
+                  habilidadeAberta.id
+                ]
+                  ? "Remover habilidade"
+                  : "Adquirir habilidade"}
               </button>
             </div>
           </section>
