@@ -10,6 +10,7 @@ const DATA_DIR = process.env.DATA_DIR
 const BUILD_DIR = path.join(__dirname, "..", "frontend", "build");
 const SERVE_FRONTEND = process.env.SERVE_FRONTEND !== "false";
 const DEFAULT_FICHA_ID = "principal";
+const SKILL_TREES_RECORD_ID = "__arvores_habilidades__";
 const SHOP_CATALOG_FILE = path.join(DATA_DIR, "loja-catalogo.json");
 const SKILL_TREES_FILE = path.join(DATA_DIR, "arvores-habilidades.json");
 const SUPABASE_URL = process.env.SUPABASE_URL?.trim();
@@ -301,11 +302,13 @@ const writePersonagem = async (id, personagem) => {
 const listPersonagens = async () => {
   if (USE_SUPABASE) {
     const rows = await requestSupabase("?select=id,personagem,updated_at&order=id.asc");
-    return rows.map((row) => ({
-      fichaId: row.id,
-      personagem: row.personagem,
-      updatedAt: row.updated_at || null,
-    }));
+    return rows
+      .filter((row) => row.id !== SKILL_TREES_RECORD_ID)
+      .map((row) => ({
+        fichaId: row.id,
+        personagem: row.personagem,
+        updatedAt: row.updated_at || null,
+      }));
   }
 
   try {
@@ -313,7 +316,12 @@ const listPersonagens = async () => {
     const files = await fs.readdir(DATA_DIR);
     const personagens = await Promise.all(
       files
-        .filter((file) => file.endsWith(".json") && file !== "loja-catalogo.json")
+        .filter(
+          (file) =>
+            file.endsWith(".json") &&
+            file !== "loja-catalogo.json" &&
+            file !== "arvores-habilidades.json",
+        )
         .map(async (file) => {
           const fichaId = path.basename(file, ".json");
           const filePath = path.join(DATA_DIR, file);
@@ -398,6 +406,14 @@ const normalizeSkillTrees = (arvores) => {
 };
 
 const readSkillTrees = async () => {
+  if (USE_SUPABASE) {
+    const rows = await requestSupabase(
+      `?id=eq.${encodeURIComponent(SKILL_TREES_RECORD_ID)}&select=personagem&limit=1`,
+    );
+
+    return normalizeSkillTrees(rows[0]?.personagem?.arvores || {});
+  }
+
   try {
     const raw = await fs.readFile(SKILL_TREES_FILE, "utf8");
     return normalizeSkillTrees(JSON.parse(raw));
@@ -412,6 +428,23 @@ const readSkillTrees = async () => {
 
 const writeSkillTrees = async (arvores) => {
   const normalized = normalizeSkillTrees(arvores);
+
+  if (USE_SUPABASE) {
+    const rows = await requestSupabase("?on_conflict=id", {
+      method: "POST",
+      headers: {
+        Prefer: "resolution=merge-duplicates,return=representation",
+      },
+      body: JSON.stringify({
+        id: SKILL_TREES_RECORD_ID,
+        personagem: { tipo: "arvores-habilidades", arvores: normalized },
+        updated_at: new Date().toISOString(),
+      }),
+    });
+
+    return normalizeSkillTrees(rows[0]?.personagem?.arvores || normalized);
+  }
+
   await fs.mkdir(DATA_DIR, { recursive: true });
   await fs.writeFile(
     SKILL_TREES_FILE,
@@ -441,7 +474,10 @@ const handleRequest = async (req, res) => {
   }
 
   try {
-    if (url.pathname === "/api/health" && req.method === "GET") {
+    if (
+      (url.pathname === "/api" || url.pathname === "/api/health") &&
+      req.method === "GET"
+    ) {
       return sendJson(res, 200, {
         ok: true,
         storage: USE_SUPABASE ? "supabase" : "json",
