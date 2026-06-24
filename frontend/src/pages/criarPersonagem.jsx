@@ -652,7 +652,7 @@ const criarFichaInicial = (form) => ({
 });
 
 const CriarPersonagem = () => {
-  const [etapa, setEtapa] = useState(0);
+  const [etapa, setEtapa] = useState(1);
   const [textoVisivel, setTextoVisivel] = useState("");
   const [form, setForm] = useState({
     nome: "",
@@ -687,10 +687,9 @@ const CriarPersonagem = () => {
   const [salvando, setSalvando] = useState(false);
   const [classeEmFoco, setClasseEmFoco] = useState(classesPersonagem[0]);
 
-  const dialogoAtual =
-    etapa === 0
-      ? dialogoInicial
-      : perguntas[etapa - 1] || "Tudo pronto. Agora podemos criar sua ficha.";
+ const dialogoAtual =
+  perguntas[etapa - 1] ||
+  "Tudo pronto. Agora podemos criar sua ficha.";
   const ultimaEtapa = etapa > perguntas.length;
   const indiceClasseEmFoco = Math.max(
     classesPersonagem.findIndex((classe) => classe.id === classeEmFoco.id),
@@ -857,9 +856,9 @@ const CriarPersonagem = () => {
   };
 
   const voltarEtapa = () => {
-    setErro("");
-    setEtapa((atual) => Math.max(atual - 1, 0));
-  };
+  setErro("");
+  setEtapa((atual) => Math.max(atual - 1, 1));
+};
 
   const enviar = async (event) => {
     event.preventDefault();
@@ -937,14 +936,6 @@ const CriarPersonagem = () => {
         </section>
 
         <section className="criacao-etapa">
-          {etapa === 0 && (
-            <div className="intro-etapa">
-              <p>
-                O dialogo inicial termina aqui. As perguntas comecam quando o
-                jogador continuar.
-              </p>
-            </div>
-          )}
 
           {etapa === 1 && (
             <div className="criacao-bloco identidade">
@@ -980,26 +971,8 @@ const CriarPersonagem = () => {
               </fieldset>
             </div>
           )}
-
+          
           {etapa === 2 && (
-            <div className="criacao-integridade">
-              {membrosIntegridade.map((membro) => (
-                <label key={membro.chave}>
-                  <span>{membro.nome}</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.integridade[membro.chave]}
-                    onChange={(event) =>
-                      atualizarIntegridade(membro.chave, event.target.value)
-                    }
-                  />
-                </label>
-              ))}
-            </div>
-          )}
-
-          {etapa === 3 && (
             <div className="criacao-atributos">
               {atributos.map((atributo) => (
                 <label key={atributo.chave}>
@@ -1010,6 +983,24 @@ const CriarPersonagem = () => {
                     value={form.atributos[atributo.chave]}
                     onChange={(event) =>
                       atualizarAtributo(atributo.chave, event.target.value)
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+
+          )}
+          {etapa === 3 && (
+            <div className="criacao-integridade">
+              {membrosIntegridade.map((membro) => (
+                <label key={membro.chave}>
+                  <span>{membro.nome}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.integridade[membro.chave]}
+                    onChange={(event) =>
+                      atualizarIntegridade(membro.chave, event.target.value)
                     }
                   />
                 </label>
@@ -1140,7 +1131,7 @@ const CriarPersonagem = () => {
             className="criacao-secundario"
             type="button"
             onClick={voltarEtapa}
-            disabled={etapa === 0 || salvando}
+            disabled={etapa === 1 || salvando}
           >
             Voltar
           </button>

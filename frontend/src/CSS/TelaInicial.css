@@ -14,9 +14,9 @@
   display: grid;
   gap: 22px;
   padding: 28px;
-  border: 1px solid rgba(139, 69, 19, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.65);
   border-radius: 8px;
-  background: rgba(10, 8, 7, 0.94);
+  background: transparent;
   box-shadow: 0 20px 70px rgba(0, 0, 0, 0.55);
   text-align: left;
 }
@@ -92,8 +92,8 @@
 }
 
 .inicio-teclado-confirmar {
-  border-color: #c89b5f !important;
-  background: #8b4513 !important;
+  border-color: #ffffff !important;
+  background: #000000 !important;
   font-size: 0.9rem !important;
   text-transform: uppercase;
 }
@@ -102,7 +102,7 @@
   width: 100%;
   min-height: 44px;
   padding: 10px 12px;
-  border: 1px solid #4a3326;
+  border: 1px solid #ffffff;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.07);
   color: #fff;
@@ -142,8 +142,8 @@
 }
 
 .inicio-entrar {
-  border: 1px solid #c89b5f;
-  background: #8b4513;
+  border: 1px solid #ffffff;
+  background: #000000;
 }
 
 .inicio-cadastrar {
@@ -152,8 +152,9 @@
 }
 
 .inicio-mestre {
-  border: 1px solid rgba(200, 155, 95, 0.42);
-  background: rgba(139, 69, 19, 0.24);
+  color: #000000;
+  border: 2x solid rgb(0, 0, 0);
+  background: rgb(255, 255, 255);
 }
 
 .inicio-entrar:disabled {
