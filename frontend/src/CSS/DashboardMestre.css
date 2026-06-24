@@ -2347,6 +2347,29 @@
   text-transform: uppercase;
 }
 
+.mestre-recurso-editor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mestre-recurso-editor input {
+  width: 70px;
+  text-align: center;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.mestre-recurso-editor span {
+  color: rgba(255,255,255,0.7);
+  font-weight: 700;
+}
+
 /* MEMBROS */
 
 .mestre-modal-ficha.minimalista .mestre-corpo-grid {

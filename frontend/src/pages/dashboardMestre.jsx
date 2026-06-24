@@ -1029,7 +1029,6 @@ const DashboardMestre = () => {
       ...estadoInicial,
       ...fichaMaisRecente,
       ...personagemAtualizado,
-
     };
 
     salvarFichaLocal(fichaSelecionada, personagemFinal);
@@ -2030,10 +2029,11 @@ const DashboardMestre = () => {
                         </button>
                       </div>
 
-                      <button onClick={diminuirNivelJogador}>Diminuir NV</button>
+                      <button onClick={diminuirNivelJogador}>
+                        Diminuir NV
+                      </button>
 
                       <button onClick={subirNivelJogador}>Subir NV</button>
-
                     </div>
 
                     <button
@@ -2132,10 +2132,49 @@ const DashboardMestre = () => {
                           />
                         </div>
 
-                        <strong>
-                          {personagem?.sanidade?.atual || 0} /{" "}
-                          {personagem?.sanidade?.max || 0}
-                        </strong>
+                        <div className="mestre-recurso-editor">
+                          <input
+                            type="number"
+                            value={personagem?.sanidade?.atual || 0}
+                            onChange={(e) => {
+                              const atualizado = {
+                                ...personagem,
+                                sanidade: {
+                                  ...(personagem.sanidade || {}),
+                                  atual: Math.max(
+                                    0,
+                                    parseInt(e.target.value, 10) || 0,
+                                  ),
+                                },
+                              };
+
+                              setPersonagem(atualizado);
+                              salvarFichaSelecionada(atualizado);
+                            }}
+                          />
+
+                          <span>/</span>
+
+                          <input
+                            type="number"
+                            value={personagem?.sanidade?.max || 0}
+                            onChange={(e) => {
+                              const atualizado = {
+                                ...personagem,
+                                sanidade: {
+                                  ...(personagem.sanidade || {}),
+                                  max: Math.max(
+                                    0,
+                                    parseInt(e.target.value, 10) || 0,
+                                  ),
+                                },
+                              };
+
+                              setPersonagem(atualizado);
+                              salvarFichaSelecionada(atualizado);
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -2155,10 +2194,49 @@ const DashboardMestre = () => {
                           />
                         </div>
 
-                        <strong>
-                          {personagem?.esperanca?.atual || 0} /{" "}
-                          {personagem?.esperanca?.max || 0}
-                        </strong>
+                        <div className="mestre-recurso-editor">
+                          <input
+                            type="number"
+                            value={personagem?.esperanca?.atual || 0}
+                            onChange={(e) => {
+                              const atualizado = {
+                                ...personagem,
+                                esperanca: {
+                                  ...(personagem.esperanca || {}),
+                                  atual: Math.max(
+                                    0,
+                                    parseInt(e.target.value, 10) || 0,
+                                  ),
+                                },
+                              };
+
+                              setPersonagem(atualizado);
+                              salvarFichaSelecionada(atualizado);
+                            }}
+                          />
+
+                          <span>/</span>
+
+                          <input
+                            type="number"
+                            value={personagem?.esperanca?.max || 0}
+                            onChange={(e) => {
+                              const atualizado = {
+                                ...personagem,
+                                esperanca: {
+                                  ...(personagem.esperanca || {}),
+                                  max: Math.max(
+                                    0,
+                                    parseInt(e.target.value, 10) || 0,
+                                  ),
+                                },
+                              };
+
+                              setPersonagem(atualizado);
+                              salvarFichaSelecionada(atualizado);
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
