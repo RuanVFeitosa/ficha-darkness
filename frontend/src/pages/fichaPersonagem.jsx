@@ -56,7 +56,19 @@ const normalizarFichaId = (valor) => {
 
 const obterFichaIdDaUrl = () => {
   const params = new URLSearchParams(window.location.search);
-  return normalizarFichaId(params.get("ficha"));
+  return normalizarFichaId(
+    params.get("senha") || params.get("codigo") || params.get("ficha"),
+  );
+};
+
+const montarUrlFicha = (personagem, fichaId, destino = "") => {
+  const nomeUrl = normalizarFichaId(personagem?.nome || fichaId);
+  const params = new URLSearchParams({
+    ficha: nomeUrl,
+    senha: fichaId,
+  });
+
+  return destino ? `${destino}&${params.toString()}` : `?${params.toString()}`;
 };
 
 const salvarLocalSeguro = (chave, valor) => {
@@ -859,15 +871,15 @@ const FichaPersonagem = () => {
   };
 
   const abrirLoja = () => {
-    window.location.href = `?loja=1&ficha=${encodeURIComponent(fichaId)}`;
+    window.location.href = montarUrlFicha(personagem, fichaId, "?loja=1");
   };
 
   const abrirUpgradeNivel = () => {
-    window.location.href = `?upgrade=1&ficha=${encodeURIComponent(fichaId)}`;
+    window.location.href = montarUrlFicha(personagem, fichaId, "?upgrade=1");
   };
 
   const abrirArvoreHabilidades = () => {
-    window.location.href = `?habilidades=1&ficha=${encodeURIComponent(fichaId)}`;
+    window.location.href = montarUrlFicha(personagem, fichaId, "?habilidades=1");
   };
 
   const abrirDashboardMestre = () => {
@@ -3567,6 +3579,12 @@ const FichaPersonagem = () => {
         <Icon path={mdiStorefrontOutline} size={1.2} />
         <span>Loja</span>
       </button>
+      <aside className="ficha-identificacao-secreta" aria-label="Dados da ficha">
+        <span>Jogador</span>
+        <strong>{personagem.nomeJogador || "Sem jogador"}</strong>
+        <span>Senha da ficha</span>
+        <strong>{fichaId}</strong>
+      </aside>
       {/* Container Principal: Perfil + Atributos + Sidebar */}
       <div className="main-content">
         {/* ... (seu conteúdo existente permanece igual) ... */}

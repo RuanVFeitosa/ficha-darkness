@@ -27,7 +27,19 @@ const normalizarFichaId = (valor) => {
 
 const obterFichaIdDaUrl = () => {
   const params = new URLSearchParams(window.location.search);
-  return normalizarFichaId(params.get("ficha"));
+  return normalizarFichaId(
+    params.get("senha") || params.get("codigo") || params.get("ficha"),
+  );
+};
+
+const montarUrlFicha = (personagem, fichaId, destino = "") => {
+  const nomeUrl = normalizarFichaId(personagem?.nome || fichaId);
+  const params = new URLSearchParams({
+    ficha: nomeUrl,
+    senha: fichaId,
+  });
+
+  return destino ? `${destino}&${params.toString()}` : `?${params.toString()}`;
 };
 
 const UpgradeNivel = () => {
@@ -107,11 +119,11 @@ const UpgradeNivel = () => {
   }, [fichaId, storageKey]);
 
   const voltarParaFicha = () => {
-    window.location.href = `?ficha=${encodeURIComponent(fichaId)}`;
+    window.location.href = montarUrlFicha(personagem, fichaId);
   };
 
   const abrirArvore = () => {
-    window.location.href = `?habilidades=1&ficha=${encodeURIComponent(fichaId)}`;
+    window.location.href = montarUrlFicha(personagem, fichaId, "?habilidades=1");
   };
 
   const alterarTrilha = (novaTrilha) => {

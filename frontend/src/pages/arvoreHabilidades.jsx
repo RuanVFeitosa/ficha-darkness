@@ -34,7 +34,19 @@ const normalizarFichaId = (valor) => {
 
 const obterFichaIdDaUrl = () => {
   const params = new URLSearchParams(window.location.search);
-  return normalizarFichaId(params.get("ficha"));
+  return normalizarFichaId(
+    params.get("senha") || params.get("codigo") || params.get("ficha"),
+  );
+};
+
+const montarUrlFicha = (personagem, fichaId) => {
+  const nomeUrl = normalizarFichaId(personagem?.nome || fichaId);
+  const params = new URLSearchParams({
+    ficha: nomeUrl,
+    senha: fichaId,
+  });
+
+  return `?${params.toString()}`;
 };
 
 const estadoHabilidadesInicial = {
@@ -270,7 +282,7 @@ const ArvoreHabilidades = () => {
   };
 
   const voltarParaFicha = () => {
-    window.location.href = `?ficha=${encodeURIComponent(fichaId)}`;
+    window.location.href = montarUrlFicha(personagem, fichaId);
   };
 
   const criarPontosEvolucaoAtualizados = (novoSaldo) => ({
@@ -1054,7 +1066,7 @@ const ArvoreHabilidades = () => {
             type="button"
             className="arvore-voltar-upgrade"
             onClick={() => {
-              window.location.href = `?ficha=${encodeURIComponent(fichaId)}`;
+              window.location.href = montarUrlFicha(personagem, fichaId);
             }}
           >
             VOLTAR PARA FICHA

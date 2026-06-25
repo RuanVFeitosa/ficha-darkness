@@ -430,7 +430,16 @@
 .mestre-card-info h3 {
   margin: 0;
   color: white;
-  font-size: 1.25rem;
+  font-size: 1.80rem;
+}
+
+.mestre-card-jogador {
+  color: #f3d77a;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
 
 .mestre-modal-header-acoes,

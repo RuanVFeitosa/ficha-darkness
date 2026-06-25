@@ -219,6 +219,9 @@ const DashboardFichaCard = memo(({ ficha, tipo = "jogador", onAbrir }) => {
               ? numeroRomanoDashboard(personagemCard.nivel)
               : personagemCard.nivel || 1}
           </small>{" "}
+          {personagemCard.nomeJogador && (
+            <em className="mestre-card-jogador">{personagemCard.nomeJogador}</em>
+          )}
           <h3>{personagemCard.nome || "Sem nome"}</h3>
           <span>{personagemCard.classe || "Sem classe"}</span>
         </div>
@@ -1787,6 +1790,9 @@ const DashboardMestre = () => {
                 ? numeroRomanoDashboard(personagemCard.nivel)
                 : personagemCard.nivel || 1}
             </small>{" "}
+            {personagemCard.nomeJogador && (
+              <em className="mestre-card-jogador">{personagemCard.nomeJogador}</em>
+            )}
             <h3>{personagemCard.nome || "Sem nome"}</h3>
             <span>{personagemCard.classe || "Sem classe"}</span>
           </div>

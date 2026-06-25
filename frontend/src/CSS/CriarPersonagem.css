@@ -223,6 +223,159 @@
   gap: 14px;
 }
 
+.criacao-bloco .campo-largo {
+  grid-column: 1 / -1;
+}
+
+.modo-cadastro-etapa {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.modo-cadastro-card,
+.existencia-rolar {
+  min-height: 120px;
+  padding: 20px;
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at top left, rgba(212, 175, 55, 0.14), transparent 38%),
+    rgba(0, 0, 0, 0.48);
+  color: #fff8ea;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: 0.2s ease;
+}
+
+.modo-cadastro-card {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+}
+
+.modo-cadastro-card span,
+.criacao-saldo small {
+  color: #d4af37;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.modo-cadastro-card strong {
+  font-size: 1.05rem;
+  text-transform: uppercase;
+}
+
+.modo-cadastro-card:hover,
+.existencia-rolar:hover {
+  border-color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.16);
+}
+
+.existencia-etapa {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.existencia-dados {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.existencia-dados span {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.54);
+  color: #fff;
+  font-size: 1.45rem;
+  font-weight: 900;
+  transform-style: preserve-3d;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.existencia-dados span.rolando {
+  animation: dadoExistenciaGira 0.32s linear infinite;
+  border-color: rgba(255, 255, 255, 0.64);
+  color: #fff;
+  box-shadow: 0 0 22px rgba(255, 255, 255, 0.16);
+}
+
+.existencia-dados span.maior {
+  border-color: #d4af37;
+  color: #d4af37;
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.24);
+}
+
+@keyframes dadoExistenciaGira {
+  0% {
+    transform: rotateX(0deg) rotateY(0deg) scale(1);
+  }
+
+  50% {
+    transform: rotateX(180deg) rotateY(120deg) scale(1.08);
+  }
+
+  100% {
+    transform: rotateX(360deg) rotateY(240deg) scale(1);
+  }
+}
+
+.existencia-rolar {
+  min-height: 44px;
+  width: min(260px, 100%);
+  text-align: center;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.existencia-rolar:disabled {
+  border-color: rgba(212, 175, 55, 0.42);
+  background: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 248, 234, 0.58);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.existencia-etapa > strong,
+.criacao-saldo {
+  color: #fff8ea;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.criacao-saldo {
+  padding: 12px 14px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-left: 3px solid #d4af37;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.criacao-saldo.full {
+  grid-column: 1 / -1;
+}
+
+.criacao-saldo small {
+  display: block;
+  margin-top: 6px;
+}
+
 .criacao-bloco.identidade,
 .criacao-bloco.titulos {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -803,6 +956,7 @@
   .criacao-bloco.titulos,
   .criacao-integridade,
   .criacao-atributos,
+  .modo-cadastro-etapa,
   .classes-etapa,
   .foto-etapa {
     grid-template-columns: 1fr;
