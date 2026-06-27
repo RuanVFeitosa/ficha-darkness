@@ -1,19 +1,17 @@
-import React, { useEffect, useState } from "react";
-import ArvoreHabilidades from "./pages/arvoreHabilidades";
-import CriarPersonagem from "./pages/criarPersonagem";
-import DashboardMestre from "./pages/dashboardMestre";
-import FichaPersonagem from "./pages/fichaPersonagem";
-import LojaHelena from "./pages/lojaHelena";
-import TelaInicial from "./pages/telaInicial";
-import UpgradeNivel from "./pages/upgradeNivel";
+import React, { lazy, Suspense, useEffect, useState } from "react";
+import PageTransition from "./pages/pageTransition";
 import "./App.css";
 import "./CSS/Responsive.css";
 
 const MESTRE_AUTH_KEY = "darkness_mestre_autorizado";
 
-function PageTransition({ active }) {
-  return <div className={`page-transition ${active ? "active" : ""}`} />;
-}
+const ArvoreHabilidades = lazy(() => import("./pages/arvoreHabilidades"));
+const CriarPersonagem = lazy(() => import("./pages/criarPersonagem"));
+const DashboardMestre = lazy(() => import("./pages/dashboardMestre"));
+const FichaPersonagem = lazy(() => import("./pages/fichaPersonagem"));
+const LojaHelena = lazy(() => import("./pages/lojaHelena"));
+const TelaInicial = lazy(() => import("./pages/telaInicial"));
+const UpgradeNivel = lazy(() => import("./pages/upgradeNivel"));
 
 function App() {
   const [search, setSearch] = useState(window.location.search);
@@ -68,21 +66,23 @@ function App() {
     <div className="App">
       <PageTransition active={transitionActive} />
 
-      {estaNoDashboardMestre && mestreAutorizado ? (
-        <DashboardMestre />
-      ) : estaNaArvoreHabilidades ? (
-        <ArvoreHabilidades />
-      ) : estaNoUpgrade ? (
-        <UpgradeNivel />
-      ) : estaNaLoja ? (
-        <LojaHelena />
-      ) : temFicha ? (
-        <FichaPersonagem />
-      ) : estaCriando ? (
-        <CriarPersonagem />
-      ) : (
-        <TelaInicial />
-      )}
+      <Suspense fallback={null}>
+        {estaNoDashboardMestre && mestreAutorizado ? (
+          <DashboardMestre />
+        ) : estaNaArvoreHabilidades ? (
+          <ArvoreHabilidades />
+        ) : estaNoUpgrade ? (
+          <UpgradeNivel />
+        ) : estaNaLoja ? (
+          <LojaHelena />
+        ) : temFicha ? (
+          <FichaPersonagem />
+        ) : estaCriando ? (
+          <CriarPersonagem />
+        ) : (
+          <TelaInicial />
+        )}
+      </Suspense>
     </div>
   );
 }

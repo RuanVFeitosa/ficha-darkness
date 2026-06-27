@@ -2,17 +2,7 @@ import { arvoreEspecialista } from "./arvoreEspecialista";
 import { arvoreAtiradorElite } from "./arvoreAtiradorElite";
 import { arvoreMedicoCampo } from "./arvoreMedicoCampo";
 import { arvoreRenegado } from "./arvoreRenegado";
-import { arvoreOcultista } from "./arvoreOcultista";
 
-const criarArvoreVazia = (nome) => ({
-  classe: nome,
-  titulo: nome,
-  beneficio: "As habilidades desta classe ainda serao adicionadas.",
-  absolutas: [],
-  bases: [],
-  aptidoes: [],
-  especialidades: [],
-});
 const arvoreAniquilador = {
   classe: "Aniquilador",
   titulo: "A ANIQUILAÇÃO ABSOLUTA",
@@ -756,7 +746,6 @@ export const arvoresHabilidades = {
   atiradorElite: arvoreAtiradorElite,
   medicoDeCampo: arvoreMedicoCampo,
   renegado: arvoreRenegado,
-  ocultista: arvoreOcultista,
 };
 
 const normalizarClasse = (classe) =>
@@ -786,9 +775,6 @@ const aliasesClasse = {
 
   renegado: "renegado",
   "o-renegado": "renegado",
-
-  ocultista: "ocultista",
-  "o-ocultista": "ocultista",
 };
 
 export const obterArvoreClasse = (classeOuPersonagem = {}) => {

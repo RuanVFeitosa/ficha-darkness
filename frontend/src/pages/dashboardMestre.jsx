@@ -368,7 +368,7 @@ const DashboardMestre = () => {
   const [novoItemLoja, setNovoItemLoja] = useState(itemLojaVazio);
   const [categoriaLojaAtiva, setCategoriaLojaAtiva] = useState("todos");
   const [abaFicha, setAbaFicha] = useState("perfil");
-  const [aba, setAba] = useState("campanha");
+  const [aba, setAba] = useState("fichas");
   const [mensagem, setMensagem] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [abaLojaEditor, setAbaLojaEditor] = useState("armas-fogo");
@@ -398,11 +398,6 @@ const DashboardMestre = () => {
   const [partyCode, setPartyCode] = useState("");
   const [partyMensagem, setPartyMensagem] = useState("");
 
-  const STORAGE_CAMPANHA = "darkness_campanha";
-
-  const [campanhaItens, setCampanhaItens] = useState([]);
-  const [campanhaEditando, setCampanhaEditando] = useState(null);
-  const [filtroCampanha, setFiltroCampanha] = useState("todos");
 
   const [popup, setPopup] = useState(null);
 
@@ -973,80 +968,6 @@ const DashboardMestre = () => {
     }
   }, []);
 
-  useEffect(() => {
-    try {
-      const dados = JSON.parse(localStorage.getItem(STORAGE_CAMPANHA)) || [];
-      setCampanhaItens(dados);
-    } catch {
-      setCampanhaItens([]);
-    }
-  }, []);
-
-  const salvarCampanha = (novaLista) => {
-    setCampanhaItens(novaLista);
-    localStorage.setItem(STORAGE_CAMPANHA, JSON.stringify(novaLista));
-  };
-
-  const criarItemCampanha = (tipo = "documento") => {
-    const novo = {
-      id: crypto.randomUUID(),
-      tipo,
-      titulo: "Novo documento",
-      subtitulo: "",
-      conteudo: "",
-      tags: "",
-      importante: false,
-      criadoEm: new Date().toISOString(),
-      atualizadoEm: new Date().toISOString(),
-    };
-
-    salvarCampanha([novo, ...campanhaItens]);
-    setCampanhaEditando(novo.id);
-  };
-
-  const atualizarItemCampanha = (id, dados) => {
-    salvarCampanha(
-      campanhaItens.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              ...dados,
-              atualizadoEm: new Date().toISOString(),
-            }
-          : item,
-      ),
-    );
-  };
-
-  const duplicarItemCampanha = (item) => {
-    const copia = {
-      ...structuredClone(item),
-      id: crypto.randomUUID(),
-      titulo: `${item.titulo} (Cópia)`,
-      criadoEm: new Date().toISOString(),
-      atualizadoEm: new Date().toISOString(),
-    };
-
-    salvarCampanha([copia, ...campanhaItens]);
-  };
-
-  const excluirItemCampanha = (id) => {
-    abrirPopup({
-      tipo: "perigo",
-      titulo: "Excluir registro da campanha",
-      mensagem: "Deseja excluir este conteúdo da campanha permanentemente?",
-      confirmarTexto: "Excluir",
-      onConfirmar: () => {
-        salvarCampanha(campanhaItens.filter((item) => item.id !== id));
-        setCampanhaEditando(null);
-      },
-    });
-  };
-
-  const campanhaFiltrada =
-    filtroCampanha === "todos"
-      ? campanhaItens
-      : campanhaItens.filter((item) => item.tipo === filtroCampanha);
 
   const salvarListaNpcs = (novaLista) => {
     setNpcs(novaLista);
@@ -1887,7 +1808,7 @@ const DashboardMestre = () => {
     );
   };
 
-  const deveMostrarPartyLateral = !["loja", "habilidades", "campanha"].includes(
+  const deveMostrarPartyLateral = !["loja", "habilidades"].includes(
     aba,
   );
   return (
@@ -1920,12 +1841,6 @@ const DashboardMestre = () => {
 
       <nav className="mestre-tabs" aria-label="Areas do dashboard">
         <button
-          className={aba === "campanha" ? "ativa" : ""}
-          onClick={() => setAba("campanha")}
-        >
-          Campanha
-        </button>
-        <button
           className={aba === "fichas" ? "ativa" : ""}
           onClick={() => setAba("fichas")}
         >
@@ -1951,215 +1866,6 @@ const DashboardMestre = () => {
         </button>
       </nav>
       {false && <section className="mestre-dashboard-full"></section>}
-
-      {aba === "campanha" && (
-        <section className="mestre-dashboard-full campanha-dashboard">
-          <div className="campanha-hero">
-            <div>
-              <span>Arquivo do Narrador</span>
-              <h2>Campanha</h2>
-              <p>
-                Organize documentos, narrações, locais, segredos, pistas e tudo
-                que você precisa para mestrar.
-              </p>
-            </div>
-
-            <div className="campanha-acoes">
-              <button
-                type="button"
-                onClick={() => criarItemCampanha("documento")}
-              >
-                + Documento
-              </button>
-
-              <button
-                type="button"
-                onClick={() => criarItemCampanha("narracao")}
-              >
-                + Narração
-              </button>
-
-              <button type="button" onClick={() => criarItemCampanha("local")}>
-                + Local
-              </button>
-
-              <button
-                type="button"
-                onClick={() => criarItemCampanha("segredo")}
-              >
-                + Segredo
-              </button>
-            </div>
-          </div>
-
-          <div className="campanha-filtros">
-            {["todos", "documento", "narracao", "local", "npc", "segredo"].map(
-              (tipo) => (
-                <button
-                  key={tipo}
-                  type="button"
-                  className={filtroCampanha === tipo ? "ativa" : ""}
-                  onClick={() => setFiltroCampanha(tipo)}
-                >
-                  {tipo}
-                </button>
-              ),
-            )}
-          </div>
-
-          <div className="campanha-layout">
-            <section className="campanha-lista">
-              {campanhaFiltrada.length ? (
-                campanhaFiltrada.map((item) => (
-                  <article
-                    key={item.id}
-                    className={`campanha-card ${item.importante ? "importante" : ""}`}
-                    onClick={() => setCampanhaEditando(item.id)}
-                  >
-                    <small>{item.tipo}</small>
-                    <h3>{item.titulo || "Sem título"}</h3>
-
-                    {item.subtitulo && <p>{item.subtitulo}</p>}
-
-                    <div className="campanha-card-footer">
-                      <span>{item.tags || "Sem tags"}</span>
-
-                      <div>
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            duplicarItemCampanha(item);
-                          }}
-                        >
-                          Duplicar
-                        </button>
-
-                        <button
-                          type="button"
-                          className="perigo"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            excluirItemCampanha(item.id);
-                          }}
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))
-              ) : (
-                <div className="campanha-vazia">
-                  Nenhum conteúdo criado para esta categoria.
-                </div>
-              )}
-            </section>
-
-            <aside className="campanha-editor">
-              {(() => {
-                const item = campanhaItens.find(
-                  (doc) => doc.id === campanhaEditando,
-                );
-
-                if (!item) {
-                  return (
-                    <div className="campanha-editor-vazio">
-                      <h3>Nenhum documento selecionado</h3>
-                      <p>Crie ou selecione um item para editar.</p>
-                    </div>
-                  );
-                }
-
-                return (
-                  <>
-                    <label>
-                      Tipo
-                      <select
-                        value={item.tipo}
-                        onChange={(e) =>
-                          atualizarItemCampanha(item.id, {
-                            tipo: e.target.value,
-                          })
-                        }
-                      >
-                        <option value="documento">Documento</option>
-                        <option value="narracao">Narração</option>
-                        <option value="local">Local</option>
-                        <option value="npc">NPC / Personagem</option>
-                        <option value="segredo">Segredo</option>
-                      </select>
-                    </label>
-
-                    <label>
-                      Título
-                      <input
-                        value={item.titulo || ""}
-                        onChange={(e) =>
-                          atualizarItemCampanha(item.id, {
-                            titulo: e.target.value,
-                          })
-                        }
-                      />
-                    </label>
-
-                    <label>
-                      Subtítulo
-                      <input
-                        value={item.subtitulo || ""}
-                        onChange={(e) =>
-                          atualizarItemCampanha(item.id, {
-                            subtitulo: e.target.value,
-                          })
-                        }
-                      />
-                    </label>
-
-                    <label>
-                      Tags
-                      <input
-                        value={item.tags || ""}
-                        placeholder="ex: Brasil, Lincoln, Chave 1"
-                        onChange={(e) =>
-                          atualizarItemCampanha(item.id, {
-                            tags: e.target.value,
-                          })
-                        }
-                      />
-                    </label>
-
-                    <label className="campanha-check">
-                      <input
-                        type="checkbox"
-                        checked={!!item.importante}
-                        onChange={(e) =>
-                          atualizarItemCampanha(item.id, {
-                            importante: e.target.checked,
-                          })
-                        }
-                      />
-                      Importante
-                    </label>
-
-                    <label>
-                      Conteúdo
-                      <textarea
-                        className="campanha-textarea"
-                        value={item.conteudo || ""}
-                        onChange={(e) =>
-                          atualizarItemCampanha(item.id, {
-                            conteudo: e.target.value,
-                          })
-                        }
-                      />
-                    </label>
-                  </>
-                );
-              })()}
-            </aside>
-          </div>
-        </section>
-      )}
 
       {aba === "fichas" && (
         <section className="mestre-dashboard-full">

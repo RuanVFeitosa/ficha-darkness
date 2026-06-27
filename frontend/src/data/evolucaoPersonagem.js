@@ -17,7 +17,6 @@ export const RECURSOS_NIVEL_CLASSE = {
   atiradorElite: { sanidade: 3, esperanca: 3 },
   medicoDeCampo: { sanidade: 5, esperanca: 5 },
   renegado: { sanidade: 3, esperanca: 3 },
-  ocultista: { sanidade: 2, esperanca: 3 },
 };
 
 const normalizarTexto = (valor) =>
@@ -35,8 +34,6 @@ const CLASSE_ID_POR_NOME = {
   medicodecampo: "medicoDeCampo",
   orenegado: "renegado",
   renegado: "renegado",
-  ocultista: "ocultista",
-  oocultista: "ocultista",
 };
 
 export const obterClasseIdRecursos = (personagem = {}) => {

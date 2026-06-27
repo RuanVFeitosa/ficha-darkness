@@ -82,15 +82,6 @@ const classesPersonagem = [
     esperancaBase: 5,
     esperancaNivel: "3 PE (+mod VON)",
   },
-  {
-    id: "ocultista",
-    nome: "O Ocultista",
-    imagem: "/classes/ocultista.webp",
-    sanidadeBase: 20,
-    sanidadeNivel: "2 SAN (+mod Fort)",
-    esperancaBase: 40,
-    esperancaNivel: "3 PE (+mod VON)",
-  },
 ];
 
 const arquetiposPersonagem = [

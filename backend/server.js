@@ -562,9 +562,7 @@ const handleRequest = async (req, res) => {
 
   try {
     if (
-      (url.pathname === "/health" ||
-        url.pathname === "/api" ||
-        url.pathname === "/api/health") &&
+      (url.pathname === "/api" || url.pathname === "/api/health") &&
       req.method === "GET"
     ) {
       return sendJson(res, 200, {
@@ -665,6 +663,10 @@ const handleRequest = async (req, res) => {
 
     if (!url.pathname.startsWith("/api/") && req.method === "GET") {
       if (!SERVE_FRONTEND) {
+        if (url.pathname !== "/") {
+          return sendJson(res, 404, { error: "Rota nao encontrada" });
+        }
+
         return sendJson(res, 200, {
           ok: true,
           service: "ficha-darkness-backend",
@@ -720,8 +722,6 @@ if (require.main === module) {
     console.log("Deixe este terminal aberto enquanto estiver usando o site.");
   });
 }
-
-
 
 module.exports = {
   handleRequest,

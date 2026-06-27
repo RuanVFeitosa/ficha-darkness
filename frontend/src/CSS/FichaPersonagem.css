@@ -1,6 +1,119 @@
 /* =========================================================
-   FichaPersonagem.css — organizado por seções
+   Inputs e remoção dos spinners
    ========================================================= */
+
+.atributo-valor::-webkit-outer-spin-button,
+.atributo-valor::-webkit-inner-spin-button,
+.habilidade-valor::-webkit-outer-spin-button,
+.habilidade-valor::-webkit-inner-spin-button,
+.passiva-valor::-webkit-outer-spin-button,
+.passiva-valor::-webkit-inner-spin-button,
+.membro-atual::-webkit-outer-spin-button,
+.membro-atual::-webkit-inner-spin-button,
+.membro-max::-webkit-outer-spin-button,
+.membro-max::-webkit-inner-spin-button,
+.membro-vida-input::-webkit-outer-spin-button,
+.membro-vida-input::-webkit-inner-spin-button,
+.recurso-atual::-webkit-outer-spin-button,
+.recurso-atual::-webkit-inner-spin-button,
+.recurso-max::-webkit-outer-spin-button,
+.recurso-max::-webkit-inner-spin-button,
+.sanidade-atual::-webkit-outer-spin-button,
+.sanidade-atual::-webkit-inner-spin-button,
+.sanidade-max::-webkit-outer-spin-button,
+.sanidade-max::-webkit-inner-spin-button,
+.esperanca-atual::-webkit-outer-spin-button,
+.esperanca-atual::-webkit-inner-spin-button,
+.esperanca-max::-webkit-outer-spin-button,
+.esperanca-max::-webkit-inner-spin-button,
+.passiva-valor-temporario::-webkit-outer-spin-button,
+.passiva-valor-temporario::-webkit-inner-spin-button,
+.membro-defesa-input::-webkit-outer-spin-button,
+.membro-defesa-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.atributo-valor[type="number"],
+.habilidade-valor[type="number"],
+.passiva-valor[type="number"],
+.membro-atual[type="number"],
+.membro-max[type="number"],
+.membro-atual[type="number"],
+.membro-vida-input[type="number"] .recurso-atual[type="number"],
+.recurso-max[type="number"],
+.sanidade-atual[type="number"],
+.sanidade-max[type="number"],
+.esperanca-atual[type="number"],
+.esperanca-max[type="number"],
+.passiva-valor-temporario[type="number"],
+.membro-defesa-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.barra-rpg-input::-webkit-outer-spin-button,
+.barra-rpg-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.categorias-passivas::-webkit-scrollbar {
+  width: 6px;
+}
+
+.categorias-passivas::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.categorias-passivas::-webkit-scrollbar-thumb {
+  background: #8b4513;
+  border-radius: 3px;
+}
+
+.categorias-passivas::-webkit-scrollbar-thumb:hover {
+  background: #a0522d;
+}
+
+.lista-condicoes::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lista-condicoes::-webkit-scrollbar-thumb {
+  background: #8b4513;
+  border-radius: 10px;
+}
+
+/* =========================================================
+00 - Design tokens globais
+========================================================= */
+
+   :root {
+  --cor-primaria: #d4af37;
+  --cor-secundaria: #8b4513;
+  --cor-texto: #fff8ea;
+  --cor-texto-secundario: #cfcfcf;
+  --cor-fundo: #080808;
+  --cor-fundo-card: rgba(255, 255, 255, 0.04);
+
+  --borda-suave: rgba(255, 255, 255, 0.14);
+  --borda-media: rgba(255, 255, 255, 0.24);
+  --borda-forte: rgba(255, 255, 255, 0.35);
+  --borda-primaria: rgba(212, 175, 55, 0.35);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --fundo-elevado: rgba(0, 0, 0, 0.35);
+  --fundo-card: rgba(255, 255, 255, 0.04);
+  --fundo-card-escuro: rgba(8, 8, 8, 0.94);
+
+  --sombra-card: 0 12px 28px rgba(0, 0, 0, 0.35);
+  --sombra-primaria: 0 0 18px rgba(212, 175, 55, 0.16);
+
+  --transicao-padrao: 0.25s ease;
+}
 
 /* =========================================================
    01 - Animações
@@ -163,6 +276,7 @@ body {
   height: 100vh;
   margin: 0 auto;
   padding: 20px;
+  background-color: var(--cor-fundo);
 }
 
 .main-content {
@@ -190,8 +304,7 @@ body {
    ========================================================= */
 
 .botao-loja-flutuante,
-.botao-upgrade-flutuante,
-.botao-party-flutuante {
+.botao-upgrade-flutuante {
   position: fixed;
 
   left: 24px;
@@ -316,7 +429,7 @@ body {
 .nome-personagem {
   background: transparent;
   border: none;
-  border-bottom: 1px solid #ffffff;
+  border-bottom: 1px solid var(--cor-primaria);
   font-weight: bold;
   font-size: 10px;
   text-transform: uppercase;
@@ -407,91 +520,7 @@ body {
   color: var(--cor-primaria);
 }
 
-/* =========================================================
-   06 - Inputs e remoção dos spinners
-   ========================================================= */
 
-.atributo-valor::-webkit-outer-spin-button,
-.atributo-valor::-webkit-inner-spin-button,
-.habilidade-valor::-webkit-outer-spin-button,
-.habilidade-valor::-webkit-inner-spin-button,
-.passiva-valor::-webkit-outer-spin-button,
-.passiva-valor::-webkit-inner-spin-button,
-.membro-atual::-webkit-outer-spin-button,
-.membro-atual::-webkit-inner-spin-button,
-.membro-max::-webkit-outer-spin-button,
-.membro-max::-webkit-inner-spin-button,
-.membro-vida-input::-webkit-outer-spin-button,
-.membro-vida-input::-webkit-inner-spin-button,
-.recurso-atual::-webkit-outer-spin-button,
-.recurso-atual::-webkit-inner-spin-button,
-.recurso-max::-webkit-outer-spin-button,
-.recurso-max::-webkit-inner-spin-button,
-.sanidade-atual::-webkit-outer-spin-button,
-.sanidade-atual::-webkit-inner-spin-button,
-.sanidade-max::-webkit-outer-spin-button,
-.sanidade-max::-webkit-inner-spin-button,
-.esperanca-atual::-webkit-outer-spin-button,
-.esperanca-atual::-webkit-inner-spin-button,
-.esperanca-max::-webkit-outer-spin-button,
-.esperanca-max::-webkit-inner-spin-button,
-.passiva-valor-temporario::-webkit-outer-spin-button,
-.passiva-valor-temporario::-webkit-inner-spin-button,
-.membro-defesa-input::-webkit-outer-spin-button,
-.membro-defesa-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.atributo-valor[type="number"],
-.habilidade-valor[type="number"],
-.passiva-valor[type="number"],
-.membro-atual[type="number"],
-.membro-max[type="number"],
-.membro-atual[type="number"],
-.membro-vida-input[type="number"] .recurso-atual[type="number"],
-.recurso-max[type="number"],
-.sanidade-atual[type="number"],
-.sanidade-max[type="number"],
-.esperanca-atual[type="number"],
-.esperanca-max[type="number"],
-.passiva-valor-temporario[type="number"],
-.membro-defesa-input[type="number"] {
-  -moz-appearance: textfield;
-}
-
-.barra-rpg-input::-webkit-outer-spin-button,
-.barra-rpg-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.categorias-passivas::-webkit-scrollbar {
-  width: 6px;
-}
-
-.categorias-passivas::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.categorias-passivas::-webkit-scrollbar-thumb {
-  background: #8b4513;
-  border-radius: 3px;
-}
-
-.categorias-passivas::-webkit-scrollbar-thumb:hover {
-  background: #a0522d;
-}
-
-.lista-condicoes::-webkit-scrollbar {
-  width: 4px;
-}
-
-.lista-condicoes::-webkit-scrollbar-thumb {
-  background: #8b4513;
-  border-radius: 10px;
-}
 
 /* =========================================================
    07 - Sanidade e Esperança
@@ -2225,6 +2254,76 @@ body {
     0 0 38px rgba(212, 175, 55, 0.22);
 }
 
+.cards-alvos-dano {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 32px;
+  width: 100%;
+  margin: 30px 0;
+  flex-wrap: nowrap;
+}
+
+.card-alvo-dano {
+  flex: 1;
+  max-width: 340px;
+  min-width: 320px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 22px;
+
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.dados-card-alvo {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: nowrap;
+}
+
+.card-alvo-dano h4 {
+  margin: 0;
+  color: #f5efe4;
+  font-size: 0.78rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.dados-card-alvo {
+  margin: 0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.resultado-alvo-dano {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.resultado-alvo-dano span {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #a8a8a8;
+}
+
+.resultado-alvo-dano strong {
+  font-size: 2rem;
+  color: #ffffff;
+  font-weight: 800;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.35);
+}
+
 @keyframes dadoGirando {
   0% {
     transform: rotate(0deg) scale(1);
@@ -2835,6 +2934,35 @@ body {
 }
 
 /* AÇÕES */
+.bonus-dano-arma {
+  display: grid;
+  gap: 8px;
+
+  margin-bottom: 18px;
+}
+
+.bonus-dano-arma span {
+  color: #d4af37;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.bonus-dano-arma input {
+  min-height: 40px;
+  padding: 0 12px;
+
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.055);
+  color: #fff8ea;
+
+  font-family: inherit;
+  font-weight: 800;
+}
+
 .item-visualizer-acoes {
   display: flex;
   flex-wrap: wrap;
@@ -2872,6 +3000,7 @@ body {
 ========================= */
 
 .dado-rolagem.d4 {
+  clip-path: polygon(50% 4%, 96% 92%, 4% 92%);
   width: 0;
   height: 0;
 
@@ -2892,19 +3021,19 @@ body {
   width: 68px;
   height: 68px;
 
-  border-radius: 12px;
-}
+  border-radius: 14px;}
 
 /* =========================
    D8
 ========================= */
 
 .dado-rolagem.d8 {
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
   width: 76px;
   height: 76px;
 
   border: none;
-  background: transparent;
+  background: goldenrod;
   box-shadow: none;
 
   position: relative;
@@ -2950,8 +3079,7 @@ body {
 
   background: #9333ea;
 
-  clip-path: polygon(50% 0%, 95% 35%, 78% 100%, 22% 100%, 5% 35%);
-}
+  clip-path: polygon(50% 0%, 92% 32%, 75% 100%, 25% 100%, 8% 32%);}
 
 /* =========================
    D12
@@ -2963,17 +3091,15 @@ body {
 
   background: #ca8a04;
 
-  clip-path: polygon(
-    50% 0%,
-    80% 10%,
-    100% 35%,
-    100% 65%,
-    80% 90%,
-    50% 100%,
-    20% 90%,
-    0% 65%,
-    0% 35%,
-    20% 10%
+    clip-path: polygon(
+    30% 0%,
+    70% 0%,
+    100% 30%,
+    100% 70%,
+    70% 100%,
+    30% 100%,
+    0% 70%,
+    0% 30%
   );
 }
 
@@ -6330,24 +6456,8 @@ body {
    escolhe novas cores via variáveis CSS.
    ========================================================= */
 
-:root {
-  --cor-primaria: white;
-  --cor-secundaria: black;
-  --cor-texto: #ffffff;
-  --cor-fundo: #000000;
-  --cor-borda: #444444;
 
-  --cor-sanidade: #4a86e8;
-  --cor-sanidade-escura: #1a4fa0;
-  --cor-esperanca: #d4af37;
-  --cor-esperanca-escura: #8b7500;
-}
 
-/* Base geral */
-.ficha-container {
-  background: var(--cor-fundo, #000000);
-  color: var(--cor-texto, #ffffff);
-}
 
 /* =========================================================
    24 - Responsividade refinada da ficha
@@ -6810,7 +6920,7 @@ body {
 .ativo-item,
 .defesa-valores input,
 .defesa-campos input {
-  border-color: var(--cor-texto, #ffffff);
+  border-color: var(--cor-borda, #ffffff);
 }
 
 .atributo-dado,
@@ -7362,12 +7472,12 @@ body {
     background:
       radial-gradient(
         circle at top left,
-        rgba(255,255,255,0.08),
+        rgba(255, 255, 255, 0.08),
         transparent 45%
       ),
-      rgba(0,0,0,0.85);
+      rgba(0, 0, 0, 0.85);
 
-    border: 1px solid rgba(255,255,255,0.12);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-left: 3px solid #fff;
 
     overflow: hidden;
@@ -7389,11 +7499,11 @@ body {
 
   .ativo-atributo {
     font-size: 0.62rem;
-    color: rgba(255,255,255,0.55);
+    color: rgba(255, 255, 255, 0.55);
   }
 
   .ativo-separador {
-    color: rgba(255,255,255,0.4);
+    color: rgba(255, 255, 255, 0.4);
   }
 
   .ativo-nome {
@@ -7474,7 +7584,6 @@ body {
      BOTÕES FLUTUANTES
   ===================================================== */
 
-  
   .botao-mestre-flutuante,
   .botao-loja-flutuante,
   .botao-upgrade-flutuante,
@@ -7518,8 +7627,7 @@ body {
     transform: translateX(-50%);
   }
 
-
- .botao-mestre-flutuante,
+  .botao-mestre-flutuante,
   .botao-loja-flutuante,
   .botao-upgrade-flutuante,
   .botao-party-flutuante,
@@ -8159,7 +8267,7 @@ body {
     grid-template-columns: 1fr;
   }
 
-.ficha-party-box button {
+  .ficha-party-box button {
     width: 100%;
   }
 }
