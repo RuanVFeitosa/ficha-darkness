@@ -2,15 +2,17 @@ services:
   - type: web
     name: ficha-darkness-backend
     runtime: node
+    plan: free
     buildCommand: npm install
     startCommand: npm run backend
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
         value: 22
       - key: SERVE_FRONTEND
         value: false
       - key: CORS_ORIGIN
-        value: "*"
+        value: https://seu-projeto.vercel.app
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY

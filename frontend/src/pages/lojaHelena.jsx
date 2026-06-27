@@ -479,9 +479,10 @@ const LojaHelena = () => {
         className={`loja-hero ${usandoLojaAbsoluto ? "loja-hero-ritos" : ""}`}
       >
         <img
-          src={usandoLojaAbsoluto ? "/SalaMarcos.png" : "/loja-helena.png"}
+          src={usandoLojaAbsoluto ? "/SalaMarcos.webp" : "/loja-helena.webp"}
           alt="Loja"
           className="loja-hero-img"
+          decoding="async"
         />
 
         <div className="loja-hero-overlay" />

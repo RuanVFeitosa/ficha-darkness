@@ -9,7 +9,7 @@
       transparent 32%
     ),
     linear-gradient(135deg, rgba(0, 0, 0, 0.96), rgba(8, 8, 8, 0.98)),
-    url("../assets/IMG/OAbsoluto.png") center/cover fixed;
+    url("../assets/IMG/OAbsoluto.webp") center/cover fixed;
 
   color: #f5f5f5;
 }

@@ -6,7 +6,7 @@ Aplicacao de ficha de RPG com frontend React e backend Node separados por worksp
 
 - `frontend/`: aplicacao React criada com Create React App.
 - `backend/`: API Node, persistencia local em JSON ou Supabase, e servidor de producao.
-- `api/`: adaptadores serverless da Vercel que encaminham chamadas para `backend/server.js`.
+- `api/`: adaptadores serverless legados da Vercel. O deploy atual ignora esta pasta para manter a Vercel apenas como frontend.
 - `scripts/`: utilitarios de desenvolvimento.
 
 ## Scripts
@@ -29,7 +29,7 @@ npm run build
 npm test
 ```
 
-`npm run build` gera o build de producao em `frontend/build`. Depois disso, o backend consegue servir o app React e a API no mesmo processo.
+`npm run build` gera o build de producao em `frontend/build`. Em producao, a Vercel serve apenas esse frontend estatico e o backend roda separado na Render.
 
 ## API local
 

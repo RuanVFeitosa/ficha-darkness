@@ -39,7 +39,7 @@ const classesPersonagem = [
   {
     id: "aniquilador",
     nome: "Aniquilidador",
-    imagem: "/classes/aniquilador.png",
+    imagem: "/classes/aniquilador.webp",
     sanidadeBase: 30,
     sanidadeNivel: "5 SAN (+mod Fort)",
     esperancaBase: 10,
@@ -48,7 +48,7 @@ const classesPersonagem = [
   {
     id: "especialista",
     nome: "Especialista",
-    imagem: "/classes/especialista.png",
+    imagem: "/classes/especialista.webp",
     sanidadeBase: 20,
     sanidadeNivel: "2 SAN (+mod Fort)",
     esperancaBase: 25,
@@ -57,7 +57,7 @@ const classesPersonagem = [
   {
     id: "atiradorElite",
     nome: "Atirador de Elite",
-    imagem: "/classes/atirador-elite.png",
+    imagem: "/classes/atirador-elite.webp",
     sanidadeBase: 25,
     sanidadeNivel: "3 SAN (+mod Fort)",
     esperancaBase: 30,
@@ -66,7 +66,7 @@ const classesPersonagem = [
   {
     id: "medicoDeCampo",
     nome: "Medico de Campo",
-    imagem: "/classes/medica.png",
+    imagem: "/classes/medica.webp",
     sanidadeBase: 20,
     sanidadeNivel: "5 SAN (+mod Fort)",
     esperancaBase: 40,
@@ -75,7 +75,7 @@ const classesPersonagem = [
   {
     id: "renegado",
     nome: "O Renegado",
-    imagem: "/classes/renegado.png",
+    imagem: "/classes/renegado.webp",
     sanidadeBase: 15,
     sanidadeNivel: "3 SAN (+mod Fort)",
     esperancaBase: 5,
@@ -84,7 +84,7 @@ const classesPersonagem = [
   {
     id: "ocultista",
     nome: "O Ocultista",
-    imagem: "/classes/ocultista.png",
+    imagem: "/classes/ocultista.webp",
     sanidadeBase: 20,
     sanidadeNivel: "2 SAN (+mod Fort)",
     esperancaBase: 40,
@@ -1216,6 +1216,7 @@ const CriarPersonagem = () => {
           alt=""
           className="classe-bg-img"
           aria-hidden="true"
+          decoding="async"
         />
       )}
       <form className="criacao-form" onSubmit={enviar}>

@@ -8,7 +8,7 @@ Arquitetura recomendada quando o servidor precisa ficar sempre ligado:
 
 Para hospedar em uma VPS Always Free da Oracle Cloud, veja tambem `ORACLE_CLOUD_DEPLOY.md`.
 
-A Vercel continua servindo o site React. O backend fica em uma URL propria e o frontend usa `REACT_APP_API_URL` para chamar essa API.
+A Vercel continua servindo apenas o site React estatico. O backend fica em uma URL propria da Render e o frontend usa `REACT_APP_API_URL` para chamar essa API diretamente, sem proxy pela Vercel.
 
 ## Banco gratuito com Supabase
 
@@ -53,7 +53,11 @@ SUPABASE_SERVICE_ROLE_KEY = sua service_role key do Supabase
 SUPABASE_TABLE = personagens
 ```
 
-Durante testes, `CORS_ORIGIN = *` funciona. Para producao, prefira a URL exata da Vercel.
+Durante testes, `CORS_ORIGIN = *` funciona. Para producao, prefira a URL exata da Vercel. Se precisar liberar mais de uma URL, use virgula:
+
+```txt
+CORS_ORIGIN = https://seu-projeto.vercel.app,https://preview-ou-dominio.vercel.app
+```
 
 Depois do deploy, teste:
 
@@ -67,7 +71,7 @@ Observacao: planos gratuitos de alguns hosts podem dormir. Para servidor realmen
 
 ## Frontend na Vercel
 
-Na Vercel, publique apenas o React estatico.
+Na Vercel, publique apenas o React estatico. A pasta `api/` esta listada em `.vercelignore`, entao a Vercel nao cria funcoes serverless para o backend.
 
 Configuracoes:
 
@@ -85,6 +89,8 @@ REACT_APP_API_URL = https://seu-backend.onrender.com/api
 ```
 
 Depois de salvar essa variavel, faca um novo deploy do frontend na Vercel. O React embute variaveis `REACT_APP_*` no momento do build.
+
+Importante: nao crie rewrite/proxy de `/api` na Vercel para a Render. Se a Vercel fizer proxy das chamadas, o trafego de API volta a passar pela Vercel e pode contar novamente no uso de transferencia.
 
 ## Teste local
 

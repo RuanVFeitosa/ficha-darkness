@@ -62,7 +62,7 @@ body {
   z-index: 999999;
 
   background-color: #000;
-  background-image: url("../public/transicao.png");
+  background-image: url("../public/transicao.webp");
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;

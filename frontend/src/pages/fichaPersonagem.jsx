@@ -5,8 +5,8 @@ import "../CSS/CondicoesProfile.css";
 
 import { condicoes } from "../components/data/condicoes";
 import { receitasCriacao } from "../components/data/receitasCriacao";
-import profile from "../assets/IMG/OAbsoluto.png";
-import corpoHumano from "../assets/IMG/corpo_humano.png";
+import profile from "../assets/IMG/OAbsoluto.webp";
+import corpoHumano from "../assets/IMG/corpo_humano.webp";
 import { descricoesHabilidades } from "../components/descricoesHabilidades";
 import ModalDescricao from "../components/modal/modalDescricao";
 import {

@@ -30,3 +30,4 @@ yarn-debug.log*
 yarn-error.log*
 
 backend/data/party
+frontend/src/assets/IMG/perfil_template.webp

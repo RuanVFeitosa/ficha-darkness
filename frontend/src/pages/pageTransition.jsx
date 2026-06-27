@@ -13,7 +13,7 @@ export default function PageTransition() {
 
   return (
     <div className={`page-transition ${active ? "active" : ""}`}>
-      <img src="/transicao.png" alt="" />
+      <img src="/transicao.webp" alt="" decoding="async" />
     </div>
   );
 }

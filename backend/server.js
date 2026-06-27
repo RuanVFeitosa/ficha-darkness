@@ -29,10 +29,26 @@ const contentTypes = {
   ".txt": "text/plain; charset=utf-8",
 };
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": process.env.CORS_ORIGIN || "*",
-  "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+const getCorsHeaders = (req) => {
+  const configuredOrigins = String(process.env.CORS_ORIGIN || "*")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  const requestOrigin = req.headers.origin;
+  const allowAnyOrigin =
+    configuredOrigins.length === 0 || configuredOrigins.includes("*");
+  const allowedOrigin = allowAnyOrigin
+    ? "*"
+    : configuredOrigins.includes(requestOrigin)
+      ? requestOrigin
+      : configuredOrigins[0];
+
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    Vary: "Origin",
+  };
 };
 
 const defaultCatalogoLoja = [
@@ -140,7 +156,7 @@ const sendJson = (res, statusCode, payload) => {
   res.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": Buffer.byteLength(body),
-    ...corsHeaders,
+    ...(res.corsHeaders || {}),
   });
   res.end(body);
 };
@@ -468,6 +484,7 @@ const createUniqueFichaId = async (nome) => {
 
 const handleRequest = async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+  res.corsHeaders = getCorsHeaders(req);
 
   if (req.method === "OPTIONS") {
     return sendJson(res, 204, {});
