@@ -9,6 +9,7 @@ import {
 import { ULTIMA_FICHA_KEY } from "../constants/session";
 import { estadoInicial } from "./fichaPersonagem";
 import { calcularModificador } from "../data/evolucaoPersonagem";
+import { compressProfileImage } from "../services/imageCompression";
 import "../CSS/CriarPersonagem.css";
 
 const STORAGE_KEY = "fichaRPG_personagem";
@@ -1073,7 +1074,7 @@ const CriarPersonagem = () => {
     setErro("");
   };
 
-  const carregarFoto = (arquivo) => {
+  const carregarFoto = async (arquivo) => {
     if (!arquivo) return;
 
     if (!arquivo.type.startsWith("image/")) {
@@ -1081,17 +1082,13 @@ const CriarPersonagem = () => {
       return;
     }
 
-    if (arquivo.size > 2 * 1024 * 1024) {
-      setErro("Escolha uma imagem de ate 2 MB.");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      atualizarCampo("fotoPerfil", reader.result || "");
+    try {
+      const fotoComprimida = await compressProfileImage(arquivo);
+      atualizarCampo("fotoPerfil", fotoComprimida);
       setErro("");
-    };
-    reader.readAsDataURL(arquivo);
+    } catch (error) {
+      setErro(error.message || "Nao foi possivel carregar a imagem.");
+    }
   };
 
   const proximaEtapa = () => {

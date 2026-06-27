@@ -14,6 +14,7 @@ import {
   buscarPersonagem,
   salvarPersonagem,
 } from "../services/personagemApi";
+import { compressProfileImage } from "../services/imageCompression";
 import {
   notificarPersonagemAtualizado,
   ouvirArvoresAtualizadas,
@@ -3526,7 +3527,7 @@ const FichaPersonagem = () => {
     setUltimoEstadoEsperanca(estadoEsperancaPerfil);
   }, [estadoEsperancaPerfil]);
 
-  const atualizarFotoPerfil = (event) => {
+  const atualizarFotoPerfil = async (event) => {
     const arquivo = event.target.files?.[0];
 
     if (!arquivo) {
@@ -3539,16 +3540,16 @@ const FichaPersonagem = () => {
       return;
     }
 
-    const leitor = new FileReader();
-
-    leitor.onload = () => {
+    try {
+      const fotoComprimida = await compressProfileImage(arquivo);
       setPersonagem((prev) => ({
         ...prev,
-        fotoPerfil: leitor.result,
+        fotoPerfil: fotoComprimida,
       }));
-    };
+    } catch (error) {
+      alert(error.message || "Nao foi possivel carregar a imagem.");
+    }
 
-    leitor.readAsDataURL(arquivo);
     event.target.value = "";
   };
 

@@ -26,6 +26,7 @@ import {
   buscarPersonagem,
   salvarPersonagem,
 } from "../services/personagemApi";
+import { compressProfileImage } from "../services/imageCompression";
 import {
   notificarArvoresAtualizadas,
   notificarPersonagemAtualizado,
@@ -2681,18 +2682,26 @@ const DashboardMestre = () => {
                           <input
                             type="file"
                             accept="image/*"
-                            onChange={(event) => {
+                            onChange={async (event) => {
                               const arquivo = event.target.files?.[0];
 
                               if (!arquivo) return;
 
-                              const reader = new FileReader();
+                              try {
+                                const fotoComprimida =
+                                  await compressProfileImage(arquivo);
+                                atualizarCampoNpc(
+                                  "fotoPerfil",
+                                  fotoComprimida,
+                                );
+                              } catch (error) {
+                                setMensagem(
+                                  error.message ||
+                                    "Nao foi possivel carregar a imagem.",
+                                );
+                              }
 
-                              reader.onload = () => {
-                                atualizarCampoNpc("fotoPerfil", reader.result);
-                              };
-
-                              reader.readAsDataURL(arquivo);
+                              event.target.value = "";
                             }}
                           />
                         </label>
@@ -3058,20 +3067,25 @@ const DashboardMestre = () => {
                             <input
                               type="file"
                               accept="image/*"
-                              onChange={(event) => {
+                              onChange={async (event) => {
                                 const arquivo = event.target.files?.[0];
                                 if (!arquivo) return;
 
-                                const reader = new FileReader();
-
-                                reader.onload = () => {
+                                try {
+                                  const fotoComprimida =
+                                    await compressProfileImage(arquivo);
                                   atualizarCampoInimigo(
                                     "fotoPerfil",
-                                    reader.result,
+                                    fotoComprimida,
                                   );
-                                };
+                                } catch (error) {
+                                  setMensagem(
+                                    error.message ||
+                                      "Nao foi possivel carregar a imagem.",
+                                  );
+                                }
 
-                                reader.readAsDataURL(arquivo);
+                                event.target.value = "";
                               }}
                             />
                           </label>
