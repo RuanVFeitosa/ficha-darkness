@@ -719,6 +719,13 @@ if (require.main === module) {
   });
 }
 
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "online",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 module.exports = {
   handleRequest,
 };
