@@ -170,12 +170,34 @@
 
 .loja-item-tipo {
   display: inline-block;
-  margin-bottom: 12px;
   color: #d4af37;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
+}
+
+.loja-item-topo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 54px;
+  margin-bottom: 14px;
+}
+
+.loja-item-icone {
+  width: 58px;
+  height: 48px;
+  flex: 0 0 58px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.2));
+}
+
+.loja-item-icone svg {
+  width: 100%;
+  height: 100%;
 }
 
 .loja-item-tipo.ritos {
@@ -275,11 +297,26 @@
 .loja-carrinho-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   padding: 10px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.06);
+}
+
+.loja-carrinho-item > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.loja-carrinho-icone {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  opacity: 0.96;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.18));
 }
 
 .loja-carrinho-item strong {

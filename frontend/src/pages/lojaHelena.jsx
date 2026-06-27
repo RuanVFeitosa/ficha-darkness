@@ -13,6 +13,7 @@ import {
   mdiCreation,
 } from "@mdi/js";
 import "../CSS/LojaHelena.css";
+import { obterIconeItem } from "../utils/itemIcons";
 import {
   buscarCatalogoLoja,
   buscarPersonagem,
@@ -317,6 +318,22 @@ const LojaHelena = () => {
     return usandoLojaAbsoluto ? `${valor} Mementos` : `${valor} cr`;
   };
 
+  const renderizarIconeItem = (item, size = 1.8) => {
+    const icone = obterIconeItem(item);
+
+    const ehImagem =
+      typeof icone === "string" &&
+      (icone.includes(".svg") || icone.startsWith("data:image"));
+
+    if (ehImagem) {
+      return (
+        <img src={icone} alt="" className="loja-item-img" aria-hidden="true" />
+      );
+    }
+
+    return <Icon path={icone} size={size} />;
+  };
+
   const adicionarAoCarrinho = (item) => {
     setCarrinho((atual) => [...atual, item]);
     setMensagem(`${item.nome} separado no balcao.`);
@@ -463,14 +480,16 @@ const LojaHelena = () => {
     localStorage.setItem(saldoKey, String(personagemAtualizado.lojaCreditos));
     notificarPersonagemAtualizado(fichaId, personagemAtualizado);
 
-    salvarPersonagem(fichaId, personagemAtualizado).then((personagemSalvo) => {
-      notificarPersonagemAtualizado(
-        fichaId,
-        personagemSalvo || personagemAtualizado,
-      );
-    }).catch((error) => {
-      console.warn("Backend indisponivel. Compra salva localmente.", error);
-    });
+    salvarPersonagem(fichaId, personagemAtualizado)
+      .then((personagemSalvo) => {
+        notificarPersonagemAtualizado(
+          fichaId,
+          personagemSalvo || personagemAtualizado,
+        );
+      })
+      .catch((error) => {
+        console.warn("Backend indisponivel. Compra salva localmente.", error);
+      });
   };
 
   return (
@@ -608,9 +627,15 @@ const LojaHelena = () => {
                 className={`loja-item ${item.armaStatus ? "loja-arma" : ""}`}
               >
                 <div>
-                  <span className={`loja-item-tipo ${item.categoria}`}>
-                    {item.armaStatus?.tipo || item.categoria}
-                  </span>
+                  <div className="loja-item-topo">
+                    <div className="loja-item-icone" aria-hidden="true">
+                      {renderizarIconeItem(item, 1.8)}{" "}
+                    </div>
+
+                    <span className={`loja-item-tipo ${item.categoria}`}>
+                      {item.armaStatus?.tipo || item.categoria}
+                    </span>
+                  </div>
 
                   <h2>{item.nome}</h2>
                   <p>{item.detalhe}</p>
@@ -703,6 +728,10 @@ const LojaHelena = () => {
                     key={`${item.id}-${index}`}
                     className="loja-carrinho-item"
                   >
+                    <span className="loja-carrinho-icone" aria-hidden="true">
+                      <Icon path={obterIconeItem(item)} size={0.95} />
+                    </span>
+
                     <div>
                       <strong>{item.nome}</strong>
                       <span>{formatarPreco(item)}</span>

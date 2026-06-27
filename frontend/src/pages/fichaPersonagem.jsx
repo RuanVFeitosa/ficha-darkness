@@ -34,6 +34,7 @@ import {
   mdiDiceD20,
   mdiShieldOutline,
 } from "@mdi/js";
+import { obterIconeItem } from "../utils/itemIcons";
 import {
   listarHabilidadesSelecionadas,
   obterArvoreClasse,
@@ -1560,6 +1561,29 @@ const FichaPersonagem = () => {
     setModalRolagem(null);
   };
 
+  const renderizarIconeItem = (item) => {
+    const icone = obterIconeItem(item);
+
+    const ehImagem =
+      typeof icone === "string" &&
+      (icone.endsWith(".svg") ||
+        icone.includes(".svg") ||
+        icone.startsWith("data:image"));
+
+    if (ehImagem) {
+      return (
+        <img
+          src={icone}
+          alt=""
+          className="inventario-card-img"
+          aria-hidden="true"
+        />
+      );
+    }
+
+    return <Icon path={icone} size={2.2} />;
+  };
+
   const criarItemPersonalizado = (event) => {
     event.preventDefault();
 
@@ -2927,13 +2951,12 @@ const FichaPersonagem = () => {
                 >
                   <div className="inventario-resumo">
                     <div className="inventario-card-icone">
-                      {item.icone || "🎒"}
+                      {renderizarIconeItem(item)}
                     </div>
-
+                    <hr width="100%" />{" "}
                     <span className="inventario-item-nome">{item.nome}</span>
-
                     <small className="inventario-item-tipo">
-                      {item.tipo || item.custo || item.detalhes || "Item"}
+                      {item.tipo || item.custo }
                     </small>
                   </div>
                 </article>
@@ -4064,13 +4087,12 @@ const FichaPersonagem = () => {
               className="item-visualizer-overlay"
               onClick={() => setItemVisualizado(null)}
             >
-              <div
-                className="item-visualizer"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="item-visualizador">
                 <div className="item-visualizer-topo">
-                  <div className="item-visualizer-icone">
-                    {itemVisualizado.icone || "🎒"}
+                  <div className="item-visualizer-topo">
+                    <div className="item-visualizer-icone">
+                      {renderizarIconeItem(itemVisualizado)}
+                    </div>
                   </div>
 
                   <div className="visualizer-info">
@@ -4109,11 +4131,7 @@ const FichaPersonagem = () => {
                     </p>
                   )}
 
-                  {itemVisualizado.detalhes && (
-                    <p>
-                      <strong>Detalhes:</strong> {itemVisualizado.detalhes}
-                    </p>
-                  )}
+                  
 
                   {itemVisualizado.efeito && (
                     <p>
@@ -4193,7 +4211,7 @@ const FichaPersonagem = () => {
                           rolarAtaqueArma(itemVisualizado, "violencia")
                         }
                       >
-                        Reflexos + Violencia
+                        Violencia
                       </button>
 
                       <button
@@ -4201,7 +4219,7 @@ const FichaPersonagem = () => {
                           rolarAtaqueArma(itemVisualizado, "percepcao")
                         }
                       >
-                        Reflexos + Percepcao
+                        Percepcao
                       </button>
 
                       <button
@@ -4209,7 +4227,7 @@ const FichaPersonagem = () => {
                           rolarAtaqueArma(itemVisualizado, "persistencia")
                         }
                       >
-                        Reflexos + Persistencia
+                        Persistencia
                       </button>
 
                       <button
@@ -4217,7 +4235,7 @@ const FichaPersonagem = () => {
                           rolarAtaqueArma(itemVisualizado, "firmeza")
                         }
                       >
-                        Reflexos + Firmeza
+                        Firmeza
                       </button>
                     </>
                   ) : (

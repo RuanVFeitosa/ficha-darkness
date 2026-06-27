@@ -1868,7 +1868,13 @@ body {
 
   background: rgba(0, 0, 0, 0.42);
 
-  font-size: 2.2rem;
+  color: #ffffff;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.18));
+}
+
+.item-visualizer-icone svg {
+  width: 100%;
+  height: 100%;
 }
 
 .rito-visualizer-info-topo {
@@ -2692,8 +2698,9 @@ body {
   border-radius: 10px;
 
   background:
-    radial-gradient(circle at top, rgba(139, 69, 19, 0.18), transparent 55%),
-    rgba(10, 8, 6, 0.94);
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.09), transparent 52%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.42)),
+    rgba(7, 7, 7, 0.82);
 
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
 
@@ -2723,19 +2730,28 @@ body {
 }
 
 .inventario-card-icone {
-  width: 54px;
-  height: 54px;
-
+  width: 88px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: transparent;
 
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: 12px;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+}
 
-  background: rgba(0, 0, 0, 0.36);
+.inventario-card-img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  background: none;
+  opacity: 1;
+}
 
-  font-size: 1.7rem;
+.inventario-card-icone svg,
+.inventario-card-icone img {
+  width: 100%;
+  height: 100%;
 }
 
 .inventario-item-nome {
@@ -2785,7 +2801,7 @@ body {
 
 .item-visualizer {
   position: relative;
-
+  overflow: hidden;
   width: min(760px, calc(100% - 32px));
   max-height: 88vh;
   overflow-y: auto;
@@ -2811,36 +2827,31 @@ body {
   display: grid;
   grid-template-columns: 80px 1fr 80px;
   align-items: center;
-
   width: 100%;
   margin-bottom: 26px;
 }
 
 /* ÍCONE */
 .item-visualizer-icone {
-  width: 72px;
-  height: 72px;
-
+  width: 150px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border: 1px solid rgba(212, 175, 55, 0.32);
+  border: none;
   border-radius: 16px;
 
-  background: rgba(0, 0, 0, 0.42);
+  background: none;
 
-  font-size: 2.2rem;
+  font-size: 2rem;
 }
 
 /* TEXTO CENTRAL */
 .visualizer-info {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  text-align: center;
+  justify-content: left;
   gap: 6px;
 }
 
@@ -2853,7 +2864,6 @@ body {
 
   letter-spacing: 3px;
   text-transform: uppercase;
-  text-align: center;
 }
 
 .visualizer-info h2,
@@ -2866,7 +2876,6 @@ body {
   font-weight: 900;
 
   line-height: 1.2;
-  text-align: center;
   text-transform: uppercase;
 }
 
