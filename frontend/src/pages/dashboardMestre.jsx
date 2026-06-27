@@ -221,7 +221,9 @@ const DashboardFichaCard = memo(({ ficha, tipo = "jogador", onAbrir }) => {
               : personagemCard.nivel || 1}
           </small>{" "}
           {personagemCard.nomeJogador && (
-            <em className="mestre-card-jogador">{personagemCard.nomeJogador}</em>
+            <em className="mestre-card-jogador">
+              {personagemCard.nomeJogador}
+            </em>
           )}
           <h3>{personagemCard.nome || "Sem nome"}</h3>
           <span>{personagemCard.classe || "Sem classe"}</span>
@@ -394,10 +396,8 @@ const DashboardMestre = () => {
   const [npcs, setNpcs] = useState([]);
   const [npcEditando, setNpcEditando] = useState(null);
 
-  const [party, setParty] = useState(null);
-  const [partyCode, setPartyCode] = useState("");
-  const [partyMensagem, setPartyMensagem] = useState("");
-
+  const [rolagensMestre, setRolagensMestre] = useState([]);
+  const [painelRolagensAberto, setPainelRolagensAberto] = useState(true);
 
   const [popup, setPopup] = useState(null);
 
@@ -635,6 +635,40 @@ const DashboardMestre = () => {
   }, [fichaSelecionada, editandoDashboard]);
 
   useEffect(() => {
+    const chave = "darkness_rolagens_mestre";
+
+    try {
+      setRolagensMestre(JSON.parse(localStorage.getItem(chave)) || []);
+    } catch {
+      setRolagensMestre([]);
+    }
+
+    const aoReceberRolagem = (event) => {
+      setRolagensMestre((prev) => [event.detail, ...prev].slice(0, 3));
+    };
+
+    const aoAtualizarStorage = (event) => {
+      if (event.key !== "darkness_rolagens_mestre") return;
+
+      try {
+        setRolagensMestre(JSON.parse(event.newValue) || []);
+      } catch {
+        setRolagensMestre([]);
+      }
+    };
+
+    window.addEventListener("storage", aoAtualizarStorage);
+
+    window.addEventListener("darkness:nova-rolagem", aoReceberRolagem);
+    window.addEventListener("storage", aoAtualizarStorage);
+
+    return () => {
+      window.removeEventListener("darkness:nova-rolagem", aoReceberRolagem);
+      window.removeEventListener("storage", aoAtualizarStorage);
+    };
+  }, []);
+
+  useEffect(() => {
     let cancelado = false;
 
     const sincronizarListas = async () => {
@@ -793,12 +827,14 @@ const DashboardMestre = () => {
     setArvoresEditor(novasArvores);
     salvarArvoresCustom(novasArvores);
     notificarArvoresAtualizadas(novasArvores);
-    salvarArvoresHabilidades(novasArvores).then((arvoresSalvas) => {
-      notificarArvoresAtualizadas(arvoresSalvas || novasArvores);
-    }).catch((error) => {
-      console.warn("Backend indisponivel. Arvore salva localmente.", error);
-      setMensagem("Arvore salva localmente. Backend indisponivel.");
-    });
+    salvarArvoresHabilidades(novasArvores)
+      .then((arvoresSalvas) => {
+        notificarArvoresAtualizadas(arvoresSalvas || novasArvores);
+      })
+      .catch((error) => {
+        console.warn("Backend indisponivel. Arvore salva localmente.", error);
+        setMensagem("Arvore salva localmente. Backend indisponivel.");
+      });
     setMensagem("Árvore de habilidades salva.");
   };
 
@@ -967,7 +1003,6 @@ const DashboardMestre = () => {
       setNpcs([]);
     }
   }, []);
-
 
   const salvarListaNpcs = (novaLista) => {
     setNpcs(novaLista);
@@ -1713,7 +1748,9 @@ const DashboardMestre = () => {
                 : personagemCard.nivel || 1}
             </small>{" "}
             {personagemCard.nomeJogador && (
-              <em className="mestre-card-jogador">{personagemCard.nomeJogador}</em>
+              <em className="mestre-card-jogador">
+                {personagemCard.nomeJogador}
+              </em>
             )}
             <h3>{personagemCard.nome || "Sem nome"}</h3>
             <span>{personagemCard.classe || "Sem classe"}</span>
@@ -1808,9 +1845,7 @@ const DashboardMestre = () => {
     );
   };
 
-  const deveMostrarPartyLateral = !["loja", "habilidades"].includes(
-    aba,
-  );
+  const deveMostrarPartyLateral = !["loja", "habilidades"].includes(aba);
   return (
     <main className="mestre-page">
       <header className="mestre-header">
@@ -1865,1813 +1900,1991 @@ const DashboardMestre = () => {
           Habilidades
         </button>
       </nav>
+
       {false && <section className="mestre-dashboard-full"></section>}
+      <div className="mestre-layout-com-rolagens">
+        <div className="mestre-conteudo-principal">
+          {aba === "fichas" && (
+            <section className="mestre-dashboard-full">
+              <div className="mestre-subtabs">
+                <button
+                  type="button"
+                  className={subAbaFichas === "jogadores" ? "ativa" : ""}
+                  onClick={() => setSubAbaFichas("jogadores")}
+                >
+                  Jogadores
+                </button>
 
-      {aba === "fichas" && (
-        <section className="mestre-dashboard-full">
-          <div className="mestre-subtabs">
-            <button
-              type="button"
-              className={subAbaFichas === "jogadores" ? "ativa" : ""}
-              onClick={() => setSubAbaFichas("jogadores")}
-            >
-              Jogadores
-            </button>
+                <button
+                  type="button"
+                  className={subAbaFichas === "npcs" ? "ativa" : ""}
+                  onClick={() => setSubAbaFichas("npcs")}
+                >
+                  NPCs
+                </button>
 
-            <button
-              type="button"
-              className={subAbaFichas === "npcs" ? "ativa" : ""}
-              onClick={() => setSubAbaFichas("npcs")}
-            >
-              NPCs
-            </button>
+                {subAbaFichas === "npcs" && (
+                  <button type="button" onClick={criarNovoNpc}>
+                    Criar NPC
+                  </button>
+                )}
+              </div>
 
-            {subAbaFichas === "npcs" && (
-              <button type="button" onClick={criarNovoNpc}>
-                Criar NPC
-              </button>
-            )}
-          </div>
-
-          {subAbaFichas === "jogadores" && (
-            <div className="mestre-dashboard-cards">
-              {fichas.length > 0 ? (
-                fichas.map((ficha) => (
-                  <DashboardFichaCard
-                    key={ficha.fichaId || ficha.id}
-                    ficha={ficha}
-                    tipo="jogador"
-                    onAbrir={abrirCardFicha}
-                  />
-                ))
-              ) : (
-                <div className="mestre-vazio">Nenhuma ficha encontrada.</div>
-              )}
-            </div>
-          )}
-
-          {subAbaFichas === "npcs" && (
-            <div className="mestre-dashboard-cards">
-              {npcs.length > 0 ? (
-                npcs.map((npc) => (
-                  <DashboardFichaCard
-                    key={npc.fichaId || npc.id}
-                    ficha={npc}
-                    tipo="npc"
-                    onAbrir={abrirCardFicha}
-                  />
-                ))
-              ) : (
-                <div className="mestre-vazio">Nenhum NPC criado.</div>
-              )}
-            </div>
-          )}
-
-          {modalFichaAberto && personagem && (
-            <div
-              className="mestre-modal-overlay"
-              onClick={() => setModalFichaAberto(false)}
-            >
-              <section
-                className="mestre-modal-ficha minimalista"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <header className="mestre-modal-header">
-                  <div className="mestre-modal-header-esquerda">
-                    <img
-                      src={
-                        personagem.fotoPerfil || "https://placehold.co/300x300"
-                      }
-                      alt={personagem.nome}
-                      className="mestre-modal-foto"
-                    />
-
-                    <div className="mestre-modal-identidade">
-                      <span>PERSONAGEM</span>
-
-                      <h2>{personagem.nome || "Sem Nome"}</h2>
-
-                      <small>
-                        {personagem.classe || "Sem Classe"} • NV{" "}
-                        {personagem.nivel || 1}
-                      </small>
-                      <div className="mestre-personagem-recursos">
-                        <span>Créditos: {personagem.lojaCreditos || 0}</span>
-
-                        <span>Mementos: {personagem.ritosCreditos || 0}</span>
-                      </div>
+              {subAbaFichas === "jogadores" && (
+                <div className="mestre-dashboard-cards">
+                  {fichas.length > 0 ? (
+                    fichas.map((ficha) => (
+                      <DashboardFichaCard
+                        key={ficha.fichaId || ficha.id}
+                        ficha={ficha}
+                        tipo="jogador"
+                        onAbrir={abrirCardFicha}
+                      />
+                    ))
+                  ) : (
+                    <div className="mestre-vazio">
+                      Nenhuma ficha encontrada.
                     </div>
-                  </div>
+                  )}
+                </div>
+              )}
 
-                  <div className="mestre-modal-header-acoes">
-                    <div className="mestre-header-admin">
-                      <div className="mestre-header-admin-grupo">
-                        <input
-                          type="number"
-                          value={creditosDelta}
-                          onChange={(e) => setCreditosDelta(e.target.value)}
+              {subAbaFichas === "npcs" && (
+                <div className="mestre-dashboard-cards">
+                  {npcs.length > 0 ? (
+                    npcs.map((npc) => (
+                      <DashboardFichaCard
+                        key={npc.fichaId || npc.id}
+                        ficha={npc}
+                        tipo="npc"
+                        onAbrir={abrirCardFicha}
+                      />
+                    ))
+                  ) : (
+                    <div className="mestre-vazio">Nenhum NPC criado.</div>
+                  )}
+                </div>
+              )}
+
+              {modalFichaAberto && personagem && (
+                <div
+                  className="mestre-modal-overlay"
+                  onClick={() => setModalFichaAberto(false)}
+                >
+                  <section
+                    className="mestre-modal-ficha minimalista"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <header className="mestre-modal-header">
+                      <div className="mestre-modal-header-esquerda">
+                        <img
+                          src={
+                            personagem.fotoPerfil ||
+                            "https://placehold.co/300x300"
+                          }
+                          alt={personagem.nome}
+                          className="mestre-modal-foto"
                         />
 
-                        <button onClick={adicionarCreditos}>+ Créditos</button>
+                        <div className="mestre-modal-identidade">
+                          <span>PERSONAGEM</span>
+
+                          <h2>{personagem.nome || "Sem Nome"}</h2>
+
+                          <small>
+                            {personagem.classe || "Sem Classe"} • NV{" "}
+                            {personagem.nivel || 1}
+                          </small>
+                          <div className="mestre-personagem-recursos">
+                            <span>
+                              Créditos: {personagem.lojaCreditos || 0}
+                            </span>
+
+                            <span>
+                              Mementos: {personagem.ritosCreditos || 0}
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="mestre-header-admin-grupo">
-                        <input
-                          type="number"
-                          value={ritosCreditosDelta}
-                          onChange={(e) =>
-                            setRitosCreditosDelta(e.target.value)
-                          }
-                        />
+                      <div className="mestre-modal-header-acoes">
+                        <div className="mestre-header-admin">
+                          <div className="mestre-header-admin-grupo">
+                            <input
+                              type="number"
+                              value={creditosDelta}
+                              onChange={(e) => setCreditosDelta(e.target.value)}
+                            />
 
-                        <button onClick={adicionarRitosCreditos}>
-                          + Mementos
+                            <button onClick={adicionarCreditos}>
+                              + Créditos
+                            </button>
+                          </div>
+
+                          <div className="mestre-header-admin-grupo">
+                            <input
+                              type="number"
+                              value={ritosCreditosDelta}
+                              onChange={(e) =>
+                                setRitosCreditosDelta(e.target.value)
+                              }
+                            />
+
+                            <button onClick={adicionarRitosCreditos}>
+                              + Mementos
+                            </button>
+                          </div>
+
+                          <button onClick={diminuirNivelJogador}>
+                            Diminuir NV
+                          </button>
+
+                          <button onClick={subirNivelJogador}>Subir NV</button>
+                        </div>
+
+                        <button
+                          className="mestre-btn-apagar"
+                          onClick={apagarFichaSelecionada}
+                        >
+                          Apagar Personagem
+                        </button>
+
+                        <button
+                          className="mestre-modal-fechar"
+                          onClick={() => setModalFichaAberto(false)}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </header>
+
+                    {/* ATRIBUTOS */}
+                    <section className="mestre-modal-bloco full">
+                      <div className="mestre-modal-linha-topo">
+                        <span>Atributos</span>
+
+                        <button
+                          className="mestre-abrir-ficha"
+                          onClick={() => {
+                            window.open(
+                              `/?ficha=${encodeURIComponent(fichaSelecionada)}`,
+                              "_blank",
+                            );
+                          }}
+                        >
+                          Abrir ficha
                         </button>
                       </div>
 
-                      <button onClick={diminuirNivelJogador}>
-                        Diminuir NV
-                      </button>
+                      <div className="mestre-modal-atributos linha">
+                        {Object.entries(personagem.atributos || {}).map(
+                          ([atributo, valor]) => (
+                            <div key={atributo}>
+                              <small>{atributo}</small>
+                              <strong>{valor}</strong>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </section>
 
-                      <button onClick={subirNivelJogador}>Subir NV</button>
-                    </div>
+                    {/* SANIDADE + ESPERANÇA */}
+                    <div className="mestre-status-layout">
+                      <div className="mestre-modal-bloco">
+                        <span>Integridade Corporal</span>
 
-                    <button
-                      className="mestre-btn-apagar"
-                      onClick={apagarFichaSelecionada}
-                    >
-                      Apagar Personagem
-                    </button>
+                        <div className="mestre-corpo-grid novo">
+                          {membrosFicha.map((membro) => {
+                            const dados = personagem?.membros?.[membro.chave];
 
-                    <button
-                      className="mestre-modal-fechar"
-                      onClick={() => setModalFichaAberto(false)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                </header>
+                            return (
+                              <div
+                                key={membro.chave}
+                                className="mestre-corpo-item"
+                              >
+                                <small>{membro.nome}</small>
 
-                {/* ATRIBUTOS */}
-                <section className="mestre-modal-bloco full">
-                  <div className="mestre-modal-linha-topo">
-                    <span>Atributos</span>
+                                <div className="mestre-barra vermelho">
+                                  <span
+                                    style={{
+                                      width: `${
+                                        ((dados?.atual || 0) /
+                                          (dados?.max || 1)) *
+                                        100
+                                      }%`,
+                                    }}
+                                  />
+                                </div>
 
-                    <button
-                      className="mestre-abrir-ficha"
-                      onClick={() => {
-                        window.open(
-                          `/?ficha=${encodeURIComponent(fichaSelecionada)}`,
-                          "_blank",
-                        );
-                      }}
-                    >
-                      Abrir ficha
-                    </button>
-                  </div>
-
-                  <div className="mestre-modal-atributos linha">
-                    {Object.entries(personagem.atributos || {}).map(
-                      ([atributo, valor]) => (
-                        <div key={atributo}>
-                          <small>{atributo}</small>
-                          <strong>{valor}</strong>
+                                <strong>
+                                  {dados?.atual || 0} / {dados?.max || 0}
+                                </strong>
+                              </div>
+                            );
+                          })}
                         </div>
-                      ),
-                    )}
-                  </div>
-                </section>
+                      </div>
 
-                {/* SANIDADE + ESPERANÇA */}
-                <div className="mestre-status-layout">
-                  <div className="mestre-modal-bloco">
-                    <span>Integridade Corporal</span>
+                      <div className="mestre-status-lateral">
+                        <div className="mestre-modal-bloco">
+                          <span>Sanidade</span>
 
-                    <div className="mestre-corpo-grid novo">
-                      {membrosFicha.map((membro) => {
-                        const dados = personagem?.membros?.[membro.chave];
-
-                        return (
-                          <div key={membro.chave} className="mestre-corpo-item">
-                            <small>{membro.nome}</small>
-
-                            <div className="mestre-barra vermelho">
+                          <div className="mestre-barra-container">
+                            <div className="mestre-barra roxo">
                               <span
                                 style={{
                                   width: `${
-                                    ((dados?.atual || 0) / (dados?.max || 1)) *
+                                    ((personagem?.sanidade?.atual || 0) /
+                                      (personagem?.sanidade?.max || 1)) *
                                     100
                                   }%`,
                                 }}
                               />
                             </div>
 
-                            <strong>
-                              {dados?.atual || 0} / {dados?.max || 0}
-                            </strong>
+                            <div className="mestre-recurso-editor">
+                              <input
+                                type="number"
+                                value={personagem?.sanidade?.atual || 0}
+                                onChange={(e) => {
+                                  const atualizado = {
+                                    ...personagem,
+                                    sanidade: {
+                                      ...(personagem.sanidade || {}),
+                                      atual: Math.max(
+                                        0,
+                                        parseInt(e.target.value, 10) || 0,
+                                      ),
+                                    },
+                                  };
+
+                                  setPersonagem(atualizado);
+                                  salvarFichaSelecionada(atualizado);
+                                }}
+                              />
+
+                              <span>/</span>
+
+                              <input
+                                type="number"
+                                value={personagem?.sanidade?.max || 0}
+                                onChange={(e) => {
+                                  const atualizado = {
+                                    ...personagem,
+                                    sanidade: {
+                                      ...(personagem.sanidade || {}),
+                                      max: Math.max(
+                                        0,
+                                        parseInt(e.target.value, 10) || 0,
+                                      ),
+                                    },
+                                  };
+
+                                  setPersonagem(atualizado);
+                                  salvarFichaSelecionada(atualizado);
+                                }}
+                              />
+                            </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="mestre-status-lateral">
-                    <div className="mestre-modal-bloco">
-                      <span>Sanidade</span>
-
-                      <div className="mestre-barra-container">
-                        <div className="mestre-barra roxo">
-                          <span
-                            style={{
-                              width: `${
-                                ((personagem?.sanidade?.atual || 0) /
-                                  (personagem?.sanidade?.max || 1)) *
-                                100
-                              }%`,
-                            }}
-                          />
                         </div>
 
-                        <div className="mestre-recurso-editor">
-                          <input
-                            type="number"
-                            value={personagem?.sanidade?.atual || 0}
-                            onChange={(e) => {
-                              const atualizado = {
-                                ...personagem,
-                                sanidade: {
-                                  ...(personagem.sanidade || {}),
-                                  atual: Math.max(
-                                    0,
-                                    parseInt(e.target.value, 10) || 0,
-                                  ),
-                                },
-                              };
+                        <div className="mestre-modal-bloco">
+                          <span>Esperança</span>
 
-                              setPersonagem(atualizado);
-                              salvarFichaSelecionada(atualizado);
-                            }}
-                          />
+                          <div className="mestre-barra-container">
+                            <div className="mestre-barra dourado">
+                              <span
+                                style={{
+                                  width: `${
+                                    ((personagem?.esperanca?.atual || 0) /
+                                      (personagem?.esperanca?.max || 1)) *
+                                    100
+                                  }%`,
+                                }}
+                              />
+                            </div>
 
-                          <span>/</span>
+                            <div className="mestre-recurso-editor">
+                              <input
+                                type="number"
+                                value={personagem?.esperanca?.atual || 0}
+                                onChange={(e) => {
+                                  const atualizado = {
+                                    ...personagem,
+                                    esperanca: {
+                                      ...(personagem.esperanca || {}),
+                                      atual: Math.max(
+                                        0,
+                                        parseInt(e.target.value, 10) || 0,
+                                      ),
+                                    },
+                                  };
 
-                          <input
-                            type="number"
-                            value={personagem?.sanidade?.max || 0}
-                            onChange={(e) => {
-                              const atualizado = {
-                                ...personagem,
-                                sanidade: {
-                                  ...(personagem.sanidade || {}),
-                                  max: Math.max(
-                                    0,
-                                    parseInt(e.target.value, 10) || 0,
-                                  ),
-                                },
-                              };
+                                  setPersonagem(atualizado);
+                                  salvarFichaSelecionada(atualizado);
+                                }}
+                              />
 
-                              setPersonagem(atualizado);
-                              salvarFichaSelecionada(atualizado);
-                            }}
-                          />
+                              <span>/</span>
+
+                              <input
+                                type="number"
+                                value={personagem?.esperanca?.max || 0}
+                                onChange={(e) => {
+                                  const atualizado = {
+                                    ...personagem,
+                                    esperanca: {
+                                      ...(personagem.esperanca || {}),
+                                      max: Math.max(
+                                        0,
+                                        parseInt(e.target.value, 10) || 0,
+                                      ),
+                                    },
+                                  };
+
+                                  setPersonagem(atualizado);
+                                  salvarFichaSelecionada(atualizado);
+                                }}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="mestre-modal-bloco">
-                      <span>Esperança</span>
+                    {/* PASSIVAS */}
+                    <section className="mestre-modal-bloco full">
+                      <span>Passivas</span>
 
-                      <div className="mestre-barra-container">
-                        <div className="mestre-barra dourado">
-                          <span
-                            style={{
-                              width: `${
-                                ((personagem?.esperanca?.atual || 0) /
-                                  (personagem?.esperanca?.max || 1)) *
-                                100
-                              }%`,
-                            }}
-                          />
-                        </div>
-
-                        <div className="mestre-recurso-editor">
-                          <input
-                            type="number"
-                            value={personagem?.esperanca?.atual || 0}
-                            onChange={(e) => {
-                              const atualizado = {
-                                ...personagem,
-                                esperanca: {
-                                  ...(personagem.esperanca || {}),
-                                  atual: Math.max(
-                                    0,
-                                    parseInt(e.target.value, 10) || 0,
-                                  ),
-                                },
-                              };
-
-                              setPersonagem(atualizado);
-                              salvarFichaSelecionada(atualizado);
-                            }}
-                          />
-
-                          <span>/</span>
-
-                          <input
-                            type="number"
-                            value={personagem?.esperanca?.max || 0}
-                            onChange={(e) => {
-                              const atualizado = {
-                                ...personagem,
-                                esperanca: {
-                                  ...(personagem.esperanca || {}),
-                                  max: Math.max(
-                                    0,
-                                    parseInt(e.target.value, 10) || 0,
-                                  ),
-                                },
-                              };
-
-                              setPersonagem(atualizado);
-                              salvarFichaSelecionada(atualizado);
-                            }}
-                          />
-                        </div>
+                      <div className="mestre-passivas-grid">
+                        {Object.entries(
+                          personagem.habilidadesPassivas || {},
+                        ).map(([nome, valor]) => (
+                          <div key={nome} className="mestre-passiva-item">
+                            <small>{nome}</small>
+                            <strong>{valor}</strong>
+                          </div>
+                        ))}
                       </div>
-                    </div>
-                  </div>
+                    </section>
+
+                    {/* INVENTÁRIO */}
+                    <section className="mestre-modal-bloco full">
+                      <span>Inventário</span>
+
+                      <div className="mestre-inventario-grid">
+                        {(personagem.inventario || []).map((item, index) => (
+                          <div
+                            key={`${item.nome}-${index}`}
+                            className="mestre-item-card"
+                          >
+                            <strong>{item.nome}</strong>
+
+                            <small>{item.tipo}</small>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    {/* RITOS */}
+                    <section className="mestre-modal-bloco full">
+                      <span>Ritos</span>
+
+                      <div className="mestre-inventario-grid">
+                        {(personagem.rituais || []).map((rito, index) => (
+                          <div
+                            key={`${rito.nome}-${index}`}
+                            className={`mestre-item-card ${
+                              rito.ativo ? "ativo" : ""
+                            }`}
+                          >
+                            <strong>{rito.nome}</strong>
+
+                            <small>{rito.nivel}</small>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  </section>
                 </div>
+              )}
+              {npcEditando && (
+                <div
+                  className="mestre-modal-overlay"
+                  onClick={() => setNpcEditando(null)}
+                >
+                  <section
+                    className="mestre-modal-ficha minimalista"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {(() => {
+                      const npc = npcs.find((item) => item.id === npcEditando);
 
-                {/* PASSIVAS */}
-                <section className="mestre-modal-bloco full">
-                  <span>Passivas</span>
+                      if (!npc) return null;
 
-                  <div className="mestre-passivas-grid">
-                    {Object.entries(personagem.habilidadesPassivas || {}).map(
-                      ([nome, valor]) => (
-                        <div key={nome} className="mestre-passiva-item">
-                          <small>{nome}</small>
-                          <strong>{valor}</strong>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                </section>
+                      const atualizarCampoNpc = (campo, valor) => {
+                        atualizarNpc(npc.id, {
+                          [campo]: valor,
+                        });
+                      };
 
-                {/* INVENTÁRIO */}
-                <section className="mestre-modal-bloco full">
-                  <span>Inventário</span>
+                      const atualizarGrupoNpc = (grupo, chave, valor) => {
+                        atualizarNpc(npc.id, {
+                          [grupo]: {
+                            ...(npc[grupo] || {}),
+                            [chave]: parseInt(valor, 10) || 0,
+                          },
+                        });
+                      };
 
-                  <div className="mestre-inventario-grid">
-                    {(personagem.inventario || []).map((item, index) => (
-                      <div
-                        key={`${item.nome}-${index}`}
-                        className="mestre-item-card"
-                      >
-                        <strong>{item.nome}</strong>
+                      const atualizarMembroNpc = (membro, campo, valor) => {
+                        atualizarNpc(npc.id, {
+                          membros: {
+                            ...(npc.membros || {}),
+                            [membro]: {
+                              ...(npc.membros?.[membro] || {}),
+                              [campo]: Math.max(0, parseInt(valor, 10) || 0),
+                            },
+                          },
+                        });
+                      };
 
-                        <small>{item.tipo}</small>
-                      </div>
-                    ))}
-                  </div>
-                </section>
+                      const adicionarAtaqueNpc = () => {
+                        atualizarNpc(npc.id, {
+                          ataques: [
+                            ...(npc.ataques || []),
+                            {
+                              id: crypto.randomUUID(),
+                              nome: "Novo Ataque",
+                              dano: "",
+                              descricao: "",
+                            },
+                          ],
+                        });
+                      };
 
-                {/* RITOS */}
-                <section className="mestre-modal-bloco full">
-                  <span>Ritos</span>
+                      const atualizarAtaqueNpc = (ataqueId, campo, valor) => {
+                        atualizarNpc(npc.id, {
+                          ataques: (npc.ataques || []).map((ataque) =>
+                            ataque.id === ataqueId
+                              ? {
+                                  ...ataque,
+                                  [campo]: valor,
+                                }
+                              : ataque,
+                          ),
+                        });
+                      };
 
-                  <div className="mestre-inventario-grid">
-                    {(personagem.rituais || []).map((rito, index) => (
-                      <div
-                        key={`${rito.nome}-${index}`}
-                        className={`mestre-item-card ${
-                          rito.ativo ? "ativo" : ""
-                        }`}
-                      >
-                        <strong>{rito.nome}</strong>
+                      const removerAtaqueNpc = (ataqueId) => {
+                        atualizarNpc(npc.id, {
+                          ataques: (npc.ataques || []).filter(
+                            (ataque) => ataque.id !== ataqueId,
+                          ),
+                        });
+                      };
 
-                        <small>{rito.nivel}</small>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </section>
-            </div>
-          )}
-          {npcEditando && (
-            <div
-              className="mestre-modal-overlay"
-              onClick={() => setNpcEditando(null)}
-            >
-              <section
-                className="mestre-modal-ficha minimalista"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {(() => {
-                  const npc = npcs.find((item) => item.id === npcEditando);
+                      const adicionarHabilidadeNpc = () => {
+                        atualizarNpc(npc.id, {
+                          habilidades: [
+                            ...(npc.habilidades || []),
+                            {
+                              id: crypto.randomUUID(),
+                              nome: "Nova Habilidade",
+                              descricao: "",
+                            },
+                          ],
+                        });
+                      };
 
-                  if (!npc) return null;
+                      const atualizarHabilidadeNpc = (
+                        habilidadeId,
+                        campo,
+                        valor,
+                      ) => {
+                        atualizarNpc(npc.id, {
+                          habilidades: (npc.habilidades || []).map(
+                            (habilidade) =>
+                              habilidade.id === habilidadeId
+                                ? {
+                                    ...habilidade,
+                                    [campo]: valor,
+                                  }
+                                : habilidade,
+                          ),
+                        });
+                      };
 
-                  const atualizarCampoNpc = (campo, valor) => {
-                    atualizarNpc(npc.id, {
-                      [campo]: valor,
-                    });
-                  };
+                      const removerHabilidadeNpc = (habilidadeId) => {
+                        atualizarNpc(npc.id, {
+                          habilidades: (npc.habilidades || []).filter(
+                            (habilidade) => habilidade.id !== habilidadeId,
+                          ),
+                        });
+                      };
 
-                  const atualizarGrupoNpc = (grupo, chave, valor) => {
-                    atualizarNpc(npc.id, {
-                      [grupo]: {
-                        ...(npc[grupo] || {}),
-                        [chave]: parseInt(valor, 10) || 0,
-                      },
-                    });
-                  };
+                      return (
+                        <>
+                          <header className="inimigo-ficha-header">
+                            <label className="inimigo-foto-editavel">
+                              <img
+                                src={
+                                  npc.fotoPerfil ||
+                                  "https://placehold.co/300x300"
+                                }
+                                alt={npc.nome}
+                              />
 
-                  const atualizarMembroNpc = (membro, campo, valor) => {
-                    atualizarNpc(npc.id, {
-                      membros: {
-                        ...(npc.membros || {}),
-                        [membro]: {
-                          ...(npc.membros?.[membro] || {}),
-                          [campo]: Math.max(0, parseInt(valor, 10) || 0),
-                        },
-                      },
-                    });
-                  };
+                              <span>Editar imagem</span>
 
-                  const adicionarAtaqueNpc = () => {
-                    atualizarNpc(npc.id, {
-                      ataques: [
-                        ...(npc.ataques || []),
-                        {
-                          id: crypto.randomUUID(),
-                          nome: "Novo Ataque",
-                          dano: "",
-                          descricao: "",
-                        },
-                      ],
-                    });
-                  };
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={async (event) => {
+                                  const arquivo = event.target.files?.[0];
 
-                  const atualizarAtaqueNpc = (ataqueId, campo, valor) => {
-                    atualizarNpc(npc.id, {
-                      ataques: (npc.ataques || []).map((ataque) =>
-                        ataque.id === ataqueId
-                          ? {
-                              ...ataque,
-                              [campo]: valor,
-                            }
-                          : ataque,
-                      ),
-                    });
-                  };
+                                  if (!arquivo) return;
 
-                  const removerAtaqueNpc = (ataqueId) => {
-                    atualizarNpc(npc.id, {
-                      ataques: (npc.ataques || []).filter(
-                        (ataque) => ataque.id !== ataqueId,
-                      ),
-                    });
-                  };
+                                  try {
+                                    const fotoComprimida =
+                                      await compressProfileImage(arquivo);
+                                    atualizarCampoNpc(
+                                      "fotoPerfil",
+                                      fotoComprimida,
+                                    );
+                                  } catch (error) {
+                                    setMensagem(
+                                      error.message ||
+                                        "Nao foi possivel carregar a imagem.",
+                                    );
+                                  }
 
-                  const adicionarHabilidadeNpc = () => {
-                    atualizarNpc(npc.id, {
-                      habilidades: [
-                        ...(npc.habilidades || []),
-                        {
-                          id: crypto.randomUUID(),
-                          nome: "Nova Habilidade",
-                          descricao: "",
-                        },
-                      ],
-                    });
-                  };
+                                  event.target.value = "";
+                                }}
+                              />
+                            </label>
 
-                  const atualizarHabilidadeNpc = (
-                    habilidadeId,
-                    campo,
-                    valor,
-                  ) => {
-                    atualizarNpc(npc.id, {
-                      habilidades: (npc.habilidades || []).map((habilidade) =>
-                        habilidade.id === habilidadeId
-                          ? {
-                              ...habilidade,
-                              [campo]: valor,
-                            }
-                          : habilidade,
-                      ),
-                    });
-                  };
-
-                  const removerHabilidadeNpc = (habilidadeId) => {
-                    atualizarNpc(npc.id, {
-                      habilidades: (npc.habilidades || []).filter(
-                        (habilidade) => habilidade.id !== habilidadeId,
-                      ),
-                    });
-                  };
-
-                  return (
-                    <>
-                      <header className="inimigo-ficha-header">
-                        <label className="inimigo-foto-editavel">
-                          <img
-                            src={
-                              npc.fotoPerfil || "https://placehold.co/300x300"
-                            }
-                            alt={npc.nome}
-                          />
-
-                          <span>Editar imagem</span>
-
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={async (event) => {
-                              const arquivo = event.target.files?.[0];
-
-                              if (!arquivo) return;
-
-                              try {
-                                const fotoComprimida =
-                                  await compressProfileImage(arquivo);
-                                atualizarCampoNpc(
-                                  "fotoPerfil",
-                                  fotoComprimida,
-                                );
-                              } catch (error) {
-                                setMensagem(
-                                  error.message ||
-                                    "Nao foi possivel carregar a imagem.",
-                                );
-                              }
-
-                              event.target.value = "";
-                            }}
-                          />
-                        </label>
-
-                        <div className="inimigo-identidade">
-                          <label>
-                            NV
-                            <input
-                              type="number"
-                              value={npc.nivel || 1}
-                              onChange={(e) =>
-                                atualizarCampoNpc(
-                                  "nivel",
-                                  parseInt(e.target.value, 10) || 1,
-                                )
-                              }
-                            />
-                          </label>
-
-                          <input
-                            className="inimigo-nome-input"
-                            value={npc.nome || ""}
-                            onChange={(e) =>
-                              atualizarCampoNpc("nome", e.target.value)
-                            }
-                          />
-                        </div>
-
-                        <div className="mestre-modal-header-acoes">
-                          <button
-                            className="duplicarButton"
-                            onClick={() => duplicarNpc(npc)}
-                          >
-                            Duplicar
-                          </button>
-
-                          <button
-                            className="mestre-btn-apagar"
-                            onClick={() => excluirNpc(npc.id)}
-                          >
-                            Apagar
-                          </button>
-
-                          <button
-                            className="mestre-modal-fechar"
-                            onClick={() => setNpcEditando(null)}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </header>
-
-                      <section className="mestre-modal-bloco full">
-                        <span>Atributos</span>
-
-                        <div className="mestre-modal-atributos linha">
-                          {Object.entries(npc.atributos || {}).map(
-                            ([atributo, valor]) => (
-                              <label key={atributo}>
-                                {atributo}
+                            <div className="inimigo-identidade">
+                              <label>
+                                NV
                                 <input
                                   type="number"
-                                  value={valor || 0}
+                                  value={npc.nivel || 1}
                                   onChange={(e) =>
-                                    atualizarGrupoNpc(
-                                      "atributos",
-                                      atributo,
-                                      e.target.value,
+                                    atualizarCampoNpc(
+                                      "nivel",
+                                      parseInt(e.target.value, 10) || 1,
                                     )
                                   }
                                 />
                               </label>
-                            ),
-                          )}
-                        </div>
-                      </section>
 
-                      <section className="mestre-modal-bloco full">
-                        <span>Sanidade</span>
+                              <input
+                                className="inimigo-nome-input"
+                                value={npc.nome || ""}
+                                onChange={(e) =>
+                                  atualizarCampoNpc("nome", e.target.value)
+                                }
+                              />
+                            </div>
 
-                        <div className="mestre-duplo">
-                          <label>
-                            Atual
+                            <div className="mestre-modal-header-acoes">
+                              <button
+                                className="duplicarButton"
+                                onClick={() => duplicarNpc(npc)}
+                              >
+                                Duplicar
+                              </button>
+
+                              <button
+                                className="mestre-btn-apagar"
+                                onClick={() => excluirNpc(npc.id)}
+                              >
+                                Apagar
+                              </button>
+
+                              <button
+                                className="mestre-modal-fechar"
+                                onClick={() => setNpcEditando(null)}
+                              >
+                                ×
+                              </button>
+                            </div>
+                          </header>
+
+                          <section className="mestre-modal-bloco full">
+                            <span>Atributos</span>
+
+                            <div className="mestre-modal-atributos linha">
+                              {Object.entries(npc.atributos || {}).map(
+                                ([atributo, valor]) => (
+                                  <label key={atributo}>
+                                    {atributo}
+                                    <input
+                                      type="number"
+                                      value={valor || 0}
+                                      onChange={(e) =>
+                                        atualizarGrupoNpc(
+                                          "atributos",
+                                          atributo,
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+                                  </label>
+                                ),
+                              )}
+                            </div>
+                          </section>
+
+                          <section className="mestre-modal-bloco full">
+                            <span>Sanidade</span>
+
+                            <div className="mestre-duplo">
+                              <label>
+                                Atual
+                                <input
+                                  type="number"
+                                  value={npc.sanidade?.atual || 0}
+                                  onChange={(e) =>
+                                    atualizarCampoNpc("sanidade", {
+                                      ...(npc.sanidade || {}),
+                                      atual: parseInt(e.target.value, 10) || 0,
+                                    })
+                                  }
+                                />
+                              </label>
+
+                              <label>
+                                Máxima
+                                <input
+                                  type="number"
+                                  value={npc.sanidade?.max || 0}
+                                  onChange={(e) =>
+                                    atualizarCampoNpc("sanidade", {
+                                      ...(npc.sanidade || {}),
+                                      max: parseInt(e.target.value, 10) || 0,
+                                    })
+                                  }
+                                />
+                              </label>
+                            </div>
+                          </section>
+
+                          <section className="mestre-modal-bloco full">
+                            <span>Defesa</span>
+
                             <input
                               type="number"
-                              value={npc.sanidade?.atual || 0}
+                              value={npc.defesa || 0}
                               onChange={(e) =>
-                                atualizarCampoNpc("sanidade", {
-                                  ...(npc.sanidade || {}),
-                                  atual: parseInt(e.target.value, 10) || 0,
-                                })
+                                atualizarCampoNpc(
+                                  "defesa",
+                                  parseInt(e.target.value, 10) || 0,
+                                )
                               }
                             />
-                          </label>
+                          </section>
 
-                          <label>
-                            Máxima
-                            <input
-                              type="number"
-                              value={npc.sanidade?.max || 0}
-                              onChange={(e) =>
-                                atualizarCampoNpc("sanidade", {
-                                  ...(npc.sanidade || {}),
-                                  max: parseInt(e.target.value, 10) || 0,
-                                })
-                              }
-                            />
-                          </label>
-                        </div>
-                      </section>
+                          <section className="mestre-modal-bloco full">
+                            <span>Membros</span>
 
-                      <section className="mestre-modal-bloco full">
-                        <span>Defesa</span>
+                            <div className="mestre-corpo-grid">
+                              {membrosFicha.map((membro) => {
+                                const dados = npc.membros?.[membro.chave] || {
+                                  atual: 0,
+                                  max: 0,
+                                  defesa: 0,
+                                };
 
-                        <input
-                          type="number"
-                          value={npc.defesa || 0}
-                          onChange={(e) =>
-                            atualizarCampoNpc(
-                              "defesa",
-                              parseInt(e.target.value, 10) || 0,
-                            )
-                          }
-                        />
-                      </section>
+                                return (
+                                  <div
+                                    key={membro.chave}
+                                    className="mestre-membro"
+                                  >
+                                    <strong>{membro.nome}</strong>
 
-                      <section className="mestre-modal-bloco full">
-                        <span>Membros</span>
+                                    <label>
+                                      Atual
+                                      <input
+                                        type="number"
+                                        value={dados.atual || 0}
+                                        onChange={(e) =>
+                                          atualizarMembroNpc(
+                                            membro.chave,
+                                            "atual",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </label>
 
-                        <div className="mestre-corpo-grid">
-                          {membrosFicha.map((membro) => {
-                            const dados = npc.membros?.[membro.chave] || {
-                              atual: 0,
-                              max: 0,
-                              defesa: 0,
-                            };
+                                    <label>
+                                      Máx
+                                      <input
+                                        type="number"
+                                        value={dados.max || 0}
+                                        onChange={(e) =>
+                                          atualizarMembroNpc(
+                                            membro.chave,
+                                            "max",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </label>
 
-                            return (
-                              <div key={membro.chave} className="mestre-membro">
-                                <strong>{membro.nome}</strong>
+                                    <label>
+                                      Def
+                                      <input
+                                        type="number"
+                                        value={dados.defesa || 0}
+                                        onChange={(e) =>
+                                          atualizarMembroNpc(
+                                            membro.chave,
+                                            "defesa",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </label>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </section>
 
+                          <section className="mestre-modal-bloco full">
+                            <div className="mestre-modal-linha-topo">
+                              <span>Ataques</span>
+
+                              <button
+                                type="button"
+                                onClick={adicionarAtaqueNpc}
+                              >
+                                + Ataque
+                              </button>
+                            </div>
+
+                            <div className="mestre-edit-lista">
+                              {(npc.ataques || []).map((ataque) => (
+                                <div key={ataque.id}>
+                                  <input
+                                    value={ataque.nome || ""}
+                                    onChange={(e) =>
+                                      atualizarAtaqueNpc(
+                                        ataque.id,
+                                        "nome",
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+
+                                  <input
+                                    value={ataque.dano || ""}
+                                    onChange={(e) =>
+                                      atualizarAtaqueNpc(
+                                        ataque.id,
+                                        "dano",
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+
+                                  <button
+                                    onClick={() => removerAtaqueNpc(ataque.id)}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </section>
+
+                          <section className="mestre-modal-bloco full">
+                            <div className="mestre-modal-linha-topo">
+                              <span>Habilidades</span>
+
+                              <button
+                                type="button"
+                                onClick={adicionarHabilidadeNpc}
+                              >
+                                + Habilidade
+                              </button>
+                            </div>
+
+                            <div className="mestre-edit-lista">
+                              {(npc.habilidades || []).map((habilidade) => (
+                                <div key={habilidade.id}>
+                                  <input
+                                    value={habilidade.nome || ""}
+                                    onChange={(e) =>
+                                      atualizarHabilidadeNpc(
+                                        habilidade.id,
+                                        "nome",
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+
+                                  <input
+                                    value={habilidade.descricao || ""}
+                                    onChange={(e) =>
+                                      atualizarHabilidadeNpc(
+                                        habilidade.id,
+                                        "descricao",
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+
+                                  <button
+                                    onClick={() =>
+                                      removerHabilidadeNpc(habilidade.id)
+                                    }
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </section>
+                        </>
+                      );
+                    })()}
+                  </section>
+                </div>
+              )}
+            </section>
+          )}
+
+          {aba === "inimigos" && (
+            <section className="mestre-dashboard-full">
+              <div className="mestre-modal-linha-topo">
+                <h2>Inimigos</h2>
+
+                <button
+                  className="criarInimigo-button"
+                  type="button"
+                  onClick={criarNovoInimigo}
+                >
+                  Criar inimigo
+                </button>
+              </div>
+
+              <div className="mestre-fichas-com-party">
+                <div className="mestre-dashboard-cards">
+                  {inimigos.map((inimigo) => (
+                    <DashboardFichaCard
+                      key={inimigo.fichaId || inimigo.id}
+                      ficha={inimigo}
+                      tipo="inimigo"
+                      onAbrir={abrirCardFicha}
+                    />
+                  ))}
+                </div>
+                {inimigoEditando && (
+                  <div
+                    className="mestre-modal-overlay"
+                    onClick={() => setInimigoEditando(null)}
+                  >
+                    <section
+                      className="mestre-modal-ficha minimalista"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {(() => {
+                        const inimigo = inimigos.find(
+                          (i) => i.id === inimigoEditando,
+                        );
+
+                        if (!inimigo) return null;
+
+                        const atualizarCampoInimigo = (campo, valor) => {
+                          atualizarInimigo(inimigo.id, {
+                            [campo]: valor,
+                          });
+                        };
+
+                        const atualizarGrupoInimigo = (grupo, chave, valor) => {
+                          atualizarInimigo(inimigo.id, {
+                            [grupo]: {
+                              ...(inimigo[grupo] || {}),
+                              [chave]: parseInt(valor, 10) || 0,
+                            },
+                          });
+                        };
+
+                        return (
+                          <>
+                            <header className="inimigo-ficha-header">
+                              <label className="inimigo-foto-editavel">
+                                <img
+                                  src={
+                                    inimigo.fotoPerfil ||
+                                    "https://placehold.co/300x300"
+                                  }
+                                  alt={inimigo.nome}
+                                />
+
+                                <span>Editar imagem</span>
+
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={async (event) => {
+                                    const arquivo = event.target.files?.[0];
+                                    if (!arquivo) return;
+
+                                    try {
+                                      const fotoComprimida =
+                                        await compressProfileImage(arquivo);
+                                      atualizarCampoInimigo(
+                                        "fotoPerfil",
+                                        fotoComprimida,
+                                      );
+                                    } catch (error) {
+                                      setMensagem(
+                                        error.message ||
+                                          "Nao foi possivel carregar a imagem.",
+                                      );
+                                    }
+
+                                    event.target.value = "";
+                                  }}
+                                />
+                              </label>
+
+                              <div className="inimigo-identidade">
+                                <label>
+                                  NV
+                                  <input
+                                    type="number"
+                                    value={inimigo.nivel || 1}
+                                    onChange={(e) =>
+                                      atualizarCampoInimigo(
+                                        "nivel",
+                                        parseInt(e.target.value, 10) || 1,
+                                      )
+                                    }
+                                  />
+                                </label>
+
+                                <input
+                                  className="inimigo-nome-input"
+                                  value={inimigo.nome || ""}
+                                  onChange={(e) =>
+                                    atualizarCampoInimigo(
+                                      "nome",
+                                      e.target.value,
+                                    )
+                                  }
+                                />
+                              </div>
+
+                              <div className="mestre-modal-header-acoes">
+                                <button
+                                  className="duplicarButton"
+                                  onClick={() => duplicarInimigo(inimigo)}
+                                >
+                                  Duplicar
+                                </button>
+
+                                <button
+                                  className="mestre-btn-apagar"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    excluirInimigo(inimigo.id);
+                                  }}
+                                >
+                                  Apagar
+                                </button>
+
+                                <button
+                                  className="mestre-modal-fechar"
+                                  onClick={() => setInimigoEditando(null)}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            </header>
+
+                            <section className="mestre-modal-bloco full">
+                              <span>Atributos</span>
+
+                              <div className="mestre-modal-atributos linha">
+                                {Object.entries(inimigo.atributos || {}).map(
+                                  ([atributo, valor]) => (
+                                    <label key={atributo}>
+                                      {atributo}
+
+                                      <input
+                                        type="number"
+                                        value={valor}
+                                        onChange={(e) =>
+                                          atualizarGrupoInimigo(
+                                            "atributos",
+                                            atributo,
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </label>
+                                  ),
+                                )}
+                              </div>
+                            </section>
+                            {/* SANIDADE */}
+                            <section className="inimigo-ficha-bloco">
+                              <h3>Sanidade</h3>
+
+                              <div className="mestre-form-grid">
                                 <label>
                                   Atual
                                   <input
                                     type="number"
-                                    value={dados.atual || 0}
+                                    value={inimigo.sanidade?.atual || 0}
                                     onChange={(e) =>
-                                      atualizarMembroNpc(
-                                        membro.chave,
-                                        "atual",
-                                        e.target.value,
-                                      )
+                                      atualizarCampoInimigo("sanidade", {
+                                        ...(inimigo.sanidade || {}),
+                                        atual:
+                                          parseInt(e.target.value, 10) || 0,
+                                      })
                                     }
                                   />
                                 </label>
 
                                 <label>
-                                  Máx
+                                  Máxima
                                   <input
                                     type="number"
-                                    value={dados.max || 0}
+                                    value={inimigo.sanidade?.max || 0}
                                     onChange={(e) =>
-                                      atualizarMembroNpc(
-                                        membro.chave,
-                                        "max",
-                                        e.target.value,
-                                      )
-                                    }
-                                  />
-                                </label>
-
-                                <label>
-                                  Def
-                                  <input
-                                    type="number"
-                                    value={dados.defesa || 0}
-                                    onChange={(e) =>
-                                      atualizarMembroNpc(
-                                        membro.chave,
-                                        "defesa",
-                                        e.target.value,
-                                      )
+                                      atualizarCampoInimigo("sanidade", {
+                                        ...(inimigo.sanidade || {}),
+                                        max: parseInt(e.target.value, 10) || 0,
+                                      })
                                     }
                                   />
                                 </label>
                               </div>
-                            );
-                          })}
-                        </div>
-                      </section>
+                            </section>
 
-                      <section className="mestre-modal-bloco full">
-                        <div className="mestre-modal-linha-topo">
-                          <span>Ataques</span>
-
-                          <button type="button" onClick={adicionarAtaqueNpc}>
-                            + Ataque
-                          </button>
-                        </div>
-
-                        <div className="mestre-edit-lista">
-                          {(npc.ataques || []).map((ataque) => (
-                            <div key={ataque.id}>
-                              <input
-                                value={ataque.nome || ""}
-                                onChange={(e) =>
-                                  atualizarAtaqueNpc(
-                                    ataque.id,
-                                    "nome",
-                                    e.target.value,
-                                  )
-                                }
-                              />
+                            {/* DEFESA */}
+                            <section className="inimigo-ficha-bloco">
+                              <h3>Defesa</h3>
 
                               <input
-                                value={ataque.dano || ""}
+                                type="number"
+                                value={inimigo.defesa || 0}
                                 onChange={(e) =>
-                                  atualizarAtaqueNpc(
-                                    ataque.id,
-                                    "dano",
-                                    e.target.value,
-                                  )
-                                }
-                              />
-
-                              <button
-                                onClick={() => removerAtaqueNpc(ataque.id)}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </section>
-
-                      <section className="mestre-modal-bloco full">
-                        <div className="mestre-modal-linha-topo">
-                          <span>Habilidades</span>
-
-                          <button
-                            type="button"
-                            onClick={adicionarHabilidadeNpc}
-                          >
-                            + Habilidade
-                          </button>
-                        </div>
-
-                        <div className="mestre-edit-lista">
-                          {(npc.habilidades || []).map((habilidade) => (
-                            <div key={habilidade.id}>
-                              <input
-                                value={habilidade.nome || ""}
-                                onChange={(e) =>
-                                  atualizarHabilidadeNpc(
-                                    habilidade.id,
-                                    "nome",
-                                    e.target.value,
-                                  )
-                                }
-                              />
-
-                              <input
-                                value={habilidade.descricao || ""}
-                                onChange={(e) =>
-                                  atualizarHabilidadeNpc(
-                                    habilidade.id,
-                                    "descricao",
-                                    e.target.value,
-                                  )
-                                }
-                              />
-
-                              <button
-                                onClick={() =>
-                                  removerHabilidadeNpc(habilidade.id)
-                                }
-                              >
-                                ×
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </section>
-                    </>
-                  );
-                })()}
-              </section>
-            </div>
-          )}
-        </section>
-      )}
-
-      {aba === "inimigos" && (
-        <section className="mestre-dashboard-full">
-          <div className="mestre-modal-linha-topo">
-            <h2>Inimigos</h2>
-
-            <button
-              className="criarInimigo-button"
-              type="button"
-              onClick={criarNovoInimigo}
-            >
-              Criar inimigo
-            </button>
-          </div>
-
-          <div className="mestre-fichas-com-party">
-            <div className="mestre-dashboard-cards">
-              {inimigos.map((inimigo) => (
-                <DashboardFichaCard
-                  key={inimigo.fichaId || inimigo.id}
-                  ficha={inimigo}
-                  tipo="inimigo"
-                  onAbrir={abrirCardFicha}
-                />
-              ))}
-            </div>
-            {inimigoEditando && (
-              <div
-                className="mestre-modal-overlay"
-                onClick={() => setInimigoEditando(null)}
-              >
-                <section
-                  className="mestre-modal-ficha minimalista"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {(() => {
-                    const inimigo = inimigos.find(
-                      (i) => i.id === inimigoEditando,
-                    );
-
-                    if (!inimigo) return null;
-
-                    const atualizarCampoInimigo = (campo, valor) => {
-                      atualizarInimigo(inimigo.id, {
-                        [campo]: valor,
-                      });
-                    };
-
-                    const atualizarGrupoInimigo = (grupo, chave, valor) => {
-                      atualizarInimigo(inimigo.id, {
-                        [grupo]: {
-                          ...(inimigo[grupo] || {}),
-                          [chave]: parseInt(valor, 10) || 0,
-                        },
-                      });
-                    };
-
-                    return (
-                      <>
-                        <header className="inimigo-ficha-header">
-                          <label className="inimigo-foto-editavel">
-                            <img
-                              src={
-                                inimigo.fotoPerfil ||
-                                "https://placehold.co/300x300"
-                              }
-                              alt={inimigo.nome}
-                            />
-
-                            <span>Editar imagem</span>
-
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={async (event) => {
-                                const arquivo = event.target.files?.[0];
-                                if (!arquivo) return;
-
-                                try {
-                                  const fotoComprimida =
-                                    await compressProfileImage(arquivo);
                                   atualizarCampoInimigo(
-                                    "fotoPerfil",
-                                    fotoComprimida,
+                                    "defesa",
+                                    parseInt(e.target.value, 10) || 0,
+                                  )
+                                }
+                              />
+                            </section>
+
+                            {/* MEMBROS */}
+                            <section className="inimigo-ficha-bloco">
+                              <h3>Membros</h3>
+
+                              <div className="mestre-corpo-grid">
+                                {membrosFicha.map(({ chave, nome }) => {
+                                  const dados = inimigo.membros?.[chave] || {
+                                    atual: 0,
+                                    max: 0,
+                                    defesa: 0,
+                                  };
+
+                                  const atualizarMembroInimigo = (
+                                    campo,
+                                    valor,
+                                  ) => {
+                                    atualizarCampoInimigo("membros", {
+                                      ...(inimigo.membros || {}),
+                                      [chave]: {
+                                        ...dados,
+                                        [campo]: Math.max(
+                                          0,
+                                          parseInt(valor, 10) || 0,
+                                        ),
+                                      },
+                                    });
+                                  };
+
+                                  return (
+                                    <div
+                                      key={chave}
+                                      className="mestre-corpo-item"
+                                    >
+                                      <strong>{nome}</strong>
+
+                                      <label>
+                                        Atual
+                                        <input
+                                          type="number"
+                                          value={dados.atual || 0}
+                                          onChange={(e) =>
+                                            atualizarMembroInimigo(
+                                              "atual",
+                                              e.target.value,
+                                            )
+                                          }
+                                        />
+                                      </label>
+
+                                      <label>
+                                        Máx
+                                        <input
+                                          type="number"
+                                          value={dados.max || 0}
+                                          onChange={(e) =>
+                                            atualizarMembroInimigo(
+                                              "max",
+                                              e.target.value,
+                                            )
+                                          }
+                                        />
+                                      </label>
+
+                                      <label>
+                                        DEF
+                                        <input
+                                          type="number"
+                                          value={dados.defesa || 0}
+                                          onChange={(e) =>
+                                            atualizarMembroInimigo(
+                                              "defesa",
+                                              e.target.value,
+                                            )
+                                          }
+                                        />
+                                      </label>
+                                    </div>
                                   );
-                                } catch (error) {
-                                  setMensagem(
-                                    error.message ||
-                                      "Nao foi possivel carregar a imagem.",
-                                  );
-                                }
+                                })}
+                              </div>
+                            </section>
 
-                                event.target.value = "";
-                              }}
-                            />
-                          </label>
-
-                          <div className="inimigo-identidade">
-                            <label>
-                              NV
-                              <input
-                                type="number"
-                                value={inimigo.nivel || 1}
-                                onChange={(e) =>
-                                  atualizarCampoInimigo(
-                                    "nivel",
-                                    parseInt(e.target.value, 10) || 1,
-                                  )
-                                }
-                              />
-                            </label>
-
-                            <input
-                              className="inimigo-nome-input"
-                              value={inimigo.nome || ""}
-                              onChange={(e) =>
-                                atualizarCampoInimigo("nome", e.target.value)
-                              }
-                            />
-                          </div>
-
-                          <div className="mestre-modal-header-acoes">
-                            <button
-                              className="duplicarButton"
-                              onClick={() => duplicarInimigo(inimigo)}
-                            >
-                              Duplicar
-                            </button>
-
-                            <button
-                              className="mestre-btn-apagar"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                excluirInimigo(inimigo.id);
-                              }}
-                            >
-                              Apagar
-                            </button>
-
-                            <button
-                              className="mestre-modal-fechar"
-                              onClick={() => setInimigoEditando(null)}
-                            >
-                              ×
-                            </button>
-                          </div>
-                        </header>
-
-                        <section className="mestre-modal-bloco full">
-                          <span>Atributos</span>
-
-                          <div className="mestre-modal-atributos linha">
-                            {Object.entries(inimigo.atributos || {}).map(
-                              ([atributo, valor]) => (
-                                <label key={atributo}>
-                                  {atributo}
-
-                                  <input
-                                    type="number"
-                                    value={valor}
-                                    onChange={(e) =>
-                                      atualizarGrupoInimigo(
-                                        "atributos",
-                                        atributo,
-                                        e.target.value,
-                                      )
-                                    }
-                                  />
-                                </label>
-                              ),
-                            )}
-                          </div>
-                        </section>
-                        {/* SANIDADE */}
-                        <section className="inimigo-ficha-bloco">
-                          <h3>Sanidade</h3>
-
-                          <div className="mestre-form-grid">
-                            <label>
-                              Atual
-                              <input
-                                type="number"
-                                value={inimigo.sanidade?.atual || 0}
-                                onChange={(e) =>
-                                  atualizarCampoInimigo("sanidade", {
-                                    ...(inimigo.sanidade || {}),
-                                    atual: parseInt(e.target.value, 10) || 0,
-                                  })
-                                }
-                              />
-                            </label>
-
-                            <label>
-                              Máxima
-                              <input
-                                type="number"
-                                value={inimigo.sanidade?.max || 0}
-                                onChange={(e) =>
-                                  atualizarCampoInimigo("sanidade", {
-                                    ...(inimigo.sanidade || {}),
-                                    max: parseInt(e.target.value, 10) || 0,
-                                  })
-                                }
-                              />
-                            </label>
-                          </div>
-                        </section>
-
-                        {/* DEFESA */}
-                        <section className="inimigo-ficha-bloco">
-                          <h3>Defesa</h3>
-
-                          <input
-                            type="number"
-                            value={inimigo.defesa || 0}
-                            onChange={(e) =>
-                              atualizarCampoInimigo(
-                                "defesa",
-                                parseInt(e.target.value, 10) || 0,
-                              )
-                            }
-                          />
-                        </section>
-
-                        {/* MEMBROS */}
-                        <section className="inimigo-ficha-bloco">
-                          <h3>Membros</h3>
-
-                          <div className="mestre-corpo-grid">
-                            {membrosFicha.map(({ chave, nome }) => {
-                              const dados = inimigo.membros?.[chave] || {
-                                atual: 0,
-                                max: 0,
-                                defesa: 0,
-                              };
-
-                              const atualizarMembroInimigo = (campo, valor) => {
-                                atualizarCampoInimigo("membros", {
-                                  ...(inimigo.membros || {}),
-                                  [chave]: {
-                                    ...dados,
-                                    [campo]: Math.max(
-                                      0,
-                                      parseInt(valor, 10) || 0,
-                                    ),
-                                  },
-                                });
-                              };
-
-                              return (
-                                <div key={chave} className="mestre-corpo-item">
-                                  <strong>{nome}</strong>
-
-                                  <label>
-                                    Atual
-                                    <input
-                                      type="number"
-                                      value={dados.atual || 0}
-                                      onChange={(e) =>
-                                        atualizarMembroInimigo(
-                                          "atual",
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </label>
-
-                                  <label>
-                                    Máx
-                                    <input
-                                      type="number"
-                                      value={dados.max || 0}
-                                      onChange={(e) =>
-                                        atualizarMembroInimigo(
-                                          "max",
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </label>
-
-                                  <label>
-                                    DEF
-                                    <input
-                                      type="number"
-                                      value={dados.defesa || 0}
-                                      onChange={(e) =>
-                                        atualizarMembroInimigo(
-                                          "defesa",
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </label>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </section>
-
-                        {/* ATAQUES */}
-                        <section className="inimigo-ficha-bloco">
-                          <div className="inimigo-bloco-topo">
-                            <h3>Ataques</h3>
-
-                            <button
-                              className="ataqueButton"
-                              type="button"
-                              onClick={() =>
-                                atualizarCampoInimigo("ataques", [
-                                  ...(inimigo.ataques || []),
-                                  {
-                                    nome: "Novo Ataque",
-                                    alcance: "Corpo a Corpo",
-                                    dano: "1d6",
-                                    efeito: "",
-                                  },
-                                ])
-                              }
-                            >
-                              + Ataque
-                            </button>
-                          </div>
-
-                          {(inimigo.ataques || []).map((ataque, index) => (
-                            <div key={index} className="inimigo-ataque-card">
-                              <input
-                                value={ataque.nome || ""}
-                                placeholder="Nome do ataque"
-                                onChange={(e) => {
-                                  const ataques = [...(inimigo.ataques || [])];
-                                  ataques[index] = {
-                                    ...ataque,
-                                    nome: e.target.value,
-                                  };
-                                  atualizarCampoInimigo("ataques", ataques);
-                                }}
-                              />
-
-                              <input
-                                value={ataque.alcance || ""}
-                                placeholder="Alcance"
-                                onChange={(e) => {
-                                  const ataques = [...(inimigo.ataques || [])];
-                                  ataques[index] = {
-                                    ...ataque,
-                                    alcance: e.target.value,
-                                  };
-                                  atualizarCampoInimigo("ataques", ataques);
-                                }}
-                              />
-
-                              <input
-                                value={ataque.dano || ""}
-                                placeholder="Dano: 2d6 + 3"
-                                onChange={(e) => {
-                                  const ataques = [...(inimigo.ataques || [])];
-                                  ataques[index] = {
-                                    ...ataque,
-                                    dano: e.target.value,
-                                  };
-                                  atualizarCampoInimigo("ataques", ataques);
-                                }}
-                              />
-
-                              <textarea
-                                value={ataque.efeito || ""}
-                                placeholder="Efeito do ataque"
-                                onChange={(e) => {
-                                  const ataques = [...(inimigo.ataques || [])];
-                                  ataques[index] = {
-                                    ...ataque,
-                                    efeito: e.target.value,
-                                  };
-                                  atualizarCampoInimigo("ataques", ataques);
-                                }}
-                              />
-
-                              <button
-                                type="button"
-                                className="mestre-btn-apagar"
-                                onClick={() =>
-                                  atualizarCampoInimigo(
-                                    "ataques",
-                                    (inimigo.ataques || []).filter(
-                                      (_, i) => i !== index,
-                                    ),
-                                  )
-                                }
-                              >
-                                Remover
-                              </button>
-                            </div>
-                          ))}
-                        </section>
-
-                        {/* HABILIDADES */}
-                        <section className="inimigo-ficha-bloco">
-                          <div className="inimigo-bloco-topo">
-                            <h3>Habilidades</h3>
-
-                            <button
-                              className="habilidadeButton"
-                              type="button"
-                              onClick={() =>
-                                atualizarCampoInimigo("habilidades", [
-                                  ...(inimigo.habilidades || []),
-                                  {
-                                    nome: "Nova Habilidade",
-                                    descricao: "",
-                                  },
-                                ])
-                              }
-                            >
-                              + Habilidade
-                            </button>
-                          </div>
-
-                          {(inimigo.habilidades || []).map(
-                            (habilidade, index) => (
-                              <div key={index} className="inimigo-ataque-card">
-                                <input
-                                  value={habilidade.nome || ""}
-                                  placeholder="Nome da habilidade"
-                                  onChange={(e) => {
-                                    const habilidades = [
-                                      ...(inimigo.habilidades || []),
-                                    ];
-                                    habilidades[index] = {
-                                      ...habilidade,
-                                      nome: e.target.value,
-                                    };
-                                    atualizarCampoInimigo(
-                                      "habilidades",
-                                      habilidades,
-                                    );
-                                  }}
-                                />
-
-                                <textarea
-                                  value={habilidade.descricao || ""}
-                                  placeholder="Descrição da habilidade"
-                                  onChange={(e) => {
-                                    const habilidades = [
-                                      ...(inimigo.habilidades || []),
-                                    ];
-                                    habilidades[index] = {
-                                      ...habilidade,
-                                      descricao: e.target.value,
-                                    };
-                                    atualizarCampoInimigo(
-                                      "habilidades",
-                                      habilidades,
-                                    );
-                                  }}
-                                />
+                            {/* ATAQUES */}
+                            <section className="inimigo-ficha-bloco">
+                              <div className="inimigo-bloco-topo">
+                                <h3>Ataques</h3>
 
                                 <button
+                                  className="ataqueButton"
                                   type="button"
-                                  className="mestre-btn-apagar"
                                   onClick={() =>
-                                    atualizarCampoInimigo(
-                                      "habilidades",
-                                      (inimigo.habilidades || []).filter(
-                                        (_, i) => i !== index,
-                                      ),
-                                    )
+                                    atualizarCampoInimigo("ataques", [
+                                      ...(inimigo.ataques || []),
+                                      {
+                                        nome: "Novo Ataque",
+                                        alcance: "Corpo a Corpo",
+                                        dano: "1d6",
+                                        efeito: "",
+                                      },
+                                    ])
                                   }
                                 >
-                                  Remover
+                                  + Ataque
                                 </button>
                               </div>
-                            ),
-                          )}
-                        </section>
-                      </>
-                    );
-                  })()}
-                </section>
+
+                              {(inimigo.ataques || []).map((ataque, index) => (
+                                <div
+                                  key={index}
+                                  className="inimigo-ataque-card"
+                                >
+                                  <input
+                                    value={ataque.nome || ""}
+                                    placeholder="Nome do ataque"
+                                    onChange={(e) => {
+                                      const ataques = [
+                                        ...(inimigo.ataques || []),
+                                      ];
+                                      ataques[index] = {
+                                        ...ataque,
+                                        nome: e.target.value,
+                                      };
+                                      atualizarCampoInimigo("ataques", ataques);
+                                    }}
+                                  />
+
+                                  <input
+                                    value={ataque.alcance || ""}
+                                    placeholder="Alcance"
+                                    onChange={(e) => {
+                                      const ataques = [
+                                        ...(inimigo.ataques || []),
+                                      ];
+                                      ataques[index] = {
+                                        ...ataque,
+                                        alcance: e.target.value,
+                                      };
+                                      atualizarCampoInimigo("ataques", ataques);
+                                    }}
+                                  />
+
+                                  <input
+                                    value={ataque.dano || ""}
+                                    placeholder="Dano: 2d6 + 3"
+                                    onChange={(e) => {
+                                      const ataques = [
+                                        ...(inimigo.ataques || []),
+                                      ];
+                                      ataques[index] = {
+                                        ...ataque,
+                                        dano: e.target.value,
+                                      };
+                                      atualizarCampoInimigo("ataques", ataques);
+                                    }}
+                                  />
+
+                                  <textarea
+                                    value={ataque.efeito || ""}
+                                    placeholder="Efeito do ataque"
+                                    onChange={(e) => {
+                                      const ataques = [
+                                        ...(inimigo.ataques || []),
+                                      ];
+                                      ataques[index] = {
+                                        ...ataque,
+                                        efeito: e.target.value,
+                                      };
+                                      atualizarCampoInimigo("ataques", ataques);
+                                    }}
+                                  />
+
+                                  <button
+                                    type="button"
+                                    className="mestre-btn-apagar"
+                                    onClick={() =>
+                                      atualizarCampoInimigo(
+                                        "ataques",
+                                        (inimigo.ataques || []).filter(
+                                          (_, i) => i !== index,
+                                        ),
+                                      )
+                                    }
+                                  >
+                                    Remover
+                                  </button>
+                                </div>
+                              ))}
+                            </section>
+
+                            {/* HABILIDADES */}
+                            <section className="inimigo-ficha-bloco">
+                              <div className="inimigo-bloco-topo">
+                                <h3>Habilidades</h3>
+
+                                <button
+                                  className="habilidadeButton"
+                                  type="button"
+                                  onClick={() =>
+                                    atualizarCampoInimigo("habilidades", [
+                                      ...(inimigo.habilidades || []),
+                                      {
+                                        nome: "Nova Habilidade",
+                                        descricao: "",
+                                      },
+                                    ])
+                                  }
+                                >
+                                  + Habilidade
+                                </button>
+                              </div>
+
+                              {(inimigo.habilidades || []).map(
+                                (habilidade, index) => (
+                                  <div
+                                    key={index}
+                                    className="inimigo-ataque-card"
+                                  >
+                                    <input
+                                      value={habilidade.nome || ""}
+                                      placeholder="Nome da habilidade"
+                                      onChange={(e) => {
+                                        const habilidades = [
+                                          ...(inimigo.habilidades || []),
+                                        ];
+                                        habilidades[index] = {
+                                          ...habilidade,
+                                          nome: e.target.value,
+                                        };
+                                        atualizarCampoInimigo(
+                                          "habilidades",
+                                          habilidades,
+                                        );
+                                      }}
+                                    />
+
+                                    <textarea
+                                      value={habilidade.descricao || ""}
+                                      placeholder="Descrição da habilidade"
+                                      onChange={(e) => {
+                                        const habilidades = [
+                                          ...(inimigo.habilidades || []),
+                                        ];
+                                        habilidades[index] = {
+                                          ...habilidade,
+                                          descricao: e.target.value,
+                                        };
+                                        atualizarCampoInimigo(
+                                          "habilidades",
+                                          habilidades,
+                                        );
+                                      }}
+                                    />
+
+                                    <button
+                                      type="button"
+                                      className="mestre-btn-apagar"
+                                      onClick={() =>
+                                        atualizarCampoInimigo(
+                                          "habilidades",
+                                          (inimigo.habilidades || []).filter(
+                                            (_, i) => i !== index,
+                                          ),
+                                        )
+                                      }
+                                    >
+                                      Remover
+                                    </button>
+                                  </div>
+                                ),
+                              )}
+                            </section>
+                          </>
+                        );
+                      })()}
+                    </section>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </section>
-      )}
+            </section>
+          )}
 
-      {aba === "loja" && (
-        <section className="mestre-loja">
-          <div className="mestre-loja-editor-topo">
-            <h2>
-              <Icon path={mdiStoreCogOutline} size={0.95} />
-              Editor da Loja
-            </h2>
-          </div>
+          {aba === "loja" && (
+            <section className="mestre-loja">
+              <div className="mestre-loja-editor-topo">
+                <h2>
+                  <Icon path={mdiStoreCogOutline} size={0.95} />
+                  Editor da Loja
+                </h2>
+              </div>
 
-          <nav className="mestre-ficha-tabs">
-            {abasEditorLoja.map((abaItem) => (
-              <button
-                key={abaItem.id}
-                className={abaLojaEditor === abaItem.id ? "ativa" : ""}
-                onClick={() => {
-                  setAbaLojaEditor(abaItem.id);
+              <nav className="mestre-ficha-tabs">
+                {abasEditorLoja.map((abaItem) => (
+                  <button
+                    key={abaItem.id}
+                    className={abaLojaEditor === abaItem.id ? "ativa" : ""}
+                    onClick={() => {
+                      setAbaLojaEditor(abaItem.id);
 
-                  setNovoItemLoja({
-                    ...itemLojaVazio,
-                    categoria: abaItem.id,
-                    nivelRito:
-                      abaItem.id === "ritos" ? nivelRitoDashboard : "iniciante",
-                  });
+                      setNovoItemLoja({
+                        ...itemLojaVazio,
+                        categoria: abaItem.id,
+                        nivelRito:
+                          abaItem.id === "ritos"
+                            ? nivelRitoDashboard
+                            : "iniciante",
+                      });
 
-                  setItemEditandoId(null);
-                }}
+                      setItemEditandoId(null);
+                    }}
+                  >
+                    {abaItem.nome}
+                  </button>
+                ))}
+              </nav>
+
+              <form
+                className="mestre-loja-form"
+                onSubmit={salvarItemLojaEditor}
               >
-                {abaItem.nome}
-              </button>
-            ))}
-          </nav>
-
-          <form className="mestre-loja-form" onSubmit={salvarItemLojaEditor}>
-            <h3>
-              {itemEditandoId ? "Editando" : "Adicionando"}{" "}
-              {abasEditorLoja.find((a) => a.id === abaLojaEditor)?.nome}
-            </h3>
-
-            <div className="mestre-form-grid">
-              <label>
-                Nome
-                <input
-                  value={novoItemLoja.nome}
-                  onChange={(event) =>
-                    atualizarCampoLoja("nome", event.target.value)
-                  }
-                />
-              </label>
-
-              <label>
-                Preço
-                <input
-                  type="number"
-                  min="0"
-                  value={novoItemLoja.preco}
-                  onChange={(event) =>
-                    atualizarCampoLoja("preco", event.target.value)
-                  }
-                />
-              </label>
-
-              <label>
-                Entrega / Custo
-                <textarea
-                  className={
-                    abaLojaEditor === "ritos" ? "textarea-rito-descricao" : ""
-                  }
-                  value={novoItemLoja.detalhe}
-                  onChange={(event) =>
-                    atualizarCampoLoja("detalhe", event.target.value)
-                  }
-                />
-              </label>
-
-              {abaLojaEditor === "ritos" && (
-                <nav className="mestre-ritos-niveis-tabs">
-                  <label>Niveis do Absoluto</label>
-                  {[
-                    { id: "iniciante", nome: "I — Iniciante" },
-                    { id: "intermediario", nome: "II — Intermediário" },
-                    { id: "avancado", nome: "III — Avançado" },
-                    { id: "experiente", nome: "IV — Experiente" },
-                  ].map((nivel) => (
-                    <button
-                      key={nivel.id}
-                      type="button"
-                      className={nivelRitoDashboard === nivel.id ? "ativa" : ""}
-                      onClick={() => {
-                        setNivelRitoDashboard(nivel.id);
-                        setNovoItemLoja((atual) => ({
-                          ...atual,
-                          categoria: "ritos",
-                          nivelRito: nivel.id,
-                        }));
-                        setItemEditandoId(null);
-                      }}
-                    >
-                      {nivel.nome}
-                    </button>
-                  ))}
-                </nav>
-              )}
-            </div>
-
-            <label>
-              Descrição / Detalhe
-              <textarea
-                value={novoItemLoja.detalhe}
-                onChange={(event) =>
-                  atualizarCampoLoja("detalhe", event.target.value)
-                }
-              />
-            </label>
-
-            {abaLojaEditor === "poderes" && (
-              <label>
-                Absolutismo
-                <textarea
-                  value={novoItemLoja.entrega}
-                  onChange={(event) =>
-                    atualizarCampoLoja("entrega", event.target.value)
-                  }
-                  placeholder="Absolutismo: ..."
-                />
-              </label>
-            )}
-
-            {abaLojaEditor === "armas-fogo" && (
-              <div className="mestre-arma-status-editor">
-                <h4>Características da arma</h4>
+                <h3>
+                  {itemEditandoId ? "Editando" : "Adicionando"}{" "}
+                  {abasEditorLoja.find((a) => a.id === abaLojaEditor)?.nome}
+                </h3>
 
                 <div className="mestre-form-grid">
                   <label>
-                    Tipo
+                    Nome
                     <input
-                      value={novoItemLoja.armaStatus?.tipo || ""}
+                      value={novoItemLoja.nome}
                       onChange={(event) =>
-                        atualizarArmaStatusLoja("tipo", event.target.value)
+                        atualizarCampoLoja("nome", event.target.value)
                       }
                     />
                   </label>
 
                   <label>
-                    DMG
+                    Preço
                     <input
-                      value={novoItemLoja.armaStatus?.dmg || ""}
+                      type="number"
+                      min="0"
+                      value={novoItemLoja.preco}
                       onChange={(event) =>
-                        atualizarArmaStatusLoja("dmg", event.target.value)
-                      }
-                      placeholder="2d6"
-                    />
-                  </label>
-
-                  <label>
-                    ROF
-                    <input
-                      value={novoItemLoja.armaStatus?.rof || ""}
-                      onChange={(event) =>
-                        atualizarArmaStatusLoja("rof", event.target.value)
+                        atualizarCampoLoja("preco", event.target.value)
                       }
                     />
                   </label>
 
                   <label>
-                    MAG
-                    <input
-                      value={novoItemLoja.armaStatus?.mag || ""}
+                    Entrega / Custo
+                    <textarea
+                      className={
+                        abaLojaEditor === "ritos"
+                          ? "textarea-rito-descricao"
+                          : ""
+                      }
+                      value={novoItemLoja.detalhe}
                       onChange={(event) =>
-                        atualizarArmaStatusLoja("mag", event.target.value)
+                        atualizarCampoLoja("detalhe", event.target.value)
                       }
                     />
                   </label>
 
-                  <label>
-                    Disparos sem desvantagem
-                    <input
-                      value={
-                        novoItemLoja.armaStatus?.disparosSemDesvantagem || ""
-                      }
-                      onChange={(event) =>
-                        atualizarArmaStatusLoja(
-                          "disparosSemDesvantagem",
-                          event.target.value,
-                        )
-                      }
-                    />
-                  </label>
+                  {abaLojaEditor === "ritos" && (
+                    <nav className="mestre-ritos-niveis-tabs">
+                      <label>Niveis do Absoluto</label>
+                      {[
+                        { id: "iniciante", nome: "I — Iniciante" },
+                        { id: "intermediario", nome: "II — Intermediário" },
+                        { id: "avancado", nome: "III — Avançado" },
+                        { id: "experiente", nome: "IV — Experiente" },
+                      ].map((nivel) => (
+                        <button
+                          key={nivel.id}
+                          type="button"
+                          className={
+                            nivelRitoDashboard === nivel.id ? "ativa" : ""
+                          }
+                          onClick={() => {
+                            setNivelRitoDashboard(nivel.id);
+                            setNovoItemLoja((atual) => ({
+                              ...atual,
+                              categoria: "ritos",
+                              nivelRito: nivel.id,
+                            }));
+                            setItemEditandoId(null);
+                          }}
+                        >
+                          {nivel.nome}
+                        </button>
+                      ))}
+                    </nav>
+                  )}
+                </div>
 
-                  <label>
-                    Recarga
-                    <input
-                      value={novoItemLoja.armaStatus?.recarga || ""}
-                      onChange={(event) =>
-                        atualizarArmaStatusLoja("recarga", event.target.value)
-                      }
-                    />
-                  </label>
+                <label>
+                  Descrição / Detalhe
+                  <textarea
+                    value={novoItemLoja.detalhe}
+                    onChange={(event) =>
+                      atualizarCampoLoja("detalhe", event.target.value)
+                    }
+                  />
+                </label>
 
+                {abaLojaEditor === "poderes" && (
                   <label>
-                    Crítico
-                    <input
-                      value={novoItemLoja.armaStatus?.critico || ""}
+                    Absolutismo
+                    <textarea
+                      value={novoItemLoja.entrega}
                       onChange={(event) =>
-                        atualizarArmaStatusLoja("critico", event.target.value)
+                        atualizarCampoLoja("entrega", event.target.value)
                       }
+                      placeholder="Absolutismo: ..."
                     />
                   </label>
+                )}
 
-                  <label>
-                    Dano Cabeça
-                    <input
-                      value={novoItemLoja.armaStatus?.danoCabeca || ""}
-                      onChange={(event) =>
-                        atualizarArmaStatusLoja(
-                          "danoCabeca",
-                          event.target.value,
-                        )
-                      }
-                    />
-                  </label>
+                {abaLojaEditor === "armas-fogo" && (
+                  <div className="mestre-arma-status-editor">
+                    <h4>Características da arma</h4>
 
-                  <label>
-                    Hipfire
-                    <input
-                      value={novoItemLoja.armaStatus?.hipfire || ""}
-                      onChange={(event) =>
-                        atualizarArmaStatusLoja("hipfire", event.target.value)
-                      }
-                    />
-                  </label>
+                    <div className="mestre-form-grid">
+                      <label>
+                        Tipo
+                        <input
+                          value={novoItemLoja.armaStatus?.tipo || ""}
+                          onChange={(event) =>
+                            atualizarArmaStatusLoja("tipo", event.target.value)
+                          }
+                        />
+                      </label>
 
-                  <label>
-                    Precision
-                    <input
-                      value={novoItemLoja.armaStatus?.precision || ""}
-                      onChange={(event) =>
-                        atualizarArmaStatusLoja("precision", event.target.value)
-                      }
-                    />
-                  </label>
+                      <label>
+                        DMG
+                        <input
+                          value={novoItemLoja.armaStatus?.dmg || ""}
+                          onChange={(event) =>
+                            atualizarArmaStatusLoja("dmg", event.target.value)
+                          }
+                          placeholder="2d6"
+                        />
+                      </label>
 
-                  <label>
-                    Control
-                    <input
-                      value={novoItemLoja.armaStatus?.control || ""}
-                      onChange={(event) =>
-                        atualizarArmaStatusLoja("control", event.target.value)
-                      }
-                    />
-                  </label>
+                      <label>
+                        ROF
+                        <input
+                          value={novoItemLoja.armaStatus?.rof || ""}
+                          onChange={(event) =>
+                            atualizarArmaStatusLoja("rof", event.target.value)
+                          }
+                        />
+                      </label>
 
-                  <label>
-                    Mobility
-                    <input
-                      value={novoItemLoja.armaStatus?.mobility || ""}
-                      onChange={(event) =>
-                        atualizarArmaStatusLoja("mobility", event.target.value)
-                      }
-                    />
-                  </label>
+                      <label>
+                        MAG
+                        <input
+                          value={novoItemLoja.armaStatus?.mag || ""}
+                          onChange={(event) =>
+                            atualizarArmaStatusLoja("mag", event.target.value)
+                          }
+                        />
+                      </label>
+
+                      <label>
+                        Disparos sem desvantagem
+                        <input
+                          value={
+                            novoItemLoja.armaStatus?.disparosSemDesvantagem ||
+                            ""
+                          }
+                          onChange={(event) =>
+                            atualizarArmaStatusLoja(
+                              "disparosSemDesvantagem",
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label>
+                        Recarga
+                        <input
+                          value={novoItemLoja.armaStatus?.recarga || ""}
+                          onChange={(event) =>
+                            atualizarArmaStatusLoja(
+                              "recarga",
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label>
+                        Crítico
+                        <input
+                          value={novoItemLoja.armaStatus?.critico || ""}
+                          onChange={(event) =>
+                            atualizarArmaStatusLoja(
+                              "critico",
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label>
+                        Dano Cabeça
+                        <input
+                          value={novoItemLoja.armaStatus?.danoCabeca || ""}
+                          onChange={(event) =>
+                            atualizarArmaStatusLoja(
+                              "danoCabeca",
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label>
+                        Hipfire
+                        <input
+                          value={novoItemLoja.armaStatus?.hipfire || ""}
+                          onChange={(event) =>
+                            atualizarArmaStatusLoja(
+                              "hipfire",
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label>
+                        Precision
+                        <input
+                          value={novoItemLoja.armaStatus?.precision || ""}
+                          onChange={(event) =>
+                            atualizarArmaStatusLoja(
+                              "precision",
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label>
+                        Control
+                        <input
+                          value={novoItemLoja.armaStatus?.control || ""}
+                          onChange={(event) =>
+                            atualizarArmaStatusLoja(
+                              "control",
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+
+                      <label>
+                        Mobility
+                        <input
+                          value={novoItemLoja.armaStatus?.mobility || ""}
+                          onChange={(event) =>
+                            atualizarArmaStatusLoja(
+                              "mobility",
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mestre-loja-form-acoes">
+                  <button type="submit">
+                    {itemEditandoId
+                      ? "Salvar alterações"
+                      : "Adicionar ao catálogo"}
+                  </button>
+
+                  {itemEditandoId && (
+                    <button type="button" onClick={limparEditorLoja}>
+                      Cancelar edição
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              <div className="mestre-catalogo-area">
+                <div className="mestre-catalogo">
+                  {itensEditorLoja.map((item) => (
+                    <article key={item.id} className="mestre-catalogo-item">
+                      <div>
+                        <span>{item.categoria}</span>
+                        <h3>{item.nome}</h3>
+                        <p>{item.detalhe}</p>
+                        <small>{item.entrega}</small>
+
+                        {item.armaStatus && (
+                          <small>
+                            DMG: {item.armaStatus.dmg} | MAG:{" "}
+                            {item.armaStatus.mag} | CRIT:{" "}
+                            {item.armaStatus.critico}
+                          </small>
+                        )}
+
+                        {item.nivelRito && (
+                          <small>Nível: {item.nivelRito}</small>
+                        )}
+                      </div>
+
+                      <strong>{item.preco} cr</strong>
+
+                      <div className="mestre-catalogo-acoes">
+                        <button
+                          type="button"
+                          className="mestre-botao-editar"
+                          onClick={() => editarItemLoja(item)}
+                        >
+                          <Icon path={mdiPencil} size={0.8} color="#ffffff" />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="perigo"
+                          onClick={() => removerItemLoja(item.id)}
+                        >
+                          <Icon path={mdiDeleteOutline} size={0.8} />
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+
+                  {itensEditorLoja.length === 0 && (
+                    <div className="mestre-catalogo-vazio">
+                      Nenhum item nesta categoria.
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-
-            <div className="mestre-loja-form-acoes">
-              <button type="submit">
-                {itemEditandoId ? "Salvar alterações" : "Adicionar ao catálogo"}
-              </button>
-
-              {itemEditandoId && (
-                <button type="button" onClick={limparEditorLoja}>
-                  Cancelar edição
-                </button>
-              )}
-            </div>
-          </form>
-
-          <div className="mestre-catalogo-area">
-            <div className="mestre-catalogo">
-              {itensEditorLoja.map((item) => (
-                <article key={item.id} className="mestre-catalogo-item">
-                  <div>
-                    <span>{item.categoria}</span>
-                    <h3>{item.nome}</h3>
-                    <p>{item.detalhe}</p>
-                    <small>{item.entrega}</small>
-
-                    {item.armaStatus && (
-                      <small>
-                        DMG: {item.armaStatus.dmg} | MAG: {item.armaStatus.mag}{" "}
-                        | CRIT: {item.armaStatus.critico}
-                      </small>
-                    )}
-
-                    {item.nivelRito && <small>Nível: {item.nivelRito}</small>}
-                  </div>
-
-                  <strong>{item.preco} cr</strong>
-
-                  <div className="mestre-catalogo-acoes">
-                    <button
-                      type="button"
-                      className="mestre-botao-editar"
-                      onClick={() => editarItemLoja(item)}
-                    >
-                      <Icon path={mdiPencil} size={0.8} color="#ffffff" />
-                    </button>
-
-                    <button
-                      type="button"
-                      className="perigo"
-                      onClick={() => removerItemLoja(item.id)}
-                    >
-                      <Icon path={mdiDeleteOutline} size={0.8} />
-                    </button>
-                  </div>
-                </article>
-              ))}
-
-              {itensEditorLoja.length === 0 && (
-                <div className="mestre-catalogo-vazio">
-                  Nenhum item nesta categoria.
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-      {aba === "habilidades" && (
-        <section className="mestre-loja">
-          <form className="mestre-loja-form" onSubmit={salvarHabilidadeEditor}>
-            <h3>
-              {habilidadeEditando ? "Editando habilidade" : "Nova habilidade"}
-            </h3>
-
-            <label>
-              Classe
-              <select
-                value={classeArvoreAtiva}
-                onChange={(e) => {
-                  setClasseArvoreAtiva(e.target.value);
-                  setEspecialidadeEditorId("");
-                  limparFormHabilidade();
-                }}
+            </section>
+          )}
+          {aba === "habilidades" && (
+            <section className="mestre-loja">
+              <form
+                className="mestre-loja-form"
+                onSubmit={salvarHabilidadeEditor}
               >
-                {Object.entries(arvoresEditor).map(([id, arvore]) => (
-                  <option key={id} value={id}>
-                    {arvore.classe || id}
-                  </option>
-                ))}
-              </select>
-            </label>
+                <h3>
+                  {habilidadeEditando
+                    ? "Editando habilidade"
+                    : "Nova habilidade"}
+                </h3>
 
-            <label>
-              Tipo
-              <select
-                value={tipoHabilidadeEditor}
-                onChange={(e) => {
-                  setTipoHabilidadeEditor(e.target.value);
-                  limparFormHabilidade();
-                }}
-              >
-                <option value="absolutas">Habilidades Absolutas</option>
-                <option value="aptidoes">Aptidões</option>
-                <option value="especialidade">
-                  Habilidades de Especialidade
-                </option>
-              </select>
-            </label>
-
-            {tipoHabilidadeEditor === "especialidade" && (
-              <label>
-                Especialidade
-                <select
-                  value={especialidadeEditorId}
-                  onChange={(e) => setEspecialidadeEditorId(e.target.value)}
-                >
-                  <option value="">Selecione</option>
-                  {(arvoresEditor[classeArvoreAtiva]?.especialidades || []).map(
-                    (esp) => (
-                      <option key={esp.id} value={esp.id}>
-                        {esp.nome}
+                <label>
+                  Classe
+                  <select
+                    value={classeArvoreAtiva}
+                    onChange={(e) => {
+                      setClasseArvoreAtiva(e.target.value);
+                      setEspecialidadeEditorId("");
+                      limparFormHabilidade();
+                    }}
+                  >
+                    {Object.entries(arvoresEditor).map(([id, arvore]) => (
+                      <option key={id} value={id}>
+                        {arvore.classe || id}
                       </option>
-                    ),
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  Tipo
+                  <select
+                    value={tipoHabilidadeEditor}
+                    onChange={(e) => {
+                      setTipoHabilidadeEditor(e.target.value);
+                      limparFormHabilidade();
+                    }}
+                  >
+                    <option value="absolutas">Habilidades Absolutas</option>
+                    <option value="aptidoes">Aptidões</option>
+                    <option value="especialidade">
+                      Habilidades de Especialidade
+                    </option>
+                  </select>
+                </label>
+
+                {tipoHabilidadeEditor === "especialidade" && (
+                  <label>
+                    Especialidade
+                    <select
+                      value={especialidadeEditorId}
+                      onChange={(e) => setEspecialidadeEditorId(e.target.value)}
+                    >
+                      <option value="">Selecione</option>
+                      {(
+                        arvoresEditor[classeArvoreAtiva]?.especialidades || []
+                      ).map((esp) => (
+                        <option key={esp.id} value={esp.id}>
+                          {esp.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+
+                <label>
+                  Nome
+                  <input
+                    value={formHabilidade.nome}
+                    onChange={(e) =>
+                      setFormHabilidade((prev) => ({
+                        ...prev,
+                        nome: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <label>
+                  Custo
+                  <input
+                    value={formHabilidade.custo}
+                    onChange={(e) =>
+                      setFormHabilidade((prev) => ({
+                        ...prev,
+                        custo: e.target.value,
+                      }))
+                    }
+                    placeholder="Ex: 2 PE, Passiva, Reação..."
+                  />
+                </label>
+
+                <label>
+                  Descrição
+                  <textarea
+                    value={formHabilidade.descricao}
+                    onChange={(e) =>
+                      setFormHabilidade((prev) => ({
+                        ...prev,
+                        descricao: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+
+                <div className="mestre-loja-form-acoes">
+                  <button type="submit">
+                    {habilidadeEditando
+                      ? "Salvar alteração"
+                      : "Criar habilidade"}
+                  </button>
+
+                  {habilidadeEditando && (
+                    <button type="button" onClick={limparFormHabilidade}>
+                      Cancelar
+                    </button>
                   )}
-                </select>
-              </label>
-            )}
+                </div>
+              </form>
 
-            <label>
-              Nome
-              <input
-                value={formHabilidade.nome}
-                onChange={(e) =>
-                  setFormHabilidade((prev) => ({
-                    ...prev,
-                    nome: e.target.value,
-                  }))
-                }
-              />
-            </label>
+              <div className="mestre-catalogo-area">
+                <div className="mestre-catalogo">
+                  {(() => {
+                    const arvoreAtual = arvoresEditor[classeArvoreAtiva] || {};
 
-            <label>
-              Custo
-              <input
-                value={formHabilidade.custo}
-                onChange={(e) =>
-                  setFormHabilidade((prev) => ({
-                    ...prev,
-                    custo: e.target.value,
-                  }))
-                }
-                placeholder="Ex: 2 PE, Passiva, Reação..."
-              />
-            </label>
+                    const lista =
+                      tipoHabilidadeEditor === "especialidade"
+                        ? (arvoreAtual.especialidades || []).find(
+                            (esp) => esp.id === especialidadeEditorId,
+                          )?.habilidades || []
+                        : arvoreAtual[tipoHabilidadeEditor] || [];
 
-            <label>
-              Descrição
-              <textarea
-                value={formHabilidade.descricao}
-                onChange={(e) =>
-                  setFormHabilidade((prev) => ({
-                    ...prev,
-                    descricao: e.target.value,
-                  }))
-                }
-              />
-            </label>
+                    return lista.map((habilidade) => (
+                      <article
+                        key={habilidade.id}
+                        className="mestre-catalogo-item"
+                      >
+                        <div>
+                          <span>{tipoHabilidadeEditor}</span>
+                          <h3>{habilidade.nome}</h3>
+                          <p>{habilidade.descricao}</p>
+                          <small>{habilidade.custo}</small>
+                        </div>
 
-            <div className="mestre-loja-form-acoes">
-              <button type="submit">
-                {habilidadeEditando ? "Salvar alteração" : "Criar habilidade"}
-              </button>
+                        <div className="mestre-catalogo-acoes">
+                          <button
+                            type="button"
+                            className="mestre-botao-editar"
+                            onClick={() => editarHabilidadeEditor(habilidade)}
+                          >
+                            <Icon path={mdiPencil} size={0.8} />
+                          </button>
 
-              {habilidadeEditando && (
-                <button type="button" onClick={limparFormHabilidade}>
-                  Cancelar
+                          <button
+                            type="button"
+                            className="perigo"
+                            onClick={() =>
+                              excluirHabilidadeEditor(habilidade.id)
+                            }
+                          >
+                            <Icon path={mdiDeleteOutline} size={0.8} />
+                          </button>
+                        </div>
+                      </article>
+                    ));
+                  })()}
+                </div>
+              </div>
+            </section>
+          )}
+        </div>
+
+        <aside className="mestre-rolagens-lateral">
+          <section className="painel-rolagens-mestre">
+            <div className="painel-rolagens-topo">
+              <div>
+                <span>Tempo real</span>
+                <h3>Rolagens dos Jogadores</h3>
+              </div>
+
+              <div className="painel-rolagens-acoes">
+                <button
+                  type="button"
+                  onClick={() => setPainelRolagensAberto((prev) => !prev)}
+                >
+                  {painelRolagensAberto ? "Ocultar" : "Mostrar"}
                 </button>
-              )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem("darkness_rolagens_mestre");
+                    setRolagensMestre([]);
+                  }}
+                >
+                  Limpar
+                </button>
+              </div>
             </div>
-          </form>
 
-          <div className="mestre-catalogo-area">
-            <div className="mestre-catalogo">
-              {(() => {
-                const arvoreAtual = arvoresEditor[classeArvoreAtiva] || {};
+            {painelRolagensAberto && (
+              <div className="lista-rolagens-mestre">
+                {rolagensMestre.length > 0 ? (
+                  rolagensMestre.map((rolagem) => (
+                    <article className="rolagem-mestre-card" key={rolagem.id}>
+                      <header>
+                        <strong>{rolagem.jogador}</strong>
+                      </header>
 
-                const lista =
-                  tipoHabilidadeEditor === "especialidade"
-                    ? (arvoreAtual.especialidades || []).find(
-                        (esp) => esp.id === especialidadeEditorId,
-                      )?.habilidades || []
-                    : arvoreAtual[tipoHabilidadeEditor] || [];
+                      <h4>{rolagem.titulo}</h4>
+                      <p>{rolagem.modo}</p>
 
-                return lista.map((habilidade) => (
-                  <article key={habilidade.id} className="mestre-catalogo-item">
-                    <div>
-                      <span>{tipoHabilidadeEditor}</span>
-                      <h3>{habilidade.nome}</h3>
-                      <p>{habilidade.descricao}</p>
-                      <small>{habilidade.custo}</small>
-                    </div>
+                      <div className="rolagem-mestre-formula">
+                        {rolagem.formula}
+                      </div>
 
-                    <div className="mestre-catalogo-acoes">
-                      <button
-                        type="button"
-                        className="mestre-botao-editar"
-                        onClick={() => editarHabilidadeEditor(habilidade)}
-                      >
-                        <Icon path={mdiPencil} size={0.8} />
-                      </button>
+                      <div className="rolagem-mestre-dados">
+                        {(
+                          rolagem.dadosDetalhados ||
+                          (rolagem.dados || []).map((valor) => ({
+                            valor,
+                            faces: rolagem.faces,
+                          }))
+                        ).map((dado, index) => (
+                          <span key={index}>
+                            d{dado.faces}: {dado.valor}
+                          </span>
+                        ))}
+                      </div>
 
-                      <button
-                        type="button"
-                        className="perigo"
-                        onClick={() => excluirHabilidadeEditor(habilidade.id)}
-                      >
-                        <Icon path={mdiDeleteOutline} size={0.8} />
-                      </button>
-                    </div>
-                  </article>
-                ));
-              })()}
-            </div>
-          </div>
-        </section>
-      )}
+                      {rolagem.finais > 0 && (
+                        <small>
+                          Finais: {rolagem.finais} | Bônus: +
+                          {rolagem.bonusFinais || 0}
+                        </small>
+                      )}
+
+                      <footer>
+                        <span>
+                          {rolagem.tipo === "dano" ? "Dano" : "Resultado"}
+                        </span>
+                        <strong>{rolagem.total}</strong>
+                      </footer>
+                    </article>
+                  ))
+                ) : (
+                  <div className="rolagem-mestre-vazio">
+                    Nenhuma rolagem recebida ainda.
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        </aside>
+      </div>
+
       {popup &&
         createPortal(
           <div className="mestre-popup-overlay" onClick={fecharPopup}>

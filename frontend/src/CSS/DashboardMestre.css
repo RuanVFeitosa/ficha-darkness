@@ -212,6 +212,170 @@
   color: #000;
 }
 
+.painel-rolagens-mestre {
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.painel-rolagens-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.painel-rolagens-topo span {
+  color: #d4af37;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.painel-rolagens-topo h3 {
+  margin: 4px 0 0;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.painel-rolagens-acoes {
+  display: flex;
+  gap: 8px;
+}
+
+.painel-rolagens-acoes button {
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  background: rgba(139, 69, 19, 0.35);
+  color: #fff8ea;
+  padding: 8px 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.lista-rolagens-mestre {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.rolagem-mestre-card {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 3px solid #d4af37;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rolagem-mestre-card header,
+.rolagem-mestre-card footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rolagem-mestre-card h4 {
+  margin: 10px 0 4px;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.rolagem-mestre-card p {
+  margin: 0;
+  color: #cfcfcf;
+  font-size: 0.8rem;
+}
+
+.rolagem-mestre-formula {
+  margin-top: 10px;
+  color: #d4af37;
+  font-weight: 900;
+}
+
+.rolagem-mestre-dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.rolagem-mestre-dados span {
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.rolagem-mestre-card footer strong {
+  color: #d4af37;
+  font-size: 1.6rem;
+}
+
+.rolagem-mestre-vazio {
+  color: #aaa;
+  font-style: italic;
+}
+
+.mestre-layout-com-rolagens {
+  width: min(1600px, calc(100vw - 48px));
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 22px;
+  align-items: start;
+}
+
+.mestre-conteudo-principal {
+  min-width: 0;
+}
+
+.mestre-conteudo-principal .mestre-tabs {
+  max-width: none;
+  margin: 0 0 22px;
+}
+
+.mestre-conteudo-principal .mestre-dashboard-full,
+.mestre-conteudo-principal .mestre-loja {
+  max-width: none;
+  margin: 0;
+}
+
+.mestre-rolagens-lateral {
+  position: sticky;
+  top: 24px;
+}
+
+.mestre-rolagens-lateral .painel-rolagens-mestre {
+  margin: 0;
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+}
+
+.mestre-rolagens-lateral .lista-rolagens-mestre {
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 1200px) {
+  .mestre-layout-com-rolagens {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-rolagens-lateral {
+    position: static;
+  }
+}
+
 .mestre-criar,
 .mestre-inventario-form,
 .mestre-loja-form {

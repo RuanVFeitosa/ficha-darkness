@@ -933,6 +933,39 @@ const FichaPersonagem = () => {
     return encontrado ? parseInt(encontrado[1], 10) : 1;
   };
 
+  const registrarRolagemMestre = (rolagem) => {
+    const novaRolagem = {
+      id: `${Date.now()}-${Math.random()}`,
+      jogador: personagem.nome || "Jogador",
+      horario: new Date().toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }),
+      ...rolagem,
+    };
+
+    const chave = "darkness_rolagens_mestre";
+
+    let historico = [];
+
+    try {
+      historico = JSON.parse(localStorage.getItem(chave)) || [];
+    } catch {
+      historico = [];
+    }
+
+    const atualizado = [novaRolagem, ...historico].slice(0, 3);
+
+    localStorage.setItem(chave, JSON.stringify(atualizado));
+
+    window.dispatchEvent(
+      new CustomEvent("darkness:nova-rolagem", {
+        detail: novaRolagem,
+      }),
+    );
+  };
+
   const rolarDado = (faces) => {
     return Math.floor(Math.random() * faces) + 1;
   };
@@ -1158,11 +1191,12 @@ const FichaPersonagem = () => {
 
     setRolandoDados(true);
 
-    setModalRolagem({
+    const rolagem = {
       tipo: "dano",
       titulo: item.nome,
       modo: efeitosPorModo[modo] || efeitosPorModo.normal,
       formula: resultado.texto,
+
       dados:
         modo === "firmeza" && resultadoAlvo2
           ? [
@@ -1172,18 +1206,27 @@ const FichaPersonagem = () => {
               ...(resultadoAlvo2.rolagensBonus || []),
             ]
           : [...resultado.rolagens, ...(resultado.rolagensBonus || [])],
+
+      dadosDetalhados:
+        modo === "firmeza" && resultadoAlvo2 ? [] : resultado.dadosDetalhados,
+
       faces: danoBase?.faces || 6,
+
       maiorResultado: Math.max(
         ...resultado.rolagens,
         ...(resultado.rolagensBonus || []),
       ),
+
       bonusAtivo: 0,
       bonusPassiva: 0,
+
       total:
         modo === "firmeza" && resultadoAlvo2
           ? resultado.total + resultadoAlvo2.total
           : resultado.total,
+
       dano: null,
+
       alvos:
         modo === "firmeza" && resultadoAlvo2
           ? [
@@ -1191,7 +1234,10 @@ const FichaPersonagem = () => {
               { nome: "ALVO 2", resultado: resultadoAlvo2 },
             ]
           : [],
-    });
+    };
+
+    setModalRolagem(rolagem);
+    registrarRolagemMestre(rolagem);
 
     setTimeout(() => {
       setRolandoDados(false);
@@ -1473,20 +1519,27 @@ const FichaPersonagem = () => {
 
     setRolandoDados(true);
 
-    setModalRolagem({
+    const rolagem = {
       tipo: tipoRolagem,
       titulo: item.nome,
       modo: tipoRolagem === "cura" ? "Rolagem de Cura" : "Rolagem de Dano",
       formula: resultado.texto,
-      dados: resultado.rolagens,
+      dados: [...resultado.rolagens, ...(resultado.rolagensBonus || [])],
+      dadosDetalhados: resultado.dadosDetalhados,
       faces: interpretarDano(formula)?.faces || 6,
-      maiorResultado: Math.max(...resultado.rolagens),
+      maiorResultado: Math.max(
+        ...resultado.rolagens,
+        ...(resultado.rolagensBonus || []),
+      ),
       bonusAtivo: 0,
       bonusPassiva: 0,
       total: resultado.total,
       dano: resultado,
       itemQuebrou: quebrouComEssaRolagem,
-    });
+    };
+
+    setModalRolagem(rolagem);
+    registrarRolagemMestre(rolagem);
 
     if (
       tipoRolagem === "dano" &&
@@ -1683,7 +1736,8 @@ const FichaPersonagem = () => {
       });
       setRolandoDados(true);
 
-      setModalRolagem({
+      const rolagem = {
+        tipo: "teste",
         titulo: `${nomesAtributos[atributoBase]} | ${nome}`,
         modo: "Teste de Ativo",
         formula: `${resultado.quantidadeDados}d${resultado.faces} + ${resultado.bonusAtivo}`,
@@ -1700,7 +1754,10 @@ const FichaPersonagem = () => {
         total: resultado.total,
         dano: null,
         dadosDetalhados: null,
-      });
+      };
+
+      setModalRolagem(rolagem);
+      registrarRolagemMestre(rolagem);
 
       setTimeout(() => {
         setRolandoDados(false);
@@ -1960,25 +2017,26 @@ const FichaPersonagem = () => {
 
     setRolandoDados(true);
 
-    setModalRolagem({
+    const rolagem = {
+      tipo: "teste",
       titulo: `${ativoInfo?.nome || "Ativo"} + ${nome}`,
       modo: "Teste de Passiva",
-
       formula: `${teste.quantidadeDados}d${teste.faces} + ${teste.bonusAtivo} + ${teste.bonusPassiva}`,
-
       dados: teste.rolagens,
+      dadosDetalhados: null,
       faces: teste.faces,
       maiorResultado: teste.maiorResultado,
-
       bonusAtivo: teste.bonusAtivo,
       bonusPassiva: teste.bonusPassiva,
       finais: teste.finais,
       resultadosExtras: teste.resultadosExtras,
       bonusFinais: teste.bonusFinais,
-
       total: teste.total,
       dano: null,
-    });
+    };
+
+    setModalRolagem(rolagem);
+    registrarRolagemMestre(rolagem);
 
     setTimeout(() => {
       setRolandoDados(false);
@@ -2207,15 +2265,14 @@ const FichaPersonagem = () => {
     setErroRolagemPersonalizada("");
     setRolandoDados(true);
 
-    setModalRolagem({
+    const rolagem = {
+      tipo: "teste",
       titulo: "Rolagem Personalizada",
       modo: formulaDadoPersonalizado,
       formula: formulaDadoPersonalizado,
 
-      // Mantém compatibilidade com o modal antigo
       dados: dados.map((dado) => dado.valor),
 
-      // Novo: cada dado com seu próprio formato
       dadosDetalhados: dados.map((dado) => ({
         valor: dado.valor,
         faces: dado.faces,
@@ -2234,7 +2291,10 @@ const FichaPersonagem = () => {
       bonusFinais,
       total,
       dano: null,
-    });
+    };
+
+    setModalRolagem(rolagem);
+    registrarRolagemMestre(rolagem);
 
     setTimeout(() => {
       setRolandoDados(false);
