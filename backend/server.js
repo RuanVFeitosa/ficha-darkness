@@ -562,7 +562,9 @@ const handleRequest = async (req, res) => {
 
   try {
     if (
-      (url.pathname === "/api" || url.pathname === "/api/health") &&
+      (url.pathname === "/health" ||
+        url.pathname === "/api" ||
+        url.pathname === "/api/health") &&
       req.method === "GET"
     ) {
       return sendJson(res, 200, {
@@ -711,13 +713,6 @@ if (require.main === module) {
     console.error("Nao foi possivel iniciar o backend:", error);
     process.exit(1);
   });
-
-  app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "online",
-    timestamp: new Date().toISOString(),
-  });
-});
 
   server.listen(PORT, HOST, () => {
     console.log(`Backend da ficha rodando em http://${HOST}:${PORT}`);
