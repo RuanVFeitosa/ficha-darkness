@@ -17,6 +17,28 @@ const SUPABASE_URL = process.env.SUPABASE_URL?.trim();
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 const SUPABASE_TABLE = (process.env.SUPABASE_TABLE || "personagens").trim();
 const USE_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+const CACHE_TTL_MS = Number(process.env.CACHE_TTL_MS || 5 * 60 * 1000);
+
+const cache = {
+  personagens: new Map(),
+  personagensList: null,
+  skillTrees: null,
+};
+
+const isCacheFresh = (entry) =>
+  Boolean(entry) && Date.now() - entry.cachedAt < CACHE_TTL_MS;
+
+const setPersonagemCache = (fichaId, personagem, updatedAt = null) => {
+  cache.personagens.set(sanitizeFichaId(fichaId), {
+    personagem,
+    updatedAt,
+    cachedAt: Date.now(),
+  });
+};
+
+const clearPersonagensListCache = () => {
+  cache.personagensList = null;
+};
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -272,11 +294,20 @@ const readJsonBody = (req) => {
 const readPersonagem = async (id) => {
   if (USE_SUPABASE) {
     const fichaId = sanitizeFichaId(id);
-    const rows = await requestSupabase(
-      `?id=eq.${encodeURIComponent(fichaId)}&select=personagem&limit=1`,
-    );
+    const cached = cache.personagens.get(fichaId);
 
-    return rows[0]?.personagem || null;
+    if (isCacheFresh(cached)) {
+      return cached.personagem;
+    }
+
+    const rows = await requestSupabase(
+      `?id=eq.${encodeURIComponent(fichaId)}&select=personagem,updated_at&limit=1`,
+    );
+    const personagem = rows[0]?.personagem || null;
+
+    setPersonagemCache(fichaId, personagem, rows[0]?.updated_at || null);
+
+    return personagem;
   }
 
   try {
@@ -295,6 +326,7 @@ const readPersonagem = async (id) => {
 const writePersonagem = async (id, personagem) => {
   if (USE_SUPABASE) {
     const fichaId = sanitizeFichaId(id);
+    const updatedAt = new Date().toISOString();
     const rows = await requestSupabase("?on_conflict=id", {
       method: "POST",
       headers: {
@@ -303,11 +335,15 @@ const writePersonagem = async (id, personagem) => {
       body: JSON.stringify({
         id: fichaId,
         personagem,
-        updated_at: new Date().toISOString(),
+        updated_at: updatedAt,
       }),
     });
+    const saved = rows[0]?.personagem || personagem;
 
-    return rows[0]?.personagem || personagem;
+    setPersonagemCache(fichaId, saved, rows[0]?.updated_at || updatedAt);
+    clearPersonagensListCache();
+
+    return saved;
   }
 
   await fs.mkdir(DATA_DIR, { recursive: true });
@@ -317,14 +353,28 @@ const writePersonagem = async (id, personagem) => {
 
 const listPersonagens = async () => {
   if (USE_SUPABASE) {
+    if (isCacheFresh(cache.personagensList)) {
+      return cache.personagensList.personagens;
+    }
+
     const rows = await requestSupabase("?select=id,personagem,updated_at&order=id.asc");
-    return rows
+    const personagens = rows
       .filter((row) => row.id !== SKILL_TREES_RECORD_ID)
       .map((row) => ({
         fichaId: row.id,
         personagem: row.personagem,
         updatedAt: row.updated_at || null,
       }));
+
+    personagens.forEach(({ fichaId, personagem, updatedAt }) => {
+      setPersonagemCache(fichaId, personagem, updatedAt);
+    });
+    cache.personagensList = {
+      personagens,
+      cachedAt: Date.now(),
+    };
+
+    return personagens;
   }
 
   try {
@@ -371,6 +421,8 @@ const deletePersonagem = async (id) => {
       method: "DELETE",
       headers: { Prefer: "return=minimal" },
     });
+    cache.personagens.delete(fichaId);
+    clearPersonagensListCache();
     return true;
   }
 
@@ -423,11 +475,21 @@ const normalizeSkillTrees = (arvores) => {
 
 const readSkillTrees = async () => {
   if (USE_SUPABASE) {
+    if (isCacheFresh(cache.skillTrees)) {
+      return cache.skillTrees.arvores;
+    }
+
     const rows = await requestSupabase(
       `?id=eq.${encodeURIComponent(SKILL_TREES_RECORD_ID)}&select=personagem&limit=1`,
     );
 
-    return normalizeSkillTrees(rows[0]?.personagem?.arvores || {});
+    const arvores = normalizeSkillTrees(rows[0]?.personagem?.arvores || {});
+    cache.skillTrees = {
+      arvores,
+      cachedAt: Date.now(),
+    };
+
+    return arvores;
   }
 
   try {
@@ -446,6 +508,7 @@ const writeSkillTrees = async (arvores) => {
   const normalized = normalizeSkillTrees(arvores);
 
   if (USE_SUPABASE) {
+    const updatedAt = new Date().toISOString();
     const rows = await requestSupabase("?on_conflict=id", {
       method: "POST",
       headers: {
@@ -454,11 +517,18 @@ const writeSkillTrees = async (arvores) => {
       body: JSON.stringify({
         id: SKILL_TREES_RECORD_ID,
         personagem: { tipo: "arvores-habilidades", arvores: normalized },
-        updated_at: new Date().toISOString(),
+        updated_at: updatedAt,
       }),
     });
+    const arvoresSalvas = normalizeSkillTrees(
+      rows[0]?.personagem?.arvores || normalized,
+    );
+    cache.skillTrees = {
+      arvores: arvoresSalvas,
+      cachedAt: Date.now(),
+    };
 
-    return normalizeSkillTrees(rows[0]?.personagem?.arvores || normalized);
+    return arvoresSalvas;
   }
 
   await fs.mkdir(DATA_DIR, { recursive: true });

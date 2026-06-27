@@ -13,6 +13,8 @@ services:
         value: false
       - key: CORS_ORIGIN
         value: https://seu-projeto.vercel.app
+      - key: CACHE_TTL_MS
+        value: 300000
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY

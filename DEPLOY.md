@@ -48,6 +48,7 @@ Variaveis de ambiente do backend:
 ```txt
 SERVE_FRONTEND = false
 CORS_ORIGIN = https://seu-projeto.vercel.app
+CACHE_TTL_MS = 300000
 SUPABASE_URL = sua Project URL do Supabase
 SUPABASE_SERVICE_ROLE_KEY = sua service_role key do Supabase
 SUPABASE_TABLE = personagens
@@ -66,6 +67,8 @@ https://seu-backend.onrender.com/api/health
 ```
 
 O retorno esperado deve mostrar `ok: true` e `storage: "supabase"`.
+
+`CACHE_TTL_MS` controla por quanto tempo o backend da Render reaproveita leituras do Supabase em memoria. O padrao recomendado e `300000` (5 minutos). Quando uma ficha ou arvore e salva pelo app, o cache e atualizado imediatamente.
 
 Observacao: planos gratuitos de alguns hosts podem dormir. Para servidor realmente sempre ligado, use um plano pago ou um provedor que garanta processo persistente no plano escolhido.
 

@@ -1,6 +1,6 @@
 const getApiUrl = () => {
   if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
+    return process.env.REACT_APP_API_URL.replace(/\/$/, "");
   }
 
   const isCraDevServer =
@@ -12,13 +12,24 @@ const getApiUrl = () => {
 const API_URL = getApiUrl();
 
 const request = async (path, options = {}) => {
-  const response = await fetch(`${API_URL}${path}`, {
+  const url = `${API_URL}${path}`;
+  const response = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
       ...(options.headers || {}),
     },
     ...options,
   });
+  const contentType = response.headers.get("content-type") || "";
+
+  if (!contentType.includes("application/json")) {
+    const body = await response.text().catch(() => "");
+    const preview = body.slice(0, 80).replace(/\s+/g, " ").trim();
+
+    throw new Error(
+      `Resposta nao-JSON da API em ${url}. Confira REACT_APP_API_URL na Vercel. Inicio da resposta: ${preview}`,
+    );
+  }
 
   if (!response.ok) {
     const data = await response.json().catch(() => null);
