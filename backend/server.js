@@ -712,6 +712,13 @@ if (require.main === module) {
     process.exit(1);
   });
 
+  app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "online",
+    timestamp: new Date().toISOString(),
+  });
+});
+
   server.listen(PORT, HOST, () => {
     console.log(`Backend da ficha rodando em http://${HOST}:${PORT}`);
     console.log(`Armazenamento: ${USE_SUPABASE ? "Supabase" : "JSON local"}`);
@@ -719,12 +726,7 @@ if (require.main === module) {
   });
 }
 
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "online",
-    timestamp: new Date().toISOString(),
-  });
-});
+
 
 module.exports = {
   handleRequest,
