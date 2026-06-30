@@ -34,6 +34,14 @@ import {
   mdiDiceD12,
   mdiDiceD20,
   mdiShieldOutline,
+  mdiBagPersonalOutline,
+  mdiFlashlight,
+  mdiMedicalBag,
+  mdiTools,
+  mdiShield,
+  mdiMapMarkerPath,
+  mdiClipboardText,
+  mdiHeartPulse,
 } from "@mdi/js";
 import { obterIconeItem } from "../utils/itemIcons";
 import {
@@ -1424,9 +1432,23 @@ const FichaPersonagem = () => {
     }
   };
 
+  const iconesPersonalizados = React.useMemo(
+    () => [
+      { nome: "Mochila", value: mdiBagPersonalOutline },
+      { nome: "Lanterna", value: mdiFlashlight },
+      { nome: "Kit Médico", value: mdiMedicalBag },
+      { nome: "Ferramentas", value: mdiTools },
+      { nome: "Escudo", value: mdiShield },
+      { nome: "Mapa", value: mdiMapMarkerPath },
+      { nome: "Prancheta", value: mdiClipboardText },
+      { nome: "Pulso", value: mdiHeartPulse },
+    ],
+    [],
+  );
+
   const [itemPersonalizado, setItemPersonalizado] = useState({
     nome: "",
-    icone: "🎒",
+    icone: mdiBagPersonalOutline,
     tipo: "Item Personalizado",
     durabilidade: "—",
     usos: "",
@@ -1577,7 +1599,7 @@ const FichaPersonagem = () => {
   };
 
   const renderizarIconeItem = (item) => {
-    const icone = obterIconeItem(item);
+    const icone = item?.icone || obterIconeItem(item);
 
     const ehImagem =
       typeof icone === "string" &&
@@ -1596,7 +1618,19 @@ const FichaPersonagem = () => {
       );
     }
 
-    return <Icon path={icone} size={2.2} />;
+    const ehEmoji =
+      typeof icone === "string" &&
+      [...icone].some((char) => /\p{Extended_Pictographic}/u.test(char));
+
+    if (ehEmoji) {
+      return <span className="inventario-card-emoji">{icone}</span>;
+    }
+
+    if (typeof icone === "string") {
+      return <Icon path={icone} size={2.2} color="#f5efe4" />;
+    }
+
+    return <Icon path={icone} size={2.2} color="#f5efe4" />;
   };
 
   const criarItemPersonalizado = (event) => {
@@ -3158,26 +3192,27 @@ const FichaPersonagem = () => {
                     <p>{ritoVisualizado.descricao}</p>
                   </div>
                 )}
-              </div>
-              <div className="rito-visualizer-acoes">
-                <button
-                  className={
-                    ritosAtivos.includes(
+
+                <div className="rito-visualizer-acoes">
+                  <button
+                    className={
+                      ritosAtivos.includes(
+                        obterRitoId(ritoVisualizado, ritoVisualizado.index),
+                      )
+                        ? "btn-rito-ativo"
+                        : ""
+                    }
+                    onClick={() =>
+                      alternarRitoAtivo(ritoVisualizado, ritoVisualizado.index)
+                    }
+                  >
+                    {ritosAtivos.includes(
                       obterRitoId(ritoVisualizado, ritoVisualizado.index),
                     )
-                      ? "btn-rito-ativo"
-                      : ""
-                  }
-                  onClick={() =>
-                    alternarRitoAtivo(ritoVisualizado, ritoVisualizado.index)
-                  }
-                >
-                  {ritosAtivos.includes(
-                    obterRitoId(ritoVisualizado, ritoVisualizado.index),
-                  )
-                    ? "Desativar Rito"
-                    : "Ativar Rito"}
-                </button>
+                      ? "Desativar Rito"
+                      : "Ativar Rito"}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -3550,17 +3585,34 @@ const FichaPersonagem = () => {
               >
                 <label>
                   Ícone
-                  <input
-                    type="text"
-                    value={itemPersonalizado.icone}
-                    onChange={(e) =>
-                      setItemPersonalizado((prev) => ({
-                        ...prev,
-                        icone: e.target.value,
-                      }))
-                    }
-                    placeholder="🎒"
-                  />
+                  <div className="item-personalizado-icone-selector">
+                    <select
+                      value={itemPersonalizado.icone}
+                      onChange={(e) =>
+                        setItemPersonalizado((prev) => ({
+                          ...prev,
+                          icone: e.target.value,
+                        }))
+                      }
+                    >
+                      {iconesPersonalizados.map((icone) => (
+                        <option key={icone.nome} value={icone.value}>
+                          {icone.nome}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="item-personalizado-icone-preview">
+                      {itemPersonalizado.icone === "🎒" ? (
+                        <span>🎒</span>
+                      ) : (
+                        <Icon
+                          path={itemPersonalizado.icone}
+                          size={1.8}
+                          color="#f5efe4"
+                        />
+                      )}
+                    </div>
+                  </div>
                 </label>
 
                 <label>

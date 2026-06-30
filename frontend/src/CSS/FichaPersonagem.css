@@ -1647,8 +1647,10 @@ body {
 }
 
 .item-personalizado-form {
+  width: 100%;
+  max-width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
   gap: 14px;
 
   padding: 16px;
@@ -1657,6 +1659,12 @@ body {
   border-radius: 10px;
 
   background: rgba(255, 255, 255, 0.035);
+}
+
+@media (max-width: 900px) {
+  .item-personalizado-form {
+    grid-template-columns: 1fr;
+  }
 }
 
 .item-personalizado-form label {
@@ -1676,6 +1684,28 @@ body {
   grid-column: 1 / -1;
 }
 
+.item-personalizado-icone-selector {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.item-personalizado-icone-preview {
+  width: 48px;
+  min-width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.item-personalizado-icone-preview span {
+  font-size: 1.45rem;
+}
+
 .item-personalizado-form input,
 .item-personalizado-form select,
 .item-personalizado-form textarea {
@@ -1690,6 +1720,48 @@ body {
   padding: 10px;
 
   font-family: inherit;
+}
+
+.item-personalizado-form select,
+.item-personalizado-form option {
+  background: rgba(0, 0, 0, 0.35) !important;
+  color: #fff8ea !important;
+}
+
+.item-personalizado-form select {
+  background-color: rgba(0, 0, 0, 0.35) !important;
+  border-color: rgba(212, 175, 55, 0.2) !important;
+}
+
+.item-personalizado-form select {
+  color: #fff8ea !important;
+  background: rgba(0, 0, 0, 0.35) !important;
+}
+
+.item-personalizado-form option {
+  background: rgba(0, 0, 0, 0.35) !important;
+  color: #fff8ea !important;
+}
+
+.item-personalizado-form select,
+.item-personalizado-form option {
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff8ea;
+}
+
+.item-personalizado-form select {
+  background-color: rgba(0, 0, 0, 0.35);
+  border-color: rgba(212, 175, 55, 0.2);
+}
+
+.item-personalizado-form select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #d4af37 50%), linear-gradient(135deg, #d4af37 50%, transparent 50%), linear-gradient(to right, rgba(255,255,255,0.06), rgba(255,255,255,0.06));
+  background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px), 0 0;
+  background-size: 5px 5px, 5px 5px, 100% 100%;
+  background-repeat: no-repeat;
 }
 
 .item-personalizado-form textarea {
@@ -1727,6 +1799,34 @@ body {
   border-color: #d4af37;
   background: #8b4513;
 }
+
+.item-personalizado-icone-selector {
+  display: grid;
+  gap: 10px;
+}
+
+.item-personalizado-icone-preview {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px;
+}
+
+.inventario-card-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  font-size: 1.4rem;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
 
 /* =========================================================
    11.3 - RITUAIS / CARDS
@@ -3315,7 +3415,7 @@ body {
 
 .criacao-itens {
   display: grid;
-  grid-template-columns: 340px minmax(520px, 1fr);
+  grid-template-columns: minmax(240px, 340px) minmax(0, 1fr);
   gap: 26px;
   align-items: flex-start;
   width: 100%;
@@ -3332,7 +3432,7 @@ body {
 .criacao-conteudo {
   display: grid;
   gap: 26px;
-  min-width: 520px;
+  min-width: 0;
 }
 
 .criacao-topo {
@@ -7219,6 +7319,15 @@ body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .rituais-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .ritual-card {
+    width: 100%;
+    min-height: auto;
+  }
+
   .sistema-membros-sidebar,
   .corpo-container-sidebar {
     width: 100%;
@@ -7371,6 +7480,40 @@ body {
     width: 100%;
     max-height: calc(100svh - 24px);
     overflow-y: auto;
+  }
+
+  .rito-visualizer {
+    width: min(100%, calc(100vw - 16px));
+    padding: 20px 14px;
+  }
+
+  .rito-visualizer-topo {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .rito-visualizer-icone {
+    justify-self: center;
+    margin-inline: auto;
+  }
+
+  .rito-visualizer-info-topo {
+    align-items: center;
+  }
+
+  .rito-visualizer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rito-visualizer-acoes {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .btn-ativar-rito,
+  .rito-visualizer-acoes button {
+    width: 100%;
   }
 }
 
@@ -9154,7 +9297,29 @@ body {
   }
 
   .ativo-item {
-    grid-template-columns: 38px minmax(0, 1fr) auto;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "botao"
+      "info"
+      "acoes";
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+
+  .ativo-rolar-btn {
+    grid-area: botao;
+    justify-self: start;
+  }
+
+  .ativo-info {
+    grid-area: info;
+  }
+
+  .ativo-acoes {
+    grid-area: acoes;
+    justify-self: stretch;
+    justify-content: flex-start;
   }
 
   .defesa-linha-principal {
@@ -9177,12 +9342,17 @@ body {
   }
 
   .ativo-item {
-    grid-template-columns: 36px minmax(0, 1fr);
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "botao"
+      "info"
+      "acoes";
+    gap: 10px;
   }
 
   .ativo-acoes {
-    grid-column: 2;
-    justify-self: start;
+    grid-column: auto;
+    justify-self: stretch;
     justify-content: flex-start;
   }
 
@@ -9269,7 +9439,7 @@ body {
 
 @media (max-width: 720px) {
   .lista-inventario.inventario-cards {
-    grid-template-columns: repeat(auto-fill, minmax(74px, 74px));
+    grid-template-columns: repeat(auto-fill, minmax(100px, 74px));
     gap: 16px;
   }
 
