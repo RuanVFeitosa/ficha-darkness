@@ -88,7 +88,7 @@
 00 - Design tokens globais
 ========================================================= */
 
-   :root {
+:root {
   --cor-primaria: #d4af37;
   --cor-secundaria: #8b4513;
   --cor-texto: #fff8ea;
@@ -519,8 +519,6 @@ body {
   font-weight: bold;
   color: var(--cor-primaria);
 }
-
-
 
 /* =========================================================
    07 - Sanidade e Esperança
@@ -1241,6 +1239,38 @@ body {
   color: var(--cor-texto);
   font-size: 1.8rem;
   font-weight: 900;
+}
+
+.defesa-bonus-inline {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 74px;
+}
+
+.defesa-bonus-inline span {
+  color: var(--cor-texto);
+  font-size: 1.8rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.defesa-bonus-inline input {
+  width: 48px;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.42);
+  background: transparent;
+  color: var(--cor-texto);
+  font-size: 1.8rem;
+  font-weight: 900;
+  line-height: 1;
+  outline: none;
+}
+
+.defesa-bonus-inline input::-webkit-outer-spin-button,
+.defesa-bonus-inline input::-webkit-inner-spin-button {
+  margin: 0;
 }
 
 .defesa-formula {
@@ -2025,8 +2055,6 @@ body {
 
 .item-recolhivel {
   overflow: hidden;
-  border: 1px solid rgba(212, 175, 55, 0.18);
-  border-left: 3px solid #d4af37;
   border-radius: 8px;
 
   background: rgba(255, 255, 255, 0.04);
@@ -2162,7 +2190,8 @@ body {
 }
 
 .modal-rolagem {
-  width: min(560px, calc(100% - 32px));
+  width: min(960px, calc(100% - 32px));
+  max-width: 960px;
   padding: 24px;
 
   border: 1px solid rgba(255, 255, 255, 0.35);
@@ -2673,98 +2702,165 @@ body {
 
 .lista-inventario.inventario-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 230px));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(82px, 82px));
+  gap: 10px;
   align-items: start;
+  justify-content: start;
 }
 
 .inventario-card {
-  width: 230px;
-  min-height: 230px;
+  position: relative;
+  width: 82px;
+  min-height: 82px;
+  aspect-ratio: 1;
 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  gap: 12px;
-  padding: 18px 14px;
+  gap: 0;
+  padding: 8px;
 
   text-align: center;
   cursor: pointer;
 
-  border: 1px solid rgba(212, 175, 55, 0.24);
-  border-left: 3px solid #d4af37;
-  border-radius: 10px;
+  border: 1px solid rgba(225, 218, 199, 0.16);
+  border-radius: 4px;
 
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.09), transparent 52%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.42)),
-    rgba(7, 7, 7, 0.82);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent 42%),
+    rgba(8, 9, 8, 0.86);
 
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.55),
+    0 8px 18px rgba(0, 0, 0, 0.28);
 
   transition:
-    transform 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
 }
 
-.inventario-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(212, 175, 55, 0.7);
-  box-shadow:
-    0 16px 34px rgba(0, 0, 0, 0.5),
-    0 0 18px rgba(212, 175, 55, 0.12);
+.inventario-card:hover,
+.inventario-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(225, 218, 199, 0.5);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.07), transparent 44%),
+    rgba(16, 18, 16, 0.94);
+  outline: none;
+}
+
+.inventario-card::after {
+  content: attr(data-item-name);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  z-index: 6;
+  width: max-content;
+  max-width: 220px;
+  padding: 7px 10px;
+  border: 1px solid rgba(225, 218, 199, 0.24);
+  border-radius: 3px;
+  background: rgba(8, 9, 8, 0.96);
+  color: #f2eee4;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  transform: translate(-50%, 4px);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease;
+}
+
+.inventario-card:hover::after,
+.inventario-card:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .inventario-card .inventario-resumo {
   width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  gap: 8px;
+  gap: 0;
   text-align: center;
 }
 
 .inventario-card-icone {
-  width: 88px;
-  height: 72px;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 8px;
+  border: none;
+  border-radius: 0;
   background: transparent;
+  box-shadow: none;
+}
 
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+.inventario-card-icone::before,
+.inventario-card-icone::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.inventario-card-icone::before {
+  inset: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.11);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.inventario-card-icone::after {
+  width: 70px;
+  height: 1px;
+  top: 18px;
+  left: -12px;
+  background: rgba(255, 255, 255, 0.16);
+  transform: rotate(-17deg);
 }
 
 .inventario-card-img {
-  width: 72px;
-  height: 72px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   background: none;
-  opacity: 1;
+  opacity: 0.92;
+  filter: brightness(0) invert(0.86) sepia(0.18) saturate(0.6)
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.75));
 }
 
 .inventario-card-icone svg,
 .inventario-card-icone img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
+  color: #e1dac7;
+  opacity: 0.95;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.65));
 }
 
 .inventario-item-nome {
-  width: 100%;
-
-  color: #fff8ea;
-
-  font-size: 0.95rem;
-  font-weight: 900;
-
-  line-height: 1.25;
-  text-align: center;
-  text-transform: uppercase;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .inventario-item-tipo {
@@ -2825,7 +2921,8 @@ body {
 /* TOPO DO VISUALIZER */
 .item-visualizer-topo {
   display: grid;
-  grid-template-columns: 80px 1fr 80px;
+  grid-template-columns: 132px minmax(0, 1fr) 44px;
+  gap: 18px;
   align-items: center;
   width: 100%;
   margin-bottom: 26px;
@@ -2833,22 +2930,54 @@ body {
 
 /* ÍCONE */
 .item-visualizer-icone {
-  width: 150px;
-  height: 50px;
+  position: relative;
+  overflow: hidden;
+  width: 132px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
 
-  border: none;
-  border-radius: 16px;
+  border: 1px solid rgba(225, 218, 199, 0.22);
+  border-radius: 4px;
 
-  background: none;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 40%),
+    linear-gradient(160deg, rgba(38, 42, 37, 0.94), rgba(8, 9, 8, 0.98));
 
   font-size: 2rem;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.55),
+    0 12px 24px rgba(0, 0, 0, 0.42);
+  filter: none;
+}
+
+.item-visualizer-icone::after {
+  content: "";
+  position: absolute;
+  width: 140px;
+  height: 1px;
+  left: -16px;
+  top: 22px;
+  background: rgba(255, 255, 255, 0.14);
+  transform: rotate(-13deg);
+}
+
+.item-visualizer-icone svg,
+.item-visualizer-icone img {
+  position: relative;
+  z-index: 1;
+  max-width: 82%;
+  max-height: 82%;
+  color: #e1dac7;
+  opacity: 0.95;
+  filter: brightness(0) invert(0.86) sepia(0.18) saturate(0.6)
+    drop-shadow(0 2px 0 rgba(0, 0, 0, 0.7));
 }
 
 /* TEXTO CENTRAL */
 .visualizer-info {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: left;
@@ -2877,6 +3006,7 @@ body {
 
   line-height: 1.2;
   text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 /* BOTÃO FECHAR */
@@ -3030,14 +3160,15 @@ body {
   width: 68px;
   height: 68px;
 
-  border-radius: 14px;}
+  border-radius: 14px;
+}
 
 /* =========================
    D8
 ========================= */
 
 .dado-rolagem.d8 {
-    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
   width: 76px;
   height: 76px;
 
@@ -3088,7 +3219,8 @@ body {
 
   background: #9333ea;
 
-  clip-path: polygon(50% 0%, 92% 32%, 75% 100%, 25% 100%, 8% 32%);}
+  clip-path: polygon(50% 0%, 92% 32%, 75% 100%, 25% 100%, 8% 32%);
+}
 
 /* =========================
    D12
@@ -3100,7 +3232,7 @@ body {
 
   background: #ca8a04;
 
-    clip-path: polygon(
+  clip-path: polygon(
     30% 0%,
     70% 0%,
     100% 30%,
@@ -3183,37 +3315,44 @@ body {
 
 .criacao-itens {
   display: grid;
+  grid-template-columns: 340px minmax(520px, 1fr);
   gap: 26px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.criacao-itens > .estoque-materiais {
+  position: sticky;
+  top: 20px;
+  align-self: flex-start;
+  width: 100%;
+  max-width: 340px;
+}
+
+.criacao-conteudo {
+  display: grid;
+  gap: 26px;
+  min-width: 520px;
 }
 
 .criacao-topo {
   padding: 18px;
-
-  border: 1px solid rgba(212, 175, 55, 0.18);
-  border-radius: 8px;
-
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.82),
-    rgba(28, 20, 14, 0.95)
-  );
+  border: 1px solid #000;
+  border-radius: 10px;
+  background: #fff;
 }
 
 .criacao-topo span {
-  color: #8e8e8e;
-
+  color: #666;
   font-size: 0.72rem;
   font-weight: 800;
-
   letter-spacing: 2px;
   text-transform: uppercase;
 }
 
 .criacao-topo h4 {
   margin: 10px 0 8px;
-
-  color: #fff7e7;
-
+  color: #111;
   font-size: 1.3rem;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -3221,9 +3360,7 @@ body {
 
 .criacao-topo p {
   max-width: 760px;
-
-  color: #b7ab97;
-
+  color: #333;
   font-size: 0.88rem;
   line-height: 1.6;
 }
@@ -3239,15 +3376,11 @@ body {
 
 .criacao-grupo h5 {
   padding-bottom: 10px;
-
-  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
-
-  color: #d4af37;
-
+  border-bottom: 1px solid #ddd;
+  color: #111;
   font-size: 0.82rem;
   font-weight: 800;
-
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
@@ -3274,56 +3407,41 @@ body {
 .criacao-abas button {
   min-height: 38px;
   padding: 0 16px;
-
-  border: 1px solid rgba(212, 175, 55, 0.18);
-  border-radius: 6px;
-
-  background: rgba(255, 255, 255, 0.04);
-
-  color: #cfc2ae;
-
+  border: 1px solid #111;
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
   font-family: inherit;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 800;
-
   letter-spacing: 1px;
   text-transform: uppercase;
-
   cursor: pointer;
-
   transition:
     border-color 0.2s ease,
     background 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .criacao-abas button:hover,
 .criacao-abas button.ativa {
-  border-color: #d4af37;
-  background: rgba(139, 69, 19, 0.35);
-  color: #d4af37;
+  border-color: #111;
+  background: #111;
+  color: #fff;
+  transform: translateY(-1px);
 }
+
 .criacao-card {
   position: relative;
-
   display: grid;
   gap: 10px;
-
-  min-height: 290px;
-  padding: 16px;
-
-  border: 1px solid rgba(212, 175, 55, 0.14);
-  border-left: 3px solid #8b4513;
-  border-radius: 8px;
-
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.045),
-    rgba(139, 69, 19, 0.08)
-  );
-
+  min-height: 200px;
+  padding: 20px;
+  border: 1px solid #111;
+  border-radius: 12px;
   overflow: hidden;
-
+  color: white;
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
@@ -3332,18 +3450,36 @@ body {
 
 .criacao-card:hover {
   transform: translateY(-3px);
+  border-color: #b66700;
+}
 
-  border-left-color: #d4af37;
+.criacao-card button {
+  margin-top: auto;
+  min-height: 40px;
+  border: 1px solid #111;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
 
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.07),
-    rgba(139, 69, 19, 0.14)
-  );
+.criacao-card button:hover {
+  background: #000;
+  border-color: #000;
+  transform: translateY(-1px);
 }
 
 .criacao-card span {
-  color: #8d8d8d;
+  color: white;
 
   font-size: 0.68rem;
   font-weight: 800;
@@ -3362,35 +3498,26 @@ body {
 
 .criacao-card p {
   margin: 0;
-
-  color: #cfc2ae;
-
+  color: white;
   font-size: 0.82rem;
   line-height: 1.45;
 }
 
 .criacao-card b {
-  color: #d4af37;
+  color: #ffffff;
 }
 
 /* =========================================================
    INGREDIENTES
    ========================================================= */
 .estoque-materiais {
+  color: white;
   display: grid;
-  gap: 14px;
-
-  padding: 16px;
-
-  border: 1px solid rgba(212, 175, 55, 0.18);
-  border-left: 3px solid #d4af37;
-  border-radius: 8px;
-
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.045),
-    rgba(139, 69, 19, 0.08)
-  );
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #111;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 .estoque-topo {
@@ -3399,18 +3526,15 @@ body {
 }
 
 .estoque-topo span {
-  color: #8d8d8d;
-
-  font-size: 0.68rem;
+  color: #ffffff;
+  font-size: 0.72rem;
   font-weight: 800;
-
   letter-spacing: 2px;
   text-transform: uppercase;
 }
 
 .estoque-topo strong {
-  color: #fff8ea;
-
+  color: #ffffff;
   font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -3418,70 +3542,54 @@ body {
 
 .estoque-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
 }
 
 .estoque-material {
   display: grid;
-  gap: 6px;
-
-  padding: 10px;
-
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-
-  background: rgba(0, 0, 0, 0.32);
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
 }
 
 .estoque-material span {
-  color: #d4af37;
-
-  font-size: 0.7rem;
+  color: #ffffff;
+  font-size: 0.72rem;
   font-weight: 800;
-
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
 .estoque-material input {
   width: 100%;
-
-  border: 1px solid rgba(212, 175, 55, 0.22);
-  border-radius: 5px;
-
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff8ea;
-
-  padding: 7px;
-
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background-color: #000;
+  color: #111;
+  padding: 10px;
   font-family: inherit;
-  font-weight: 800;
+  font-weight: 700;
   text-align: center;
 }
 
 .estoque-material input:focus {
   outline: none;
-  border-color: #d4af37;
-  background: rgba(139, 69, 19, 0.22);
+  border-color: #111;
 }
 
 .estoque-icone {
   display: flex;
   align-items: center;
   justify-content: center;
-
-  width: 42px;
-  height: 42px;
-
+  width: 40px;
+  height: 40px;
   margin: 0 auto;
-
-  border: 1px solid rgba(212, 175, 55, 0.18);
-  border-radius: 8px;
-
-  background: rgba(0, 0, 0, 0.35);
-
-  font-size: 1.3rem;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #f7f7f7;
+  font-size: 1.2rem;
 }
 
 .estoque-material {
@@ -3497,10 +3605,8 @@ body {
 
 .receita-recursos small {
   padding: 6px 8px;
-
   border-radius: 5px;
-
-  background: rgba(0, 0, 0, 0.38);
+  color: #111;
 
   color: #d4af37;
 
@@ -3874,25 +3980,17 @@ body {
 
 .criacao-card button {
   margin-top: auto;
-
-  min-height: 38px;
-
-  border: 1px solid rgba(212, 175, 55, 0.24);
-  border-radius: 6px;
-
-  background: rgba(139, 69, 19, 0.38);
-
-  color: #f5efe4;
-
+  min-height: 40px;
+  border: 1px solid #111;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 800;
-
   letter-spacing: 1px;
   text-transform: uppercase;
-
   cursor: pointer;
-
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
@@ -3900,16 +3998,403 @@ body {
 }
 
 .criacao-card button:hover {
-  border-color: #d4af37;
-  background: #8b4513;
+  border-color: #000;
+  background: #000;
+}
+
+/* =========================================================
+   11.5 - MELHORIAS / WEAPON UPGRADE UI
+   ========================================================= */
+
+.melhorias-container {
+  display: grid;
+  gap: 18px;
+}
+
+.melhorias-topo {
+  padding: 18px;
+  border: 1px solid #111;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.melhorias-topo span {
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.melhorias-topo p {
+  margin-top: 10px;
+  color: #ffffff;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.melhorias-vazio {
+  padding: 30px 20px;
+  text-align: center;
+  border: 1px dashed #111;
+  border-radius: 12px;
+}
+
+.melhorias-vazio p {
+  color: #333;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+.melhorias-vazio small {
+  color: #666;
+  font-size: 0.75rem;
+}
+
+.melhorias-lista-armas {
+  display: grid;
+  gap: 12px;
+}
+
+.melhorias-lista-armas h5 {
+  color: #111;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #ddd;
+}
+
+.melhorias-armas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.melhoria-arma-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 14px;
+  border: 1px solid #dddddd3f;
+  border-radius: 12px;
+  background: #000000;
+  color: #111;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.melhoria-arma-card:hover {
+  border-color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.melhoria-arma-card.selecionada {
+  border-color: #ffae00a6;
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.08);
+}
+
+.melhoria-arma-icone {
+  width: 100px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 1.4rem;
+}
+
+.melhoria-arma-icone svg {
+  width: 100%;
+  height: 100%;
+}
+
+.melhoria-arma-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.melhoria-arma-info strong {
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.melhoria-arma-dmg {
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.melhoria-arma-nivel {
+  color: #ffffff88;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.melhoria-arma-atributos {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.melhoria-arma-atributos small {
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #eee;
+  color: #111;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.melhorias-upgrade-painel {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+}
+
+.melhoria-upgrade-topo {
+  text-align: center;
+}
+
+.melhoria-upgrade-topo h5 {
+  color: white;
+  font-size: 1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.melhoria-upgrade-stats-atuais {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.melhoria-upgrade-stats-atuais span {
+  padding: 5px 10px;
+  border-radius: 6px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.melhoria-upgrade-stats-atuais b {
+  color: white;
+}
+
+.melhoria-upgrade-recursos {
+  display: grid;
+  gap: 8px;
+  text-align: center;
+}
+
+.melhoria-upgrade-recursos > span {
+  color: #666;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.melhoria-recursos-lista {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.recurso-chip {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  border: 1px solid #ddd;
+  background: #f7f7f7;
+  color: #111;
+}
+
+.recurso-chip.disponivel {
+  border-color: #111;
+}
+
+.recurso-chip.insuficiente {
+  border-color: #111;
+}
+
+.melhoria-upgrade-btn {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid #111;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.melhoria-upgrade-btn:hover:not(:disabled) {
+  border-color: #000;
+  background: #000;
   transform: translateY(-1px);
+}
+
+.melhoria-upgrade-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.melhoria-upgrade-nivel-info {
+  text-align: center;
+  margin-top: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #f7f7f7;
+  color: #666;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.melhoria-upgrade-nivel-info strong {
+  color: #111;
+  font-size: 1rem;
+}
+
+.melhoria-upgrade-tipos {
+  display: grid;
+  gap: 12px;
+}
+
+.melhoria-upgrade-tipos-label {
+  color: #111;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.melhoria-upgrade-tipos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.melhoria-tipo-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.melhoria-tipo-card:hover:not(:disabled) {
+  border-color: #111;
+  background: #f4f4f4;
+  transform: translateY(-2px);
+}
+
+.melhoria-tipo-card.selecionado {
+  border: 4px solid goldenrod;
+  background: #eee;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.08);
+}
+
+.melhoria-tipo-card.maximizado {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #111;
+}
+
+.melhoria-tipo-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.2
+}
+
+.melhoria-tipo-icone {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.melhoria-tipo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+}
+
+.melhoria-tipo-info strong {
+  color: #111;
+  font-size: 0.85rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.melhoria-tipo-info small {
+  color: #666;
+  font-size: 0.68rem;
+  line-height: 1.3;
+}
+
+.melhoria-tipo-nivel {
+  color: #111;
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin-top: 2px;
+}
+
+.melhoria-tipo-bar {
+  width: 100%;
+  height: 6px;
+  border-radius: 99px;
+  background: #eee;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.melhoria-tipo-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: #111;
+  transition: width 0.3s ease;
 }
 
 /* =========================================================
    RESPONSIVO
    ========================================================= */
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
+  .criacao-itens {
+    grid-template-columns: 1fr;
+  }
+
   .criacao-grid {
     grid-template-columns: 1fr;
   }
@@ -6465,9 +6950,6 @@ body {
    escolhe novas cores via variáveis CSS.
    ========================================================= */
 
-
-
-
 /* =========================================================
    24 - Responsividade refinada da ficha
    ========================================================= */
@@ -6910,7 +7392,6 @@ body {
 .membro-max,
 .recurso-atual,
 .recurso-max,
-.item-recolhivel,
 .habilidade-card,
 .ritual-card,
 .inventario-card,
@@ -6947,7 +7428,6 @@ body {
 
 /* Elementos dourados do tema padrão */
 .info-box,
-.item-recolhivel,
 .ritual-card,
 .inventario-card,
 .item-inventario {
@@ -7064,13 +7544,9 @@ body {
 .subabas-habilidades-ficha button.ativa,
 .criacao-abas button:hover,
 .criacao-abas button.ativa {
-  border-color: var(--cor-primaria, #d4af37);
-  background: color-mix(
-    in srgb,
-    var(--cor-secundaria, #8b4513) 34%,
-    transparent
-  );
-  color: var(--cor-primaria, #d4af37);
+  border-color: #111;
+  background: #111;
+  color: #fff;
 }
 
 /* Hovers */
@@ -8712,5 +9188,103 @@ body {
 
   .defesa-membros {
     grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   INVENTARIO EM MODO ICONES
+========================================================= */
+
+.lista-inventario.inventario-cards {
+  grid-template-columns: repeat(auto-fill, minmax(82px, 82px));
+  gap: 20px;
+}
+
+.item-inventario.inventario-card {
+  width: 82px;
+  min-height: 82px;
+  overflow: visible;
+  border-color: transparent;
+  border-left-width: 0;
+  border-left-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.item-inventario.inventario-card:hover,
+.item-inventario.inventario-card:focus-visible {
+  border-color: transparent;
+  border-left-color: transparent;
+  background: rgba(225, 218, 199, 0.055);
+}
+
+.item-inventario.inventario-card::after {
+  display: none;
+}
+
+.item-inventario.inventario-card .inventario-item-nome {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  width: max-content;
+  max-width: 180px;
+  height: auto;
+  padding: 5px 7px;
+  overflow: hidden;
+  clip: auto;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.88);
+  color: #f2eee4;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  line-height: 1.15;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  transform: translateY(-4px);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease;
+}
+
+.item-inventario.inventario-card:hover .inventario-item-nome,
+.item-inventario.inventario-card:focus-visible .inventario-item-nome {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.item-inventario.inventario-card .inventario-card-icone {
+  width: 100%;
+  height: 100%;
+}
+
+.item-inventario.inventario-card .inventario-card-icone::before,
+.item-inventario.inventario-card .inventario-card-icone::after {
+  opacity: 0;
+}
+
+@media (max-width: 720px) {
+  .lista-inventario.inventario-cards {
+    grid-template-columns: repeat(auto-fill, minmax(74px, 74px));
+    gap: 16px;
+  }
+
+  .item-inventario.inventario-card {
+    width: 74px;
+    min-height: 74px;
+  }
+
+  .item-visualizer-topo {
+    grid-template-columns: 96px minmax(0, 1fr) 40px;
+    gap: 12px;
+  }
+
+  .item-visualizer-icone {
+    width: 96px;
+    height: 56px;
   }
 }

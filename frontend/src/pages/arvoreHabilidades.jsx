@@ -12,6 +12,7 @@ import {
   ouvirArvoresAtualizadas,
   ouvirPersonagemAtualizado,
 } from "../services/syncEvents";
+import { SYNC_INTERVALS, iniciarPollingVisivel } from "../services/syncPolicy";
 import { estadoInicial } from "./fichaPersonagem";
 import {
   obterArvoreClasse,
@@ -239,18 +240,22 @@ const ArvoreHabilidades = () => {
       }
     };
 
-    const pararPersonagem = ouvirPersonagemAtualizado(recarregarPersonagem);
-    const pararArvores = ouvirArvoresAtualizadas(recarregarArvores);
-    const intervalo = setInterval(() => {
+    const sincronizarTudo = () => {
       recarregarPersonagem();
       recarregarArvores();
-    }, 12000);
+    };
+    const pararPersonagem = ouvirPersonagemAtualizado(recarregarPersonagem);
+    const pararArvores = ouvirArvoresAtualizadas(recarregarArvores);
+    const pararPolling = iniciarPollingVisivel(
+      sincronizarTudo,
+      SYNC_INTERVALS.arvores,
+    );
 
     return () => {
       cancelado = true;
       pararPersonagem();
       pararArvores();
-      clearInterval(intervalo);
+      pararPolling();
     };
   }, [fichaId, storageKey]);
 

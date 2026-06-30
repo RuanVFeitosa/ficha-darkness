@@ -33,6 +33,7 @@ import {
   ouvirArvoresAtualizadas,
   ouvirPersonagemAtualizado,
 } from "../services/syncEvents";
+import { SYNC_INTERVALS, iniciarPollingVisivel } from "../services/syncPolicy";
 import { estadoInicial } from "./fichaPersonagem";
 import {
   carregarArvoresCustom,
@@ -623,14 +624,17 @@ const DashboardMestre = () => {
       }
     };
 
-    const intervalo = setInterval(sincronizarFichaSelecionada, 8000);
     const pararPersonagem = ouvirPersonagemAtualizado(
       sincronizarFichaSelecionada,
     );
+    const pararPolling = iniciarPollingVisivel(
+      sincronizarFichaSelecionada,
+      SYNC_INTERVALS.dashboardFicha,
+    );
 
     return () => {
-      clearInterval(intervalo);
       pararPersonagem();
+      pararPolling();
     };
   }, [fichaSelecionada, editandoDashboard]);
 
@@ -720,22 +724,16 @@ const DashboardMestre = () => {
 
     const pararPersonagem = ouvirPersonagemAtualizado(sincronizarListas);
     const pararArvores = ouvirArvoresAtualizadas(sincronizarArvores);
-    const intervalo = setInterval(sincronizarListas, 15000);
-
-    const aoVoltarFoco = () => {
-      if (!document.hidden) {
-        sincronizarListas();
-      }
-    };
-
-    document.addEventListener("visibilitychange", aoVoltarFoco);
+    const pararPolling = iniciarPollingVisivel(
+      sincronizarListas,
+      SYNC_INTERVALS.dashboardListas,
+    );
 
     return () => {
       cancelado = true;
       pararPersonagem();
       pararArvores();
-      clearInterval(intervalo);
-      document.removeEventListener("visibilitychange", aoVoltarFoco);
+      pararPolling();
     };
   }, []);
 

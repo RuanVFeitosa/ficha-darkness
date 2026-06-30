@@ -186,18 +186,57 @@
 }
 
 .loja-item-icone {
+  position: relative;
+  overflow: hidden;
   width: 58px;
   height: 48px;
   flex: 0 0 58px;
   display: grid;
   place-items: center;
-  color: #ffffff;
-  filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.2));
+  padding: 7px 9px;
+  color: #e1dac7;
+  border: 1px solid rgba(225, 218, 199, 0.22);
+  border-radius: 4px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 38%),
+    linear-gradient(160deg, rgba(36, 40, 36, 0.95), rgba(9, 10, 9, 0.98));
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.55),
+    inset 0 -12px 18px rgba(0, 0, 0, 0.28),
+    0 9px 16px rgba(0, 0, 0, 0.36);
 }
 
-.loja-item-icone svg {
+.loja-item-icone::before,
+.loja-item-icone::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.loja-item-icone::before {
+  inset: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.loja-item-icone::after {
+  width: 58px;
+  height: 1px;
+  top: 15px;
+  left: -7px;
+  background: rgba(255, 255, 255, 0.16);
+  transform: rotate(-16deg);
+}
+
+.loja-item-icone svg,
+.loja-item-icone img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
+  opacity: 0.95;
+  filter: brightness(0) invert(0.86) sepia(0.18) saturate(0.6)
+    drop-shadow(0 2px 0 rgba(0, 0, 0, 0.7));
 }
 
 .loja-item-tipo.ritos {
@@ -749,5 +788,315 @@
   .loja-total,
   .loja-carrinho-item {
     align-items: flex-start;
+  }
+}
+
+/* =========================================================
+   ACABAMENTO MINIMALISTA
+   ========================================================= */
+
+.loja-page {
+  background: #0b0c0b;
+  color: #ece8de;
+}
+
+.loja-hero {
+  min-height: 210px;
+  border-bottom: 1px solid rgba(225, 218, 199, 0.12);
+  background:
+    linear-gradient(90deg, rgba(11, 12, 11, 0.98), rgba(18, 20, 18, 0.92)),
+    #0b0c0b;
+}
+
+.loja-hero-img {
+  opacity: 0.08;
+  height: 100%;
+  filter: grayscale(1) contrast(1.1);
+}
+
+.loja-hero-overlay {
+  background: linear-gradient(90deg, rgba(11, 12, 11, 0.96), rgba(11, 12, 11, 0.7));
+}
+
+.loja-voltar {
+  top: 18px;
+  left: 18px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-color: rgba(225, 218, 199, 0.2);
+  border-radius: 4px;
+  background: rgba(11, 12, 11, 0.82);
+  color: #d8d2c3;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.loja-voltar:hover {
+  border-color: rgba(225, 218, 199, 0.52);
+  color: #fff8ea;
+}
+
+.loja-hero-copy {
+  width: min(980px, calc(100% - 36px));
+  margin: 0 auto;
+  padding: 76px 0 30px;
+}
+
+.loja-kicker {
+  color: #918b7d;
+  font-size: 0.72rem;
+  letter-spacing: 1.4px;
+}
+
+.loja-hero h1 {
+  margin: 8px 0 0;
+  color: #f3efe5;
+  font-size: clamp(1.7rem, 4vw, 3.1rem);
+  line-height: 1.05;
+  text-shadow: none;
+}
+
+.loja-hero p {
+  max-width: 760px;
+  margin: 10px 0 0;
+  color: #aaa294;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.loja-shell {
+  width: min(1500px, calc(100% - 36px));
+  padding: 20px 0 38px;
+}
+
+.loja-toolbar,
+.ritos-subabas {
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.loja-categoria,
+.ritos-subabas button,
+.loja-item-footer button,
+.loja-finalizar {
+  min-height: 36px;
+  border-color: rgba(225, 218, 199, 0.14);
+  border-radius: 4px;
+  background: transparent;
+  color: #cfc8b8;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.loja-categoria {
+  padding: 8px 11px;
+}
+
+.loja-categoria:hover,
+.loja-categoria.ativa,
+.ritos-subabas button:hover,
+.ritos-subabas button.ativa {
+  border-color: rgba(225, 218, 199, 0.42);
+  background: rgba(225, 218, 199, 0.06);
+  color: #f3efe5;
+  box-shadow: none;
+}
+
+.loja-layout {
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 18px;
+}
+
+.loja-catalogo {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.loja-item,
+.loja-arma {
+  min-height: 0;
+  padding: 14px;
+  border: 1px solid rgba(225, 218, 199, 0.11);
+  border-left: 1px solid rgba(225, 218, 199, 0.11);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.025);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.loja-item:hover {
+  border-color: rgba(225, 218, 199, 0.28);
+  border-left-color: rgba(225, 218, 199, 0.28);
+  background: rgba(255, 255, 255, 0.045);
+  transform: translateY(-1px);
+}
+
+.loja-item-topo {
+  min-height: 48px;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.loja-item-tipo,
+.loja-item-tipo.ritos,
+.loja-item-tipo.defesas {
+  color: #918b7d;
+  font-size: 0.62rem;
+  letter-spacing: 0.8px;
+}
+
+.loja-item h2 {
+  margin-bottom: 8px;
+  color: #f2eee4;
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.loja-item p {
+  color: #aaa294;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.loja-item-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(225, 218, 199, 0.08);
+}
+
+.loja-preco {
+  color: #e1dac7;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.loja-item-footer button {
+  padding: 8px 10px;
+}
+
+.loja-item-footer button:hover,
+.loja-finalizar:hover:not(:disabled) {
+  border-color: rgba(225, 218, 199, 0.48);
+  background: rgba(225, 218, 199, 0.08);
+  color: #fff8ea;
+}
+
+.arma-status-card {
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px;
+  border-color: rgba(225, 218, 199, 0.1);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.arma-status-principais div,
+.arma-status-extra span {
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.arma-status-principais strong,
+.arma-status-modos strong {
+  color: #e1dac7;
+}
+
+.arma-status-principais span,
+.arma-status-modos span,
+.arma-status-extra span {
+  color: #8f887b;
+  letter-spacing: 0.7px;
+}
+
+.loja-carrinho {
+  top: 14px;
+  gap: 14px;
+  padding: 14px;
+  border-color: rgba(225, 218, 199, 0.12);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.loja-carrinho-topo strong,
+.loja-total strong {
+  color: #f2eee4;
+  font-size: 1.1rem;
+}
+
+.loja-carrinho-topo span,
+.loja-total span {
+  color: #8f887b;
+  font-size: 0.68rem;
+}
+
+.loja-carrinho-item {
+  padding: 9px;
+  border: 1px solid rgba(225, 218, 199, 0.08);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.loja-carrinho-icone {
+  color: #e1dac7;
+  filter: none;
+}
+
+.loja-carrinho-item strong {
+  color: #eee8dc;
+}
+
+.loja-carrinho-item span,
+.loja-mensagem {
+  color: #aaa294;
+}
+
+.loja-finalizar {
+  background: rgba(225, 218, 199, 0.06);
+}
+
+.loja-hero-ritos,
+.loja-hero-ritos ~ .loja-shell .loja-item,
+.loja-hero-ritos ~ .loja-shell .loja-carrinho {
+  border-color: rgba(225, 218, 199, 0.12);
+}
+
+.loja-hero-ritos h1,
+.loja-hero-ritos .loja-kicker,
+.loja-hero-ritos ~ .loja-shell .loja-preco,
+.loja-hero-ritos ~ .loja-shell .loja-carrinho-topo strong,
+.loja-hero-ritos ~ .loja-shell .loja-total strong {
+  color: #f2eee4;
+  text-shadow: none;
+}
+
+@media (max-width: 980px) {
+  .loja-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .loja-carrinho {
+    position: static;
+    order: -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .loja-hero {
+    padding: 76px 14px 24px;
+  }
+
+  .loja-hero-copy {
+    width: 100%;
+    padding: 0;
+  }
+
+  .loja-shell {
+    padding: 12px;
+  }
+
+  .loja-catalogo {
+    grid-template-columns: 1fr;
   }
 }

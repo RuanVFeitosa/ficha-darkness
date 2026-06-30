@@ -23,6 +23,7 @@ import {
   notificarPersonagemAtualizado,
   ouvirPersonagemAtualizado,
 } from "../services/syncEvents";
+import { SYNC_INTERVALS, iniciarPollingVisivel } from "../services/syncPolicy";
 import {
   DEFAULT_CATALOGO_LOJA,
   normalizarItemLoja,
@@ -223,12 +224,15 @@ const LojaHelena = () => {
     };
 
     const pararPersonagem = ouvirPersonagemAtualizado(sincronizarPersonagem);
-    const intervalo = setInterval(sincronizarPersonagem, 12000);
+    const pararPolling = iniciarPollingVisivel(
+      sincronizarPersonagem,
+      SYNC_INTERVALS.loja,
+    );
 
     return () => {
       cancelado = true;
       pararPersonagem();
-      clearInterval(intervalo);
+      pararPolling();
     };
   }, [fichaId, storageKey]);
   const temMaletaDeCampo = (personagem.inventario || []).some(

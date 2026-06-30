@@ -20,6 +20,7 @@ import {
   ouvirArvoresAtualizadas,
   ouvirPersonagemAtualizado,
 } from "../services/syncEvents";
+import { SYNC_INTERVALS, iniciarPollingVisivel } from "../services/syncPolicy";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
 import Icon from "@mdi/react";
 import { mdiAccount } from "@mdi/js";
@@ -147,6 +148,7 @@ export const estadoInicial = {
   lojaCreditos: 0,
   ritosCreditos: 0,
   nivel: 1,
+  bonusDefesa: 0,
   pontosEvolucao: {
     disponiveis: 0,
     acumulados: 0,
@@ -432,6 +434,8 @@ const FichaPersonagem = () => {
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
   const [subAbaInventario, setSubAbaInventario] = useState("mochila");
   const [abaCriacao, setAbaCriacao] = useState("armas");
+  const [receitaSelecionada, setReceitaSelecionada] = useState(null);
+  const [armaUpgradeIndex, setArmaUpgradeIndex] = useState(null);
   const [mensagemCraft, setMensagemCraft] = useState("");
   const [rolandoDados, setRolandoDados] = useState(false);
   const [itemVisualizado, setItemVisualizado] = useState(null);
@@ -604,25 +608,22 @@ const FichaPersonagem = () => {
       }
     };
 
+    const sincronizarTudo = () => {
+      recarregarPersonagem();
+      recarregarArvores();
+    };
     const pararPersonagem = ouvirPersonagemAtualizado(recarregarPersonagem);
     const pararArvores = ouvirArvoresAtualizadas(recarregarArvores);
-    const intervalo = setInterval(recarregarPersonagem, 12000);
-
-    const aoVoltarFoco = () => {
-      if (!document.hidden) {
-        recarregarPersonagem();
-        recarregarArvores();
-      }
-    };
-
-    document.addEventListener("visibilitychange", aoVoltarFoco);
+    const pararPolling = iniciarPollingVisivel(
+      sincronizarTudo,
+      SYNC_INTERVALS.ficha,
+    );
 
     return () => {
       cancelado = true;
       pararPersonagem();
       pararArvores();
-      clearInterval(intervalo);
-      document.removeEventListener("visibilitychange", aoVoltarFoco);
+      pararPolling();
     };
   }, [fichaId, storageKey]);
 
@@ -646,16 +647,22 @@ const FichaPersonagem = () => {
     notificarPersonagemAtualizado(fichaId, personagem);
     setUltimoSave(new Date().toLocaleTimeString());
 
-    salvarPersonagem(fichaId, personagem)
-      .then((personagemSalvo) => {
-        notificarPersonagemAtualizado(fichaId, personagemSalvo || personagem);
-      })
-      .catch((error) => {
-        console.warn(
-          "Backend indisponivel. Dados mantidos no localStorage.",
-          error,
-        );
-      });
+    const timeout = window.setTimeout(() => {
+      salvarPersonagem(fichaId, personagem)
+        .then((personagemSalvo) => {
+          notificarPersonagemAtualizado(fichaId, personagemSalvo || personagem);
+        })
+        .catch((error) => {
+          console.warn(
+            "Backend indisponivel. Dados mantidos no localStorage.",
+            error,
+          );
+        });
+    }, SYNC_INTERVALS.autoSaveDebounce);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
   }, [personagem, carregado, fichaId, storageKey]);
 
   // FUNÇÕES DE ATUALIZAÇÃO
@@ -1018,6 +1025,12 @@ const FichaPersonagem = () => {
     return null;
   };
 
+  const obterQuantidadeAlvosFirmeza = (mobilityTexto) => {
+    const texto = String(mobilityTexto || "");
+    const match = texto.match(/(\d+)\s*alvos?/i) || texto.match(/(\d+)/);
+    return match ? Math.max(1, parseInt(match[1], 10)) : 2;
+  };
+
   const rolarDanoArma = (dmg, dadosExtras = 0, bonusDano = "") => {
     const dano = interpretarDano(dmg);
 
@@ -1178,38 +1191,43 @@ const FichaPersonagem = () => {
 
     const dadosExtras = dadosExtrasPorModo[modo] || 0;
     const danoBase = interpretarDano(arma.dmg);
-
-    const resultado = rolarDanoArma(
-      arma.dmg,
-      dadosExtras,
-      item.bonusDanoArma || "",
-    );
-
-    const resultadoAlvo2 =
+    const quantidadeAlvosFirmeza =
       modo === "firmeza"
-        ? rolarDanoArma(arma.dmg, dadosExtras, item.bonusDanoArma || "")
-        : null;
+        ? obterQuantidadeAlvosFirmeza(arma.mobility)
+        : 1;
+
+    const resultadosAlvos =
+      modo === "firmeza"
+        ? Array.from({ length: quantidadeAlvosFirmeza }, () =>
+            rolarDanoArma(arma.dmg, dadosExtras, item.bonusDanoArma || ""),
+          )
+        : [rolarDanoArma(arma.dmg, dadosExtras, item.bonusDanoArma || "")];
+
+    const resultado = resultadosAlvos[0];
+    const formula =
+      modo === "firmeza"
+        ? `${quantidadeAlvosFirmeza}x ${resultado.texto}`
+        : resultado.texto;
+    const modoDescricao =
+      modo === "firmeza"
+        ? `Firmeza: ataque simultâneo em ${quantidadeAlvosFirmeza} alvos.`
+        : efeitosPorModo[modo] || efeitosPorModo.normal;
 
     setRolandoDados(true);
 
     const rolagem = {
       tipo: "dano",
       titulo: item.nome,
-      modo: efeitosPorModo[modo] || efeitosPorModo.normal,
-      formula: resultado.texto,
+      modo: modoDescricao,
+      formula,
 
-      dados:
-        modo === "firmeza" && resultadoAlvo2
-          ? [
-              ...resultado.rolagens,
-              ...(resultado.rolagensBonus || []),
-              ...resultadoAlvo2.rolagens,
-              ...(resultadoAlvo2.rolagensBonus || []),
-            ]
-          : [...resultado.rolagens, ...(resultado.rolagensBonus || [])],
+      dados: resultadosAlvos.flatMap((res) => [
+        ...res.rolagens,
+        ...(res.rolagensBonus || []),
+      ]),
 
       dadosDetalhados:
-        modo === "firmeza" && resultadoAlvo2 ? [] : resultado.dadosDetalhados,
+        modo === "firmeza" && resultadosAlvos.length > 1 ? [] : resultado.dadosDetalhados,
 
       faces: danoBase?.faces || 6,
 
@@ -1221,19 +1239,16 @@ const FichaPersonagem = () => {
       bonusAtivo: 0,
       bonusPassiva: 0,
 
-      total:
-        modo === "firmeza" && resultadoAlvo2
-          ? resultado.total + resultadoAlvo2.total
-          : resultado.total,
+      total: resultadosAlvos.reduce((soma, res) => soma + res.total, 0),
 
       dano: null,
 
       alvos:
-        modo === "firmeza" && resultadoAlvo2
-          ? [
-              { nome: "ALVO 1", resultado },
-              { nome: "ALVO 2", resultado: resultadoAlvo2 },
-            ]
+        modo === "firmeza" && resultadosAlvos.length > 1
+          ? resultadosAlvos.map((res, index) => ({
+              nome: `ALVO ${index + 1}`,
+              resultado: res,
+            }))
           : [],
     };
 
@@ -1692,6 +1707,251 @@ const FichaPersonagem = () => {
     setTimeout(() => {
       setMensagemCraft("");
     }, 3000);
+  };
+
+  const gruposCriacaoFiltrados = receitasCriacao.filter((grupo) => {
+    if (abaCriacao === "armas") {
+      return grupo.categoria === "Armas AprimorÃ¡veis";
+    }
+
+    if (abaCriacao === "improvisados") {
+      return grupo.categoria === "Itens Improvisados";
+    }
+
+    if (abaCriacao === "municoes") {
+      return grupo.categoria === "MuniÃ§Ãµes Fabricadas";
+    }
+
+    return false;
+  });
+
+  const receitasDaBancada = (abaCriacao === "melhorias"
+    ? []
+    : receitasCriacao
+  ).flatMap(
+    (grupo) => grupo.itens,
+  );
+
+  const receitaAtiva = receitaSelecionada || receitasDaBancada[0] || null;
+
+  const armasAprimoraveis = (personagem.inventario || [])
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => {
+      const texto = `${item.nome || ""} ${item.tipo || ""} ${
+        item.categoria || ""
+      }`;
+
+      return item.armaStatus || /arma|pistola|rifle|fuzil|escopeta|arco/i.test(texto);
+    });
+
+  const armaUpgradeAtiva =
+    armasAprimoraveis.find(({ index }) => index === armaUpgradeIndex) ||
+    armasAprimoraveis[0] ||
+    null;
+
+  const [armaUpgradeTipo, setArmaUpgradeTipo] = useState("dano");
+
+  const tiposUpgrade = [
+    { chave: "dano", nome: "Dano", icone: "⚔️", descricao: "Aumenta o dano base da arma", max: 5, materiais: { cano: 1, fita: 1 } },
+    { chave: "critico", nome: "Crítico", icone: "💥", descricao: "Reduz a dificuldade de crítico (menos dados necessários)", max: 3, materiais: { laminas: 1, fita: 1 } },
+    { chave: "precisao", nome: "Precisão", icone: "🎯", descricao: "Aumenta o bônus de ataque com Percepção e fortalece alcance/control", max: 3, materiais: { fita: 1, alcool: 1 } },
+    { chave: "controle", nome: "Controle", icone: "🎚️", descricao: "Melhora o controle de recuo e a estabilidade do disparo", max: 3, materiais: { cano: 1, laminas: 1 } },
+    { chave: "velocidade", nome: "Velocidade", icone: "💨", descricao: "Aumenta a capacidade de atingir mais alvos em uma mesma ação", max: 3, materiais: { fita: 1, explosivos: 1 } },
+    { chave: "alcance", nome: "Alcance", icone: "📏", descricao: "Estende o alcance efetivo da arma e reforça ataques de precisão", max: 3, materiais: { cano: 1, fita: 1 } },
+  ];
+
+  const obterCustoUpgrade = (tipoChave) => {
+    const tipo = tiposUpgrade.find((t) => t.chave === tipoChave);
+    return tipo?.materiais || { cano: 1, fita: 1 };
+  };
+
+  const verificarMateriaisUpgrade = (tipoChave) => {
+    const custo = obterCustoUpgrade(tipoChave);
+    const materiais = personagem.materiaisCriacao || {};
+    return Object.entries(custo).every(([mat, qtd]) => (materiais[mat] || 0) >= qtd);
+  };
+
+  const reduzirCritico = (criticoTexto) => {
+    const texto = String(criticoTexto || "").trim();
+    const match = texto.match(/(\d+)x(\d+)/i);
+    if (!match) return texto;
+    const quantidade = Math.max(1, parseInt(match[1], 10) - 1);
+    const faces = match[2];
+    return `${quantidade}x${faces}`;
+  };
+
+  const incrementarPrecisao = (precisionTexto) => {
+    const texto = String(precisionTexto || "").trim();
+    const bonusMatch = texto.match(/([+-]\d+)/);
+    if (bonusMatch) {
+      const valorAtual = parseInt(bonusMatch[1], 10);
+      return texto.replace(/([+-]\d+)/, `${valorAtual + 1}`);
+    }
+
+    if (texto.includes("distância")) {
+      return texto.includes("|")
+        ? `${texto} +1`
+        : `${texto} | +1`;
+    }
+
+    if (texto.includes("|")) {
+      const [prefixo, sufixo] = texto.split("|").map((parte) => parte.trim());
+      return `${prefixo} | +1 ${sufixo}`;
+    }
+
+    return `Percepção | +1`;
+  };
+
+  const aumentarAlcance = (precisionTexto) => {
+    const texto = String(precisionTexto || "").trim();
+    const niveis = ["curta", "média", "distante", "longa"];
+    const match = texto.match(/distância\s*(curta|média|distante|longa)/i);
+
+    if (match) {
+      const atual = match[1].toLowerCase();
+      const indice = niveis.indexOf(atual);
+      if (indice >= 0 && indice < niveis.length - 1) {
+        return texto.replace(new RegExp(`distância\\s*${atual}`, "i"), `distância ${niveis[indice + 1]}`);
+      }
+      if (texto.includes("|")) {
+        return `${texto} +1`;
+      }
+      return `${texto} | +1`;
+    }
+
+    if (texto.includes("|")) {
+      const [prefixo, sufixo] = texto.split("|").map((parte) => parte.trim());
+      return `${prefixo} | +1 ${sufixo}`;
+    }
+
+    return `${texto || "Percepção"} | +1`;
+  };
+
+  const incrementarControle = (controlTexto) => {
+    const texto = String(controlTexto || "").trim();
+    const bonusMatch = texto.match(/([+-]\d+)/);
+    if (bonusMatch) {
+      const valorAtual = parseInt(bonusMatch[1], 10);
+      return texto.replace(/([+-]\d+)/, `${valorAtual + 1}`);
+    }
+    if (texto.includes("|")) {
+      return `${texto} +1`;
+    }
+    return `${texto || "Persistência"} | +1`;
+  };
+
+  const incrementarMobilidade = (mobilityTexto) => {
+    const texto = String(mobilityTexto || "").trim();
+    const match = texto.match(/(\d+)\s*alvos?/i);
+    if (match) {
+      const quantidade = parseInt(match[1], 10) + 1;
+      return texto.replace(/(\d+)\s*alvos?/i, `${quantidade} alvos`);
+    }
+    if (texto.includes("|")) {
+      const [prefixo, sufixo] = texto.split("|").map((parte) => parte.trim());
+      return `${prefixo} | 3 alvos`;
+    }
+    return `${texto || "Firmeza"} | 3 alvos`;
+  };
+
+  const melhorarArmaSelecionada = () => {
+    if (!armaUpgradeAtiva) {
+      setMensagemCraft("Selecione uma arma para melhorar.");
+      setTimeout(() => setMensagemCraft(""), 3000);
+      return;
+    }
+
+    const tipoInfo = tiposUpgrade.find((t) => t.chave === armaUpgradeTipo);
+    if (!tipoInfo) {
+      setMensagemCraft("Tipo de melhoria inválido.");
+      setTimeout(() => setMensagemCraft(""), 3000);
+      return;
+    }
+
+    if (!verificarMateriaisUpgrade(armaUpgradeTipo)) {
+      setMensagemCraft(`Materiais insuficientes para ${tipoInfo.nome}.`);
+      setTimeout(() => setMensagemCraft(""), 3000);
+      return;
+    }
+
+    setPersonagem((prev) => {
+      const inventario = [...(prev.inventario || [])];
+      const arma = inventario[armaUpgradeAtiva.index];
+
+      if (!arma) return prev;
+
+      const melhoriaAtual = arma.melhoriaArma || {};
+      const nivelAtual = parseInt(melhoriaAtual.nivel, 10) || 0;
+      const valorAtual = parseInt(melhoriaAtual[armaUpgradeTipo], 10) || 0;
+
+      if (valorAtual >= tipoInfo.max) {
+        setMensagemCraft(`${tipoInfo.nome} já está no nível máximo!`);
+        setTimeout(() => setMensagemCraft(""), 3000);
+        return prev;
+      }
+
+      const custo = obterCustoUpgrade(armaUpgradeTipo);
+
+      // Aplica as melhorias nos stats reais da arma (armaStatus)
+      const armaStatus = arma.armaStatus ? { ...arma.armaStatus } : null;
+      if (armaStatus) {
+        switch (armaUpgradeTipo) {
+          case "dano": {
+            // Aumenta o dano: incrementa a quantidade de dados (ex: 2d6 -> 3d6)
+            const danoAtual = interpretarDano(armaStatus.dmg);
+            if (danoAtual) {
+              const novaQtd = Math.min(danoAtual.quantidade + 1, 12);
+              armaStatus.dmg = `${novaQtd}d${danoAtual.faces}${danoAtual.bonus ? `${danoAtual.bonus > 0 ? "+" : ""}${danoAtual.bonus}` : ""}`;
+            }
+            break;
+          }
+          case "critico": {
+            armaStatus.critico = reduzirCritico(armaStatus.critico);
+            break;
+          }
+          case "precisao": {
+            armaStatus.precision = incrementarPrecisao(armaStatus.precision);
+            break;
+          }
+          case "controle": {
+            armaStatus.control = incrementarControle(armaStatus.control);
+            break;
+          }
+          case "velocidade": {
+            armaStatus.mobility = incrementarMobilidade(armaStatus.mobility);
+            break;
+          }
+          case "alcance": {
+            armaStatus.precision = aumentarAlcance(armaStatus.precision);
+            break;
+          }
+        }
+      }
+
+      inventario[armaUpgradeAtiva.index] = {
+        ...arma,
+        ...(armaStatus ? { armaStatus } : {}),
+        melhoriaArma: {
+          ...melhoriaAtual,
+          nivel: nivelAtual + 1,
+          [armaUpgradeTipo]: valorAtual + 1,
+        },
+      };
+
+      const novosMateriais = { ...prev.materiaisCriacao };
+      Object.entries(custo).forEach(([mat, qtd]) => {
+        novosMateriais[mat] = Math.max(0, (novosMateriais[mat] || 0) - qtd);
+      });
+
+      return {
+        ...prev,
+        materiaisCriacao: novosMateriais,
+        inventario,
+      };
+    });
+
+    setMensagemCraft(`${armaUpgradeAtiva.item.nome} — ${tipoInfo.nome} melhorado!`);
+    setTimeout(() => setMensagemCraft(""), 3000);
   };
 
   const atualizarTemaFicha = (campo, valor) => {
@@ -2160,8 +2420,10 @@ const FichaPersonagem = () => {
     );
   };
 
-  const defesaBase =
+  const bonusDefesa = parseInt(personagem.bonusDefesa, 10) || 0;
+  const defesaBaseNatural =
     10 + calcularModificadorAtivo(personagem.atributos?.reflexos || 0);
+  const defesaBase = defesaBaseNatural + bonusDefesa;
 
   const bloqueio =
     defesaBase +
@@ -2388,12 +2650,30 @@ const FichaPersonagem = () => {
                   <h3 className="defesa-titulo">Defesa Base</h3>
 
                   <div className="escudo-defesa">
-                    <input inputMode="numeric" value={defesaBase} />
+                    <input inputMode="numeric" value={defesaBase} readOnly />
                   </div>
                 </div>
 
                 <div className="defesa-info">
-                  <div className="defesa-formula"></div>
+                  <label className="defesa-bonus-inline">
+                    <span>{bonusDefesa >= 0 ? "+" : "-"}</span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      value={Math.abs(personagem.bonusDefesa ?? 0)}
+                      onChange={(e) =>
+                        setPersonagem((prev) => ({
+                          ...prev,
+                          bonusDefesa:
+                            (bonusDefesa >= 0 ? 1 : -1) *
+                            (parseInt(e.target.value, 10) || 0),
+                        }))
+                      }
+                    />
+                  </label>
+                  <div className="defesa-formula">
+                    Base {defesaBaseNatural} + bonus
+                  </div>
                 </div>
               </div>
 
@@ -2405,7 +2685,7 @@ const FichaPersonagem = () => {
 
                 <label>
                   <span>ESQUIVA</span>
-                  <input type="text" value={esquiva} />
+                  <input type="text" value={esquiva} readOnly />
                 </label>
               </div>
             </div>
@@ -2778,7 +3058,7 @@ const FichaPersonagem = () => {
                     : "Ritual Obscuro"}
                 </small>
 
-                <span>{ritual.custo || "0 PE"}</span>
+                
               </div>
 
               <button
@@ -2947,17 +3227,23 @@ const FichaPersonagem = () => {
                 <article
                   key={index}
                   className="item-inventario item-recolhivel inventario-card"
+                  tabIndex={0}
+                  aria-label={item.nome}
+                  title={item.nome}
+                  data-item-name={item.nome}
                   onClick={() => setItemVisualizado({ ...item, index })}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setItemVisualizado({ ...item, index });
+                    }
+                  }}
                 >
                   <div className="inventario-resumo">
                     <div className="inventario-card-icone">
                       {renderizarIconeItem(item)}
                     </div>
-                    <hr width="100%" />{" "}
                     <span className="inventario-item-nome">{item.nome}</span>
-                    <small className="inventario-item-tipo">
-                      {item.tipo || item.custo }
-                    </small>
                   </div>
                 </article>
               ))}
@@ -2967,6 +3253,7 @@ const FichaPersonagem = () => {
 
         {subAbaInventario === "criacao" && (
           <div className="criacao-itens">
+
             <div className="estoque-materiais">
               <div className="estoque-topo">
                 <span>Estoque</span>
@@ -3006,7 +3293,8 @@ const FichaPersonagem = () => {
               </div>
             </div>
 
-            <div className="criacao-abas">
+            <div className="criacao-conteudo">
+              <div className="criacao-abas">
               <button
                 className={abaCriacao === "armas" ? "ativa" : ""}
                 onClick={() => setAbaCriacao("armas")}
@@ -3027,72 +3315,228 @@ const FichaPersonagem = () => {
               >
                 Munições
               </button>
+
+              <button
+                className={abaCriacao === "melhorias" ? "ativa" : ""}
+                onClick={() => setAbaCriacao("melhorias")}
+              >
+                ✦ Melhorias
+              </button>
             </div>
 
-            {receitasCriacao
-              .filter((grupo) => {
-                if (abaCriacao === "armas") {
-                  return grupo.categoria === "Armas Aprimoráveis";
-                }
+            {abaCriacao === "melhorias" ? (
+              <div className="melhorias-container">
+                <div className="melhorias-topo">
+                  <span>✦ Bancada de Melhorias</span>
+                  <p>Selecione uma arma do inventário para aprimorar seus atributos.</p>
+                </div>
 
-                if (abaCriacao === "improvisados") {
-                  return grupo.categoria === "Itens Improvisados";
-                }
-
-                if (abaCriacao === "municoes") {
-                  return grupo.categoria === "Munições Fabricadas";
-                }
-
-                if (abaCriacao === "materiais") {
-                  return grupo.categoria === "Materiais de Criação";
-                }
-
-                return true;
-              })
-              .map((grupo) => (
-                <section key={grupo.categoria} className="criacao-grupo">
-                  <h5>{grupo.categoria}</h5>
-
-                  <div className="criacao-grid">
-                    {grupo.itens.map((receita) => (
-                      <article key={receita.nome} className="criacao-card">
-                        <span>{receita.tipo}</span>
-
-                        <div className="receita-titulo">
-                          <strong>{receita.nome}</strong>
-                        </div>
-                        <p>
-                          <b>Durabilidade:</b> {receita.durabilidade}
-                        </p>
-
-                        <p>
-                          <b>Dano:</b> {receita.dano}
-                        </p>
-
-                        <div className="receita-recursos">
-                          {receita.ingredientes.length > 0 ? (
-                            receita.ingredientes.map((ingrediente) => (
-                              <small
-                                key={ingrediente.nome}
-                                className="ingrediente-chip"
-                              >
-                                <span>{ingrediente.icone}</span>
-                                {ingrediente.nome}
-                              </small>
-                            ))
-                          ) : (
-                            <small>Item base</small>
-                          )}
-                        </div>
-
-                        <button onClick={() => criarItem(receita)}>
-                          Criar
-                        </button>
-                      </article>
-                    ))}
+                {armasAprimoraveis.length === 0 ? (
+                  <div className="melhorias-vazio">
+                    <p>Nenhuma arma aprimorável encontrada no inventário.</p>
+                    <small>Armas precisam ter <strong>armaStatus</strong> ou conter termos como Pistola, Rifle, Fuzil, Escopeta, Arco no nome.</small>
                   </div>
-                </section>
-              ))}
+                ) : (
+                  <>
+                    <div className="melhorias-lista-armas">
+                      <h5>Armas Disponíveis</h5>
+                      <div className="melhorias-armas-grid">
+                        {armasAprimoraveis.map(({ item, index }) => {
+                          const melhoria = item.melhoriaArma || { nivel: 0, forca: 0, velocidade: 0, alcance: 0 };
+                          const selecionada = armaUpgradeAtiva?.index === index;
+
+                          return (
+                            <button
+                              key={index}
+                              className={`melhoria-arma-card ${selecionada ? "selecionada" : ""}`}
+                              onClick={() => setArmaUpgradeIndex(index)}
+                            >
+                              <div className="melhoria-arma-icone">
+                                {renderizarIconeItem(item)}
+                              </div>
+                              <div className="melhoria-arma-info">
+                                <strong>{item.nome}</strong>
+                                {item.armaStatus && (
+                                  <span className="melhoria-arma-dmg">DMG: {item.armaStatus.dmg}</span>
+                                )}
+                                <span className="melhoria-arma-nivel">
+                                  Nível: {melhoria.nivel || 0}
+                                </span>
+                              </div>
+                              {melhoria.nivel > 0 && (
+                                <div className="melhoria-arma-atributos">
+                                  {melhoria.forca > 0 && <small>Força +{melhoria.forca}</small>}
+                                  {melhoria.velocidade > 0 && <small>Veloc. +{melhoria.velocidade}</small>}
+                                  {melhoria.alcance > 0 && <small>Alcance +{melhoria.alcance}</small>}
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {armaUpgradeAtiva && (
+                      <div className="melhorias-upgrade-painel">
+                        <div className="melhoria-upgrade-topo">
+                          <h5>Aprimorando: {armaUpgradeAtiva.item.nome}</h5>
+                          {armaUpgradeAtiva.item.armaStatus && (
+                            <div className="melhoria-upgrade-stats-atuais">
+                              <span><b>DMG:</b> {armaUpgradeAtiva.item.armaStatus.dmg}</span>
+                              <span><b>ROF:</b> {armaUpgradeAtiva.item.armaStatus.rof}</span>
+                              <span><b>MAG:</b> {armaUpgradeAtiva.item.armaStatus.mag}</span>
+                              <span><b>Crítico:</b> {armaUpgradeAtiva.item.armaStatus.critico}</span>
+                              <span><b>Precisão:</b> {armaUpgradeAtiva.item.armaStatus.precision}</span>
+                              <span><b>Controle:</b> {armaUpgradeAtiva.item.armaStatus.control}</span>
+                            </div>
+                          )}
+                          <div className="melhoria-upgrade-nivel-info">
+                            Nível atual da arma: <strong>{armaUpgradeAtiva.item.melhoriaArma?.nivel || 0}</strong>
+                          </div>
+                        </div>
+
+                        <div className="melhoria-upgrade-tipos">
+                          <span className="melhoria-upgrade-tipos-label">Selecione o tipo de melhoria:</span>
+                          <div className="melhoria-upgrade-tipos-grid">
+                            {tiposUpgrade.map((tipo) => {
+                              const melhoriaAtual = armaUpgradeAtiva.item.melhoriaArma || {};
+                              const valorAtual = parseInt(melhoriaAtual[tipo.chave], 10) || 0;
+                              const noMaximo = valorAtual >= tipo.max;
+                              const podePagar = verificarMateriaisUpgrade(tipo.chave);
+                              const selecionado = armaUpgradeTipo === tipo.chave;
+
+                              return (
+                                <button
+                                  key={tipo.chave}
+                                  className={`melhoria-tipo-card ${selecionado ? "selecionado" : ""} ${noMaximo ? "maximizado" : ""}`}
+                                  onClick={() => !noMaximo && setArmaUpgradeTipo(tipo.chave)}
+                                  disabled={noMaximo}
+                                >
+                                  <span className="melhoria-tipo-icone">{tipo.icone}</span>
+                                  <div className="melhoria-tipo-info">
+                                    <strong>{tipo.nome}</strong>
+                                    <small>{tipo.descricao}</small>
+                                    <span className="melhoria-tipo-nivel">
+                                      Nível: {valorAtual}/{tipo.max}
+                                      {noMaximo && " ✅"}
+                                    </span>
+                                  </div>
+                                  <div className="melhoria-tipo-bar">
+                                    <div
+                                      className="melhoria-tipo-bar-fill"
+                                      style={{ width: `${(valorAtual / tipo.max) * 100}%` }}
+                                    />
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="melhoria-upgrade-recursos">
+                          <span>Recursos necessários para {tiposUpgrade.find(t => t.chave === armaUpgradeTipo)?.nome}:</span>
+                          <div className="melhoria-recursos-lista">
+                            {Object.entries(obterCustoUpgrade(armaUpgradeTipo)).map(([mat, qtd]) => {
+                              const tem = (personagem.materiaisCriacao?.[mat] || 0) >= qtd;
+                              const nomesMateriais = {
+                                cano: "🔩 Cano",
+                                fita: "🩹 Fita",
+                                laminas: "🔪 Lâminas",
+                                alcool: "🧪 Álcool",
+                                explosivos: "💣 Explosivos",
+                              };
+                              return (
+                                <span key={mat} className={`recurso-chip ${tem ? "disponivel" : "insuficiente"}`}>
+                                  {nomesMateriais[mat] || mat} (x{qtd})
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <button
+                          className="melhoria-upgrade-btn"
+                          onClick={melhorarArmaSelecionada}
+                          disabled={
+                            !verificarMateriaisUpgrade(armaUpgradeTipo) ||
+                            (parseInt(armaUpgradeAtiva.item.melhoriaArma?.[armaUpgradeTipo], 10) || 0) >=
+                            (tiposUpgrade.find(t => t.chave === armaUpgradeTipo)?.max || 5)
+                          }
+                        >
+                          ✦ Aprimorar {tiposUpgrade.find(t => t.chave === armaUpgradeTipo)?.nome}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : (
+              receitasCriacao
+                .filter((grupo) => {
+                  if (abaCriacao === "armas") {
+                    return grupo.categoria === "Armas Aprimoráveis";
+                  }
+
+                  if (abaCriacao === "improvisados") {
+                    return grupo.categoria === "Itens Improvisados";
+                  }
+
+                  if (abaCriacao === "municoes") {
+                    return grupo.categoria === "Munições Fabricadas";
+                  }
+
+                  if (abaCriacao === "materiais") {
+                    return grupo.categoria === "Materiais de Criação";
+                  }
+
+                  return true;
+                })
+                .map((grupo) => (
+                  <section key={grupo.categoria} className="criacao-grupo">
+                    <h5>{grupo.categoria}</h5>
+
+                    <div className="criacao-grid">
+                      {grupo.itens.map((receita) => (
+                        <article key={receita.nome} className="criacao-card">
+                          <span>{receita.tipo}</span>
+
+                          <div className="receita-titulo">
+                            <strong>{receita.nome}</strong>
+                          </div>
+                          <p>
+                            <b>Durabilidade:</b> {receita.durabilidade}
+                          </p>
+
+                          <p>
+                            <b>Dano:</b> {receita.dano}
+                          </p>
+
+                          <div className="receita-recursos">
+                            {receita.ingredientes.length > 0 ? (
+                              receita.ingredientes.map((ingrediente) => (
+                                <small
+                                  key={ingrediente.nome}
+                                  className="ingrediente-chip"
+                                >
+                                  <span>{ingrediente.icone}</span>
+                                  {ingrediente.nome}
+                                </small>
+                              ))
+                            ) : (
+                              <small>Item base</small>
+                            )}
+                          </div>
+
+                          <button onClick={() => criarItem(receita)}>
+                            Criar
+                          </button>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                ))
+            )}
+            </div>
           </div>
         )}
         {subAbaInventario === "personalizado" && (
@@ -4089,10 +4533,8 @@ const FichaPersonagem = () => {
             >
               <div className="item-visualizador">
                 <div className="item-visualizer-topo">
-                  <div className="item-visualizer-topo">
-                    <div className="item-visualizer-icone">
-                      {renderizarIconeItem(itemVisualizado)}
-                    </div>
+                  <div className="item-visualizer-icone">
+                    {renderizarIconeItem(itemVisualizado)}
                   </div>
 
                   <div className="visualizer-info">
