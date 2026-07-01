@@ -39,6 +39,8 @@ export const normalizarItemLoja = (item, index = 0) => {
     preco: Math.max(0, parseInt(item?.preco, 10) || 0),
     detalhe: String(item?.detalhe || "").trim(),
     entrega: String(item?.entrega || "").trim(),
+    dano: String(item?.dano || "").trim(),
+    bonusDano: String(item?.bonusDano || "").trim(),
     armaStatus: item?.armaStatus || null,
     nivelRito: String(item?.nivelRito || "").trim(),
   };
