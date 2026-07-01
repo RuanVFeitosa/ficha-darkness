@@ -291,219 +291,171 @@ const UpgradeNivel = () => {
     }));
   };
 
-  // Remove pontos permanentemente de um atributo
-  const removerPontosAtributo = async (chaveAtributo) => {
-    if (trilha !== "atributos") return;
+ // Remove pontos permanentemente de um atributo
+const removerPontosAtributo = async (chaveAtributo) => {
+  if (trilha !== "atributos") return;
 
-    const valorAtual = personagem.atributos?.[chaveAtributo] || 0;
-    const pontosAlocados = distribuicao[chaveAtributo] || 0;
+  const valorAtual = personagem.atributos?.[chaveAtributo] || 0;
+  const pontosAlocados = distribuicao[chaveAtributo] || 0;
 
-    if (valorAtual <= 0) {
-      mostrarNotificacao(
-        `Este atributo não possui pontos para remover.`,
-        "erro",
-      );
-      return;
-    }
+  if (valorAtual <= 0) {
+    mostrarNotificacao(`Este atributo não possui pontos para remover.`, "erro");
+    return;
+  }
 
-    const maximoRemover = valorAtual;
+  const maximoRemover = valorAtual;
 
-    abrirModalQuantidade(
-      `Remover pontos de ${chaveAtributo}`,
-      `Valor atual: ${valorAtual}`,
-      maximoRemover,
-      (pontosRemover) => {
-        if (pontosRemover <= 0 || pontosRemover > maximoRemover) {
-          mostrarNotificacao(
-            `Valor inválido. Máximo permitido: ${maximoRemover}`,
-            "erro",
-          );
-          return;
-        }
+  abrirModalQuantidade(
+    `Remover pontos de ${chaveAtributo}`,
+    `Valor atual: ${valorAtual}`,
+    1,              // ← valor inicial
+    maximoRemover,  // ← máximo
+    (pontosRemover) => {
+      if (pontosRemover <= 0 || pontosRemover > maximoRemover) {
+        mostrarNotificacao(`Valor inválido. Máximo permitido: ${maximoRemover}`, "erro");
+        return;
+      }
 
-        abrirModalConfirmacao(
-          "⚠️ Confirmar Remoção",
-          `Remover ${pontosRemover} ponto(s) de "${chaveAtributo}"?`,
-          [
-            `Valor atual: ${valorAtual} → ${valorAtual - pontosRemover}`,
-            `Todos os pontos serão devolvidos ao saldo.`,
-          ],
-          "red",
-          async () => {
-            const atualizado = structuredClone(personagem);
+      abrirModalConfirmacao(
+        "⚠️ Confirmar Remoção",
+        `Remover ${pontosRemover} ponto(s) de "${chaveAtributo}"?`,
+        [
+          `Valor atual: ${valorAtual} → ${valorAtual - pontosRemover}`,
+          `Todos os pontos serão devolvidos ao saldo.`,
+        ],
+        "red",
+        async () => {
+          const atualizado = structuredClone(personagem);
 
-            atualizado.atributos = {
-              ...(atualizado.atributos || {}),
-              [chaveAtributo]: Math.max(0, valorAtual - pontosRemover),
-            };
+          atualizado.atributos = {
+            ...(atualizado.atributos || {}),
+            [chaveAtributo]: Math.max(0, valorAtual - pontosRemover),
+          };
 
-            const pontosADevolver = pontosRemover;
+          const pontosADevolver = pontosRemover;
 
-            atualizado.pontosEvolucao = {
-              ...(atualizado.pontosEvolucao || {}),
-              disponiveis:
-                (atualizado.pontosEvolucao?.disponiveis || 0) + pontosADevolver,
-            };
+          atualizado.pontosEvolucao = {
+            ...(atualizado.pontosEvolucao || {}),
+            disponiveis: (atualizado.pontosEvolucao?.disponiveis || 0) + pontosADevolver,
+          };
 
-            setDistribuicao((atual) => {
-              const novaDistribuicao = { ...atual };
-
-              if (novaDistribuicao[chaveAtributo]) {
-                const pontosAlocadosAtuais =
-                  novaDistribuicao[chaveAtributo] || 0;
-                const novosPontosAlocados = Math.max(
-                  0,
-                  pontosAlocadosAtuais - pontosRemover,
-                );
-
-                if (novosPontosAlocados === 0) {
-                  delete novaDistribuicao[chaveAtributo];
-                } else {
-                  novaDistribuicao[chaveAtributo] = novosPontosAlocados;
-                }
+          setDistribuicao((atual) => {
+            const novaDistribuicao = { ...atual };
+            if (novaDistribuicao[chaveAtributo]) {
+              const pontosAlocadosAtuais = novaDistribuicao[chaveAtributo] || 0;
+              const novosPontosAlocados = Math.max(0, pontosAlocadosAtuais - pontosRemover);
+              if (novosPontosAlocados === 0) {
+                delete novaDistribuicao[chaveAtributo];
+              } else {
+                novaDistribuicao[chaveAtributo] = novosPontosAlocados;
               }
-
-              return novaDistribuicao;
-            });
-
-            setPersonagem(atualizado);
-
-            // 🔥 NOTIFICAÇÃO DE SUCESSO
-            mostrarNotificacao(
-              `✅ ${pontosRemover} ponto(s) removido(s) de "${chaveAtributo}". ${pontosADevolver} ponto(s) devolvidos ao saldo.`,
-              "sucesso",
-            );
-
-            localStorage.setItem(storageKey, JSON.stringify(atualizado));
-            notificarPersonagemAtualizado(fichaId, atualizado);
-
-            try {
-              const personagemSalvo = await salvarPersonagem(
-                fichaId,
-                atualizado,
-              );
-              notificarPersonagemAtualizado(
-                fichaId,
-                personagemSalvo || atualizado,
-              );
-            } catch (error) {
-              console.warn(
-                "Backend indisponivel. Remoção salva localmente.",
-                error,
-              );
             }
-          },
-        );
-      },
-    );
-  };
+            return novaDistribuicao;
+          });
 
-  // Remove pontos permanentemente de um passivo
-  const removerPontosPassivo = async (chavePassivo) => {
-    if (trilha !== "passivos") return;
-
-    const valorAtual = personagem.habilidadesPassivas?.[chavePassivo] || 0;
-    const pontosAlocados = distribuicao[chavePassivo] || 0;
-
-    if (valorAtual <= 0) {
-      mostrarNotificacao(
-        `Este passivo não possui pontos para remover.`,
-        "erro",
-      );
-      return;
-    }
-
-    const maximoRemover = valorAtual;
-
-    abrirModalQuantidade(
-      `Remover pontos de ${chavePassivo}`,
-      `Valor atual: ${valorAtual}`,
-      maximoRemover,
-      (pontosRemover) => {
-        if (pontosRemover <= 0 || pontosRemover > maximoRemover) {
+          setPersonagem(atualizado);
           mostrarNotificacao(
-            `Valor inválido. Máximo permitido: ${maximoRemover}`,
-            "erro",
+            `✅ ${pontosRemover} ponto(s) removido(s) de "${chaveAtributo}". ${pontosADevolver} ponto(s) devolvidos ao saldo.`,
+            "sucesso"
           );
-          return;
+
+          localStorage.setItem(storageKey, JSON.stringify(atualizado));
+          notificarPersonagemAtualizado(fichaId, atualizado);
+
+          try {
+            const personagemSalvo = await salvarPersonagem(fichaId, atualizado);
+            notificarPersonagemAtualizado(fichaId, personagemSalvo || atualizado);
+          } catch (error) {
+            console.warn("Backend indisponivel. Remoção salva localmente.", error);
+          }
         }
+      );
+    }
+  );
+};
 
-        abrirModalConfirmacao(
-          "⚠️ Confirmar Remoção",
-          `Remover ${pontosRemover} ponto(s) de "${chavePassivo}"?`,
-          [
-            `Valor atual: ${valorAtual} → ${valorAtual - pontosRemover}`,
-            `Todos os pontos serão devolvidos ao saldo.`,
-          ],
-          "red",
-          async () => {
-            const atualizado = structuredClone(personagem);
+// Remove pontos permanentemente de um passivo
+const removerPontosPassivo = async (chavePassivo) => {
+  if (trilha !== "passivos") return;
 
-            atualizado.habilidadesPassivas = {
-              ...(atualizado.habilidadesPassivas || {}),
-              [chavePassivo]: Math.max(0, valorAtual - pontosRemover),
-            };
+  const valorAtual = personagem.habilidadesPassivas?.[chavePassivo] || 0;
+  const pontosAlocados = distribuicao[chavePassivo] || 0;
 
-            const pontosADevolver = pontosRemover;
+  if (valorAtual <= 0) {
+    mostrarNotificacao(`Este passivo não possui pontos para remover.`, "erro");
+    return;
+  }
 
-            atualizado.pontosEvolucao = {
-              ...(atualizado.pontosEvolucao || {}),
-              disponiveis:
-                (atualizado.pontosEvolucao?.disponiveis || 0) + pontosADevolver,
-            };
+  const maximoRemover = valorAtual;
 
-            setDistribuicao((atual) => {
-              const novaDistribuicao = { ...atual };
+  abrirModalQuantidade(
+    `Remover pontos de ${chavePassivo}`,
+    `Valor atual: ${valorAtual}`,
+    1,
+    maximoRemover,
+    (pontosRemover) => {
+      if (pontosRemover <= 0 || pontosRemover > maximoRemover) {
+        mostrarNotificacao(`Valor inválido. Máximo permitido: ${maximoRemover}`, "erro");
+        return;
+      }
 
-              if (novaDistribuicao[chavePassivo]) {
-                const pontosAlocadosAtuais =
-                  novaDistribuicao[chavePassivo] || 0;
-                const novosPontosAlocados = Math.max(
-                  0,
-                  pontosAlocadosAtuais - pontosRemover,
-                );
+      abrirModalConfirmacao(
+        "⚠️ Confirmar Remoção",
+        `Remover ${pontosRemover} ponto(s) de "${chavePassivo}"?`,
+        [
+          `Valor atual: ${valorAtual} → ${valorAtual - pontosRemover}`,
+          `Todos os pontos serão devolvidos ao saldo.`,
+        ],
+        "red",
+        async () => {
+          const atualizado = structuredClone(personagem);
 
-                if (novosPontosAlocados === 0) {
-                  delete novaDistribuicao[chavePassivo];
-                } else {
-                  novaDistribuicao[chavePassivo] = novosPontosAlocados;
-                }
+          atualizado.habilidadesPassivas = {
+            ...(atualizado.habilidadesPassivas || {}),
+            [chavePassivo]: Math.max(0, valorAtual - pontosRemover),
+          };
+
+          const pontosADevolver = pontosRemover;
+
+          atualizado.pontosEvolucao = {
+            ...(atualizado.pontosEvolucao || {}),
+            disponiveis: (atualizado.pontosEvolucao?.disponiveis || 0) + pontosADevolver,
+          };
+
+          setDistribuicao((atual) => {
+            const novaDistribuicao = { ...atual };
+            if (novaDistribuicao[chavePassivo]) {
+              const pontosAlocadosAtuais = novaDistribuicao[chavePassivo] || 0;
+              const novosPontosAlocados = Math.max(0, pontosAlocadosAtuais - pontosRemover);
+              if (novosPontosAlocados === 0) {
+                delete novaDistribuicao[chavePassivo];
+              } else {
+                novaDistribuicao[chavePassivo] = novosPontosAlocados;
               }
-
-              return novaDistribuicao;
-            });
-
-            setPersonagem(atualizado);
-
-            // 🔥 NOTIFICAÇÃO DE SUCESSO
-            mostrarNotificacao(
-              `✅ ${pontosRemover} ponto(s) removido(s) de "${chavePassivo}". ${pontosADevolver} ponto(s) devolvidos ao saldo.`,
-              "sucesso",
-            );
-
-            localStorage.setItem(storageKey, JSON.stringify(atualizado));
-            notificarPersonagemAtualizado(fichaId, atualizado);
-
-            try {
-              const personagemSalvo = await salvarPersonagem(
-                fichaId,
-                atualizado,
-              );
-              notificarPersonagemAtualizado(
-                fichaId,
-                personagemSalvo || atualizado,
-              );
-            } catch (error) {
-              console.warn(
-                "Backend indisponivel. Remoção salva localmente.",
-                error,
-              );
             }
-          },
-        );
-      },
-    );
-  };
+            return novaDistribuicao;
+          });
+
+          setPersonagem(atualizado);
+          mostrarNotificacao(
+            `✅ ${pontosRemover} ponto(s) removido(s) de "${chavePassivo}". ${pontosADevolver} ponto(s) devolvidos ao saldo.`,
+            "sucesso"
+          );
+
+          localStorage.setItem(storageKey, JSON.stringify(atualizado));
+          notificarPersonagemAtualizado(fichaId, atualizado);
+
+          try {
+            const personagemSalvo = await salvarPersonagem(fichaId, atualizado);
+            notificarPersonagemAtualizado(fichaId, personagemSalvo || atualizado);
+          } catch (error) {
+            console.warn("Backend indisponivel. Remoção salva localmente.", error);
+          }
+        }
+      );
+    }
+  );
+};
 
   const aplicarUpgrade = async () => {
     if (trilha === "habilidades") {
