@@ -2237,16 +2237,25 @@ const FichaPersonagem = () => {
 
   const incrementarMobilidade = (mobilityTexto) => {
     const texto = String(mobilityTexto || "").trim();
+
+    // Busca "N alvos" (ex: "Firmeza | 2 alvos") e incrementa N em +1.
     const match = texto.match(/(\d+)\s*alvos?/i);
     if (match) {
-      const quantidade = parseInt(match[1], 10) + 1;
+      const quantidadeAtual = Math.max(1, parseInt(match[1], 10) || 1);
+      const quantidade = quantidadeAtual + 1;
+
+      // Mantém o prefixo original (ex: "Firmeza") e só troca a parte numérica.
       return texto.replace(/(\d+)\s*alvos?/i, `${quantidade} alvos`);
     }
-    if (texto.includes("|")) {
-      const [prefixo, sufixo] = texto.split("|").map((parte) => parte.trim());
-      return `${prefixo} | 3 alvos`;
-    }
-    return `${texto || "Firmeza"} | 3 alvos`;
+
+    // Caso não encontre número, tenta preservar prefixo antes do '|'.
+    // Se vier sem número (ex: "Firmeza | alvos"), assume padrão 2 -> 3.
+    const prefixo = texto.includes("|")
+      ? texto.split("|")[0].trim() || "Firmeza"
+      : texto || "Firmeza";
+
+    // Regra solicitada: padrão 2x (2 alvos). Ao melhorar, vira 3 alvos.
+    return `${prefixo} | 3 alvos`;
   };
 
   const melhorarArmaSelecionada = () => {

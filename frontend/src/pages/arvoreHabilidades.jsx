@@ -73,8 +73,8 @@ const obterCustoHabilidade = (habilidade = {}) => {
   return custo ? Number(custo[1]) : 0;
 };
 
-const CUSTO_APTIDAO = 10;
-const CUSTO_HABILIDADE_ESPECIALIDADE = 20;
+const CUSTO_APTIDAO = 5;
+const CUSTO_HABILIDADE_ESPECIALIDADE = 10;
 
 const obterCustoAptidao = () => CUSTO_APTIDAO;
 const obterCustoHabilidadeEspecialidade = () => CUSTO_HABILIDADE_ESPECIALIDADE;

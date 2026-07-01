@@ -57,30 +57,20 @@ const UpgradeNivel = () => {
     atributos: passouDoNivel5 ? 100 : 50,
   };
 
-  const pontosPorTrilha = {
-    passivos: 10,
-    atributos: 10,
-  };
-
+  // REMOVIDO: custos por trilha, agora usamos pontos disponíveis diretamente
   const custos =
     TABELA_EVOLUCAO.find((linha) => linha.nivel === nivelAtual) ||
     obterCustosNivel(nivelAtual);
+
   const pontosEvolucaoDisponiveis = Math.max(
     0,
     parseInt(personagem.pontosEvolucao?.disponiveis, 10) || 0,
   );
 
-  const pontosDisponiveisNaTrilha =
-    trilha === "habilidades"
-      ? pontosEvolucaoDisponiveis
-      : pontosPorTrilha[trilha] || 0;
+  // Pontos disponíveis para gastar na trilha (todos os pontos disponíveis)
+  const pontosDisponiveisNaTrilha = pontosEvolucaoDisponiveis;
 
-  const custoPorMelhoria =
-    trilha === "passivos"
-      ? custos.passivos
-      : trilha === "atributos"
-        ? custos.atributos
-        : custos.habilidades;
+  // REMOVIDO: custoPorMelhoria - agora cada ponto gasto é 1 ponto
 
   const pontosDistribuidos = useMemo(
     () =>
@@ -123,7 +113,11 @@ const UpgradeNivel = () => {
   };
 
   const abrirArvore = () => {
-    window.location.href = montarUrlFicha(personagem, fichaId, "?habilidades=1");
+    window.location.href = montarUrlFicha(
+      personagem,
+      fichaId,
+      "?habilidades=1",
+    );
   };
 
   const alterarTrilha = (novaTrilha) => {
@@ -150,7 +144,6 @@ const UpgradeNivel = () => {
     const outrosPontos = Object.entries(distribuicao).reduce(
       (total, [itemChave, itemValor]) => {
         if (itemChave === chave) return total;
-
         return total + Math.max(0, parseInt(itemValor, 10) || 0);
       },
       0,
@@ -167,7 +160,7 @@ const UpgradeNivel = () => {
       setMensagem(
         `Limite atingido. ${
           trilha === "atributos" ? "Atributos" : "Passivos"
-        } podem ir atÃ© ${limite}.`,
+        } podem ir até ${limite}.`,
       );
     } else {
       setMensagem("");
@@ -179,6 +172,339 @@ const UpgradeNivel = () => {
     }));
   };
 
+  const [modal, setModal] = useState({
+    aberto: false,
+    tipo: "quantidade", // "quantidade" ou "confirmacao"
+    titulo: "",
+    mensagem: "",
+    valor: 1,
+    maximo: 0,
+    onConfirm: null,
+    onCancel: null,
+    detalhes: [],
+    cor: "gold",
+  });
+
+  // Abrir modal de quantidade
+  const abrirModalQuantidade = (
+    titulo,
+    mensagem,
+    valorInicial,
+    maximo,
+    onConfirm,
+  ) => {
+    setModal({
+      aberto: true,
+      tipo: "quantidade",
+      titulo,
+      mensagem,
+      valor: valorInicial,
+      maximo,
+      onConfirm,
+      onCancel: null,
+      detalhes: [],
+      cor: "gold",
+    });
+  };
+
+  // Abrir modal de confirmação
+  const abrirModalConfirmacao = (
+    titulo,
+    mensagem,
+    detalhes,
+    cor,
+    onConfirm,
+    onCancel,
+  ) => {
+    setModal({
+      aberto: true,
+      tipo: "confirmacao",
+      titulo,
+      mensagem,
+      valor: 1,
+      maximo: 0,
+      onConfirm,
+      onCancel: onCancel || (() => fecharModal()),
+      detalhes: detalhes || [],
+      cor: cor || "red",
+    });
+  };
+
+  // Fechar modal
+  const fecharModal = () => {
+    setModal({
+      aberto: false,
+      tipo: "quantidade",
+      titulo: "",
+      mensagem: "",
+      valor: 1,
+      maximo: 0,
+      onConfirm: null,
+      onCancel: null,
+      detalhes: [],
+      cor: "gold",
+    });
+  };
+
+  const [notificacao, setNotificacao] = useState({
+    visivel: false,
+    mensagem: "",
+    tipo: "sucesso", // "sucesso", "erro", "info"
+  });
+
+  // Mostrar notificação
+  const mostrarNotificacao = (mensagem, tipo = "sucesso") => {
+    setNotificacao({
+      visivel: true,
+      mensagem,
+      tipo,
+    });
+
+    // Auto-esconder após 4 segundos
+    setTimeout(() => {
+      setNotificacao({
+        visivel: false,
+        mensagem: "",
+        tipo: "sucesso",
+      });
+    }, 4000);
+  };
+
+  // Fechar notificação manualmente
+  const fecharNotificacao = () => {
+    setNotificacao({
+      visivel: false,
+      mensagem: "",
+      tipo: "sucesso",
+    });
+  };
+
+  // Atualizar quantidade no modal
+  const atualizarQuantidadeModal = (valor) => {
+    const numero = parseInt(valor, 10) || 0;
+    const maximo = modal.maximo || 0;
+    const valorFinal = Math.min(Math.max(0, numero), maximo);
+
+    setModal((prev) => ({
+      ...prev,
+      quantidade: valorFinal,
+    }));
+  };
+
+  // Remove pontos permanentemente de um atributo
+  const removerPontosAtributo = async (chaveAtributo) => {
+    if (trilha !== "atributos") return;
+
+    const valorAtual = personagem.atributos?.[chaveAtributo] || 0;
+    const pontosAlocados = distribuicao[chaveAtributo] || 0;
+
+    if (valorAtual <= 0) {
+      mostrarNotificacao(
+        `Este atributo não possui pontos para remover.`,
+        "erro",
+      );
+      return;
+    }
+
+    const maximoRemover = valorAtual;
+
+    abrirModalQuantidade(
+      `Remover pontos de ${chaveAtributo}`,
+      `Valor atual: ${valorAtual}`,
+      maximoRemover,
+      (pontosRemover) => {
+        if (pontosRemover <= 0 || pontosRemover > maximoRemover) {
+          mostrarNotificacao(
+            `Valor inválido. Máximo permitido: ${maximoRemover}`,
+            "erro",
+          );
+          return;
+        }
+
+        abrirModalConfirmacao(
+          "⚠️ Confirmar Remoção",
+          `Remover ${pontosRemover} ponto(s) de "${chaveAtributo}"?`,
+          [
+            `Valor atual: ${valorAtual} → ${valorAtual - pontosRemover}`,
+            `Todos os pontos serão devolvidos ao saldo.`,
+          ],
+          "red",
+          async () => {
+            const atualizado = structuredClone(personagem);
+
+            atualizado.atributos = {
+              ...(atualizado.atributos || {}),
+              [chaveAtributo]: Math.max(0, valorAtual - pontosRemover),
+            };
+
+            const pontosADevolver = pontosRemover;
+
+            atualizado.pontosEvolucao = {
+              ...(atualizado.pontosEvolucao || {}),
+              disponiveis:
+                (atualizado.pontosEvolucao?.disponiveis || 0) + pontosADevolver,
+            };
+
+            setDistribuicao((atual) => {
+              const novaDistribuicao = { ...atual };
+
+              if (novaDistribuicao[chaveAtributo]) {
+                const pontosAlocadosAtuais =
+                  novaDistribuicao[chaveAtributo] || 0;
+                const novosPontosAlocados = Math.max(
+                  0,
+                  pontosAlocadosAtuais - pontosRemover,
+                );
+
+                if (novosPontosAlocados === 0) {
+                  delete novaDistribuicao[chaveAtributo];
+                } else {
+                  novaDistribuicao[chaveAtributo] = novosPontosAlocados;
+                }
+              }
+
+              return novaDistribuicao;
+            });
+
+            setPersonagem(atualizado);
+
+            // 🔥 NOTIFICAÇÃO DE SUCESSO
+            mostrarNotificacao(
+              `✅ ${pontosRemover} ponto(s) removido(s) de "${chaveAtributo}". ${pontosADevolver} ponto(s) devolvidos ao saldo.`,
+              "sucesso",
+            );
+
+            localStorage.setItem(storageKey, JSON.stringify(atualizado));
+            notificarPersonagemAtualizado(fichaId, atualizado);
+
+            try {
+              const personagemSalvo = await salvarPersonagem(
+                fichaId,
+                atualizado,
+              );
+              notificarPersonagemAtualizado(
+                fichaId,
+                personagemSalvo || atualizado,
+              );
+            } catch (error) {
+              console.warn(
+                "Backend indisponivel. Remoção salva localmente.",
+                error,
+              );
+            }
+          },
+        );
+      },
+    );
+  };
+
+  // Remove pontos permanentemente de um passivo
+  const removerPontosPassivo = async (chavePassivo) => {
+    if (trilha !== "passivos") return;
+
+    const valorAtual = personagem.habilidadesPassivas?.[chavePassivo] || 0;
+    const pontosAlocados = distribuicao[chavePassivo] || 0;
+
+    if (valorAtual <= 0) {
+      mostrarNotificacao(
+        `Este passivo não possui pontos para remover.`,
+        "erro",
+      );
+      return;
+    }
+
+    const maximoRemover = valorAtual;
+
+    abrirModalQuantidade(
+      `Remover pontos de ${chavePassivo}`,
+      `Valor atual: ${valorAtual}`,
+      maximoRemover,
+      (pontosRemover) => {
+        if (pontosRemover <= 0 || pontosRemover > maximoRemover) {
+          mostrarNotificacao(
+            `Valor inválido. Máximo permitido: ${maximoRemover}`,
+            "erro",
+          );
+          return;
+        }
+
+        abrirModalConfirmacao(
+          "⚠️ Confirmar Remoção",
+          `Remover ${pontosRemover} ponto(s) de "${chavePassivo}"?`,
+          [
+            `Valor atual: ${valorAtual} → ${valorAtual - pontosRemover}`,
+            `Todos os pontos serão devolvidos ao saldo.`,
+          ],
+          "red",
+          async () => {
+            const atualizado = structuredClone(personagem);
+
+            atualizado.habilidadesPassivas = {
+              ...(atualizado.habilidadesPassivas || {}),
+              [chavePassivo]: Math.max(0, valorAtual - pontosRemover),
+            };
+
+            const pontosADevolver = pontosRemover;
+
+            atualizado.pontosEvolucao = {
+              ...(atualizado.pontosEvolucao || {}),
+              disponiveis:
+                (atualizado.pontosEvolucao?.disponiveis || 0) + pontosADevolver,
+            };
+
+            setDistribuicao((atual) => {
+              const novaDistribuicao = { ...atual };
+
+              if (novaDistribuicao[chavePassivo]) {
+                const pontosAlocadosAtuais =
+                  novaDistribuicao[chavePassivo] || 0;
+                const novosPontosAlocados = Math.max(
+                  0,
+                  pontosAlocadosAtuais - pontosRemover,
+                );
+
+                if (novosPontosAlocados === 0) {
+                  delete novaDistribuicao[chavePassivo];
+                } else {
+                  novaDistribuicao[chavePassivo] = novosPontosAlocados;
+                }
+              }
+
+              return novaDistribuicao;
+            });
+
+            setPersonagem(atualizado);
+
+            // 🔥 NOTIFICAÇÃO DE SUCESSO
+            mostrarNotificacao(
+              `✅ ${pontosRemover} ponto(s) removido(s) de "${chavePassivo}". ${pontosADevolver} ponto(s) devolvidos ao saldo.`,
+              "sucesso",
+            );
+
+            localStorage.setItem(storageKey, JSON.stringify(atualizado));
+            notificarPersonagemAtualizado(fichaId, atualizado);
+
+            try {
+              const personagemSalvo = await salvarPersonagem(
+                fichaId,
+                atualizado,
+              );
+              notificarPersonagemAtualizado(
+                fichaId,
+                personagemSalvo || atualizado,
+              );
+            } catch (error) {
+              console.warn(
+                "Backend indisponivel. Remoção salva localmente.",
+                error,
+              );
+            }
+          },
+        );
+      },
+    );
+  };
+
   const aplicarUpgrade = async () => {
     if (trilha === "habilidades") {
       abrirArvore();
@@ -186,18 +512,26 @@ const UpgradeNivel = () => {
     }
 
     if (pontosEvolucaoDisponiveis <= 0) {
-      setMensagem("Voce nao tem pontos de evolucao disponiveis.");
-      return;
-    }
-
-    if (custoPorMelhoria > pontosEvolucaoDisponiveis) {
-      setMensagem("Voce nao possui PE suficiente para esta trilha.");
-
+      mostrarNotificacao(
+        "Você não tem pontos de evolução disponíveis.",
+        "erro",
+      );
       return;
     }
 
     if (pontosDistribuidos > pontosEvolucaoDisponiveis) {
-      setMensagem("Voce esta gastando mais pontos do que possui.");
+      mostrarNotificacao(
+        "Você está gastando mais pontos do que possui.",
+        "erro",
+      );
+      return;
+    }
+
+    if (pontosDistribuidos === 0) {
+      mostrarNotificacao(
+        "Distribua pelo menos 1 ponto para aplicar o upgrade.",
+        "info",
+      );
       return;
     }
 
@@ -205,7 +539,7 @@ const UpgradeNivel = () => {
 
     atualizado.pontosEvolucao = {
       ...(atualizado.pontosEvolucao || {}),
-      disponiveis: pontosEvolucaoDisponiveis - custoPorMelhoria,
+      disponiveis: pontosEvolucaoDisponiveis - pontosDistribuidos,
     };
 
     atualizado.historicoUpgrades = [
@@ -214,7 +548,7 @@ const UpgradeNivel = () => {
         nivel: nivelAtual,
         trilha,
         pontos: distribuicao,
-        custo: custoPorMelhoria,
+        pontosGastos: pontosDistribuidos,
         criadoEm: new Date().toISOString(),
       },
     ];
@@ -253,7 +587,12 @@ const UpgradeNivel = () => {
 
     setPersonagem(atualizado);
     setDistribuicao({});
-    setMensagem("Upgrade aplicado. Pontos de evolucao atualizados.");
+
+    // 🔥 NOTIFICAÇÃO DE SUCESSO
+    mostrarNotificacao(
+      `✅ Upgrade aplicado! ${pontosDistribuidos} ponto(s) distribuídos em ${trilha}.`,
+      "sucesso",
+    );
 
     localStorage.setItem(storageKey, JSON.stringify(atualizado));
     notificarPersonagemAtualizado(fichaId, atualizado);
@@ -267,209 +606,463 @@ const UpgradeNivel = () => {
   };
 
   const NOMES_PASSIVAS = {
-  enganacao: "Enganação",
-  raciocinioLogico: "Raciocínio Lógico",
-  investigacao: "Investigação",
-  instinto: "Instinto",
-  sensibilidade: "Sensibilidade",
-  instintoSobrevivencia: "Instinto de Sobrevivência",
-  coragem: "Coragem",
-  diplomacia: "Diplomacia",
-  disciplina: "Disciplina",
-  autocontrole: "Autocontrole",
-  intimidacaoPassiva: "Intimidação Passiva",
-  presenca: "Presença",
-  memoria: "Memória",
-  empatia: "Empatia",
-  lealdade: "Lealdade",
-  fe: "Fé",
+    enganacao: "Enganação",
+    raciocinioLogico: "Raciocínio Lógico",
+    investigacao: "Investigação",
+    instinto: "Instinto",
+    sensibilidade: "Sensibilidade",
+    instintoSobrevivencia: "Instinto de Sobrevivência",
+    coragem: "Coragem",
+    diplomacia: "Diplomacia",
+    disciplina: "Disciplina",
+    autocontrole: "Autocontrole",
+    intimidacaoPassiva: "Intimidação Passiva",
+    presenca: "Presença",
+    memoria: "Memória",
+    empatia: "Empatia",
+    lealdade: "Lealdade",
+    fe: "Fé",
+    vitalidade: "Vitalidade",
+    folego: "Fôlego",
+    equilibrio: "Equilíbrio",
+    velocidade: "Velocidade",
+    precisao: "Precisão",
+    lutar: "Lutar",
+    resistenciaFisica: "Resistência Física",
+    primeirosSocorros: "Primeiros Socorros",
+    furtividade: "Furtividade",
+    conhecimentoMedico: "Conhecimento Médico",
+    conhecimentoTecnico: "Conhecimento Técnico",
+    conhecimentoHistorico: "Conhecimento Histórico",
+    conhecimentoOculto: "Conhecimento Oculto",
+    tecnologia: "Tecnologia",
+    tatica: "Tática",
+    percepcaoAuditiva: "Percepção Auditiva",
+    percepcaoVisual: "Percepção Visual",
+    percepcaoOlfativa: "Percepção Olfativa",
+    crime: "Crime",
+    manipulacao: "Manipulação",
+    intimidacao: "Intimidação",
+    seducao: "Sedução",
+    resistenciaMental: "Resistência Mental",
+  };
 
-  vitalidade: "Vitalidade",
-  folego: "Fôlego",
-  equilibrio: "Equilíbrio",
-  velocidade: "Velocidade",
-  precisao: "Precisão",
-  lutar: "Lutar",
-  resistenciaFisica: "Resistência Física",
-  primeirosSocorros: "Primeiros Socorros",
-  furtividade: "Furtividade",
-
-  conhecimentoMedico: "Conhecimento Médico",
-  conhecimentoTecnico: "Conhecimento Técnico",
-  conhecimentoHistorico: "Conhecimento Histórico",
-  conhecimentoOculto: "Conhecimento Oculto",
-  tecnologia: "Tecnologia",
-  tatica: "Tática",
-
-  percepcaoAuditiva: "Percepção Auditiva",
-  percepcaoVisual: "Percepção Visual",
-  percepcaoOlfativa: "Percepção Olfativa",
-
-  crime: "Crime",
-  manipulacao: "Manipulação",
-  intimidacao: "Intimidação",
-  seducao: "Sedução",
-  resistenciaMental: "Resistência Mental",
-};
-
-const opcoesPassivas = Object.keys(personagem.habilidadesPassivas || {}).map(
-  (chave) => ({
-    chave,
-    nome: NOMES_PASSIVAS[chave] || chave,
-  }),
-);
+  const opcoesPassivas = Object.keys(personagem.habilidadesPassivas || {}).map(
+    (chave) => ({
+      chave,
+      nome: NOMES_PASSIVAS[chave] || chave,
+    }),
+  );
 
   return (
     <main className="upgrade-page">
+      {/* ===== HERO ===== */}
       <section className="upgrade-hero">
         <button className="upgrade-voltar" onClick={voltarParaFicha}>
           <Icon path={mdiArrowLeft} size={1} />
           Ficha
         </button>
-        <span>Evolucao de personagem</span>
-        <h1>Upgrade de Nivel</h1>
+        <span>Evolução de personagem</span>
+        <h1>Upgrade de Nível</h1>
         <p>
-          O mestre deposita niveis na ficha. Cada upgrade consome 1 nivel
-          disponivel e libera os pontos da trilha escolhida.
+          Distribua seus pontos de evolução livremente entre atributos e
+          passivos. Cada ponto gasto aumenta permanentemente o valor escolhido.
         </p>
       </section>
 
+      {/* ===== STATUS ===== */}
       <section className="upgrade-status">
         <div>
-          <span>Nivel atual</span>
+          <span>Nível atual</span>
           <strong>NV{nivelAtual}</strong>
         </div>
         <div>
-          <span>Proximo upgrade</span>
-          <strong>
-            {custos.acumulado} pts ganhos no NV{nivelAtual}
-          </strong>
-        </div>
-        <div>
-          <span>Pontos disponiveis</span>
+          <span>Pontos disponíveis</span>
           <strong>{pontosEvolucaoDisponiveis}</strong>
         </div>
-      </section>
-
-      <section className="upgrade-tabela">
-        <h2>Evolucao de personagem</h2>
-        <div className="upgrade-tabela-grid">
-          <span />
-          <strong>Passivos</strong>
-          <strong>Atributos</strong>
-          <strong>Habilidades</strong>
-          <strong>Pontos acumulado</strong>
-          {TABELA_EVOLUCAO.map((linha) => (
-            <React.Fragment key={linha.nivel}>
-              <strong>NV{linha.nivel}</strong>
-              <span>{linha.passivos}</span>
-              <span>{linha.atributos}</span>
-              <span>{linha.habilidades}</span>
-              <span>{linha.acumulado}</span>
-            </React.Fragment>
-          ))}
+        <div>
+          <span>Pontos restantes</span>
+          <strong>{pontosRestantes}</strong>
         </div>
       </section>
 
-      <section className="upgrade-shell">
-        <div className="upgrade-trilhas">
-          {["passivos", "atributos", "habilidades"].map((item) => (
+      {/* ===== LAYOUT DUAS COLUNAS ===== */}
+      <section className="upgrade-layout">
+        {/* ----- COLUNA ESQUERDA: TABELA SIMPLIFICADA ----- */}
+        <section className="upgrade-tabela">
+          <h2>Evolução por Nível</h2>
+          <div className="upgrade-tabela-grid">
+            <strong>Nível</strong>
+            <strong>Pontos</strong>
+            {TABELA_EVOLUCAO.map((linha) => (
+              <React.Fragment key={linha.nivel}>
+                <span>NV{linha.nivel}</span>
+                <span>{linha.acumulado}</span>
+              </React.Fragment>
+            ))}
+          </div>
+        </section>
+
+        {/* ----- COLUNA DIREITA: UPGRADES ----- */}
+        <section className="upgrade-shell">
+          {/* Trilhas */}
+          <div className="upgrade-trilhas">
+            {["passivos", "atributos", "habilidades"].map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={trilha === item ? "ativa" : ""}
+                onClick={() => alterarTrilha(item)}
+              >
+                {item.charAt(0).toUpperCase() + item.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          {/* Pontos restantes na trilha */}
+          <div className="upgrade-pontos">
+            <span>
+              {trilha === "habilidades"
+                ? "Saldo para habilidades"
+                : `Distribuindo pontos em ${trilha}`}
+            </span>
+            <strong>
+              {trilha === "habilidades"
+                ? `${pontosEvolucaoDisponiveis} pontos disponíveis`
+                : `${pontosRestantes} pontos restantes de ${pontosEvolucaoDisponiveis}`}
+            </strong>
+          </div>
+
+          {/* ATRIBUTOS */}
+          {trilha === "atributos" && (
+            <div className="upgrade-lista">
+              {ATRIBUTOS_UPGRADE.map((atributo) => {
+                const valorAtual = personagem.atributos?.[atributo.chave] || 0;
+                const pontosAlocados = distribuicao[atributo.chave] || 0;
+                const podeRemover = valorAtual > 0;
+
+                return (
+                  <div key={atributo.chave} className="upgrade-item">
+                    <div className="upgrade-item-header">
+                      <span className="upgrade-item-nome">{atributo.nome}</span>
+                      <div className="upgrade-item-info">
+                        <small className="upgrade-item-atual">
+                          Atual: {valorAtual}
+                          {pontosAlocados > 0 && (
+                            <span className="upgrade-item-alocado">
+                              +{pontosAlocados}
+                            </span>
+                          )}
+                        </small>
+                      </div>
+                    </div>
+                    <div className="upgrade-item-controles">
+                      <div className="upgrade-input-group">
+                        <button
+                          type="button"
+                          className="upgrade-input-btn"
+                          onClick={() => {
+                            if (pontosRestantes > 0) {
+                              const novoValor =
+                                (distribuicao[atributo.chave] || 0) + 1;
+                              atualizarDistribuicao(atributo.chave, novoValor);
+                            } else {
+                              mostrarNotificacao(
+                                "Sem pontos restantes para distribuir.",
+                                "info",
+                              );
+                            }
+                          }}
+                          disabled={pontosRestantes <= 0}
+                        >
+                          +
+                        </button>
+                        <input
+                          type="number"
+                          min="0"
+                          value={pontosAlocados}
+                          onChange={(event) =>
+                            atualizarDistribuicao(
+                              atributo.chave,
+                              event.target.value,
+                            )
+                          }
+                        />
+                        <button
+                          type="button"
+                          className="upgrade-input-btn"
+                          onClick={() => {
+                            const novoValor = Math.max(
+                              0,
+                              (distribuicao[atributo.chave] || 0) - 1,
+                            );
+                            atualizarDistribuicao(atributo.chave, novoValor);
+                          }}
+                          disabled={pontosAlocados <= 0}
+                        >
+                          -
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        className={`upgrade-remover ${podeRemover ? "" : "disabled"}`}
+                        onClick={() => removerPontosAtributo(atributo.chave)}
+                        disabled={!podeRemover}
+                        title={
+                          podeRemover
+                            ? "Remover pontos permanentemente"
+                            : "Sem pontos para remover"
+                        }
+                      >
+                        <span className="remover-icon">×</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* PASSIVOS */}
+          {trilha === "passivos" && (
+            <div className="upgrade-lista">
+              {opcoesPassivas.map((passiva) => {
+                const valorAtual =
+                  personagem.habilidadesPassivas?.[passiva.chave] || 0;
+                const pontosAlocados = distribuicao[passiva.chave] || 0;
+                const podeRemover = valorAtual > 0;
+
+                return (
+                  <div key={passiva.chave} className="upgrade-item">
+                    <div className="upgrade-item-header">
+                      <span className="upgrade-item-nome">{passiva.nome}</span>
+                      <div className="upgrade-item-info">
+                        <small className="upgrade-item-atual">
+                          Atual: {valorAtual}
+                          {pontosAlocados > 0 && (
+                            <span className="upgrade-item-alocado">
+                              +{pontosAlocados}
+                            </span>
+                          )}
+                        </small>
+                      </div>
+                    </div>
+                    <div className="upgrade-item-controles">
+                      <div className="upgrade-input-group">
+                        <button
+                          type="button"
+                          className="upgrade-input-btn"
+                          onClick={() => {
+                            if (pontosRestantes > 0) {
+                              const novoValor =
+                                (distribuicao[passiva.chave] || 0) + 1;
+                              atualizarDistribuicao(passiva.chave, novoValor);
+                            } else {
+                              mostrarNotificacao(
+                                "Sem pontos restantes para distribuir.",
+                                "info",
+                              );
+                            }
+                          }}
+                          disabled={pontosRestantes <= 0}
+                        >
+                          +
+                        </button>
+                        <input
+                          type="number"
+                          min="0"
+                          value={pontosAlocados}
+                          onChange={(event) =>
+                            atualizarDistribuicao(
+                              passiva.chave,
+                              event.target.value,
+                            )
+                          }
+                        />
+                        <button
+                          type="button"
+                          className="upgrade-input-btn"
+                          onClick={() => {
+                            const novoValor = Math.max(
+                              0,
+                              (distribuicao[passiva.chave] || 0) - 1,
+                            );
+                            atualizarDistribuicao(passiva.chave, novoValor);
+                          }}
+                          disabled={pontosAlocados <= 0}
+                        >
+                          -
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        className={`upgrade-remover ${podeRemover ? "" : "disabled"}`}
+                        onClick={() => removerPontosPassivo(passiva.chave)}
+                        disabled={!podeRemover}
+                        title={
+                          podeRemover
+                            ? "Remover pontos permanentemente"
+                            : "Sem pontos para remover"
+                        }
+                      >
+                        <span className="remover-icon">×</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* HABILIDADES */}
+          {trilha === "habilidades" && (
+            <div className="upgrade-habilidades-info">
+              <h2>Habilidades Absolutas</h2>
+              <p>
+                Na árvore, aptidões custam 5 pontos e habilidades de
+                especialidade custam 10 pontos. A árvore usa o saldo de pontos
+                disponíveis desta ficha:{" "}
+                <strong>{pontosEvolucaoDisponiveis} pontos</strong>.
+              </p>
+              <button type="button" onClick={abrirArvore}>
+                Abrir árvore de habilidades
+              </button>
+            </div>
+          )}
+
+          {/* Botão confirmar upgrade */}
+          {trilha !== "habilidades" && (
             <button
-              key={item}
               type="button"
-              className={trilha === item ? "ativa" : ""}
-              onClick={() => alterarTrilha(item)}
+              className="upgrade-confirmar"
+              onClick={aplicarUpgrade}
+              disabled={
+                pontosEvolucaoDisponiveis <= 0 || pontosDistribuidos === 0
+              }
             >
-              {item}
+              Confirmar upgrade ({pontosDistribuidos} pontos)
             </button>
-          ))}
-        </div>
-
-        <div className="upgrade-pontos">
-          <span>
-            {trilha === "habilidades"
-              ? "Saldo para habilidades"
-              : "Pontos da trilha"}
-          </span>
-          <strong>
-            {trilha === "habilidades"
-              ? `${pontosEvolucaoDisponiveis} pontos disponiveis`
-              : `${pontosRestantes} restantes de ${pontosDisponiveisNaTrilha} pontos - Custo: ${custoPorMelhoria} pontos`}
-          </strong>
-        </div>
-
-        {trilha === "atributos" && (
-          <div className="upgrade-lista">
-            {ATRIBUTOS_UPGRADE.map((atributo) => (
-              <label key={atributo.chave}>
-                <span className="upgrade-item-nome">{atributo.nome}</span>
-
-                <small className="upgrade-item-atual">
-                  Atual: {personagem.atributos?.[atributo.chave] || 0}
-                </small>
-                <input
-                  type="number"
-                  min="0"
-                  value={distribuicao[atributo.chave] || 0}
-                  onChange={(event) =>
-                    atualizarDistribuicao(atributo.chave, event.target.value)
-                  }
-                />
-              </label>
-            ))}
-          </div>
-        )}
-
-        {trilha === "passivos" && (
-          <div className="upgrade-lista">
-            {opcoesPassivas.map((passiva) => (
-              <label key={passiva.chave}>
-                <span className="upgrade-item-nome">{passiva.nome}</span>
-
-                <small className="upgrade-item-atual">
-                  Atual: {personagem.habilidadesPassivas?.[passiva.chave] || 0}
-                </small>
-                <input
-                  type="number"
-                  min="0"
-                  value={distribuicao[passiva.chave] || 0}
-                  onChange={(event) =>
-                    atualizarDistribuicao(passiva.chave, event.target.value)
-                  }
-                />
-              </label>
-            ))}
-          </div>
-        )}
-
-        {trilha === "habilidades" && (
-          <div className="upgrade-habilidades-info">
-            <h2>Habilidades Absolutas</h2>
-            <p>
-              Na arvore, aptidoes custam 10 pontos e habilidades de
-              especialidade custam 20 pontos. A arvore usa o saldo de pontos
-              disponiveis desta ficha:{" "}
-              <strong>{pontosEvolucaoDisponiveis} pontos</strong>.
-            </p>
-            <button type="button" onClick={abrirArvore}>
-              Abrir arvore de habilidades
-            </button>
-          </div>
-        )}
-
-        {mensagem && <p className="upgrade-mensagem">{mensagem}</p>}
-
-        {trilha !== "habilidades" && (
-          <button
-            type="button"
-            className="upgrade-confirmar"
-            onClick={aplicarUpgrade}
-            disabled={pontosEvolucaoDisponiveis <= 0}
-          >
-            Confirmar upgrade
-          </button>
-        )}
+          )}
+        </section>
       </section>
+
+      {/* ===== MODAL PERSONALIZADO ===== */}
+      {modal.aberto && (
+        <div
+          className="modal-overlay"
+          onClick={() => {
+            if (modal.onCancel) modal.onCancel();
+            fecharModal();
+          }}
+        >
+          <div
+            className={`modal-content ${modal.cor}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3>{modal.titulo}</h3>
+              <button
+                className="modal-fechar"
+                onClick={() => {
+                  if (modal.onCancel) modal.onCancel();
+                  fecharModal();
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="modal-body">
+              <p className="modal-mensagem">{modal.mensagem}</p>
+
+              {modal.detalhes && modal.detalhes.length > 0 && (
+                <div className="modal-detalhes">
+                  {modal.detalhes.map((linha, index) => (
+                    <p key={index}>{linha}</p>
+                  ))}
+                </div>
+              )}
+
+              {modal.tipo === "quantidade" && (
+                <div className="modal-input-group">
+                  <label>
+                    Quantidade de pontos:
+                    <input
+                      type="number"
+                      min="1"
+                      max={modal.maximo}
+                      value={modal.valor}
+                      onChange={(e) => {
+                        const valor = parseInt(e.target.value, 10) || 1;
+                        const maximo = modal.maximo || 1;
+                        const valorFinal = Math.min(Math.max(1, valor), maximo);
+                        setModal((prev) => ({
+                          ...prev,
+                          valor: valorFinal,
+                        }));
+                      }}
+                      className="modal-input"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          if (modal.onConfirm) modal.onConfirm(modal.valor);
+                        }
+                      }}
+                      autoFocus
+                    />
+                  </label>
+                  <small className="modal-hint">
+                    Máximo permitido: {modal.maximo} ponto(s)
+                  </small>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                className="modal-btn modal-btn-cancelar"
+                onClick={() => {
+                  if (modal.onCancel) modal.onCancel();
+                  fecharModal();
+                }}
+              >
+                {modal.tipo === "confirmacao" ? "Voltar" : "Cancelar"}
+              </button>
+              <button
+                className={`modal-btn modal-btn-confirmar ${modal.cor}`}
+                onClick={() => {
+                  if (modal.onConfirm) {
+                    if (modal.tipo === "quantidade") {
+                      modal.onConfirm(modal.valor);
+                    } else {
+                      modal.onConfirm();
+                    }
+                  }
+                }}
+              >
+                {modal.tipo === "confirmacao" ? "Confirmar" : "Remover"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== NOTIFICAÇÃO TOAST ===== */}
+      {notificacao.visivel && (
+        <div className={`notificacao notificacao-${notificacao.tipo}`}>
+          <div className="notificacao-conteudo">
+            <span className="notificacao-icone">
+              {notificacao.tipo === "sucesso" && "✅"}
+              {notificacao.tipo === "erro" && "❌"}
+              {notificacao.tipo === "info" && "ℹ️"}
+            </span>
+            <span className="notificacao-mensagem">{notificacao.mensagem}</span>
+          </div>
+          <button className="notificacao-fechar" onClick={fecharNotificacao}>
+            ✕
+          </button>
+          <div className="notificacao-barra-progresso" />
+        </div>
+      )}
     </main>
   );
 };

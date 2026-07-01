@@ -1,145 +1,101 @@
+/* =========================================================
+   VARIÁVEIS (opcional, mas consistente)
+========================================================= */
+:root {
+  --gold: #d4af37;
+  --gold-dark: #b8962f;
+  --gold-light: #ffd700;
+  --bg-dark: #0a0a0a;
+  --bg-card: rgba(0, 0, 0, 0.75);
+  --text-light: #f5f5f5;
+  --text-muted: #bdbdbd;
+  --border-gold: rgba(212, 175, 55, 0.2);
+  --shadow-gold: rgba(212, 175, 55, 0.12);
+}
+
+/* =========================================================
+   GERAL
+========================================================= */
 .upgrade-page {
   min-height: 100vh;
   padding: 26px;
-
   background:
-    radial-gradient(
-      circle at top left,
-      rgba(255, 255, 255, 0.08),
-      transparent 32%
-    ),
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 32%),
     linear-gradient(135deg, rgba(0, 0, 0, 0.96), rgba(8, 8, 8, 0.98)),
     url("../assets/IMG/OAbsoluto.webp") center/cover fixed;
-
-  color: #f5f5f5;
+  color: var(--text-light);
 }
 
 /* =========================================================
    HERO
 ========================================================= */
-
 .upgrade-hero {
   position: relative;
   min-height: 310px;
-
   display: grid;
   gap: 12px;
   justify-content: center;
-
   padding: 82px 34px 32px;
-
   border: 1px solid rgba(212, 175, 55, 0.22);
-  border-left: 4px solid #d4af37;
+  border-left: 4px solid var(--gold);
   border-radius: 12px;
-
   background:
-    linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.9),
-      rgba(255, 255, 255, 0.04)
-    ),
-    radial-gradient(
-      circle at bottom right,
-      rgba(212, 175, 55, 0.1),
-      transparent 38%
-    );
-
+    linear-gradient(90deg, rgba(0, 0, 0, 0.9), rgba(255, 255, 255, 0.04)),
+    radial-gradient(circle at bottom right, rgba(212, 175, 55, 0.1), transparent 38%);
   overflow: hidden;
-
-  box-shadow:
-    0 18px 45px rgba(0, 0, 0, 0.55),
-    0 0 30px rgba(212, 175, 55, 0.08);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55), 0 0 30px rgba(212, 175, 55, 0.08);
 }
 
 .upgrade-hero::before {
   content: "";
-
   position: absolute;
   inset: 0;
-
-  background: linear-gradient(
-    120deg,
-    transparent,
-    rgba(255, 255, 255, 0.05),
-    transparent
-  );
-
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.05), transparent);
   transform: translateX(-100%);
   animation: upgradeHeroGlow 7s infinite;
 }
 
 @keyframes upgradeHeroGlow {
-  0% {
-    transform: translateX(-100%);
-  }
-
-  45%,
-  100% {
-    transform: translateX(100%);
-  }
+  0% { transform: translateX(-100%); }
+  45%, 100% { transform: translateX(100%); }
 }
-
-/* =========================================================
-   VOLTAR
-========================================================= */
 
 .upgrade-voltar {
   position: absolute;
   top: 20px;
   left: 20px;
   z-index: 2;
-
   min-height: 42px;
-
   display: inline-flex;
   align-items: center;
   gap: 9px;
-
   padding: 0 15px;
-
   border: 1px solid rgba(212, 175, 55, 0.28);
   border-radius: 8px;
-
   background: rgba(0, 0, 0, 0.7);
-
-  color: #ffffff;
-
+  color: #fff;
   cursor: pointer;
-
   font: inherit;
   font-weight: 800;
   text-transform: uppercase;
-
   transition: 0.22s ease;
 }
 
 .upgrade-voltar:hover {
-  border-color: #d4af37;
-
-  color: #d4af37;
-
+  border-color: var(--gold);
+  color: var(--gold);
   transform: translateY(-2px);
-
-  box-shadow:
-    0 0 18px rgba(212, 175, 55, 0.18),
-    0 0 40px rgba(212, 175, 55, 0.08);
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.18), 0 0 40px rgba(212, 175, 55, 0.08);
 }
-
-/* =========================================================
-   TEXTOS HERO
-========================================================= */
 
 .upgrade-hero span,
 .upgrade-status span,
 .upgrade-pontos span {
   position: relative;
   z-index: 1;
-
-  color: #d4af37;
-
+  color: var(--gold);
   font-size: 0.76rem;
   font-weight: 900;
-
   letter-spacing: 2px;
   text-transform: uppercase;
 }
@@ -147,409 +103,976 @@
 .upgrade-hero h1 {
   position: relative;
   z-index: 1;
-
   max-width: 1000px;
-
-  color: #ffffff;
-
+  color: #fff;
   font-size: clamp(2.5rem, 6vw, 5rem);
   line-height: 0.95;
-
   text-transform: uppercase;
-
-  text-shadow:
-    0 0 25px rgba(255, 255, 255, 0.08),
-    0 0 60px rgba(212, 175, 55, 0.08);
+  text-shadow: 0 0 25px rgba(255, 255, 255, 0.08), 0 0 60px rgba(212, 175, 55, 0.08);
 }
 
 .upgrade-hero p {
   position: relative;
   z-index: 1;
-
   max-width: 760px;
-
   color: #cfcfcf;
-
   font-size: 0.96rem;
   line-height: 1.6;
 }
 
 /* =========================================================
-   CONTAINERS
+   STATUS (3 colunas)
 ========================================================= */
-
-.upgrade-status,
-.upgrade-shell,
-.upgrade-tabela {
-  width: min(1380px, 100%);
-  margin: 26px auto 0;
-}
-
 .upgrade-status {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
-}
-
-.upgrade-status div,
-.upgrade-shell,
-.upgrade-tabela {
-  border: 1px solid rgba(212, 175, 55, 0.14);
-  border-radius: 14px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.03),
-      rgba(255, 255, 255, 0.01)
-    ),
-    rgba(0, 0, 0, 0.75);
-
-  box-shadow:
-    0 14px 32px rgba(0, 0, 0, 0.42),
-    inset 0 0 18px rgba(255, 255, 255, 0.02);
+  width: min(1380px, 100%);
+  margin: 26px auto 0;
 }
 
 .upgrade-status div {
   display: grid;
   gap: 8px;
   padding: 16px;
+  border: 1px solid var(--border-gold);
+  border-radius: 14px;
+  background: var(--bg-card);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42), inset 0 0 18px rgba(255, 255, 255, 0.02);
 }
 
 .upgrade-status strong {
-  color: #ffffff;
+  color: #fff;
   font-size: 1.45rem;
 }
 
 /* =========================================================
-   TABELA
+   LAYOUT DUAS COLUNAS
 ========================================================= */
-
-.upgrade-tabela,
-.upgrade-shell {
-  padding: 22px;
+.upgrade-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 26px;
+  width: min(1380px, 100%);
+  margin: 26px auto 0;
 }
 
-.upgrade-tabela h2,
-.upgrade-habilidades-info h2 {
-  color: #ffffff;
-
-  letter-spacing: 1px;
-  text-transform: uppercase;
+/* =========================================================
+   TABELA (coluna esquerda)
+========================================================= */
+.upgrade-tabela {
+  padding: 22px;
+  border: 1px solid var(--border-gold);
+  border-radius: 14px;
+  background: var(--bg-card);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42), inset 0 0 18px rgba(255, 255, 255, 0.02);
+  height: fit-content;
 }
 
 .upgrade-tabela h2 {
+  color: #fff;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   margin-bottom: 14px;
+  font-size: 1.1rem;
 }
 
 .upgrade-tabela-grid {
   display: grid;
-  grid-template-columns: 80px repeat(4, 1fr);
-
-  overflow-x: auto;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 0;
 }
 
 .upgrade-tabela-grid > * {
-  min-width: 120px;
-
-  padding: 12px;
-
-  border-bottom: 1px solid rgba(212, 175, 55, 0.12);
-
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.08);
   text-align: center;
+  font-size: 0.95rem;
 }
 
 .upgrade-tabela-grid strong {
-  color: #d4af37;
+  color: var(--gold);
   text-transform: uppercase;
+  font-weight: 800;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+}
+
+.upgrade-tabela-grid span {
+  color: #e0e0e0;
 }
 
 /* =========================================================
-   SHELL
+   TABELA (coluna esquerda) - RESPONSIVA
 ========================================================= */
+.upgrade-tabela {
+  padding: 22px;
+  border: 1px solid var(--border-gold);
+  border-radius: 14px;
+  background: var(--bg-card);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42), inset 0 0 18px rgba(255, 255, 255, 0.02);
+  height: fit-content;
+  min-width: 0; /* permitir encolher */
+  overflow-x: auto; /* rolagem horizontal se necessário */
+}
 
+.upgrade-tabela h2 {
+  color: #fff;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  font-size: 1.1rem;
+}
+
+.upgrade-tabela-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 0;
+  min-width: 0; /* permitir encolher */
+}
+
+.upgrade-tabela-grid > * {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.08);
+  text-align: center;
+  font-size: 0.95rem;
+  white-space: nowrap; /* evitar quebra de linha */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsividade da tabela */
+@media (max-width: 640px) {
+  .upgrade-tabela {
+    padding: 14px;
+    overflow-x: auto;
+  }
+  .upgrade-tabela-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 2px 0;
+  }
+  .upgrade-tabela-grid > * {
+    padding: 8px 6px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+  .upgrade-tabela h2 {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .upgrade-tabela-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .upgrade-tabela-grid > * {
+    font-size: 0.7rem;
+    padding: 6px 4px;
+  }
+}
+
+/* =========================================================
+   SHELL (coluna direita)
+========================================================= */
 .upgrade-shell {
+  padding: 22px;
+  border: 1px solid var(--border-gold);
+  border-radius: 14px;
+  background: var(--bg-card);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42), inset 0 0 18px rgba(255, 255, 255, 0.02);
   display: grid;
   gap: 18px;
 }
 
-/* =========================================================
-   TRILHAS
-========================================================= */
-
+/* Trilhas */
 .upgrade-trilhas {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
-.upgrade-trilhas button,
-.upgrade-confirmar,
-.upgrade-habilidades-info button {
+.upgrade-trilhas button {
   min-height: 44px;
-
   padding: 0 18px;
-
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 999px;
-
   background: rgba(255, 255, 255, 0.04);
-
-  color: #f5f5f5;
-
+  color: var(--text-light);
   cursor: pointer;
-
   font: inherit;
   font-size: 0.78rem;
   font-weight: 900;
-
   letter-spacing: 1px;
   text-transform: uppercase;
-
   transition: 0.22s ease;
 }
 
 .upgrade-trilhas button:hover,
-.upgrade-trilhas button.ativa,
-.upgrade-confirmar,
-.upgrade-habilidades-info button:hover {
-  border-color: #d4af37;
-
+.upgrade-trilhas button.ativa {
+  border-color: var(--gold);
   background: rgba(212, 175, 55, 0.12);
-
-  color: #d4af37;
-
-  box-shadow:
-    0 0 16px rgba(212, 175, 55, 0.16),
-    inset 0 0 12px rgba(212, 175, 55, 0.06);
+  color: var(--gold);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.16), inset 0 0 12px rgba(212, 175, 55, 0.06);
 }
 
-/* =========================================================
-   PONTOS
-========================================================= */
-
+/* Pontos restantes */
 .upgrade-pontos {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-
   padding: 14px;
-
   border: 1px solid rgba(212, 175, 55, 0.18);
   border-radius: 10px;
-
   background: rgba(255, 255, 255, 0.03);
 }
 
 .upgrade-pontos strong {
-  color: #ffffff;
+  color: var(--gold);
+  font-size: 1.1rem;
 }
 
-/* =========================================================
-   LISTAS
-========================================================= */
-
+/* Lista de itens (atributos / passivos) */
 .upgrade-lista {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  justify-content: center;
-  align-items: center;
-
   gap: 14px;
 }
 
-.upgrade-lista label {
-  grid-template-rows: auto auto auto;
-}
-
-.upgrade-item-nome {
-  display: block;
-  text-align: center;
-  word-break: break-word;
-}
-
-.upgrade-item-atual {
-  display: block;
-  text-align: center;
-  color: #bdbdbd;
-  font-size: 0.75rem;
-}
-
-.upgrade-lista label,
-.upgrade-habilidades-info {
+.upgrade-item {
   display: grid;
   gap: 10px;
-
   padding: 16px;
-
   border: 1px solid rgba(212, 175, 55, 0.14);
-  border-left: 3px solid #d4af37;
+  border-left: 3px solid var(--gold);
   border-radius: 12px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.04),
-      rgba(255, 255, 255, 0.01)
-    ),
-    rgba(0, 0, 0, 0.7);
-
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)), rgba(0, 0, 0, 0.7);
   transition: 0.22s ease;
 }
 
-.upgrade-lista label:hover,
-.upgrade-habilidades-info:hover {
+.upgrade-item:hover {
   border-color: rgba(212, 175, 55, 0.45);
-
-  box-shadow:
-    0 0 18px rgba(212, 175, 55, 0.12),
-    0 14px 28px rgba(0, 0, 0, 0.35);
-
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.12), 0 14px 28px rgba(0, 0, 0, 0.35);
   transform: translateY(-2px);
 }
 
-.upgrade-lista label span {
-  color: #ffffff;
+.upgrade-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
+.upgrade-item-nome {
+  color: #fff;
   font-weight: 800;
-
   text-transform: uppercase;
   letter-spacing: 1px;
+  font-size: 0.85rem;
 }
 
-.upgrade-lista small,
-.upgrade-habilidades-info p {
-  color: #bdbdbd;
-
-  font-size: 0.86rem;
-  line-height: 1.5;
+.upgrade-item-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* =========================================================
-   INPUTS
-========================================================= */
+.upgrade-item-atual {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
-.upgrade-lista input,
-.upgrade-habilidades-info input {
-  min-height: 42px;
+.upgrade-item-alocado {
+  background-color: #28a745;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: bold;
+}
 
+.upgrade-item-controles {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.upgrade-input-group {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(212, 175, 55, 0.18);
   border-radius: 8px;
+  overflow: hidden;
+  flex: 1;
+  min-width: 120px;
+}
 
-  background: rgba(0, 0, 0, 0.55);
+.upgrade-input-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  padding: 0 12px;
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--gold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
 
-  color: #ffffff;
+.upgrade-input-btn:hover:not(:disabled) {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-light);
+}
 
-  font: inherit;
+.upgrade-input-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.upgrade-input-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.upgrade-input-group input {
+  width: 50px;
+  border: none;
+  background: transparent;
   text-align: center;
-
-  transition: 0.2s ease;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  padding: 4px 0;
+  -moz-appearance: textfield;
 }
 
-.upgrade-lista input:focus,
-.upgrade-habilidades-info input:focus {
+.upgrade-input-group input::-webkit-outer-spin-button,
+.upgrade-input-group input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.upgrade-input-group input:focus {
   outline: none;
-
-  border-color: #d4af37;
-
-  box-shadow:
-    0 0 16px rgba(212, 175, 55, 0.14),
-    inset 0 0 14px rgba(212, 175, 55, 0.05);
 }
 
-/* =========================================================
-   LABELS
-========================================================= */
+/* Botão remover (×) */
+.upgrade-remover {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
 
-.upgrade-habilidades-info label {
+.upgrade-remover:hover:not(:disabled) {
+  background-color: #c82333;
+  transform: scale(1.05);
+}
+
+.upgrade-remover:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.upgrade-remover.disabled,
+.upgrade-remover:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Habilidades info */
+.upgrade-habilidades-info {
   display: grid;
-  gap: 8px;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-left: 3px solid var(--gold);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)), rgba(0, 0, 0, 0.7);
+  text-align: center;
+}
 
-  color: #d4af37;
-
-  font-weight: 900;
-
+.upgrade-habilidades-info h2 {
+  color: var(--gold);
+  font-size: 1.2rem;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
 
-/* =========================================================
-   MENSAGEM
-========================================================= */
+.upgrade-habilidades-info p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 600px;
+  margin: 0 auto;
+}
 
-.upgrade-mensagem {
-  color: #d4af37;
+.upgrade-habilidades-info button {
+  min-height: 48px;
+  padding: 0 24px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.08);
+  color: var(--text-light);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
   font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: 0.22s ease;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.upgrade-habilidades-info button:hover {
+  border-color: var(--gold);
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.12);
+}
+
+/* Botão confirmar */
+.upgrade-confirmar {
+  position: relative;
+  min-height: 52px;
+  padding: 0 28px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(212, 175, 55, 0.02));
+  color: var(--text-light);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: 0.22s ease;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.upgrade-confirmar:hover:not(:disabled) {
+  border-color: var(--gold);
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.15), inset 0 0 20px rgba(212, 175, 55, 0.05);
+  transform: translateY(-2px);
 }
 
 .upgrade-confirmar:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  box-shadow: none;
+  transform: none;
 }
 
 /* =========================================================
-   RESPONSIVO
+   MODAL PERSONALIZADO
 ========================================================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  animation: modalFadeIn 0.25s ease;
+}
 
-@media (max-width: 760px) {
-  .upgrade-page {
-    padding: 14px;
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  max-width: 460px;
+  width: 92%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px 32px 24px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(18, 18, 18, 0.98), rgba(8, 8, 8, 0.99));
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 60px rgba(212, 175, 55, 0.03);
+  animation: modalSlideUp 0.3s ease;
+  position: relative;
+}
+
+.modal-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold));
+  border-radius: 16px 16px 0 0;
+}
+
+.modal-content.red::before {
+  background: linear-gradient(90deg, #dc3545, #ff6b6b, #dc3545);
+}
+
+.modal-content.green::before {
+  background: linear-gradient(90deg, #28a745, #5cb85c, #28a745);
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
   }
-
-  .upgrade-hero {
-    min-height: 280px;
-    padding: 78px 18px 24px;
-  }
-
-  .upgrade-status {
-    grid-template-columns: 1fr;
-  }
-
-  .upgrade-tabela-grid {
-    grid-template-columns: 70px repeat(4, 120px);
-  }
-
-  .upgrade-trilhas button {
-    width: 100%;
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.modal-header h3 {
+  color: var(--gold);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.modal-content.red .modal-header h3 {
+  color: #ff6b6b;
+}
+.modal-content.green .modal-header h3 {
+  color: #5cb85c;
+}
+
+.modal-fechar {
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 22px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 4px 8px;
+  line-height: 1;
+  border-radius: 4px;
+}
+
+.modal-fechar:hover {
+  color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+  transform: rotate(90deg);
+}
+
+.modal-body {
+  margin-bottom: 24px;
+}
+
+.modal-mensagem {
+  color: #e8e8e8;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+.modal-detalhes {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(212, 175, 55, 0.08);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 12px 0 4px;
+}
+
+.modal-detalhes p {
+  color: #c0c0c0;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin: 2px 0;
+  text-align: center;
+}
+
+.modal-detalhes p:first-child {
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.modal-detalhes p:last-child {
+  color: var(--gold-light);
+  font-weight: 600;
+  border-top: 1px solid rgba(212, 175, 55, 0.08);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.modal-content.red .modal-detalhes p:last-child {
+  color: #ff6b6b;
+}
+
+.modal-input-group {
+  margin-top: 16px;
+}
+
+.modal-input-group label {
+  display: block;
+  color: #b0b0b0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.modal-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 2px solid rgba(212, 175, 55, 0.15);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.3s ease;
+  -moz-appearance: textfield;
+}
+
+.modal-input::-webkit-outer-spin-button,
+.modal-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.08);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.modal-input:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.modal-hint {
+  display: block;
+  color: #6c757d;
+  font-size: 0.8rem;
+  margin-top: 8px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid rgba(212, 175, 55, 0.08);
+}
+
+.modal-btn {
+  min-height: 44px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex: 1;
+}
+
+.modal-btn-cancelar {
+  background: rgba(255, 255, 255, 0.05);
+  color: #b0b0b0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.modal-btn-cancelar:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.modal-btn-cancelar:active {
+  transform: scale(0.98);
+}
+
+.modal-btn-confirmar {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #000;
+  font-weight: 800;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);
+}
+
+.modal-btn-confirmar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.25);
+}
+.modal-btn-confirmar:active {
+  transform: scale(0.98);
+}
+
+.modal-btn-confirmar.red {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+}
+.modal-btn-confirmar.red:hover {
+  box-shadow: 0 8px 30px rgba(220, 53, 69, 0.35);
+}
+
+.modal-btn-confirmar.green {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+}
+.modal-btn-confirmar.green:hover {
+  box-shadow: 0 8px 30px rgba(40, 167, 69, 0.35);
+}
+
+/* =========================================================
+   NOTIFICAÇÃO TOAST
+========================================================= */
+.notificacao {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 10000;
+  max-width: 460px;
+  min-width: 300px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgba(20, 20, 20, 0.98), rgba(10, 10, 10, 0.99));
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(212, 175, 55, 0.03);
+  animation: notificacaoEntrar 0.4s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.notificacao::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 12px 12px 0 0;
+}
+
+.notificacao-sucesso::before {
+  background: linear-gradient(90deg, #28a745, #5cb85c);
+}
+.notificacao-erro::before {
+  background: linear-gradient(90deg, #dc3545, #ff6b6b);
+}
+.notificacao-info::before {
+  background: linear-gradient(90deg, #17a2b8, #5bc0de);
+}
+
+@keyframes notificacaoEntrar {
+  from {
+    opacity: 0;
+    transform: translateX(40px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.notificacao-conteudo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.notificacao-icone {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.notificacao-mensagem {
+  color: #e8e8e8;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.notificacao-fechar {
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.notificacao-fechar:hover {
+  color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+}
+
+.notificacao-barra-progresso {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 0 0 12px 12px;
+  animation: notificacaoProgresso 4s linear forwards;
+}
+
+.notificacao-sucesso .notificacao-barra-progresso {
+  background: linear-gradient(90deg, #28a745, #5cb85c);
+}
+.notificacao-erro .notificacao-barra-progresso {
+  background: linear-gradient(90deg, #dc3545, #ff6b6b);
+}
+.notificacao-info .notificacao-barra-progresso {
+  background: linear-gradient(90deg, #17a2b8, #5bc0de);
+}
+
+@keyframes notificacaoProgresso {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* =========================================================
+   SCROLLBAR PERSONALIZADA
+========================================================= */
+.upgrade-lista::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar {
+  width: 4px;
+}
+.upgrade-lista::-webkit-scrollbar-track,
+.modal-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 2px;
+}
+.upgrade-lista::-webkit-scrollbar-thumb,
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.2);
+  border-radius: 2px;
+}
+.upgrade-lista::-webkit-scrollbar-thumb:hover,
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.3);
+}
+
+/* =========================================================
+   RESPONSIVIDADE
+========================================================= */
+
+/* Telas médias (tablets e laptops pequenos) */
+@media (max-width: 1024px) {
+  .upgrade-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .upgrade-tabela {
+    order: 2;
+  }
+  .upgrade-shell {
+    order: 1;
+  }
+  .upgrade-tabela-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Telas menores que 980px */
 @media (max-width: 980px) {
   .upgrade-page {
     padding: 18px;
   }
-
   .upgrade-hero {
     min-height: 260px;
     padding: 78px 22px 26px;
   }
-
   .upgrade-status {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
   .upgrade-status strong {
     font-size: 1.18rem;
     overflow-wrap: anywhere;
   }
-
-  .upgrade-tabela {
-    overflow-x: auto;
-  }
-
-  .upgrade-tabela-grid {
-    min-width: 680px;
-  }
-
   .upgrade-shell,
   .upgrade-tabela {
     padding: 18px;
   }
-
   .upgrade-pontos {
     display: grid;
     gap: 8px;
+  }
+  .upgrade-lista {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  .upgrade-item {
+    padding: 14px;
+  }
+}
+
+/* Telas pequenas (mobile) */
+@media (max-width: 760px) {
+  .upgrade-page {
+    padding: 14px;
+  }
+  .upgrade-hero {
+    min-height: 280px;
+    padding: 78px 18px 24px;
+  }
+  .upgrade-status {
+    grid-template-columns: 1fr;
+  }
+  .upgrade-trilhas button {
+    width: 100%;
   }
 }
 
@@ -557,71 +1080,205 @@
   .upgrade-page {
     padding: 12px;
   }
-
   .upgrade-hero {
     min-height: auto;
     padding: 76px 16px 24px;
   }
-
   .upgrade-voltar {
     top: 14px;
     left: 14px;
+    font-size: 0.8rem;
+    padding: 0 12px;
+    min-height: 36px;
   }
-
   .upgrade-hero h1 {
     font-size: clamp(2rem, 13vw, 3.3rem);
     overflow-wrap: anywhere;
   }
-
   .upgrade-status {
     grid-template-columns: 1fr;
     gap: 10px;
   }
-
   .upgrade-status,
-  .upgrade-shell,
-  .upgrade-tabela {
+  .upgrade-layout {
     margin-top: 14px;
   }
-
   .upgrade-tabela,
   .upgrade-shell {
-    border-radius: 10px;
     padding: 14px;
+    border-radius: 10px;
   }
-
   .upgrade-tabela-grid {
-    min-width: 560px;
-    grid-template-columns: 64px repeat(4, 124px);
+    grid-template-columns: 1fr 1fr;
   }
-
   .upgrade-tabela-grid > * {
-    min-width: 0;
-    padding: 10px 8px;
-    font-size: 0.82rem;
+    padding: 8px 6px;
+    font-size: 0.85rem;
   }
-
   .upgrade-trilhas {
     display: grid;
     grid-template-columns: 1fr;
   }
-
   .upgrade-lista {
     grid-template-columns: 1fr;
   }
-
-  .upgrade-lista label,
-  .upgrade-habilidades-info {
-    padding: 14px;
+  .upgrade-item {
+    padding: 12px;
   }
-
-  .upgrade-lista label:hover,
-  .upgrade-habilidades-info:hover {
-    transform: none;
+  .upgrade-item-nome {
+    font-size: 0.8rem;
   }
-
-  .upgrade-confirmar,
-  .upgrade-habilidades-info button {
+  .upgrade-item-controles {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .upgrade-input-group {
     width: 100%;
+    min-width: unset;
+  }
+  .upgrade-input-btn {
+    min-width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
+  .upgrade-input-group input {
+    width: 60px;
+    font-size: 18px;
+  }
+  .upgrade-remover {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: 22px;
+    align-self: center;
+  }
+  .upgrade-item-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .upgrade-item-info {
+    flex-wrap: wrap;
+  }
+  .upgrade-confirmar {
+    font-size: 0.75rem;
+    min-height: 44px;
+    max-width: 100%;
+  }
+  .upgrade-habilidades-info {
+    padding: 18px;
+  }
+  .upgrade-habilidades-info h2 {
+    font-size: 1rem;
+  }
+
+  /* Modal */
+  .modal-content {
+    padding: 20px 18px 18px;
+    width: 95%;
+    border-radius: 12px;
+  }
+  .modal-header h3 {
+    font-size: 1rem;
+  }
+  .modal-mensagem {
+    font-size: 0.9rem;
+  }
+  .modal-detalhes {
+    padding: 10px 14px;
+  }
+  .modal-detalhes p {
+    font-size: 0.85rem;
+  }
+  .modal-input {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+  .modal-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .modal-btn {
+    min-height: 44px;
+    font-size: 0.8rem;
+    padding: 0 16px;
+    width: 100%;
+  }
+  .modal-fechar {
+    font-size: 20px;
+  }
+
+  /* Notificação */
+  .notificacao {
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    min-width: unset;
+    max-width: unset;
+    padding: 14px 16px;
+    border-radius: 10px;
+  }
+  .notificacao-mensagem {
+    font-size: 0.85rem;
+  }
+  .notificacao-icone {
+    font-size: 1.2rem;
+  }
+  .notificacao-fechar {
+    font-size: 16px;
+  }
+}
+
+/* Telas muito pequenas (<= 400px) */
+@media (max-width: 400px) {
+  .upgrade-hero h1 {
+    font-size: 1.8rem;
+  }
+  .upgrade-hero p {
+    font-size: 0.85rem;
+  }
+  .upgrade-status strong {
+    font-size: 1rem;
+  }
+  .upgrade-tabela-grid > * {
+    font-size: 0.75rem;
+    padding: 6px 4px;
+  }
+  .upgrade-item-nome {
+    font-size: 0.7rem;
+  }
+  .upgrade-input-btn {
+    min-width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+  .upgrade-remover {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    font-size: 18px;
+  }
+}
+
+.upgrade-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 26px;
+  width: min(1380px, 100%);
+  margin: 26px auto 0;
+  min-width: 0; /* importante para evitar overflow */
+}
+
+@media (max-width: 1024px) {
+  .upgrade-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .upgrade-tabela {
+    order: 2;
+    overflow-x: auto;
+  }
+  .upgrade-shell {
+    order: 1;
   }
 }
