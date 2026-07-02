@@ -2237,6 +2237,18 @@ body {
   white-space: nowrap;
 }
 
+.item-visualizer-status span {
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.item-visualizer-status span:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+}
+
 .rolagem-arma-acoes {
   display: flex;
   flex-wrap: wrap;
@@ -2392,15 +2404,13 @@ body {
 }
 
 .card-alvo-dano {
-  flex: 1;
-  max-width: 340px;
-  min-width: 320px;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  padding: 22px;
+  flex: 1 1 auto;
+  max-width: 100%; /* libera a largura */
+  min-width: 0; /* evita overflow */
+  width: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
 
   border: 1px solid var(--borda-primaria);
   border-radius: 14px;
@@ -2410,9 +2420,11 @@ body {
 
 .dados-card-alvo {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 18px;
-  flex-wrap: nowrap;
+  gap: 10px; /* espaçamento menor */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .card-alvo-dano h4 {
@@ -3405,6 +3417,97 @@ body {
 .item-visualizer-acoes button:hover {
   border-color: var(--cor-primaria);
   background: var(--cor-secundaria);
+}
+
+/* =========================================================
+   MODAL DE SELEÇÃO DE ATAQUE
+========================================================= */
+.ataque-modal {
+  max-width: 480px;
+}
+
+.ataque-modos {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.ataque-modo-btn {
+  padding: 12px 8px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.ataque-modo-btn:hover {
+  border-color: rgba(212, 175, 55, 0.5);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.ataque-modo-btn.selecionado {
+  border-color: var(--cor-primaria);
+  background: rgba(212, 175, 55, 0.18);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+}
+
+.ataque-critico {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 4px;
+}
+
+.ataque-critico label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--cor-texto);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.ataque-critico input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--cor-primaria);
+  cursor: pointer;
+}
+
+@media (max-width: 500px) {
+  .ataque-modos {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ataque-bonus {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  margin: 8px 0 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+}
+
+.ataque-bonus span {
+  color: var(--cor-texto-secundario);
+  font-size: 0.8rem;
+}
+
+.ataque-bonus strong {
+  color: var(--cor-primaria);
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
 .item-ataque-btn {
@@ -6410,11 +6513,7 @@ body {
   border: 1px solid var(--cor-borda);
   border-left: 3px solid var(--borda-suave);
   border-radius: 8px;
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.96),
-    rgba(8, 8, 8, 0.96)
-  );
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.96), rgba(8, 8, 8, 0.96));
   animation: fadeCondicao 0.25s ease;
 }
 
@@ -8073,8 +8172,7 @@ body {
 
 .ativo-nome.clickable:hover {
   color: var(--cor-primaria);
-  text-shadow: 0 0 8px
-    color-mix(in srgb, var(--cor-primaria) 60%, transparent);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--cor-primaria) 60%, transparent);
 }
 
 /* Foco dos inputs */
@@ -8086,11 +8184,7 @@ body {
 .recurso-atual:focus,
 .recurso-max:focus {
   outline-color: var(--cor-secundaria);
-  background: color-mix(
-    in srgb,
-    var(--cor-secundaria) 20%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--cor-secundaria) 20%, transparent);
 }
 
 /* Botões flutuantes */
@@ -8099,11 +8193,7 @@ body {
 .botao-party-flutuante,
 .botao-mestre-flutuante,
 .botao-customizacao-flutuante {
-  border-color: color-mix(
-    in srgb,
-    var(--cor-primaria) 45%,
-    transparent
-  );
+  border-color: color-mix(in srgb, var(--cor-primaria) 45%, transparent);
   background: rgba(16, 12, 8, 0.88);
   color: var(--cor-texto);
 }
@@ -8209,11 +8299,7 @@ body {
   border: 1px solid var(--cor-primaria);
   border-radius: 10px;
 
-  background: color-mix(
-    in srgb,
-    var(--cor-secundaria) 45%,
-    transparent
-  );
+  background: color-mix(in srgb, var(--cor-secundaria) 45%, transparent);
   color: var(--cor-primaria);
 
   font-weight: 900;
@@ -8226,8 +8312,7 @@ body {
 .customizacao-restaurar:hover {
   background: var(--cor-secundaria);
   color: var(--cor-texto);
-  box-shadow: 0 0 14px
-    color-mix(in srgb, var(--cor-primaria) 25%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--cor-primaria) 25%, transparent);
 }
 
 .customizacao-controles-cor {
@@ -9920,5 +10005,39 @@ body {
 
   .item-visualizer-acoes button {
     width: 100%;
+  }
+}
+
+/* FORÇA EMPILHAMENTO DOS CARDS DE ALVOS NO MOBILE */
+@media screen and (max-width: 768px) {
+  .cards-alvos-dano {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: wrap !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: visible !important; /* ou hidden, mas visível para não cortar */
+    box-sizing: border-box !important;
+  }
+
+  .card-alvo-dano {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    padding: 12px !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+  }
+
+  .dados-card-alvo {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 }

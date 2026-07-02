@@ -443,6 +443,24 @@ const descricoesAtivos = {
     "FORTITUDE | Resistência\n\nMede sua capacidade de aguentar venenos, sangramento e outros efeitos físicos. Quanto maior a Resistência, mais difícil sofrer penalidades.",
 };
 
+const descricoesStatusArma = {
+  tipo: "TIPO\n\nDefine a categoria da arma (Pistola, Rifle, Fuzil, etc.). Cada tipo possui características próprias de manuseio e modificações.",
+  dmg: "DMG\n\nRepresenta o dano que a arma pode causar por rodada. É o valor base considerado sempre que um disparo acerta o alvo.",
+  rof: "ROF (Rate of Fire)\n\nDefine o potencial crítico da arma — a chance de causar dano adicional quando o disparo atinge um ponto vulnerável. Quanto maior o ROF, maior a probabilidade de um acerto crítico. Para um acerto crítico, os dados terão que ser igual ou maior que o ROF. Caso os dados não cheguem até o resultado, soma-se o resultado dos dados.",
+  critico:
+    "CRÍTICO\n\nRequisito de crítico: O valor necessário para que um disparo seja considerado crítico. Geralmente depende de uma rolagem específica ou de um modificador proveniente da arma ou do personagem. Por exemplo: 3x6 é equivalente a 3 dados que resultaram em 6.",
+  danoCabeca:
+    "DANO MÁXIMO NA CABEÇA\n\nDefine o teto de dano que a arma pode causar caso acerte diretamente a cabeça do alvo.",
+  hipfire:
+    "HIPFIRE (Violência)\n\nDisparo rápido e agressivo. Ao usar o Ativo de Violência, o personagem aumenta o dano causado pelo tiro. Ideal para confrontos de curta distância, quando precisão é secundária ao impacto.",
+  precision:
+    "PRECISION (Percepção)\n\nTiro focado e calculado. Com o Ativo de Percepção, o personagem estende o alcance da arma além do normal e, em certos modelos, ainda recebe bônus no teste. É o modo preferido para acertos de longa distância.",
+  control:
+    "CONTROL (Persistência)\n\nTiro estabilizado e constante. Utilizando o Ativo de Persistência, o atirador remove todas as penalidades que teria ao disparar — seja por movimento, postura, distância ou condição adversa. Excelente para confrontos prolongados.",
+  mobility:
+    "MOBILITY (Firmeza)\n\nMovimentação fluida e ofensiva. Com o Ativo de Firmeza, o personagem pode atacar até dois alvos na mesma ação, se a arma permitir múltiplos disparos. Favorece personagens ágeis que atacam em movimento.",
+};
+
 const FichaPersonagem = () => {
   const [fichaId] = useState(() => obterFichaIdDaUrl());
   const [personagem, setPersonagem] = useState(estadoInicial);
@@ -513,6 +531,10 @@ const FichaPersonagem = () => {
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalRolagem, setModalRolagem] = useState(null);
+  const [ataqueModalAberto, setAtaqueModalAberto] = useState(false);
+  const [ataqueModoSelecionado, setAtaqueModoSelecionado] = useState("normal");
+  const [ataqueCritico, setAtaqueCritico] = useState(false);
+  const [ataqueItemRef, setAtaqueItemRef] = useState(null);
   // Dentro do componente FichaPersonagem, adicione estes estados:
 
   const [subAbaPersonalizacao, setSubAbaPersonalizacao] =
@@ -553,6 +575,32 @@ const FichaPersonagem = () => {
   // FUNÇÃO PARA FECHAR MODAL
   const fecharModal = () => {
     setModalAberto(false);
+  };
+
+  const abrirDescricaoStatus = (titulo, chave) => {
+    setModalTitulo(titulo);
+    setModalDescricao(
+      descricoesStatusArma[chave] || "Descrição não disponível.",
+    );
+    setModalAberto(true);
+  };
+
+  const abrirModalAtaque = (item) => {
+    setAtaqueItemRef(item);
+    setAtaqueModoSelecionado("normal");
+    setAtaqueCritico(false);
+    setAtaqueModalAberto(true);
+  };
+
+  const fecharModalAtaque = () => {
+    setAtaqueModalAberto(false);
+    setAtaqueItemRef(null);
+  };
+
+  const executarAtaque = () => {
+    if (!ataqueItemRef) return;
+    rolarAtaqueArma(ataqueItemRef, ataqueModoSelecionado, ataqueCritico);
+    fecharModalAtaque();
   };
 
   const classeAtual = personagem.classeId || personagem.classe || "";
@@ -1348,7 +1396,7 @@ const FichaPersonagem = () => {
     };
   };
 
-  const rolarAtaqueArma = (item, modo = "normal") => {
+  const rolarAtaqueArma = (item, modo = "normal", critico = false) => {
     const arma = item.armaStatus;
 
     if (!arma) {
@@ -1372,7 +1420,8 @@ const FichaPersonagem = () => {
       firmeza: 0,
     };
 
-    const dadosExtras = dadosExtrasPorModo[modo] || 0;
+    // Adiciona +2 dados se for crítico
+    const dadosExtras = (dadosExtrasPorModo[modo] || 0) + (critico ? 2 : 0);
     const danoBase = interpretarDano(arma.dmg);
     const quantidadeAlvosFirmeza =
       modo === "firmeza" ? obterQuantidadeAlvosFirmeza(arma.mobility) : 1;
@@ -1402,12 +1451,17 @@ const FichaPersonagem = () => {
         ? `Firmeza: ataque simultâneo em ${quantidadeAlvosFirmeza} alvos.`
         : efeitosPorModo[modo] || efeitosPorModo.normal;
 
+    // Adiciona "Crítico!" ao modo se for crítico
+    const modoComCritico = critico
+      ? `⚡ CRÍTICO! - ${modoDescricao}`
+      : modoDescricao;
+
     setRolandoDados(true);
 
     const rolagem = {
       tipo: "dano",
       titulo: item.nome,
-      modo: modoDescricao,
+      modo: modoComCritico,
       formula,
 
       dados: resultadosAlvos.flatMap((res) => [
@@ -2248,11 +2302,23 @@ const FichaPersonagem = () => {
 
   const reduzirCritico = (criticoTexto) => {
     const texto = String(criticoTexto || "").trim();
+
+    // Se for apenas um número (ex: "20")
+    if (/^\d+$/.test(texto)) {
+      const num = Math.max(1, parseInt(texto, 10) - 1);
+      return String(num);
+    }
+
+    // Se for "NxM" (ex: "3x6")
     const match = texto.match(/(\d+)x(\d+)/i);
-    if (!match) return texto;
-    const quantidade = Math.max(1, parseInt(match[1], 10) - 1);
-    const faces = match[2];
-    return `${quantidade}x${faces}`;
+    if (match) {
+      let quantidade = Math.max(1, parseInt(match[1], 10) - 1);
+      const faces = match[2];
+      return `${quantidade}x${faces}`;
+    }
+
+    // Se não reconhecer, retorna o texto original
+    return texto;
   };
 
   const incrementarPrecisao = (precisionTexto) => {
@@ -2391,7 +2457,10 @@ const FichaPersonagem = () => {
             break;
           }
           case "critico": {
-            armaStatus.critico = reduzirCritico(armaStatus.critico);
+            // ROF: diminui o valor em 1 a cada melhoria (ex: 20 -> 19 -> 18...)
+            const rofAtual = parseInt(armaStatus.rof, 10) || 20;
+            const novoRof = Math.max(1, rofAtual - 1); // mínimo 1
+            armaStatus.rof = novoRof;
             break;
           }
           case "precisao": {
@@ -3748,7 +3817,7 @@ const FichaPersonagem = () => {
                     </div>
                     <div className="visualizer-info">
                       <span className="visualizer-categoria">
-                        {itemVisualizado.tipo || "Item"}
+                        {itemVisualizado.tipo || "Item" }
                       </span>
                       <h2>{itemVisualizado.nome}</h2>
                     </div>
@@ -3789,56 +3858,68 @@ const FichaPersonagem = () => {
                   {itemVisualizado.armaStatus && (
                     <>
                       <div className="item-visualizer-status">
-                        <span>
+                        <span
+                          onClick={() => abrirDescricaoStatus("Tipo", "tipo")}
+                        >
                           <strong>Tipo:</strong>{" "}
                           {itemVisualizado.armaStatus.tipo}
                         </span>
-                        <span>
+                        <span
+                          onClick={() =>
+                            abrirDescricaoStatus("Dano Padrão", "dmg")
+                          }
+                        >
                           <strong>Dano Padrão:</strong>{" "}
                           {itemVisualizado.armaStatus.dmg}
                         </span>
-                        <span>
-                          <strong>ROF:</strong> {itemVisualizado.armaStatus.rof}
+                        <span
+                          onClick={() => abrirDescricaoStatus("ROF", "rof")}
+                        >
+                          <strong>Critico ROF:</strong>{" "}
+                          {itemVisualizado.armaStatus.rof}
                         </span>
-                        <span>
-                          <strong>Critico:</strong>{" "}
-                          {itemVisualizado.armaStatus.critico}
-                        </span>
-                        <span>
+
+                        <span
+                          onClick={() =>
+                            abrirDescricaoStatus("Dano Cabeça", "danoCabeca")
+                          }
+                        >
                           <strong>Dano Cabeca:</strong>{" "}
                           {itemVisualizado.armaStatus.danoCabeca}
                         </span>
-                        <span>
+                        <span
+                          onClick={() =>
+                            abrirDescricaoStatus("Hipfire", "hipfire")
+                          }
+                        >
                           <strong>Hipfire:</strong>{" "}
                           {itemVisualizado.armaStatus.hipfire}
                         </span>
-                        <span>
+                        <span
+                          onClick={() =>
+                            abrirDescricaoStatus("Precision", "precision")
+                          }
+                        >
                           <strong>Precision:</strong>{" "}
                           {itemVisualizado.armaStatus.precision}
                         </span>
-                        <span>
+                        <span
+                          onClick={() =>
+                            abrirDescricaoStatus("Control", "control")
+                          }
+                        >
                           <strong>Control:</strong>{" "}
                           {itemVisualizado.armaStatus.control}
                         </span>
-                        <span>
+                        <span
+                          onClick={() =>
+                            abrirDescricaoStatus("Mobility", "mobility")
+                          }
+                        >
                           <strong>Mobility:</strong>{" "}
                           {itemVisualizado.armaStatus.mobility}
                         </span>
                       </div>
-
-                      <label className="bonus-dano-arma">
-                        <span>Bonus de dano</span>
-                        <input
-                          value={itemVisualizado.bonusDanoArma || ""}
-                          placeholder="+2, 1d6, 2d8+3..."
-                          onChange={(event) =>
-                            atualizarBonusDanoArma(
-                              itemVisualizado.index,
-                              event.target.value,
-                            )
-                          }
-                        />
-                      </label>
                     </>
                   )}
 
@@ -3923,39 +4004,10 @@ const FichaPersonagem = () => {
                       <>
                         <button
                           className="item-ataque-btn"
-                          onClick={() =>
-                            rolarAtaqueArma(itemVisualizado, "violencia")
-                          }
+                          onClick={() => abrirModalAtaque(itemVisualizado)}
                         >
                           <Icon path={mdiDiceD20} size={0.9} />
-                          Violencia
-                        </button>
-                        <button
-                          className="item-ataque-btn"
-                          onClick={() =>
-                            rolarAtaqueArma(itemVisualizado, "percepcao")
-                          }
-                        >
-                          <Icon path={mdiDiceD20} size={0.9} />
-                          Percepcao
-                        </button>
-                        <button
-                          className="item-ataque-btn"
-                          onClick={() =>
-                            rolarAtaqueArma(itemVisualizado, "persistencia")
-                          }
-                        >
-                          <Icon path={mdiDiceD20} size={0.9} />
-                          Persistencia
-                        </button>
-                        <button
-                          className="item-ataque-btn"
-                          onClick={() =>
-                            rolarAtaqueArma(itemVisualizado, "firmeza")
-                          }
-                        >
-                          <Icon path={mdiDiceD20} size={0.9} />
-                          Firmeza
+                          Rolar Dano
                         </button>
                       </>
                     ) : (
@@ -3985,6 +4037,74 @@ const FichaPersonagem = () => {
           </>
         )}
 
+        {ataqueModalAberto && (
+          <div className="modal-overlay" onClick={fecharModalAtaque}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Selecione o modo de ataque</h3>
+                <button className="modal-fechar" onClick={fecharModalAtaque}>
+                  ×
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="ataque-modos">
+                  {[
+                    "normal",
+                    "violencia",
+                    "percepcao",
+                    "persistencia",
+                    "firmeza",
+                  ].map((modo) => (
+                    <button
+                      key={modo}
+                      className={`ataque-modo-btn ${ataqueModoSelecionado === modo ? "selecionado" : ""}`}
+                      onClick={() => setAtaqueModoSelecionado(modo)}
+                    >
+                      {modo.charAt(0).toUpperCase() + modo.slice(1)}
+                    </button>
+                  ))}
+                </div>
+                <label className="bonus-dano-arma">
+                  <span>Bonus de dano</span>
+                  <input
+                    value={itemVisualizado.bonusDanoArma || ""}
+                    placeholder="+2, 1d6, 2d8+3..."
+                    onChange={(event) =>
+                      atualizarBonusDanoArma(
+                        itemVisualizado.index,
+                        event.target.value,
+                      )
+                    }
+                  />
+                </label>
+                <div className="ataque-critico">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={ataqueCritico}
+                      onChange={(e) => setAtaqueCritico(e.target.checked)}
+                    />
+                    Crítico (+2 dados de dano)
+                  </label>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="modal-btn modal-btn-cancelar"
+                  onClick={fecharModalAtaque}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="modal-btn modal-btn-confirmar"
+                  onClick={executarAtaque}
+                >
+                  Atacar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {subAbaInventario === "criacao" && (
           <div className="criacao-itens">
             <div className="estoque-materiais">
