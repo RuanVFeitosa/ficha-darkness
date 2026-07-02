@@ -17,10 +17,11 @@ export const receitasCriacao = [
         icone: "🪵",
         tipo: "Temporário",
         durabilidade: "🇴 🇴 🇴 ▭",
-        dano: "1d6 > 3d6",
+        dano: "6d6",
         ingredientes: [
           { nome: "3x Pregos", icone: "📌" },
           { nome: "Fita adesiva", icone: "🩹" },
+          { nome: "Pedaço de Madeira", icone: "🪵" },
         ],
       },
 
@@ -29,7 +30,7 @@ export const receitasCriacao = [
         icone: "🪵",
         tipo: "Temporário",
         durabilidade: "🇴 🇴 🇴 ▭ ▭",
-        dano: "1d6",
+        dano: "2d6",
         ingredientes: [
           { nome: "2x Pregos", icone: "📌" },
           { nome: "Pedaço de Madeira", icone: "🪵" },
@@ -41,8 +42,11 @@ export const receitasCriacao = [
         icone: "🪵",
         tipo: "Permanente",
         durabilidade: "🇴 🇴",
-        dano: "4d6",
-        ingredientes: [{ nome: "Faca", icone: "🔪" }],
+        dano: "10d6",
+        ingredientes: [
+          { nome: "Faca", icone: "🔪" },
+          { nome: "Pedaço de Madeira", icone: "🪵" },
+        ],
       },
 
       {
@@ -59,10 +63,11 @@ export const receitasCriacao = [
         icone: "🔩",
         tipo: "Temporário",
         durabilidade: "🇴 🇴 🇴 🇴 🇴 ▭",
-        dano: "3d6 > 6d6",
+        dano: "6d6",
         ingredientes: [
           { nome: "3x Pregos", icone: "📌" },
           { nome: "Fita adesiva", icone: "🩹" },
+          { nome: "Pedaço de Cano", icone: "🔩" },
         ],
       },
 
@@ -71,7 +76,7 @@ export const receitasCriacao = [
         icone: "🔩",
         tipo: "Temporário",
         durabilidade: "🇴 🇴 🇴 🇴 🇴 ▭ ▭",
-        dano: "3d6",
+        dano: "2d6",
         ingredientes: [
           { nome: "2x Pregos", icone: "📌" },
           { nome: "Pedaço de Cano", icone: "🔩" },
@@ -83,7 +88,7 @@ export const receitasCriacao = [
         icone: "🔩",
         tipo: "Permanente",
         durabilidade: "🇴 🇴",
-        dano: "6d6",
+        dano: "3d12",
         ingredientes: [
           { nome: "Cano Quebrado", icone: "🔩" },
           { nome: "Faca", icone: "🔪" },
@@ -95,7 +100,7 @@ export const receitasCriacao = [
         icone: "🛠️",
         tipo: "Aprimorável",
         durabilidade: "🇴 🇴 🇴 🇴 🇴 🇴 🇴 🇴 🇴 🇴",
-        dano: "5d6",
+        dano: "6d6",
         ingredientes: [],
       },
 
@@ -108,6 +113,7 @@ export const receitasCriacao = [
         ingredientes: [
           { nome: "3x Pregos", icone: "📌" },
           { nome: "Fita adesiva", icone: "🩹" },
+          { nome: "Pé de Cabra", icone: "🛠️" },
         ],
       },
 
@@ -119,7 +125,7 @@ export const receitasCriacao = [
         dano: "5d6",
         ingredientes: [
           { nome: "2x Pregos", icone: "📌" },
-          { nome: "Pedaço de Madeira", icone: "🪵" },
+          { nome: "Pé de Cabra", icone: "🛠️" },
         ],
       },
 
@@ -128,8 +134,11 @@ export const receitasCriacao = [
         icone: "🛠️",
         tipo: "Permanente",
         durabilidade: "🇴 🇴 🇴",
-        dano: "7d6",
-        ingredientes: [{ nome: "Faca", icone: "🔪" }],
+        dano: "5d12",
+        ingredientes: [
+          { nome: "Faca", icone: "🔪" },
+          { nome: "Pé de Cabra", icone: "🛠️" },
+        ],
       },
 
       {
@@ -150,6 +159,7 @@ export const receitasCriacao = [
         ingredientes: [
           { nome: "3x Pregos", icone: "📌" },
           { nome: "Fita adesiva", icone: "🩹" },
+          { nome: "Martelo", icone: "🔨" },
         ],
       },
     ],
@@ -229,62 +239,57 @@ export const receitasCriacao = [
 
   {
     categoria: "Munições Fabricadas",
-
     itens: [
       {
         nome: "Munição Explosiva",
         icone: "💥",
         tipo: "Quantidade: ⧭ ⧭ ⧭ ⧭",
         durabilidade: "—",
-        dano: "Explosivo",
+        dano: "2d8", // 🔥 antes era "Explosivo"
         ingredientes: [
           { nome: "2x Álcool", icone: "🧪" },
-          { nome: "1x Explosivo", icone: "💣" },
+          { nome: "4x Explosivo", icone: "💣" },
         ],
       },
-
       {
         nome: "Munição Ácida",
         icone: "☣️",
-        tipo: "Quantidade: ⧭ ⧭ ⧭ ⧭",
+        tipo: "Quantidade: ⧭ ⧭",
         durabilidade: "—",
-        dano: "Ácido",
+        dano: "10d4", // antes "Ácido"
         ingredientes: [
-          { nome: "4x Álcool", icone: "🧪" },
-          { nome: "6x Explosivo", icone: "💣" },
+          { nome: "6x Álcool", icone: "🧪" },
+          { nome: "2x Explosivo", icone: "💣" },
         ],
       },
-
       {
         nome: "Munição Incendiária",
         icone: "🔥",
         tipo: "Quantidade: ⧭ ⧭",
         durabilidade: "—",
-        dano: "Fogo",
+        dano: "2d8", // antes "Fogo"
         ingredientes: [
-          { nome: "6x Álcool", icone: "🧪" },
+          { nome: "4x Álcool", icone: "🧪" },
           { nome: "4x Explosivo", icone: "💣" },
         ],
       },
-
       {
         nome: "Munição Sonífera",
         icone: "🌙",
         tipo: "Quantidade: ⧭",
         durabilidade: "—",
-        dano: "Sono",
+        dano: "1d4", // antes "Sono"
         ingredientes: [
           { nome: "6x Álcool", icone: "🧪" },
           { nome: "6x Explosivo", icone: "💣" },
         ],
       },
-
       {
         nome: "Flechas",
         icone: "🏹",
         tipo: "Quantidade: ⧭ ⧭ ⧭ ⧭",
         durabilidade: "—",
-        dano: "Perfuração",
+        dano: "1d6", // antes "Perfuração"
         ingredientes: [
           { nome: "1x Fita", icone: "🩹" },
           { nome: "1x Lâmina", icone: "🗡️" },

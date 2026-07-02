@@ -981,12 +981,20 @@ const FichaPersonagem = () => {
     lamina: "laminas",
     laminas: "laminas",
     pregos: "pregos",
-    "pedaco de madeira": "madeira",
-    madeira: "madeira",
-    "pedaco de cano": "cano",
-    "cano quebrado": "cano",
-    cano: "cano",
     faca: "faca",
+    polvora: "polvora",
+    pólvora: "polvora",
+    chumbo: "chumbo",
+    capsula: "capsula",
+    cápsula: "capsula",
+    espoleta: "espoleta",
+    "caixa de municao": "caixaMunicao",
+    "caixa de munição": "caixaMunicao",
+    municao: "caixaMunicao",
+    munição: "caixaMunicao",
+    // Se você tiver um material genérico "materiais de criação"
+    "kit de municao": "kitMunicao",
+    "kit de munição": "kitMunicao",
   };
 
   const obterQuantidadeIngrediente = (nome) => {
@@ -995,8 +1003,8 @@ const FichaPersonagem = () => {
   };
 
   const obterIngredientesReceita = (receita) => {
-    const rawIngredientes = receita?.ingredientes || [];
-
+    const rawIngredientes = receita?.ingredientes;
+    if (!rawIngredientes) return [];
     if (typeof rawIngredientes === "string") {
       return rawIngredientes
         .split(",")
@@ -1004,20 +1012,15 @@ const FichaPersonagem = () => {
         .filter(Boolean)
         .map((nome) => ({ nome }));
     }
-
-    if (!Array.isArray(rawIngredientes)) {
-      return [];
+    if (Array.isArray(rawIngredientes)) {
+      return rawIngredientes.map((ingrediente) => {
+        if (!ingrediente) return { nome: "" };
+        return typeof ingrediente === "string"
+          ? { nome: ingrediente }
+          : { nome: ingrediente.nome || "" };
+      });
     }
-
-    return rawIngredientes.map((ingrediente) => {
-      if (!ingrediente) {
-        return { nome: "" };
-      }
-
-      return typeof ingrediente === "string"
-        ? { nome: ingrediente }
-        : { nome: ingrediente.nome || "" };
-    });
+    return [];
   };
 
   const isMunicaoEspecialItem = (item) => {
@@ -1068,14 +1071,26 @@ const FichaPersonagem = () => {
     return "1d4";
   };
 
-  const montarMunicaoEspecial = (receita) => ({
-    ...receita,
-    detalhes: receita.efeito || receita.dano || receita.tipo || "Item",
-    quantidade: (String(receita.tipo || "").match(/⧭/g) || []).length || 1,
-    municaoEspecial: true,
-    bonusDano: obterBonusMunicaoEspecial(receita.dano || receita.nome),
-    criado: true,
-  });
+  const montarMunicaoEspecial = (receita) => {
+    const danoBruto = receita.dano || receita.tipo || receita.nome || "";
+
+    // Verifica se já é uma fórmula de dados (ex: 3d6, 2d8+2)
+    const isFormula = /(\d+)d(\d+)([+-]\d+)?/i.test(danoBruto);
+
+    // Se for fórmula, usa ela diretamente. Senão, usa o mapeamento antigo.
+    const bonusDano = isFormula
+      ? danoBruto
+      : obterBonusMunicaoEspecial(danoBruto);
+
+    return {
+      ...receita,
+      detalhes: receita.efeito || receita.dano || receita.tipo || "Item",
+      quantidade: (String(receita.tipo || "").match(/⧭/g) || []).length || 1,
+      municaoEspecial: true,
+      bonusDano,
+      criado: true,
+    };
+  };
 
   const combinarBonusDano = (baseBonus, extraBonus) => {
     const partes = [baseBonus, extraBonus]
@@ -1997,31 +2012,57 @@ const FichaPersonagem = () => {
     setMensagemCraft(`${novoItem.nome} criado e adicionado ao inventário.`);
     setTimeout(() => setMensagemCraft(""), 3000);
   };
-
   const criarItem = (receita) => {
     const materiaisAtuais = personagem.materiaisCriacao || {};
+    const inventarioAtual = personagem.inventario || [];
     const ingredientes = obterIngredientesReceita(receita);
+
+    // Verifica se há ingredientes suficientes
+    let materiaisFaltantes = [];
+    let itensBaseFaltantes = [];
 
     const temIngredientes = ingredientes.every(({ nome }) => {
       const chaveNormalizada = normalizarIngrediente(nome);
       const chaveMaterial = mapaIngredientes[chaveNormalizada];
       const quantidadeNecessaria = obterQuantidadeIngrediente(nome);
 
-      if (!chaveMaterial) return false;
-
-      return (materiaisAtuais[chaveMaterial] || 0) >= quantidadeNecessaria;
+      if (chaveMaterial) {
+        // É um material de criação
+        const tem =
+          (materiaisAtuais[chaveMaterial] || 0) >= quantidadeNecessaria;
+        if (!tem) {
+          materiaisFaltantes.push(
+            `${nome} (faltam ${quantidadeNecessaria}, tem ${materiaisAtuais[chaveMaterial] || 0})`,
+          );
+        }
+        return tem;
+      } else {
+        // É um item base (não está no mapa de materiais)
+        const quantidadeDisponivel = inventarioAtual.filter(
+          (item) => item.nome === nome,
+        ).length;
+        if (quantidadeDisponivel < quantidadeNecessaria) {
+          itensBaseFaltantes.push(
+            `${nome} (faltam ${quantidadeNecessaria}, tem ${quantidadeDisponivel})`,
+          );
+        }
+        return quantidadeDisponivel >= quantidadeNecessaria;
+      }
     });
 
     if (!temIngredientes) {
+      const mensagem = [...materiaisFaltantes, ...itensBaseFaltantes].join(
+        "\n",
+      );
       setPopupCraft({
         titulo: "Materiais insuficientes",
-        mensagem: `Você não possui todos os materiais necessários para criar.`,
+        mensagem: `Você não possui todos os materiais necessários:\n${mensagem}`,
       });
       return;
     }
 
-    const materiaisAtualizados = { ...materiaisAtuais };
-
+    // Consome os materiais de criação
+    let materiaisAtualizados = { ...materiaisAtuais };
     ingredientes.forEach(({ nome }) => {
       const chaveNormalizada = normalizarIngrediente(nome);
       const chaveMaterial = mapaIngredientes[chaveNormalizada];
@@ -2035,6 +2076,27 @@ const FichaPersonagem = () => {
       }
     });
 
+    // Remove os itens base do inventário
+    let novoInventario = [...inventarioAtual];
+    ingredientes.forEach(({ nome }) => {
+      const chaveNormalizada = normalizarIngrediente(nome);
+      const chaveMaterial = mapaIngredientes[chaveNormalizada];
+      const quantidadeNecessaria = obterQuantidadeIngrediente(nome);
+
+      if (!chaveMaterial) {
+        // Remove a quantidade necessária do item base
+        let removidos = 0;
+        novoInventario = novoInventario.filter((item) => {
+          if (item.nome === nome && removidos < quantidadeNecessaria) {
+            removidos++;
+            return false;
+          }
+          return true;
+        });
+      }
+    });
+
+    // Cria o novo item
     const itemCriado = isMunicaoEspecialItem(receita)
       ? montarMunicaoEspecial(receita)
       : {
@@ -2043,19 +2105,16 @@ const FichaPersonagem = () => {
           criado: true,
         };
 
+    novoInventario.push(itemCriado);
+
     setPersonagem((prev) => ({
       ...prev,
-
       materiaisCriacao: materiaisAtualizados,
-
-      inventario: [...(prev.inventario || []), itemCriado],
+      inventario: novoInventario,
     }));
 
     setMensagemCraft(`${receita.nome} criado com sucesso.`);
-
-    setTimeout(() => {
-      setMensagemCraft("");
-    }, 3000);
+    setTimeout(() => setMensagemCraft(""), 3000);
   };
 
   const gruposCriacaoFiltrados = receitasCriacaoAtuais.filter((grupo) => {
@@ -4963,7 +5022,6 @@ const FichaPersonagem = () => {
         "--cor-borda": personagem.temaFicha?.borda,
       }}
     >
-     
       <button
         className="botao-mestre-flutuante"
         onClick={abrirUpgradeNivel}
@@ -4981,7 +5039,7 @@ const FichaPersonagem = () => {
         <span>Loja</span>
       </button>
 
-       <aside
+      <aside
         className="ficha-identificacao-secreta"
         aria-label="Dados da ficha"
       >

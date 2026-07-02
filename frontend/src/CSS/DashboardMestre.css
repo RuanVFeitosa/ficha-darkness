@@ -43,6 +43,78 @@
   appearance: textfield;
 }
 
+/* Menu hambúrguer */
+.mestre-hamburguer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 30px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.hamburguer-linha {
+  width: 100%;
+  height: 2px;
+  background-color: #fff;
+  transition: all 0.3s ease;
+}
+
+.mestre-hamburguer-menu {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background: #1a1a1a;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.8);
+  padding: 8px 0;
+  z-index: 100;
+  min-width: 220px;
+}
+
+.mestre-hamburguer-item {
+  display: block;
+  width: 100%;
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+   background: #050505;
+  color: #fff;
+
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.mestre-hamburguer-item:hover {
+    background: #fff;
+  color: #000;
+  border-color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .mestre-hamburguer-menu {
+    right: 10px;
+    top: 55px;
+    min-width: 180px;
+  }
+}
+
 /* =========================================================
    DASHBOARD MESTRE — MINIMALISTA PRETO & BRANCO
 ========================================================= */
@@ -60,9 +132,8 @@
 }
 
 /* =========================================================
-   HEADER
+   HEADER ADMIN — ESPAÇOSO E COM CORES DISTINTAS
 ========================================================= */
-
 .mestre-header {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -76,23 +147,173 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.mestre-header span,
-.mestre-editor-topo span,
-.mestre-creditos span {
-  color: #aaa;
-  font-size: 0.72rem;
+
+.mestre-header-admin {
+  margin: 12px 0 8px;
+  padding: 18px 20px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.mestre-admin-grid {
+  display: flex;  
+  gap: 18px 30px;
+  align-items: end;
+}
+
+.mestre-admin-grupo {
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 3px solid transparent;
+  transition: background 0.2s;
+}
+
+.mestre-admin-grupo.creditos {
+  border-left-color: #f1c40f;
+}
+.mestre-admin-grupo.mementos {
+  border-left-color: #9b59b6;
+}
+.mestre-admin-grupo.pe {
+  border-left-color: #2ecc71;
+}
+.mestre-admin-grupo.nivel {
+  border-left-color: #e67e22;
+}
+
+.mestre-admin-grupo label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ccc;
+  font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 2px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
 }
 
-.mestre-header h1,
-.mestre-editor-topo h2 {
-  margin: 4px 0 0;
+.mestre-admin-controles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mestre-admin-controles input[type="number"] {
+  flex: 1;
+  min-width: 70px;
+  max-width: 120px;
+  min-height: 40px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: #050505;
   color: #fff;
-  font-size: 1.35rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.mestre-admin-controles button {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: #0a0a0a;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mestre-admin-controles button:hover {
+  background: #fff;
+  color: #000;
+}
+
+/* Grupo Nível (especial) */
+.mestre-admin-grupo.nivel .mestre-admin-controles {
+  justify-content: center;
+  gap: 8px;
+}
+
+.mestre-nivel-atual {
+  min-width: 44px;
+  text-align: center;
+  color: #d4af37;
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.mestre-btn-nivel {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  background: #0a0a0a;
+  color: #d4af37;
+  font-size: 1.4rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mestre-btn-nivel:hover {
+  background: #d4af37;
+  color: #000;
+}
+
+/* Divisor opcional */
+.mestre-admin-divisor {
+  margin: 14px 0 0;
+  border: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+/* Responsivo */
+@media (max-width: 820px) {
+  .mestre-admin-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .mestre-admin-grupo {
+    padding: 6px 8px;
+  }
+
+  .mestre-admin-controles input[type="number"] {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+  .mestre-admin-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .mestre-admin-grupo.nivel {
+    order: 4; /* coloca o nível por último */
+  }
+
+  .mestre-admin-controles {
+    flex-wrap: wrap;
+  }
+
+  .mestre-admin-controles input[type="number"] {
+    min-width: 60px;
+    flex: 1 1 100%;
+  }
+
+  .mestre-admin-controles button {
+    flex: 1;
+  }
 }
 
 /* =========================================================
