@@ -179,7 +179,7 @@ export const receitasCriacao = [
 
         durabilidade: "—",
 
-        efeito: "Recupera 1d6 de integridade em um membro.",
+        efeito: "Recupera 2d20+20 de integridade em um membro.",
 
         ingredientes: [
           { nome: "3x Álcool", icone: "🧪" },
@@ -191,8 +191,7 @@ export const receitasCriacao = [
         nome: "Molotov",
         icone: "🔥",
         tipo: "Usos: ⧬",
-        durabilidade: "—",
-        dano: "Incendiário",
+        dano: "6d6",
         ingredientes: [
           { nome: "5x Álcool", icone: "🧪" },
           { nome: "2x Trapos", icone: "🧻" },
@@ -216,7 +215,7 @@ export const receitasCriacao = [
         icone: "💣",
         tipo: "Usos: ⧬",
         durabilidade: "—",
-        dano: "Explosivo",
+        dano: "10d8",
         ingredientes: [
           { nome: "Recipiente", icone: "🫙" },
           { nome: "5x Explosivos", icone: "💣" },
@@ -228,7 +227,7 @@ export const receitasCriacao = [
         icone: "🔪",
         tipo: "Usos: ⧬ ⧬ ⧬ ⧬",
         durabilidade: "—",
-        dano: "Corte leve",
+        dano: "2d6",
         ingredientes: [
           { nome: "2x Fita", icone: "🩹" },
           { nome: "Lâmina", icone: "🗡️" },

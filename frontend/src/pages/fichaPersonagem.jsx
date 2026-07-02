@@ -186,6 +186,10 @@ export const estadoInicial = {
   vida: { atual: 0, max: 0 },
   sanidade: { atual: 50, max: 100 },
   esperanca: { atual: 30, max: 100 },
+  pontosIntegridade: {
+    disponiveis: 0,
+    gastos: 0,
+  },
   membros: {
     cabeca: {
       atual: 100,
@@ -492,7 +496,8 @@ const FichaPersonagem = () => {
   const [municaoSelecionadaIndex, setMunicaoSelecionadaIndex] = useState(null);
   const [rolandoDados, setRolandoDados] = useState(false);
   const [itemVisualizado, setItemVisualizado] = useState(null);
-  const [itemVisualizadoIndex, setItemVisualizadoIndex] = useState(null);
+  const [visualizadorAberto, setVisualizadorAberto] = useState(false);
+  const [visualizadorFechando, setVisualizadorFechando] = useState(false);
   const [ritoVisualizado, setRitoVisualizado] = useState(null);
   const [ritoDesativando, setRitoDesativando] = useState(false);
   const [sanidadeSaindo, setSanidadeSaindo] = useState(false);
@@ -508,6 +513,8 @@ const FichaPersonagem = () => {
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalRolagem, setModalRolagem] = useState(null);
+  // Dentro do componente FichaPersonagem, adicione estes estados:
+
   const [subAbaPersonalizacao, setSubAbaPersonalizacao] =
     useState("customizacao");
   const [formulaDadoPersonalizado, setFormulaDadoPersonalizado] = useState("");
@@ -518,6 +525,21 @@ const FichaPersonagem = () => {
   const ignorarProximoSalvamentoRef = useRef(false);
 
   const [subAbaHabilidade, setSubAbaHabilidade] = useState("arquetipo");
+
+  const abrirVisualizador = (item, index) => {
+    setItemVisualizado({ ...item, index });
+    setVisualizadorAberto(true);
+    setVisualizadorFechando(false);
+  };
+
+  const fecharVisualizador = () => {
+    setVisualizadorFechando(true);
+    setTimeout(() => {
+      setItemVisualizado(null);
+      setVisualizadorAberto(false);
+      setVisualizadorFechando(false);
+    }, 300);
+  };
 
   // FUNÇÃO PARA ABRIR MODAL
   const abrirModal = (titulo, chaveHabilidade) => {
@@ -1753,7 +1775,7 @@ const FichaPersonagem = () => {
 
     if (nomeItemQuebrou) {
       setMensagemCraft(`⚠️ ${nomeItemQuebrou} quebrou e foi removido.`);
-      setItemVisualizado(null);
+      fecharVisualizador(); // 🔥 substituído
       setTimeout(() => setMensagemCraft(""), 3000);
     }
   };
@@ -1828,7 +1850,7 @@ const FichaPersonagem = () => {
 
     if (nomeItemAcabou) {
       setMensagemCraft(`⚠️ ${nomeItemAcabou} acabou e foi removido.`);
-      setItemVisualizado(null);
+      fecharVisualizador(); // <-- substitui setItemVisualizado(null)
       setTimeout(() => setMensagemCraft(""), 3000);
     }
   };
@@ -3695,7 +3717,7 @@ const FichaPersonagem = () => {
                   aria-label={item.nome}
                   title={item.nome}
                   data-item-name={item.nome}
-                  onClick={() => setItemVisualizado({ ...item, index })}
+                  onClick={() => abrirVisualizador(item, index)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
@@ -3713,51 +3735,49 @@ const FichaPersonagem = () => {
               ))}
             </div>
 
-            {itemVisualizado && (
-              <div className="item-visualizer-inline">
+            {/* Visualizador de Item (Overlay) */}
+            <div
+              className={`item-visualizer-inline ${visualizadorAberto ? "aberto" : ""} ${visualizadorFechando ? "fechando" : ""}`}
+            >
+              {itemVisualizado && (
                 <div className="item-visualizador">
+                  {/* TOPO */}
                   <div className="item-visualizer-topo">
                     <div className="item-visualizer-icone">
                       {renderizarIconeItem(itemVisualizado)}
                     </div>
-
                     <div className="visualizer-info">
                       <span className="visualizer-categoria">
                         {itemVisualizado.tipo || "Item"}
                       </span>
-
                       <h2>{itemVisualizado.nome}</h2>
                     </div>
-
                     <button
                       className="item-visualizer-fechar"
-                      onClick={() => setItemVisualizado(null)}
-                      type="button"
+                      onClick={fecharVisualizador}
                     >
                       ×
                     </button>
                   </div>
 
+                  {/* INFORMAÇÕES GERAIS */}
                   <div className="item-visualizer-info">
                     {itemVisualizado.usos && (
                       <p>
                         <strong>Usos:</strong> {itemVisualizado.usos}
                       </p>
                     )}
-
                     {itemVisualizado.durabilidade && (
                       <p>
                         <strong>Durabilidade:</strong>{" "}
                         {itemVisualizado.durabilidade}
                       </p>
                     )}
-
                     {itemVisualizado.dano && (
                       <p>
                         <strong>Dano:</strong> {itemVisualizado.dano}
                       </p>
                     )}
-
                     {itemVisualizado.efeito && (
                       <p>
                         <strong>Efeito:</strong> {itemVisualizado.efeito}
@@ -3765,6 +3785,7 @@ const FichaPersonagem = () => {
                     )}
                   </div>
 
+                  {/* STATUS DE ARMA */}
                   {itemVisualizado.armaStatus && (
                     <>
                       <div className="item-visualizer-status">
@@ -3821,6 +3842,7 @@ const FichaPersonagem = () => {
                     </>
                   )}
 
+                  {/* MUNIÇÃO ESPECIAL */}
                   {itemVisualizado.armaStatus && (
                     <div className="item-visualizer-municao">
                       {itemVisualizado.municaoCarregada ? (
@@ -3850,45 +3872,41 @@ const FichaPersonagem = () => {
                       ) : (
                         <>
                           {obterMunicoesEspeciais().length > 0 ? (
-                            <>
-                              <div className="item-visualizer-municao-select">
-                                <span>Selecione munição especial</span>
-                                <div className="municao-especial-list">
-                                  {obterMunicoesEspeciais().map(
-                                    ({ item, index }) => (
-                                      <button
-                                        key={index}
-                                        type="button"
-                                        className={getClassMunicaoEspecial(
-                                          item,
-                                        )}
-                                        onClick={() =>
-                                          carregarMunicaoEspecial(
-                                            itemVisualizado.index,
-                                            index,
-                                          )
-                                        }
-                                      >
-                                        <span className="municao-especial-icon">
-                                          <Icon
-                                            path={getIconMunicaoEspecial(item)}
-                                            size={1.2}
-                                          />
+                            <div className="item-visualizer-municao-select">
+                              <span>Selecione munição especial</span>
+                              <div className="municao-especial-list">
+                                {obterMunicoesEspeciais().map(
+                                  ({ item, index }) => (
+                                    <button
+                                      key={index}
+                                      type="button"
+                                      className={getClassMunicaoEspecial(item)}
+                                      onClick={() =>
+                                        carregarMunicaoEspecial(
+                                          itemVisualizado.index,
+                                          index,
+                                        )
+                                      }
+                                    >
+                                      <span className="municao-especial-icon">
+                                        <Icon
+                                          path={getIconMunicaoEspecial(item)}
+                                          size={1.2}
+                                        />
+                                      </span>
+                                      <span className="municao-especial-nome">
+                                        {item.nome}
+                                      </span>
+                                      {item.quantidade && (
+                                        <span className="municao-especial-quantidade">
+                                          {item.quantidade}
                                         </span>
-                                        <span className="municao-especial-nome">
-                                          {item.nome}
-                                        </span>
-                                        {item.quantidade ? (
-                                          <span className="municao-especial-quantidade">
-                                            {item.quantidade}
-                                          </span>
-                                        ) : null}
-                                      </button>
-                                    ),
-                                  )}
-                                </div>
+                                      )}
+                                    </button>
+                                  ),
+                                )}
                               </div>
-                            </>
+                            </div>
                           ) : (
                             <p>
                               Nenhuma munição especial disponível no inventário.
@@ -3899,42 +3917,44 @@ const FichaPersonagem = () => {
                     </div>
                   )}
 
+                  {/* AÇÕES */}
                   <div className="item-visualizer-acoes">
                     {itemVisualizado.armaStatus ? (
                       <>
                         <button
+                          className="item-ataque-btn"
                           onClick={() =>
                             rolarAtaqueArma(itemVisualizado, "violencia")
                           }
-                          type="button"
                         >
+                          <Icon path={mdiDiceD20} size={0.9} />
                           Violencia
                         </button>
-
                         <button
+                          className="item-ataque-btn"
                           onClick={() =>
                             rolarAtaqueArma(itemVisualizado, "percepcao")
                           }
-                          type="button"
                         >
+                          <Icon path={mdiDiceD20} size={0.9} />
                           Percepcao
                         </button>
-
                         <button
+                          className="item-ataque-btn"
                           onClick={() =>
                             rolarAtaqueArma(itemVisualizado, "persistencia")
                           }
-                          type="button"
                         >
+                          <Icon path={mdiDiceD20} size={0.9} />
                           Persistencia
                         </button>
-
                         <button
+                          className="item-ataque-btn"
                           onClick={() =>
                             rolarAtaqueArma(itemVisualizado, "firmeza")
                           }
-                          type="button"
                         >
+                          <Icon path={mdiDiceD20} size={0.9} />
                           Firmeza
                         </button>
                       </>
@@ -3946,10 +3966,7 @@ const FichaPersonagem = () => {
                         itemVisualizado?.efeito?.match(
                           /(\d+)d(\d+)([+-]\d+)?/i,
                         )) && (
-                        <button
-                          onClick={() => rolarItem(itemVisualizado)}
-                          type="button"
-                        >
+                        <button onClick={() => rolarItem(itemVisualizado)}>
                           {itemVisualizado?.tipo
                             ?.toLowerCase()
                             .includes("cura") ||
@@ -3963,8 +3980,8 @@ const FichaPersonagem = () => {
                     )}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </>
         )}
 
