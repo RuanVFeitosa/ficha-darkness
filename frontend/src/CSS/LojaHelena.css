@@ -132,22 +132,22 @@
 
 .loja-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(100, 1fr) 300px;
   gap: 22px;
   align-items: start;
 }
 
 .loja-catalogo {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .loja-item {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 230px;
+  min-height: 500px;
   padding: 18px;
   border: 1px solid rgba(212, 175, 55, 0.16);
   border-left: 3px solid #8b4513;
@@ -400,7 +400,7 @@
    ========================================================= */
 
 .loja-arma {
-  min-height: 430px;
+  min-height: 450px;
 }
 
 .arma-status-card {
@@ -623,37 +623,15 @@
   }
 }
 
-@media (max-width: 620px) {
-  .loja-hero {
-    min-height: 360px;
-  }
-
-  .loja-hero-copy {
-    padding-top: 104px;
-  }
-
-  .loja-toolbar,
-  .loja-categoria {
-    width: 100%;
-  }
-
-  .loja-catalogo {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .loja-item-footer {
-    align-items: stretch;
-    flex-direction: column;
-  }
-}
-
 @media (max-width: 1280px) {
   .loja-shell {
     width: min(100%, calc(100vw - 28px));
   }
 
-  .loja-catalogo {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .loja-item,
+  .loja-arma {
+    width: 240px;
+    max-width: 260px;
   }
 }
 
@@ -670,8 +648,10 @@
     grid-template-columns: 1fr;
   }
 
-  .loja-catalogo {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .loja-item,
+  .loja-arma {
+    width: 220px;
+    max-width: 240px;
   }
 
   .loja-carrinho {
@@ -731,12 +711,10 @@
     min-height: 44px;
   }
 
-  .loja-catalogo {
-    grid-template-columns: 1fr;
-  }
-
   .loja-item,
   .loja-arma {
+    width: 100%;
+    max-width: 100%;
     min-height: auto;
     padding: 16px;
   }
@@ -873,14 +851,12 @@
   gap: 18px;
 }
 
-.loja-catalogo {
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
-}
-
 .loja-item,
 .loja-arma {
   min-height: 0;
+  width: 260px;
+  max-width: 300px;
+  flex: 0 0 auto;
   padding: 14px;
   border: 1px solid rgba(225, 218, 199, 0.11);
   border-left: 1px solid rgba(225, 218, 199, 0.11);
@@ -1049,7 +1025,7 @@
 }
 
 /* =========================================================
-   APRIMORAMENTO DE ARMAS — LAYOUT HORIZONTAL
+   APRIMORAMENTO DE ARMAS — LAYOUT DEFINITIVO (HORIZONTAL)
    ========================================================= */
 
 .loja-aprimoramento-container {
@@ -1077,7 +1053,7 @@
 
 .loja-aprimoramento-container .melhorias-lista-armas {
   margin-bottom: 20px;
-  width: 120%;
+  width: 100%;
 }
 
 .loja-aprimoramento-container .melhorias-lista-armas h5 {
@@ -1088,41 +1064,37 @@
   letter-spacing: 0.6px;
 }
 
-/* ARMAS */
+/* =========================================================
+   CARDS DE ARMAS — HORIZONTAIS LADO A LADO
+   ========================================================= */
+
 .loja-aprimoramento-container .melhorias-armas-grid {
-  display: flex;
-  gap: 10px;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  width: 100% !important;
   padding-bottom: 8px;
-  -webkit-overflow-scrolling: touch;
-}
-
-.loja-aprimoramento-container .melhorias-armas-grid::-webkit-scrollbar {
-  height: 4px;
-}
-
-.loja-aprimoramento-container .melhorias-armas-grid::-webkit-scrollbar-thumb {
-  background: rgba(225, 218, 199, 0.2);
-  border-radius: 2px;
 }
 
 .loja-aprimoramento-container .melhoria-arma-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex: 0 0 auto !important;
+  width: 140px !important;
+  max-width: 160px !important;
+  min-width: 120px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
   gap: 6px;
-  max-width: 200px;
   padding: 10px 8px;
   border: 1px solid rgba(225, 218, 199, 0.11);
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.025);
   color: #f5efe4;
-  font: inherit;
   cursor: pointer;
   text-align: center;
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease;
-  flex-shrink: 0;
+  transition: 0.18s ease;
 }
 
 .loja-aprimoramento-container .melhoria-arma-card:hover {
@@ -1172,12 +1144,19 @@
   margin-top: 2px;
 }
 
+/* =========================================================
+   PAINEL DE UPGRADE — CORRIGIDO
+   ========================================================= */
+
 .loja-aprimoramento-container .melhorias-upgrade-painel {
   border: 1px solid rgba(225, 218, 199, 0.11);
   border-radius: 4px;
-  padding: 16=5px;
+  padding: 16px;
   background: rgba(0, 0, 0, 0.14);
-  width: 120%;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .loja-aprimoramento-container .melhoria-upgrade-topo h5 {
@@ -1186,25 +1165,11 @@
   margin-bottom: 10px;
 }
 
-/* STATS — Horizontal scroll */
 .loja-aprimoramento-container .melhoria-upgrade-stats-atuais {
   display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
+  flex-wrap: wrap;
   gap: 6px 14px;
   margin-bottom: 8px;
-  padding-bottom: 4px;
-}
-
-.loja-aprimoramento-container
-  .melhoria-upgrade-stats-atuais::-webkit-scrollbar {
-  height: 3px;
-}
-
-.loja-aprimoramento-container
-  .melhoria-upgrade-stats-atuais::-webkit-scrollbar-thumb {
-  background: rgba(225, 218, 199, 0.15);
-  border-radius: 2px;
 }
 
 .loja-aprimoramento-container .melhoria-upgrade-stats-atuais span {
@@ -1234,42 +1199,25 @@
   margin-bottom: 10px;
 }
 
-/* TIPOS */
+/* TIPOS DE MELHORIA — GRID */
 .loja-aprimoramento-container .melhoria-upgrade-tipos-grid {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  gap: 8px;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+  gap: 10px !important;
   margin-bottom: 14px;
-  padding-bottom: 8px;
-}
-
-.loja-aprimoramento-container .melhoria-upgrade-tipos-grid::-webkit-scrollbar {
-  height: 4px;
-}
-
-.loja-aprimoramento-container
-  .melhoria-upgrade-tipos-grid::-webkit-scrollbar-thumb {
-  background: rgba(225, 218, 199, 0.2);
-  border-radius: 2px;
 }
 
 .loja-aprimoramento-container .melhoria-tipo-card {
-  text-align: left;
+  display: flex !important;
+  flex-direction: column !important;
   padding: 10px;
-  min-width: 150px;
-  max-width: 180px;
   border: 1px solid rgba(225, 218, 199, 0.11);
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.025);
   color: #f5efe4;
-  font: inherit;
   cursor: pointer;
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease;
-  flex-shrink: 0;
-  margin-top: 10px;
+  transition: 0.18s ease;
+  text-align: left;
 }
 
 .loja-aprimoramento-container .melhoria-tipo-card:hover:not(:disabled) {
@@ -1333,7 +1281,7 @@
   transition: width 0.3s ease;
 }
 
-/* RECURSOS — Horizontal */
+/* RECURSOS */
 .loja-aprimoramento-container .melhoria-upgrade-recursos {
   display: flex;
   align-items: center;
@@ -1431,32 +1379,22 @@
 }
 
 /* =========================================================
-   RESPONSIVO — APRIMORAMENTO
+   RESPONSIVO
    ========================================================= */
 
 @media (max-width: 900px) {
   .loja-aprimoramento-container .melhoria-arma-card {
-    min-width: 100px;
-    max-width: 110px;
-    padding: 8px 6px;
+    width: 110px !important;
+    max-width: 120px !important;
+    min-width: 90px !important;
   }
 
   .loja-aprimoramento-container .melhoria-arma-info strong {
     font-size: 0.68rem;
   }
 
-  .loja-aprimoramento-container .melhoria-tipo-card {
-    min-width: 140px;
-    max-width: 160px;
-    padding: 8px;
-  }
-
-  .loja-aprimoramento-container .melhoria-tipo-info strong {
-    font-size: 0.78rem;
-  }
-
-  .loja-aprimoramento-container .melhoria-tipo-info small {
-    font-size: 0.65rem;
+  .loja-aprimoramento-container .melhoria-upgrade-tipos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
   }
 
   .loja-aprimoramento-container .melhoria-upgrade-stats-atuais span {
@@ -1470,21 +1408,10 @@
 }
 
 @media (max-width: 640px) {
-  .loja-aprimoramento-container .melhorias-topo span {
-    font-size: 1rem;
-  }
-
-  .loja-aprimoramento-container .melhorias-topo p {
-    font-size: 0.78rem;
-  }
-
-  .loja-aprimoramento-container .melhorias-armas-grid {
-    gap: 6px;
-  }
-
   .loja-aprimoramento-container .melhoria-arma-card {
-    min-width: 85px;
-    max-width: 95px;
+    width: 90px !important;
+    max-width: 100px !important;
+    min-width: 70px !important;
     padding: 6px 4px;
     gap: 4px;
   }
@@ -1511,25 +1438,11 @@
   }
 
   .loja-aprimoramento-container .melhoria-upgrade-tipos-grid {
-    gap: 6px;
+    grid-template-columns: 1fr !important;
   }
 
   .loja-aprimoramento-container .melhoria-tipo-card {
-    min-width: 130px;
-    max-width: 150px;
     padding: 8px 6px;
-  }
-
-  .loja-aprimoramento-container .melhoria-tipo-info strong {
-    font-size: 0.75rem;
-  }
-
-  .loja-aprimoramento-container .melhoria-tipo-info small {
-    font-size: 0.6rem;
-  }
-
-  .loja-aprimoramento-container .melhoria-tipo-nivel {
-    font-size: 0.65rem;
   }
 
   .loja-aprimoramento-container .melhoria-upgrade-recursos {
@@ -1538,58 +1451,22 @@
     gap: 6px;
   }
 
-  .loja-aprimoramento-container .melhoria-upgrade-recursos > span {
-    font-size: 0.72rem;
-  }
-
-  .loja-aprimoramento-container .recurso-chip {
-    font-size: 0.72rem;
-    padding: 3px 8px;
-  }
-
   .loja-aprimoramento-container .melhoria-upgrade-btn {
     font-size: 0.75rem;
     padding: 8px 6px;
-  }
-
-  .loja-aprimoramento-container .craft-mensagem {
-    font-size: 0.72rem;
-    padding: 6px 10px;
-  }
-
-  .loja-hero {
-    padding: 76px 14px 24px;
-  }
-
-  .loja-hero-copy {
-    width: 100%;
-    padding: 0;
-  }
-
-  .loja-shell {
-    padding: 12px;
-  }
-
-  .loja-catalogo {
-    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 480px) {
   .loja-aprimoramento-container .melhoria-arma-card {
-    min-width: 72px;
-    max-width: 82px;
+    width: 72px !important;
+    max-width: 82px !important;
+    min-width: 60px !important;
     padding: 5px 3px;
   }
 
   .loja-aprimoramento-container .melhoria-arma-info strong {
     font-size: 0.55rem;
-  }
-
-  .loja-aprimoramento-container .melhoria-tipo-card {
-    min-width: 120px;
-    max-width: 140px;
-    padding: 6px;
   }
 
   .loja-aprimoramento-container .melhoria-upgrade-stats-atuais {
@@ -1603,4 +1480,25 @@
   .loja-aprimoramento-container .melhoria-upgrade-tipos-label {
     font-size: 0.72rem;
   }
+}
+
+.modificadores-subaba {
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid rgba(225, 218, 199, 0.14);
+  border-radius: 999px;
+  background: transparent;
+  color: #cfc8b8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.18s ease;
+}
+
+.modificadores-subaba:hover,
+.modificadores-subaba.ativa {
+  border-color: rgba(225, 218, 199, 0.42);
+  background: rgba(225, 218, 199, 0.06);
+  color: #f3efe5;
 }

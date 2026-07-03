@@ -31,6 +31,7 @@ import {
 } from "../data/catalogoLoja";
 import { estadoInicial } from "./fichaPersonagem";
 import { APRIMORAMENTOS_MALETA } from "../data/Catalogo/aprimoramentoMaleta";
+
 const STORAGE_KEY = "fichaRPG_personagem";
 const CATALOGO_STORAGE_KEY = "lojaHelena_catalogo";
 const DEFAULT_FICHA_ID = "principal";
@@ -81,12 +82,17 @@ const LojaHelena = () => {
   const [categoriaAtiva, setCategoriaAtiva] = useState("armas-fogo");
   const [nivelRitoAtivo, setNivelRitoAtivo] = useState("iniciante");
   const [subAbaMaleta, setSubAbaMaleta] = useState("medicinal");
+  const [filtroModificadores, setFiltroModificadores] = useState("todos");
   const [carrinho, setCarrinho] = useState([]);
   const [mensagem, setMensagem] = useState("");
 
   // Estado para Aprimoramento de Armas
   const [armaUpgradeIndex, setArmaUpgradeIndex] = useState(null);
   const [armaUpgradeTipo, setArmaUpgradeTipo] = useState("dano");
+
+  // Estado para Aplicar Modificadores
+  const [modAba, setModAba] = useState("aplicar"); // aplicar | estoque
+  const [modSubAba, setModSubAba] = useState("todas");
 
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
   const saldoKey = `lojaHelena_creditos_${fichaId}`;
@@ -100,8 +106,8 @@ const LojaHelena = () => {
   const usandoRitos = categoriaAtiva === "ritos";
   const usandoPoderes = categoriaAtiva === "poderes";
   const usandoLojaAbsoluto = usandoRitos || usandoPoderes;
-  const classeAtual = personagem.classeId || personagem.classe || "";
 
+  const classeAtual = personagem.classeId || personagem.classe || "";
   const ehMedicoDeCampo =
     classeAtual.toLowerCase().includes("medico") ||
     classeAtual.toLowerCase().includes("médico");
@@ -241,6 +247,7 @@ const LojaHelena = () => {
       pararPolling();
     };
   }, [fichaId, storageKey]);
+
   const temMaletaDeCampo = (personagem.inventario || []).some(
     (item) => item.nome === "Maleta de Campo",
   );
@@ -285,10 +292,7 @@ const LojaHelena = () => {
 
   const itensFiltrados = useMemo(() => {
     if (categoriaAtiva === "maleta-campo") {
-      if (!ehMedicoDeCampo && !temMaletaDeCampo) {
-        return [];
-      }
-
+      if (!ehMedicoDeCampo && !temMaletaDeCampo) return [];
       return aprimoramentosMaletaLoja[subAbaMaleta] || [];
     }
 
@@ -299,6 +303,14 @@ const LojaHelena = () => {
         (item) =>
           item.categoria === "ritos" && item.nivelRito === nivelRitoAtivo,
       );
+    }
+
+    if (categoriaAtiva === "modificacoes") {
+      return catalogo.filter((item) => item.categoria === "modificacoes");
+    }
+
+    if (categoriaAtiva === "aprimoramento") {
+      return []; // não usado; renderiza por renderizarAprimoramento()
     }
 
     const itensBase = catalogo.filter(
@@ -316,7 +328,10 @@ const LojaHelena = () => {
     nivelRitoAtivo,
     aprimoramentosMaletaLoja,
     subAbaMaleta,
+    temMaletaDeCampo,
+    ehMedicoDeCampo,
   ]);
+
   const totalCarrinho = carrinho.reduce((acc, item) => acc + item.preco, 0);
   const saldoAtual = usandoLojaAbsoluto ? saldoMementos : saldo;
   const podeComprar = carrinho.length > 0 && totalCarrinho <= saldoAtual;
@@ -324,13 +339,11 @@ const LojaHelena = () => {
   const formatarPreco = (itemOuValor) => {
     const valor =
       typeof itemOuValor === "number" ? itemOuValor : itemOuValor.preco;
-
     return usandoLojaAbsoluto ? `${valor} Mementos` : `${valor} cr`;
   };
 
   const renderizarIconeItem = (item, size = 1.8) => {
     const icone = obterIconeItem(item);
-
     const ehImagem =
       typeof icone === "string" &&
       (icone.includes(".svg") || icone.startsWith("data:image"));
@@ -357,7 +370,9 @@ const LojaHelena = () => {
     window.location.href = montarUrlFicha(personagem, fichaId);
   };
 
-  // Funções auxiliares para aprimoramento de armas
+  // =====================
+  // Aprimoramento (antigo)
+  // =====================
   const interpretarDano = (danoTexto) => {
     const texto = String(danoTexto || "")
       .toLowerCase()
@@ -405,7 +420,10 @@ const LojaHelena = () => {
       const atual = match[1].toLowerCase();
       const indice = niveis.indexOf(atual);
       if (indice >= 0 && indice < niveis.length - 1) {
-        return texto.replace(new RegExp(`distância\\s*${atual}`, "i"), `distância ${niveis[indice + 1]}`);
+        return texto.replace(
+          new RegExp(`distância\\s*${atual}`, "i"),
+          `distância ${niveis[indice + 1]}`,
+        );
       }
       if (texto.includes("|")) return `${texto} +1`;
       return `${texto} | +1`;
@@ -442,27 +460,258 @@ const LojaHelena = () => {
     return `${texto || "Firmeza"} | 3 alvos`;
   };
 
-  const tiposUpgrade = [
-    { chave: "dano", nome: "Dano", icone: "⚔️", descricao: "Aumenta o dano base da arma", max: 5 },
-    { chave: "critico", nome: "Crítico", icone: "💥", descricao: "Reduz a dificuldade de crítico (menos dados necessários)", max: 3 },
-    { chave: "precisao", nome: "Precisão", icone: "🎯", descricao: "Aumenta o bônus de ataque com Percepção e fortalece alcance/control", max: 3 },
-    { chave: "controle", nome: "Controle", icone: "🎚️", descricao: "Melhora o controle de recuo e a estabilidade do disparo", max: 3 },
-    { chave: "velocidade", nome: "Velocidade", icone: "💨", descricao: "Aumenta a capacidade de atingir mais alvos em uma mesma ação", max: 3 },
-    { chave: "alcance", nome: "Alcance", icone: "📏", descricao: "Estende o alcance efetivo da arma e reforça ataques de precisão", max: 3 },
+  const tiposUpgradeFogo = [
+    {
+      chave: "dano",
+      nome: "Dano",
+      icone: "⚔️",
+      descricao: "Aumenta o dano base da arma",
+      max: 5,
+    },
+    {
+      chave: "critico",
+      nome: "Crítico",
+      icone: "💥",
+      descricao: "Reduz a dificuldade de crítico (menos dados necessários)",
+      max: 3,
+    },
+    {
+      chave: "precisao",
+      nome: "Precisão",
+      icone: "🎯",
+      descricao:
+        "Aumenta o bônus de ataque com Percepção e fortalece alcance/control",
+      max: 3,
+    },
+    {
+      chave: "controle",
+      nome: "Controle",
+      icone: "🎚️",
+      descricao: "Melhora o controle de recuo e a estabilidade do disparo",
+      max: 3,
+    },
+    {
+      chave: "velocidade",
+      nome: "Velocidade",
+      icone: "💨",
+      descricao: "Aumenta a capacidade de atingir mais alvos em uma mesma ação",
+      max: 3,
+    },
+    {
+      chave: "alcance",
+      nome: "Alcance",
+      icone: "📏",
+      descricao:
+        "Estende o alcance efetivo da arma e reforça ataques de precisão",
+      max: 3,
+    },
   ];
 
-  const armasAprimoraveis = (personagem.inventario || [])
-    .map((item, index) => ({ item, index }))
-    .filter(({ item }) => {
-      const texto = `${item.nome || ""} ${item.tipo || ""} ${item.categoria || ""}`;
-      return item.armaStatus || /arma|pistola|rifle|fuzil|escopeta|arco/i.test(texto);
-    });
+  const tiposUpgradeCorpo = [
+    {
+      chave: "dadoDano",
+      nome: "Dados de Dano",
+      icone: "⚡",
+      descricao: "Adiciona +1 dado de dano permanente",
+      max: 3,
+    },
+    {
+      chave: "bonusDano",
+      nome: "Bônus de Dano",
+      icone: "⚡",
+      descricao: "Adiciona +2 de dano fixo permanente",
+      max: 3,
+    },
+    {
+      chave: "danoCritico",
+      nome: "Dano Crítico",
+      icone: "💢",
+      descricao: "Aumenta em +1 o número de dados extras do crítico",
+      max: 3,
+    },
+    {
+      chave: "danoCabeca",
+      nome: "Dano na Cabeça",
+      icone: "💀",
+      descricao: "Aumenta o dano máximo na cabeça em +10",
+      max: 3,
+    },
+  ];
 
-  const armaUpgradeAtiva =
-    armasAprimoraveis.find(({ index }) => index === armaUpgradeIndex) ||
-    armasAprimoraveis[0] ||
-    null;
+  const armasAprimoraveis = useMemo(() => {
+    return (personagem.inventario || [])
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => {
+        const texto = `${item.nome || ""} ${item.tipo || ""} ${item.categoria || ""}`;
+        return (
+          item.armaStatus ||
+          /arma|pistola|rifle|fuzil|escopeta|arco/i.test(texto)
+        );
+      });
+  }, [personagem.inventario]);
 
+  const armaUpgradeAtiva = useMemo(() => {
+    return (
+      armasAprimoraveis.find(({ index }) => index === armaUpgradeIndex) ||
+      armasAprimoraveis[0] ||
+      null
+    );
+  }, [armasAprimoraveis, armaUpgradeIndex]);
+
+  const tiposUpgrade = useMemo(() => {
+    if (!armaUpgradeAtiva) return tiposUpgradeFogo;
+    const isCorpo = armaUpgradeAtiva.item.armaStatus?.tipo === "Corpo a Corpo";
+    return isCorpo ? tiposUpgradeCorpo : tiposUpgradeFogo;
+  }, [armaUpgradeAtiva]);
+
+  // =====================
+  // Função: aplicar Modificações na arma selecionada
+  // =====================
+  const aplicarModificacoesNaArmaSelecionada = ({
+    inventarioAtualizado,
+    novosModificacoesArma,
+  }) => {
+    if (!novosModificacoesArma?.length) return true;
+
+    const armaAlvoIndex =
+      armaUpgradeAtiva?.index ?? armasAprimoraveis[0]?.index;
+    const armaAlvo = inventarioAtualizado[armaAlvoIndex];
+
+    if (!armaAlvo) {
+      setMensagem("Selecione uma arma para aplicar modificadores.");
+      return false;
+    }
+
+    // Verifica limite de 3 modificadores
+    const modificacoesAtuais = armaAlvo.modificacoesArma || [];
+    if (modificacoesAtuais.length + novosModificacoesArma.length > 3) {
+      setMensagem("A arma só pode ter até 3 modificadores por vez.");
+      return false;
+    }
+
+    // Aplica os efeitos no armaStatus
+    if (armaAlvo.armaStatus) {
+      novosModificacoesArma.forEach((mod) => {
+        // Pega os efeitos (pode estar em mod.modificacao.efeitos ou diretamente em mod.efeitos)
+        const efeitos = mod.modificacao?.efeitos || mod.efeitos;
+        if (efeitos) {
+          aplicarEfeitosModificador(armaAlvo.armaStatus, efeitos);
+        }
+      });
+    }
+
+    // Adiciona ao histórico da arma
+    armaAlvo.modificacoesArma = [
+      ...modificacoesAtuais,
+      ...novosModificacoesArma,
+    ];
+
+    // Salva no inventário
+    inventarioAtualizado[armaAlvoIndex] = armaAlvo;
+    return true;
+  };
+  // =========================================================
+  // Aplica os efeitos de um modificador no armaStatus
+  // ========================================================
+  const aplicarEfeitosModificador = (armaStatus, efeitos) => {
+    if (!armaStatus || !efeitos) return armaStatus;
+
+    // 1. Bônus de Dano (número fixo ou dado extra)
+    if (efeitos.bonusDano !== undefined && efeitos.bonusDano !== null) {
+      const bonus = efeitos.bonusDano;
+      const danoAtual = interpretarDano(armaStatus.dmg);
+      if (danoAtual) {
+        let novaQtd = danoAtual.quantidade;
+        let novoBonus = danoAtual.bonus || 0;
+        // Se for número, soma ao bônus fixo
+        if (typeof bonus === "number" || !isNaN(parseInt(bonus))) {
+          novoBonus += parseInt(bonus);
+        }
+        // Se for string com 'd' (ex: "1d"), adiciona +1 dado
+        else if (typeof bonus === "string" && bonus.includes("d")) {
+          const extra = interpretarDano(bonus);
+          if (extra) {
+            // Se as faces forem iguais, soma a quantidade
+            if (extra.faces === danoAtual.faces) {
+              novaQtd += extra.quantidade;
+            } else {
+              // Se faces diferentes, concatena (ex: 1d6 + 1d8)
+              armaStatus.dmg = `${armaStatus.dmg} + ${bonus}`;
+              return armaStatus;
+            }
+          }
+        }
+        armaStatus.dmg = `${novaQtd}d${danoAtual.faces}${novoBonus > 0 ? "+" + novoBonus : ""}`;
+      }
+    }
+
+    // 2. Dano Adicional (ex: "1d6")
+    if (efeitos.danoAdicional) {
+      const danoAtual = interpretarDano(armaStatus.dmg);
+      const extra = interpretarDano(efeitos.danoAdicional);
+      if (danoAtual && extra) {
+        if (danoAtual.faces === extra.faces) {
+          const novaQtd = danoAtual.quantidade + extra.quantidade;
+          armaStatus.dmg = `${novaQtd}d${danoAtual.faces}${danoAtual.bonus > 0 ? "+" + danoAtual.bonus : ""}`;
+        } else {
+          armaStatus.dmg = `${armaStatus.dmg} + ${efeitos.danoAdicional}`;
+        }
+      }
+    }
+
+    // 3. Bônus de Teste de Ataque
+    if (efeitos.bonusTesteAtaque) {
+      const valor = parseInt(efeitos.bonusTesteAtaque) || 0;
+      armaStatus.bonusTesteAtaque = (armaStatus.bonusTesteAtaque || 0) + valor;
+
+      // IMPORTANTE: não modificar armaStatus.precision aqui.
+      // O campo "Precision" é do modo Percepção (estat do teste de Ataque a longa distância),
+      // e não deve exibir modificadores genéricos vindos de modificações.
+    }
+
+    // 4. Ignorar Armadura
+    if (efeitos.ignorarArmadura) {
+      armaStatus.ignorarArmadura =
+        (armaStatus.ignorarArmadura || 0) + parseInt(efeitos.ignorarArmadura);
+    }
+
+    // 5. Bônus de Munição (MAG)
+    if (efeitos.bonusMunicao) {
+      armaStatus.mag =
+        (parseInt(armaStatus.mag) || 0) + parseInt(efeitos.bonusMunicao);
+    }
+
+    // 6. Bônus de Dano na Cabeça
+    if (efeitos.danoCabeca) {
+      armaStatus.danoCabeca =
+        (parseInt(armaStatus.danoCabeca) || 0) + parseInt(efeitos.danoCabeca);
+    }
+
+    // 7. Bônus de Furtividade / Desarme / etc (adiciona ao texto do mobility ou cria uma propriedade)
+    if (efeitos.bonusFurtividade) {
+      armaStatus.bonusFurtividade =
+        (armaStatus.bonusFurtividade || 0) + parseInt(efeitos.bonusFurtividade);
+    }
+    if (efeitos.bonusDesarme) {
+      armaStatus.bonusDesarme =
+        (armaStatus.bonusDesarme || 0) + parseInt(efeitos.bonusDesarme);
+    }
+
+    // 8. Modificadores de Alcance/Precisão
+    if (efeitos.bonusLongo || efeitos.penalidadeCurto) {
+      let precision = armaStatus.precision || "";
+      if (efeitos.bonusLongo) precision += ` | Longo +${efeitos.bonusLongo}`;
+      if (efeitos.penalidadeCurto)
+        precision += ` | Curto ${efeitos.penalidadeCurto}`;
+      armaStatus.precision = precision.trim();
+    }
+
+    return armaStatus;
+  };
+
+  // =====================
+  // Finalizar Compra (com Modificadores)
+  // =====================
   const finalizarCompra = () => {
     if (!podeComprar) {
       setMensagem(
@@ -480,10 +729,8 @@ const LojaHelena = () => {
         custo: item.entrega,
         descricao: item.detalhe,
         detalhe: item.detalhe,
-
         nivel: item.nivelRito || "iniciante",
         nivelRito: item.nivelRito || "iniciante",
-
         acao: item.acao || "",
         distancia: item.distancia || "",
         duracao: item.duracao || "",
@@ -500,12 +747,21 @@ const LojaHelena = () => {
         absolutismo: item.entrega,
       }));
 
+    const novosAprimoramentosMaleta = carrinho.filter(
+      (item) => item.categoria === "maleta-campo",
+    );
+
+    const novosModificacoesArma = carrinho.filter(
+      (item) => item.categoria === "modificacoes",
+    );
+
     const novosItens = carrinho
       .filter(
         (item) =>
           item.categoria !== "ritos" &&
           item.categoria !== "poderes" &&
-          item.categoria !== "maleta-campo",
+          item.categoria !== "maleta-campo" &&
+          item.categoria !== "modificacoes",
       )
       .map((item) =>
         item.maletaCampo
@@ -515,11 +771,7 @@ const LojaHelena = () => {
               icone: "🩺",
               detalhes: "Equipamento Médico",
               descricao: item.descricao || item.detalhe,
-              compartimentos: {
-                medicinal: [],
-                combate: [],
-                geral: [],
-              },
+              compartimentos: { medicinal: [], combate: [], geral: [] },
               aprimoramentosAtivos: [],
               personalizado: false,
             }
@@ -530,10 +782,6 @@ const LojaHelena = () => {
             },
       );
 
-    const novosAprimoramentosMaleta = carrinho.filter(
-      (item) => item.categoria === "maleta-campo",
-    );
-
     const aprimoramentosAtuais =
       personagem.maletaCampo?.aprimoramentosAtivos || [];
 
@@ -542,22 +790,31 @@ const LojaHelena = () => {
       return;
     }
 
+    // Inventário base
+    const inventarioAtualizado = [...(personagem.inventario || [])];
+
+    // Aplicar modificadores na arma (usa a arma selecionada no Aprimoramento)
+    if (novosModificacoesArma.length > 0) {
+      const ok = aplicarModificacoesNaArmaSelecionada({
+        inventarioAtualizado,
+        novosModificacoesArma,
+      });
+
+      if (!ok) return;
+    }
+
     const personagemAtualizado = {
       ...personagem,
-
       lojaCreditos: usandoLojaAbsoluto ? saldo : saldo - totalCarrinho,
       ritosCreditos: usandoLojaAbsoluto
         ? saldoMementos - totalCarrinho
         : saldoMementos,
-
       rituais: [...(personagem.rituais || []), ...novosRitos],
       poderesAbsolutos: [
         ...(personagem.poderesAbsolutos || []),
         ...novosPoderes,
       ],
-
-      inventario: [...(personagem.inventario || []), ...novosItens],
-
+      inventario: [...inventarioAtualizado, ...novosItens],
       maletaCampo: {
         ...(personagem.maletaCampo || {}),
         aprimoramentosAtivos: [
@@ -571,6 +828,7 @@ const LojaHelena = () => {
           ),
       },
     };
+
     setPersonagem(personagemAtualizado);
     setCarrinho([]);
 
@@ -584,13 +842,10 @@ const LojaHelena = () => {
       localStorage.setItem(storageKey, JSON.stringify(personagemAtualizado));
     } catch (error) {
       console.warn("LocalStorage cheio. Salvando sem foto.", error);
-
-      const personagemSemFoto = {
-        ...personagemAtualizado,
-        fotoPerfil: "",
-      };
-
-      localStorage.setItem(storageKey, JSON.stringify(personagemSemFoto));
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({ ...personagemAtualizado, fotoPerfil: "" }),
+      );
     }
 
     localStorage.setItem(saldoKey, String(personagemAtualizado.lojaCreditos));
@@ -608,98 +863,136 @@ const LojaHelena = () => {
       });
   };
 
+  // =====================
+  // renderização Aprimoramento + Modificadores
+  // =====================
   const renderizarAprimoramento = () => {
+    const listaModificacoes = catalogo.filter(
+      (item) => item.categoria === "modificacoes",
+    );
+
+    const subCategorias = Array.from(
+      new Set(
+        listaModificacoes
+          .map((m) => String(m.subcategoria || "geral").trim())
+          .filter(Boolean),
+      ),
+    );
+    const subCategoriasFinal = ["todas", ...subCategorias];
+
+    const listaModificacoesFallback = DEFAULT_CATALOGO_LOJA.filter(
+      (item) => item.categoria === "modificacoes",
+    );
+
+    const listaModificacoesEfetiva = listaModificacoes.length
+      ? listaModificacoes
+      : listaModificacoesFallback;
+
+    const armaSelecionada = armaUpgradeAtiva;
+    const isArmaFogo =
+      armaSelecionada?.item?.armaStatus?.tipo !== "Corpo a Corpo";
+    const isArmaCorpo =
+      armaSelecionada?.item?.armaStatus?.tipo === "Corpo a Corpo";
+
+    const listaModificacoesFiltrada = listaModificacoesEfetiva.filter((m) => {
+      // Filtro por subcategoria
+      if (modSubAba !== "todas" && (m.subcategoria || "geral") !== modSubAba) {
+        return false;
+      }
+      // Filtro por tipo de arma
+      const aplicavel = m.aplicavel || "ambos";
+      if (aplicavel === "ambos") return true;
+      if (isArmaCorpo && aplicavel === "arma-corpo") return true;
+      if (isArmaFogo && aplicavel === "arma-fogo") return true;
+      return false;
+    });
+
     return (
       <div className="melhorias-container loja-aprimoramento-container">
-        
-
-        {armasAprimoraveis.length === 0 ? (
-          <div className="melhorias-vazio">
-            <p>Nenhuma arma aprimorável encontrada no inventário.</p>
-            <small>Armas precisam ter <strong>armaStatus</strong> ou conter termos como Pistola, Rifle, Fuzil, Escopeta, Arco no nome.</small>
+        <div
+          className="melhorias-topo"
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>✦ Aprimoramento & Modificadores</span>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              className={`loja-categoria ${modAba === "aplicar" ? "ativa" : ""}`}
+              onClick={() => {
+                setModAba("aplicar");
+                setMensagem("");
+              }}
+            >
+              Aprimorar
+            </button>
+            <button
+              type="button"
+              className={`loja-categoria ${modAba === "estoque" ? "ativa" : ""}`}
+              onClick={() => {
+                setModAba("estoque");
+                setModSubAba("todas");
+                setMensagem("");
+              }}
+            >
+              Comprar Modificadores
+            </button>
           </div>
-        ) : (
+        </div>
+
+        {!armaSelecionada && (
+          <div className="melhorias-vazio" style={{ width: "100%" }}>
+            <p>
+              Selecione uma arma no painel acima para ver os modificadores
+              compatíveis.
+            </p>
+          </div>
+        )}
+
+        {modAba === "aplicar" ? (
           <>
-            <div className="melhorias-lista-armas">
-              <h5>Armas Disponíveis</h5>
-              <div className="melhorias-armas-grid">
-                {armasAprimoraveis.map(({ item, index }) => {
-                  const melhoria = item.melhoriaArma || { nivel: 0 };
-                  const selecionada = armaUpgradeAtiva?.index === index;
-
-                  return (
-                    <button
-                      key={index}
-                      className={`melhoria-arma-card ${selecionada ? "selecionada" : ""}`}
-                      onClick={() => { setArmaUpgradeIndex(index); setMensagem(""); }}
-                    >
-                      <div className="melhoria-arma-icone">
-                        {renderizarIconeItem(item, 1.5)}
-                      </div>
-                      <div className="melhoria-arma-info">
-                        <strong>{item.nome}</strong>
-                        {item.armaStatus && (
-                          <span className="melhoria-arma-dmg">DMG: {item.armaStatus.dmg}</span>
-                        )}
-                        <span className="melhoria-arma-nivel">
-                          Nível: {melhoria.nivel || 0}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
+            {armasAprimoraveis.length === 0 ? (
+              <div className="melhorias-vazio">
+                <p>Nenhuma arma aprimorável encontrada no inventário.</p>
+                <small>
+                  Armas precisam ter <strong>armaStatus</strong> ou conter
+                  termos como Pistola, Rifle, Fuzil, Escopeta, Arco no nome.
+                </small>
               </div>
-            </div>
-
-            {armaUpgradeAtiva && (
-              <div className="melhorias-upgrade-painel">
-                <div className="melhoria-upgrade-topo">
-                  <h5>Aprimorando: {armaUpgradeAtiva.item.nome}</h5>
-                  {armaUpgradeAtiva.item.armaStatus && (
-                    <div className="melhoria-upgrade-stats-atuais">
-                      <span><b>DMG:</b> {armaUpgradeAtiva.item.armaStatus.dmg}</span>
-                      <span><b>ROF:</b> {armaUpgradeAtiva.item.armaStatus.rof}</span>
-                      <span><b>MAG:</b> {armaUpgradeAtiva.item.armaStatus.mag}</span>
-                      <span><b>Crítico:</b> {armaUpgradeAtiva.item.armaStatus.critico}</span>
-                      <span><b>Precisão:</b> {armaUpgradeAtiva.item.armaStatus.precision}</span>
-                      <span><b>Controle:</b> {armaUpgradeAtiva.item.armaStatus.control}</span>
-                    </div>
-                  )}
-                  <div className="melhoria-upgrade-nivel-info">
-                    Nível atual da arma: <strong>{armaUpgradeAtiva.item.melhoriaArma?.nivel || 0}</strong>
-                  </div>
-                </div>
-
-                <div className="melhoria-upgrade-tipos">
-                  <span className="melhoria-upgrade-tipos-label">Selecione o tipo de melhoria:</span>
-                  <div className="melhoria-upgrade-tipos-grid">
-                    {tiposUpgrade.map((tipo) => {
-                      const melhoriaAtual = armaUpgradeAtiva.item.melhoriaArma || {};
-                      const valorAtual = parseInt(melhoriaAtual[tipo.chave], 10) || 0;
-                      const noMaximo = valorAtual >= tipo.max;
-                      const selecionado = armaUpgradeTipo === tipo.chave;
+            ) : (
+              <>
+                <div className="melhorias-lista-armas">
+                  <h5>Armas Disponíveis</h5>
+                  <div className="melhorias-armas-grid">
+                    {armasAprimoraveis.map(({ item, index }) => {
+                      const melhoria = item.melhoriaArma || { nivel: 0 };
+                      const selecionada = armaUpgradeAtiva?.index === index;
 
                       return (
                         <button
-                          key={tipo.chave}
-                          className={`melhoria-tipo-card ${selecionado ? "selecionado" : ""} ${noMaximo ? "maximizado" : ""}`}
-                          onClick={() => !noMaximo && setArmaUpgradeTipo(tipo.chave)}
-                          disabled={noMaximo}
+                          key={index}
+                          className={`melhoria-arma-card ${selecionada ? "selecionada" : ""}`}
+                          onClick={() => {
+                            setArmaUpgradeIndex(index);
+                            setMensagem("");
+                          }}
                         >
-                          <span className="melhoria-tipo-icone">{tipo.icone}</span>
-                          <div className="melhoria-tipo-info">
-                            <strong>{tipo.nome}</strong>
-                            <small>{tipo.descricao}</small>
-                            <span className="melhoria-tipo-nivel">
-                              Nível: {valorAtual}/{tipo.max}
-                              {noMaximo && " ✅"}
-                            </span>
+                          <div className="melhoria-arma-icone">
+                            {renderizarIconeItem(item, 1.5)}
                           </div>
-                          <div className="melhoria-tipo-bar">
-                            <div
-                              className="melhoria-tipo-bar-fill"
-                              style={{ width: `${(valorAtual / tipo.max) * 100}%` }}
-                            />
+                          <div className="melhoria-arma-info">
+                            <strong>{item.nome}</strong>
+                            {item.armaStatus && (
+                              <span className="melhoria-arma-dmg">
+                                DMG: {item.armaStatus.dmg}
+                              </span>
+                            )}
+                            <span className="melhoria-arma-nivel">
+                              Nível: {melhoria.nivel || 0}
+                            </span>
                           </div>
                         </button>
                       );
@@ -707,124 +1000,443 @@ const LojaHelena = () => {
                   </div>
                 </div>
 
-                <div className="melhoria-upgrade-recursos">
-                  <span>Custo em créditos para {tiposUpgrade.find(t => t.chave === armaUpgradeTipo)?.nome}:</span>
-                  {(() => {
-                    const melhoriaAtual = armaUpgradeAtiva.item.melhoriaArma || {};
-                    const valorAtual = parseInt(melhoriaAtual[armaUpgradeTipo], 10) || 0;
-                    const custoCreditos = 100 + (valorAtual * 50);
-                    const podePagar = saldo >= custoCreditos;
-                    return (
-                      <div className="melhoria-recursos-lista">
-                        <span className={`recurso-chip ${podePagar ? "disponivel" : "insuficiente"}`}>
-                          💰 {custoCreditos} cr
-                        </span>
+                {armaUpgradeAtiva && (
+                  <div className="melhorias-upgrade-painel">
+                    <div className="melhoria-upgrade-topo">
+                      <h5>Aprimorando: {armaUpgradeAtiva.item.nome}</h5>
+                      {armaUpgradeAtiva.item.armaStatus && (
+                        <div className="melhoria-upgrade-stats-atuais">
+                          <span>
+                            <b>DMG:</b> {armaUpgradeAtiva.item.armaStatus.dmg}
+                          </span>
+                          <span>
+                            <b>ROF:</b> {armaUpgradeAtiva.item.armaStatus.rof}
+                          </span>
+                          <span>
+                            <b>MAG:</b> {armaUpgradeAtiva.item.armaStatus.mag}
+                          </span>
+                          <span>
+                            <b>Crítico:</b>{" "}
+                            {armaUpgradeAtiva.item.armaStatus.critico}
+                          </span>
+                          <span>
+                            <b>Precisão:</b>{" "}
+                            {armaUpgradeAtiva.item.armaStatus.precision}
+                          </span>
+                          <span>
+                            <b>Controle:</b>{" "}
+                            {armaUpgradeAtiva.item.armaStatus.control}
+                          </span>
+                        </div>
+                      )}
+                      <div className="melhoria-upgrade-nivel-info">
+                        Nível atual da arma:{" "}
+                        <strong>
+                          {armaUpgradeAtiva.item.melhoriaArma?.nivel || 0}
+                        </strong>
                       </div>
-                    );
-                  })()}
+                    </div>
+
+                    <div className="melhoria-upgrade-tipos">
+                      <span className="melhoria-upgrade-tipos-label">
+                        Selecione o tipo de melhoria:
+                      </span>
+                      <div className="melhoria-upgrade-tipos-grid">
+                        {tiposUpgrade.map((tipo) => {
+                          const melhoriaAtual =
+                            armaUpgradeAtiva.item.melhoriaArma || {};
+                          const valorAtual =
+                            parseInt(melhoriaAtual[tipo.chave], 10) || 0;
+                          const noMaximo = valorAtual >= tipo.max;
+                          const selecionado = armaUpgradeTipo === tipo.chave;
+
+                          return (
+                            <button
+                              key={tipo.chave}
+                              className={`melhoria-tipo-card ${selecionado ? "selecionado" : ""} ${noMaximo ? "maximizado" : ""}`}
+                              onClick={() =>
+                                !noMaximo && setArmaUpgradeTipo(tipo.chave)
+                              }
+                              disabled={noMaximo}
+                            >
+                              <span className="melhoria-tipo-icone">
+                                {tipo.icone}
+                              </span>
+                              <div className="melhoria-tipo-info">
+                                <strong>{tipo.nome}</strong>
+                                <small>{tipo.descricao}</small>
+                                <span className="melhoria-tipo-nivel">
+                                  Nível: {valorAtual}/{tipo.max}
+                                  {noMaximo ? " ✅" : ""}
+                                </span>
+                              </div>
+                              <div className="melhoria-tipo-bar">
+                                <div
+                                  className="melhoria-tipo-bar-fill"
+                                  style={{
+                                    width: `${(valorAtual / tipo.max) * 100}%`,
+                                  }}
+                                />
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="melhoria-upgrade-recursos">
+                      <span>
+                        Custo em créditos para{" "}
+                        {
+                          tiposUpgrade.find((t) => t.chave === armaUpgradeTipo)
+                            ?.nome
+                        }
+                        :
+                      </span>
+                      {(() => {
+                        const melhoriaAtual =
+                          armaUpgradeAtiva.item.melhoriaArma || {};
+                        const valorAtual =
+                          parseInt(melhoriaAtual[armaUpgradeTipo], 10) || 0;
+                        const custoCreditos = 100 + valorAtual * 50;
+                        const podePagar = saldo >= custoCreditos;
+                        return (
+                          <div className="melhoria-recursos-lista">
+                            <span
+                              className={`recurso-chip ${podePagar ? "disponivel" : "insuficiente"}`}
+                            >
+                              💰 {custoCreditos} cr
+                            </span>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    <button
+                      className="melhoria-upgrade-btn aprimoramento-creditos-btn"
+                      onClick={() => {
+                        if (!armaUpgradeAtiva) {
+                          setMensagem("Selecione uma arma para aprimorar.");
+                          return;
+                        }
+                        const tipoInfo = tiposUpgrade.find(
+                          (t) => t.chave === armaUpgradeTipo,
+                        );
+                        if (!tipoInfo) return;
+
+                        const melhoriaAtual =
+                          armaUpgradeAtiva.item.melhoriaArma || {};
+                        const valorAtual =
+                          parseInt(melhoriaAtual[armaUpgradeTipo], 10) || 0;
+
+                        if (valorAtual >= tipoInfo.max) {
+                          setMensagem(
+                            `${tipoInfo.nome} já está no nível máximo!`,
+                          );
+                          return;
+                        }
+
+                        const custoCreditos = 100 + valorAtual * 50;
+                        if (saldo < custoCreditos) {
+                          setMensagem(
+                            `Créditos insuficientes! Precisa de ${custoCreditos} cr.`,
+                          );
+                          return;
+                        }
+
+                        setPersonagem((prev) => {
+                          const inventario = [...(prev.inventario || [])];
+                          const arma = inventario[armaUpgradeAtiva.index];
+                          if (!arma) return prev;
+
+                          const melhoriaAtualArma = arma.melhoriaArma || {};
+                          const nivelAtual =
+                            parseInt(melhoriaAtualArma.nivel, 10) || 0;
+
+                          const armaStatus = arma.armaStatus
+                            ? { ...arma.armaStatus }
+                            : null;
+                          if (armaStatus) {
+                            switch (armaUpgradeTipo) {
+                              case "dano": {
+                                const danoAtual = interpretarDano(
+                                  armaStatus.dmg,
+                                );
+                                if (danoAtual) {
+                                  const novaQtd = Math.min(
+                                    danoAtual.quantidade + 1,
+                                    12,
+                                  );
+                                  armaStatus.dmg = `${novaQtd}d${danoAtual.faces}${danoAtual.bonus ? `${danoAtual.bonus > 0 ? "+" : ""}${danoAtual.bonus}` : ""}`;
+                                }
+                                break;
+                              }
+                              case "critico":
+                                armaStatus.critico = reduzirCritico(
+                                  armaStatus.critico,
+                                );
+                                break;
+                              case "precisao":
+                                armaStatus.precision = incrementarPrecisao(
+                                  armaStatus.precision,
+                                );
+                                break;
+                              case "controle":
+                                armaStatus.control = incrementarControle(
+                                  armaStatus.control,
+                                );
+                                break;
+                              case "velocidade":
+                                armaStatus.mobility = incrementarMobilidade(
+                                  armaStatus.mobility,
+                                );
+                                break;
+                              case "alcance":
+                                armaStatus.precision = aumentarAlcance(
+                                  armaStatus.precision,
+                                );
+                                break;
+                              case "dadoDano": {
+                                const danoAtual = interpretarDano(
+                                  armaStatus.dmg,
+                                );
+                                if (danoAtual) {
+                                  const novaQtd = Math.min(
+                                    danoAtual.quantidade + 1,
+                                    12,
+                                  );
+                                  armaStatus.dmg = `${novaQtd}d${danoAtual.faces}${danoAtual.bonus ? (danoAtual.bonus > 0 ? "+" : "") + danoAtual.bonus : ""}`;
+                                }
+                                break;
+                              }
+                              case "bonusDano": {
+                                const danoAtual = interpretarDano(
+                                  armaStatus.dmg,
+                                );
+                                if (danoAtual) {
+                                  const novoBonus = (danoAtual.bonus || 0) + 2;
+                                  armaStatus.dmg = `${danoAtual.quantidade}d${danoAtual.faces}${novoBonus > 0 ? "+" + novoBonus : ""}`;
+                                }
+                                break;
+                              }
+                              case "danoCritico": {
+                                const criticoMatch =
+                                  armaStatus.critico.match(/(\d+)x(\d+)/i);
+                                if (criticoMatch) {
+                                  const qtd = parseInt(criticoMatch[1], 10) + 1;
+                                  armaStatus.critico = `${qtd}x${criticoMatch[2]}`;
+                                }
+                                break;
+                              }
+                              case "danoCabeca":
+                                armaStatus.danoCabeca =
+                                  (parseInt(armaStatus.danoCabeca, 10) || 0) +
+                                  10;
+                                break;
+                              default:
+                                break;
+                            }
+                          }
+
+                          inventario[armaUpgradeAtiva.index] = {
+                            ...arma,
+                            ...(armaStatus ? { armaStatus } : {}),
+                            melhoriaArma: {
+                              ...melhoriaAtualArma,
+                              nivel: nivelAtual + 1,
+                              [armaUpgradeTipo]: valorAtual + 1,
+                            },
+                          };
+
+                          const personagemAtualizado = {
+                            ...prev,
+                            inventario,
+                            lojaCreditos:
+                              (prev.lojaCreditos || 0) - custoCreditos,
+                          };
+
+                          localStorage.setItem(
+                            storageKey,
+                            JSON.stringify(personagemAtualizado),
+                          );
+                          localStorage.setItem(
+                            saldoKey,
+                            String(personagemAtualizado.lojaCreditos),
+                          );
+                          notificarPersonagemAtualizado(
+                            fichaId,
+                            personagemAtualizado,
+                          );
+                          salvarPersonagem(fichaId, personagemAtualizado).catch(
+                            () => {},
+                          );
+
+                          return personagemAtualizado;
+                        });
+
+                        setMensagem(
+                          `${armaUpgradeAtiva.item.nome} — ${tipoInfo.nome} melhorado por ${custoCreditos} cr!`,
+                        );
+                        setTimeout(() => setMensagem(""), 3000);
+                      }}
+                      disabled={(() => {
+                        if (!armaUpgradeAtiva) return true;
+                        const melhoriaAtual =
+                          armaUpgradeAtiva.item.melhoriaArma || {};
+                        const valorAtual =
+                          parseInt(melhoriaAtual[armaUpgradeTipo], 10) || 0;
+                        const custoCreditos = 100 + valorAtual * 50;
+                        const noMaximo =
+                          valorAtual >=
+                          (tiposUpgrade.find((t) => t.chave === armaUpgradeTipo)
+                            ?.max || 5);
+                        return saldo < custoCreditos || noMaximo;
+                      })()}
+                    >
+                      ✦ Aprimorar{" "}
+                      {
+                        tiposUpgrade.find((t) => t.chave === armaUpgradeTipo)
+                          ?.nome
+                      }
+                    </button>
+
+                    {mensagem && (
+                      <div
+                        className="craft-mensagem"
+                        style={{ marginTop: "12px" }}
+                      >
+                        {mensagem}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            {modAba === "estoque" && (
+              <>
+                <div className="melhorias-lista-armas">
+                  <h5>Selecione a arma para receber os modificadores</h5>
+                  <div className="melhorias-armas-grid">
+                    {armasAprimoraveis.map(({ item, index }) => {
+                      const melhoria = item.melhoriaArma || { nivel: 0 };
+                      const selecionada = armaUpgradeAtiva?.index === index;
+
+                      return (
+                        <button
+                          key={index}
+                          className={`melhoria-arma-card ${selecionada ? "selecionada" : ""}`}
+                          onClick={() => {
+                            setArmaUpgradeIndex(index);
+                            setMensagem("");
+                          }}
+                        >
+                          <div className="melhoria-arma-icone">
+                            {renderizarIconeItem(item, 1.5)}
+                          </div>
+                          <div className="melhoria-arma-info">
+                            <strong>{item.nome}</strong>
+                            {item.armaStatus && (
+                              <span className="melhoria-arma-dmg">
+                                DMG: {item.armaStatus.dmg}
+                              </span>
+                            )}
+                            <span className="melhoria-arma-nivel">
+                              Nível: {melhoria.nivel || 0}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {!armaUpgradeAtiva && (
+                    <div className="melhorias-vazio" style={{ marginTop: 12 }}>
+                      <p>Selecione uma arma para aplicar os modificadores.</p>
+                    </div>
+                  )}
                 </div>
 
-                <button
-                  className="melhoria-upgrade-btn aprimoramento-creditos-btn"
-                  onClick={() => {
-                    if (!armaUpgradeAtiva) {
-                      setMensagem("Selecione uma arma para aprimorar.");
-                      return;
-                    }
-                    const tipoInfo = tiposUpgrade.find((t) => t.chave === armaUpgradeTipo);
-                    if (!tipoInfo) return;
-
-                    const melhoriaAtual = armaUpgradeAtiva.item.melhoriaArma || {};
-                    const valorAtual = parseInt(melhoriaAtual[armaUpgradeTipo], 10) || 0;
-
-                    if (valorAtual >= tipoInfo.max) {
-                      setMensagem(`${tipoInfo.nome} já está no nível máximo!`);
-                      return;
-                    }
-
-                    const custoCreditos = 100 + (valorAtual * 50);
-                    if (saldo < custoCreditos) {
-                      setMensagem(`Créditos insuficientes! Precisa de ${custoCreditos} cr.`);
-                      return;
-                    }
-
-                    setPersonagem((prev) => {
-                      const inventario = [...(prev.inventario || [])];
-                      const arma = inventario[armaUpgradeAtiva.index];
-                      if (!arma) return prev;
-
-                      const melhoriaAtualArma = arma.melhoriaArma || {};
-                      const nivelAtual = parseInt(melhoriaAtualArma.nivel, 10) || 0;
-
-                      const armaStatus = arma.armaStatus ? { ...arma.armaStatus } : null;
-                      if (armaStatus) {
-                        switch (armaUpgradeTipo) {
-                          case "dano": {
-                            const danoAtual = interpretarDano(armaStatus.dmg);
-                            if (danoAtual) {
-                              const novaQtd = Math.min(danoAtual.quantidade + 1, 12);
-                              armaStatus.dmg = `${novaQtd}d${danoAtual.faces}${danoAtual.bonus ? `${danoAtual.bonus > 0 ? "+" : ""}${danoAtual.bonus}` : ""}`;
-                            }
-                            break;
-                          }
-                          case "critico": armaStatus.critico = reduzirCritico(armaStatus.critico); break;
-                          case "precisao": armaStatus.precision = incrementarPrecisao(armaStatus.precision); break;
-                          case "controle": armaStatus.control = incrementarControle(armaStatus.control); break;
-                          case "velocidade": armaStatus.mobility = incrementarMobilidade(armaStatus.mobility); break;
-                          case "alcance": armaStatus.precision = aumentarAlcance(armaStatus.precision); break;
-                        }
-                      }
-
-                      inventario[armaUpgradeAtiva.index] = {
-                        ...arma,
-                        ...(armaStatus ? { armaStatus } : {}),
-                        melhoriaArma: {
-                          ...melhoriaAtualArma,
-                          nivel: nivelAtual + 1,
-                          [armaUpgradeTipo]: valorAtual + 1,
-                        },
-                      };
-
-                      const personagemAtualizado = {
-                        ...prev,
-                        inventario,
-                        lojaCreditos: (prev.lojaCreditos || 0) - custoCreditos,
-                      };
-
-                      localStorage.setItem(storageKey, JSON.stringify(personagemAtualizado));
-                      localStorage.setItem(saldoKey, String(personagemAtualizado.lojaCreditos));
-                      notificarPersonagemAtualizado(fichaId, personagemAtualizado);
-                      salvarPersonagem(fichaId, personagemAtualizado).catch(() => {});
-
-                      return personagemAtualizado;
-                    });
-
-                    setMensagem(`${armaUpgradeAtiva.item.nome} — ${tipoInfo.nome} melhorado por ${custoCreditos} cr!`);
-                    setTimeout(() => setMensagem(""), 3000);
-                  }}
-                  disabled={
-                    (() => {
-                      if (!armaUpgradeAtiva) return true;
-                      const melhoriaAtual = armaUpgradeAtiva.item.melhoriaArma || {};
-                      const valorAtual = parseInt(melhoriaAtual[armaUpgradeTipo], 10) || 0;
-                      const custoCreditos = 100 + (valorAtual * 50);
-                      const noMaximo = valorAtual >= (tiposUpgrade.find(t => t.chave === armaUpgradeTipo)?.max || 5);
-                      return saldo < custoCreditos || noMaximo;
-                    })()
-                  }
+                <div
+                  className="melhorias-lista-armas"
+                  style={{ marginBottom: 18 }}
                 >
-                  ✦ Aprimorar {tiposUpgrade.find(t => t.chave === armaUpgradeTipo)?.nome}
-                </button>
+                  <h5>Comprar Modificadores</h5>
+                  <div
+                    style={{
+                      color: "#aaa294",
+                      fontSize: "0.82rem",
+                      lineHeight: 1.45,
+                      marginTop: 6,
+                    }}
+                  >
+                    Os modificadores serão aplicados na arma selecionada acima.
+                    Máximo de 3 por arma.
+                  </div>
+                </div>
 
-                {mensagem && (
-                  <div className="craft-mensagem" style={{marginTop: "12px"}}>{mensagem}</div>
-                )}
-              </div>
+                <div
+                  className="melhoria-upgrade-tipos-grid"
+                  style={{ display: "flex", gap: 10, flexWrap: "wrap" }}
+                >
+                  {listaModificacoesFiltrada.length === 0 ? (
+                    <div className="melhorias-vazio" style={{ width: "100%" }}>
+                      <p>Nenhum modificador nesta subcategoria.</p>
+                    </div>
+                  ) : (
+                    listaModificacoesFiltrada.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        className="melhoria-tipo-card"
+                        onClick={() => {
+                          if (!armaUpgradeAtiva) {
+                            setMensagem(
+                              "Selecione uma arma antes de comprar modificadores.",
+                            );
+                            return;
+                          }
+                          adicionarAoCarrinho(m);
+                        }}
+                        style={{ width: 220 }}
+                      >
+                        <span className="melhoria-tipo-icone">
+                          {renderizarIconeItem(m, 1.1)}
+                        </span>
+                        <div className="melhoria-tipo-info">
+                          <strong>{m.nome}</strong>
+                          <small>
+                            {m.subcategoria ? `${m.subcategoria}` : m.categoria}
+                          </small>
+                          <span className="melhoria-tipo-nivel">
+                            {formatarPreco(m)}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 6,
+                            color: "#aaa294",
+                            fontSize: "0.72rem",
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {m.detalhe}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </>
             )}
           </>
         )}
       </div>
     );
+  };
+
+  const renderizarCarrinhoResumo = () => {
+    return null;
   };
 
   return (
@@ -882,13 +1494,16 @@ const LojaHelena = () => {
           {categorias.map((categoria) => (
             <button
               key={categoria.id}
-              className={`loja-categoria ${
-                categoriaAtiva === categoria.id ? "ativa" : ""
-              }`}
+              className={`loja-categoria ${categoriaAtiva === categoria.id ? "ativa" : ""}`}
               onClick={() => {
                 setCategoriaAtiva(categoria.id);
                 setCarrinho([]);
                 setMensagem("");
+
+                if (categoria.id === "modificadores") {
+                  setModAba("estoque");
+                  setCategoriaAtiva("aprimoramento");
+                }
               }}
             >
               <Icon path={categoria.icon} size={0.8} />
@@ -905,21 +1520,18 @@ const LojaHelena = () => {
             >
               I — Iniciante
             </button>
-
             <button
               className={nivelRitoAtivo === "intermediario" ? "ativa" : ""}
               onClick={() => setNivelRitoAtivo("intermediario")}
             >
               II — Intermediário
             </button>
-
             <button
               className={nivelRitoAtivo === "avancado" ? "ativa" : ""}
               onClick={() => setNivelRitoAtivo("avancado")}
             >
               III — Avançado
             </button>
-
             <button
               className={nivelRitoAtivo === "experiente" ? "ativa" : ""}
               onClick={() => setNivelRitoAtivo("experiente")}
@@ -937,14 +1549,12 @@ const LojaHelena = () => {
             >
               Medicina
             </button>
-
             <button
               className={subAbaMaleta === "combate" ? "ativa" : ""}
               onClick={() => setSubAbaMaleta("combate")}
             >
               Combate
             </button>
-
             <button
               className={subAbaMaleta === "geral" ? "ativa" : ""}
               onClick={() => setSubAbaMaleta("geral")}
@@ -956,92 +1566,95 @@ const LojaHelena = () => {
 
         <div className="loja-layout">
           <div className="loja-catalogo">
-            {categoriaAtiva === "aprimoramento" ? (
-              renderizarAprimoramento()
-            ) : (
-              itensFiltrados.map((item) => (
-                <article
-                  key={item.id}
-                  className={`loja-item ${item.armaStatus ? "loja-arma" : ""}`}
-                >
-                  <div>
-                    <div className="loja-item-topo">
-                      <div className="loja-item-icone" aria-hidden="true">
-                        {renderizarIconeItem(item, 1.8)}{" "}
+            {categoriaAtiva === "aprimoramento"
+              ? renderizarAprimoramento()
+              : itensFiltrados.map((item) => (
+                  <article
+                    key={item.id}
+                    className={`loja-item ${item.armaStatus ? "loja-arma" : ""}`}
+                  >
+                    <div>
+                      <div className="loja-item-topo">
+                        <div className="loja-item-icone" aria-hidden="true">
+                          {renderizarIconeItem(item, 1.8)}{" "}
+                        </div>
+
+                        <span className={`loja-item-tipo ${item.categoria}`}>
+                          {item.armaStatus?.tipo || item.categoria}
+                        </span>
                       </div>
 
-                      <span className={`loja-item-tipo ${item.categoria}`}>
-                        {item.armaStatus?.tipo || item.categoria}
-                      </span>
+                      <h2>{item.nome}</h2>
+                      <p>{item.detalhe}</p>
+
+                      {item.armaStatus && (
+                        <div className="arma-status-card">
+                          <div className="arma-status-principais">
+                            <div>
+                              <span>DMG</span>
+                              <strong>{item.armaStatus.dmg}</strong>
+                            </div>
+                            {item.armaStatus.tipo !== "Corpo a Corpo" && (
+                              <>
+                                <div>
+                                  <span>ROF</span>
+                                  <strong>{item.armaStatus.rof}</strong>
+                                </div>
+                                <div>
+                                  <span>MAG</span>
+                                  <strong>{item.armaStatus.mag}</strong>
+                                </div>
+                              </>
+                            )}
+                          </div>
+
+                          {item.armaStatus.tipo !== "Corpo a Corpo" && (
+                            <div className="arma-status-modos">
+                              <div>
+                                <span>HIPFIRE</span>
+                                <strong>{item.armaStatus.hipfire}</strong>
+                              </div>
+                              <div>
+                                <span>PRECISION</span>
+                                <strong>{item.armaStatus.precision}</strong>
+                              </div>
+                              <div>
+                                <span>CONTROL</span>
+                                <strong>{item.armaStatus.control}</strong>
+                              </div>
+                              <div>
+                                <span>MOBILITY</span>
+                                <strong>{item.armaStatus.mobility}</strong>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="arma-status-extra">
+                            {item.armaStatus.tipo !== "Corpo a Corpo" && (
+                              <>
+                                <span>
+                                  Disparos:{" "}
+                                  {item.armaStatus.disparosSemDesvantagem}
+                                </span>
+                                <span>Recarga: {item.armaStatus.recarga}</span>
+                              </>
+                            )}
+                            <span>Crítico: {item.armaStatus.critico}</span>
+                            <span>Cabeça: {item.armaStatus.danoCabeca}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    <h2>{item.nome}</h2>
-                    <p>{item.detalhe}</p>
-
-                    {item.armaStatus && (
-                      <div className="arma-status-card">
-                        <div className="arma-status-principais">
-                          <div>
-                            <span>DMG</span>
-                            <strong>{item.armaStatus.dmg}</strong>
-                          </div>
-
-                          <div>
-                            <span>ROF</span>
-                            <strong>{item.armaStatus.rof}</strong>
-                          </div>
-
-                          <div>
-                            <span>MAG</span>
-                            <strong>{item.armaStatus.mag}</strong>
-                          </div>
-                        </div>
-
-                        <div className="arma-status-modos">
-                          <div>
-                            <span>HIPFIRE</span>
-                            <strong>{item.armaStatus.hipfire}</strong>
-                          </div>
-
-                          <div>
-                            <span>PRECISION</span>
-                            <strong>{item.armaStatus.precision}</strong>
-                          </div>
-
-                          <div>
-                            <span>CONTROL</span>
-                            <strong>{item.armaStatus.control}</strong>
-                          </div>
-
-                          <div>
-                            <span>MOBILITY</span>
-                            <strong>{item.armaStatus.mobility}</strong>
-                          </div>
-                        </div>
-
-                        <div className="arma-status-extra">
-                          <span>
-                            Disparos: {item.armaStatus.disparosSemDesvantagem}
-                          </span>
-                          <span>Recarga: {item.armaStatus.recarga}</span>
-                          <span>Crítico: {item.armaStatus.critico}</span>
-                          <span>Cabeça: {item.armaStatus.danoCabeca}</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="loja-item-footer">
-                    <span className="loja-preco">{formatarPreco(item)}</span>
-
-                    <button onClick={() => adicionarAoCarrinho(item)}>
-                      <Icon path={mdiCart} size={0.75} />
-                      Comprar
-                    </button>
-                  </div>
-                </article>
-              ))
-            )}
+                    <div className="loja-item-footer">
+                      <span className="loja-preco">{formatarPreco(item)}</span>
+                      <button onClick={() => adicionarAoCarrinho(item)}>
+                        <Icon path={mdiCart} size={0.75} />
+                        Comprar
+                      </button>
+                    </div>
+                  </article>
+                ))}
           </div>
 
           <aside className="loja-carrinho" aria-label="Carrinho">
@@ -1054,7 +1667,6 @@ const LojaHelena = () => {
                     : `${saldo} cr`}
                 </strong>
               </div>
-
               <Icon path={mdiCart} size={1.2} />
             </div>
 

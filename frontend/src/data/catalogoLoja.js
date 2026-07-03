@@ -1,6 +1,8 @@
 import { CATALOGO_COMBATE } from "./Catalogo/combate";
 import { CATALOGO_RITOS_ABSOLUTOS } from "./Catalogo/ritosAbsolutos";
 import { CATALOGO_PODERES_ABSOLUTOS } from "./Catalogo/poderesAbsolutos";
+import { MODIFICACOES } from "./Catalogo/modificacoes";
+
 
 export const CATEGORIAS_LOJA = [
   { id: "armas-fogo", nome: "Armas de Fogo" },
@@ -16,7 +18,9 @@ export const DEFAULT_CATALOGO_LOJA = [
   ...CATALOGO_COMBATE,
   ...CATALOGO_RITOS_ABSOLUTOS,
   ...CATALOGO_PODERES_ABSOLUTOS,
+  ...MODIFICACOES,
 ];
+
 
 export const normalizarItemLoja = (item, index = 0) => {
   const nome = String(item?.nome || "").trim();

@@ -128,7 +128,7 @@ export const CATALOGO_COMBATE = [
     },
   },
 
-  /* =========================================================
+   /* =========================================================
    ARMAS CORPO A CORPO
    ========================================================= */
 
@@ -139,6 +139,12 @@ export const CATALOGO_COMBATE = [
     preco: 120,
     detalhe: "Ferramenta pesada adaptada para combate brutal.",
     entrega: "Dano: FOR + 4 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d8+4",
+      critico: "1x8",
+      danoCabeca: 40,
+    },
   },
 
   {
@@ -148,6 +154,12 @@ export const CATALOGO_COMBATE = [
     preco: 90,
     detalhe: "Lâmina curta, discreta e fácil de ocultar.",
     entrega: "Dano: FOR + 2 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d4+2",
+      critico: "1x4",
+      danoCabeca: 25,
+    },
   },
 
   {
@@ -157,6 +169,12 @@ export const CATALOGO_COMBATE = [
     preco: 75,
     detalhe: "Arma simples para ampliar o impacto dos golpes.",
     entrega: "Dano: 2x FOR ou DES | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d6",
+      critico: "1x6",
+      danoCabeca: 30,
+    },
   },
 
   {
@@ -166,6 +184,12 @@ export const CATALOGO_COMBATE = [
     preco: 85,
     detalhe: "Bastão curto usado para contenção e pancadas rápidas.",
     entrega: "Dano: FOR + 1 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d6+1",
+      critico: "1x6",
+      danoCabeca: 30,
+    },
   },
 
   {
@@ -175,6 +199,12 @@ export const CATALOGO_COMBATE = [
     preco: 110,
     detalhe: "Arma flexível para golpes rápidos e intimidação.",
     entrega: "Dano: FOR + 2 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d4+2",
+      critico: "1x4",
+      danoCabeca: 25,
+    },
   },
 
   {
@@ -184,6 +214,12 @@ export const CATALOGO_COMBATE = [
     preco: 190,
     detalhe: "Florete afiado, veloz e preciso.",
     entrega: "Dano: FOR ou DES + 2 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d8+2",
+      critico: "1x8",
+      danoCabeca: 35,
+    },
   },
 
   {
@@ -193,6 +229,12 @@ export const CATALOGO_COMBATE = [
     preco: 260,
     detalhe: "Rapieira ou florete pesado, equilibrada entre alcance e dano.",
     entrega: "Dano: FOR ou DES + 3 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d10+3",
+      critico: "1x10",
+      danoCabeca: 45,
+    },
   },
 
   {
@@ -202,6 +244,12 @@ export const CATALOGO_COMBATE = [
     preco: 340,
     detalhe: "Sabre de cavalaria pesado, feito para cortes devastadores.",
     entrega: "Dano: FOR + 5 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d12+5",
+      critico: "1x12",
+      danoCabeca: 55,
+    },
   },
 
   {
@@ -211,6 +259,12 @@ export const CATALOGO_COMBATE = [
     preco: 60,
     detalhe: "Canivete ou lâmina pequena de uso rápido.",
     entrega: "Dano: FOR + 2 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d4+2",
+      critico: "1x4",
+      danoCabeca: 25,
+    },
   },
 
   {
@@ -220,6 +274,12 @@ export const CATALOGO_COMBATE = [
     preco: 80,
     detalhe: "Faca de cozinha ou lâmina média improvisada.",
     entrega: "Dano: FOR + 3 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d6+3",
+      critico: "1x6",
+      danoCabeca: 32,
+    },
   },
 
   {
@@ -229,6 +289,12 @@ export const CATALOGO_COMBATE = [
     preco: 130,
     detalhe: "Facão ou lâmina grande de corte pesado.",
     entrega: "Dano: FOR + 4 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d8+4",
+      critico: "1x8",
+      danoCabeca: 40,
+    },
   },
 
   {
@@ -238,6 +304,12 @@ export const CATALOGO_COMBATE = [
     preco: 210,
     detalhe: "Lança de cavalaria adaptada para investidas e perfuração.",
     entrega: "Dano: FOR + 4 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d10+4",
+      critico: "1x10",
+      danoCabeca: 45,
+    },
   },
 
   {
@@ -247,6 +319,12 @@ export const CATALOGO_COMBATE = [
     preco: 230,
     detalhe: "Machado pesado, lento e destrutivo.",
     entrega: "Dano: FOR + 4 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d12+4",
+      critico: "1x12",
+      danoCabeca: 55,
+    },
   },
 
   {
@@ -256,6 +334,12 @@ export const CATALOGO_COMBATE = [
     preco: 150,
     detalhe: "Arma flexível para golpes rápidos e sequenciais.",
     entrega: "Dano: FOR + 1 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d6+1",
+      critico: "1x6",
+      danoCabeca: 30,
+    },
   },
 
   {
@@ -265,6 +349,12 @@ export const CATALOGO_COMBATE = [
     preco: 180,
     detalhe: "Dispositivo elétrico de curta distância com 3 cargas.",
     entrega: "Dano: 1d6 + 4 | Alcance: Curto | 3 cargas",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d6+4",
+      critico: "1x6",
+      danoCabeca: 30,
+    },
   },
 
   {
@@ -274,6 +364,12 @@ export const CATALOGO_COMBATE = [
     preco: 420,
     detalhe: "Lâmina longa extremamente afiada para cortes precisos.",
     entrega: "Dano: FOR ou DES + 5 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "2d6+5",
+      critico: "2x6",
+      danoCabeca: 65,
+    },
   },
 
   {
@@ -283,6 +379,12 @@ export const CATALOGO_COMBATE = [
     preco: 160,
     detalhe: "Corrente pesada usada para prender e esmagar.",
     entrega: "Dano: FOR + 2 | Alcance: Curto",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d8+2",
+      critico: "1x8",
+      danoCabeca: 40,
+    },
   },
 
   {
@@ -292,6 +394,12 @@ export const CATALOGO_COMBATE = [
     preco: 145,
     detalhe: "Bastão reforçado para defesa e combate urbano.",
     entrega: "Dano: FOR + 2 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d6+2",
+      critico: "1x6",
+      danoCabeca: 32,
+    },
   },
 
   {
@@ -301,6 +409,12 @@ export const CATALOGO_COMBATE = [
     preco: 210,
     detalhe: "Machado compacto utilizado para cortes rápidos.",
     entrega: "Dano: FOR + 3 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "1d8+3",
+      critico: "1x8",
+      danoCabeca: 40,
+    },
   },
 
   {
@@ -310,6 +424,12 @@ export const CATALOGO_COMBATE = [
     preco: 510,
     detalhe: "Ferramenta adaptada para destruição brutal em curta distância.",
     entrega: "Dano: FOR + 6 | Alcance: Toque",
+    armaStatus: {
+      tipo: "Corpo a Corpo",
+      dmg: "2d8+6",
+      critico: "2x8",
+      danoCabeca: 75,
+    },
   },
 
   /* =========================================================

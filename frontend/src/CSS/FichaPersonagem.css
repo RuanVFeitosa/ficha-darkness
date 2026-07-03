@@ -2249,6 +2249,166 @@ body {
   color: #d4af37;
 }
 
+/* =========================================================
+   MODIFICAÇÕES APLICADAS — CARDS RECOLHÍVEIS
+   ========================================================= */
+
+.modificacoes-aplicadas {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.modificacoes-titulo {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--cor-primaria);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.modificacoes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* CARD RECOLHÍVEL */
+.modificacao-card-recolhivel {
+  border: 1px solid rgba(225, 218, 199, 0.12);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.modificacao-card-recolhivel:hover {
+  border-color: rgba(225, 218, 199, 0.25);
+}
+
+.modificacao-card-recolhivel[open] {
+  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* SUMMARY (cabeçalho) */
+.modificacao-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.modificacao-summary::-webkit-details-marker {
+  display: none;
+}
+
+.modificacao-summary:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.modificacao-summary-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.modificacao-nome {
+  color: var(--cor-texto);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.modificacao-subcategoria {
+  color: var(--cor-texto-secundario);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.modificacao-expandir-icon {
+  color: var(--cor-texto-secundario);
+  font-size: 0.7rem;
+  transition: transform 0.25s ease;
+}
+
+.modificacao-card-recolhivel[open] .modificacao-expandir-icon {
+  transform: rotate(180deg);
+}
+
+/* CONTEÚDO EXPANDIDO */
+.modificacao-detalhes {
+  padding: 0 12px 14px 12px;
+  border-top: 1px solid rgba(225, 218, 199, 0.08);
+}
+
+.modificacao-detalhes p {
+  margin: 10px 0 0;
+  color: var(--cor-texto-secundario);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.modificacao-efeitos {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.modificacao-efeitos span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--cor-primaria);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modificacao-efeitos ul {
+  margin: 0;
+  padding-left: 16px;
+  color: var(--cor-texto-secundario);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.modificacao-efeitos ul li {
+  list-style-type: disc;
+}
+
+.modificacao-efeitos ul li strong {
+  color: var(--cor-texto);
+}
+
+@media (max-width: 560px) {
+  .modificacao-summary-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .modificacao-subcategoria {
+    font-size: 0.6rem;
+  }
+  .modificacao-detalhes p {
+    font-size: 0.78rem;
+  }
+}
+
 .rolagem-arma-acoes {
   display: flex;
   flex-wrap: wrap;
@@ -3221,6 +3381,24 @@ body {
   text-transform: uppercase;
 }
 
+/* Layout simplificado para corpo a corpo */
+.corpo-a-corpo-status {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 12px;
+}
+
+.corpo-a-corpo-status span {
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  text-align: center;
+}
+
 .bonus-dano-arma input {
   min-height: 40px;
   padding: 0 12px;
@@ -3233,6 +3411,208 @@ body {
 
   font-family: inherit;
   font-weight: 800;
+}
+
+/* Controles de bônus e crítico para corpo a corpo */
+.corpo-a-corpo-bonus {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.corpo-a-corpo-bonus .bonus-dano-arma span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--cor-primaria);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.corpo-a-corpo-bonus .bonus-dano-arma input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--borda-suave);
+  border-radius: 6px;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-weight: 800;
+}
+
+.corpo-a-corpo-critico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.corpo-a-corpo-critico label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--cor-texto);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.corpo-a-corpo-critico input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--cor-primaria);
+  cursor: pointer;
+}
+
+/* Controles de ataque para armas de fogo */
+.arma-fogo-controles {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.modos-ataque span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--cor-primaria);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.modos-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.modo-btn {
+  flex: 1;
+  min-width: 70px;
+  padding: 6px 10px;
+  border: 1px solid var(--borda-suave);
+  border-radius: 4px;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.modo-btn:hover {
+  border-color: var(--cor-primaria);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.modo-btn.selecionado {
+  border-color: var(--cor-primaria);
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--cor-primaria);
+}
+
+.bonus-dano-arma {
+  display: grid;
+  gap: 6px;
+}
+
+.bonus-dano-arma span {
+  color: var(--cor-primaria);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.bonus-dano-arma input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--borda-suave);
+  border-radius: 6px;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-weight: 800;
+}
+
+.ataque-critico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ataque-critico label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--cor-texto);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.ataque-critico input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--cor-primaria);
+  cursor: pointer;
+}
+
+/* Ajustes para corpo a corpo */
+.corpo-a-corpo-bonus {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.corpo-a-corpo-bonus .bonus-dano-arma span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--cor-primaria);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.corpo-a-corpo-bonus .bonus-dano-arma input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--borda-suave);
+  border-radius: 6px;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-weight: 800;
+}
+
+.corpo-a-corpo-critico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .item-visualizer-municao {

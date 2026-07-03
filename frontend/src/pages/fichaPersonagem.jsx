@@ -533,7 +533,10 @@ const FichaPersonagem = () => {
   const [modalRolagem, setModalRolagem] = useState(null);
   const [ataqueModalAberto, setAtaqueModalAberto] = useState(false);
   const [ataqueModoSelecionado, setAtaqueModoSelecionado] = useState("normal");
+  const [modoAtaque, setModoAtaque] = useState("normal");
+  const [criticoAtivo, setCriticoAtivo] = useState(false);
   const [ataqueCritico, setAtaqueCritico] = useState(false);
+  const [criticoCorpoACorpo, setCriticoCorpoACorpo] = useState(false);
   const [ataqueItemRef, setAtaqueItemRef] = useState(null);
   // Dentro do componente FichaPersonagem, adicione estes estados:
 
@@ -613,7 +616,6 @@ const FichaPersonagem = () => {
     (item) => item.nome === "Maleta de Campo",
   );
 
-  // CARREGAR DADOS AO INICIAR
   // CARREGAR DADOS AO INICIAR
   useEffect(() => {
     let ativo = true;
@@ -1396,6 +1398,12 @@ const FichaPersonagem = () => {
     };
   };
 
+  const extrairDadosCritico = (criticoTexto) => {
+    if (!criticoTexto) return 2; // fallback seguro
+    const match = String(criticoTexto).match(/(\d+)x/i);
+    return match ? parseInt(match[1], 10) : 2;
+  };
+
   const rolarAtaqueArma = (item, modo = "normal", critico = false) => {
     const arma = item.armaStatus;
 
@@ -1421,7 +1429,10 @@ const FichaPersonagem = () => {
     };
 
     // Adiciona +2 dados se for crítico
-    const dadosExtras = (dadosExtrasPorModo[modo] || 0) + (critico ? 2 : 0);
+
+    const dadosExtrasBase = dadosExtrasPorModo[modo] || 0;
+    const dadosCritico = critico ? extrairDadosCritico(arma.critico) : 0;
+    const dadosExtras = dadosExtrasBase + dadosCritico;
     const danoBase = interpretarDano(arma.dmg);
     const quantidadeAlvosFirmeza =
       modo === "firmeza" ? obterQuantidadeAlvosFirmeza(arma.mobility) : 1;
@@ -2476,7 +2487,11 @@ const FichaPersonagem = () => {
             break;
           }
           case "alcance": {
-            armaStatus.precision = aumentarAlcance(armaStatus.precision);
+            // Não permitir que modificadores de Alcance sejam incluídos no texto do campo Precision.
+            // AUI: continuar aumentando apenas o alcance efetivo no combate,
+            // mas manter o rótulo Precision como “estável”.
+            // Caso o seu sistema dependa do texto em precision, ajuste aqui depois.
+            armaStatus.precision = String(armaStatus.precision || "");
             break;
           }
         }
@@ -3762,7 +3777,7 @@ const FichaPersonagem = () => {
           >
             Personalizado
           </button>
-          {ehMedicoDeCampo && (
+          {(ehMedicoDeCampo || temMaletaDeCampo) && (
             <button
               className={subAbaInventario === "maleta" ? "ativa" : ""}
               onClick={() => setSubAbaInventario("maleta")}
@@ -3777,31 +3792,32 @@ const FichaPersonagem = () => {
             <h4>INVENTÁRIO</h4>
 
             <div className="lista-inventario inventario-cards">
-              {" "}
-              {personagem.inventario.map((item, index) => (
-                <article
-                  key={index}
-                  className="item-inventario item-recolhivel inventario-card"
-                  tabIndex={0}
-                  aria-label={item.nome}
-                  title={item.nome}
-                  data-item-name={item.nome}
-                  onClick={() => abrirVisualizador(item, index)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      setItemVisualizado({ ...item, index });
-                    }
-                  }}
-                >
-                  <div className="inventario-resumo">
-                    <div className="inventario-card-icone">
-                      {renderizarIconeItem(item)}
+              {personagem.inventario
+                .filter((item) => item.nome !== "Maleta de Campo") // oculta a maleta da lista comum
+                .map((item, index) => (
+                  <article
+                    key={index}
+                    className="item-inventario item-recolhivel inventario-card"
+                    tabIndex={0}
+                    aria-label={item.nome}
+                    title={item.nome}
+                    data-item-name={item.nome}
+                    onClick={() => abrirVisualizador(item, index)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setItemVisualizado({ ...item, index });
+                      }
+                    }}
+                  >
+                    <div className="inventario-resumo">
+                      <div className="inventario-card-icone">
+                        {renderizarIconeItem(item)}
+                      </div>
+                      <span className="inventario-item-nome">{item.nome}</span>
                     </div>
-                    <span className="inventario-item-nome">{item.nome}</span>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                ))}
             </div>
 
             {/* Visualizador de Item (Overlay) */}
@@ -3817,7 +3833,7 @@ const FichaPersonagem = () => {
                     </div>
                     <div className="visualizer-info">
                       <span className="visualizer-categoria">
-                        {itemVisualizado.tipo || "Item" }
+                        {itemVisualizado.tipo || "Item"}
                       </span>
                       <h2>{itemVisualizado.nome}</h2>
                     </div>
@@ -3857,160 +3873,350 @@ const FichaPersonagem = () => {
                   {/* STATUS DE ARMA */}
                   {itemVisualizado.armaStatus && (
                     <>
-                      <div className="item-visualizer-status">
-                        <span
-                          onClick={() => abrirDescricaoStatus("Tipo", "tipo")}
-                        >
-                          <strong>Tipo:</strong>{" "}
-                          {itemVisualizado.armaStatus.tipo}
-                        </span>
-                        <span
-                          onClick={() =>
-                            abrirDescricaoStatus("Dano Padrão", "dmg")
-                          }
-                        >
-                          <strong>Dano Padrão:</strong>{" "}
-                          {itemVisualizado.armaStatus.dmg}
-                        </span>
-                        <span
-                          onClick={() => abrirDescricaoStatus("ROF", "rof")}
-                        >
-                          <strong>Critico ROF:</strong>{" "}
-                          {itemVisualizado.armaStatus.rof}
-                        </span>
-
-                        <span
-                          onClick={() =>
-                            abrirDescricaoStatus("Dano Cabeça", "danoCabeca")
-                          }
-                        >
-                          <strong>Dano Cabeca:</strong>{" "}
-                          {itemVisualizado.armaStatus.danoCabeca}
-                        </span>
-                        <span
-                          onClick={() =>
-                            abrirDescricaoStatus("Hipfire", "hipfire")
-                          }
-                        >
-                          <strong>Hipfire:</strong>{" "}
-                          {itemVisualizado.armaStatus.hipfire}
-                        </span>
-                        <span
-                          onClick={() =>
-                            abrirDescricaoStatus("Precision", "precision")
-                          }
-                        >
-                          <strong>Precision:</strong>{" "}
-                          {itemVisualizado.armaStatus.precision}
-                        </span>
-                        <span
-                          onClick={() =>
-                            abrirDescricaoStatus("Control", "control")
-                          }
-                        >
-                          <strong>Control:</strong>{" "}
-                          {itemVisualizado.armaStatus.control}
-                        </span>
-                        <span
-                          onClick={() =>
-                            abrirDescricaoStatus("Mobility", "mobility")
-                          }
-                        >
-                          <strong>Mobility:</strong>{" "}
-                          {itemVisualizado.armaStatus.mobility}
-                        </span>
-                      </div>
+                      {itemVisualizado.armaStatus.tipo === "Corpo a Corpo" ? (
+                        // --- LAYOUT CORPO A CORPO ---
+                        <div className="item-visualizer-status corpo-a-corpo-status">
+                          <span>
+                            <strong>Tipo:</strong>{" "}
+                            {itemVisualizado.armaStatus.tipo}
+                          </span>
+                          <span>
+                            <strong>Dano Padrão:</strong>{" "}
+                            {itemVisualizado.armaStatus.dmg}
+                          </span>
+                          <span>
+                            <strong>Crítico:</strong>{" "}
+                            {itemVisualizado.armaStatus.critico}
+                          </span>
+                          <span>
+                            <strong>Dano Cabeça:</strong>{" "}
+                            {itemVisualizado.armaStatus.danoCabeca}
+                          </span>
+                        </div>
+                      ) : (
+                        // --- LAYOUT ARMAS DE FOGO (completo) ---
+                        <div className="item-visualizer-status">
+                          <span
+                            onClick={() => abrirDescricaoStatus("Tipo", "tipo")}
+                          >
+                            <strong>Tipo:</strong>{" "}
+                            {itemVisualizado.armaStatus.tipo}
+                          </span>
+                          <span
+                            onClick={() =>
+                              abrirDescricaoStatus("Dano Padrão", "dmg")
+                            }
+                          >
+                            <strong>Dano Padrão:</strong>{" "}
+                            {itemVisualizado.armaStatus.dmg}
+                          </span>
+                          <span
+                            onClick={() => abrirDescricaoStatus("ROF", "rof")}
+                          >
+                            <strong>Critico ROF:</strong>{" "}
+                            {itemVisualizado.armaStatus.rof}
+                          </span>
+                          <span
+                            onClick={() =>
+                              abrirDescricaoStatus("Dano Cabeça", "danoCabeca")
+                            }
+                          >
+                            <strong>Dano Cabeca:</strong>{" "}
+                            {itemVisualizado.armaStatus.danoCabeca}
+                          </span>
+                          <span
+                            onClick={() =>
+                              abrirDescricaoStatus("Hipfire", "hipfire")
+                            }
+                          >
+                            <strong>Hipfire:</strong>{" "}
+                            {itemVisualizado.armaStatus.hipfire}
+                          </span>
+                          <span
+                            onClick={() =>
+                              abrirDescricaoStatus("Precision", "precision")
+                            }
+                          >
+                            <strong>Precision:</strong>{" "}
+                            {itemVisualizado.armaStatus.precision}
+                          </span>
+                          <span
+                            onClick={() =>
+                              abrirDescricaoStatus("Control", "control")
+                            }
+                          >
+                            <strong>Control:</strong>{" "}
+                            {itemVisualizado.armaStatus.control}
+                          </span>
+                          <span
+                            onClick={() =>
+                              abrirDescricaoStatus("Mobility", "mobility")
+                            }
+                          >
+                            <strong>Mobility:</strong>{" "}
+                            {itemVisualizado.armaStatus.mobility}
+                          </span>
+                        </div>
+                      )}
                     </>
                   )}
 
-                  {/* MUNIÇÃO ESPECIAL */}
-                  {itemVisualizado.armaStatus && (
-                    <div className="item-visualizer-municao">
-                      {itemVisualizado.municaoCarregada ? (
-                        <>
-                          <p>
-                            <strong>Munição Especial Carregada:</strong>{" "}
-                            {itemVisualizado.municaoCarregada.nome}
-                          </p>
-                          <p>
-                            <strong>Bônus:</strong>{" "}
-                            {itemVisualizado.municaoCarregada.bonusDano || "—"}
-                          </p>
-                          <p>
-                            <strong>Quantidade restante:</strong>{" "}
-                            {itemVisualizado.municaoCarregada.quantidade || 0}
-                          </p>
-                          <button
-                            type="button"
-                            className="item-visualizer-municao-remover"
-                            onClick={() =>
-                              removerMunicaoDaArma(itemVisualizado.index)
-                            }
-                          >
-                            Remover munição
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          {obterMunicoesEspeciais().length > 0 ? (
-                            <div className="item-visualizer-municao-select">
-                              <span>Selecione munição especial</span>
-                              <div className="municao-especial-list">
-                                {obterMunicoesEspeciais().map(
-                                  ({ item, index }) => (
-                                    <button
-                                      key={index}
-                                      type="button"
-                                      className={getClassMunicaoEspecial(item)}
-                                      onClick={() =>
-                                        carregarMunicaoEspecial(
-                                          itemVisualizado.index,
-                                          index,
-                                        )
-                                      }
-                                    >
-                                      <span className="municao-especial-icon">
-                                        <Icon
-                                          path={getIconMunicaoEspecial(item)}
-                                          size={1.2}
-                                        />
-                                      </span>
-                                      <span className="municao-especial-nome">
-                                        {item.nome}
-                                      </span>
-                                      {item.quantidade && (
-                                        <span className="municao-especial-quantidade">
-                                          {item.quantidade}
-                                        </span>
-                                      )}
-                                    </button>
-                                  ),
-                                )}
+                  {/* MODIFICAÇÕES APLICADAS - CARDS RECOLHÍVEIS */}
+                  {itemVisualizado.modificacoesArma &&
+                    itemVisualizado.modificacoesArma.length > 0 && (
+                      <div className="modificacoes-aplicadas">
+                        <span className="modificacoes-titulo">
+                          Modificações Aplicadas
+                        </span>
+                        <div className="modificacoes-lista">
+                          {itemVisualizado.modificacoesArma.map((mod, idx) => (
+                            <details
+                              key={idx}
+                              className="modificacao-card-recolhivel"
+                            >
+                              <summary className="modificacao-summary">
+                                <div className="modificacao-summary-info">
+                                  <span className="modificacao-nome">
+                                    {mod.nome}
+                                  </span>
+                                  {mod.subcategoria && (
+                                    <span className="modificacao-subcategoria">
+                                      {mod.subcategoria}
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="modificacao-expandir-icon">
+                                  ▼
+                                </span>
+                              </summary>
+                              <div className="modificacao-detalhes">
+                                <p>
+                                  {mod.detalhe ||
+                                    mod.descricao ||
+                                    mod.efeito ||
+                                    "Sem descrição."}
+                                </p>
                               </div>
-                            </div>
-                          ) : (
+                            </details>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* CONTROLES PARA ARMAS DE FOGO */}
+                  {itemVisualizado.armaStatus &&
+                    itemVisualizado.armaStatus.tipo !== "Corpo a Corpo" && (
+                      <div className="arma-fogo-controles">
+                        <div className="modos-ataque">
+                          <span>Modo de ataque</span>
+                          <div className="modos-botoes">
+                            {[
+                              "normal",
+                              "violencia",
+                              "percepcao",
+                              "persistencia",
+                              "firmeza",
+                            ].map((modo) => (
+                              <button
+                                key={modo}
+                                className={`modo-btn ${
+                                  modoAtaque === modo ? "selecionado" : ""
+                                }`}
+                                onClick={() => setModoAtaque(modo)}
+                              >
+                                {modo.charAt(0).toUpperCase() + modo.slice(1)}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="bonus-dano-arma">
+                          <span>Bônus de dano</span>
+                          <input
+                            value={itemVisualizado.bonusDanoArma || ""}
+                            placeholder="+2, 1d6, 2d8+3..."
+                            onChange={(event) =>
+                              atualizarBonusDanoArma(
+                                itemVisualizado.index,
+                                event.target.value,
+                              )
+                            }
+                          />
+                        </div>
+
+                        <div className="ataque-critico">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={criticoAtivo}
+                              onChange={(e) =>
+                                setCriticoAtivo(e.target.checked)
+                              }
+                            />
+                            Crítico (
+                            {extrairDadosCritico(
+                              itemVisualizado.armaStatus.critico,
+                            )}{" "}
+                            dados extras)
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* MUNIÇÃO ESPECIAL (apenas para armas de fogo) */}
+                  {itemVisualizado.armaStatus &&
+                    itemVisualizado.armaStatus.tipo !== "Corpo a Corpo" && (
+                      <div className="item-visualizer-municao">
+                        {itemVisualizado.municaoCarregada ? (
+                          // ... exibe munição carregada (mantém igual)
+                          <>
                             <p>
-                              Nenhuma munição especial disponível no inventário.
+                              <strong>Munição Especial Carregada:</strong>{" "}
+                              {itemVisualizado.municaoCarregada.nome}
                             </p>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )}
+                            <p>
+                              <strong>Bônus:</strong>{" "}
+                              {itemVisualizado.municaoCarregada.bonusDano ||
+                                "—"}
+                            </p>
+                            <p>
+                              <strong>Quantidade restante:</strong>{" "}
+                              {itemVisualizado.municaoCarregada.quantidade || 0}
+                            </p>
+                            <button
+                              type="button"
+                              className="item-visualizer-municao-remover"
+                              onClick={() =>
+                                removerMunicaoDaArma(itemVisualizado.index)
+                              }
+                            >
+                              Remover munição
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            {obterMunicoesEspeciais().length > 0 ? (
+                              <div className="item-visualizer-municao-select">
+                                <span>Selecione munição especial</span>
+                                <div className="municao-especial-list">
+                                  {obterMunicoesEspeciais().map(
+                                    ({ item, index }) => (
+                                      <button
+                                        key={index}
+                                        type="button"
+                                        className={getClassMunicaoEspecial(
+                                          item,
+                                        )}
+                                        onClick={() =>
+                                          carregarMunicaoEspecial(
+                                            itemVisualizado.index,
+                                            index,
+                                          )
+                                        }
+                                      >
+                                        <span className="municao-especial-icon">
+                                          <Icon
+                                            path={getIconMunicaoEspecial(item)}
+                                            size={1.2}
+                                          />
+                                        </span>
+                                        <span className="municao-especial-nome">
+                                          {item.nome}
+                                        </span>
+                                        {item.quantidade && (
+                                          <span className="municao-especial-quantidade">
+                                            {item.quantidade}
+                                          </span>
+                                        )}
+                                      </button>
+                                    ),
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <p>
+                                Nenhuma munição especial disponível no
+                                inventário.
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                  {/* BÔNUS DE DANO E CRÍTICO PARA CORPO A CORPO */}
+                  {itemVisualizado.armaStatus &&
+                    itemVisualizado.armaStatus.tipo === "Corpo a Corpo" && (
+                      <div className="corpo-a-corpo-bonus">
+                        <div className="bonus-dano-arma">
+                          <span>Bônus de dano</span>
+                          <input
+                            value={itemVisualizado.bonusDanoArma || ""}
+                            placeholder="+2, 1d6, 2d8+3..."
+                            onChange={(event) =>
+                              atualizarBonusDanoArma(
+                                itemVisualizado.index,
+                                event.target.value,
+                              )
+                            }
+                          />
+                        </div>
+
+                        <div className="corpo-a-corpo-critico">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={criticoCorpoACorpo}
+                              onChange={(e) =>
+                                setCriticoCorpoACorpo(e.target.checked)
+                              }
+                            />
+                            Crítico (
+                            {extrairDadosCritico(
+                              itemVisualizado.armaStatus.critico,
+                            )}{" "}
+                            dados extras)
+                          </label>
+                        </div>
+                      </div>
+                    )}
 
                   {/* AÇÕES */}
                   <div className="item-visualizer-acoes">
                     {itemVisualizado.armaStatus ? (
                       <>
-                        <button
-                          className="item-ataque-btn"
-                          onClick={() => abrirModalAtaque(itemVisualizado)}
-                        >
-                          <Icon path={mdiDiceD20} size={0.9} />
-                          Rolar Dano
-                        </button>
+                        {itemVisualizado.armaStatus.tipo === "Corpo a Corpo" ? (
+                          <button
+                            className="item-ataque-btn corpo-a-corpo-btn"
+                            onClick={() =>
+                              rolarAtaqueArma(
+                                itemVisualizado,
+                                "normal",
+                                criticoCorpoACorpo,
+                              )
+                            }
+                          >
+                            <Icon path={mdiDiceD20} size={0.9} />
+                            Rolar Dano
+                          </button>
+                        ) : (
+                          <button
+                            className="item-ataque-btn"
+                            onClick={() =>
+                              rolarAtaqueArma(
+                                itemVisualizado,
+                                modoAtaque,
+                                criticoAtivo,
+                              )
+                            }
+                          >
+                            <Icon path={mdiDiceD20} size={0.9} />
+                            Rolar Dano
+                          </button>
+                        )}
                       </>
                     ) : (
+                      // Itens sem armaStatus (rolagem personalizada)
                       (itemVisualizado?.rolagem?.formula ||
                         itemVisualizado?.dano?.match(
                           /(\d+)d(\d+)([+-]\d+)?/i,
@@ -4037,74 +4243,6 @@ const FichaPersonagem = () => {
           </>
         )}
 
-        {ataqueModalAberto && (
-          <div className="modal-overlay" onClick={fecharModalAtaque}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>Selecione o modo de ataque</h3>
-                <button className="modal-fechar" onClick={fecharModalAtaque}>
-                  ×
-                </button>
-              </div>
-              <div className="modal-body">
-                <div className="ataque-modos">
-                  {[
-                    "normal",
-                    "violencia",
-                    "percepcao",
-                    "persistencia",
-                    "firmeza",
-                  ].map((modo) => (
-                    <button
-                      key={modo}
-                      className={`ataque-modo-btn ${ataqueModoSelecionado === modo ? "selecionado" : ""}`}
-                      onClick={() => setAtaqueModoSelecionado(modo)}
-                    >
-                      {modo.charAt(0).toUpperCase() + modo.slice(1)}
-                    </button>
-                  ))}
-                </div>
-                <label className="bonus-dano-arma">
-                  <span>Bonus de dano</span>
-                  <input
-                    value={itemVisualizado.bonusDanoArma || ""}
-                    placeholder="+2, 1d6, 2d8+3..."
-                    onChange={(event) =>
-                      atualizarBonusDanoArma(
-                        itemVisualizado.index,
-                        event.target.value,
-                      )
-                    }
-                  />
-                </label>
-                <div className="ataque-critico">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={ataqueCritico}
-                      onChange={(e) => setAtaqueCritico(e.target.checked)}
-                    />
-                    Crítico (+2 dados de dano)
-                  </label>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="modal-btn modal-btn-cancelar"
-                  onClick={fecharModalAtaque}
-                >
-                  Cancelar
-                </button>
-                <button
-                  className="modal-btn modal-btn-confirmar"
-                  onClick={executarAtaque}
-                >
-                  Atacar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
         {subAbaInventario === "criacao" && (
           <div className="criacao-itens">
             <div className="estoque-materiais">
@@ -4662,56 +4800,60 @@ const FichaPersonagem = () => {
             </section>
           </div>
         )}
-        {subAbaInventario === "maleta" && ehMedicoDeCampo && (
-          <div className="maleta-campo-container">
-            <div className="maleta-aprimoramentos-ativos">
-              <div className="maleta-aprimoramentos-topo">
-                <span>Aprimoramentos Ativos</span>
+        {subAbaInventario === "maleta" &&
+          (ehMedicoDeCampo || temMaletaDeCampo) && (
+            <div className="maleta-campo-container">
+              <div className="maleta-aprimoramentos-ativos">
+                <div className="maleta-aprimoramentos-topo">
+                  <span>Aprimoramentos Ativos</span>
 
-                <strong>
-                  {(personagem.maletaCampo?.aprimoramentosAtivos || []).length}
-                  /3
-                </strong>
-              </div>
+                  <strong>
+                    {
+                      (personagem.maletaCampo?.aprimoramentosAtivos || [])
+                        .length
+                    }
+                    /3
+                  </strong>
+                </div>
 
-              <div className="maleta-aprimoramentos-grid">
-                {(personagem.maletaCampo?.aprimoramentosAtivos || []).length >
-                0 ? (
-                  personagem.maletaCampo.aprimoramentosAtivos.map(
-                    (aprimoramento, index) => (
-                      <article
-                        key={aprimoramento.id || index}
-                        className={`maleta-aprimoramento-card ${
-                          aprimoramento.tipoMaleta || "geral"
-                        }`}
-                      >
-                        <span className="maleta-tipo">
-                          {aprimoramento.tipoMaleta === "medicinal"
-                            ? "Medicinal"
-                            : aprimoramento.tipoMaleta === "combate"
-                              ? "Combate"
-                              : "Geral"}
-                        </span>
+                <div className="maleta-aprimoramentos-grid">
+                  {(personagem.maletaCampo?.aprimoramentosAtivos || []).length >
+                  0 ? (
+                    personagem.maletaCampo.aprimoramentosAtivos.map(
+                      (aprimoramento, index) => (
+                        <article
+                          key={aprimoramento.id || index}
+                          className={`maleta-aprimoramento-card ${
+                            aprimoramento.tipoMaleta || "geral"
+                          }`}
+                        >
+                          <span className="maleta-tipo">
+                            {aprimoramento.tipoMaleta === "medicinal"
+                              ? "Medicinal"
+                              : aprimoramento.tipoMaleta === "combate"
+                                ? "Combate"
+                                : "Geral"}
+                          </span>
 
-                        <h5>{aprimoramento.nome}</h5>
+                          <h5>{aprimoramento.nome}</h5>
 
-                        <p>
-                          {aprimoramento.descricao ||
-                            aprimoramento.efeito ||
-                            aprimoramento.detalhe}
-                        </p>
-                      </article>
-                    ),
-                  )
-                ) : (
-                  <p className="maleta-vazia">
-                    Nenhum aprimoramento instalado.
-                  </p>
-                )}
+                          <p>
+                            {aprimoramento.descricao ||
+                              aprimoramento.efeito ||
+                              aprimoramento.detalhe}
+                          </p>
+                        </article>
+                      ),
+                    )
+                  ) : (
+                    <p className="maleta-vazia">
+                      Nenhum aprimoramento instalado.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     ),
 
