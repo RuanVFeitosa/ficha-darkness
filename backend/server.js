@@ -172,16 +172,54 @@ const defaultCatalogoLoja = [
   },
 ];
 
-const sendJson = (res, statusCode, payload) => {
+const crypto = require("crypto");
+
+const computeEtag = (payload) => {
+  // hash curto para reduzir tamanho do header, mas determinístico para o mesmo conteúdo
+  const str = payload === undefined ? "" : JSON.stringify(payload);
+  const hash = crypto.createHash("sha256").update(str).digest("hex");
+  return `"${hash.slice(0, 16)}"`;
+};
+
+const sendJson = ({
+  req,
+  res,
+  statusCode,
+  payload,
+  cacheControl = undefined,
+  etag = undefined,
+  lastModified = undefined,
+}) => {
   const body = statusCode === 204 ? "" : JSON.stringify(payload);
 
-  res.writeHead(statusCode, {
+  // Revalidação condicional (evita Fast Origin Transfer quando conteúdo não mudou)
+  if (statusCode === 200 && etag) {
+    const inm = String(req.headers["if-none-match"] || "");
+    if (inm && inm === etag) {
+      res.writeHead(304, {
+        ...(res.corsHeaders || {}),
+        ...(cacheControl ? { "Cache-Control": cacheControl } : {}),
+        ...(etag ? { ETag: etag } : {}),
+        ...(lastModified ? { "Last-Modified": lastModified } : {}),
+        "Content-Length": 0,
+      });
+      return res.end();
+    }
+  }
+
+  const headers = {
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": Buffer.byteLength(body),
     ...(res.corsHeaders || {}),
-  });
+    ...(cacheControl ? { "Cache-Control": cacheControl } : {}),
+    ...(etag ? { ETag: etag } : {}),
+    ...(lastModified ? { "Last-Modified": lastModified } : {}),
+  };
+
+  res.writeHead(statusCode, headers);
   res.end(body);
 };
+
 
 const sendFile = async (res, filePath) => {
   const ext = path.extname(filePath).toLowerCase();
@@ -557,7 +595,8 @@ const handleRequest = async (req, res) => {
   res.corsHeaders = getCorsHeaders(req);
 
   if (req.method === "OPTIONS") {
-    return sendJson(res, 204, {});
+      return sendJson({ req, res, statusCode: 204, payload: {} });
+
   }
 
   try {
@@ -565,39 +604,75 @@ const handleRequest = async (req, res) => {
       (url.pathname === "/api" || url.pathname === "/api/health") &&
       req.method === "GET"
     ) {
-      return sendJson(res, 200, {
-        ok: true,
-        storage: USE_SUPABASE ? "supabase" : "json",
-        supabaseConfigured: USE_SUPABASE,
-        table: USE_SUPABASE ? SUPABASE_TABLE : null,
-      });
+        return sendJson({
+          req,
+          res,
+          statusCode: 200,
+          payload: {
+            ok: true,
+            storage: USE_SUPABASE ? "supabase" : "json",
+            supabaseConfigured: USE_SUPABASE,
+            table: USE_SUPABASE ? SUPABASE_TABLE : null,
+          },
+        });
+
     }
 
     if (url.pathname === "/api/loja/catalogo" && req.method === "GET") {
       const catalogo = await readShopCatalog();
-      return sendJson(res, 200, { catalogo });
+      const etag = computeEtag({ catalogo });
+      return sendJson({
+        req,
+        res,
+        statusCode: 200,
+        payload: { catalogo },
+        cacheControl: "public, s-maxage=60, stale-while-revalidate=300",
+        etag,
+      });
+
     }
 
     if (url.pathname === "/api/loja/catalogo" && req.method === "PUT") {
       const body = await readJsonBody(req);
       const catalogo = await writeShopCatalog(body.catalogo);
-      return sendJson(res, 200, { catalogo });
+      return sendJson({ req, res, statusCode: 200, payload: { catalogo } });
     }
+
 
     if (url.pathname === "/api/arvores-habilidades" && req.method === "GET") {
       const arvores = await readSkillTrees();
-      return sendJson(res, 200, { arvores });
+      const etag = computeEtag({ arvores });
+      return sendJson({
+        req,
+        res,
+        statusCode: 200,
+        payload: { arvores },
+        cacheControl: "public, s-maxage=60, stale-while-revalidate=300",
+        etag,
+      });
+
     }
 
     if (url.pathname === "/api/arvores-habilidades" && req.method === "PUT") {
       const body = await readJsonBody(req);
       const arvores = await writeSkillTrees(body.arvores);
-      return sendJson(res, 200, { arvores });
+      return sendJson({ req, res, statusCode: 200, payload: { arvores } });
     }
+
 
     if (url.pathname === "/api/personagens" && req.method === "GET") {
       const personagens = await listPersonagens();
-      return sendJson(res, 200, { personagens });
+      const cacheControl = "public, s-maxage=30, stale-while-revalidate=120";
+      const etag = computeEtag({ personagens });
+      return sendJson({
+        req,
+        res,
+        statusCode: 200,
+        payload: { personagens },
+        cacheControl,
+        etag,
+      });
+
     }
 
     if (url.pathname === "/api/personagens" && req.method === "POST") {
@@ -609,12 +684,14 @@ const handleRequest = async (req, res) => {
         Array.isArray(personagem) ||
         !String(personagem.nome || "").trim()
       ) {
-        return sendJson(res, 400, { error: "Nome do personagem e obrigatorio" });
+      return sendJson({ req, res, statusCode: 400, payload: { error: "Nome do personagem e obrigatorio" } });
+
       }
 
       const fichaId = await createUniqueFichaId(personagem.nome);
       const saved = await writePersonagem(fichaId, personagem);
-      return sendJson(res, 201, { fichaId, personagem: saved });
+      return sendJson({ req, res, statusCode: 201, payload: { fichaId, personagem: saved } });
+
     }
 
     const legacyPersonagemRoute = url.pathname === "/api/personagem";
@@ -625,7 +702,17 @@ const handleRequest = async (req, res) => {
 
     if ((legacyPersonagemRoute || personagemMatch) && req.method === "GET") {
       const personagem = await readPersonagem(fichaId);
-      return sendJson(res, 200, { fichaId, personagem });
+      const cacheControl = "public, s-maxage=30, stale-while-revalidate=120";
+      const etag = computeEtag({ fichaId, personagem });
+      return sendJson({
+        req,
+        res,
+        statusCode: 200,
+        payload: { fichaId, personagem },
+        cacheControl,
+        etag,
+      });
+
     }
 
     if (
@@ -639,39 +726,59 @@ const handleRequest = async (req, res) => {
         typeof personagem !== "object" ||
         Array.isArray(personagem)
       ) {
-        return sendJson(res, 400, { error: "Personagem invalido" });
+        return sendJson({ req, res, statusCode: 400, payload: { error: "Personagem invalido" } });
+
       }
 
       if (personagemMatch && !String(personagem.nome || "").trim()) {
-        return sendJson(res, 400, {
-          error: "Nao e permitido sobrescrever uma ficha com personagem vazio",
+        return sendJson({
+          req,
+          res,
+          statusCode: 400,
+          payload: {
+            error: "Nao e permitido sobrescrever uma ficha com personagem vazio",
+          },
         });
+
       }
 
       const saved = await writePersonagem(fichaId, personagem);
-      return sendJson(res, 200, { fichaId, personagem: saved });
+      return sendJson({ req, res, statusCode: 200, payload: { fichaId, personagem: saved } });
+
     }
 
     if (personagemMatch && req.method === "DELETE") {
       const deleted = await deletePersonagem(fichaId);
-      return sendJson(res, deleted ? 200 : 404, {
-        fichaId,
-        deleted,
-        ...(deleted ? {} : { error: "Ficha nao encontrada" }),
+      return sendJson({
+        req,
+        res,
+        statusCode: deleted ? 200 : 404,
+        payload: {
+          fichaId,
+          deleted,
+          ...(deleted ? {} : { error: "Ficha nao encontrada" }),
+        },
       });
+
     }
 
     if (!url.pathname.startsWith("/api/") && req.method === "GET") {
       if (!SERVE_FRONTEND) {
         if (url.pathname !== "/") {
-          return sendJson(res, 404, { error: "Rota nao encontrada" });
+          return sendJson({ req, res, statusCode: 404, payload: { error: "Rota nao encontrada" } });
         }
 
-        return sendJson(res, 200, {
-          ok: true,
-          service: "ficha-darkness-backend",
-          health: "/api/health",
+        return sendJson({
+          req,
+          res,
+          statusCode: 200,
+          payload: {
+            ok: true,
+            service: "ficha-darkness-backend",
+            health: "/api/health",
+          },
         });
+
       }
 
       const requestedPath = url.pathname === "/" ? "/index.html" : url.pathname;
@@ -691,13 +798,20 @@ const handleRequest = async (req, res) => {
       return await sendFile(res, path.join(BUILD_DIR, "index.html"));
     }
 
-    return sendJson(res, 404, { error: "Rota nao encontrada" });
+    return sendJson({ req, res, statusCode: 404, payload: { error: "Rota nao encontrada" } });
+
   } catch (error) {
     console.error(error);
-    return sendJson(res, 500, {
-      error: "Erro interno do servidor",
-      details: error.message,
+    return sendJson({
+      req,
+      res,
+      statusCode: 500,
+      payload: {
+        error: "Erro interno do servidor",
+        details: error.message,
+      },
     });
+
   }
 };
 

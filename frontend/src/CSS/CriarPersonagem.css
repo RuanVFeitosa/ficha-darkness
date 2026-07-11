@@ -506,6 +506,7 @@
   max-height: 58vh;
 
   overflow-y: auto;
+  min-height: 240px;
 
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 2fr));
@@ -946,6 +947,10 @@
 @media (max-width: 760px) {
   .criacao-container {
     padding: 14px;
+  }
+
+  .arquetipos-etapa {
+    max-height: 70svh;
   }
 
   .criacao-form {

@@ -178,7 +178,7 @@
   display: grid;
   gap: 18px;
   padding: 22px;
-  border: 1px solid rgba(200, 155, 95, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.58);
   border-radius: 8px;
   background: rgba(10, 8, 7, 0.98);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.72);
@@ -186,13 +186,13 @@
 
 .mestre-senha-topo {
   display: flex;
-  align-items: center;
+  align-iems: center;
   justify-content: space-between;
   gap: 16px;
 }
 
 .mestre-senha-topo span {
-  color: #c89b5f;
+  color: #ffffff;
   font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
@@ -223,7 +223,7 @@
 
 .mestre-senha-display span {
   height: 12px;
-  border: 1px solid rgba(200, 155, 95, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
 }
@@ -250,7 +250,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #4a3326;
+  border: 1px solid #ffffff81;
   border-radius: 4px;
   color: #fff;
   background: rgba(255, 255, 255, 0.07);
@@ -261,8 +261,8 @@
 }
 
 .mestre-teclado-confirmar {
-  border-color: #c89b5f !important;
-  background: #8b4513 !important;
+  border-color: #ffffff !important;
+  background: #000000 !important;
   font-size: 0.95rem !important;
   text-transform: uppercase;
 }

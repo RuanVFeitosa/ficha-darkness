@@ -1028,7 +1028,7 @@
 
 .mestre-modal-identidade span,
 .mestre-modal-bloco > span {
-  color: #c89b5f;
+  color: #ffffffb4;
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 2px;
@@ -1243,7 +1243,7 @@
 }
 
 .mestre-botao-editar:hover {
-  border-color: #d4af37;
+  border-color: #ffffff;
   background: rgba(212, 175, 55, 0.12);
 }
 
@@ -1274,9 +1274,9 @@
 
 .mestre-ritos-niveis-tabs button:hover,
 .mestre-ritos-niveis-tabs button.ativa {
-  border-color: #d4af37;
-  background: rgba(139, 69, 19, 0.42);
-  color: #d4af37;
+  border-color: #ffffff;
+  background: rgba(0, 0, 0, 0.42);
+  color: #ffffff;
 }
 
 .mestre-niveis-ritos-wrapper {
@@ -2155,7 +2155,7 @@
 ========================================================= */
 
 .mestre-party-embed {
-  width: 120%;
+  width: 100%;
   margin-bottom: 22px;
   padding: 18px;
   border: 1px solid rgba(0, 0, 0, 0.18);
@@ -2730,12 +2730,12 @@
 
 .mestre-modal-ficha.minimalista .mestre-modal-bloco {
   border: 1px solid rgba(212, 175, 55, 0.16);
-  border-left: 3px solid rgba(212, 175, 55, 0.6);
+  border-left: 3px solid rgba(255, 255, 255, 0.6);
 
   background:
     linear-gradient(
       145deg,
-      rgba(212, 175, 55, 0.055),
+      rgba(0, 0, 0, 0.055),
       rgba(255, 255, 255, 0.025)
     ),
     rgba(0, 0, 0, 0.62);
@@ -2743,7 +2743,7 @@
 
 .mestre-modal-ficha.minimalista .mestre-modal-bloco > span,
 .mestre-modal-ficha.minimalista .mestre-modal-linha-topo > span {
-  color: #d4af37;
+  color: #ffffff;
 
   font-size: 0.72rem;
   font-weight: 900;
@@ -2795,7 +2795,7 @@
 .mestre-modal-ficha.minimalista textarea:focus {
   outline: none;
 
-  border-color: #d4af37;
+  border-color: #ffffff;
 
   box-shadow: 0 0 14px rgba(212, 175, 55, 0.18);
 }
@@ -2854,7 +2854,7 @@
 
   padding: 14px;
 
-  border-left: 3px solid #d4af37;
+  border-left: 3px solid #979797;
   border-radius: 12px;
 
   background:
@@ -2972,7 +2972,7 @@
 
 .mestre-modal-ficha.minimalista .duplicarButton {
   border-color: rgba(212, 175, 55, 0.35);
-  color: #d4af37;
+  color: #ffffff;
 }
 
 .mestre-modal-ficha.minimalista .duplicarButton:hover {

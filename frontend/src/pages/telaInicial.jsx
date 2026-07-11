@@ -197,6 +197,7 @@ const TelaInicial = () => {
             <div className="mestre-senha-topo">
               <div>
                 <span>Acesso restrito</span>
+                <hr width="150%" />
                 <h2>Area do Mestre</h2>
               </div>
 

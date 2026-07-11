@@ -7049,7 +7049,7 @@ body {
   padding: 10px 14px;
   border: 1px solid var(--borda-primaria);
   border-radius: 10px;
-  background: var(--cor-fundo);
+  background: white;
 }
 
 .bonus-finais span,

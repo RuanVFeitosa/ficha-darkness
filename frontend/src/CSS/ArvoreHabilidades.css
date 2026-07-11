@@ -2024,12 +2024,40 @@
   }
 
   /* =====================================================
-     TOOLTIP
+     TOOLTIP (mobile)
+     - Antes estava `display:none`, então o usuário não via as
+       informações das Habilidades/Arquetipos.
+     - Mantém visível e ajusta para caber na tela.
   ===================================================== */
 
   .skilltree-tooltip {
-    display: none !important;
+    display: block !important;
+
+    position: fixed !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 112px !important;
+
+    width: auto !important;
+    max-width: none !important;
+
+    transform: none !important;
+    opacity: 0 !important;
+    pointer-events: none;
+
+    transition: opacity 0.18s ease;
+    z-index: 100000;
   }
+
+  /* Quando o node estiver em hover (desktop) ou focado (mobile/touch), mostramos */
+  .skilltree-node:hover .skilltree-tooltip,
+  .skilltree-node:focus-within .skilltree-tooltip,
+  .skilltree-node:focus .skilltree-tooltip {
+    opacity: 1 !important;
+    pointer-events: none;
+    transform: none !important;
+  }
+
 
   /* =====================================================
      PONTOS / AÇÕES
