@@ -499,6 +499,289 @@ body {
   border: 3px solid var(--cor-texto);
 }
 
+/* =========================================================
+   MODAL DE MARCA
+========================================================= */
+
+/* Marcas no perfil - estilo semelhante aos outros campos */
+
+.marca-perfil-nome {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--cor-texto-secundario);
+  opacity: 0.85;
+  margin-bottom: 20px;
+  color: #d4af37;
+}
+
+.marca-pendente-tag {
+  color: #ffd700;
+  font-size: 0.6rem;
+  font-weight: 800;
+  margin-left: 4px;
+  opacity: 1;
+}
+
+.marca-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  padding: 20px;
+}
+
+.marca-modal {
+  width: min(600px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #0a0a0a;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  color: #f5efe4;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  position: relative;
+}
+
+.marca-modal-fechar {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.marca-modal-header span {
+  color: #d4af37;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.marca-modal-header h2 {
+  margin: 6px 0 4px;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.marca-descricao {
+  color: #cfcfcf;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  border-left: 3px solid #d4af37;
+  padding-left: 12px;
+  margin: 10px 0 16px;
+}
+
+.marca-modal-corpo {
+  display: grid;
+  gap: 20px;
+}
+
+.marca-beneficios,
+.marca-penalidades {
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid #2ecc71;
+}
+
+.marca-penalidades {
+  border-left-color: #e74c3c;
+}
+
+.marca-beneficios h4,
+.marca-penalidades h4,
+.marca-habilidades h4 {
+  margin: 0 0 6px;
+  color: #d4af37;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marca-beneficios p,
+.marca-penalidades p {
+  margin: 0;
+  color: #ddd;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.marca-habilidades-lista {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.marca-habilidade-btn {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  color: #f5efe4;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.marca-habilidade-btn strong {
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+.marca-habilidade-btn span {
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.marca-habilidade-btn:hover {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.marca-habilidade-btn.selecionada {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.15);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.12);
+}
+
+.marca-acoes {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.marca-aceitar-btn,
+.marca-recusar-btn {
+  min-height: 40px;
+  padding: 0 20px;
+  border-radius: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.marca-aceitar-btn {
+  border: 1px solid #d4af37;
+  background: rgba(212, 175, 55, 0.2);
+  color: #d4af37;
+}
+
+.marca-aceitar-btn:hover:not(:disabled) {
+  background: #d4af37;
+  color: #000;
+}
+
+.marca-aceitar-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.marca-recusar-btn {
+  border: 1px solid rgba(255, 80, 80, 0.4);
+  background: transparent;
+  color: #ffb3b3;
+}
+
+.marca-recusar-btn:hover {
+  background: rgba(180, 35, 35, 0.3);
+  border-color: #ff4d4d;
+}
+
+/* Botão de marca pendente */
+.marca-pendente-btn {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 16px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: transparent;
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  animation: pulsarBranco 1.2s ease-in-out infinite;
+  transition: background 0.2s, color 0.2s;
+}
+
+.marca-pendente-btn:hover {
+  background: #ffffff;
+  color: #000000;
+  animation: none;
+}
+
+@keyframes pulsarBranco {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px 8px rgba(255, 255, 255, 0.3);
+    transform: scale(1.03);
+  }
+}
+
+/* Marcas no perfil */
+.marcas-personagem-perfil {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.marcas-perfil-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--cor-primaria);
+  text-transform: uppercase;
+}
+
+.marcas-perfil-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.marca-perfil-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #f5efe4;
+}
+
+.marca-pendente-tag {
+  color: #ffd700;
+  font-size: 0.6rem;
+}
+
 .nivel-acima-sanidade {
   display: flex;
   align-items: center;
@@ -6437,6 +6720,305 @@ body {
 
 .habilidade-expandivel-corpo {
   z-index: 999;
+}
+
+/* =========================================================
+   HABILIDADES CRIADAS - LAYOUT LADO A LADO
+   ========================================================= */
+.habilidades-criadas-section {
+  padding: 0.5rem 0;
+}
+
+.habilidades-criadas-lado-a-lado {
+  display: grid;
+  grid-template-columns: 1fr 1.8fr; /* formulário mais estreito, lista mais larga */
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Bloco do formulário */
+.criar-habilidade-bloco {
+  background: var(--cor-fundo, #000000);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid var(--cor-borda, #000000);
+}
+
+.criar-habilidade-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.criar-habilidade-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.criar-habilidade-form input,
+.criar-habilidade-form textarea {
+  background: #000000;
+  border: 1px solid #ffffff9a;
+  color: #f5efe4;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+.criar-habilidade-form textarea {
+  resize: vertical;
+}
+
+.btn-criar-habilidade {
+  background: #4a6fa5;
+  border: none;
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  align-self: flex-start;
+}
+
+.btn-criar-habilidade:hover {
+  background: #5f8bc9;
+}
+
+.erro-criar-habilidade {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin-top: 0.2rem;
+}
+
+/* Lista de habilidades criadas */
+.lista-habilidades-criadas-bloco h5 {
+  margin-bottom: 0.8rem;
+}
+
+.habilidades-criadas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.8rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.habilidade-criada-card {
+  background: #000000;
+  border: 1px solid #979797;
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.habilidade-criada-info {
+  flex: 1;
+}
+
+.habilidade-criada-info strong {
+  display: block;
+  font-size: 1rem;
+  color: #f5efe4;
+}
+
+.custo-badge {
+  display: inline-block;
+  background: #2c3e50;
+  color: #ecf0f1;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  margin: 0.2rem 0 0.4rem 0;
+}
+
+.habilidade-criada-info p {
+  margin: 0.3rem 0 0 0;
+  font-size: 0.9rem;
+  color: #b0b0b0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.btn-remover-habilidade {
+  background: transparent;
+  border: none;
+  color: #e74c3c;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+  line-height: 1;
+}
+
+.btn-remover-habilidade:hover {
+  background: #2c2c2c;
+}
+
+.sem-habilidades {
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* =========================================================
+   RESPONSIVIDADE
+   ========================================================= */
+@media (max-width: 860px) {
+  .habilidades-criadas-lado-a-lado {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .habilidades-criadas-grid {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .criar-habilidade-bloco {
+    padding: 0.8rem;
+  }
+
+  .habilidade-criada-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-remover-habilidade {
+    align-self: flex-end;
+  }
+}
+
+/* =========================================================
+   MARCA DETALHES - ABA HABILIDADES
+========================================================= */
+.marca-detalhes-section {
+  padding: 0.5rem 0;
+}
+
+.marca-detalhes-card {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.marca-detalhes-header span {
+  color: var(--cor-primaria);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.marca-detalhes-header h2 {
+  margin: 6px 0 12px;
+  color: var(--cor-texto);
+  font-size: 1.5rem;
+  text-transform: uppercase;
+}
+
+.marca-detalhes-descricao {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--cor-primaria);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+}
+
+.marca-detalhes-descricao p {
+  margin: 0;
+  color: var(--cor-texto-secundario);
+  line-height: 1.5;
+}
+
+.marca-detalhes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.marca-detalhes-beneficios,
+.marca-detalhes-penalidades {
+  padding: 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid #2ecc71;
+}
+
+.marca-detalhes-penalidades {
+  border-left-color: #e74c3c;
+}
+
+.marca-detalhes-beneficios h4,
+.marca-detalhes-penalidades h4,
+.marca-detalhes-habilidades h4 {
+  margin: 0 0 8px;
+  color: var(--cor-primaria);
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marca-detalhes-beneficios p,
+.marca-detalhes-penalidades p {
+  margin: 0;
+  color: var(--cor-texto-secundario);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.marca-detalhes-habilidades {
+  padding: 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+.marca-habilidades-lista-detalhes {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.marca-habilidade-item {
+  padding: 12px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 3px solid var(--cor-primaria);
+}
+
+.marca-habilidade-item strong {
+  display: block;
+  color: var(--cor-texto);
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.marca-habilidade-item p {
+  margin: 0;
+  color: var(--cor-texto-secundario);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 700px) {
+  .marca-detalhes-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* =========================================================

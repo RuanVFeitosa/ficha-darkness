@@ -313,6 +313,9 @@ export const estadoInicial = {
     especialidadeDefinida: false,
     habilidadesEspecialidade: {},
   },
+
+  // Habilidades criadas pelos jogadores (aba "Marcas")
+  marcas: [],
   inventario: [
     { nome: "Pistola (9mm)", detalhes: "12 balas" },
 
@@ -550,6 +553,21 @@ const FichaPersonagem = () => {
   const ignorarProximoSalvamentoRef = useRef(false);
 
   const [subAbaHabilidade, setSubAbaHabilidade] = useState("arquetipo");
+  const [subAbaMarcaSelecionada, setSubAbaMarcaSelecionada] = useState(null);
+
+  // Estados para criação de habilidade (Marcas)
+  const [habilidadeMarcaNome, setHabilidadeMarcaNome] = useState("");
+  const [habilidadeMarcaChave, setHabilidadeMarcaChave] = useState(""); // não usado no formulário, pode manter
+  const [habilidadeMarcaDescricao, setHabilidadeMarcaDescricao] = useState("");
+  const [habilidadeMarcaCusto, setHabilidadeMarcaCusto] = useState("");
+  const [habilidadeMarcaErro, setHabilidadeMarcaErro] = useState("");
+
+  const [marcaModalAberto, setMarcaModalAberto] = useState(false);
+  const [marcaSelecionada, setMarcaSelecionada] = useState(null);
+  const [habilidadeEscolhidaIndex, setHabilidadeEscolhidaIndex] =
+    useState(null);
+  const marcasPendentes = (personagem.marcas || []).filter((m) => !m.aceita);
+  const temMarcaPendente = marcasPendentes.length > 0;
 
   const abrirVisualizador = (item, index) => {
     setItemVisualizado({ ...item, index });
@@ -578,6 +596,12 @@ const FichaPersonagem = () => {
   // FUNÇÃO PARA FECHAR MODAL
   const fecharModal = () => {
     setModalAberto(false);
+  };
+
+  const abrirModalMarca = (marca) => {
+    setMarcaSelecionada(marca);
+    setHabilidadeEscolhidaIndex(null);
+    setMarcaModalAberto(true);
   };
 
   const abrirDescricaoStatus = (titulo, chave) => {
@@ -2571,8 +2595,12 @@ const FichaPersonagem = () => {
     const atributoValor = personagem.atributos[atributoBase];
     const bonusAtributo = calcularModificadorAtivo(atributoValor);
 
+    const valorTemporario = personagem.habilidadesTemporarias?.[chave] || 0;
+
     const bonusAtivo =
-      (personagem.habilidadesCombate?.[chave] || 0) + bonusAtributo;
+      (personagem.habilidadesCombate?.[chave] || 0) +
+      bonusAtributo +
+      valorTemporario;
 
     const nomesAtributos = {
       inteligencia: "Inteligência",
@@ -2589,6 +2617,7 @@ const FichaPersonagem = () => {
         passiva: 0,
         modificadorDados: modificadorDadosRolagem,
       });
+
       setRolandoDados(true);
 
       const rolagem = {
@@ -2990,6 +3019,76 @@ const FichaPersonagem = () => {
       (parseInt(personagem.habilidadesTemporarias?.[passiva], 10) || 0)
     );
   };
+
+  // Cria uma nova habilidade e adiciona ao array 'marcas'
+  const criarHabilidadeMarca = () => {
+    const nome = habilidadeMarcaNome.trim();
+    if (!nome) {
+      setHabilidadeMarcaErro("Informe o nome da habilidade.");
+      return;
+    }
+    const novaHabilidade = {
+      nome,
+      descricao: habilidadeMarcaDescricao.trim(),
+      custo: habilidadeMarcaCusto.trim() || undefined,
+    };
+    setPersonagem((prev) => ({
+      ...prev,
+      marcas: [...(prev.marcas || []), novaHabilidade],
+    }));
+    // Limpa os campos
+    setHabilidadeMarcaNome("");
+    setHabilidadeMarcaDescricao("");
+    setHabilidadeMarcaCusto("");
+    setHabilidadeMarcaErro("");
+  };
+
+  // Remove uma habilidade pelo índice
+  const removerHabilidadeMarca = (index) => {
+    setPersonagem((prev) => ({
+      ...prev,
+      marcas: prev.marcas.filter((_, i) => i !== index),
+    }));
+  };
+
+ const aceitarMarca = () => {
+  if (!marcaSelecionada) return;
+
+  // Pega apenas a habilidade escolhida (se houver)
+  let habilidadesEscolhidas = [];
+  if (
+    habilidadeEscolhidaIndex !== null &&
+    marcaSelecionada.habilidades?.length > 0
+  ) {
+    const habilidadeEscolhida =
+      marcaSelecionada.habilidades[habilidadeEscolhidaIndex];
+    habilidadesEscolhidas = [habilidadeEscolhida];
+  }
+
+  // Atualiza a marca: aceita e com apenas as habilidades escolhidas
+  const marcaAtualizada = {
+    ...marcaSelecionada,
+    aceita: true,
+    habilidades: habilidadesEscolhidas, // substitui a lista original
+  };
+
+  // Substitui a marca pendente pela aceita no array do personagem
+  const marcasAtualizadas = (personagem.marcas || []).map((m) =>
+    m.id === marcaSelecionada.id ? marcaAtualizada : m,
+  );
+
+  const personagemAtualizado = {
+    ...personagem,
+    marcas: marcasAtualizadas,
+    // Remove o campo habilidadesMarcas se não for usado em outro lugar
+    // habilidadesMarcas: [], // opcional: limpar para evitar duplicidade
+  };
+
+  setPersonagem(personagemAtualizado);
+  setMarcaModalAberto(false);
+  setMarcaSelecionada(null);
+  setHabilidadeEscolhidaIndex(null);
+};
 
   const bonusDefesa = parseInt(personagem.bonusDefesa, 10) || 0;
   const defesaBaseNatural =
@@ -3521,6 +3620,32 @@ const FichaPersonagem = () => {
             >
               Absoluta
             </button>
+            <button
+              className={subAbaHabilidade === "marcas" ? "ativa" : ""}
+              onClick={() => setSubAbaHabilidade("marcas")}
+            >
+              Habilidades Criadas
+            </button>
+
+            {/* Subabas dinâmicas para marcas aceitas */}
+            {personagem.marcas &&
+              personagem.marcas
+                .filter((m) => m.aceita)
+                .map((marca, index) => {
+                  const chave = `marca-${marca.id || index}`;
+                  return (
+                    <button
+                      key={chave}
+                      className={subAbaHabilidade === chave ? "ativa" : ""}
+                      onClick={() => {
+                        setSubAbaHabilidade(chave);
+                        setSubAbaMarcaSelecionada(marca);
+                      }}
+                    >
+                      {marca.nome}
+                    </button>
+                  );
+                })}
           </div>
 
           {subAbaHabilidade === "arquetipo" && (
@@ -3596,6 +3721,136 @@ const FichaPersonagem = () => {
                   Nenhuma habilidade absoluta adquirida.
                 </p>
               )}
+            </section>
+          )}
+          {subAbaHabilidade === "marcas" && (
+            <section className="habilidades-criadas-section">
+              <div className="habilidades-criadas-lado-a-lado">
+                {/* --- FORMULÁRIO DE CRIAÇÃO (esquerda) --- */}
+                <div className="criar-habilidade-bloco">
+                  <div className="criar-habilidade-form">
+                    <label>
+                      Nome da Habilidade *
+                      <input
+                        type="text"
+                        value={habilidadeMarcaNome}
+                        onChange={(e) => setHabilidadeMarcaNome(e.target.value)}
+                        placeholder="Ex: Golpe Sombrio"
+                      />
+                    </label>
+                    <label>
+                      Descrição
+                      <textarea
+                        value={habilidadeMarcaDescricao}
+                        onChange={(e) =>
+                          setHabilidadeMarcaDescricao(e.target.value)
+                        }
+                        placeholder="Descreva o efeito da habilidade..."
+                        rows="3"
+                      />
+                    </label>
+                    <label>
+                      Custo (opcional)
+                      <input
+                        type="text"
+                        value={habilidadeMarcaCusto}
+                        onChange={(e) =>
+                          setHabilidadeMarcaCusto(e.target.value)
+                        }
+                        placeholder="Ex: 2 PE, 1 Ação..."
+                      />
+                    </label>
+                    <button
+                      onClick={criarHabilidadeMarca}
+                      className="btn-criar-habilidade"
+                    >
+                      Criar Habilidade
+                    </button>
+                    {habilidadeMarcaErro && (
+                      <p className="erro-criar-habilidade">
+                        {habilidadeMarcaErro}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* --- LISTA DE HABILIDADES CRIADAS (direita) --- */}
+                <div className="lista-habilidades-criadas-bloco">
+                  <h5>Suas Habilidades Criadas</h5>
+                  <div className="habilidades-criadas-grid">
+                    {personagem.marcas && personagem.marcas.length > 0 ? (
+                      personagem.marcas.map((hab, index) => (
+                        <div key={index} className="habilidade-criada-card">
+                          <div className="habilidade-criada-info">
+                            <strong>{hab.nome}</strong>
+                            {hab.custo && (
+                              <span className="custo-badge">{hab.custo}</span>
+                            )}
+                            <p>{hab.descricao || "Sem descrição."}</p>
+                          </div>
+                          <button
+                            className="btn-remover-habilidade"
+                            onClick={() => removerHabilidadeMarca(index)}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="sem-habilidades">
+                        Nenhuma habilidade criada ainda.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {subAbaHabilidade.startsWith("marca-") && subAbaMarcaSelecionada && (
+            <section className="marca-detalhes-section">
+              <div className="marca-detalhes-card">
+                <div className="marca-detalhes-header">
+                  <span>MARCA</span>
+                  <h2>{subAbaMarcaSelecionada.nome}</h2>
+                </div>
+
+                <div className="marca-detalhes-descricao">
+                  <p>{subAbaMarcaSelecionada.descricao || "Sem descrição."}</p>
+                </div>
+
+                <div className="marca-detalhes-grid">
+                  <div className="marca-detalhes-beneficios">
+                    <h4>✦ Benefícios</h4>
+                    <p>
+                      {subAbaMarcaSelecionada.beneficios ||
+                        "Nenhum benefício listado."}
+                    </p>
+                  </div>
+
+                  <div className="marca-detalhes-penalidades">
+                    <h4>✧ Penalidades</h4>
+                    <p>
+                      {subAbaMarcaSelecionada.penalidades ||
+                        "Nenhuma penalidade listada."}
+                    </p>
+                  </div>
+                </div>
+
+                {subAbaMarcaSelecionada.habilidades?.length > 0 && (
+                  <div className="marca-detalhes-habilidades">
+                    <h4>⚡ Habilidades Adquiridas</h4>
+                    <div className="marca-habilidades-lista-detalhes">
+                      {subAbaMarcaSelecionada.habilidades.map((hab, idx) => (
+                        <div key={idx} className="marca-habilidade-item">
+                          <strong>{hab.nome}</strong>
+                          <p>{hab.descricao}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </section>
           )}
         </section>
@@ -5333,6 +5588,14 @@ const FichaPersonagem = () => {
         {/* ... (seu conteúdo existente permanece igual) ... */}
         <div className="profile-section">
           <div className="profile-container">
+            {temMarcaPendente && (
+              <button
+                className="marca-pendente-btn"
+                onClick={() => abrirModalMarca(marcasPendentes[0])}
+              >
+                ✦ Nova Marca Disponível
+              </button>
+            )}
             {/* Sanidade */}
             <div className="sanidade-section">
               <div className="sanidade-container">
@@ -5379,6 +5642,22 @@ const FichaPersonagem = () => {
                         className="dado-personagem perfil-info-bloqueada"
                         maxLength={40}
                       />
+                      {/* EXIBIR MARCAS */}
+                      {personagem.marcas && personagem.marcas.length > 0 && (
+                        <div className="marcas-personagem-perfil">
+                          {personagem.marcas.map((marca, index) => (
+                            <span key={index} className="marca-perfil-nome">
+                              {marca.nome}
+                              {!marca.aceita && (
+                                <span className="marca-pendente-tag">
+                                  {" "}
+                                  pendente
+                                </span>
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -5632,7 +5911,89 @@ const FichaPersonagem = () => {
           </div>
 
           <div className="sidebar-conteudo">{conteudoAbas[abaAtiva]}</div>
+          {/* MODAL DE MARCA */}
+          {marcaModalAberto && marcaSelecionada && (
+            <div
+              className="marca-modal-overlay"
+              onClick={() => setMarcaModalAberto(false)}
+            >
+              <div className="marca-modal" onClick={(e) => e.stopPropagation()}>
+                <button
+                  className="marca-modal-fechar"
+                  onClick={() => setMarcaModalAberto(false)}
+                >
+                  ×
+                </button>
 
+                <div className="marca-modal-header">
+                  <span>MARCA</span>
+                  <h2>{marcaSelecionada.nome}</h2>
+                  <p className="marca-descricao">
+                    {marcaSelecionada.descricao}
+                  </p>
+                </div>
+
+                <div className="marca-modal-corpo">
+                  <div className="marca-beneficios">
+                    <h4>✦ Benefícios</h4>
+                    <p>
+                      {marcaSelecionada.beneficios ||
+                        "Nenhum benefício listado."}
+                    </p>
+                  </div>
+
+                  <div className="marca-penalidades">
+                    <h4>✧ Penalidades</h4>
+                    <p>
+                      {marcaSelecionada.penalidades ||
+                        "Nenhuma penalidade listada."}
+                    </p>
+                  </div>
+
+                  {marcaSelecionada.habilidades?.length > 0 && (
+                    <div className="marca-habilidades">
+                      <h4>⚡ Escolha uma habilidade</h4>
+                      <div className="marca-habilidades-lista">
+                        {marcaSelecionada.habilidades.map((hab, index) => (
+                          <button
+                            key={index}
+                            className={`marca-habilidade-btn ${
+                              habilidadeEscolhidaIndex === index
+                                ? "selecionada"
+                                : ""
+                            }`}
+                            onClick={() => setHabilidadeEscolhidaIndex(index)}
+                          >
+                            <strong>{hab.nome}</strong>
+                            <span>{hab.descricao}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="marca-acoes">
+                    <button
+                      className="marca-aceitar-btn"
+                      onClick={aceitarMarca}
+                      disabled={
+                        marcaSelecionada.habilidades?.length > 0 &&
+                        habilidadeEscolhidaIndex === null
+                      }
+                    >
+                      Aceitar Marca
+                    </button>
+                    <button
+                      className="marca-recusar-btn"
+                      onClick={() => setMarcaModalAberto(false)}
+                    >
+                      Recusar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {/* MODAL DE ROLAGEM */}
           {modalRolagem && (
             <div

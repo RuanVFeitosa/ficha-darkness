@@ -129,7 +129,16 @@
   background: #000;
   color: #fff;
   text-align: left;
+  overflow-x: hidden;
 }
+
+/* Evita overflow em telas pequenas (principalmente dentro do grid/cards) */
+.mestre-page *,
+.mestre-page *::before,
+.mestre-page *::after {
+  max-width: 100%;
+}
+
 
 /* =========================================================
    HEADER ADMIN — ESPAÇOSO E COM CORES DISTINTAS
@@ -1044,6 +1053,268 @@
 
 .mestre-modal-identidade small {
   color: #aaa;
+}
+
+/* =========================================================
+   MARCAS NO MODAL DA FICHA
+========================================================= */
+
+.mestre-modal-marcas {
+  margin: 6px 0 4px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mestre-modal-marcas-label {
+  color: #d4af37;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.mestre-modal-marcas-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mestre-modal-marca-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.08);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mestre-modal-marca-tag .marca-pendente {
+  color: #f1c40f;
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+
+.marcas-habilidades-container {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.marcas-habilidade-input-group {
+  gap: 8px;
+  align-items: start;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.marcas-habilidade-input-group input,
+.marcas-habilidade-input-group textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  background: #050505;
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.marcas-habilidade-input-group textarea {
+  resize: vertical;
+  min-height: 50px;
+}
+
+.marcas-remover-habilidade {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 80, 80, 0.4);
+  border-radius: 6px;
+  background: transparent;
+  color: #ffb3b3;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+.marcas-remover-habilidade:hover {
+  background: rgba(180, 35, 35, 0.3);
+  border-color: #ff4d4d;
+}
+
+.marcas-adicionar-habilidade {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  background: transparent;
+  color: #ccc;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.2s;
+  width: fit-content;
+}
+
+.marcas-adicionar-habilidade:hover {
+  border-color: #fff;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* =========================================================
+   Detalhes da Marca – Benefícios e Penalidades lado a lado
+   ========================================================= */
+
+.marca-detalhes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.marca-detalhes-beneficios,
+.marca-detalhes-penalidades {
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid #2ecc71; /* verde para benefícios */
+}
+
+.marca-detalhes-penalidades {
+  border-left-color: #e74c3c; /* vermelho para penalidades */
+}
+
+.marca-detalhes-beneficios h4,
+.marca-detalhes-penalidades h4 {
+  margin: 0 0 6px;
+  color: #d4af37;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marca-detalhes-beneficios p,
+.marca-detalhes-penalidades p {
+  margin: 0;
+  color: #ddd;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* Responsivo: empilha em telas pequenas */
+@media (max-width: 600px) {
+  .marca-detalhes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Seletor de cores */
+.marcas-cor-seletor {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.marcas-cor-seletor label {
+  color: #ccc;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marcas-paleta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.marcas-cor-opcao {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.marcas-cor-opcao:hover {
+  transform: scale(1.12);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.marcas-cor-opcao.selecionada {
+  border-color: #ffffff;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.marcas-cor-personalizada {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.marcas-cor-personalizada label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.marcas-cor-personalizada input[type="color"] {
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.marcas-cor-hex {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ddd;
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+/* Indicador de cor no card */
+.marca-cor-indicador {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-right: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.marcas-card-topo h4 {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .mestre-modal-grid {
@@ -3074,4 +3345,363 @@
   .mestre-party-lista.mestre-party-cards {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* =========================================================
+   SEÇÃO MARCAS — CSS EXCLUSIVO
+========================================================= */
+
+.marcas-wrapper {
+  display: grid;
+  gap: 30px;
+  padding: 10px 0;
+}
+
+.marcas-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.8fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .marcas-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- FORMULÁRIO ---- */
+.marcas-form {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.marcas-form h3 {
+  margin: 0 0 4px 0;
+  color: #d4af37;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marcas-form label {
+  display: grid;
+  gap: 6px;
+  color: #ccc;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.marcas-form input,
+.marcas-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.marcas-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.marcas-form-acoes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.marcas-form-acoes button {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  background: #0a0a0a;
+  color: #fff;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.marcas-form-acoes button:hover {
+  background: #fff;
+  color: #000;
+}
+
+.marcas-form-acoes button.secundario {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #aaa;
+}
+
+.marcas-form-acoes button.secundario:hover {
+  background: #222;
+  color: #fff;
+}
+
+/* ---- LISTA DE MARCAS ---- */
+.marcas-lista {
+  display: grid;
+  gap: 16px;
+}
+
+.marcas-lista-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+
+.marcas-lista-header span {
+  color: #888;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marcas-lista-grid {
+  display: grid;
+  gap: 16px;
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.marcas-card {
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #d4af37;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  transition: border-color 0.2s ease;
+}
+
+.marcas-card:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.marcas-card-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.marcas-card-topo h4 {
+  margin: 0;
+  color: #fff;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.marcas-card-topo .marcas-tag {
+  color: #d4af37;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.marcas-card-desc {
+  color: #ccc;
+  font-size: 0.85rem;
+  margin: 6px 0 10px;
+  line-height: 1.4;
+}
+
+.marcas-card-detalhes {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.marcas-card-detalhes small {
+  color: #aaa;
+  font-size: 0.78rem;
+}
+
+.marcas-card-detalhes strong {
+  color: #d4af37;
+}
+
+.marcas-card-personagens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.marcas-personagem-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 0.72rem;
+}
+
+.marcas-personagem-chip img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+.marcas-personagem-chip span {
+  color: #ddd;
+  font-weight: 700;
+}
+
+.marcas-card-acoes {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.marcas-card-acoes button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: transparent;
+  color: #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s ease;
+}
+
+.marcas-card-acoes button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #fff;
+  color: #fff;
+}
+
+.marcas-card-acoes button.perigo:hover {
+  background: rgba(180, 35, 35, 0.4);
+  border-color: #ff4d4d;
+  color: #ffb3b3;
+}
+
+/* ---- ATRIBUIÇÃO ---- */
+.marcas-atribuicao {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.marcas-atribuicao h3 {
+  margin: 0;
+  color: #d4af37;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marcas-atribuicao-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 14px;
+  align-items: end;
+}
+
+@media (max-width: 700px) {
+  .marcas-atribuicao-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.marcas-atribuicao-grid label {
+  display: grid;
+  gap: 6px;
+  color: #ccc;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.marcas-atribuicao-grid select,
+.marcas-atribuicao-grid input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font: inherit;
+}
+
+.marcas-atribuicao-grid button {
+  min-height: 42px;
+  padding: 0 20px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  background: #0a0a0a;
+  color: #fff;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.marcas-atribuicao-grid button:hover:not(:disabled) {
+  background: #fff;
+  color: #000;
+}
+
+.marcas-atribuicao-grid button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.marcas-personagem-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.marcas-personagem-preview img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(212, 175, 55, 0.2);
+}
+
+.marcas-personagem-preview div {
+  display: grid;
+  gap: 2px;
+}
+
+.marcas-personagem-preview strong {
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.marcas-personagem-preview small {
+  color: #aaa;
+  font-size: 0.72rem;
 }
