@@ -306,6 +306,7 @@ export const estadoInicial = {
     { nome: "Ritual da Protecao", custo: "3 PE" },
     { nome: "Invocaçao Menor", custo: "5 PE" },
   ],
+  poderesAbsolutos: [], // <-- ADICIONE AQUI
   habilidadesClasse: {
     habilidadeAbsoluta: "",
     aptidoes: {},
@@ -528,6 +529,7 @@ const FichaPersonagem = () => {
   const [ritoAtivo, setRitoAtivo] = useState(false);
   const [customizacaoAberta, setCustomizacaoAberta] = useState(false);
   const [subAbaMaleta, setSubAbaMaleta] = useState("medicinal");
+  const [subAbaRituais, setSubAbaRituais] = useState("rituais");
 
   // ESTADO PARA O MODAL
   const [modalAberto, setModalAberto] = useState(false);
@@ -1284,8 +1286,23 @@ const FichaPersonagem = () => {
 
   const obterQuantidadeAlvosFirmeza = (mobilityTexto) => {
     const texto = String(mobilityTexto || "");
-    const match = texto.match(/(\d+)\s*alvos?/i) || texto.match(/(\d+)/);
-    return match ? Math.max(1, parseInt(match[1], 10)) : 2;
+
+    // Prioriza padrões que indiquem explicitamente alvos.
+    // Aceita: "Firmeza | 2 alvos", "Firmeza | 2", "2 alvos", "2 alvo".
+    const matchAlvos = texto.match(/(\d+)\s*(?:alvos?|alvo)\b/i);
+    if (matchAlvos) {
+      const n = parseInt(matchAlvos[1], 10);
+      return Number.isFinite(n) ? Math.max(1, n) : 2;
+    }
+
+    // Fallback: pega o primeiro número do texto (ex: "Firmeza | 2").
+    const matchNumero = texto.match(/(\d+)/);
+    if (matchNumero) {
+      const n = parseInt(matchNumero[1], 10);
+      return Number.isFinite(n) ? Math.max(1, n) : 2;
+    }
+
+    return 2;
   };
 
   const rolarDanoArma = (dmg, dadosExtras = 0, bonusDano = "") => {
@@ -2276,7 +2293,7 @@ const FichaPersonagem = () => {
       icone: "⚔️",
       descricao: "Aumenta o dano base da arma",
       max: 5,
-      materiais: { cano: 1, fita: 1 },
+      materiais: { cano: 3, fita: 3 },
     },
     {
       chave: "critico",
@@ -2284,7 +2301,7 @@ const FichaPersonagem = () => {
       icone: "💥",
       descricao: "Reduz a dificuldade de crítico (menos dados necessários)",
       max: 3,
-      materiais: { laminas: 1, fita: 1 },
+      materiais: { laminas: 3, fita: 3 },
     },
     {
       chave: "precisao",
@@ -2293,7 +2310,7 @@ const FichaPersonagem = () => {
       descricao:
         "Aumenta o bônus de ataque com Percepção e fortalece alcance/control",
       max: 3,
-      materiais: { fita: 1, alcool: 1 },
+      materiais: { fita: 3, alcool: 3 },
     },
     {
       chave: "controle",
@@ -2301,7 +2318,7 @@ const FichaPersonagem = () => {
       icone: "🎚️",
       descricao: "Melhora o controle de recuo e a estabilidade do disparo",
       max: 3,
-      materiais: { cano: 1, laminas: 1 },
+      materiais: { cano: 3, laminas: 3 },
     },
     {
       chave: "velocidade",
@@ -2420,24 +2437,23 @@ const FichaPersonagem = () => {
   const incrementarMobilidade = (mobilityTexto) => {
     const texto = String(mobilityTexto || "").trim();
 
-    // Busca "N alvos" (ex: "Firmeza | 2 alvos") e incrementa N em +1.
-    const match = texto.match(/(\d+)\s*alvos?/i);
-    if (match) {
-      const quantidadeAtual = Math.max(1, parseInt(match[1], 10) || 1);
-      const quantidade = quantidadeAtual + 1;
+    // Descobre o número atual, usando o mesmo parser da regra de combate.
+    // Isso evita divergências entre "Velocidade" (escrita) e "Firmeza" (leitura).
+    const numeroAtual = obterQuantidadeAlvosFirmeza(texto);
 
-      // Mantém o prefixo original (ex: "Firmeza") e só troca a parte numérica.
-      return texto.replace(/(\d+)\s*alvos?/i, `${quantidade} alvos`);
+    const proximoNumero = Math.max(1, numeroAtual + 1);
+
+    // Mantém o prefixo original antes de '|', se existir.
+    // Se não houver separador, tenta preservar o primeiro trecho textual.
+    let prefixo = "Firmeza";
+    if (texto.includes("|")) {
+      prefixo = texto.split("|")[0].trim() || "Firmeza";
+    } else if (texto) {
+      // remove a parte numérica pra ficar só o rótulo textual
+      prefixo = texto.replace(/\d+[\s\w\-]*/g, "").trim() || "Firmeza";
     }
 
-    // Caso não encontre número, tenta preservar prefixo antes do '|'.
-    // Se vier sem número (ex: "Firmeza | alvos"), assume padrão 2 -> 3.
-    const prefixo = texto.includes("|")
-      ? texto.split("|")[0].trim() || "Firmeza"
-      : texto || "Firmeza";
-
-    // Regra solicitada: padrão 2x (2 alvos). Ao melhorar, vira 3 alvos.
-    return `${prefixo} | 3 alvos`;
+    return `${prefixo} | ${proximoNumero} alvos`;
   };
 
   const melhorarArmaSelecionada = () => {
@@ -2993,6 +3009,27 @@ const FichaPersonagem = () => {
     (habilidade) => habilidade.grupo === "Habilidade Absoluta",
   );
 
+  // “Poderes Absolutos” devem ser exibidos dentro da aba RITUAIS.
+  // Mapeia as habilidades absolutas para uma estrutura semelhante à dos ritos.
+  const poderesAbsolutos = habilidadesAbsolutas.map((habilidade, index) => ({
+    id: habilidade.id || `${habilidade.nome}-${index}`,
+    nome: habilidade.nome,
+    custo: habilidade.custo,
+    grupo: "poderes-absolutos",
+    nivelRito: habilidade.nivel || "Iniciante", // ou "Absoluto", se preferir
+    icone: habilidade.icone || "✦",
+    // --- Campos que serão exibidos (mapeie todos os que existirem) ---
+    acao: habilidade.acao,
+    alvo: habilidade.alvo,
+    duracao: habilidade.duracao,
+    distancia: habilidade.distancia,
+    requisitos: habilidade.requisitos,
+    efeito: habilidade.efeito,
+    descricao: habilidade.descricao,
+    absolutismo: habilidade.absolutismo || habilidade.descricao,
+    isPoder: true, // marcador para o visualizador
+  }));
+
   const aptidoesSelecionadas = habilidadesSelecionadas.filter(
     (habilidade) => habilidade.grupo === "Aptidão",
   );
@@ -3051,44 +3088,44 @@ const FichaPersonagem = () => {
     }));
   };
 
- const aceitarMarca = () => {
-  if (!marcaSelecionada) return;
+  const aceitarMarca = () => {
+    if (!marcaSelecionada) return;
 
-  // Pega apenas a habilidade escolhida (se houver)
-  let habilidadesEscolhidas = [];
-  if (
-    habilidadeEscolhidaIndex !== null &&
-    marcaSelecionada.habilidades?.length > 0
-  ) {
-    const habilidadeEscolhida =
-      marcaSelecionada.habilidades[habilidadeEscolhidaIndex];
-    habilidadesEscolhidas = [habilidadeEscolhida];
-  }
+    // Pega apenas a habilidade escolhida (se houver)
+    let habilidadesEscolhidas = [];
+    if (
+      habilidadeEscolhidaIndex !== null &&
+      marcaSelecionada.habilidades?.length > 0
+    ) {
+      const habilidadeEscolhida =
+        marcaSelecionada.habilidades[habilidadeEscolhidaIndex];
+      habilidadesEscolhidas = [habilidadeEscolhida];
+    }
 
-  // Atualiza a marca: aceita e com apenas as habilidades escolhidas
-  const marcaAtualizada = {
-    ...marcaSelecionada,
-    aceita: true,
-    habilidades: habilidadesEscolhidas, // substitui a lista original
+    // Atualiza a marca: aceita e com apenas as habilidades escolhidas
+    const marcaAtualizada = {
+      ...marcaSelecionada,
+      aceita: true,
+      habilidades: habilidadesEscolhidas, // substitui a lista original
+    };
+
+    // Substitui a marca pendente pela aceita no array do personagem
+    const marcasAtualizadas = (personagem.marcas || []).map((m) =>
+      m.id === marcaSelecionada.id ? marcaAtualizada : m,
+    );
+
+    const personagemAtualizado = {
+      ...personagem,
+      marcas: marcasAtualizadas,
+      // Remove o campo habilidadesMarcas se não for usado em outro lugar
+      // habilidadesMarcas: [], // opcional: limpar para evitar duplicidade
+    };
+
+    setPersonagem(personagemAtualizado);
+    setMarcaModalAberto(false);
+    setMarcaSelecionada(null);
+    setHabilidadeEscolhidaIndex(null);
   };
-
-  // Substitui a marca pendente pela aceita no array do personagem
-  const marcasAtualizadas = (personagem.marcas || []).map((m) =>
-    m.id === marcaSelecionada.id ? marcaAtualizada : m,
-  );
-
-  const personagemAtualizado = {
-    ...personagem,
-    marcas: marcasAtualizadas,
-    // Remove o campo habilidadesMarcas se não for usado em outro lugar
-    // habilidadesMarcas: [], // opcional: limpar para evitar duplicidade
-  };
-
-  setPersonagem(personagemAtualizado);
-  setMarcaModalAberto(false);
-  setMarcaSelecionada(null);
-  setHabilidadeEscolhidaIndex(null);
-};
 
   const bonusDefesa = parseInt(personagem.bonusDefesa, 10) || 0;
   const defesaBaseNatural =
@@ -3401,31 +3438,7 @@ const FichaPersonagem = () => {
               </label>
             </div>
 
-            <div className="defesa-membros">
-              {[
-                ["cabeca", "Cabeça"],
-                ["torso", "Torso"],
-                ["bracoDireito", "Braço D."],
-                ["bracoEsquerdo", "Braço E."],
-                ["pernaDireita", "Perna D."],
-                ["pernaEsquerda", "Perna E."],
-              ].map(([chave, nome]) => (
-                <label key={chave} className="defesa-membro-item">
-                  <div className="mini-escudo-defesa">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={personagem.membros?.[chave]?.defesa || 0}
-                      onChange={(e) =>
-                        atualizarDefesaMembro(chave, e.target.value)
-                      }
-                    />
-                  </div>
-
-                  <span>{nome}</span>
-                </label>
-              ))}
-            </div>
+           
           </aside>
         </div>
       </div>
@@ -3860,130 +3873,308 @@ const FichaPersonagem = () => {
     rituais: (
       <div className="conteudo-aba rituais-aba">
         <div className="rituais-topo">
-          <span>Biblioteca Oculta</span>
-          <h4>RITUAIS CONHECIDOS</h4>
+          <span>Biblioteca do Absoluto</span>
+          <h4>RITOS CONHECIDOS</h4>
+        </div>
+
+        <div className="rituais-subabas">
+          <button
+            type="button"
+            className={subAbaRituais === "rituais" ? "ativa" : ""}
+            onClick={() => {
+              setSubAbaRituais("rituais");
+              setRitoVisualizado(null);
+            }}
+          >
+            Ritos
+          </button>
+           <button
+            type="button"
+            className={subAbaRituais === "absolutos" ? "ativa" : ""}
+            onClick={() => {
+              setSubAbaRituais("absolutos");
+              setRitoVisualizado(null);
+            }}
+          >
+            Poderes Absolutos
+          </button>
         </div>
 
         <div className="lista-rituais rituais-cards">
-          {personagem.rituais.map((ritual, index) => (
-            <article
-              key={index}
-              className={`ritual-card ${
-                ritosAtivos.includes(obterRitoId(ritual, index)) ? "ativo" : ""
-              } nivel-${ritual.nivelRito || ritual.nivel || "iniciante"}`}
-              onClick={() => setRitoVisualizado({ ...ritual, index })}
-            >
-              <div className="ritual-card-icone">{ritual.icone || "☉"}</div>
+          {subAbaRituais === "absolutos"
+            ? // ============================================================
+              //  PODERES ABSOLUTOS (lidos do campo poderesAbsolutos)
+              // ============================================================
+              (() => {
+                const poderes = personagem.poderesAbsolutos || [];
+                if (poderes.length === 0) {
+                  return (
+                    <div className="rituais-vazio">
+                      Nenhum poder absoluto adquirido.
+                    </div>
+                  );
+                }
+                return poderes.map((poder, index) => (
+                  <article
+                    key={`poder-${index}`}
+                    className="ritual-card poder-absoluto"
+                    onClick={() => {
+                      // Para depuração, veja o que está no objeto poder
+                      console.log("Poder selecionado:", poder);
+                      setRitoVisualizado({
+                        ...poder,
+                        index,
+                        isPoder: true,
+                      });
+                    }}
+                  >
+                    <div className="ritual-card-icone">
+                      {poder.icone || "✦"}
+                    </div>
 
-              <div className="ritual-card-info">
-                <strong>{ritual.nome}</strong>
+                    <div className="ritual-card-info">
+                      <strong>{poder.nome}</strong>
+                      <small>{poder.custo || "Absoluto"}</small>
+                    </div>
+                  </article>
+                ));
+              })()
+            : // ============================================================
+              //  RITUAIS NORMAIS (da lista personagem.rituais)
+              // ============================================================
+              (() => {
+                const rituaisNormais = (personagem.rituais || []).filter(
+                  (r) =>
+                    !String(r.grupo || r.tipo || "")
+                      .toLowerCase()
+                      .includes("absoluto") &&
+                    !String(r.nome || "")
+                      .toLowerCase()
+                      .includes("absolutismo"),
+                );
+                if (rituaisNormais.length === 0) {
+                  return (
+                    <div className="rituais-vazio">
+                      Nenhum ritual conhecido.
+                    </div>
+                  );
+                }
+                return rituaisNormais.map((ritual, index) => {
+                  const originalIndex = (personagem.rituais || []).indexOf(
+                    ritual,
+                  );
+                  return (
+                    <article
+                      key={originalIndex}
+                      className={`ritual-card ${
+                        ritosAtivos.includes(obterRitoId(ritual, originalIndex))
+                          ? "ativo"
+                          : ""
+                      } nivel-${ritual.nivelRito || ritual.nivel || "iniciante"}`}
+                      onClick={() =>
+                        setRitoVisualizado({ ...ritual, index: originalIndex })
+                      }
+                    >
+                      <div className="ritual-card-icone">
+                        {ritual.icone || "☉"}
+                      </div>
 
-                <small>
-                  {ritual.nivelRito || ritual.nivel
-                    ? `Nível ${ritual.nivelRito || ritual.nivel}`
-                    : "Ritual Obscuro"}
-                </small>
-              </div>
+                      <div className="ritual-card-info">
+                        <strong>{ritual.nome}</strong>
+                        <small>
+                          {ritual.nivelRito || ritual.nivel
+                            ? `Nível ${ritual.nivelRito || ritual.nivel}`
+                            : "Ritual Obscuro"}
+                        </small>
+                      </div>
 
-              <button
-                className="btn-ativar-rito"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  alternarRitoAtivo(ritual, index);
-                }}
-              >
-                {ritosAtivos.includes(obterRitoId(ritual, index))
-                  ? "Desativar"
-                  : "Ativar"}
-              </button>
-            </article>
-          ))}
-          {ritoVisualizado && (
+                      <button
+                        className="btn-ativar-rito"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          alternarRitoAtivo(ritual, originalIndex);
+                        }}
+                      >
+                        {ritosAtivos.includes(
+                          obterRitoId(ritual, originalIndex),
+                        )
+                          ? "Desativar"
+                          : "Ativar"}
+                      </button>
+                    </article>
+                  );
+                });
+              })()}
+        </div>
+
+        {/* ============================================================
+        VISUALIZADOR (funciona para poderes e rituais)
+        ============================================================ */}
+        {ritoVisualizado && (
+          <div
+            className="rito-visualizer-overlay"
+            onClick={() => setRitoVisualizado(null)}
+          >
             <div
-              className="rito-visualizer-overlay"
-              onClick={() => setRitoVisualizado(null)}
+              className="rito-visualizer"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div
-                className="rito-visualizer"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="rito-visualizer-topo">
-                  <div className="rito-visualizer-icone">
-                    {ritoVisualizado.icone || "☉"}
-                  </div>
+              <div className="rito-visualizer-topo">
+                <div className="rito-visualizer-icone">
+                  {ritoVisualizado.icone ||
+                    (ritoVisualizado.isPoder ? "✦" : "☉")}
+                </div>
 
-                  <div className="rito-visualizer-info-topo">
-                    <span>
-                      {ritoVisualizado.nivelRito || ritoVisualizado.nivel
+                <div className="rito-visualizer-info-topo">
+                  <span>
+                    {ritoVisualizado.isPoder
+                      ? "Poder Absoluto"
+                      : ritoVisualizado.nivelRito || ritoVisualizado.nivel
                         ? `Nível ${ritoVisualizado.nivelRito || ritoVisualizado.nivel}`
                         : "Ritual Obscuro"}
-                    </span>
+                  </span>
 
-                    <h2>{ritoVisualizado.nome}</h2>
-
-                    <small>{ritoVisualizado.custo || "0 PE"}</small>
-                  </div>
-
-                  <button
-                    className="rito-visualizer-fechar"
-                    onClick={() => setRitoVisualizado(null)}
-                  >
-                    ×
-                  </button>
+                  <h2>{ritoVisualizado.nome}</h2>
                 </div>
 
-                <div className="rito-visualizer-grid">
-                  {ritoVisualizado.acao && (
-                    <div>
-                      <span>Ação</span>
-                      <strong>{ritoVisualizado.acao}</strong>
-                    </div>
-                  )}
+                <button
+                  className="rito-visualizer-fechar"
+                  onClick={() => setRitoVisualizado(null)}
+                >
+                  ×
+                </button>
+              </div>
 
-                  {ritoVisualizado.alvo && (
-                    <div>
-                      <span>Alvo</span>
-                      <strong>{ritoVisualizado.alvo}</strong>
-                    </div>
-                  )}
+              <div className="rito-visualizer-grid">
+                {ritoVisualizado.isPoder ? (
+                  // ---- PODER ABSOLUTO ----
+                  <>
+                    {/* Ação */}
+                    {ritoVisualizado.acao && (
+                      <div className="rito-visualizer-bloco">
+                        <span>Ação</span>
+                        <p>{ritoVisualizado.acao}</p>
+                      </div>
+                    )}
 
-                  {ritoVisualizado.duracao && (
-                    <div>
-                      <span>Duração</span>
-                      <strong>{ritoVisualizado.duracao}</strong>
-                    </div>
-                  )}
+                    {/* Alvo */}
+                    {ritoVisualizado.alvo && (
+                      <div className="rito-visualizer-bloco">
+                        <span>Alvo</span>
+                        <p>{ritoVisualizado.alvo}</p>
+                      </div>
+                    )}
 
-                  {ritoVisualizado.distancia && (
-                    <div>
-                      <span>Distância</span>
-                      <strong>{ritoVisualizado.distancia}</strong>
-                    </div>
-                  )}
-                </div>
+                    {/* Duração */}
+                    {ritoVisualizado.duracao && (
+                      <div className="rito-visualizer-bloco">
+                        <span>Duração</span>
+                        <p>{ritoVisualizado.duracao}</p>
+                      </div>
+                    )}
 
-                {ritoVisualizado.requisitos && (
-                  <div className="rito-visualizer-bloco">
-                    <span>Requisitos</span>
-                    <p>{ritoVisualizado.requisitos}</p>
-                  </div>
+                    {/* Distância */}
+                    {ritoVisualizado.distancia && (
+                      <div className="rito-visualizer-bloco">
+                        <span>Distância</span>
+                        <p>{ritoVisualizado.distancia}</p>
+                      </div>
+                    )}
+
+                    {/* Requisitos */}
+                    {ritoVisualizado.requisitos && (
+                      <div className="rito-visualizer-bloco">
+                        <span>Requisitos</span>
+                        <p>{ritoVisualizado.requisitos}</p>
+                      </div>
+                    )}
+
+                    {/* Efeito */}
+                    {ritoVisualizado.efeito && (
+                      <div className="rito-visualizer-bloco">
+                        <span>Efeito</span>
+                        <p>{ritoVisualizado.efeito}</p>
+                      </div>
+                    )}
+
+                    {/* Descrição (usada apenas se não houver efeito, para evitar duplicação) */}
+                    {ritoVisualizado.descricao && !ritoVisualizado.efeito && (
+                      <div className="rito-visualizer-bloco">
+                        <span>Descrição</span>
+                        <p>{ritoVisualizado.descricao}</p>
+                      </div>
+                    )}
+
+                    {/* Absolutismo (campo extra, comum em poderes e alguns rituais) */}
+                    {ritoVisualizado.absolutismo && (
+                      <div className="rito-visualizer-bloco">
+                        <span>
+                          {ritoVisualizado.isPoder
+                            ? "Absolutismo"
+                            : "Descrição"}
+                        </span>
+                        <p>{ritoVisualizado.absolutismo}</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // ---- RITUAL NORMAL ----
+                  <>
+                    {ritoVisualizado.acao && (
+                      <div>
+                        <span>Ação</span>
+                        <strong>{ritoVisualizado.acao}</strong>
+                      </div>
+                    )}
+
+                    {ritoVisualizado.alvo && (
+                      <div>
+                        <span>Alvo</span>
+                        <strong>{ritoVisualizado.alvo}</strong>
+                      </div>
+                    )}
+
+                    {ritoVisualizado.duracao && (
+                      <div>
+                        <span>Duração</span>
+                        <strong>{ritoVisualizado.duracao}</strong>
+                      </div>
+                    )}
+
+                    {ritoVisualizado.distancia && (
+                      <div>
+                        <span>Distância</span>
+                        <strong>{ritoVisualizado.distancia}</strong>
+                      </div>
+                    )}
+
+                    {ritoVisualizado.requisitos && (
+                      <div className="rito-visualizer-bloco">
+                        <span>Requisitos</span>
+                        <p>{ritoVisualizado.requisitos}</p>
+                      </div>
+                    )}
+
+                    {ritoVisualizado.efeito && (
+                      <div className="rito-visualizer-bloco">
+                        <span>Efeito</span>
+                        <p>{ritoVisualizado.efeito}</p>
+                      </div>
+                    )}
+
+                    {ritoVisualizado.descricao && (
+                      <div className="rito-visualizer-bloco">
+                        <span>Descrição</span>
+                        <p>{ritoVisualizado.descricao}</p>
+                      </div>
+                    )}
+                  </>
                 )}
+              </div>
 
-                {ritoVisualizado.efeito && (
-                  <div className="rito-visualizer-bloco">
-                    <span>Efeito</span>
-                    <p>{ritoVisualizado.efeito}</p>
-                  </div>
-                )}
-
-                {ritoVisualizado.descricao && (
-                  <div className="rito-visualizer-bloco">
-                    <span>Descrição</span>
-                    <p>{ritoVisualizado.descricao}</p>
-                  </div>
-                )}
-
-                <div className="rito-visualizer-acoes">
+              <div className="rito-visualizer-acoes">
+                {/* Botão de ativar/desativar só para rituais normais */}
+                {!ritoVisualizado.isPoder && (
                   <button
                     className={
                       ritosAtivos.includes(
@@ -4002,11 +4193,11 @@ const FichaPersonagem = () => {
                       ? "Desativar Rito"
                       : "Ativar Rito"}
                   </button>
-                </div>
+                )}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     ),
 
@@ -5882,7 +6073,7 @@ const FichaPersonagem = () => {
               className={`aba-btn ${abaAtiva === "rituais" ? "ativa" : ""}`}
               onClick={() => setAbaAtiva("rituais")}
             >
-              RITUAIS
+              ABSOLUTO
             </button>
             <button
               className={`aba-btn ${abaAtiva === "inventario" ? "ativa" : ""}`}

@@ -2114,6 +2114,40 @@ body {
   align-items: start;
 }
 
+.rituais-subabas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 18px;
+}
+
+.rituais-subabas button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--borda-suave);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.58);
+  color: var(--cor-texto);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.rituais-subabas button.ativa {
+  border-color: var(--cor-primaria);
+  background: rgba(212, 175, 55, 0.14);
+  color: var(--cor-primaria);
+}
+
+.rituais-subabas button:hover {
+  border-color: var(--cor-primaria);
+  background: rgba(212, 175, 55, 0.12);
+}
+
 .ritual-card {
   width: 230px;
   min-height: 230px;
