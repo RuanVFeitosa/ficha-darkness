@@ -126,6 +126,31 @@ const salvarPersonagemLocalSeguro = (chave, personagem) => {
   }
 };
 
+const CampoNumeroEditavel = ({ valor, onConfirmar, ...props }) => {
+  const [rascunho, setRascunho] = useState(String(valor ?? ""));
+
+  useEffect(() => {
+    setRascunho(String(valor ?? ""));
+  }, [valor]);
+
+  const confirmar = () => {
+    const numero = parseInt(rascunho, 10);
+    onConfirmar(Number.isFinite(numero) ? numero : 0);
+  };
+
+  return (
+    <input
+      {...props}
+      value={rascunho}
+      onChange={(event) => setRascunho(event.target.value)}
+      onBlur={confirmar}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") event.currentTarget.blur();
+      }}
+    />
+  );
+};
+
 const TEMA_PADRAO_FICHA = {
   primaria: "#ffffff",
   secundaria: "#000000",
@@ -3066,6 +3091,16 @@ const FichaPersonagem = () => {
           (item) => item.id !== habilidade.id,
         ),
       };
+      if (habilidade.tipo === "rito") {
+        atualizado.rituais = (atual.rituais || []).filter(
+          (item) => item.id !== habilidade.id,
+        );
+      }
+      if (habilidade.tipo === "poderAbsoluto") {
+        atualizado.poderesAbsolutos = (atual.poderesAbsolutos || []).filter(
+          (item) => item.id !== habilidade.id,
+        );
+      }
       if (habilidade.recurso === "evolucao") {
         atualizado.pontosEvolucao = {
           ...(atualizado.pontosEvolucao || {}),
@@ -3749,7 +3784,7 @@ const FichaPersonagem = () => {
                       <div key={habilidade.id} className={`habilidade-criada-card ${habilidade.status || "pendente"}`}>
                         <div className="habilidade-criada-info">
                           <strong>{habilidade.nome}</strong>
-                          <span className="custo-badge">{habilidade.custo} {habilidade.recurso === "evolucao" ? "Pontos de Evolução" : habilidade.recurso}</span>
+                          <span className="custo-badge">{habilidade.tipo === "rito" ? "Rito" : habilidade.tipo === "poderAbsoluto" ? "Poder Absoluto" : "Habilidade"} · {habilidade.custo} {habilidade.recurso === "evolucao" ? "Pontos de Evolução" : habilidade.recurso}</span>
                           <span className="status-habilidade-criada">{habilidade.status || "pendente"}</span>
                           <p>{habilidade.descricao || "Sem descrição."}</p>
                         </div>
@@ -5846,24 +5881,24 @@ const FichaPersonagem = () => {
                           −
                         </button>
                         <span className="barra-rpg-valores">
-                          <input
+                          <CampoNumeroEditavel
                             type="number"
-                            value={personagem.sanidade.atual}
-                            onChange={(e) => atualizarSanidade(e.target.value)}
+                            valor={personagem.sanidade.atual}
+                            onConfirmar={atualizarSanidade}
                             className="barra-rpg-input atual"
                             min="0"
                             max={personagem.sanidade.max}
                           />
                           <span className="barra-rpg-sep">/</span>
-                          <input
+                          <CampoNumeroEditavel
                             type="number"
-                            value={personagem.sanidade.max}
-                            onChange={(e) =>
+                            valor={personagem.sanidade.max}
+                            onConfirmar={(valor) =>
                               setPersonagem((prev) => ({
                                 ...prev,
                                 sanidade: {
                                   ...prev.sanidade,
-                                  max: parseInt(e.target.value) || 0,
+                                  max: Math.max(0, valor),
                                 },
                               }))
                             }
@@ -5905,24 +5940,24 @@ const FichaPersonagem = () => {
                         </button>
 
                         <span className="barra-rpg-valores">
-                          <input
+                          <CampoNumeroEditavel
                             type="number"
-                            value={personagem.esperanca.atual}
-                            onChange={(e) => atualizarEsperanca(e.target.value)}
+                            valor={personagem.esperanca.atual}
+                            onConfirmar={atualizarEsperanca}
                             className="barra-rpg-input atual esperanca-input"
                             min="0"
                             max={personagem.esperanca.max}
                           />
                           <span className="barra-rpg-sep">/</span>
-                          <input
+                          <CampoNumeroEditavel
                             type="number"
-                            value={personagem.esperanca.max}
-                            onChange={(e) =>
+                            valor={personagem.esperanca.max}
+                            onConfirmar={(valor) =>
                               setPersonagem((prev) => ({
                                 ...prev,
                                 esperanca: {
                                   ...prev.esperanca,
-                                  max: parseInt(e.target.value) || 0,
+                                  max: Math.max(0, valor),
                                 },
                               }))
                             }

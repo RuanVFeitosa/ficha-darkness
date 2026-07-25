@@ -65,6 +65,7 @@ const UpgradeNivel = () => {
   const [distribuicao, setDistribuicao] = useState({});
   const [mensagem, setMensagem] = useState("");
   const [novaHabilidade, setNovaHabilidade] = useState({
+    tipo: "habilidade",
     nome: "",
     descricao: "",
     custo: 10,
@@ -133,7 +134,8 @@ const UpgradeNivel = () => {
     const nome = novaHabilidade.nome.trim();
     const descricao = novaHabilidade.descricao.trim();
     const custo = Math.max(10, Math.min(50, parseInt(novaHabilidade.custo, 10) || 10));
-    const recurso = novaHabilidade.recurso;
+    const tipo = novaHabilidade.tipo;
+    const recurso = tipo === "habilidade" ? novaHabilidade.recurso : "sanidade";
 
     if (!nome || !descricao) {
       mostrarNotificacao("Informe o nome e a descrição da habilidade.", "erro");
@@ -147,6 +149,7 @@ const UpgradeNivel = () => {
     const atualizado = structuredClone(personagem);
     const habilidade = {
       id: crypto.randomUUID(),
+      tipo,
       nome,
       descricao,
       custo,
@@ -175,7 +178,7 @@ const UpgradeNivel = () => {
     }
 
     setPersonagem(atualizado);
-    setNovaHabilidade({ nome: "", descricao: "", custo: 10, recurso: "evolucao" });
+    setNovaHabilidade({ tipo, nome: "", descricao: "", custo: 10, recurso: tipo === "habilidade" ? "evolucao" : "sanidade" });
     localStorage.setItem(storageKey, JSON.stringify(atualizado));
     notificarPersonagemAtualizado(fichaId, atualizado);
     try {
@@ -184,7 +187,7 @@ const UpgradeNivel = () => {
     } catch (error) {
       console.warn("Backend indisponível. Habilidade salva localmente.", error);
     }
-    mostrarNotificacao("Habilidade enviada para análise do mestre.", "sucesso");
+    mostrarNotificacao(`${tipo === "rito" ? "Rito" : tipo === "poderAbsoluto" ? "Poder absoluto" : "Habilidade"} enviado para análise do mestre.`, "sucesso");
   };
 
   // ============================================================
@@ -996,15 +999,16 @@ const UpgradeNivel = () => {
                   <div><span>Esperança</span><strong>{personagem.esperanca?.atual || 0} <small>/ {personagem.esperanca?.max || 0}</small></strong></div>
                   <div><span>Sanidade</span><strong>{personagem.sanidade?.atual || 0} <small>/ {personagem.sanidade?.max || 0}</small></strong></div>
                 </div>
+                <label>Tipo<select value={novaHabilidade.tipo} onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, tipo: e.target.value, recurso: e.target.value === "habilidade" ? atual.recurso : "sanidade" }))}><option value="habilidade">Habilidade</option><option value="rito">Rito</option><option value="poderAbsoluto">Poder Absoluto</option></select></label>
                 <label>Nome<input value={novaHabilidade.nome} maxLength="80" onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, nome: e.target.value }))} placeholder="Ex.: Manto da Ruína" /></label>
                 <label className="criador-descricao">Descrição<textarea value={novaHabilidade.descricao} maxLength="800" onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, descricao: e.target.value }))} placeholder="Explique o efeito, limites e condições da habilidade." /></label>
-                <label>Custo (10 a 50)<input type="number" min="10" max="50" value={novaHabilidade.custo} onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, custo: Math.max(10, Math.min(50, parseInt(e.target.value, 10) || 10)) }))} /></label>
-                <label>Gastar de<select value={novaHabilidade.recurso} onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, recurso: e.target.value }))}><option value="evolucao">Pontos de Evolução ({saldoRecursoHabilidade.evolucao})</option><option value="esperanca">Esperança máxima ({saldoRecursoHabilidade.esperanca})</option><option value="sanidade">Sanidade máxima ({saldoRecursoHabilidade.sanidade})</option></select></label>
+                <label>Custo<select value={novaHabilidade.custo} onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, custo: parseInt(e.target.value, 10) }))}><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="40">40</option><option value="50">50</option></select></label>
+                {novaHabilidade.tipo === "habilidade" ? <label>Gastar de<select value={novaHabilidade.recurso} onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, recurso: e.target.value }))}><option value="evolucao">Pontos de Evolução ({saldoRecursoHabilidade.evolucao})</option><option value="esperanca">Esperança máxima ({saldoRecursoHabilidade.esperanca})</option><option value="sanidade">Sanidade máxima ({saldoRecursoHabilidade.sanidade})</option></select></label> : <label>Recurso obrigatório<input value={`Sanidade máxima (${saldoRecursoHabilidade.sanidade})`} readOnly /></label>}
                 <button type="button" className="upgrade-confirmar" onClick={enviarHabilidadeParaAnalise}>Enviar para análise ({novaHabilidade.custo})</button>
               </div>
               <div className="habilidades-enviadas">
                 <h3>Suas solicitações</h3>
-                {(personagem.habilidadesCriadas || []).length ? personagem.habilidadesCriadas.map((habilidade) => <article key={habilidade.id} className={`habilidade-enviada ${habilidade.status || "pendente"}`}><div><strong>{habilidade.nome}</strong><span>{habilidade.custo} {habilidade.recurso === "evolucao" ? "Pontos de Evolução" : habilidade.recurso}</span><p>{habilidade.descricao}</p></div><b>{habilidade.status || "pendente"}</b></article>) : <p>Nenhuma habilidade enviada.</p>}
+                {(personagem.habilidadesCriadas || []).length ? personagem.habilidadesCriadas.map((habilidade) => <article key={habilidade.id} className={`habilidade-enviada ${habilidade.status || "pendente"}`}><div><strong>{habilidade.nome}</strong><span>{habilidade.tipo === "rito" ? "Rito" : habilidade.tipo === "poderAbsoluto" ? "Poder Absoluto" : "Habilidade"} · {habilidade.custo} {habilidade.recurso === "evolucao" ? "Pontos de Evolução" : habilidade.recurso}</span><p>{habilidade.descricao}</p></div><b>{habilidade.status || "pendente"}</b></article>) : <p>Nenhuma solicitação enviada.</p>}
               </div>
             </div>
           )}
