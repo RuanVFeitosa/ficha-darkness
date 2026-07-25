@@ -64,6 +64,12 @@ const UpgradeNivel = () => {
   const [trilha, setTrilha] = useState("atributos");
   const [distribuicao, setDistribuicao] = useState({});
   const [mensagem, setMensagem] = useState("");
+  const [novaHabilidade, setNovaHabilidade] = useState({
+    nome: "",
+    descricao: "",
+    custo: 10,
+    recurso: "evolucao",
+  });
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
   const nivelAtual = Math.max(1, parseInt(personagem.nivel, 10) || 1);
   const passouDoNivel5 = nivelAtual > 5;
@@ -116,6 +122,70 @@ const UpgradeNivel = () => {
     0,
     pontosEvolucaoDisponiveis - pontosDistribuidos,
   );
+
+  const saldoRecursoHabilidade = {
+    evolucao: pontosEvolucaoDisponiveis,
+    esperanca: Math.max(0, parseInt(personagem.esperanca?.max, 10) || 0),
+    sanidade: Math.max(0, parseInt(personagem.sanidade?.max, 10) || 0),
+  };
+
+  const enviarHabilidadeParaAnalise = async () => {
+    const nome = novaHabilidade.nome.trim();
+    const descricao = novaHabilidade.descricao.trim();
+    const custo = Math.max(10, Math.min(50, parseInt(novaHabilidade.custo, 10) || 10));
+    const recurso = novaHabilidade.recurso;
+
+    if (!nome || !descricao) {
+      mostrarNotificacao("Informe o nome e a descrição da habilidade.", "erro");
+      return;
+    }
+    if (saldoRecursoHabilidade[recurso] < custo) {
+      mostrarNotificacao("Você não possui saldo suficiente para este custo.", "erro");
+      return;
+    }
+
+    const atualizado = structuredClone(personagem);
+    const habilidade = {
+      id: crypto.randomUUID(),
+      nome,
+      descricao,
+      custo,
+      recurso,
+      recursoAtualAntes:
+        recurso === "evolucao" ? null : parseInt(personagem[recurso]?.atual, 10) || 0,
+      status: "pendente",
+      criadaEm: new Date().toISOString(),
+    };
+    atualizado.habilidadesCriadas = [
+      ...(atualizado.habilidadesCriadas || []),
+      habilidade,
+    ];
+    if (recurso === "evolucao") {
+      atualizado.pontosEvolucao = {
+        ...(atualizado.pontosEvolucao || {}),
+        disponiveis: saldoRecursoHabilidade.evolucao - custo,
+      };
+    } else {
+      const novoMaximo = saldoRecursoHabilidade[recurso] - custo;
+      atualizado[recurso] = {
+        ...(atualizado[recurso] || {}),
+        max: novoMaximo,
+        atual: Math.min(parseInt(atualizado[recurso]?.atual, 10) || 0, novoMaximo),
+      };
+    }
+
+    setPersonagem(atualizado);
+    setNovaHabilidade({ nome: "", descricao: "", custo: 10, recurso: "evolucao" });
+    localStorage.setItem(storageKey, JSON.stringify(atualizado));
+    notificarPersonagemAtualizado(fichaId, atualizado);
+    try {
+      const personagemSalvo = await salvarPersonagem(fichaId, atualizado);
+      notificarPersonagemAtualizado(fichaId, personagemSalvo || atualizado);
+    } catch (error) {
+      console.warn("Backend indisponível. Habilidade salva localmente.", error);
+    }
+    mostrarNotificacao("Habilidade enviada para análise do mestre.", "sucesso");
+  };
 
   // ============================================================
   // CARREGAR FICHA
@@ -913,16 +983,29 @@ const UpgradeNivel = () => {
           {/* HABILIDADES */}
           {trilha === "habilidades" && (
             <div className="upgrade-habilidades-info">
-              <h2>Habilidades Absolutas</h2>
-              <p>
-                Na árvore, aptidões custam 5 pontos e habilidades de
-                especialidade custam 10 pontos. A árvore usa o saldo de pontos
-                disponíveis desta ficha:{" "}
-                <strong>{pontosEvolucaoDisponiveis} pontos</strong>.
-              </p>
-              <button type="button" onClick={abrirArvore}>
-                Abrir árvore de habilidades
-              </button>
+              <div className="upgrade-habilidades-topo">
+                <div>
+                  <h2>Criação de Habilidades</h2>
+                  <p>Defina o custo entre 10 e 50. A habilidade ficará pendente até a aprovação do mestre.</p>
+                </div>
+                <button type="button" onClick={abrirArvore}>Árvore de habilidades</button>
+              </div>
+              <div className="criador-habilidade-form">
+                <div className="recursos-habilidade-resumo">
+                  <div><span>Pontos de Evolução</span><strong>{pontosEvolucaoDisponiveis}</strong></div>
+                  <div><span>Esperança</span><strong>{personagem.esperanca?.atual || 0} <small>/ {personagem.esperanca?.max || 0}</small></strong></div>
+                  <div><span>Sanidade</span><strong>{personagem.sanidade?.atual || 0} <small>/ {personagem.sanidade?.max || 0}</small></strong></div>
+                </div>
+                <label>Nome<input value={novaHabilidade.nome} maxLength="80" onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, nome: e.target.value }))} placeholder="Ex.: Manto da Ruína" /></label>
+                <label className="criador-descricao">Descrição<textarea value={novaHabilidade.descricao} maxLength="800" onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, descricao: e.target.value }))} placeholder="Explique o efeito, limites e condições da habilidade." /></label>
+                <label>Custo (10 a 50)<input type="number" min="10" max="50" value={novaHabilidade.custo} onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, custo: Math.max(10, Math.min(50, parseInt(e.target.value, 10) || 10)) }))} /></label>
+                <label>Gastar de<select value={novaHabilidade.recurso} onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, recurso: e.target.value }))}><option value="evolucao">Pontos de Evolução ({saldoRecursoHabilidade.evolucao})</option><option value="esperanca">Esperança máxima ({saldoRecursoHabilidade.esperanca})</option><option value="sanidade">Sanidade máxima ({saldoRecursoHabilidade.sanidade})</option></select></label>
+                <button type="button" className="upgrade-confirmar" onClick={enviarHabilidadeParaAnalise}>Enviar para análise ({novaHabilidade.custo})</button>
+              </div>
+              <div className="habilidades-enviadas">
+                <h3>Suas solicitações</h3>
+                {(personagem.habilidadesCriadas || []).length ? personagem.habilidadesCriadas.map((habilidade) => <article key={habilidade.id} className={`habilidade-enviada ${habilidade.status || "pendente"}`}><div><strong>{habilidade.nome}</strong><span>{habilidade.custo} {habilidade.recurso === "evolucao" ? "Pontos de Evolução" : habilidade.recurso}</span><p>{habilidade.descricao}</p></div><b>{habilidade.status || "pendente"}</b></article>) : <p>Nenhuma habilidade enviada.</p>}
+              </div>
             </div>
           )}
 

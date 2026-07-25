@@ -557,13 +557,6 @@ const FichaPersonagem = () => {
   const [subAbaHabilidade, setSubAbaHabilidade] = useState("arquetipo");
   const [subAbaMarcaSelecionada, setSubAbaMarcaSelecionada] = useState(null);
 
-  // Estados para criação de habilidade (Marcas)
-  const [habilidadeMarcaNome, setHabilidadeMarcaNome] = useState("");
-  const [habilidadeMarcaChave, setHabilidadeMarcaChave] = useState(""); // não usado no formulário, pode manter
-  const [habilidadeMarcaDescricao, setHabilidadeMarcaDescricao] = useState("");
-  const [habilidadeMarcaCusto, setHabilidadeMarcaCusto] = useState("");
-  const [habilidadeMarcaErro, setHabilidadeMarcaErro] = useState("");
-
   const [marcaModalAberto, setMarcaModalAberto] = useState(false);
   const [marcaSelecionada, setMarcaSelecionada] = useState(null);
   const [habilidadeEscolhidaIndex, setHabilidadeEscolhidaIndex] =
@@ -3058,34 +3051,43 @@ const FichaPersonagem = () => {
   };
 
   // Cria uma nova habilidade e adiciona ao array 'marcas'
-  const criarHabilidadeMarca = () => {
-    const nome = habilidadeMarcaNome.trim();
-    if (!nome) {
-      setHabilidadeMarcaErro("Informe o nome da habilidade.");
-      return;
-    }
-    const novaHabilidade = {
-      nome,
-      descricao: habilidadeMarcaDescricao.trim(),
-      custo: habilidadeMarcaCusto.trim() || undefined,
-    };
-    setPersonagem((prev) => ({
-      ...prev,
-      marcas: [...(prev.marcas || []), novaHabilidade],
-    }));
-    // Limpa os campos
-    setHabilidadeMarcaNome("");
-    setHabilidadeMarcaDescricao("");
-    setHabilidadeMarcaCusto("");
-    setHabilidadeMarcaErro("");
-  };
+  const venderHabilidadeCriada = (habilidade) => {
+    const custo = Math.max(0, parseInt(habilidade.custo, 10) || 0);
+    const nomeRecurso = habilidade.recurso === "evolucao"
+      ? "Pontos de Evolução"
+      : habilidade.recurso === "esperanca" ? "Esperança" : "Sanidade";
 
-  // Remove uma habilidade pelo índice
-  const removerHabilidadeMarca = (index) => {
-    setPersonagem((prev) => ({
-      ...prev,
-      marcas: prev.marcas.filter((_, i) => i !== index),
-    }));
+    if (!window.confirm(`Vender "${habilidade.nome}" e recuperar ${custo} de ${nomeRecurso}?`)) return;
+
+    setPersonagem((atual) => {
+      const atualizado = {
+        ...atual,
+        habilidadesCriadas: (atual.habilidadesCriadas || []).filter(
+          (item) => item.id !== habilidade.id,
+        ),
+      };
+      if (habilidade.recurso === "evolucao") {
+        atualizado.pontosEvolucao = {
+          ...(atualizado.pontosEvolucao || {}),
+          disponiveis: (parseInt(atualizado.pontosEvolucao?.disponiveis, 10) || 0) + custo,
+        };
+      } else if (habilidade.recurso === "esperanca" || habilidade.recurso === "sanidade") {
+        const recurso = habilidade.recurso;
+        const novoMaximo = (parseInt(atualizado[recurso]?.max, 10) || 0) + custo;
+        atualizado[recurso] = {
+          ...(atualizado[recurso] || {}),
+          max: novoMaximo,
+          atual: Math.min(
+            novoMaximo,
+            Math.max(
+              parseInt(atualizado[recurso]?.atual, 10) || 0,
+              parseInt(habilidade.recursoAtualAntes, 10) || 0,
+            ),
+          ),
+        };
+      }
+      return atualizado;
+    });
   };
 
   const aceitarMarca = () => {
@@ -3738,83 +3740,23 @@ const FichaPersonagem = () => {
           )}
           {subAbaHabilidade === "marcas" && (
             <section className="habilidades-criadas-section">
-              <div className="habilidades-criadas-lado-a-lado">
-                {/* --- FORMULÁRIO DE CRIAÇÃO (esquerda) --- */}
-                <div className="criar-habilidade-bloco">
-                  <div className="criar-habilidade-form">
-                    <label>
-                      Nome da Habilidade *
-                      <input
-                        type="text"
-                        value={habilidadeMarcaNome}
-                        onChange={(e) => setHabilidadeMarcaNome(e.target.value)}
-                        placeholder="Ex: Golpe Sombrio"
-                      />
-                    </label>
-                    <label>
-                      Descrição
-                      <textarea
-                        value={habilidadeMarcaDescricao}
-                        onChange={(e) =>
-                          setHabilidadeMarcaDescricao(e.target.value)
-                        }
-                        placeholder="Descreva o efeito da habilidade..."
-                        rows="3"
-                      />
-                    </label>
-                    <label>
-                      Custo (opcional)
-                      <input
-                        type="text"
-                        value={habilidadeMarcaCusto}
-                        onChange={(e) =>
-                          setHabilidadeMarcaCusto(e.target.value)
-                        }
-                        placeholder="Ex: 2 PE, 1 Ação..."
-                      />
-                    </label>
-                    <button
-                      onClick={criarHabilidadeMarca}
-                      className="btn-criar-habilidade"
-                    >
-                      Criar Habilidade
-                    </button>
-                    {habilidadeMarcaErro && (
-                      <p className="erro-criar-habilidade">
-                        {habilidadeMarcaErro}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* --- LISTA DE HABILIDADES CRIADAS (direita) --- */}
-                <div className="lista-habilidades-criadas-bloco">
-                  <h5>Suas Habilidades Criadas</h5>
-                  <div className="habilidades-criadas-grid">
-                    {personagem.marcas && personagem.marcas.length > 0 ? (
-                      personagem.marcas.map((hab, index) => (
-                        <div key={index} className="habilidade-criada-card">
-                          <div className="habilidade-criada-info">
-                            <strong>{hab.nome}</strong>
-                            {hab.custo && (
-                              <span className="custo-badge">{hab.custo}</span>
-                            )}
-                            <p>{hab.descricao || "Sem descrição."}</p>
-                          </div>
-                          <button
-                            className="btn-remover-habilidade"
-                            onClick={() => removerHabilidadeMarca(index)}
-                          >
-                            ✕
-                          </button>
+              <div className="lista-habilidades-criadas-bloco">
+                <h5>Habilidades criadas</h5>
+                <p className="habilidades-criadas-ajuda">Crie novas habilidades na página de Upgrade. Ao vender uma habilidade, você recupera o valor investido.</p>
+                <div className="habilidades-criadas-grid">
+                  {(personagem.habilidadesCriadas || []).length > 0 ? (
+                    personagem.habilidadesCriadas.map((habilidade) => (
+                      <div key={habilidade.id} className={`habilidade-criada-card ${habilidade.status || "pendente"}`}>
+                        <div className="habilidade-criada-info">
+                          <strong>{habilidade.nome}</strong>
+                          <span className="custo-badge">{habilidade.custo} {habilidade.recurso === "evolucao" ? "Pontos de Evolução" : habilidade.recurso}</span>
+                          <span className="status-habilidade-criada">{habilidade.status || "pendente"}</span>
+                          <p>{habilidade.descricao || "Sem descrição."}</p>
                         </div>
-                      ))
-                    ) : (
-                      <p className="sem-habilidades">
-                        Nenhuma habilidade criada ainda.
-                      </p>
-                    )}
-                  </div>
+                        <button className="btn-vender-habilidade" onClick={() => venderHabilidadeCriada(habilidade)}>Vender</button>
+                      </div>
+                    ))
+                  ) : <p className="sem-habilidades">Nenhuma habilidade criada ainda.</p>}
                 </div>
               </div>
             </section>

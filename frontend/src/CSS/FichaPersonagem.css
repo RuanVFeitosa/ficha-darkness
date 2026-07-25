@@ -6833,6 +6833,13 @@ body {
   margin-bottom: 0.8rem;
 }
 
+.habilidades-criadas-ajuda {
+  margin: -0.35rem 0 1rem;
+  color: #bdbdbd;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
 .habilidades-criadas-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -6895,6 +6902,44 @@ body {
 
 .btn-remover-habilidade:hover {
   background: #2c2c2c;
+}
+
+.habilidade-criada-card.aprovada {
+  border-left: 3px solid #4cc56b;
+}
+
+.habilidade-criada-card.recusada {
+  border-left: 3px solid #e05c5c;
+}
+
+.status-habilidade-criada {
+  display: inline-block;
+  margin-top: 0.45rem;
+  color: #d4af37;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.btn-vender-habilidade {
+  align-self: flex-start;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(224, 92, 92, 0.65);
+  border-radius: 6px;
+  background: rgba(120, 25, 25, 0.22);
+  color: #ffb5b5;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.btn-vender-habilidade:hover {
+  background: #8f2525;
+  color: #fff;
 }
 
 .sem-habilidades {

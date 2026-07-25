@@ -1282,3 +1282,28 @@
     order: 1;
   }
 }
+
+/* Criação de habilidades pelo jogador */
+.upgrade-habilidades-topo { display: flex; justify-content: space-between; gap: 16px; align-items: start; }
+.upgrade-habilidades-topo h2, .habilidades-enviadas h3 { margin: 0 0 8px; color: #fff; text-transform: uppercase; }
+.upgrade-habilidades-topo p { margin: 0; color: var(--text-muted); line-height: 1.5; }
+.upgrade-habilidades-topo button { min-height: 40px; padding: 0 14px; border: 1px solid var(--border-gold); border-radius: 8px; background: transparent; color: var(--gold); font: inherit; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.criador-habilidade-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 22px; }
+.recursos-habilidade-resumo { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.recursos-habilidade-resumo div { display: grid; gap: 4px; padding: 12px; border: 1px solid rgba(212,175,55,.2); border-radius: 8px; background: rgba(255,255,255,.035); }
+.recursos-habilidade-resumo span { color: var(--gold); font-size: .68rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.recursos-habilidade-resumo strong { color: #fff; font-size: 1.1rem; }
+.recursos-habilidade-resumo small { color: var(--text-muted); font-size: .8rem; }
+.criador-habilidade-form label { display: grid; gap: 7px; color: var(--gold); font-size: .76rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.criador-habilidade-form input, .criador-habilidade-form textarea, .criador-habilidade-form select { width: 100%; padding: 11px 12px; border: 1px solid rgba(255,255,255,.18); border-radius: 8px; background: rgba(0,0,0,.48); color: #fff; font: inherit; }
+.criador-habilidade-form textarea { min-height: 115px; resize: vertical; }
+.criador-habilidade-form .criador-descricao, .criador-habilidade-form .upgrade-confirmar { grid-column: 1 / -1; }
+.habilidades-enviadas { display: grid; gap: 10px; margin-top: 26px; }
+.habilidade-enviada { display: flex; justify-content: space-between; gap: 16px; padding: 14px; border: 1px solid rgba(255,255,255,.12); border-left: 3px solid #d4af37; border-radius: 9px; background: rgba(255,255,255,.03); }
+.habilidade-enviada.aprovada { border-left-color: #4cc56b; }
+.habilidade-enviada.recusada { border-left-color: #dd5454; }
+.habilidade-enviada strong, .habilidade-enviada span, .habilidade-enviada p { display: block; }
+.habilidade-enviada span { margin-top: 4px; color: var(--gold); font-size: .8rem; }
+.habilidade-enviada p { margin: 8px 0 0; color: var(--text-muted); line-height: 1.4; }
+.habilidade-enviada b { height: fit-content; color: #fff; font-size: .72rem; letter-spacing: 1px; text-transform: uppercase; }
+@media (max-width: 620px) { .upgrade-habilidades-topo, .habilidade-enviada { flex-direction: column; } .criador-habilidade-form { grid-template-columns: 1fr; } .recursos-habilidade-resumo { grid-template-columns: 1fr; } .criador-habilidade-form .criador-descricao, .criador-habilidade-form .upgrade-confirmar { grid-column: auto; } }

@@ -132,6 +132,25 @@
   overflow-x: hidden;
 }
 
+/* Fila de aprovação das habilidades criadas no Upgrade */
+.mestre-analises { display: grid; gap: 18px; padding: 24px; border: 1px solid rgba(212,175,55,.2); border-radius: 14px; background: rgba(255,255,255,.025); }
+.mestre-analises-topo { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.mestre-analises-topo span { color: #d4af37; font-size: .7rem; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; }
+.mestre-analises-topo h2 { margin: 5px 0 0; font-size: 1.35rem; text-transform: uppercase; }
+.mestre-analises-topo > strong { color: #d4af37; }
+.mestre-analises-lista { display: grid; gap: 12px; }
+.mestre-analise-card { padding: 18px; border: 1px solid rgba(255,255,255,.12); border-left: 3px solid #d4af37; border-radius: 10px; background: rgba(0,0,0,.35); }
+.mestre-analise-meta, .mestre-analise-acoes { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.mestre-analise-meta span { color: #d4af37; font-size: .76rem; font-weight: 800; text-transform: uppercase; }
+.mestre-analise-meta b { color: #ddd; font-size: .78rem; }
+.mestre-analise-card h3 { margin: 12px 0 6px; color: #fff; }
+.mestre-analise-card p { margin: 0 0 16px; color: #bbb; line-height: 1.5; white-space: pre-wrap; }
+.mestre-analise-acoes button { min-height: 38px; padding: 0 14px; border-radius: 7px; font: inherit; font-size: .75rem; font-weight: 900; text-transform: uppercase; cursor: pointer; }
+.mestre-analise-acoes .aprovar { border: 1px solid rgba(76,197,107,.7); background: rgba(36,117,55,.25); color: #a4f4b5; }
+.mestre-analise-acoes .recusar { border: 1px solid rgba(221,84,84,.7); background: rgba(130,36,36,.22); color: #ffb1b1; }
+.mestre-analises-vazia { padding: 36px 0; color: #aaa; text-align: center; }
+@media (max-width: 560px) { .mestre-analises { padding: 16px; } .mestre-analises-topo { align-items: flex-start; flex-direction: column; } }
+
 /* Evita overflow em telas pequenas (principalmente dentro do grid/cards) */
 .mestre-page *,
 .mestre-page *::before,
@@ -3704,4 +3723,238 @@
 .marcas-personagem-preview small {
   color: #aaa;
   font-size: 0.72rem;
+}
+
+/* =========================================================
+   AJUSTES FINAIS DE RESPONSIVIDADE DO DASHBOARD
+========================================================= */
+@media (max-width: 900px) {
+  .mestre-page {
+    padding: 16px;
+  }
+
+  .mestre-header {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+
+  .mestre-header h1 {
+    font-size: clamp(1.25rem, 5vw, 2rem);
+    overflow-wrap: anywhere;
+  }
+
+  .mestre-tabs,
+  .mestre-subtabs,
+  .mestre-ficha-tabs,
+  .mestre-categorias-loja {
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mestre-tabs button,
+  .mestre-subtabs button,
+  .mestre-ficha-tabs button,
+  .mestre-categorias-loja button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .mestre-layout-com-rolagens {
+    width: 100%;
+    gap: 16px;
+  }
+
+  .mestre-rolagens-lateral .painel-rolagens-mestre,
+  .mestre-rolagens-lateral .lista-rolagens-mestre {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .mestre-dashboard-cards {
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+    gap: 14px;
+  }
+
+  .mestre-card-personagem,
+  .mestre-card-conteudo {
+    min-height: 460px;
+  }
+
+  .mestre-loja-editor-topo,
+  .mestre-modal-linha-topo,
+  .mestre-analises-topo,
+  .painel-rolagens-topo {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 620px) {
+  .mestre-page {
+    padding: 12px;
+  }
+
+  .mestre-header {
+    grid-template-columns: 42px minmax(0, 1fr) 30px;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+  }
+
+  .mestre-header > div > span {
+    font-size: 0.62rem;
+    letter-spacing: 1px;
+  }
+
+  .mestre-header h1 {
+    margin: 3px 0 0;
+    font-size: 1.15rem;
+    line-height: 1.08;
+  }
+
+  .mestre-voltar {
+    width: 42px;
+    min-width: 42px;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .mestre-voltar svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .mestre-hamburguer-menu {
+    position: fixed;
+    top: 62px;
+    right: 12px;
+    left: 12px;
+    min-width: 0;
+  }
+
+  .mestre-dashboard-full,
+  .mestre-analises,
+  .mestre-loja,
+  .mestre-criar,
+  .mestre-inventario-form {
+    gap: 14px;
+  }
+
+  .mestre-dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-card-personagem,
+  .mestre-card-conteudo {
+    min-height: 400px;
+  }
+
+  .mestre-card-conteudo {
+    padding: 16px;
+  }
+
+  .mestre-card-info h3 {
+    font-size: clamp(1.25rem, 7vw, 1.65rem);
+  }
+
+  .mestre-card-atributos {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .mestre-card-atributos div {
+    min-width: 0;
+    padding: 6px 2px;
+  }
+
+  .mestre-card-membro-mini {
+    grid-template-columns: 78px minmax(0, 1fr) 48px;
+    gap: 5px;
+  }
+
+  .mestre-card-membro-mini span,
+  .mestre-card-membro-mini small {
+    font-size: 0.58rem;
+  }
+
+  .mestre-duplo,
+  .mestre-form-grid,
+  .mestre-modal-atributos,
+  .mestre-corpo-grid,
+  .mestre-edit-lista > div,
+  .marcas-layout,
+  .marcas-atribuicao-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-header-admin,
+  .mestre-admin-grid,
+  .mestre-admin-controles,
+  .mestre-modal-header-acoes,
+  .mestre-loja-form-acoes,
+  .mestre-analise-acoes,
+  .painel-rolagens-acoes {
+    flex-wrap: wrap;
+  }
+
+  .mestre-admin-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-admin-controles input[type="number"] {
+    max-width: none;
+  }
+
+  .mestre-modal-overlay {
+    padding: 8px;
+  }
+
+  .mestre-modal-ficha,
+  .mestre-modal-ficha.minimalista {
+    width: 100%;
+    max-height: calc(100svh - 16px);
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .mestre-modal-header,
+  .mestre-modal-header-esquerda,
+  .mestre-modal-linha-topo,
+  .inimigo-ficha-header,
+  .mestre-analises-topo,
+  .painel-rolagens-topo {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .mestre-modal-header-esquerda {
+    gap: 10px;
+  }
+
+  .mestre-modal-foto {
+    width: 58px;
+    height: 58px;
+  }
+
+  .mestre-modal-header-acoes button,
+  .mestre-loja-form-acoes button,
+  .mestre-analise-acoes button {
+    flex: 1 1 100%;
+  }
+
+  .mestre-analises {
+    padding: 14px;
+  }
+
+  .mestre-analise-card {
+    padding: 14px;
+  }
+
+  .mestre-analise-meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
