@@ -92,6 +92,7 @@
   width: min(1800px, calc(100% - 36px));
   margin: 0 auto;
   padding: 28px 0 44px;
+  background: black;
 }
 
 .loja-toolbar {
@@ -126,7 +127,7 @@
 .loja-categoria:hover,
 .loja-categoria.ativa {
   border-color: #d4af37;
-  background: rgba(139, 69, 19, 0.32);
+  background: rgba(255, 255, 255, 0.32);
   color: #d4af37;
 }
 
