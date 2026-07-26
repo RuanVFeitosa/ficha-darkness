@@ -4138,13 +4138,6 @@ const FichaPersonagem = () => {
                         <p>{ritoVisualizado.efeito}</p>
                       </div>
                     )}
-
-                    {ritoVisualizado.descricao && (
-                      <div className="rito-visualizer-bloco">
-                        <span>Descrição</span>
-                        <p>{ritoVisualizado.descricao}</p>
-                      </div>
-                    )}
                   </>
                 )}
               </div>

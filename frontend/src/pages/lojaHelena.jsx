@@ -41,10 +41,11 @@ const categorias = [
   { id: "armas-corpo", nome: "Corpo a Corpo", icon: mdiKnifeMilitary },
   { id: "defesas", nome: "Defesas", icon: mdiShield },
   { id: "itens", nome: "Itens", icon: mdiTools },
-  { id: "ritos", nome: "Ritos Absolutos", icon: mdiCreationOutline },
-  { id: "poderes", nome: "Poderes Absolutos", icon: mdiCreation },
   { id: "maleta-campo", nome: "Maleta de Campo", icon: mdiTools },
   { id: "aprimoramento", nome: "✦ Aprimoramento", icon: mdiWrench },
+  
+  { id: "ritos", nome: "Ritos Absolutos", icon: mdiCreationOutline },
+  { id: "poderes", nome: "Poderes Absolutos", icon: mdiCreation },
 ];
 
 const normalizarFichaId = (valor) => {

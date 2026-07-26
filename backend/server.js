@@ -248,9 +248,17 @@ const getDataFile = (id) => path.join(DATA_DIR, `${sanitizeFichaId(id)}.json`);
 const normalizeShopItem = (item, index = 0) => {
   const nome = String(item?.nome || "").trim();
   const id = sanitizeFichaId(item?.id || nome || `item-${Date.now()}-${index}`);
-  const categoria = ["armas", "defesas", "itens", "ritos"].includes(
-    item?.categoria,
-  )
+  const categoria = [
+    "armas",
+    "armas-fogo",
+    "armas-corpo",
+    "defesas",
+    "itens",
+    "modificacoes",
+    "ritos",
+    "poderes",
+    "maleta-campo",
+  ].includes(item?.categoria)
     ? item.categoria
     : "itens";
 
@@ -261,6 +269,13 @@ const normalizeShopItem = (item, index = 0) => {
     preco: Math.max(0, Number(item?.preco) || 0),
     detalhe: String(item?.detalhe || "").trim(),
     entrega: String(item?.entrega || "").trim(),
+    dano: String(item?.dano || "").trim(),
+    bonusDano: String(item?.bonusDano || "").trim(),
+    armaStatus: item?.armaStatus || null,
+    nivelRito: String(item?.nivelRito || "").trim(),
+    subcategoria: String(item?.subcategoria || "").trim(),
+    aplicavel: String(item?.aplicavel || "").trim(),
+    modificacao: item?.modificacao || null,
   };
 };
 
