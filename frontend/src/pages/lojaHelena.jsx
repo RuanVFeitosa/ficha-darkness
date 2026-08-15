@@ -27,6 +27,7 @@ import {
 import { SYNC_INTERVALS, iniciarPollingVisivel } from "../services/syncPolicy";
 import {
   DEFAULT_CATALOGO_LOJA,
+  aplicarDefesasAtualizadas,
   normalizarItemLoja,
 } from "../data/catalogoLoja";
 import { estadoInicial } from "./fichaPersonagem";
@@ -36,6 +37,33 @@ const STORAGE_KEY = "fichaRPG_personagem";
 const CATALOGO_STORAGE_KEY = "lojaHelena_catalogo";
 const DEFAULT_FICHA_ID = "principal";
 
+const membrosProtegidosPelaDefesa = (item = {}) => {
+  const area = `${item.areaDefesa || ""} ${item.entrega || item.detalhes || ""}`
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  if (area.includes("conjunto")) {
+    return [
+      "cabeca",
+      "torso",
+      "bracoDireito",
+      "bracoEsquerdo",
+      "pernaDireita",
+      "pernaEsquerda",
+    ];
+  }
+  if (area.includes("cabeca") || area.includes("face")) return ["cabeca"];
+  if (area.includes("torso")) return ["torso"];
+  if (area.includes("braco") || area.includes("mao") || area.includes("empunh")) {
+    return ["bracoDireito", "bracoEsquerdo"];
+  }
+  if (area.includes("perna") || area.includes("pes")) {
+    return ["pernaDireita", "pernaEsquerda"];
+  }
+  return [];
+};
+
 const categorias = [
   { id: "armas-fogo", nome: "Armas de Fogo", icon: mdiPistol },
   { id: "armas-corpo", nome: "Corpo a Corpo", icon: mdiKnifeMilitary },
@@ -43,7 +71,7 @@ const categorias = [
   { id: "itens", nome: "Itens", icon: mdiTools },
   { id: "maleta-campo", nome: "Maleta de Campo", icon: mdiTools },
   { id: "aprimoramento", nome: "✦ Aprimoramento", icon: mdiWrench },
-  
+
   { id: "ritos", nome: "Ritos Absolutos", icon: mdiCreationOutline },
   { id: "poderes", nome: "Poderes Absolutos", icon: mdiCreation },
 ];
@@ -81,6 +109,8 @@ const LojaHelena = () => {
   const [personagem, setPersonagem] = useState(estadoInicial);
   const [catalogo, setCatalogo] = useState(DEFAULT_CATALOGO_LOJA);
   const [categoriaAtiva, setCategoriaAtiva] = useState("armas-fogo");
+  const [subAbaArmasFogo, setSubAbaArmasFogo] = useState("armas");
+  const [subAbaMunicoes, setSubAbaMunicoes] = useState("pistola");
   const [nivelRitoAtivo, setNivelRitoAtivo] = useState("iniciante");
   const [subAbaMaleta, setSubAbaMaleta] = useState("medicinal");
   const [filtroModificadores, setFiltroModificadores] = useState("todos");
@@ -161,7 +191,9 @@ const LojaHelena = () => {
           );
 
         if (catalogoApi.length > 0 && apiAtualizada) {
-          const catalogoNormalizado = catalogoApi.map(normalizarItemLoja);
+          const catalogoNormalizado = aplicarDefesasAtualizadas(catalogoApi).map(
+            normalizarItemLoja,
+          );
           setCatalogo(catalogoNormalizado);
           localStorage.setItem(
             CATALOGO_STORAGE_KEY,
@@ -292,29 +324,46 @@ const LojaHelena = () => {
   }, [ehMedicoDeCampo, aprimoramentoMedicoGratisUsado]);
 
   const itensFiltrados = useMemo(() => {
+    // Armas exclusivas são administradas e entregues pelo dashboard do mestre.
+    // Elas jamais integram a vitrine comprável da loja.
+    const catalogoDaLoja = catalogo.filter(
+      (item) => item.categoria !== "armas-exclusivas",
+    );
+
     if (categoriaAtiva === "maleta-campo") {
       if (!ehMedicoDeCampo && !temMaletaDeCampo) return [];
       return aprimoramentosMaletaLoja[subAbaMaleta] || [];
     }
 
-    if (categoriaAtiva === "todos") return catalogo;
+    if (categoriaAtiva === "todos") return catalogoDaLoja;
 
     if (categoriaAtiva === "ritos") {
-      return catalogo.filter(
+      return catalogoDaLoja.filter(
         (item) =>
           item.categoria === "ritos" && item.nivelRito === nivelRitoAtivo,
       );
     }
 
     if (categoriaAtiva === "modificacoes") {
-      return catalogo.filter((item) => item.categoria === "modificacoes");
+      return catalogoDaLoja.filter(
+        (item) => item.categoria === "modificacoes",
+      );
     }
 
     if (categoriaAtiva === "aprimoramento") {
       return []; // não usado; renderiza por renderizarAprimoramento()
     }
 
-    const itensBase = catalogo.filter(
+    if (categoriaAtiva === "armas-fogo") {
+      return catalogoDaLoja.filter((item) =>
+        subAbaArmasFogo === "municoes"
+          ? item.categoria === "municoes-especiais" &&
+            item.tipoArma === subAbaMunicoes
+          : item.categoria === "armas-fogo",
+      );
+    }
+
+    const itensBase = catalogoDaLoja.filter(
       (item) => item.categoria === categoriaAtiva,
     );
 
@@ -329,6 +378,8 @@ const LojaHelena = () => {
     nivelRitoAtivo,
     aprimoramentosMaletaLoja,
     subAbaMaleta,
+    subAbaArmasFogo,
+    subAbaMunicoes,
     temMaletaDeCampo,
     ehMedicoDeCampo,
   ]);
@@ -358,7 +409,39 @@ const LojaHelena = () => {
     return <Icon path={icone} size={size} />;
   };
 
+  const obterConflitoDefesa = (item) => {
+    if (item.categoria !== "defesas") return null;
+
+    const membrosAlvo = membrosProtegidosPelaDefesa(item);
+    const defesaConflitante = [...(personagem.inventario || []), ...carrinho].find(
+      (defesa) => {
+        const ehDefesa =
+          defesa.categoria === "defesas" ||
+          defesa.tipo === "Defesa" ||
+          Number(defesa.defesaBonus) > 0;
+        const membrosProtegidos = defesa.membrosProtegidos?.length
+          ? defesa.membrosProtegidos
+          : membrosProtegidosPelaDefesa(defesa);
+
+        return (
+          ehDefesa &&
+          membrosAlvo.some((membro) => membrosProtegidos.includes(membro))
+        );
+      },
+    );
+
+    return defesaConflitante || null;
+  };
+
   const adicionarAoCarrinho = (item) => {
+    const conflitoDefesa = obterConflitoDefesa(item);
+    if (conflitoDefesa) {
+      setMensagem(
+        `${item.nome} não pode ser comprado: ${conflitoDefesa.nome} já protege essa área.`,
+      );
+      return;
+    }
+
     setCarrinho((atual) => [...atual, item]);
     setMensagem(`${item.nome} separado no balcao.`);
   };
@@ -778,7 +861,30 @@ const LojaHelena = () => {
             }
           : {
               nome: item.nome,
+              categoria: item.categoria,
+              detalhe: item.detalhe || "",
+              tipo:
+                item.categoria === "defesas"
+                  ? "Defesa"
+                  : item.tipo || item.categoria,
               detalhes: item.entrega,
+              defesaBonus: item.defesaBonus || 0,
+              resistencia: item.resistencia || "",
+              resistenciasDano: item.resistenciasDano || [],
+              membrosProtegidos:
+                item.categoria === "defesas"
+                  ? membrosProtegidosPelaDefesa(item)
+                  : [],
+              entrega: item.entrega || "",
+              dano: item.dano || "",
+              cura: item.cura || "",
+              bonusDano: item.bonusDano || "",
+              bonusTeste: item.bonusTeste || "",
+              efeito: item.efeito || "",
+              usos: item.usos || "",
+              tipoArma: item.tipoArma || "",
+              quantidade: item.quantidade || 0,
+              municaoEspecial: Boolean(item.municaoEspecial),
               armaStatus: item.armaStatus || null,
             },
       );
@@ -794,6 +900,38 @@ const LojaHelena = () => {
     // Inventário base
     const inventarioAtualizado = [...(personagem.inventario || [])];
 
+    const membrosComDefesa = new Set(
+      inventarioAtualizado
+        .filter(
+          (item) =>
+            item.categoria === "defesas" ||
+            item.tipo === "Defesa" ||
+            Number(item.defesaBonus) > 0,
+        )
+        .flatMap((item) =>
+          item.membrosProtegidos?.length
+            ? item.membrosProtegidos
+            : membrosProtegidosPelaDefesa(item),
+        ),
+    );
+    const conflitoDefesa = carrinho
+      .filter((item) => item.categoria === "defesas")
+      .find((item) => {
+        const membros = membrosProtegidosPelaDefesa(item);
+        const possuiConflito = membros.some((membro) =>
+          membrosComDefesa.has(membro),
+        );
+        membros.forEach((membro) => membrosComDefesa.add(membro));
+        return possuiConflito;
+      });
+
+    if (conflitoDefesa) {
+      setMensagem(
+        `${conflitoDefesa.nome} não pode ser equipado: uma das áreas protegidas já possui defesa.`,
+      );
+      return;
+    }
+
     // Aplicar modificadores na arma (usa a arma selecionada no Aprimoramento)
     if (novosModificacoesArma.length > 0) {
       const ok = aplicarModificacoesNaArmaSelecionada({
@@ -803,6 +941,47 @@ const LojaHelena = () => {
 
       if (!ok) return;
     }
+
+    const bonusDefesaCompra = carrinho
+      .filter((item) => item.categoria === "defesas")
+      .reduce((total, item) => total + (Number(item.defesaBonus) || 0), 0);
+    const resistenciasDaCompra = [
+      ...new Set(
+        carrinho
+          .filter((item) => item.categoria === "defesas" && item.resistencia)
+          .map((item) => item.resistencia),
+      ),
+    ];
+    const resistenciasAtuais = String(personagem.resistencias || "")
+      .split(" | ")
+      .map((resistencia) => resistencia.trim())
+      .filter(Boolean);
+    const resistenciasAtualizadas = [
+      ...new Set([...resistenciasAtuais, ...resistenciasDaCompra]),
+    ].join(" | ");
+    const resistenciasDanoAtualizadas = [
+      ...(personagem.resistenciasDano || []),
+      ...carrinho
+        .filter((item) => item.categoria === "defesas")
+        .flatMap((item) =>
+          (item.resistenciasDano || []).map((resistencia) => ({
+            ...resistencia,
+            membros: membrosProtegidosPelaDefesa(item),
+          })),
+        ),
+    ];
+    const membrosAtualizados = carrinho
+      .filter((item) => item.categoria === "defesas")
+      .reduce((membros, item) => {
+        const bonus = Number(item.defesaBonus) || 0;
+        membrosProtegidosPelaDefesa(item).forEach((membro) => {
+          membros[membro] = {
+            ...(membros[membro] || {}),
+            defesa: (Number(membros[membro]?.defesa) || 0) + bonus,
+          };
+        });
+        return membros;
+      }, { ...(personagem.membros || {}) });
 
     const personagemAtualizado = {
       ...personagem,
@@ -815,6 +994,10 @@ const LojaHelena = () => {
         ...(personagem.poderesAbsolutos || []),
         ...novosPoderes,
       ],
+      bonusDefesa: (Number(personagem.bonusDefesa) || 0) + bonusDefesaCompra,
+      resistencias: resistenciasAtualizadas,
+      resistenciasDano: resistenciasDanoAtualizadas,
+      membros: membrosAtualizados,
       inventario: [...inventarioAtualizado, ...novosItens],
       maletaCampo: {
         ...(personagem.maletaCampo || {}),
@@ -1513,6 +1696,44 @@ const LojaHelena = () => {
           ))}
         </div>
 
+        {categoriaAtiva === "armas-fogo" && (
+          <div className="ritos-subabas armas-fogo-subabas">
+            <button
+              className={subAbaArmasFogo === "armas" ? "ativa" : ""}
+              onClick={() => setSubAbaArmasFogo("armas")}
+            >
+              Armas de fogo
+            </button>
+            <button
+              className={subAbaArmasFogo === "municoes" ? "ativa" : ""}
+              onClick={() => setSubAbaArmasFogo("municoes")}
+            >
+              Munições especiais
+            </button>
+          </div>
+        )}
+
+        {categoriaAtiva === "armas-fogo" &&
+          subAbaArmasFogo === "municoes" && (
+            <div className="ritos-subabas municoes-subabas">
+              {[
+                ["pistola", "Pistola"],
+                ["escopeta", "Escopeta"],
+                ["rifle", "Rifle"],
+                ["fuzil", "Fuzil"],
+                ["arco", "Arco"],
+              ].map(([id, nome]) => (
+                <button
+                  key={id}
+                  className={subAbaMunicoes === id ? "ativa" : ""}
+                  onClick={() => setSubAbaMunicoes(id)}
+                >
+                  {nome}
+                </button>
+              ))}
+            </div>
+          )}
+
         {usandoRitos && (
           <div className="ritos-subabas">
             <button
@@ -1588,28 +1809,94 @@ const LojaHelena = () => {
                       <h2>{item.nome}</h2>
                       <p>{item.detalhe}</p>
 
-                      {item.armaStatus && (
-                        <div className="arma-status-card">
-                          <div className="arma-status-principais">
-                            <div>
-                              <span>DMG</span>
-                              <strong>{item.armaStatus.dmg}</strong>
-                            </div>
-                            {item.armaStatus.tipo !== "Corpo a Corpo" && (
-                              <>
-                                <div>
-                                  <span>ROF</span>
-                                  <strong>{item.armaStatus.rof}</strong>
-                                </div>
-                                <div>
-                                  <span>MAG</span>
-                                  <strong>{item.armaStatus.mag}</strong>
-                                </div>
-                              </>
+                      {item.categoria === "itens" &&
+                        (item.dano ||
+                          item.cura ||
+                          item.bonusDano ||
+                          item.bonusTeste) && (
+                          <div className="loja-item-beneficios">
+                            {item.dano && <span>Dano: {item.dano}</span>}
+                            {item.cura && <span>Cura: {item.cura}</span>}
+                            {item.bonusDano && (
+                              <span>Bônus de dano: {item.bonusDano}</span>
+                            )}
+                            {item.bonusTeste && (
+                              <span>Teste: {item.bonusTeste}</span>
                             )}
                           </div>
+                        )}
 
-                          {item.armaStatus.tipo !== "Corpo a Corpo" && (
+                      {item.categoria === "municoes-especiais" && (
+                        <div className="loja-item-beneficios municao-beneficios">
+                          <span>Compatível: {item.tipoArma}</span>
+                          <span>Bônus de dano: {item.bonusDano}</span>
+                          <span>Quantidade: {item.quantidade}</span>
+                        </div>
+                      )}
+
+                      {item.categoria === "defesas" && (
+                        <div className="loja-defesa-beneficios">
+                          {item.defesaBonus > 0 && (
+                            <span>Defesa concedida: +{item.defesaBonus}</span>
+                          )}
+                          {item.resistencia && (
+                            <span>
+                              Resistência: {(item.resistenciasDano || [])
+                                .map(
+                                  (resistencia) =>
+                                    `${resistencia.tipo} −${resistencia.reducao}`,
+                                )
+                                .join(" | ") || item.resistencia}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {item.armaStatus && (
+                        <div className="arma-status-card">
+                          {/* ===== GRID PRINCIPAL (3 colunas) ===== */}
+                          <div className="arma-status-principais">
+                            <div>
+                              <span>
+                                {item.categoria === "armas-corpo"
+                                  ? "Dano"
+                                  : "DMG"}
+                              </span>
+                              <strong>
+                                {item.armaStatus.dmg || item.dano || "—"}
+                              </strong>
+                            </div>
+                            <div>
+                              <span>Crítico</span>
+                              <strong>
+                                {item.armaStatus.critico}
+                              </strong>
+                            </div>
+                            <div>
+                              <span>
+                                {item.categoria === "armas-corpo"
+                                  ? "Cabeça"
+                                  : "MAG"}
+                              </span>
+                              <strong>
+                                {item.categoria === "armas-corpo"
+                                  ? item.armaStatus.danoCabeca || "0"
+                                  : item.armaStatus.mag || "—"}
+                              </strong>
+                            </div>
+                          </div>
+
+                          {/* ===== SEÇÃO DE MODOS / DETALHES ===== */}
+                          {item.categoria === "armas-corpo" ? (
+                            // Corpo a corpo: exibe apenas o Tipo
+                            <div
+                              className="arma-status-modos"
+                              style={{ display: "block" }}
+                            >
+                             
+                            </div>
+                          ) : (
+                            // Armas de fogo: exibe os 4 modos
                             <div className="arma-status-modos">
                               <div>
                                 <span>HIPFIRE</span>
@@ -1630,18 +1917,32 @@ const LojaHelena = () => {
                             </div>
                           )}
 
+                          {/* ===== SEÇÃO EXTRA ===== */}
                           <div className="arma-status-extra">
-                            {item.armaStatus.tipo !== "Corpo a Corpo" && (
+                            {item.categoria === "armas-corpo" ? (
+                              // Corpo a corpo: não mostra disparos nem recarga
+                              <>
+                                <span>
+                                  Crítico: {item.armaStatus.critico || "1x..."}
+                                </span>
+                                <span>
+                                  Cabeça: {item.armaStatus.danoCabeca || "0"}
+                                </span>
+                              </>
+                            ) : (
+                              // Armas de fogo: mostra disparos, recarga, crítico e cabeça
                               <>
                                 <span>
                                   Disparos:{" "}
                                   {item.armaStatus.disparosSemDesvantagem}
                                 </span>
                                 <span>Recarga: {item.armaStatus.recarga}</span>
+                                <span>Crítico: {item.armaStatus.critico}</span>
+                                <span>
+                                  Cabeça: {item.armaStatus.danoCabeca}
+                                </span>
                               </>
                             )}
-                            <span>Crítico: {item.armaStatus.critico}</span>
-                            <span>Cabeça: {item.armaStatus.danoCabeca}</span>
                           </div>
                         </div>
                       )}
@@ -1649,9 +1950,17 @@ const LojaHelena = () => {
 
                     <div className="loja-item-footer">
                       <span className="loja-preco">{formatarPreco(item)}</span>
-                      <button onClick={() => adicionarAoCarrinho(item)}>
+                      <button
+                        onClick={() => adicionarAoCarrinho(item)}
+                        disabled={Boolean(obterConflitoDefesa(item))}
+                        title={
+                          obterConflitoDefesa(item)
+                            ? `Área já protegida por ${obterConflitoDefesa(item).nome}`
+                            : "Comprar"
+                        }
+                      >
                         <Icon path={mdiCart} size={0.75} />
-                        Comprar
+                        {obterConflitoDefesa(item) ? "Já protegido" : "Comprar"}
                       </button>
                     </div>
                   </article>

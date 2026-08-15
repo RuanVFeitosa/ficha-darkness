@@ -1434,7 +1434,7 @@
   z-index: 1;
 
   width: 2600px;
-  height: 1600px;
+  height: 2200px;
 
   overflow: visible;
 }
@@ -1584,7 +1584,7 @@
   top: 0;
 
   width: 2600px;
-  height: 1600px;
+  height: 2200px;
 
   background:
     radial-gradient(
@@ -1979,7 +1979,7 @@
     position: absolute !important;
 
     width: 2600px !important;
-    height: 1600px !important;
+    height: 2200px !important;
 
     overflow: visible !important;
 
@@ -1989,7 +1989,7 @@
 
   .skilltree-lines {
     width: 2600px !important;
-    height: 1600px !important;
+    height: 2200px !important;
   }
 
   .skilltree-node,

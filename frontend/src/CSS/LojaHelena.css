@@ -5,6 +5,46 @@
   text-align: left;
 }
 
+.loja-defesa-beneficios {
+  display: grid;
+  gap: 5px;
+  margin-top: 12px;
+}
+
+.loja-item-beneficios {
+  display: grid;
+  gap: 5px;
+  margin-top: 12px;
+}
+
+.loja-item-beneficios span {
+  padding: 6px 8px;
+  border-left: 2px solid #5e9fd6;
+  background: rgba(94, 159, 214, 0.08);
+  color: #c8e3f5;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.loja-defesa-beneficios span {
+  display: block;
+  padding: 7px 9px;
+  border-left: 2px solid #d4af37;
+  background: rgba(212, 175, 55, 0.08);
+  color: #f4df9a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.loja-item-footer button:disabled {
+  border-color: #3c3c3c;
+  background: #111;
+  color: #777;
+  cursor: not-allowed;
+}
+
 .loja-hero {
   position: relative;
   min-height: 45vh;
@@ -468,6 +508,40 @@
   text-align: center;
 }
 
+.arma-status-corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.arma-status-corpo div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.arma-status-corpo span {
+  min-width: 120px;          /* alinha todos os rótulos */
+  color: #8f887b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.arma-status-corpo strong {
+  color: #f2eee4;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .arma-status-corpo span {
+    min-width: 90px;
+  }
+}
+
 /* =========================================================
    VISUAL RITOS
    ========================================================= */
@@ -748,8 +822,6 @@
   border-color: rgba(225, 218, 199, 0.52);
   color: #fff8ea;
 }
-
-
 
 
 .loja-toolbar,

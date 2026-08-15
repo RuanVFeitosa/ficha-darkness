@@ -13,15 +13,15 @@ export const CATALOGO_COMBATE = [
 
     armaStatus: {
       tipo: "Pistola",
-      dmg: "2d6",
+      dmg: "3d8",
       rof: 20,
       mag: 7,
       disparosSemDesvantagem: 3,
       recarga: "Livre",
-      critico: "2x6",
-      danoCabeca: 30,
+      critico: "3x8",
+      danoCabeca: 45,
 
-      hipfire: "Violência + 1d6",
+      hipfire: "Violência + 1d8",
       precision: "Percepção | + distância longa",
       control: "Persistência | sem penalidades",
       mobility: "Firmeza | 2 alvos",
@@ -38,15 +38,15 @@ export const CATALOGO_COMBATE = [
 
     armaStatus: {
       tipo: "Fuzil de Assalto",
-      dmg: "2d12",
+      dmg: "3d12+3",
       rof: 20,
       mag: 30,
       disparosSemDesvantagem: 2,
       recarga: "Preparo",
       critico: "3x12",
-      danoCabeca: 50,
+      danoCabeca: 70,
 
-      hipfire: "Violência + 1d12",
+      hipfire: "Violência + 2d12",
       precision: "Percepção | + distância distante",
       control: "Persistência | sem penalidades",
       mobility: "Firmeza | 2 alvos",
@@ -63,15 +63,15 @@ export const CATALOGO_COMBATE = [
 
     armaStatus: {
       tipo: "Escopeta",
-      dmg: "4d8",
+      dmg: "5d10+4",
       rof: 20,
       mag: 6,
       disparosSemDesvantagem: 2,
       recarga: "Preparo",
-      critico: "4x8",
-      danoCabeca: 100,
+      critico: "5x10",
+      danoCabeca: 120,
 
-      hipfire: "Violência + 2d8",
+      hipfire: "Violência + 3d10",
       precision: "Percepção | + distância média",
       control: "Persistência | sem penalidades",
       mobility: "Firmeza | 2 alvos",
@@ -88,15 +88,15 @@ export const CATALOGO_COMBATE = [
 
     armaStatus: {
       tipo: "Rifle de Precisão",
-      dmg: "3d12",
+      dmg: "4d12+4",
       rof: 20,
       mag: 30,
       disparosSemDesvantagem: 2,
       recarga: "Preparo",
       critico: "3x12",
-      danoCabeca: 50,
+      danoCabeca: 100,
 
-      hipfire: "Violência + 1d12",
+      hipfire: "Violência + 2d12",
       precision: "Percepção | + distância distante",
       control: "Persistência | sem penalidades",
       mobility: "Firmeza | 2 alvos",
@@ -113,13 +113,13 @@ export const CATALOGO_COMBATE = [
 
     armaStatus: {
       tipo: "Arco",
-      dmg: "1d10",
+      dmg: "2d10+3",
       rof: 20,
       mag: 1,
       disparosSemDesvantagem: 2,
       recarga: "Livre",
       critico: "2x10",
-      danoCabeca: 100,
+      danoCabeca: 90,
 
       hipfire: "Violência + 1d10",
       precision: "Percepção | + distância distante",
@@ -141,9 +141,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 4 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d8+4",
-      critico: "1x8",
-      danoCabeca: 40,
+      dmg: "2d10+6",
+      critico: "2x10",
+      danoCabeca: 50,
     },
   },
 
@@ -156,9 +156,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 2 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d4+2",
-      critico: "1x4",
-      danoCabeca: 25,
+      dmg: "1d8+4",
+      critico: "1x8",
+      danoCabeca: 30,
     },
   },
 
@@ -171,9 +171,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: 2x FOR ou DES | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d6",
-      critico: "1x6",
-      danoCabeca: 30,
+      dmg: "2d6+3",
+      critico: "2x6",
+      danoCabeca: 35,
     },
   },
 
@@ -186,9 +186,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 1 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d6+1",
-      critico: "1x6",
-      danoCabeca: 30,
+      dmg: "2d6+3",
+      critico: "2x6",
+      danoCabeca: 35,
     },
   },
 
@@ -201,9 +201,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 2 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d4+2",
-      critico: "1x4",
-      danoCabeca: 25,
+      dmg: "1d8+4",
+      critico: "1x8",
+      danoCabeca: 30,
     },
   },
 
@@ -216,9 +216,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR ou DES + 2 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d8+2",
-      critico: "1x8",
-      danoCabeca: 35,
+      dmg: "2d8+4",
+      critico: "2x8",
+      danoCabeca: 45,
     },
   },
 
@@ -231,9 +231,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR ou DES + 3 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d10+3",
-      critico: "1x10",
-      danoCabeca: 45,
+      dmg: "2d10+5",
+      critico: "2x10",
+      danoCabeca: 55,
     },
   },
 
@@ -246,9 +246,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 5 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d12+5",
-      critico: "1x12",
-      danoCabeca: 55,
+      dmg: "2d12+7",
+      critico: "2x12",
+      danoCabeca: 70,
     },
   },
 
@@ -261,9 +261,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 2 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d4+2",
-      critico: "1x4",
-      danoCabeca: 25,
+      dmg: "1d6+4",
+      critico: "1x6",
+      danoCabeca: 30,
     },
   },
 
@@ -276,9 +276,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 3 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d6+3",
-      critico: "1x6",
-      danoCabeca: 32,
+      dmg: "1d8+5",
+      critico: "1x8",
+      danoCabeca: 38,
     },
   },
 
@@ -291,9 +291,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 4 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d8+4",
-      critico: "1x8",
-      danoCabeca: 40,
+      dmg: "2d8+6",
+      critico: "2x8",
+      danoCabeca: 50,
     },
   },
 
@@ -306,9 +306,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 4 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d10+4",
-      critico: "1x10",
-      danoCabeca: 45,
+      dmg: "2d10+6",
+      critico: "2x10",
+      danoCabeca: 55,
     },
   },
 
@@ -321,9 +321,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 4 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d12+4",
-      critico: "1x12",
-      danoCabeca: 55,
+      dmg: "2d12+6",
+      critico: "2x12",
+      danoCabeca: 70,
     },
   },
 
@@ -336,9 +336,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 1 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d6+1",
-      critico: "1x6",
-      danoCabeca: 30,
+      dmg: "2d6+3",
+      critico: "2x6",
+      danoCabeca: 35,
     },
   },
 
@@ -351,9 +351,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: 1d6 + 4 | Alcance: Curto | 3 cargas",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d6+4",
-      critico: "1x6",
-      danoCabeca: 30,
+      dmg: "2d6+5",
+      critico: "2x6",
+      danoCabeca: 35,
     },
   },
 
@@ -366,9 +366,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR ou DES + 5 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "2d6+5",
-      critico: "2x6",
-      danoCabeca: 65,
+      dmg: "3d8+7",
+      critico: "3x8",
+      danoCabeca: 80,
     },
   },
 
@@ -381,9 +381,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 2 | Alcance: Curto",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d8+2",
-      critico: "1x8",
-      danoCabeca: 40,
+      dmg: "2d8+4",
+      critico: "2x8",
+      danoCabeca: 50,
     },
   },
 
@@ -396,9 +396,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 2 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d6+2",
-      critico: "1x6",
-      danoCabeca: 32,
+      dmg: "2d6+4",
+      critico: "2x6",
+      danoCabeca: 38,
     },
   },
 
@@ -411,9 +411,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 3 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "1d8+3",
-      critico: "1x8",
-      danoCabeca: 40,
+      dmg: "2d8+5",
+      critico: "2x8",
+      danoCabeca: 50,
     },
   },
 
@@ -426,9 +426,9 @@ export const CATALOGO_COMBATE = [
     entrega: "Dano: FOR + 6 | Alcance: Toque",
     armaStatus: {
       tipo: "Corpo a Corpo",
-      dmg: "2d8+6",
-      critico: "2x8",
-      danoCabeca: 75,
+      dmg: "3d10+8",
+      critico: "3x10",
+      danoCabeca: 90,
     },
   },
 

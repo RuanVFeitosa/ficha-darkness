@@ -248,6 +248,8 @@ const getDataFile = (id) => path.join(DATA_DIR, `${sanitizeFichaId(id)}.json`);
 const normalizeShopItem = (item, index = 0) => {
   const nome = String(item?.nome || "").trim();
   const id = sanitizeFichaId(item?.id || nome || `item-${Date.now()}-${index}`);
+  // Migra itens exclusivos criados antes da correção da categoria.
+  const ehArmaExclusivaLegada = id.startsWith("armas-exclusivas-");
   const categoria = [
     "armas",
     "armas-fogo",
@@ -255,12 +257,18 @@ const normalizeShopItem = (item, index = 0) => {
     "defesas",
     "itens",
     "modificacoes",
+    "municoes-especiais",
     "ritos",
     "poderes",
+    "armas-exclusivas",
     "maleta-campo",
   ].includes(item?.categoria)
-    ? item.categoria
-    : "itens";
+    ? ehArmaExclusivaLegada
+      ? "armas-exclusivas"
+      : item.categoria
+    : ehArmaExclusivaLegada
+      ? "armas-exclusivas"
+      : "itens";
 
   return {
     id,
@@ -269,8 +277,40 @@ const normalizeShopItem = (item, index = 0) => {
     preco: Math.max(0, Number(item?.preco) || 0),
     detalhe: String(item?.detalhe || "").trim(),
     entrega: String(item?.entrega || "").trim(),
+    defesaBonus: Math.max(0, Number(item?.defesaBonus) || 0),
+    resistencia: String(item?.resistencia || "").trim(),
+    resistenciasDano: Array.isArray(item?.resistenciasDano)
+      ? item.resistenciasDano
+          .map((resistencia) => ({
+            tipo: String(resistencia?.tipo || "").trim().toLowerCase(),
+            reducao: Math.max(0, Number(resistencia?.reducao) || 0),
+          }))
+          .filter((resistencia) => resistencia.tipo && resistencia.reducao > 0)
+      : [],
+    icone: String(item?.icone || "").trim(),
     dano: String(item?.dano || "").trim(),
     bonusDano: String(item?.bonusDano || "").trim(),
+    cura: String(item?.cura || "").trim(),
+    bonusTeste: String(item?.bonusTeste || "").trim(),
+    efeito: String(item?.efeito || "").trim(),
+    usos: String(item?.usos || "").trim(),
+    tipoArma: String(item?.tipoArma || "").trim(),
+    quantidade: Math.max(0, Number(item?.quantidade) || 0),
+    municaoEspecial: Boolean(item?.municaoEspecial),
+    subtipo: String(
+      item?.subtipo ||
+        (ehArmaExclusivaLegada && item?.armaStatus
+          ? item.armaStatus.tipo === "Corpo a Corpo"
+            ? "corpo"
+            : "fogo"
+          : "nenhum"),
+    ).trim(),
+    critico: String(item?.critico || "").trim(),
+    danoCabeca: String(item?.danoCabeca || "").trim(),
+    modificacoesArma: Array.isArray(item?.modificacoesArma)
+      ? item.modificacoesArma
+      : [],
+    aprimoramentoCustomizado: item?.aprimoramentoCustomizado || null,
     armaStatus: item?.armaStatus || null,
     nivelRito: String(item?.nivelRito || "").trim(),
     subcategoria: String(item?.subcategoria || "").trim(),

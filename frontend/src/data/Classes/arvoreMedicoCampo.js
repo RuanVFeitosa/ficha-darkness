@@ -1,73 +1,105 @@
+const habilidade = (id, nome, nivel, custo, descricao) => ({
+  id,
+  nome,
+  nivel,
+  custo,
+  descricao,
+});
+
 export const arvoreMedicoCampo = {
   id: "medico-de-campo",
   classe: "Médico de Campo",
   titulo: "A MEDICINA ABSOLUTA",
   beneficio:
-    "Médico de Campo possui acesso a técnicas médicas extremas, suporte tático e procedimentos avançados em combate.",
+    "Você começa com uma Maleta de Campo. Uma vez por cena, ao usar um item medicinal da maleta, pode sacar ou guardar a maleta sem gastar ação.",
 
   absolutas: [
     {
-      id: "intervencao-de-estabilizacao-rapida",
-      nome: "Intervenção de Estabilização Rápida",
-      custo: "4 PE",
-      tipo: "Reação",
+      id: "triagem-de-emergencia",
+      nome: "Triagem de Emergência",
+      custo: "1 PE — Ação de Movimento",
       descricao:
-        "Você age no exato momento em que a vida escapa, virando o jogo contra a morte. Quando um ser à sua vista (alcance curto) é reduzido a Morte ou sofre um golpe que o faria cair morrendo, você pode usar sua reação para estabilizá-lo instantaneamente. O alvo para de sangrar e recupera 1d4 + seu modificador de Inteligência em Vida. Esta habilidade pode salvar alguém de um dano massivo fatal.",
+        "Escolha até dois aliados em alcance curto. Você identifica a condição mais grave de cada um e eles recebem +2 no próximo teste para resistir a Sangramento, Veneno ou doença até o fim da rodada.",
     },
-
     {
-      id: "comando-medico",
-      nome: "Comando Médico",
-      custo: "2 PE",
-      tipo: "Ação Padrão",
+      id: "janela-de-estabilizacao",
+      nome: "Janela de Estabilização",
+      custo: "2 PE — Reação, 1× por cena",
       descricao:
-        "Você avalia o campo de batalha como um verdadeiro médico general. Enquanto mantiver a concentração, gastando 1 PE no início de cada turno, você recebe benefícios estratégicos: identifica instantaneamente o inimigo mais ferido, aumenta curas realizadas em +1d4 de Integridade e pode conceder Redução de Dano 2 para um aliado próximo uma vez por rodada.",
+        "Quando um aliado em alcance curto cair a 0 PI ou ficar Morrendo, ele fica Estável e pode escolher permanecer consciente até o início do próximo turno. A habilidade não recupera PI e não evita dano que o ultrapasse em 20 ou mais.",
     },
-
     {
-      id: "cirurgia-de-campo-absoluta",
-      nome: "Cirurgia de Campo",
-      custo: "4 PE",
-      tipo: "Ação Completa",
+      id: "protocolo-de-campo",
+      nome: "Protocolo de Campo",
+      custo: "2 PE — Ação Padrão",
       descricao:
-        "Você realiza uma intervenção cirúrgica crítica em um aliado incapacitado. Remove automaticamente uma condição física debilitante, como Sangramento, Envenenamento, Atordoamento ou fraturas, além de recuperar 2d8 + seu modificador de Inteligência em Integridade no membro afetado. Fora de combate, também remove doenças comuns automaticamente.",
+        "Com a Maleta de Campo em mãos, trate um aliado adjacente. Ele recupera 1d6 + seu modificador de Conhecimento Médico em PI. Cada aliado só pode receber esta cura uma vez por cena.",
     },
-
     {
-      id: "soro-de-adrenalina-e-recuperacao",
-      nome: "Soro de Adrenalina e Recuperação",
-      custo: "3 PE",
-      tipo: "Ação Padrão",
+      id: "ordem-de-sobrevivencia",
+      nome: "Ordem de Sobrevivência",
+      custo: "3 PE — Ação Padrão, concentração",
       descricao:
-        "Você prepara um coquetel médico especial. Escolha um efeito ao aplicar: Adrenalina — o alvo ignora fadiga, atordoamento e penalidades leves por 1d4+1 rodadas, recebendo +2 em testes físicos; ao final, fica Fatigado por 1 rodada. Recuperação — o alvo recupera 1d6 de Integridade no membro tratado no início de cada turno por 3 rodadas, encerrando caso sofra dano cortante ou perfurante.",
+        "Escolha um aliado em alcance médio. Até o início do seu próximo turno, a primeira vez que ele sofrer dano reduz esse dano em 1d6 + seu nível. Se reduzir o dano a 0, ele também pode se mover 1,5 m sem provocar ataques de oportunidade.",
     },
   ],
 
   aptidoes: [
     {
-      id: "foco-cardiaco",
-      nome: "Foco Cardíaco",
-      custo: "10 PE",
-      descricao:
-        "Seus procedimentos médicos reduzem o risco de morte imediata.",
-    },
-    {
       id: "maos-firmes",
       nome: "Mãos Firmes",
-      custo: "10 PE",
-      descricao: "Você ignora penalidades em procedimentos sob pressão.",
+      custo: "Passiva",
+      descricao:
+        "Você ignora a penalidade por tratar alguém em combate ou sob pressão. Uma falha em Conhecimento Médico para estabilizar um aliado se torna sucesso parcial: ele continua Morrendo, mas não perde PI adicional até o próximo turno.",
     },
     {
-      id: "conhecimento-anatomico",
-      nome: "Conhecimento Anatômico",
-      custo: "10 PE",
-      descricao: "Você recebe bônus em testes envolvendo anatomia humana.",
+      id: "anatomia-aplicada",
+      nome: "Anatomia Aplicada",
+      custo: "Passiva",
+      descricao:
+        "Você recebe +2 em testes de Conhecimento Médico para diagnosticar ferimentos, venenos, doenças e pontos vulneráveis. Após identificar uma lesão, a primeira cura que fizer nela recupera +2 PI.",
     },
     {
-      id: "resistencia-biologica",
-      nome: "Resistência Biológica",
-      custo: "10 PE",
-      descricao: "Você possui resistência aumentada contra doenças e toxinas.",
+      id: "estoque-organizado",
+      nome: "Estoque Organizado",
+      custo: "Passiva",
+      descricao:
+        "No início de cada missão, escolha dois itens medicinais comuns. O primeiro uso de cada um não consome recurso. Não pode escolher explosivos, modificações ou itens vendidos como armas.",
+    },
+    {
+      id: "analgesia-controlada",
+      nome: "Analgesia Controlada",
+      custo: "1 PE — Reação",
+      descricao:
+        "Quando um aliado em alcance curto falhar em um teste causado por dor, Sangramento ou exaustão, ele pode rerrolar um dado. Deve usar o novo resultado. Cada aliado só pode receber este benefício uma vez por cena.",
+    },
+    {
+      id: "barreira-sanitaria",
+      nome: "Barreira Sanitária",
+      custo: "1 PE — Ação de Movimento",
+      descricao:
+        "Até o início do seu próximo turno, você e aliados adjacentes recebem +2 em testes contra Veneno, doença e efeitos de contaminação. O bônus não se acumula com outra Barreira Sanitária.",
+    },
+    {
+      id: "recuperacao-supervisionada",
+      nome: "Recuperação Supervisionada",
+      custo: "Passiva",
+      descricao:
+        "Durante um descanso de pelo menos 10 minutos, até três aliados tratados por você recuperam +1d6 PI adicional uma vez. Um personagem só pode receber este benefício uma vez por descanso.",
+    },
+    {
+      id: "dosagem-segura",
+      nome: "Dosagem Segura",
+      custo: "Passiva",
+      descricao:
+        "Quando usar uma habilidade sua que cure dados de PI, você pode rerrolar um dado de cura que tenha resultado 1. Pode fazer isso uma vez por rodada.",
+    },
+    {
+      id: "segunda-opiniao",
+      nome: "Segunda Opinião",
+      custo: "2 PE — Reação, 1× por cena",
+      descricao:
+        "Depois que um aliado em alcance médio falhar em um teste de resistência contra condição física ou mental, ele rerrola o teste com +2. O novo resultado substitui o anterior.",
     },
   ],
 
@@ -75,364 +107,85 @@ export const arvoreMedicoCampo = {
     {
       id: "medico-de-combate",
       nome: "Médico de Combate",
-      passiva: "Você pode estabilizar aliados em combate sem penalidades.",
-
+      passiva:
+        "Sempre que você curar um aliado em combate, ele recebe +1 de Defesa até o início do próximo turno.",
       habilidades: [
-        {
-          id: "pronto-socorro",
-          nome: "Pronto-Socorro",
-          nivel: 1,
-          descricao: "Você estabiliza rapidamente um aliado caído.",
-        },
-        {
-          id: "taticas-de-campo",
-          nome: "Táticas de Campo",
-          nivel: 2,
-          descricao: "Aliados próximos recebem bônus defensivos após cura.",
-        },
-        {
-          id: "tratamento-rapido",
-          nome: "Tratamento Rápido",
-          nivel: 3,
-          descricao:
-            "Você reduz drasticamente o tempo necessário para tratar ferimentos.",
-        },
-        {
-          id: "cirurgia-de-campo",
-          nome: "Cirurgia de Campo",
-          nivel: 4,
-          descricao:
-            "Você pode realizar procedimentos críticos em ambientes hostis.",
-        },
-        {
-          id: "estimulantes-de-combate",
-          nome: "Estimulantes de Combate",
-          nivel: 5,
-          descricao:
-            "Você injeta estimulantes que aumentam momentaneamente o desempenho físico.",
-        },
-        {
-          id: "resistencia-a-agentes-quimicos",
-          nome: "Resistência a Agentes Químicos",
-          nivel: 6,
-          descricao:
-            "Aliados tratados por você recebem resistência temporária a toxinas.",
-        },
-        {
-          id: "recuperacao-rapida",
-          nome: "Recuperação Rápida",
-          nivel: 7,
-          descricao: "Ferimentos tratados cicatrizam com velocidade anormal.",
-        },
-        {
-          id: "curativo-avancado",
-          nome: "Curativo Avançado",
-          nivel: 8,
-          descricao: "Você reduz sangramentos críticos instantaneamente.",
-        },
-        {
-          id: "oposicao-a-toxinas",
-          nome: "Oposição a Toxinas",
-          nivel: 9,
-          descricao:
-            "Você neutraliza parcialmente venenos e compostos químicos.",
-        },
-        {
-          id: "ressuscitacao-rapida",
-          nome: "Ressuscitação Rápida",
-          nivel: 10,
-          descricao:
-            "Você pode trazer um aliado recém-caído de volta à consciência.",
-        },
+        habilidade("socorro-sob-fogo", "Socorro Sob Fogo", 1, "1 PE — Ação de Movimento", "Saque um item medicinal e mova-se até metade do deslocamento. O próximo uso desse item neste turno não provoca ataques de oportunidade."),
+        habilidade("curativo-de-pressao", "Curativo de Pressão", 2, "1 PE — Ação Padrão", "Um aliado adjacente encerra Sangramento e recupera 1d4 PI. Se já não estiver Sangrando, recebe apenas a cura. Cada alvo: 1× por cena."),
+        habilidade("cobertura-clinica", "Cobertura Clínica", 3, "2 PE — Reação", "Quando um aliado que você curou nesta cena for atingido em alcance curto, reduza o dano em 1d6. Após isso, ele pode se deslocar 1,5 m."),
+        habilidade("injeção-de-avanço", "Injeção de Avanço", 4, "2 PE — Ação Padrão", "Um aliado adjacente recebe +2 no próximo ataque ou teste físico até o fim do próximo turno. Ao término, não pode receber outra Injeção de Avanço até o fim da cena."),
+        habilidade("linha-de-extração", "Linha de Extração", 5, "3 PE — Ação Completa", "Mova um aliado adjacente até metade do deslocamento dele. Esse movimento não provoca ataques de oportunidade e o aliado recebe RD 2 até o próximo turno."),
+        habilidade("protocolo-dourado", "Protocolo Dourado", 6, "4 PE — Ação Padrão, 1× por cena", "Um aliado adjacente recupera 2d6 + modificador de Conhecimento Médico em PI e encerra Sangramento ou Atordoamento. O alvo fica Vulnerável até o início do próximo turno."),
       ],
     },
-
     {
       id: "medico-de-resgate-urbano",
       nome: "Médico de Resgate Urbano",
       passiva:
-        "Você possui treinamento para operar em áreas colapsadas e situações críticas.",
-
+        "Você e aliados que esteja guiando ignoram terreno difícil causado por escombros, fumaça ou multidão durante o primeiro deslocamento de cada rodada.",
       habilidades: [
-        {
-          id: "resgate-em-areas-de-risco",
-          nome: "Resgate em Áreas de Risco",
-          nivel: 1,
-          descricao: "Você ignora penalidades em ambientes perigosos.",
-        },
-        {
-          id: "tecnico-em-trauma",
-          nome: "Técnico em Trauma",
-          nivel: 2,
-          descricao: "Você reduz danos permanentes em aliados feridos.",
-        },
-        {
-          id: "operacoes-de-resgate",
-          nome: "Operações de Resgate",
-          nivel: 3,
-          descricao: "Você move aliados feridos sem penalidades.",
-        },
-        {
-          id: "negociacao-em-crises",
-          nome: "Negociação em Crises",
-          nivel: 4,
-          descricao:
-            "Você mantém vítimas e civis calmos em situações extremas.",
-        },
-        {
-          id: "treinamento-em-escavacao",
-          nome: "Treinamento em Escavação",
-          nivel: 5,
-          descricao:
-            "Você localiza sobreviventes soterrados com mais facilidade.",
-        },
-        {
-          id: "logistica-de-emergencia",
-          nome: "Logística de Emergência",
-          nivel: 6,
-          descricao: "Você organiza evacuações e suprimentos rapidamente.",
-        },
-        {
-          id: "cuidado-pos-operatorio",
-          nome: "Cuidado Pós-Operatório",
-          nivel: 7,
-          descricao: "Aliados tratados por você recuperam mais rapidamente.",
-        },
-        {
-          id: "primeiros-socorros-avancados",
-          nome: "Primeiros Socorros Avançados",
-          nivel: 8,
-          descricao: "Você remove penalidades leves de aliados tratados.",
-        },
-        {
-          id: "assistencia-psicossocial",
-          nome: "Assistência Psicossocial",
-          nivel: 9,
-          descricao: "Você reduz efeitos mentais causados por trauma.",
-        },
-        {
-          id: "intervencao-rapida-e-eficaz",
-          nome: "Intervenção Rápida e Eficaz",
-          nivel: 10,
-          descricao:
-            "Você consegue agir instantaneamente em situações críticas.",
-        },
+        habilidade("rota-de-fuga", "Rota de Fuga", 1, "Passiva", "Após examinar uma área por 1 minuto, você identifica a saída segura mais próxima, cobertura leve e um risco estrutural evidente."),
+        habilidade("arrasto-seguro", "Arrasto Seguro", 2, "1 PE — Ação de Movimento", "Você move um aliado adjacente incapacitado até 3 m. Esse deslocamento não provoca ataques de oportunidade e não agrava seus ferimentos."),
+        habilidade("sinalizacao-de-perigo", "Sinalização de Perigo", 3, "1 PE — Ação Padrão", "Marque uma área pequena em alcance curto. Até o fim da cena, aliados que a atravessem recebem +2 para evitar armadilhas, queda, incêndio ou desabamento."),
+        habilidade("evacuacao-coordenada", "Evacuação Coordenada", 4, "2 PE — Ação Completa", "Até três aliados que possam ouvi-lo podem usar a reação para se mover até metade do deslocamento. Nenhum deles pode terminar mais perto de um inimigo."),
+        habilidade("abrigo-improvisado", "Abrigo Improvisado", 5, "2 PE — 1 minuto", "Com materiais do cenário, cria cobertura leve para até dois aliados até o fim da cena ou até ser destruída. A cobertura concede +2 de Defesa contra ataques à distância."),
+        habilidade("prioridade-de-resgate", "Prioridade de Resgate", 6, "3 PE — Reação, 1× por cena", "Quando uma área causar dano a aliados em alcance médio, escolha até dois deles: cada um reduz o dano em 1d8 e pode se mover 1,5 m após o efeito."),
       ],
     },
-
     {
       id: "cirurgiao-de-trauma",
       nome: "Cirurgião de Trauma",
-      passiva: "Você domina procedimentos invasivos e operações de alto risco.",
-
+      passiva:
+        "Ao tratar um aliado com metade ou menos dos PI máximos, suas curas nele recuperam +2 PI.",
       habilidades: [
-        {
-          id: "intervencao-rapida",
-          nome: "Intervenção Rápida",
-          nivel: 1,
-          descricao: "Você inicia procedimentos médicos imediatamente.",
-        },
-        {
-          id: "diagnostico-instantaneo",
-          nome: "Diagnóstico Instantâneo",
-          nivel: 2,
-          descricao: "Você identifica danos internos rapidamente.",
-        },
-        {
-          id: "cirurgia-de-campo-trauma",
-          nome: "Cirurgia de Campo",
-          nivel: 3,
-          descricao: "Você realiza cirurgias improvisadas em combate.",
-        },
-        {
-          id: "transfusao-de-campo",
-          nome: "Transfusão de Campo",
-          nivel: 4,
-          descricao: "Você recupera rapidamente aliados debilitados.",
-        },
-        {
-          id: "tecnica-de-fechamento-rapido",
-          nome: "Técnica de Fechamento Rápido",
-          nivel: 5,
-          descricao: "Você fecha ferimentos graves em poucos segundos.",
-        },
-        {
-          id: "monitoramento-vital-continuo",
-          nome: "Monitoramento Vital Contínuo",
-          nivel: 6,
-          descricao: "Você acompanha sinais vitais em tempo real.",
-        },
-        {
-          id: "procedimento-de-ressuscitacao",
-          nome: "Procedimento de Ressuscitação",
-          nivel: 7,
-          descricao: "Você reduz drasticamente o risco de morte.",
-        },
-        {
-          id: "mestre-do-trauma",
-          nome: "Mestre do Trauma",
-          nivel: 8,
-          descricao: "Você executa procedimentos quase impossíveis.",
-        },
+        habilidade("diagnostico-de-trauma", "Diagnóstico de Trauma", 1, "Passiva", "Com um teste de Conhecimento Médico, você identifica a condição física mais grave de um alvo adjacente e sabe se ela exige estabilização, antídoto ou repouso."),
+        habilidade("fechamento-rapido", "Fechamento Rápido", 2, "1 PE — Ação Padrão", "Um aliado adjacente encerra Sangramento e reduz a próxima fonte de dano físico sofrida nesta rodada em 2."),
+        habilidade("redução-de-choque", "Redução de Choque", 3, "2 PE — Reação", "Quando um aliado adjacente cair a 0 PI, ele fica Estável e não ganha uma condição adicional por ter caído. Não funciona contra dano massivo."),
+        habilidade("transfusao-controlada", "Transfusão Controlada", 4, "2 PE — Ação Completa", "Um aliado adjacente recupera 1d8 + modificador de Conhecimento Médico em PI. Você sofre 1d4 PI que não podem ser reduzidos."),
+        habilidade("procedimento-limpo", "Procedimento Limpo", 5, "3 PE — Ação Completa", "Remova Veneno, Sangramento ou uma penalidade de fratura de um aliado adjacente. Se o efeito permitir teste, ele também recebe +2 no próximo teste contra a mesma fonte."),
+        habilidade("cirurgia-de-urgencia", "Cirurgia de Urgência", 6, "4 PE — 10 minutos, 1× por descanso", "Fora de combate, um aliado recupera 3d6 + modificador de Conhecimento Médico em PI e remove uma condição física tratável. O alvo fica Exausto até completar um descanso."),
       ],
     },
-
     {
       id: "bioquimico",
       nome: "Bioquímico",
-      passiva: "Você domina substâncias químicas e compostos experimentais.",
-
+      passiva:
+        "No início de cada missão, escolha um composto: antídoto, analgésico ou estimulante. Você prepara uma dose gratuita desse composto.",
       habilidades: [
-        {
-          id: "sintese-de-campo",
-          nome: "Síntese de Campo",
-          nivel: 1,
-          descricao: "Você cria compostos improvisados rapidamente.",
-        },
-        {
-          id: "dosagem-precisa",
-          nome: "Dosagem Precisa",
-          nivel: 2,
-          descricao: "Seus compostos possuem efeitos mais eficientes.",
-        },
-        {
-          id: "cocktail-de-combate",
-          nome: "Cocktail de Combate",
-          nivel: 3,
-          descricao: "Você cria estimulantes de combate temporários.",
-        },
-        {
-          id: "nano-antidotos",
-          nome: "Nano-Antídotos",
-          nivel: 4,
-          descricao: "Você neutraliza toxinas avançadas.",
-        },
-        {
-          id: "modulador-metabolico",
-          nome: "Modulador Metabólico",
-          nivel: 5,
-          descricao: "Você altera temporariamente o metabolismo humano.",
-        },
-        {
-          id: "aerossol-medico",
-          nome: "Aerossol Médico",
-          nivel: 6,
-          descricao: "Você aplica substâncias em área.",
-        },
-        {
-          id: "mestre-farmacologo",
-          nome: "Mestre Farmacólogo",
-          nivel: 7,
-          descricao: "Você domina compostos médicos extremos.",
-        },
+        habilidade("sintese-de-campo", "Síntese de Campo", 1, "1 PE — Ação Completa", "Transforme um recurso medicinal comum em uma dose improvisada de antídoto ou analgésico, utilizável até o fim da cena."),
+        habilidade("dosagem-precisa", "Dosagem Precisa", 2, "Passiva", "A primeira criatura que usar sua dose preparada na cena recupera +1d4 PI ou recebe +2 no teste para resistir ao Veneno, conforme o efeito da dose."),
+        habilidade("coquetel-de-combate", "Coquetel de Combate", 3, "2 PE — Ação Padrão", "Um aliado adjacente escolhe: +2 no próximo teste físico ou ignora Exausto até o fim do próximo turno. Depois, ele não pode receber outro Coquetel nesta cena."),
+        habilidade("antidoto-amplo", "Antídoto Amplo", 4, "2 PE — Ação Padrão", "Um aliado adjacente encerra Veneno comum ou recebe +4 no próximo teste contra toxinas. Contra toxina sobrenatural, apenas concede o bônus."),
+        habilidade("aerossol-medicinal", "Aerossol Medicinal", 5, "3 PE — Ação Padrão", "Até três aliados em alcance curto recebem +2 contra Veneno e doença até o fim da cena. Um aliado que já esteja Envenenado pode repetir seu teste de resistência."),
+        habilidade("metabolismo-de-emergencia", "Metabolismo de Emergência", 6, "3 PE — Reação, 1× por cena", "Quando um aliado em alcance curto falhar num teste físico, ele rerrola com +2. Se obtiver sucesso, fica Fatigado após a ação."),
       ],
     },
-
     {
       id: "psiquiatra",
       nome: "Psiquiatra / Psicólogo",
-      passiva: "Você entende profundamente a mente humana.",
-
+      passiva:
+        "Aliados que concluírem um descanso de 10 minutos sob seus cuidados recebem +2 no próximo teste contra medo, pânico ou Abalo.",
       habilidades: [
-        {
-          id: "avaliacao-psicologica",
-          nome: "Avaliação Psicológica",
-          nivel: 1,
-          descricao: "Você identifica estados mentais rapidamente.",
-        },
-        {
-          id: "intervencao-em-crise",
-          nome: "Intervenção em Crise",
-          nivel: 2,
-          descricao: "Você reduz surtos e colapsos mentais.",
-        },
-        {
-          id: "terapia-de-campo",
-          nome: "Terapia de Campo",
-          nivel: 3,
-          descricao: "Você auxilia aliados a recuperar estabilidade emocional.",
-        },
-        {
-          id: "leitura-microexpressiva",
-          nome: "Leitura Microexpressiva",
-          nivel: 4,
-          descricao: "Você identifica emoções ocultas.",
-        },
-        {
-          id: "psicoprofilaxia",
-          nome: "Psicoprofilaxia",
-          nivel: 5,
-          descricao: "Você reduz traumas mentais futuros.",
-        },
-        {
-          id: "debriefing-pos-traumatico",
-          nome: "Debriefing Pós-Traumático",
-          nivel: 6,
-          descricao: "Você remove penalidades mentais temporárias.",
-        },
-        {
-          id: "manipulacao-terapeutica",
-          nome: "Manipulação Terapêutica",
-          nivel: 7,
-          descricao: "Você influencia emocionalmente pessoas vulneráveis.",
-        },
-        {
-          id: "reconstrucao-de-memoria",
-          nome: "Reconstrução de Memória",
-          nivel: 8,
-          descricao: "Você auxilia na recuperação de memórias fragmentadas.",
-        },
+        habilidade("leitura-de-crise", "Leitura de Crise", 1, "Passiva", "Após conversar ou observar alguém por 1 minuto, você identifica se ele está Abalado, Amedrontado, sob coerção ou escondendo uma emoção intensa."),
+        habilidade("ancora-emocional", "Âncora Emocional", 2, "1 PE — Reação", "Quando um aliado em alcance curto receber Abalado ou Amedrontado, ele adia a condição até o fim do próximo turno e recebe +2 para resistir a ela."),
+        habilidade("intervencao-em-crise", "Intervenção em Crise", 3, "2 PE — Ação Padrão", "Um aliado que possa ouvi-lo remove Abalado ou reduz Pânico para Abalado. Cada alvo: 1× por cena."),
+        habilidade("comando-sereno", "Comando Sereno", 4, "1 PE — Ação de Movimento", "Escolha um aliado em alcance médio. Até o próximo turno, ele recebe +2 no próximo teste de resistência mental e não pode ser flanqueado."),
+        habilidade("debriefing-de-campo", "Debriefing de Campo", 5, "2 PE — 10 minutos", "Até três aliados removem uma penalidade mental temporária e recuperam 1 ponto de Esperança, uma vez por descanso."),
+        habilidade("protocolo-de-lucidez", "Protocolo de Lucidez", 6, "3 PE — Reação, 1× por cena", "Quando um aliado em alcance médio falhar em um teste mental, ele pode transformar a falha em sucesso parcial. Ainda sofre um efeito narrativo ou reduzido definido pelo mestre."),
       ],
     },
     {
       id: "pesquisador-biomedico",
       nome: "Pesquisador Biomédico",
       passiva:
-        "Você domina diagnóstico, análise laboratorial, imunização e desenvolvimento de tratamentos experimentais.",
-
+        "Após examinar uma criatura, amostra ou doença por 10 minutos, você recebe +2 em testes para identificar ou criar uma contramedida contra ela nesta missão.",
       habilidades: [
-        {
-          id: "analise-de-doencas",
-          nome: "Análise de Doenças",
-          nivel: 1,
-          descricao:
-            "O pesquisador pode diagnosticar doenças rolando 2d6 + Medicina. O resultado determina a precisão do diagnóstico, identificando com eficácia doenças em pacientes ou criaturas.",
-        },
-        {
-          id: "desenvolvimento-de-antidotos",
-          nome: "Desenvolvimento de Antídotos",
-          nivel: 2,
-          descricao:
-            "Ao criar antídotos, o pesquisador faz um teste de 2d6 + Modificador de Química para determinar a eficácia do antídoto. Um resultado mais alto garante maior sucesso na neutralização do veneno ou doença.",
-        },
-        {
-          id: "melhorias-biologicas",
-          nome: "Melhorias Biológicas",
-          nivel: 3,
-          descricao:
-            "Para aplicar melhorias biológicas temporárias, o pesquisador faz um teste de 2d6 + Medicina. O resultado determina a duração e os benefícios das melhorias, proporcionando vantagens temporárias em atributos físicos ou mentais.",
-        },
-        {
-          id: "genetica-avancada",
-          nome: "Genética Avançada",
-          nivel: 4,
-          descricao:
-            "Manipulação genética para criar tratamentos personalizados. O pesquisador faz um teste de 2d6 + Modificador de Medicina para determinar a eficácia do tratamento, podendo curar doenças ou melhorar habilidades de forma adaptativa.",
-        },
-        {
-          id: "imunizacao-rapida",
-          nome: "Imunização Rápida",
-          nivel: 5,
-          descricao:
-            "Desenvolve técnicas para acelerar a imunização. Um teste de 2d6 + Modificador de Habilidade Alquímica determina a eficácia do processo. Resultados altos geram imunização mais eficaz e rápida contra agentes patogênicos.",
-        },
-        {
-          id: "monitoramento-biomedico",
-          nome: "Monitoramento Biomédico",
-          nivel: 6,
-          descricao:
-            "Implementa sistemas de monitoramento biomédico avançados. Um teste de 2d6 + Modificador de Medicina detecta anormalidades e fornece informações vitais em tempo real, podendo prever problemas antes de se agravarem.",
-        },
+        habilidade("analise-de-amostra", "Análise de Amostra", 1, "Passiva", "Com material biológico e 10 minutos, identifique uma característica útil: vetor, resistência, fraqueza fisiológica ou risco de contaminação."),
+        habilidade("marcador-biologico", "Marcador Biológico", 2, "1 PE — Ação Padrão", "Marque um alvo analisado em alcance curto. O próximo aliado a acertá-lo antes do seu próximo turno causa +1d4 de dano ou recebe +2 no teste de Cura contra ele."),
+        habilidade("antidoto-direcionado", "Antídoto Direcionado", 3, "2 PE — Ação Completa", "Após analisar a fonte, prepare uma dose que concede +4 no próximo teste contra uma doença, Veneno ou contaminação específica."),
+        habilidade("monitoramento-vital", "Monitoramento Vital", 4, "2 PE — Ação de Movimento", "Por uma cena, acompanhe um aliado em alcance médio. Você sabe quando ele ficar com metade ou menos dos PI e pode usar Triagem de Emergência nele sem gastar PE uma vez."),
+        habilidade("protocolo-de-quarentena", "Protocolo de Quarentena", 5, "2 PE — Ação Padrão", "Crie uma zona de 3 m até o fim da cena. Aliados na zona recebem +2 contra contaminação; criaturas contaminadas que entrarem nela revelam sinais visíveis."),
+        habilidade("tratamento-experimental", "Tratamento Experimental", 6, "4 PE — Ação Completa, 1× por missão", "Um aliado adjacente recupera 2d6 PI e pode repetir um teste contra doença, Veneno ou condição biológica. Em caso de falha, ele recupera apenas metade dos PI e fica Fatigado."),
       ],
     },
   ],

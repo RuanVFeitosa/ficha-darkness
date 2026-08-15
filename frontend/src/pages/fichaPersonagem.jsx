@@ -54,6 +54,8 @@ import {
   obterArvoreClasse,
   salvarArvoresCustom,
 } from "../data/Classes/arvoresHabilidades";
+import { CATALOGO_DEFESAS } from "../data/Catalogo/defesas";
+import { CATALOGO_COMBATE } from "../data/Catalogo/combate";
 
 // Chave para o localStorage
 const STORAGE_KEY = "fichaRPG_personagem";
@@ -175,6 +177,43 @@ const MALETA_DE_CAMPO = {
   personalizado: false,
 };
 
+const rotuloMembrosProtegidos = (membros = []) => {
+  const nomes = {
+    cabeca: "Cabeça",
+    torso: "Torso",
+    bracoDireito: "Braço direito",
+    bracoEsquerdo: "Braço esquerdo",
+    pernaDireita: "Perna direita",
+    pernaEsquerda: "Perna esquerda",
+  };
+
+  return membros.map((membro) => nomes[membro] || membro).join(" / ");
+};
+
+const membrosProtegidosPelaDefesa = (item = {}) => {
+  if (Array.isArray(item.membrosProtegidos) && item.membrosProtegidos.length) {
+    return item.membrosProtegidos;
+  }
+
+  const area = `${item.areaDefesa || ""} ${item.entrega || item.detalhes || ""}`
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  if (area.includes("conjunto")) {
+    return ["cabeca", "torso", "bracoDireito", "bracoEsquerdo", "pernaDireita", "pernaEsquerda"];
+  }
+  if (area.includes("cabeca") || area.includes("face")) return ["cabeca"];
+  if (area.includes("torso")) return ["torso"];
+  if (area.includes("braco") || area.includes("mao") || area.includes("empunh")) {
+    return ["bracoDireito", "bracoEsquerdo"];
+  }
+  if (area.includes("perna") || area.includes("pes")) {
+    return ["pernaDireita", "pernaEsquerda"];
+  }
+  return [];
+};
+
 // Estado inicial padrão
 export const estadoInicial = {
   nome: "",
@@ -200,6 +239,7 @@ export const estadoInicial = {
   esquiva: 0,
   protecao: "",
   resistencias: "",
+  resistenciasDano: [],
   proficiencias: "",
   atributos: {
     forca: 0,
@@ -494,6 +534,7 @@ const FichaPersonagem = () => {
   const [fichaId] = useState(() => obterFichaIdDaUrl());
   const [personagem, setPersonagem] = useState(estadoInicial);
   const [abaAtiva, setAbaAtiva] = useState("combate");
+  const [tipoDanoRecebido, setTipoDanoRecebido] = useState("geral");
   const [ultimoSave, setUltimoSave] = useState(null);
   const [carregado, setCarregado] = useState(false);
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
@@ -545,6 +586,7 @@ const FichaPersonagem = () => {
   const [itemVisualizado, setItemVisualizado] = useState(null);
   const [visualizadorAberto, setVisualizadorAberto] = useState(false);
   const [visualizadorFechando, setVisualizadorFechando] = useState(false);
+  const [defesaVisualizada, setDefesaVisualizada] = useState(null);
   const [ritoVisualizado, setRitoVisualizado] = useState(null);
   const [ritoDesativando, setRitoDesativando] = useState(false);
   const [sanidadeSaindo, setSanidadeSaindo] = useState(false);
@@ -555,6 +597,16 @@ const FichaPersonagem = () => {
   const [customizacaoAberta, setCustomizacaoAberta] = useState(false);
   const [subAbaMaleta, setSubAbaMaleta] = useState("medicinal");
   const [subAbaRituais, setSubAbaRituais] = useState("rituais");
+  const [presetsRolagem, setPresetsRolagem] = useState([]);
+  const [presetEditando, setPresetEditando] = useState(null);
+  const [formPreset, setFormPreset] = useState({
+    nome: "",
+    formula: "",
+    tipo: "Dano",
+    descricao: "",
+  });
+  const [editandoNomeItem, setEditandoNomeItem] = useState(false);
+  const [novoNomeItem, setNovoNomeItem] = useState("");
 
   // ESTADO PARA O MODAL
   const [modalAberto, setModalAberto] = useState(false);
@@ -578,6 +630,11 @@ const FichaPersonagem = () => {
   const [ativoPassivaSelecionado, setAtivoPassivaSelecionado] =
     useState("razao");
   const ignorarProximoSalvamentoRef = useRef(false);
+  const [editandoHabilidadeId, setEditandoHabilidadeId] = useState(null);
+  const [habilidadeEditavel, setHabilidadeEditavel] = useState({
+    nome: "",
+    descricao: "",
+  });
 
   const [subAbaHabilidade, setSubAbaHabilidade] = useState("arquetipo");
   const [subAbaMarcaSelecionada, setSubAbaMarcaSelecionada] = useState(null);
@@ -590,7 +647,36 @@ const FichaPersonagem = () => {
   const temMarcaPendente = marcasPendentes.length > 0;
 
   const abrirVisualizador = (item, index) => {
-    setItemVisualizado({ ...item, index });
+    const ehDefesa =
+      item?.categoria === "defesas" ||
+      item?.tipo === "Defesa" ||
+      Number(item?.defesaBonus) > 0 ||
+      Boolean(item?.resistencia) ||
+      (item?.resistenciasDano || []).length > 0;
+
+    if (ehDefesa) {
+      setDefesaVisualizada(item);
+      return;
+    }
+
+    const armaPadrao = CATALOGO_COMBATE.find(
+      (arma) =>
+        (arma.categoria === "armas-fogo" || arma.categoria === "armas-corpo") &&
+        arma.nome === item?.nome,
+    );
+    const itemBalanceado = armaPadrao
+      ? {
+          ...item,
+          armaStatus: {
+            ...(item.armaStatus || {}),
+            ...armaPadrao.armaStatus,
+          },
+        }
+      : item;
+
+    setEditandoNomeItem(false);
+    setNovoNomeItem("");
+    setItemVisualizado({ ...itemBalanceado, index });
     setVisualizadorAberto(true);
     setVisualizadorFechando(false);
   };
@@ -871,6 +957,51 @@ const FichaPersonagem = () => {
     }));
   };
 
+  const salvarNovoNomeItem = () => {
+    if (!itemVisualizado || !novoNomeItem.trim()) {
+      setEditandoNomeItem(false);
+      return;
+    }
+
+    const index = itemVisualizado.index;
+    setPersonagem((prev) => {
+      const novoInventario = [...(prev.inventario || [])];
+      if (novoInventario[index]) {
+        novoInventario[index] = {
+          ...novoInventario[index],
+          nome: novoNomeItem.trim(),
+        };
+        // Atualiza o itemVisualizado com o novo nome
+        setItemVisualizado((atual) => ({
+          ...atual,
+          nome: novoNomeItem.trim(),
+        }));
+      }
+      return { ...prev, inventario: novoInventario };
+    });
+    setEditandoNomeItem(false);
+    setNovoNomeItem("");
+  };
+
+  // Carregar presets do localStorage
+  useEffect(() => {
+    try {
+      const dados =
+        JSON.parse(localStorage.getItem("darkness_rolagens_presets")) || [];
+      setPresetsRolagem(dados);
+    } catch {
+      setPresetsRolagem([]);
+    }
+  }, []);
+
+  // Salvar presets sempre que mudarem
+  useEffect(() => {
+    localStorage.setItem(
+      "darkness_rolagens_presets",
+      JSON.stringify(presetsRolagem),
+    );
+  }, [presetsRolagem]);
+
   // ESTADO CRÍTICO AUTOMÁTICO
   // Cabeça e Torso são regiões vitais. Se qualquer uma entrar em Grave,
   // a condição Estado Crítico é ativada automaticamente.
@@ -962,8 +1093,19 @@ const FichaPersonagem = () => {
       const dadosMembro = prev.membros[membro];
 
       const defesa = parseInt(dadosMembro.defesa) || 0;
+      const reducaoResistencia = (prev.resistenciasDano || [])
+        .filter(
+          (resistencia) =>
+            resistencia.tipo === tipoDanoRecebido &&
+            (!Array.isArray(resistencia.membros) ||
+              resistencia.membros.includes(membro)),
+        )
+        .reduce(
+          (total, resistencia) => total + (Number(resistencia.reducao) || 0),
+          0,
+        );
 
-      const danoFinal = Math.max(0, dano - defesa);
+      const danoFinal = Math.max(0, dano - defesa - reducaoResistencia);
 
       const novaVida = Math.max(0, dadosMembro.atual - danoFinal);
 
@@ -1033,6 +1175,31 @@ const FichaPersonagem = () => {
       },
     }));
   };
+
+  const iniciarEdicaoHabilidade = (habilidade) => {
+  setEditandoHabilidadeId(habilidade.id);
+  setHabilidadeEditavel({
+    nome: habilidade.nome,
+    descricao: habilidade.descricao || "",
+  });
+};
+
+const salvarEdicaoHabilidade = (habilidadeId) => {
+  if (!habilidadeEditavel.nome.trim()) return;
+  setPersonagem((prev) => {
+    const novasHabilidades = (prev.habilidadesCriadas || []).map((h) =>
+      h.id === habilidadeId
+        ? { ...h, nome: habilidadeEditavel.nome.trim(), descricao: habilidadeEditavel.descricao.trim() }
+        : h
+    );
+    return { ...prev, habilidadesCriadas: novasHabilidades };
+  });
+  setEditandoHabilidadeId(null);
+};
+
+const cancelarEdicaoHabilidade = () => {
+  setEditandoHabilidadeId(null);
+};
 
   const atualizarDescricao = (novaDescricao) => {
     setPersonagem((prev) => ({
@@ -1144,6 +1311,19 @@ const FichaPersonagem = () => {
     return /muni[cç][ãa]o|flechas|quantidade:/i.test(texto);
   };
 
+  const tipoArmaParaMunicao = (arma = {}) => {
+    const texto = `${arma?.nome || ""} ${arma?.armaStatus?.tipo || ""}`
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+    if (texto.includes("arco")) return "arco";
+    if (texto.includes("escopeta")) return "escopeta";
+    if (texto.includes("rifle")) return "rifle";
+    if (texto.includes("fuzil")) return "fuzil";
+    if (texto.includes("pistola") || texto.includes("revolver")) return "pistola";
+    return "";
+  };
+
   const getTipoMunicaoEspecial = (item) => {
     const texto = `${item?.nome || ""} ${item?.tipo || ""}`.toLowerCase();
     if (texto.includes("explosivo")) return "explosiva";
@@ -1253,6 +1433,37 @@ const FichaPersonagem = () => {
 
   const rolarDado = (faces) => {
     return Math.floor(Math.random() * faces) + 1;
+  };
+
+  const rolarDestino = () => {
+    const resultado = rolarDado(20);
+    const rolagem = {
+      tipo: "destino",
+      titulo: "Destino",
+      modo: "Teste de Sorte",
+      formula: "1d20",
+      dados: [resultado],
+      faces: 20,
+      maiorResultado: resultado,
+      quantidadeBase: 1,
+      finais: 0,
+      resultadosExtras: [],
+      bonusFinais: 0,
+      modificadorDados: 0,
+      bonusAtivo: 0,
+      bonusPassiva: 0,
+      total: resultado,
+      dano: null,
+      dadosDetalhados: null,
+    };
+
+    setRolandoDados(true);
+    setModalRolagem(rolagem);
+    registrarRolagemMestre(rolagem);
+
+    setTimeout(() => {
+      setRolandoDados(false);
+    }, 1200);
   };
 
   const interpretarDano = (danoTexto) => {
@@ -1656,6 +1867,16 @@ const FichaPersonagem = () => {
         return prev;
       }
 
+      if (
+        municao.tipoArma &&
+        tipoArmaParaMunicao(arma) !== municao.tipoArma
+      ) {
+        setMensagemCraft(
+          `Esta munição é compatível apenas com ${municao.tipoArma}.`,
+        );
+        return prev;
+      }
+
       const quantidadeMunicao = parseInt(municao.quantidade, 10) || 1;
       const municaoCarregada = {
         ...municao,
@@ -1762,6 +1983,54 @@ const FichaPersonagem = () => {
         inventario: novoInventario,
       };
     });
+  };
+
+  const criarPreset = (e) => {
+    e.preventDefault();
+    if (!formPreset.nome.trim() || !formPreset.formula.trim()) {
+      setMensagemCraft("Preencha nome e fórmula.");
+      return;
+    }
+    const novoPreset = {
+      id: crypto.randomUUID(),
+      ...formPreset,
+      criadoEm: Date.now(),
+    };
+    setPresetsRolagem([...presetsRolagem, novoPreset]);
+    limparFormPreset();
+  };
+
+  const editarPreset = (id) => {
+    const preset = presetsRolagem.find((p) => p.id === id);
+    if (preset) {
+      setPresetEditando(id);
+      setFormPreset({ ...preset });
+    }
+  };
+
+  const salvarEdicaoPreset = (e) => {
+    e.preventDefault();
+    if (!formPreset.nome.trim() || !formPreset.formula.trim()) return;
+    const atualizados = presetsRolagem.map((p) =>
+      p.id === presetEditando ? { ...p, ...formPreset } : p,
+    );
+    setPresetsRolagem(atualizados);
+    limparFormPreset();
+  };
+
+  const excluirPreset = (id) => {
+    setPresetsRolagem(presetsRolagem.filter((p) => p.id !== id));
+    if (presetEditando === id) limparFormPreset();
+  };
+
+  const limparFormPreset = () => {
+    setFormPreset({ nome: "", formula: "", tipo: "Dano", descricao: "" });
+    setPresetEditando(null);
+  };
+
+  const executarPreset = (formula) => {
+    setFormulaDadoPersonalizado(formula);
+    rolarFormulaPersonalizada();
   };
 
   const obterRitoId = (rito, index) => {
@@ -2000,6 +2269,7 @@ const FichaPersonagem = () => {
   const rolarItem = (item) => {
     const formula =
       item?.rolagem?.formula ||
+      item?.cura?.match(/(\d+)d(\d+)([+-]\d+)?/i)?.[0] ||
       item?.dano?.match(/(\d+)d(\d+)([+-]\d+)?/i)?.[0] ||
       item?.efeito?.match(/(\d+)d(\d+)([+-]\d+)?/i)?.[0];
 
@@ -2010,7 +2280,8 @@ const FichaPersonagem = () => {
 
     const tipoRolagem =
       item?.rolagem?.tipo ||
-      (item?.tipo?.toLowerCase().includes("cura") ||
+      (item?.cura ||
+      item?.tipo?.toLowerCase().includes("cura") ||
       item?.efeito?.toLowerCase().includes("recupera")
         ? "cura"
         : "dano");
@@ -3078,11 +3349,19 @@ const FichaPersonagem = () => {
   // Cria uma nova habilidade e adiciona ao array 'marcas'
   const venderHabilidadeCriada = (habilidade) => {
     const custo = Math.max(0, parseInt(habilidade.custo, 10) || 0);
-    const nomeRecurso = habilidade.recurso === "evolucao"
-      ? "Pontos de Evolução"
-      : habilidade.recurso === "esperanca" ? "Esperança" : "Sanidade";
+    const nomeRecurso =
+      habilidade.recurso === "evolucao"
+        ? "Pontos de Evolução"
+        : habilidade.recurso === "esperanca"
+          ? "Esperança"
+          : "Sanidade";
 
-    if (!window.confirm(`Vender "${habilidade.nome}" e recuperar ${custo} de ${nomeRecurso}?`)) return;
+    if (
+      !window.confirm(
+        `Vender "${habilidade.nome}" e recuperar ${custo} de ${nomeRecurso}?`,
+      )
+    )
+      return;
 
     setPersonagem((atual) => {
       const atualizado = {
@@ -3104,11 +3383,16 @@ const FichaPersonagem = () => {
       if (habilidade.recurso === "evolucao") {
         atualizado.pontosEvolucao = {
           ...(atualizado.pontosEvolucao || {}),
-          disponiveis: (parseInt(atualizado.pontosEvolucao?.disponiveis, 10) || 0) + custo,
+          disponiveis:
+            (parseInt(atualizado.pontosEvolucao?.disponiveis, 10) || 0) + custo,
         };
-      } else if (habilidade.recurso === "esperanca" || habilidade.recurso === "sanidade") {
+      } else if (
+        habilidade.recurso === "esperanca" ||
+        habilidade.recurso === "sanidade"
+      ) {
         const recurso = habilidade.recurso;
-        const novoMaximo = (parseInt(atualizado[recurso]?.max, 10) || 0) + custo;
+        const novoMaximo =
+          (parseInt(atualizado[recurso]?.max, 10) || 0) + custo;
         atualizado[recurso] = {
           ...(atualizado[recurso] || {}),
           max: novoMaximo,
@@ -3332,6 +3616,30 @@ const FichaPersonagem = () => {
   };
 
   // Conteúdo das abas
+  const defesasEquipadas = (personagem.inventario || [])
+    .filter(
+      (item) =>
+        item.categoria === "defesas" ||
+        item.tipo === "Defesa" ||
+        Number(item.defesaBonus) > 0,
+    )
+    .map((item) => {
+      const defesaCatalogada = CATALOGO_DEFESAS.find(
+        (defesa) => defesa.nome === item.nome,
+      );
+
+      return {
+        ...defesaCatalogada,
+        ...item,
+        detalhe:
+          item.detalhe || item.descricao || defesaCatalogada?.detalhe || "",
+      };
+    });
+  const defesasDoMembro = (membro) =>
+    defesasEquipadas.filter((item) =>
+      membrosProtegidosPelaDefesa(item).includes(membro),
+    );
+
   const conteudoAbas = {
     combate: (
       <div className="conteudo-aba">
@@ -3449,19 +3757,6 @@ const FichaPersonagem = () => {
               </label>
 
               <label>
-                <span>RESISTÊNCIAS</span>
-                <input
-                  value={personagem.resistencias || ""}
-                  onChange={(e) =>
-                    setPersonagem((prev) => ({
-                      ...prev,
-                      resistencias: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-
-              <label>
                 <span>PROFICIÊNCIAS</span>
                 <input
                   value={personagem.proficiencias || ""}
@@ -3473,9 +3768,24 @@ const FichaPersonagem = () => {
                   }
                 />
               </label>
-            </div>
 
-           
+              {(personagem.resistenciasDano || []).length > 0 && (
+                <div className="defesa-resistencias-cards">
+                  <span>RESISTÊNCIAS ATIVAS</span>
+                  <div>
+                    {(personagem.resistenciasDano || [])
+                      .map((resistencia) => (
+                        <small key={`${resistencia.tipo}-${resistencia.reducao}`}>
+                          {rotuloMembrosProtegidos(resistencia.membros) ||
+                            "Corpo"}
+                          {": "}
+                          {resistencia.tipo} −{resistencia.reducao}
+                        </small>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </aside>
         </div>
       </div>
@@ -3777,21 +4087,48 @@ const FichaPersonagem = () => {
             <section className="habilidades-criadas-section">
               <div className="lista-habilidades-criadas-bloco">
                 <h5>Habilidades criadas</h5>
-                <p className="habilidades-criadas-ajuda">Crie novas habilidades na página de Upgrade. Ao vender uma habilidade, você recupera o valor investido.</p>
+                <p className="habilidades-criadas-ajuda">
+                  Crie novas habilidades na página de Upgrade. Ao vender uma
+                  habilidade, você recupera o valor investido.
+                </p>
                 <div className="habilidades-criadas-grid">
                   {(personagem.habilidadesCriadas || []).length > 0 ? (
                     personagem.habilidadesCriadas.map((habilidade) => (
-                      <div key={habilidade.id} className={`habilidade-criada-card ${habilidade.status || "pendente"}`}>
+                      <div
+                        key={habilidade.id}
+                        className={`habilidade-criada-card ${habilidade.status || "pendente"}`}
+                      >
                         <div className="habilidade-criada-info">
                           <strong>{habilidade.nome}</strong>
-                          <span className="custo-badge">{habilidade.tipo === "rito" ? "Rito" : habilidade.tipo === "poderAbsoluto" ? "Poder Absoluto" : "Habilidade"} · {habilidade.custo} {habilidade.recurso === "evolucao" ? "Pontos de Evolução" : habilidade.recurso}</span>
-                          <span className="status-habilidade-criada">{habilidade.status || "pendente"}</span>
+                          <span className="custo-badge">
+                            {habilidade.tipo === "rito"
+                              ? "Rito"
+                              : habilidade.tipo === "poderAbsoluto"
+                                ? "Poder Absoluto"
+                                : "Habilidade"}{" "}
+                            · {habilidade.custo}{" "}
+                            {habilidade.recurso === "evolucao"
+                              ? "Pontos de Evolução"
+                              : habilidade.recurso}
+                          </span>
+                          <span className="status-habilidade-criada">
+                            {habilidade.status || "pendente"}
+                          </span>
                           <p>{habilidade.descricao || "Sem descrição."}</p>
                         </div>
-                        <button className="btn-vender-habilidade" onClick={() => venderHabilidadeCriada(habilidade)}>Vender</button>
+                        <button
+                          className="btn-vender-habilidade"
+                          onClick={() => venderHabilidadeCriada(habilidade)}
+                        >
+                          Vender
+                        </button>
                       </div>
                     ))
-                  ) : <p className="sem-habilidades">Nenhuma habilidade criada ainda.</p>}
+                  ) : (
+                    <p className="sem-habilidades">
+                      Nenhuma habilidade criada ainda.
+                    </p>
+                  )}
                 </div>
               </div>
             </section>
@@ -3865,7 +4202,7 @@ const FichaPersonagem = () => {
           >
             Ritos
           </button>
-           <button
+          <button
             type="button"
             className={subAbaRituais === "absolutos" ? "ativa" : ""}
             onClick={() => {
@@ -4182,6 +4519,13 @@ const FichaPersonagem = () => {
           </button>
 
           <button
+            className={subAbaInventario === "rolagens" ? "ativa" : ""}
+            onClick={() => setSubAbaInventario("rolagens")}
+          >
+            Rolagens
+          </button>
+
+          <button
             className={subAbaInventario === "criacao" ? "ativa" : ""}
             onClick={() => setSubAbaInventario("criacao")}
           >
@@ -4209,7 +4553,13 @@ const FichaPersonagem = () => {
 
             <div className="lista-inventario inventario-cards">
               {personagem.inventario
-                .filter((item) => item.nome !== "Maleta de Campo") // oculta a maleta da lista comum
+                .filter(
+                  (item) =>
+                    item.nome !== "Maleta de Campo" &&
+                    item.categoria !== "defesas" &&
+                    item.tipo !== "Defesa" &&
+                    !Number(item.defesaBonus),
+                )
                 .map((item, index) => (
                   <article
                     key={index}
@@ -4222,7 +4572,7 @@ const FichaPersonagem = () => {
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
-                        setItemVisualizado({ ...item, index });
+                        abrirVisualizador(item, index);
                       }
                     }}
                   >
@@ -4251,14 +4601,78 @@ const FichaPersonagem = () => {
                       <span className="visualizer-categoria">
                         {itemVisualizado.tipo || "Item"}
                       </span>
-                      <h2>{itemVisualizado.nome}</h2>
+                      {editandoNomeItem ? (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <input
+                            type="text"
+                            value={novoNomeItem}
+                            onChange={(e) => setNovoNomeItem(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") salvarNovoNomeItem();
+                              if (e.key === "Escape") {
+                                setEditandoNomeItem(false);
+                                setNovoNomeItem("");
+                              }
+                            }}
+                            autoFocus
+                            style={{
+                              background: "transparent",
+                              border: "1px solid var(--cor-primaria)",
+                              color: "var(--cor-texto)",
+                              padding: "4px 8px",
+                              borderRadius: "4px",
+                              fontSize: "1.1rem",
+                              fontWeight: "bold",
+                              width: "100%",
+                            }}
+                          />
+                          <button
+                            onClick={salvarNovoNomeItem}
+                            className="visualizer-salvar-nome"
+                          >
+                            Salvar
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditandoNomeItem(false);
+                              setNovoNomeItem("");
+                            }}
+                            className="visualizer-cancelar-nome"
+                          >
+                            ✕
+                          </button>
+                          
+                        </div>
+                      ) : (
+                        <h2>{itemVisualizado.nome}</h2>
+                      )}
                     </div>
+                   
                     <button
                       className="item-visualizer-fechar"
                       onClick={fecharVisualizador}
                     >
                       ×
                     </button>
+                     {!editandoNomeItem && (
+                      <button
+                        onClick={() => {
+                          setNovoNomeItem(itemVisualizado.nome);
+                          setEditandoNomeItem(true);
+                        }}
+                        className="item-renomear-btn"
+                        title="Renomear item"
+                      >
+                        ✏️
+                      </button>
+                    )}
+                    
                   </div>
 
                   {/* INFORMAÇÕES GERAIS */}
@@ -4279,9 +4693,52 @@ const FichaPersonagem = () => {
                         <strong>Dano:</strong> {itemVisualizado.dano}
                       </p>
                     )}
+                    {itemVisualizado.cura && (
+                      <p>
+                        <strong>Cura:</strong> {itemVisualizado.cura}
+                      </p>
+                    )}
+                    {itemVisualizado.bonusDano && (
+                      <p>
+                        <strong>Bônus de dano:</strong>{" "}
+                        {itemVisualizado.bonusDano}
+                      </p>
+                    )}
+                    {itemVisualizado.bonusTeste && (
+                      <p>
+                        <strong>Bônus de teste:</strong>{" "}
+                        {itemVisualizado.bonusTeste}
+                      </p>
+                    )}
                     {itemVisualizado.efeito && (
                       <p>
                         <strong>Efeito:</strong> {itemVisualizado.efeito}
+                      </p>
+                    )}
+                    {(itemVisualizado.dano || itemVisualizado.cura) && (
+                      <button
+                        type="button"
+                        className="item-rolar-efeito"
+                        onClick={() => rolarItem(itemVisualizado)}
+                      >
+                        Rolar {itemVisualizado.cura ? "cura" : "dano"}
+                      </button>
+                    )}
+                    {itemVisualizado.defesaBonus > 0 && (
+                      <p>
+                        <strong>Defesa concedida:</strong> +
+                        {itemVisualizado.defesaBonus}
+                      </p>
+                    )}
+                    {itemVisualizado.resistencia && (
+                      <p>
+                        <strong>Resistência:</strong>{" "}
+                        {itemVisualizado.resistencia}
+                      </p>
+                    )}
+                    {itemVisualizado.entrega && (
+                      <p>
+                        <strong>Proteção:</strong> {itemVisualizado.entrega}
                       </p>
                     )}
                   </div>
@@ -4419,6 +4876,34 @@ const FichaPersonagem = () => {
                       </div>
                     )}
 
+                  {itemVisualizado.aprimoramentoCustomizado?.nome && (
+                    <div className="modificacoes-aplicadas aprimoramento-exclusivo-aplicado">
+                      <span className="modificacoes-titulo">
+                        Aprimoramento Exclusivo
+                      </span>
+                      <div className="modificacoes-lista">
+                        <details className="modificacao-card-recolhivel" open>
+                          <summary className="modificacao-summary">
+                            <div className="modificacao-summary-info">
+                              <span className="modificacao-nome">
+                                {itemVisualizado.aprimoramentoCustomizado.nome}
+                              </span>
+                              <span className="modificacao-subcategoria">
+                                Exclusivo da arma
+                              </span>
+                            </div>
+                          </summary>
+                          <div className="modificacao-detalhes">
+                            <p>
+                              {itemVisualizado.aprimoramentoCustomizado.detalhe ||
+                                "Sem efeito descrito."}
+                            </p>
+                          </div>
+                        </details>
+                      </div>
+                    </div>
+                  )}
+
                   {/* CONTROLES PARA ARMAS DE FOGO */}
                   {itemVisualizado.armaStatus &&
                     itemVisualizado.armaStatus.tipo !== "Corpo a Corpo" && (
@@ -4484,21 +4969,60 @@ const FichaPersonagem = () => {
                     itemVisualizado.armaStatus.tipo !== "Corpo a Corpo" && (
                       <div className="item-visualizer-municao">
                         {itemVisualizado.municaoCarregada ? (
-                          // ... exibe munição carregada (mantém igual)
-                          <>
-                            <p>
-                              <strong>Munição Especial Carregada:</strong>{" "}
-                              {itemVisualizado.municaoCarregada.nome}
-                            </p>
-                            <p>
-                              <strong>Bônus:</strong>{" "}
-                              {itemVisualizado.municaoCarregada.bonusDano ||
-                                "—"}
-                            </p>
-                            <p>
-                              <strong>Quantidade restante:</strong>{" "}
-                              {itemVisualizado.municaoCarregada.quantidade || 0}
-                            </p>
+                          <div
+                            className={`municao-carregada-painel tipo-${getTipoMunicaoEspecial(
+                              itemVisualizado.municaoCarregada,
+                            )}`}
+                          >
+                            <header>
+                              <span className="municao-carregada-icone">
+                                <Icon
+                                  path={getIconMunicaoEspecial(
+                                    itemVisualizado.municaoCarregada,
+                                  )}
+                                  size={1.05}
+                                />
+                              </span>
+                              <div>
+                                <small>Munição especial carregada</small>
+                                <strong>{itemVisualizado.municaoCarregada.nome}</strong>
+                              </div>
+                              <em>ATIVA</em>
+                            </header>
+
+                            <div className="municao-carregada-dados">
+                              <div className="municao-carregada-bonus">
+                                <span>Bônus de dano</span>
+                                <strong>
+                                  {itemVisualizado.municaoCarregada.bonusDano ||
+                                    "—"}
+                                </strong>
+                              </div>
+                              <div className="municao-carregada-capsulas">
+                                <span>Cartuchos restantes</span>
+                                <div
+                                  className={`municao-capsulas tipo-${getTipoMunicaoEspecial(
+                                    itemVisualizado.municaoCarregada,
+                                  )}`}
+                                  aria-label={`${itemVisualizado.municaoCarregada.quantidade || 0} cartuchos restantes`}
+                                >
+                                  {Array.from(
+                                    {
+                                      length: Math.min(
+                                        30,
+                                        Number(
+                                          itemVisualizado.municaoCarregada
+                                            .quantidade,
+                                        ) || 0,
+                                      ),
+                                    },
+                                    (_, index) => (
+                                      <i key={index} aria-hidden="true" />
+                                    ),
+                                  )}
+                                </div>
+                              </div>
+                            </div>
                             <button
                               type="button"
                               className="item-visualizer-municao-remover"
@@ -4508,7 +5032,7 @@ const FichaPersonagem = () => {
                             >
                               Remover munição
                             </button>
-                          </>
+                          </div>
                         ) : (
                           <>
                             {obterMunicoesEspeciais().length > 0 ? (
@@ -4657,6 +5181,125 @@ const FichaPersonagem = () => {
               )}
             </div>
           </>
+        )}
+
+        {subAbaInventario === "rolagens" && (
+          <div className="rolagens-presets-container">
+            {/* Formulário de criação/edição */}
+            <section className="criacao-grupo">
+              <h5>{presetEditando ? "Editar Rolagem" : "Nova Rolagem"}</h5>
+              <form
+                className="rolagem-preset-form"
+                onSubmit={presetEditando ? salvarEdicaoPreset : criarPreset}
+              >
+                <label>
+                  Nome
+                  <input
+                    type="text"
+                    value={formPreset.nome}
+                    onChange={(e) =>
+                      setFormPreset({ ...formPreset, nome: e.target.value })
+                    }
+                    placeholder="Ex: Ataque com Adaga"
+                  />
+                </label>
+                <label>
+                  Fórmula
+                  <input
+                    type="text"
+                    value={formPreset.formula}
+                    onChange={(e) =>
+                      setFormPreset({ ...formPreset, formula: e.target.value })
+                    }
+                    placeholder="Ex: 1d6+2, 2d8+4, 1d20+5"
+                  />
+                </label>
+                <label>
+                  Tipo
+                  <select
+                    value={formPreset.tipo}
+                    onChange={(e) =>
+                      setFormPreset({ ...formPreset, tipo: e.target.value })
+                    }
+                  >
+                    <option value="Dano">Dano</option>
+                    <option value="Cura">Cura</option>
+                    <option value="Teste">Teste</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </label>
+                <label>
+                  Descrição (opcional)
+                  <input
+                    type="text"
+                    value={formPreset.descricao}
+                    onChange={(e) =>
+                      setFormPreset({
+                        ...formPreset,
+                        descricao: e.target.value,
+                      })
+                    }
+                    placeholder="Ex: Dano da adaga + força"
+                  />
+                </label>
+                <div className="rolagem-preset-acoes">
+                  <button type="submit">
+                    {presetEditando ? "Salvar" : "Criar"}
+                  </button>
+                  {presetEditando && (
+                    <button type="button" onClick={limparFormPreset}>
+                      Cancelar
+                    </button>
+                  )}
+                </div>
+              </form>
+            </section>
+
+            {/* Lista de presets */}
+            <section className="criacao-grupo">
+              <h5>Presets Salvos ({presetsRolagem.length})</h5>
+              <div className="rolagens-presets-grid">
+                {presetsRolagem.length === 0 ? (
+                  <div className="rolagens-vazio">
+                    Nenhum preset salvo ainda.
+                  </div>
+                ) : (
+                  presetsRolagem.map((preset) => (
+                    <div key={preset.id} className="rolagem-preset-card">
+                      <div className="rolagem-preset-info">
+                        <span className="rolagem-preset-tipo">
+                          {preset.tipo}
+                        </span>
+                        <strong>{preset.nome}</strong>
+                        <code>{preset.formula}</code>
+                        {preset.descricao && <small>{preset.descricao}</small>}
+                      </div>
+                      <div className="rolagem-preset-acoes-card">
+                        <button
+                          className="rolagem-preset-rolar"
+                          onClick={() => executarPreset(preset.formula)}
+                        >
+                          Rolar
+                        </button>
+                        <button
+                          className="rolagem-preset-editar"
+                          onClick={() => editarPreset(preset.id)}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          className="rolagem-preset-excluir"
+                          onClick={() => excluirPreset(preset.id)}
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
         )}
 
         {subAbaInventario === "criacao" && (
@@ -5275,6 +5918,24 @@ const FichaPersonagem = () => {
 
     corpo: (
       <div className="conteudo-aba corpo-aba">
+        <label className="tipo-dano-corporal">
+          Tipo de dano recebido
+          <select
+            value={tipoDanoRecebido}
+            onChange={(e) => setTipoDanoRecebido(e.target.value)}
+          >
+            <option value="geral">Geral</option>
+            <option value="projetil">Projétil</option>
+            <option value="impacto">Impacto</option>
+            <option value="corte">Corte</option>
+            <option value="perfuracao">Perfuração</option>
+            <option value="estilhaco">Estilhaço</option>
+            <option value="gas">Gás</option>
+            <option value="frio">Frio</option>
+            <option value="calor">Calor</option>
+            <option value="eletrico">Elétrico</option>
+          </select>
+        </label>
         <div className="sistema-membros-sidebar">
           <div className="corpo-container-sidebar">
             <div className="controles-membros-sidebar">
@@ -5286,6 +5947,8 @@ const FichaPersonagem = () => {
                 onChange={(valor) => atualizarVidaMembro("cabeca", valor)}
                 onDamage={(dano) => aplicarDanoMembro("cabeca", dano)}
                 onDefesaChange={atualizarDefesaMembro}
+                defesas={defesasDoMembro("cabeca")}
+                onVisualizarDefesa={abrirVisualizador}
                 classNameInput="cabeca-input"
               />
 
@@ -5297,6 +5960,8 @@ const FichaPersonagem = () => {
                 onChange={(valor) => atualizarVidaMembro("torso", valor)}
                 onDamage={(dano) => aplicarDanoMembro("torso", dano)}
                 onDefesaChange={atualizarDefesaMembro}
+                defesas={defesasDoMembro("torso")}
+                onVisualizarDefesa={abrirVisualizador}
                 classNameInput="torso-input"
               />
 
@@ -5308,6 +5973,8 @@ const FichaPersonagem = () => {
                 onChange={(valor) => atualizarVidaMembro("bracoDireito", valor)}
                 onDamage={(dano) => aplicarDanoMembro("bracoDireito", dano)}
                 onDefesaChange={atualizarDefesaMembro}
+                defesas={defesasDoMembro("bracoDireito")}
+                onVisualizarDefesa={abrirVisualizador}
                 classNameInput="bracoDireito-input"
               />
 
@@ -5321,6 +5988,8 @@ const FichaPersonagem = () => {
                 }
                 onDamage={(dano) => aplicarDanoMembro("bracoEsquerdo", dano)}
                 onDefesaChange={atualizarDefesaMembro}
+                defesas={defesasDoMembro("bracoEsquerdo")}
+                onVisualizarDefesa={abrirVisualizador}
                 classNameInput="bracoEsquerdo-input"
               />
 
@@ -5332,6 +6001,8 @@ const FichaPersonagem = () => {
                 onChange={(valor) => atualizarVidaMembro("pernaDireita", valor)}
                 onDamage={(dano) => aplicarDanoMembro("pernaDireita", dano)}
                 onDefesaChange={atualizarDefesaMembro}
+                defesas={defesasDoMembro("pernaDireita")}
+                onVisualizarDefesa={abrirVisualizador}
                 classNameInput="pernaDireita-input"
               />
 
@@ -5345,6 +6016,8 @@ const FichaPersonagem = () => {
                 }
                 onDamage={(dano) => aplicarDanoMembro("pernaEsquerda", dano)}
                 onDefesaChange={atualizarDefesaMembro}
+                defesas={defesasDoMembro("pernaEsquerda")}
+                onVisualizarDefesa={abrirVisualizador}
                 classNameInput="pernaEsquerda-input"
               />
             </div>
@@ -6012,6 +6685,7 @@ const FichaPersonagem = () => {
                     valor={personagem.atributos.vontade}
                     onChange={(valor) => atualizarAtributo("vontade", valor)}
                   />
+                  <Atributo nome="DESTINO" especial onRoll={rolarDestino} />
                 </div>
               </div>
             </div>
@@ -6260,14 +6934,20 @@ const FichaPersonagem = () => {
                     ) : (
                       <>
                         <div className="resultado-rolagem">
-                          <span>Maior dado</span>
+                          <span>
+                            {modalRolagem.tipo === "destino"
+                              ? "Dado de Destino"
+                              : "Maior dado"}
+                          </span>
                           <strong>{modalRolagem.maiorResultado}</strong>
                         </div>
 
-                        <div className="bonus-rolagem">
-                          <span>Ativo: +{modalRolagem.bonusAtivo}</span>
-                          <span>Passiva: +{modalRolagem.bonusPassiva}</span>
-                        </div>
+                        {modalRolagem.tipo !== "destino" && (
+                          <div className="bonus-rolagem">
+                            <span>Ativo: +{modalRolagem.bonusAtivo}</span>
+                            <span>Passiva: +{modalRolagem.bonusPassiva}</span>
+                          </div>
+                        )}
 
                         {modalRolagem.finais > 0 && (
                           <div className="bonus-finais">
@@ -6321,6 +7001,64 @@ const FichaPersonagem = () => {
             </div>
           </div>
         )}
+        {defesaVisualizada && (
+          <div
+            className="modal-descricao-overlay"
+            onClick={() => setDefesaVisualizada(null)}
+          >
+            <section
+              className="modal-descricao defesa-detalhes-modal"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="modal-fechar"
+                aria-label="Fechar informações da proteção"
+                onClick={() => setDefesaVisualizada(null)}
+              >
+                ×
+              </button>
+              <span className="defesa-detalhes-modal-tipo">
+                DEFESA EQUIPADA
+              </span>
+              <h2>{defesaVisualizada.nome}</h2>
+              <p>
+                {defesaVisualizada.detalhe ||
+                  defesaVisualizada.descricao ||
+                  "Proteção equipada no membro selecionado."}
+              </p>
+
+              <div className="defesa-detalhes-modal-grade">
+                {Number(defesaVisualizada.defesaBonus) > 0 && (
+                  <div>
+                    <span>Defesa concedida</span>
+                    <strong>+{defesaVisualizada.defesaBonus}</strong>
+                  </div>
+                )}
+               
+                {defesaVisualizada.resistencia && (
+                  <div>
+                    <span>Resistência</span>
+                    <strong>{defesaVisualizada.resistencia}</strong>
+                  </div>
+                )}
+              </div>
+
+              {(defesaVisualizada.resistenciasDano || []).length > 0 && (
+                <div className="defesa-detalhes-modal-resistencias">
+                  <span>Redução de dano</span>
+                  {(defesaVisualizada.resistenciasDano || []).map(
+                    (resistencia, index) => (
+                      <strong key={`${resistencia.tipo}-${index}`}>
+                        {resistencia.tipo} −{resistencia.reducao}
+                      </strong>
+                    ),
+                  )}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -6339,26 +7077,37 @@ const calcularDadoAtributo = (valor) => {
   return mdiDiceD4;
 };
 
-const Atributo = ({ nome, valor }) => {
+const Atributo = ({ nome, valor, especial = false, onRoll }) => {
   const dado = calcularDadoAtributo(valor);
 
   return (
-    <div className="atributoCompleto">
+    <div className={`atributoCompleto${especial ? " atributo-destino" : ""}`}>
       <div className="atributo-dado">
-        <Icon path={dado} size={2} />
+        <Icon path={especial ? mdiDiceD20 : dado} size={2} />
       </div>
 
       <div className="atributo-item">
         <span className="atributo-nome">{nome}</span>
 
         <div className="atributo-controles">
-          <input
-            type="number"
-            value={valor}
-            className="atributo-valor atributo-bloqueado"
-            disabled
-            title="Atributo bloqueado. Aumente pela tela de Upgrade."
-          />
+          {especial ? (
+            <button
+              type="button"
+              className="destino-rolar-btn"
+              onClick={onRoll}
+              title="Role 1d20 para determinar a sua sorte"
+            >
+              ROLAR 1D20
+            </button>
+          ) : (
+            <input
+              type="number"
+              value={valor}
+              className="atributo-valor atributo-bloqueado"
+              disabled
+              title="Atributo bloqueado. Aumente pela tela de Upgrade."
+            />
+          )}
         </div>
       </div>
     </div>
@@ -6398,6 +7147,8 @@ const MembroControle = ({
   onDamage,
   onDefesaChange,
   onMaxChange,
+  defesas = [],
+  onVisualizarDefesa,
   classNameInput,
 }) => {
   const porcentagem = membro.max > 0 ? (membro.atual / membro.max) * 100 : 0;
@@ -6412,6 +7163,22 @@ const MembroControle = ({
 
   return (
     <div className={`membro-controle ${estadoVida}`}>
+      {defesas.length > 0 ? (
+        defesas.map((defesa, index) => (
+          <button
+            key={defesa.idLoja || defesa.id || `${defesa.nome}-${index}`}
+            type="button"
+            className="membro-defesa-equipada"
+            title={`Ver informações: ${defesa.nome}`}
+            onClick={() => onVisualizarDefesa?.(defesa, -1)}
+          >
+            <span aria-hidden="true">🛡</span>
+            <strong>{defesa.nome}</strong>
+          </button>
+        ))
+      ) : (
+        <span className="membro-defesa-vazia">Não protegido</span>
+      )}
       <span className="membro-nome">{nome}</span>
 
       <div className="membro-barra-container">
@@ -6465,6 +7232,7 @@ const MembroControle = ({
           onChange={(e) => onDefesaChange(membroChave, e.target.value)}
           className="membro-defesa-input"
         />
+
       </div>
 
       <div className="membro-botoes">

@@ -611,7 +611,7 @@ const ArvoreHabilidades = () => {
   };
 
   const MAPA_LARGURA = 2600;
-  const MAPA_ALTURA = 1600;
+  const MAPA_ALTURA = 2200;
   const ROOT = { x: 1300, y: 1250 };
 
   const obterPontoHabilidade = (
@@ -647,7 +647,9 @@ const ArvoreHabilidades = () => {
     const linha = Math.floor(index / colunas);
 
     const inicioX = ROOT.x - 740;
-    const inicioY = ROOT.y - 850;
+    // As aptidões ocupam a faixa inferior do mapa. Assim, não encobrem os
+    // ramos de Especialidade — especialmente nas árvores com muitos ramos.
+    const inicioY = ROOT.y + 240;
 
     const espacamentoX = 320;
     const espacamentoY = 230;
