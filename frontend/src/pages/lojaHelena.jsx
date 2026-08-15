@@ -191,9 +191,17 @@ const LojaHelena = () => {
           );
 
         if (catalogoApi.length > 0 && apiAtualizada) {
-          const catalogoNormalizado = aplicarDefesasAtualizadas(catalogoApi).map(
-            normalizarItemLoja,
-          );
+          // O catalogo remoto pode ter sido salvo em uma versao anterior.
+          // Mantemos os itens padrao ausentes (como a pistola) sem descartar
+          // os itens personalizados criados pelo mestre.
+          const itensRemotos = catalogoApi.map(normalizarItemLoja);
+          const idsRemotos = new Set(itensRemotos.map((item) => item.id));
+          const catalogoNormalizado = aplicarDefesasAtualizadas([
+            ...DEFAULT_CATALOGO_LOJA.filter(
+              (item) => !idsRemotos.has(normalizarItemLoja(item).id),
+            ).map(normalizarItemLoja),
+            ...itensRemotos,
+          ]).map(normalizarItemLoja);
           setCatalogo(catalogoNormalizado);
           localStorage.setItem(
             CATALOGO_STORAGE_KEY,
