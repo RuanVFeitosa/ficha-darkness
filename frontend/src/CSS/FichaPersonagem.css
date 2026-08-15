@@ -1747,6 +1747,37 @@ body {
   text-transform: uppercase;
 }
 
+.corpo-a-corpo-grupos {
+  display: grid;
+  grid-template-columns: auto 64px;
+  align-items: center;
+  gap: 6px 10px;
+  color: var(--cor-texto);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.corpo-a-corpo-grupos input {
+  width: 64px;
+  min-height: 34px;
+  border: 1px solid var(--cor-primaria);
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.42);
+  color: var(--cor-texto);
+  font: inherit;
+  text-align: center;
+}
+
+.corpo-a-corpo-grupos small {
+  grid-column: 1 / -1;
+  color: var(--cor-texto-secundario);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
 /* MEMBROS */
 
 .defesa-membros {
@@ -3870,6 +3901,166 @@ body {
   justify-content: center;
   padding: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.status-arma-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 14px 0 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 8px;
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.status-arma-acoes > span {
+  color: var(--cor-primaria);
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+}
+
+.status-arma-acoes > div {
+  display: flex;
+  gap: 6px;
+}
+
+.status-arma-acoes button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--cor-texto);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.status-arma-acoes button:hover {
+  background: rgba(212, 175, 55, 0.18);
+}
+
+.status-arma-editor {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 9px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.status-arma-editor label {
+  display: grid;
+  gap: 5px;
+  color: #cbbd91;
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.status-arma-editor input {
+  min-width: 0;
+  min-height: 34px;
+  padding: 0 9px;
+  border: 1px solid var(--borda-suave);
+  border-radius: 5px;
+  background: #080808;
+  color: var(--cor-texto);
+  font: inherit;
+}
+
+/* Painel de ataque corpo a corpo: controles compactos e legíveis. */
+.corpo-a-corpo-bonus {
+  grid-template-columns: minmax(240px, 1fr) auto minmax(205px, 0.6fr);
+  align-items: stretch;
+  gap: 10px;
+  padding: 14px;
+  border-color: rgba(212, 175, 55, 0.28);
+  background:
+    linear-gradient(125deg, rgba(212, 175, 55, 0.08), transparent 42%),
+    rgba(0, 0, 0, 0.35);
+}
+
+.corpo-a-corpo-bonus .bonus-dano-arma,
+.corpo-a-corpo-bonus .corpo-a-corpo-critico,
+.corpo-a-corpo-bonus .corpo-a-corpo-grupos {
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.corpo-a-corpo-bonus .bonus-dano-arma {
+  align-content: center;
+  gap: 7px;
+}
+
+.corpo-a-corpo-bonus .bonus-dano-arma span {
+  margin: 0;
+  color: #e5c55b;
+  font-size: 0.64rem;
+  letter-spacing: 1.4px;
+}
+
+.corpo-a-corpo-bonus .bonus-dano-arma input {
+  min-height: 34px;
+  padding: 0 10px;
+  border-color: rgba(212, 175, 55, 0.32);
+  background: rgba(4, 4, 4, 0.8);
+}
+
+.corpo-a-corpo-bonus .corpo-a-corpo-critico {
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.corpo-a-corpo-bonus .corpo-a-corpo-critico label {
+  gap: 8px;
+  color: #fff5d3;
+  font-size: 0.72rem;
+}
+
+.corpo-a-corpo-bonus .corpo-a-corpo-grupos {
+  grid-template-columns: 1fr 54px;
+  align-content: center;
+  gap: 5px 8px;
+  color: #e5c55b;
+  font-size: 0.64rem;
+  letter-spacing: 1px;
+}
+
+.corpo-a-corpo-bonus .corpo-a-corpo-grupos input {
+  width: 54px;
+  min-height: 34px;
+  color: #fff5d3;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.corpo-a-corpo-bonus .corpo-a-corpo-grupos small {
+  color: #9e967e;
+  font-size: 0.58rem;
+}
+
+@media (max-width: 760px) {
+  .corpo-a-corpo-bonus {
+    grid-template-columns: 1fr;
+  }
+
+  .corpo-a-corpo-bonus .corpo-a-corpo-critico {
+    justify-content: flex-start;
+  }
 }
 
 .corpo-a-corpo-critico label {
@@ -11250,6 +11441,46 @@ body {
   opacity: 0;
 }
 
+/* A arma aberta permanece marcada diretamente no Inventário. */
+.item-inventario.inventario-card.arma-selecionada {
+  border-color: transparent;
+  background: transparent;
+  transform: none;
+}
+
+.item-inventario.inventario-card.arma-selecionada .inventario-card-icone {
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, 0.96);
+  border-radius: 7px;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18), 0 7px 16px rgba(0, 0, 0, 0.34);
+}
+
+.item-inventario.inventario-card.arma-selecionada .inventario-card-icone svg,
+.item-inventario.inventario-card.arma-selecionada .inventario-card-icone img {
+  color: #050505;
+  filter: brightness(0) !important;
+  opacity: 1;
+}
+
+.inventario-arma-selecionada {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  z-index: 4;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border: 2px solid #050505;
+  border-radius: 50%;
+  background: #d4af37;
+  color: #050505;
+  font-size: 0.75rem;
+  font-weight: 1000;
+  line-height: 1;
+}
+
 @media (max-width: 720px) {
   .lista-inventario.inventario-cards {
     grid-template-columns: repeat(auto-fill, minmax(100px, 74px));
@@ -11569,6 +11800,120 @@ body {
   padding: 30px 0;
 }
 
+/* Visual renovado para os presets de rolagem. */
+.rolagens-presets-container { gap: 18px; }
+
+.rolagem-preset-editor,
+.rolagens-presets-salvos {
+  padding: 18px;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 14px;
+  background: linear-gradient(125deg, rgba(212, 175, 55, 0.075), transparent 42%), rgba(6, 6, 6, 0.7);
+}
+
+.rolagens-presets-salvos {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(5, 5, 5, 0.5);
+}
+
+.rolagem-preset-cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.rolagem-preset-cabecalho span {
+  display: block;
+  color: var(--cor-primaria);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+}
+
+.rolagem-preset-cabecalho h5 {
+  margin: 4px 0 0;
+  color: var(--cor-texto);
+  font-size: 1rem;
+}
+
+.rolagem-preset-cabecalho small { color: var(--cor-texto-secundario); font-size: 0.72rem; }
+
+.rolagem-preset-cabecalho > strong {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--cor-primaria);
+  font-size: 0.85rem;
+}
+
+.rolagem-preset-editor .rolagem-preset-form {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.rolagem-preset-form input,
+.rolagem-preset-form select {
+  min-height: 40px;
+  padding: 8px 11px;
+  border-color: rgba(212, 175, 55, 0.34);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.54);
+}
+
+.rolagem-preset-acoes button {
+  min-height: 38px;
+  padding: 0 16px;
+  border-color: var(--cor-primaria);
+  border-radius: 6px;
+  background: var(--cor-primaria);
+  color: #090909;
+}
+
+.rolagens-presets-grid { gap: 12px; }
+
+.rolagem-preset-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 14px;
+  border-color: rgba(255, 255, 255, 0.14);
+  border-radius: 9px;
+  background: linear-gradient(125deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.26));
+  transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+
+.rolagem-preset-card:hover {
+  border-color: rgba(212, 175, 55, 0.65);
+  transform: translateY(-2px);
+  background: linear-gradient(125deg, rgba(212, 175, 55, 0.1), rgba(0, 0, 0, 0.4));
+}
+
+.rolagem-preset-info code {
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px 8px;
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 5px;
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.rolagem-preset-acoes-card {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  align-content: end;
+  margin-top: 0;
+}
+
+.rolagem-preset-acoes-card button { min-height: 30px; padding: 0 10px; }
+
 @media (max-width: 700px) {
   .rolagem-preset-form {
     grid-template-columns: 1fr;
@@ -11580,18 +11925,36 @@ body {
   }
 }
 
-/* Botão renomear no visualizador */
-.item-renomear-btn {
-  background: transparent;
-  border: none;
-  color: var(--cor-primaria);
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 4px 8px;
-  transition: 0.2s;
+.visualizer-nome-acoes {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
 }
+
+.visualizer-nome-acoes h2 { min-width: 0; }
+
+/* Botão minimalista para renomear no visualizador. */
+.item-renomear-btn {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border: 1px solid rgba(225, 218, 199, 0.28);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cor-texto);
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+.item-renomear-btn svg { display: block; }
 .item-renomear-btn:hover {
-  transform: scale(1.1);
+  border-color: var(--cor-primaria);
+  background: rgba(212, 175, 55, 0.13);
+  color: var(--cor-primaria);
+  transform: translateY(-1px);
 }
 
 .visualizer-salvar-nome,

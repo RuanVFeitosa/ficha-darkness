@@ -42,6 +42,7 @@ import {
   mdiMapMarkerPath,
   mdiClipboardText,
   mdiHeartPulse,
+  mdiPencilOutline,
   mdiBomb,
   mdiFire,
   mdiFlask,
@@ -607,6 +608,8 @@ const FichaPersonagem = () => {
   });
   const [editandoNomeItem, setEditandoNomeItem] = useState(false);
   const [novoNomeItem, setNovoNomeItem] = useState("");
+  const [editandoStatusArma, setEditandoStatusArma] = useState(false);
+  const [statusArmaEditavel, setStatusArmaEditavel] = useState({});
 
   // ESTADO PARA O MODAL
   const [modalAberto, setModalAberto] = useState(false);
@@ -619,6 +622,7 @@ const FichaPersonagem = () => {
   const [criticoAtivo, setCriticoAtivo] = useState(false);
   const [ataqueCritico, setAtaqueCritico] = useState(false);
   const [criticoCorpoACorpo, setCriticoCorpoACorpo] = useState(false);
+  const [gruposAtaqueCorpo, setGruposAtaqueCorpo] = useState(1);
   const [ataqueItemRef, setAtaqueItemRef] = useState(null);
   // Dentro do componente FichaPersonagem, adicione estes estados:
 
@@ -667,15 +671,22 @@ const FichaPersonagem = () => {
     const itemBalanceado = armaPadrao
       ? {
           ...item,
-          armaStatus: {
-            ...(item.armaStatus || {}),
-            ...armaPadrao.armaStatus,
-          },
+          armaStatus: item.statusPersonalizado
+            ? {
+                ...armaPadrao.armaStatus,
+                ...(item.armaStatus || {}),
+              }
+            : {
+                ...(item.armaStatus || {}),
+                ...armaPadrao.armaStatus,
+              },
         }
       : item;
 
     setEditandoNomeItem(false);
     setNovoNomeItem("");
+    setEditandoStatusArma(false);
+    setStatusArmaEditavel({});
     setItemVisualizado({ ...itemBalanceado, index });
     setVisualizadorAberto(true);
     setVisualizadorFechando(false);
@@ -916,12 +927,36 @@ const FichaPersonagem = () => {
     );
 
     if (itemAtualizado && itemAtualizado !== itemVisualizado) {
-      setItemVisualizado(itemAtualizado);
+      setItemVisualizado({
+        ...itemAtualizado,
+        index: itemVisualizado.index,
+      });
     }
   }, [
     personagem.inventario,
     itemVisualizado,
   ]);
+
+  // Corrige dados gerados por uma versao anterior que podia aplicar status de
+  // arma na Maleta de Campo ao editar um item exibido em uma lista filtrada.
+  useEffect(() => {
+    if (!carregado) return;
+
+    const maletaComStatusDeArma = (personagem.inventario || []).some(
+      (item) => item.nome === "Maleta de Campo" && item.armaStatus,
+    );
+    if (!maletaComStatusDeArma) return;
+
+    setPersonagem((atual) => ({
+      ...atual,
+      inventario: (atual.inventario || []).map((item) => {
+        if (item.nome !== "Maleta de Campo" || !item.armaStatus) return item;
+
+        const { armaStatus, statusPersonalizado, ...maletaCorrigida } = item;
+        return maletaCorrigida;
+      }),
+    }));
+  }, [carregado, personagem.inventario]);
 
   // SALVAR DADOS AUTOMATICAMENTE QUANDO MUDAR
   useEffect(() => {
@@ -1004,9 +1039,26 @@ const FichaPersonagem = () => {
       return;
     }
 
-    const index = itemVisualizado.index;
     setPersonagem((prev) => {
       const novoInventario = [...(prev.inventario || [])];
+      const indicePeloIndice = Number.isInteger(itemVisualizado.index)
+        ? itemVisualizado.index
+        : -1;
+      const indiceCorrespondeAoItem =
+        indicePeloIndice >= 0 &&
+        (novoInventario[indicePeloIndice]?.nome === itemVisualizado.nome ||
+          (itemVisualizado.idLoja &&
+            novoInventario[indicePeloIndice]?.idLoja === itemVisualizado.idLoja) ||
+          (itemVisualizado.id &&
+            novoInventario[indicePeloIndice]?.id === itemVisualizado.id));
+      const index = indiceCorrespondeAoItem
+        ? indicePeloIndice
+        : novoInventario.findIndex(
+            (item) =>
+              (itemVisualizado.idLoja && item.idLoja === itemVisualizado.idLoja) ||
+              (itemVisualizado.id && item.id === itemVisualizado.id) ||
+              item.nome === itemVisualizado.nome,
+          );
       if (novoInventario[index]) {
         novoInventario[index] = {
           ...novoInventario[index],
@@ -1476,6 +1528,50 @@ const cancelarEdicaoHabilidade = () => {
     return Math.floor(Math.random() * faces) + 1;
   };
 
+  const iniciarEdicaoStatusArma = () => {
+    if (!itemVisualizado?.armaStatus) return;
+    setStatusArmaEditavel({ ...itemVisualizado.armaStatus });
+    setEditandoStatusArma(true);
+  };
+
+  const salvarStatusArma = () => {
+    setPersonagem((prev) => {
+      const inventario = [...(prev.inventario || [])];
+      const indicePeloIndice = Number.isInteger(itemVisualizado?.index)
+        ? itemVisualizado.index
+        : -1;
+      const indiceCorrespondeAoItem =
+        indicePeloIndice >= 0 &&
+        (inventario[indicePeloIndice]?.nome === itemVisualizado?.nome ||
+          (itemVisualizado?.idLoja &&
+            inventario[indicePeloIndice]?.idLoja === itemVisualizado.idLoja) ||
+          (itemVisualizado?.id &&
+            inventario[indicePeloIndice]?.id === itemVisualizado.id));
+      const index = indiceCorrespondeAoItem
+        ? indicePeloIndice
+        : inventario.findIndex(
+            (item) =>
+              (itemVisualizado?.idLoja && item.idLoja === itemVisualizado.idLoja) ||
+              (itemVisualizado?.id && item.id === itemVisualizado.id) ||
+              item.nome === itemVisualizado?.nome,
+          );
+      const arma = inventario[index];
+      if (!arma) return prev;
+
+    const armaAtualizada = {
+      ...arma,
+      armaStatus: { ...statusArmaEditavel },
+      statusPersonalizado: true,
+    };
+      inventario[index] = armaAtualizada;
+      setItemVisualizado({ ...armaAtualizada, index });
+      return { ...prev, inventario };
+    });
+
+    setEditandoStatusArma(false);
+    setStatusArmaEditavel({});
+  };
+
   const rolarDestino = () => {
     const resultado = rolarDado(20);
     const rolagem = {
@@ -1715,7 +1811,12 @@ const cancelarEdicaoHabilidade = () => {
     return match ? parseInt(match[1], 10) : 2;
   };
 
-  const rolarAtaqueArma = (item, modo = "normal", critico = false) => {
+  const rolarAtaqueArma = (
+    item,
+    modo = "normal",
+    critico = false,
+    gruposCorpo = 1,
+  ) => {
     const arma = item.armaStatus;
 
     if (!arma) {
@@ -1747,6 +1848,10 @@ const cancelarEdicaoHabilidade = () => {
     const danoBase = interpretarDano(arma.dmg);
     const quantidadeAlvosFirmeza =
       modo === "firmeza" ? obterQuantidadeAlvosFirmeza(arma.mobility) : 1;
+    const quantidadeGrupos =
+      arma.tipo === "Corpo a Corpo"
+        ? Math.min(10, Math.max(1, parseInt(gruposCorpo, 10) || 1))
+        : quantidadeAlvosFirmeza;
 
     const bonusMunicao = item.municaoCarregada
       ? item.municaoCarregada.bonusDano
@@ -1756,20 +1861,19 @@ const cancelarEdicaoHabilidade = () => {
       bonusMunicao,
     );
 
-    const resultadosAlvos =
-      modo === "firmeza"
-        ? Array.from({ length: quantidadeAlvosFirmeza }, () =>
-            rolarDanoArma(arma.dmg, dadosExtras, bonusFinal),
-          )
-        : [rolarDanoArma(arma.dmg, dadosExtras, bonusFinal)];
+    const resultadosAlvos = Array.from({ length: quantidadeGrupos }, () =>
+      rolarDanoArma(arma.dmg, dadosExtras, bonusFinal),
+    );
 
     const resultado = resultadosAlvos[0];
     const formula =
-      modo === "firmeza"
-        ? `${quantidadeAlvosFirmeza}x ${resultado.texto}`
+      quantidadeGrupos > 1
+        ? `${quantidadeGrupos} grupos de ${resultado.texto}`
         : resultado.texto;
     const modoDescricao =
-      modo === "firmeza"
+      arma.tipo === "Corpo a Corpo" && quantidadeGrupos > 1
+        ? `Ataque corpo a corpo em ${quantidadeGrupos} grupos separados.`
+        : modo === "firmeza"
         ? `Firmeza: ataque simultâneo em ${quantidadeAlvosFirmeza} alvos.`
         : efeitosPorModo[modo] || efeitosPorModo.normal;
 
@@ -1792,7 +1896,7 @@ const cancelarEdicaoHabilidade = () => {
       ]),
 
       dadosDetalhados:
-        modo === "firmeza" && resultadosAlvos.length > 1
+        resultadosAlvos.length > 1
           ? []
           : resultado.dadosDetalhados,
 
@@ -1811,9 +1915,12 @@ const cancelarEdicaoHabilidade = () => {
       dano: null,
 
       alvos:
-        modo === "firmeza" && resultadosAlvos.length > 1
+        resultadosAlvos.length > 1
           ? resultadosAlvos.map((res, index) => ({
-              nome: `ALVO ${index + 1}`,
+              nome:
+                arma.tipo === "Corpo a Corpo"
+                  ? `GRUPO ${index + 1}`
+                  : `ALVO ${index + 1}`,
               resultado: res,
             }))
           : [],
@@ -4594,17 +4701,24 @@ const cancelarEdicaoHabilidade = () => {
 
             <div className="lista-inventario inventario-cards">
               {personagem.inventario
+                .map((item, index) => ({ item, index }))
                 .filter(
-                  (item) =>
+                  ({ item }) =>
                     item.nome !== "Maleta de Campo" &&
                     item.categoria !== "defesas" &&
                     item.tipo !== "Defesa" &&
                     !Number(item.defesaBonus),
                 )
-                .map((item, index) => (
+                .map(({ item, index }) => (
                   <article
                     key={index}
-                    className="item-inventario item-recolhivel inventario-card"
+                    className={`item-inventario item-recolhivel inventario-card ${
+                      visualizadorAberto &&
+                      itemVisualizado?.armaStatus &&
+                      itemVisualizado.index === index
+                        ? "arma-selecionada"
+                        : ""
+                    }`}
                     tabIndex={0}
                     aria-label={item.nome}
                     title={item.nome}
@@ -4621,6 +4735,13 @@ const cancelarEdicaoHabilidade = () => {
                       <div className="inventario-card-icone">
                         {renderizarIconeItem(item)}
                       </div>
+                      {visualizadorAberto &&
+                        itemVisualizado?.armaStatus &&
+                        itemVisualizado.index === index && (
+                          <span className="inventario-arma-selecionada" title="Arma selecionada">
+                            ✓
+                          </span>
+                        )}
                       <span className="inventario-item-nome">{item.nome}</span>
                     </div>
                   </article>
@@ -4691,7 +4812,21 @@ const cancelarEdicaoHabilidade = () => {
                           
                         </div>
                       ) : (
-                        <h2>{itemVisualizado.nome}</h2>
+                        <div className="visualizer-nome-acoes">
+                          <h2>{itemVisualizado.nome}</h2>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNovoNomeItem(itemVisualizado.nome);
+                              setEditandoNomeItem(true);
+                            }}
+                            className="item-renomear-btn"
+                            title="Renomear item"
+                            aria-label="Renomear item"
+                          >
+                            <Icon path={mdiPencilOutline} size={0.72} />
+                          </button>
+                        </div>
                       )}
                     </div>
                    
@@ -4701,18 +4836,6 @@ const cancelarEdicaoHabilidade = () => {
                     >
                       ×
                     </button>
-                     {!editandoNomeItem && (
-                      <button
-                        onClick={() => {
-                          setNovoNomeItem(itemVisualizado.nome);
-                          setEditandoNomeItem(true);
-                        }}
-                        className="item-renomear-btn"
-                        title="Renomear item"
-                      >
-                        ✏️
-                      </button>
-                    )}
                     
                   </div>
 
@@ -4787,6 +4910,82 @@ const cancelarEdicaoHabilidade = () => {
 
                   {/* STATUS DE ARMA */}
                   {itemVisualizado.armaStatus && (
+                    <div className="status-arma-acoes">
+                      <span>Status da arma</span>
+                      {editandoStatusArma ? (
+                        <div>
+                          <button type="button" onClick={salvarStatusArma}>
+                            Salvar status
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditandoStatusArma(false);
+                              setStatusArmaEditavel({});
+                            }}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={iniciarEdicaoStatusArma}>
+                          Editar status
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {itemVisualizado.armaStatus && editandoStatusArma && (
+                    <div className="status-arma-editor">
+                      {(itemVisualizado.armaStatus.tipo === "Corpo a Corpo"
+                        ? ["tipo", "dmg", "critico", "danoCabeca"]
+                        : [
+                            "tipo",
+                            "dmg",
+                            "rof",
+                            "mag",
+                            "disparosSemDesvantagem",
+                            "recarga",
+                            "critico",
+                            "danoCabeca",
+                            "hipfire",
+                            "precision",
+                            "control",
+                            "mobility",
+                          ]
+                      ).map((campo) => (
+                        <label key={campo}>
+                          {(
+                            {
+                              tipo: "Tipo",
+                              dmg: "Dano padrão",
+                              rof: "ROF",
+                              mag: "Munição",
+                              disparosSemDesvantagem: "Disparos",
+                              recarga: "Recarga",
+                              critico: "Crítico",
+                              danoCabeca: "Dano cabeça",
+                              hipfire: "Hipfire",
+                              precision: "Precisão",
+                              control: "Controle",
+                              mobility: "Mobilidade",
+                            }[campo]
+                          )}
+                          <input
+                            value={statusArmaEditavel[campo] || ""}
+                            onChange={(event) =>
+                              setStatusArmaEditavel((atual) => ({
+                                ...atual,
+                                [campo]: event.target.value,
+                              }))
+                            }
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {itemVisualizado.armaStatus && !editandoStatusArma && (
                     <>
                       {itemVisualizado.armaStatus.tipo === "Corpo a Corpo" ? (
                         // --- LAYOUT CORPO A CORPO ---
@@ -5160,6 +5359,27 @@ const cancelarEdicaoHabilidade = () => {
                             dados extras)
                           </label>
                         </div>
+
+                        <label className="corpo-a-corpo-grupos">
+                          <span>Grupos de dados</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="10"
+                            value={gruposAtaqueCorpo}
+                            onChange={(event) =>
+                              setGruposAtaqueCorpo(
+                                Math.min(
+                                  10,
+                                  Math.max(1, parseInt(event.target.value, 10) || 1),
+                                ),
+                              )
+                            }
+                          />
+                          <small>
+                            Cada grupo rola {itemVisualizado.armaStatus.dmg} separadamente.
+                          </small>
+                        </label>
                       </div>
                     )}
 
@@ -5175,6 +5395,7 @@ const cancelarEdicaoHabilidade = () => {
                                 itemVisualizado,
                                 "normal",
                                 criticoCorpoACorpo,
+                                gruposAtaqueCorpo,
                               )
                             }
                           >
@@ -5228,8 +5449,14 @@ const cancelarEdicaoHabilidade = () => {
         {subAbaInventario === "rolagens" && (
           <div className="rolagens-presets-container">
             {/* Formulário de criação/edição */}
-            <section className="criacao-grupo">
-              <h5>{presetEditando ? "Editar Rolagem" : "Nova Rolagem"}</h5>
+            <section className="criacao-grupo rolagem-preset-editor">
+              <div className="rolagem-preset-cabecalho">
+                <div>
+                  <span>{presetEditando ? "Editando" : "Novo preset"}</span>
+                  <h5>{presetEditando ? "Editar Rolagem" : "Criar rolagem rápida"}</h5>
+                </div>
+                <small>Use fórmulas como 2d6+3</small>
+              </div>
               <form
                 className="rolagem-preset-form"
                 onSubmit={presetEditando ? salvarEdicaoPreset : criarPreset}
@@ -5298,8 +5525,14 @@ const cancelarEdicaoHabilidade = () => {
             </section>
 
             {/* Lista de presets */}
-            <section className="criacao-grupo">
-              <h5>Presets Salvos ({presetsRolagem.length})</h5>
+            <section className="criacao-grupo rolagens-presets-salvos">
+              <div className="rolagem-preset-cabecalho">
+                <div>
+                  <span>Biblioteca de rolagens</span>
+                  <h5>Presets Salvos</h5>
+                </div>
+                <strong>{presetsRolagem.length}</strong>
+              </div>
               <div className="rolagens-presets-grid">
                 {presetsRolagem.length === 0 ? (
                   <div className="rolagens-vazio">

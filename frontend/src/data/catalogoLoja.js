@@ -180,6 +180,7 @@ export const normalizarItemLoja = (item, index = 0) => {
       ? item.modificacoesArma
       : [],
     aprimoramentoCustomizado: item?.aprimoramentoCustomizado || null,
+    armaStatusBase: item?.armaStatusBase || null,
     armaStatus: item?.armaStatus || null,
     nivelRito: String(item?.nivelRito || "").trim(),
     subcategoria: String(

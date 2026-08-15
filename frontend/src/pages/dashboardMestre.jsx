@@ -163,6 +163,44 @@ const reaplicarMelhoriasDaArma = (armaStatus, melhoriaArma = {}) => {
   return status;
 };
 
+const aplicarAprimoramentosNoStatus = (armaStatus, modificacoes = []) => {
+  if (!armaStatus) return armaStatus;
+
+  const status = { ...armaStatus };
+  const dano = String(status.dmg || "").match(/^(\d+)d(\d+)([+-]\d+)?$/i);
+  if (!dano) return status;
+
+  let quantidade = Number(dano[1]);
+  const faces = dano[2];
+  let bonus = parseInt(dano[3], 10) || 0;
+
+  const aplicarAjuste = (valor, direcao = 1) => {
+    if (typeof valor === "number") {
+      bonus += valor * direcao;
+      return;
+    }
+
+    const texto = String(valor || "").trim();
+    const dadosExtras = texto.match(/^(\d+)d$/i);
+    if (dadosExtras) {
+      quantidade = Math.max(1, Math.min(12, quantidade + Number(dadosExtras[1]) * direcao));
+      return;
+    }
+
+    const bonusFixo = texto.match(/^([+-]?\d+)$/);
+    if (bonusFixo) bonus += Number(bonusFixo[1]) * direcao;
+  };
+
+  modificacoes.forEach((modificacao) => {
+    const efeitos = modificacao?.modificacao?.efeitos || {};
+    aplicarAjuste(efeitos.bonusDano, 1);
+    aplicarAjuste(efeitos.penalidadeDano, -1);
+  });
+
+  status.dmg = `${quantidade}d${faces}${bonus ? `${bonus > 0 ? "+" : ""}${bonus}` : ""}`;
+  return status;
+};
+
 const fichaVazia = {
   nome: "",
   pronome: "Ele",
@@ -2839,6 +2877,42 @@ const DashboardMestre = () => {
     });
   };
 
+  const alternarModificacaoArmaExclusivaEmEdicao = (modificacao) => {
+    setItemEditandoDados((atual) => {
+      if (!atual) return atual;
+
+      const atuais = atual.modificacoesArma || [];
+      const jaSelecionada = atuais.some((item) => item.id === modificacao.id);
+
+      if (jaSelecionada) {
+        const modificacoesArma = atuais.filter((item) => item.id !== modificacao.id);
+        return {
+          ...atual,
+          modificacoesArma,
+          armaStatus: aplicarAprimoramentosNoStatus(
+            atual.armaStatusBase || atual.armaStatus,
+            modificacoesArma,
+          ),
+        };
+      }
+
+      if (atuais.length >= 3) {
+        setMensagem("Uma arma pode receber no máximo 3 aprimoramentos.");
+        return atual;
+      }
+
+      const modificacoesArma = [...atuais, modificacao];
+      return {
+        ...atual,
+        modificacoesArma,
+        armaStatus: aplicarAprimoramentosNoStatus(
+          atual.armaStatusBase || atual.armaStatus,
+          modificacoesArma,
+        ),
+      };
+    });
+  };
+
   const editarItemLoja = (item) => {
     console.log("🛠 Editando item:", item);
 
@@ -2874,9 +2948,15 @@ const DashboardMestre = () => {
 
   const editarItemLojaInPlace = (item) => {
     setItemEditandoId(item.id);
+    const armaStatusBase = item.armaStatusBase || item.armaStatus || null;
     setItemEditandoDados({
       ...item,
       subtipo: item.subtipo || "nenhum",
+      armaStatusBase,
+      armaStatus: aplicarAprimoramentosNoStatus(
+        armaStatusBase,
+        item.modificacoesArma || [],
+      ),
     });
   };
 
@@ -2892,7 +2972,16 @@ const DashboardMestre = () => {
     }
 
     const itemAnterior = catalogo.find((item) => item.id === itemEditandoId);
-    const itemNormalizado = normalizarItemLoja(itemEditandoDados);
+    const armaStatusBase =
+      itemEditandoDados.armaStatusBase || itemEditandoDados.armaStatus || null;
+    const itemNormalizado = normalizarItemLoja({
+      ...itemEditandoDados,
+      armaStatusBase,
+      armaStatus: aplicarAprimoramentosNoStatus(
+        armaStatusBase,
+        itemEditandoDados.modificacoesArma || [],
+      ),
+    });
     const catalogoAtualizado = catalogo.map((item) =>
       item.id === itemEditandoId ? itemNormalizado : item,
     );
@@ -3027,9 +3116,18 @@ const DashboardMestre = () => {
       }
     }
 
+    const armaStatusBase =
+      abaLojaEditor === "armas-exclusivas" ? itemBase.armaStatus : null;
     const itemFinal = {
       ...itemBase,
-      armaStatus: itemBase.armaStatus || null,
+      armaStatusBase,
+      armaStatus:
+        abaLojaEditor === "armas-exclusivas"
+          ? aplicarAprimoramentosNoStatus(
+              armaStatusBase,
+              itemBase.modificacoesArma || [],
+            )
+          : itemBase.armaStatus || null,
       nivelRito:
         abaLojaEditor === "ritos" ? itemBase.nivelRito || "iniciante" : "",
     };
@@ -3732,7 +3830,14 @@ const DashboardMestre = () => {
                     </section>
 
                     <section className="mestre-modal-bloco full">
-                      <span>Entregar item da loja</span>
+                      <div className="mestre-entrega-cabecalho">
+                        <div>
+                          <span>Entrega do catálogo</span>
+                          <h3>Entregar item ao jogador</h3>
+                          <p>Escolha uma categoria, selecione o item e confirme a entrega.</p>
+                        </div>
+                        <strong>{catalogoFiltrado.length} disponível(is)</strong>
+                      </div>
 
                       <div className="mestre-entrega-filtro">
                         {categoriasFiltroLoja.map((categoria) => (
@@ -3768,30 +3873,54 @@ const DashboardMestre = () => {
                               onClick={() => setItemLojaSelecionadoId(item.id)}
                             >
                               <div className="mestre-entrega-card-topo">
-                                <strong>{item.nome}</strong>
-                                <span>{item.preco} cr</span>
+                                <span className="mestre-entrega-card-categoria">
+                                  {categoriasFiltroLoja.find(
+                                    (categoria) => categoria.id === item.categoria,
+                                  )?.nome || item.categoria}
+                                </span>
+                                <span className="mestre-entrega-card-preco">
+                                  {item.preco} cr
+                                </span>
                               </div>
-                              <small>
-                                {item.detalhe || item.entrega || item.categoria}
-                              </small>
+                              <strong>{item.nome}</strong>
+                              <small>{item.detalhe || item.entrega || "Sem descrição."}</small>
+                              <div className="mestre-entrega-card-dados">
+                                {item.armaStatus?.dmg && <span>DMG {item.armaStatus.dmg}</span>}
+                                {item.defesaBonus > 0 && <span>DEF +{item.defesaBonus}</span>}
+                                {item.resistenciasDano?.[0]?.reducao > 0 && (
+                                  <span>RD {item.resistenciasDano[0].reducao}</span>
+                                )}
+                                {item.bonusDano && <span>+ {item.bonusDano}</span>}
+                              </div>
+                              <em>
+                                {itemLojaSelecionadoId === item.id
+                                  ? "✓ Item selecionado"
+                                  : "Selecionar item"}
+                              </em>
                             </button>
                           ))
                         )}
                       </div>
 
                       <div className="mestre-entrega-loja">
-                        <span className="mestre-entrega-info">
-                          Categoria:{" "}
-                          {categoriasFiltroLoja.find(
-                            (categoria) => categoria.id === categoriaLojaAtiva,
-                          )?.nome || "Armas de Fogo"}
-                        </span>
+                        <div className="mestre-entrega-info">
+                          <span>Categoria ativa</span>
+                          <strong>
+                            {categoriasFiltroLoja.find(
+                              (categoria) => categoria.id === categoriaLojaAtiva,
+                            )?.nome || "Armas de Fogo"}
+                          </strong>
+                          <small>
+                            {catalogo.find((item) => item.id === itemLojaSelecionadoId)?.nome ||
+                              "Nenhum item selecionado"}
+                          </small>
+                        </div>
                         <button
                           type="button"
                           onClick={entregarItemLojaAoJogador}
                           disabled={!itemLojaSelecionadoId}
                         >
-                          Entregar item selecionado
+                          Entregar ao jogador →
                         </button>
                       </div>
                     </section>
@@ -5364,13 +5493,20 @@ const DashboardMestre = () => {
                       };
 
                       const handleArmaStatusChange = (campo, valor) => {
-                        setItemEditandoDados((prev) => ({
-                          ...prev,
-                          armaStatus: {
-                            ...(prev.armaStatus || {}),
+                        setItemEditandoDados((prev) => {
+                          const armaStatusBase = {
+                            ...(prev.armaStatusBase || prev.armaStatus || {}),
                             [campo]: valor,
-                          },
-                        }));
+                          };
+                          return {
+                            ...prev,
+                            armaStatusBase,
+                            armaStatus: aplicarAprimoramentosNoStatus(
+                              armaStatusBase,
+                              prev.modificacoesArma || [],
+                            ),
+                          };
+                        });
                       };
 
                       return (
@@ -6211,6 +6347,110 @@ const DashboardMestre = () => {
                                 )}
                               </>
                             )}
+
+                            {isEditing &&
+                              dados.categoria === "armas-exclusivas" &&
+                              dados.subtipo !== "nenhum" && (
+                                <>
+                                  <details className="mestre-aprimoramentos-exclusiva" open>
+                                    <summary>
+                                      Aprimoramentos da arma ({(dados.modificacoesArma || []).length}/3)
+                                    </summary>
+                                    <p>Adicione, remova ou substitua os aprimoramentos desta arma exclusiva.</p>
+                                    <div className="mestre-aprimoramentos-lista">
+                                      {MODIFICACOES.filter(
+                                        (modificacao) =>
+                                          modificacao.aplicavel ===
+                                            (dados.subtipo === "fogo"
+                                              ? "arma-fogo"
+                                              : "arma-corpo") ||
+                                          modificacao.aplicavel === "ambos",
+                                      ).map((modificacao) => {
+                                        const selecionada = (dados.modificacoesArma || []).some(
+                                          (aprimoramento) => aprimoramento.id === modificacao.id,
+                                        );
+
+                                        return (
+                                          <label key={modificacao.id} className="mestre-aprimoramento-opcao">
+                                            <input
+                                              type="checkbox"
+                                              checked={selecionada}
+                                              onChange={() =>
+                                                alternarModificacaoArmaExclusivaEmEdicao(modificacao)
+                                              }
+                                            />
+                                            <span>
+                                              <strong>{modificacao.nome}</strong>
+                                              <small>{modificacao.detalhe}</small>
+                                            </span>
+                                          </label>
+                                        );
+                                      })}
+                                    </div>
+                                  </details>
+
+                                  <section className="mestre-aprimoramento-customizado">
+                                    <div className="mestre-aprimoramento-customizado-topo">
+                                      <div>
+                                        <span>Exclusivo</span>
+                                        <h4>Aprimoramento Customizado</h4>
+                                        <p>Edite ou crie o efeito único desta arma.</p>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setItemEditandoDados((atual) => ({
+                                            ...atual,
+                                            aprimoramentoCustomizado:
+                                              atual.aprimoramentoCustomizado
+                                                ? null
+                                                : { nome: "", detalhe: "" },
+                                          }))
+                                        }
+                                      >
+                                        {dados.aprimoramentoCustomizado
+                                          ? "Remover"
+                                          : "+ Criar exclusivo"}
+                                      </button>
+                                    </div>
+
+                                    {dados.aprimoramentoCustomizado && (
+                                      <div className="mestre-aprimoramento-customizado-form">
+                                        <label>
+                                          Nome do aprimoramento
+                                          <input
+                                            value={dados.aprimoramentoCustomizado.nome || ""}
+                                            onChange={(event) =>
+                                              setItemEditandoDados((atual) => ({
+                                                ...atual,
+                                                aprimoramentoCustomizado: {
+                                                  ...atual.aprimoramentoCustomizado,
+                                                  nome: event.target.value,
+                                                },
+                                              }))
+                                            }
+                                          />
+                                        </label>
+                                        <label>
+                                          Efeito exclusivo
+                                          <textarea
+                                            value={dados.aprimoramentoCustomizado.detalhe || ""}
+                                            onChange={(event) =>
+                                              setItemEditandoDados((atual) => ({
+                                                ...atual,
+                                                aprimoramentoCustomizado: {
+                                                  ...atual.aprimoramentoCustomizado,
+                                                  detalhe: event.target.value,
+                                                },
+                                              }))
+                                            }
+                                          />
+                                        </label>
+                                      </div>
+                                    )}
+                                  </section>
+                                </>
+                              )}
 
                             {isEditing && abaLojaEditor === "defesas" && (
                               <div className="mestre-arma-status-editor" style={{ marginTop: "10px" }}>
