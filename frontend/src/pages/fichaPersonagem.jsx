@@ -827,8 +827,19 @@ const FichaPersonagem = () => {
   useEffect(() => {
     let cancelado = false;
 
-    const recarregarPersonagem = async ({ fichaId: fichaAtualizada } = {}) => {
+    const recarregarPersonagem = async ({
+      fichaId: fichaAtualizada,
+      personagem: personagemSincronizado,
+    } = {}) => {
       if (fichaAtualizada && fichaAtualizada !== fichaId) return;
+
+      if (personagemSincronizado) {
+        if (!cancelado) {
+          ignorarProximoSalvamentoRef.current = true;
+          setPersonagem(personagemSincronizado);
+        }
+        return;
+      }
 
       try {
         const personagemApi = await buscarPersonagem(fichaId);
@@ -869,6 +880,17 @@ const FichaPersonagem = () => {
     };
     const pararPersonagem = ouvirPersonagemAtualizado(recarregarPersonagem);
     const pararArvores = ouvirArvoresAtualizadas(recarregarArvores);
+    const sincronizarFichaPeloStorage = (event) => {
+      if (event.key !== storageKey || !event.newValue || cancelado) return;
+
+      try {
+        ignorarProximoSalvamentoRef.current = true;
+        setPersonagem(JSON.parse(event.newValue));
+      } catch {
+        console.warn("Nao foi possivel ler a ficha atualizada localmente.");
+      }
+    };
+    window.addEventListener("storage", sincronizarFichaPeloStorage);
     const pararPolling = iniciarPollingVisivel(
       sincronizarTudo,
       SYNC_INTERVALS.ficha,
@@ -878,9 +900,28 @@ const FichaPersonagem = () => {
       cancelado = true;
       pararPersonagem();
       pararArvores();
+      window.removeEventListener("storage", sincronizarFichaPeloStorage);
       pararPolling();
     };
   }, [fichaId, storageKey]);
+
+  useEffect(() => {
+    if (!itemVisualizado) return;
+
+    const itemAtualizado = (personagem.inventario || []).find(
+      (item) =>
+        (itemVisualizado.idLoja && item.idLoja === itemVisualizado.idLoja) ||
+        (itemVisualizado.id && item.id === itemVisualizado.id) ||
+        item.nome === itemVisualizado.nome,
+    );
+
+    if (itemAtualizado && itemAtualizado !== itemVisualizado) {
+      setItemVisualizado(itemAtualizado);
+    }
+  }, [
+    personagem.inventario,
+    itemVisualizado,
+  ]);
 
   // SALVAR DADOS AUTOMATICAMENTE QUANDO MUDAR
   useEffect(() => {
@@ -4688,7 +4729,7 @@ const cancelarEdicaoHabilidade = () => {
                         {itemVisualizado.durabilidade}
                       </p>
                     )}
-                    {itemVisualizado.dano && (
+                    {!itemVisualizado.armaStatus && itemVisualizado.dano && (
                       <p>
                         <strong>Dano:</strong> {itemVisualizado.dano}
                       </p>
@@ -4715,7 +4756,8 @@ const cancelarEdicaoHabilidade = () => {
                         <strong>Efeito:</strong> {itemVisualizado.efeito}
                       </p>
                     )}
-                    {(itemVisualizado.dano || itemVisualizado.cura) && (
+                    {!itemVisualizado.armaStatus &&
+                      (itemVisualizado.dano || itemVisualizado.cura) && (
                       <button
                         type="button"
                         className="item-rolar-efeito"
