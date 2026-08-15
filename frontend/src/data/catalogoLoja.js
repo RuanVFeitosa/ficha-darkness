@@ -131,18 +131,25 @@ export const normalizarItemLoja = (item, index = 0) => {
   const categoriaValida = CATEGORIAS_LOJA.some(
     (categoria) => categoria.id === item?.categoria,
   );
+  // Catalogos antigos usavam a categoria generica "armas". Quando um item
+  // conhecido chega assim do servidor, preservamos sua categoria oficial em
+  // vez de manda-lo para "itens" (caso da Pistola Sable).
+  const itemPadrao = DEFAULT_CATALOGO_LOJA.find(
+    (itemPadraoCatalogo) => itemPadraoCatalogo.id === id,
+  );
+  const categoriaNormalizada = modificacaoPadrao
+    ? "modificacoes"
+    : ehArmaExclusivaLegada
+      ? "armas-exclusivas"
+      : categoriaValida
+        ? item.categoria
+        : itemPadrao?.categoria || "itens";
 
   return {
     id,
 
     nome: nome || "Item sem nome",
-    categoria: modificacaoPadrao
-      ? "modificacoes"
-      : ehArmaExclusivaLegada
-        ? "armas-exclusivas"
-        : categoriaValida
-        ? item.categoria
-        : "itens",
+    categoria: categoriaNormalizada,
     preco: Math.max(0, parseInt(item?.preco, 10) || 0),
     detalhe: String(item?.detalhe || "").trim(),
     entrega: String(item?.entrega || "").trim(),
