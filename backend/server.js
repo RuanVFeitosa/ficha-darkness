@@ -251,6 +251,10 @@ const normalizeShopItem = (item, index = 0) => {
   const id = sanitizeFichaId(item?.id || nome || `item-${Date.now()}-${index}`);
   // Migra itens exclusivos criados antes da correção da categoria.
   const ehArmaExclusivaLegada = id.startsWith("armas-exclusivas-");
+  // A Pistola Sable foi criada quando o catalogo ainda usava as categorias
+  // "armas" e, em uma migracao intermediaria, "itens".
+  const categoriaLegadaDaPistola =
+    id === "pistola-sable" && ["armas", "itens"].includes(item?.categoria);
   const categoria = [
     "armas",
     "armas-fogo",
@@ -266,6 +270,8 @@ const normalizeShopItem = (item, index = 0) => {
   ].includes(item?.categoria)
     ? ehArmaExclusivaLegada
       ? "armas-exclusivas"
+      : categoriaLegadaDaPistola
+        ? "armas-fogo"
       : item.categoria
     : ehArmaExclusivaLegada
       ? "armas-exclusivas"

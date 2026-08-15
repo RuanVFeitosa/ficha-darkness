@@ -137,10 +137,14 @@ export const normalizarItemLoja = (item, index = 0) => {
   const itemPadrao = DEFAULT_CATALOGO_LOJA.find(
     (itemPadraoCatalogo) => itemPadraoCatalogo.id === id,
   );
+  const categoriaLegadaDaPistola =
+    id === "pistola-sable" && item?.categoria === "itens";
   const categoriaNormalizada = modificacaoPadrao
     ? "modificacoes"
     : ehArmaExclusivaLegada
       ? "armas-exclusivas"
+      : categoriaLegadaDaPistola
+        ? "armas-fogo"
       : categoriaValida
         ? item.categoria
         : itemPadrao?.categoria || "itens";

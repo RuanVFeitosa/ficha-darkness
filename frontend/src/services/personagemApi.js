@@ -6,7 +6,14 @@ const getApiUrl = () => {
   const isCraDevServer =
     window.location.hostname === "localhost" && window.location.port === "3000";
 
-  return isCraDevServer ? "http://localhost:4000/api" : "/api";
+  if (isCraDevServer) {
+    return "http://localhost:4000/api";
+  }
+
+  // Fallback de producao: a Vercel hospeda apenas o React e nao possui
+  // funcoes /api neste projeto. A variavel de ambiente continua tendo
+  // prioridade para permitir trocar o backend sem alterar o codigo.
+  return "https://ficha-darkness-backend.onrender.com/api";
 };
 
 const API_URL = getApiUrl();
