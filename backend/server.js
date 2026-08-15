@@ -11,6 +11,7 @@ const BUILD_DIR = path.join(__dirname, "..", "frontend", "build");
 const SERVE_FRONTEND = process.env.SERVE_FRONTEND !== "false";
 const DEFAULT_FICHA_ID = "principal";
 const SKILL_TREES_RECORD_ID = "__arvores_habilidades__";
+const SHOP_CATALOG_RECORD_ID = "__catalogo_loja__";
 const SHOP_CATALOG_FILE = path.join(DATA_DIR, "loja-catalogo.json");
 const SKILL_TREES_FILE = path.join(DATA_DIR, "arvores-habilidades.json");
 const SUPABASE_URL = process.env.SUPABASE_URL?.trim();
@@ -452,7 +453,10 @@ const listPersonagens = async () => {
 
     const rows = await requestSupabase("?select=id,personagem,updated_at&order=id.asc");
     const personagens = rows
-      .filter((row) => row.id !== SKILL_TREES_RECORD_ID)
+      .filter(
+        (row) =>
+          row.id !== SKILL_TREES_RECORD_ID && row.id !== SHOP_CATALOG_RECORD_ID,
+      )
       .map((row) => ({
         fichaId: row.id,
         personagem: row.personagem,
@@ -532,6 +536,17 @@ const deletePersonagem = async (id) => {
 };
 
 const readShopCatalog = async () => {
+  if (USE_SUPABASE) {
+    const rows = await requestSupabase(
+      `?id=eq.${encodeURIComponent(SHOP_CATALOG_RECORD_ID)}&select=personagem&limit=1`,
+    );
+    const catalogo = rows[0]?.personagem?.catalogo;
+
+    return Array.isArray(catalogo)
+      ? catalogo.map((item, index) => normalizeShopItem(item, index))
+      : defaultCatalogoLoja;
+  }
+
   try {
     const raw = await fs.readFile(SHOP_CATALOG_FILE, "utf8");
     const catalogo = JSON.parse(raw);
@@ -553,6 +568,27 @@ const writeShopCatalog = async (catalogo) => {
   }
 
   const normalized = catalogo.map((item, index) => normalizeShopItem(item, index));
+
+  if (USE_SUPABASE) {
+    const updatedAt = new Date().toISOString();
+    const rows = await requestSupabase("?on_conflict=id", {
+      method: "POST",
+      headers: {
+        Prefer: "resolution=merge-duplicates,return=representation",
+      },
+      body: JSON.stringify({
+        id: SHOP_CATALOG_RECORD_ID,
+        personagem: { tipo: "catalogo-loja", catalogo: normalized },
+        updated_at: updatedAt,
+      }),
+    });
+
+    const catalogoSalvo = rows[0]?.personagem?.catalogo;
+    return Array.isArray(catalogoSalvo)
+      ? catalogoSalvo.map((item, index) => normalizeShopItem(item, index))
+      : normalized;
+  }
+
   await fs.mkdir(DATA_DIR, { recursive: true });
   await fs.writeFile(SHOP_CATALOG_FILE, `${JSON.stringify(normalized, null, 2)}\n`);
   return normalized;

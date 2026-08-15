@@ -1109,6 +1109,29 @@ const DashboardMestre = () => {
       const itensRemotos = Array.isArray(catalogoApi)
         ? catalogoApi.map(normalizarItemLoja)
         : [];
+      // Se uma publicacao retornar apenas o catalogo padrao, preserva as armas
+      // exclusivas ainda existentes neste navegador para poder republica-las.
+      // Isso nao sobrescreve o catalogo remoto quando ele ja possui exclusivas.
+      let exclusivasLocais = [];
+      try {
+        const catalogoLocalSalvo = JSON.parse(
+          localStorage.getItem(CATALOGO_STORAGE_KEY) || "[]",
+        );
+        if (Array.isArray(catalogoLocalSalvo)) {
+          exclusivasLocais = catalogoLocalSalvo
+            .map(normalizarItemLoja)
+            .filter((item) => item.categoria === "armas-exclusivas");
+        }
+      } catch {
+        exclusivasLocais = [];
+      }
+      const remotoPossuiExclusivas = itensRemotos.some(
+        (item) => item.categoria === "armas-exclusivas",
+      );
+      const recuperarExclusivasLocais =
+        itensRemotos.length > 0 &&
+        !remotoPossuiExclusivas &&
+        exclusivasLocais.length > 0;
       const idsRemotos = new Set(itensRemotos.map((item) => item.id));
       const catalogoBase =
         itensRemotos.length > 0
@@ -1117,6 +1140,9 @@ const DashboardMestre = () => {
                 (item) => !idsRemotos.has(normalizarItemLoja(item).id),
               ).map(normalizarItemLoja),
               ...itensRemotos,
+              ...(recuperarExclusivasLocais
+                ? exclusivasLocais.filter((item) => !idsRemotos.has(item.id))
+                : []),
             ]
           : DEFAULT_CATALOGO_LOJA.map(normalizarItemLoja);
       const catalogoNormalizado = aplicarDefesasAtualizadas(catalogoBase).map(
@@ -1150,7 +1176,8 @@ const DashboardMestre = () => {
       if (
         !catalogoApiAtualizado ||
         !catalogoPossuiDefesasAtualizadas(catalogoBase) ||
-        !catalogoPossuiDanosBalanceados(catalogoBase)
+        !catalogoPossuiDanosBalanceados(catalogoBase) ||
+        recuperarExclusivasLocais
       ) {
         salvarCatalogoLoja(catalogoNormalizado).catch((error) => {
           console.warn("Não foi possível atualizar o catálogo da loja.", error);
