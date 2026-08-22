@@ -352,7 +352,8 @@ export const enviarImagemCena = async (campanhaId, arquivo, tipo) => {
     return new Promise((resolve, reject) => { const leitor = new FileReader(); leitor.onload = () => resolve(leitor.result); leitor.onerror = reject; leitor.readAsDataURL(arquivo); });
   }
   const extensao = arquivo.name.split(".").pop()?.toLowerCase() || "webp";
-  const caminho = `${campanhaId}/${tipo}-${Date.now()}.${extensao}`;
+  const sufixo = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2, 10);
+  const caminho = `${campanhaId}/${tipo}-${Date.now()}-${sufixo}.${extensao}`;
   const { error } = await supabase.storage.from("mapas").upload(caminho, arquivo, { upsert: false });
   if (error) throw error;
   return supabase.storage.from("mapas").getPublicUrl(caminho).data.publicUrl;

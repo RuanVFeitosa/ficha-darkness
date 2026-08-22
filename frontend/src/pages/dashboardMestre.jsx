@@ -358,7 +358,7 @@ const gerarIdReceita = (nome, categoria) =>
     .trim()
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[ --]/g, "")
+    .replace(/[--]/g, "")
     .replace(/[^a-z0-9_-]/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "") || `${Date.now()}`;
@@ -1329,6 +1329,70 @@ const DashboardMestre = () => {
       setPastasInimigos(novas);
       setPastaInimigosAtiva(nome);
     }
+  };
+
+  const excluirPastaCatalogo = (tipo, pasta) => {
+    if (!pasta) return;
+
+    const itensNaPasta =
+      tipo === "npc"
+        ? npcs.filter((item) => item.pasta === pasta).length
+        : inimigos.filter((item) => item.pasta === pasta).length;
+
+    const descricaoItens =
+      itensNaPasta > 0
+        ? `\n\n${itensNaPasta} ${tipo === "npc" ? "NPC(s)" : "inimigo(s)"} desta pasta serão movidos para "Sem pasta".`
+        : "";
+
+    if (
+      !window.confirm(
+        `Excluir a pasta "${pasta}"?${descricaoItens}`,
+      )
+    ) {
+      return;
+    }
+
+    if (tipo === "npc") {
+      const novasPastas = pastasNpcs.filter((item) => item !== pasta);
+      const novosNpcs = npcs.map((npc) =>
+        npc.pasta === pasta ? { ...npc, pasta: "" } : npc,
+      );
+
+      localStorage.setItem(
+        "darkness_pastas_npcs",
+        JSON.stringify(novasPastas),
+      );
+      salvarListaNpcs(novosNpcs);
+      setPastasNpcs(novasPastas);
+
+      if (pastaNpcsAtiva === pasta) {
+        setPastaNpcsAtiva("todas");
+      }
+    } else {
+      const novasPastas = pastasInimigos.filter((item) => item !== pasta);
+      const novosInimigos = inimigos.map((inimigo) =>
+        inimigo.pasta === pasta ? { ...inimigo, pasta: "" } : inimigo,
+      );
+
+      localStorage.setItem(
+        "darkness_pastas_inimigos",
+        JSON.stringify(novasPastas),
+      );
+      salvarListaInimigos(novosInimigos);
+      setPastasInimigos(novasPastas);
+
+      if (pastaInimigosAtiva === pasta) {
+        setPastaInimigosAtiva("todas");
+      }
+    }
+
+    abrirPopup({
+      titulo: "Pasta excluída",
+      mensagem:
+        itensNaPasta > 0
+          ? `A pasta "${pasta}" foi excluída e seus itens foram movidos para "Sem pasta".`
+          : `A pasta "${pasta}" foi excluída.`,
+    });
   };
 
 
@@ -4184,19 +4248,36 @@ const DashboardMestre = () => {
                     Todos <b>{inimigos.length}</b>
                   </button>
                   {pastasInimigos.map((pasta) => (
-                    <button
+                    <span
                       key={pasta}
-                      className={pastaInimigosAtiva === pasta ? "ativa" : ""}
-                      onClick={() => setPastaInimigosAtiva(pasta)}
+                      className={`mestre-pasta-catalogo-item ${pastaInimigosAtiva === pasta ? "ativa" : ""}`}
                     >
-                      {pasta}{" "}
-                      <b>
-                        {
-                          inimigos.filter((inimigo) => inimigo.pasta === pasta)
-                            .length
-                        }
-                      </b>
-                    </button>
+                      <button
+                        type="button"
+                        className={pastaInimigosAtiva === pasta ? "ativa" : ""}
+                        onClick={() => setPastaInimigosAtiva(pasta)}
+                      >
+                        {pasta}{" "}
+                        <b>
+                          {
+                            inimigos.filter((inimigo) => inimigo.pasta === pasta)
+                              .length
+                          }
+                        </b>
+                      </button>
+                      <button
+                        type="button"
+                        className="mestre-pasta-excluir"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          excluirPastaCatalogo("inimigo", pasta);
+                        }}
+                        title={`Excluir pasta ${pasta}`}
+                        aria-label={`Excluir pasta ${pasta}`}
+                      >
+                        <Icon path={mdiDeleteOutline} size={0.58} />
+                      </button>
+                    </span>
                   ))}
                   <button
                     className={pastaInimigosAtiva === "sem-pasta" ? "ativa" : ""}
@@ -4737,16 +4818,33 @@ const DashboardMestre = () => {
   Todos <b>{npcs.length}</b>
                     </button>
                       {pastasNpcs.map((pasta) => (
-                        <button
+                        <span
                           key={pasta}
-                          className={pastaNpcsAtiva === pasta ? "ativa" : ""}
-                          onClick={() => setPastaNpcsAtiva(pasta)}
+                          className={`mestre-pasta-catalogo-item ${pastaNpcsAtiva === pasta ? "ativa" : ""}`}
                         >
-                          {pasta}{" "}
-                          <b>
-                            {npcs.filter((npc) => npc.pasta === pasta).length}
-                          </b>
-                        </button>
+                          <button
+                            type="button"
+                            className={pastaNpcsAtiva === pasta ? "ativa" : ""}
+                            onClick={() => setPastaNpcsAtiva(pasta)}
+                          >
+                            {pasta}{" "}
+                            <b>
+                              {npcs.filter((npc) => npc.pasta === pasta).length}
+                            </b>
+                          </button>
+                          <button
+                            type="button"
+                            className="mestre-pasta-excluir"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              excluirPastaCatalogo("npc", pasta);
+                            }}
+                            title={`Excluir pasta ${pasta}`}
+                            aria-label={`Excluir pasta ${pasta}`}
+                          >
+                            <Icon path={mdiDeleteOutline} size={0.58} />
+                          </button>
+                        </span>
                       ))}
                       <button
                         className={pastaNpcsAtiva === "sem-pasta" ? "ativa" : ""}

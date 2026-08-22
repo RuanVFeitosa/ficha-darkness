@@ -10,7 +10,8 @@ import AnotacoesCampanha from "../components/AnotacoesCampanha";
 import MusicaTabletop from "../components/MusicaTabletop";
 import "../CSS/Mesa.css";
 
-const cenaVazia = { nome: "", descricao: "", imagemUrl: "", mapaUrl: "", larguraGrade: 12, alturaGrade: 8 };
+const cenaVazia = { nome: "", descricao: "", imagemUrl: "", mapaUrl: "", imagensCena: [], mapasBatalha: [], larguraGrade: 12, alturaGrade: 8 };
+const idMidiaLocal = (tipo = "midia") => `${tipo}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const midiasDaCena = (cena, tipo) => tipo === "mapa" ? (cena?.mapasBatalha || []) : (cena?.imagensCena || []);
 const urlCena = (cena, tipo, midiaId = null) => {
   const midias = midiasDaCena(cena, tipo);
@@ -173,7 +174,7 @@ const Mesa = () => {
   const [musicaAberta, setMusicaAberta] = useState(false);
   const [editorAberto, setEditorAberto] = useState(false);
   const [editando, setEditando] = useState(cenaVazia);
-  const [arquivos, setArquivos] = useState({ cena: null, mapa: null });
+  const [arquivos, setArquivos] = useState({ cena: [], mapa: [] });
   const [salvando, setSalvando] = useState(false);
   const [transicao, setTransicao] = useState(false);
   const [fichasDisponiveis, setFichasDisponiveis] = useState([]);
@@ -488,26 +489,50 @@ const Mesa = () => {
   };
 
   const abrirEditor = (cena = null) => {
-    setEditando(cena ? { ...cena, imagemUrl: urlCena(cena, "cena"), mapaUrl: urlCena(cena, "mapa"), larguraGrade: cena.largura_grade || cena.larguraGrade || 12, alturaGrade: cena.altura_grade || cena.alturaGrade || 8 } : cenaVazia);
-    setArquivos({ cena: null, mapa: null }); setEditorAberto(true);
+    const larguraGrade = cena?.largura_grade || cena?.larguraGrade || 12;
+    const alturaGrade = cena?.altura_grade || cena?.alturaGrade || 8;
+    const imagensCena = cena ? midiasDaCena(cena, "cena").map((midia, indice) => ({ ...midia, id: midia.id || `cena-${cena.id || "existente"}-${indice + 1}`, nome: midia.nome || `Cena ${indice + 1}` })) : [];
+    const mapasBatalha = cena ? midiasDaCena(cena, "mapa").map((midia, indice) => ({ ...midia, id: midia.id || `mapa-${cena.id || "existente"}-${indice + 1}`, nome: midia.nome || `Mapa ${indice + 1}`, larguraGrade: Number(midia.larguraGrade || larguraGrade), alturaGrade: Number(midia.alturaGrade || alturaGrade) })) : [];
+    setEditando(cena ? { ...cena, imagemUrl: urlCena(cena, "cena"), mapaUrl: urlCena(cena, "mapa"), imagensCena, mapasBatalha, larguraGrade, alturaGrade } : { ...cenaVazia, imagensCena: [], mapasBatalha: [] });
+    setArquivos({ cena: [], mapa: [] });
+    setEditorAberto(true);
   };
 
   const confirmarCena = async (event) => {
     event.preventDefault(); setSalvando(true); setErro("");
     try {
-      const [imagemUrl, mapaUrl] = await Promise.all([
-        arquivos.cena ? enviarImagemCena(campanha.id, arquivos.cena, "cena") : editando.imagemUrl,
-        arquivos.mapa ? enviarImagemCena(campanha.id, arquivos.mapa, "mapa") : editando.mapaUrl,
+      const [novasImagens, novosMapas] = await Promise.all([
+        Promise.all(arquivos.cena.map(async (item) => ({ id: item.id, nome: item.nome || item.arquivo.name, url: await enviarImagemCena(campanha.id, item.arquivo, "cena") }))),
+        Promise.all(arquivos.mapa.map(async (item) => ({ id: item.id, nome: item.nome || item.arquivo.name, url: await enviarImagemCena(campanha.id, item.arquivo, "mapa"), larguraGrade: Number(item.larguraGrade || editando.larguraGrade || 12), alturaGrade: Number(item.alturaGrade || editando.alturaGrade || 8) }))),
       ]);
-      await salvarCena(campanha.id, { ...editando, imagemUrl, mapaUrl });
+      let imagensCena = [...(editando.imagensCena || []), ...novasImagens];
+      let mapasBatalha = [...(editando.mapasBatalha || []), ...novosMapas];
+      if (!imagensCena.length && editando.imagemUrl) imagensCena = [{ id: idMidiaLocal("cena-url"), nome: "Cena principal", url: editando.imagemUrl }];
+      if (!mapasBatalha.length && editando.mapaUrl) mapasBatalha = [{ id: idMidiaLocal("mapa-url"), nome: "Mapa principal", url: editando.mapaUrl, larguraGrade: Number(editando.larguraGrade || 12), alturaGrade: Number(editando.alturaGrade || 8) }];
+      await salvarCena(campanha.id, { ...editando, imagensCena, mapasBatalha, imagemUrl: imagensCena[0]?.url || "", mapaUrl: mapasBatalha[0]?.url || "" });
       await carregar(); setEditorAberto(false);
     } catch (error) { setErro(error.message || "Nao foi possivel salvar a cena."); }
     finally { setSalvando(false); }
   };
-  const selecionarArquivoCena = (tipo, arquivo, input) => {
-    try { validarArquivoImagem(arquivo, tipo); setErro(""); setArquivos((atuais) => ({ ...atuais, [tipo]: arquivo })); }
-    catch (error) { setErro(error.message); if (input) input.value = ""; }
+
+  const selecionarArquivosCena = (tipo, listaArquivos, input) => {
+    const selecionados = Array.from(listaArquivos || []);
+    if (!selecionados.length) return;
+    try {
+      selecionados.forEach((arquivo) => validarArquivoImagem(arquivo, tipo));
+      setErro("");
+      setArquivos((atuais) => ({ ...atuais, [tipo]: [...atuais[tipo], ...selecionados.map((arquivo) => ({ id: idMidiaLocal(tipo), nome: arquivo.name.replace(/\.[^.]+$/, ""), arquivo, ...(tipo === "mapa" ? { larguraGrade: Number(editando.larguraGrade || 12), alturaGrade: Number(editando.alturaGrade || 8) } : {}) }))] }));
+      if (input) input.value = "";
+    } catch (error) { setErro(error.message); if (input) input.value = ""; }
   };
+
+  const removerMidiaExistente = (tipo, id) => {
+    const chave = tipo === "mapa" ? "mapasBatalha" : "imagensCena";
+    setEditando((atual) => ({ ...atual, [chave]: (atual[chave] || []).filter((midia) => midia.id !== id) }));
+  };
+  const removerArquivoPendente = (tipo, id) => setArquivos((atuais) => ({ ...atuais, [tipo]: atuais[tipo].filter((item) => item.id !== id) }));
+  const atualizarMapaPendente = (id, campo, valor) => setArquivos((atuais) => ({ ...atuais, mapa: atuais.mapa.map((item) => item.id === id ? { ...item, [campo]: valor } : item) }));
+  const atualizarMapaExistente = (id, campo, valor) => setEditando((atual) => ({ ...atual, mapasBatalha: (atual.mapasBatalha || []).map((item) => item.id === id ? { ...item, [campo]: valor } : item) }));
 
   const removerCena = async (cena) => {
     if (!window.confirm(`Excluir "${cena.nome}" da biblioteca?`)) return;
@@ -897,9 +922,31 @@ const Mesa = () => {
     <aside className={`mesa-lateral ${mestre ? "" : "mesa-ficha-jogador"}`}>{mestre ? <><div className="mesa-lateral-titulo"><Icon path={mdiShieldCrownOutline} size={0.8} /><span>Participantes</span><b>{campanha.membros.length}</b></div><div className="mesa-membros">{campanha.membros.length ? campanha.membros.map((membro) => { const personagem = personagens[membro.ficha_id]; const recursos = recursosParticipante(personagem); return <button className={`participante-condicionado ${classesCondicoesMesa(personagem)}`} key={membro.id} draggable title="Arraste para o mapa para criar ou mover o token" onDragStart={(event) => { event.dataTransfer.effectAllowed = "copy"; event.dataTransfer.setData("application/x-darkness-ficha", membro.ficha_id); }} onClick={() => setFichaAberta({ membro, personagem })}><span>{personagem?.fotoPerfil ? <img src={personagem.fotoPerfil} alt="" /> : membro.nome?.slice(0, 2)}</span><div><strong>{personagem?.nome || membro.nome}</strong><small>{personagem ? `Nivel ${personagem.nivel || 1} · ${personagem.classe || "Sem classe"}` : membro.papel}</small><ResumoCondicoesParticipante personagem={personagem} />{recursos.length > 0 && <div className="membro-recursos">{recursos.map((recurso) => <div className={`membro-recurso ${classeRecursoParticipante(recurso)}`} key={recurso.id}><span>{recurso.nome}</span><i><em style={{ width: `${percentualRecurso(recurso.valor)}%` }} /></i><b>{recurso.valor?.atual || 0}/{recurso.valor?.max || 0}</b></div>)}</div>}</div></button>; }) : <p>Nenhuma ficha vinculada ainda.</p>}</div></> : personagemJogador ? <><div className="mesa-lateral-titulo"><Icon path={mdiShieldCrownOutline} size={0.8} /><span>Minha ficha</span></div><div className="jogador-ficha-identidade">{personagemJogador.fotoPerfil && <img src={personagemJogador.fotoPerfil} alt="" />}<div><strong>{personagemJogador.nome}</strong><small>Nivel {personagemJogador.nivel || 1} · {personagemJogador.classe || "Sem classe"}</small></div></div><div className="jogador-ficha-recursos">{[["SAN", personagemJogador.sanidade], ["ESP", personagemJogador.esperanca], ["INT", calcularIntegridade(personagemJogador)]].map(([nome, recurso]) => <div key={nome}><span>{nome}</span><i><em style={{ width: `${percentualRecurso(recurso)}%` }} /></i><b>{recurso?.atual || 0}/{recurso?.max || 0}</b></div>)}</div><div className="jogador-ficha-listas"><section><h3>Habilidades</h3>{habilidadesJogador.length ? habilidadesJogador.map((item) => <article key={`${item.grupo}-${item.id}`}><strong>{item.nome}</strong><span>{item.grupo}{item.especialidade ? ` · ${item.especialidade}` : ""}</span><p>{item.descricao || item.efeito}</p></article>) : <p>Nenhuma habilidade selecionada.</p>}</section><section><h3>Passivos</h3>{passivosJogador.length ? passivosJogador.map(([nome, valor]) => <div className="jogador-ficha-passivo" key={nome}><span>{nome.replace(/([A-Z])/g, " $1")}</span><b>{valor}</b></div>) : <p>Nenhum passivo adquirido.</p>}</section><section><h3>Rituais e ativos</h3>{personagemJogador.rituais?.length ? personagemJogador.rituais.map((item, index) => <article key={item.id || index}><strong>{item.nome || `Ritual ${index + 1}`}</strong><p>{item.descricao || item.efeito}</p></article>) : <p>Nenhum ritual ou ativo registrado.</p>}</section></div><button className="jogador-abrir-ficha" onClick={() => setFichaAberta({ membro: membroJogador, personagem: personagemJogador })}>Abrir ficha</button></> : <div className="jogador-escolher-ficha"><strong>Qual e a sua ficha?</strong><p>Escolha a ficha vinculada a este jogador.</p><select value={fichaJogadorId} onChange={(event) => { const id = event.target.value; setFichaJogadorId(id); localStorage.setItem(`darkness_mesa_ficha_${codigo}`, id); }}><option value="">Selecionar ficha...</option>{campanha.membros.map((membro) => <option key={membro.id} value={membro.ficha_id}>{personagens[membro.ficha_id]?.nome || membro.nome}</option>)}</select></div>}</aside>
     <footer className="mesa-rodape"><div className="mesa-rolagens-titulo"><Icon path={mdiDiceMultiple} size={0.85} /><span>Rolagens</span></div><div className="mesa-rolagens">{campanha.rolagens.length ? campanha.rolagens.map((rolagem) => { const faces = facesDaRolagem(rolagem); return <div key={rolagem.id}><span>{rolagem.autor_nome}</span><b className={`mesa-resultado-dado d${faces}`} title={`Resultado ${rolagem.resultado} em d${faces}`}><i>{rolagem.resultado}</i></b><small>{rolagem.expressao}</small></div>; }) : <p>As rolagens da sessao aparecerao aqui.</p>}</div></footer>
 
-    {editorAberto && <div className="cena-editor-fundo" onMouseDown={(event) => event.target === event.currentTarget && setEditorAberto(false)}><form className="cena-editor" onSubmit={confirmarCena}><header><div><span>Biblioteca</span><h2>{editando.id ? "Editar cena" : "Nova cena"}</h2></div><button type="button" onClick={() => setEditorAberto(false)}><Icon path={mdiClose} size={.85} /></button></header><label>Nome<input required value={editando.nome || ""} onChange={(e) => setEditando({ ...editando, nome: e.target.value })} /></label><label>Descricao<textarea rows="3" value={editando.descricao || ""} onChange={(e) => setEditando({ ...editando, descricao: e.target.value })} /></label><div className="cena-editor-midias"><label>Imagem da cena · max. 2 MB<input type="file" accept="image/webp,image/jpeg,image/png,image/avif" onChange={(e) => selecionarArquivoCena("cena", e.target.files[0], e.target)} /><small>{arquivos.cena?.name || editando.imagemUrl || "Escolha uma imagem"}</small></label><label>Mapa de batalha · max. 5 MB<input type="file" accept="image/webp,image/jpeg,image/png,image/avif" onChange={(e) => selecionarArquivoCena("mapa", e.target.files[0], e.target)} /><small>{arquivos.mapa?.name || editando.mapaUrl || "Opcional"}</small></label></div><details><summary>Usar URLs em vez de arquivos</summary><label>URL da cena<input value={editando.imagemUrl || ""} onChange={(e) => setEditando({ ...editando, imagemUrl: e.target.value })} /></label><label>URL do mapa<input value={editando.mapaUrl || ""} onChange={(e) => setEditando({ ...editando, mapaUrl: e.target.value })} /></label></details><div className="cena-editor-grade"><label>Colunas<input type="number" min="1" max="100" value={editando.larguraGrade} onChange={(e) => setEditando({ ...editando, larguraGrade: e.target.value })} /></label><label>Linhas<input type="number" min="1" max="100" value={editando.alturaGrade} onChange={(e) => setEditando({ ...editando, alturaGrade: e.target.value })} /></label></div>{erro && <p className="cena-editor-erro">{erro}</p>}<footer><button type="button" onClick={() => setEditorAberto(false)}>Cancelar</button><button type="submit" disabled={salvando}>{salvando ? "Salvando..." : "Salvar na biblioteca"}</button></footer></form></div>}
-    {fichaAberta && <div className="ficha-mesa-fundo" onMouseDown={(e) => e.target === e.currentTarget && setFichaAberta(null)}><section className={`ficha-mesa-resumo ${mestre ? "plano-a" : ""}`}><header><div><span>Ficha integrada</span><h2>{fichaAberta.personagem?.nome || fichaAberta.membro.nome}</h2></div><button onClick={() => setFichaAberta(null)}><Icon path={mdiClose} size={.85} /></button></header>{fichaAberta.personagem ? <><div className="ficha-mesa-identidade">{fichaAberta.personagem.fotoPerfil ? <img src={fichaAberta.personagem.fotoPerfil} alt="" /> : <span>{fichaAberta.personagem.nome?.slice(0, 2)}</span>}<div><strong>{fichaAberta.personagem.classe || "Sem classe"}</strong><small>Nivel {fichaAberta.personagem.nivel || 1}</small></div></div><div className="ficha-mesa-recursos">{[["Sanidade", fichaAberta.personagem.sanidade], ["Esperanca", fichaAberta.personagem.esperanca], ["Integridade", calcularIntegridade(fichaAberta.personagem)]].map(([nome, recurso]) => <div key={nome}><span>{nome}</span><strong>{recurso?.atual ?? 0}{recurso?.max ? ` / ${recurso.max}` : ""}</strong>{recurso?.max > 0 && <i><em style={{ width: `${percentualRecurso(recurso)}%` }} /></i>}</div>)}</div>{mestre && <div className="ficha-mesa-detalhes"><section><h3>Atributos</h3><div className="ficha-mesa-atributos">{Object.entries(personagemFichaAberta.atributos || {}).map(([nome, valor]) => <div key={nome}><span>{nome}</span><b>{typeof valor === "object" ? valor.valor ?? 0 : valor}</b></div>)}</div></section><section><h3>Habilidades</h3>{habilidadesFichaAberta.length ? habilidadesFichaAberta.map((item) => <article key={`${item.grupo}-${item.id}`}><strong>{item.nome}</strong><small>{item.grupo}{item.especialidade ? ` · ${item.especialidade}` : ""}</small><p>{item.descricao || item.efeito || "Sem descricao."}</p></article>) : <p>Nenhuma habilidade selecionada.</p>}</section><section><h3>Passivos</h3>{passivosFichaAberta.length ? passivosFichaAberta.map(([nome, valor]) => <div className="ficha-mesa-passivo" key={nome}><span>{nome.replace(/([A-Z])/g, " $1")}</span><b>{valor}</b></div>) : <p>Nenhum passivo adquirido.</p>}</section><section><h3>Rituais e ativos</h3>{personagemFichaAberta.rituais?.length ? personagemFichaAberta.rituais.map((item, index) => <article key={item.id || index}><strong>{item.nome || `Ritual ${index + 1}`}</strong><p>{item.descricao || item.efeito || "Sem descricao."}</p></article>) : <p>Nenhum ritual ou ativo registrado.</p>}</section></div>}</> : <p className="ficha-mesa-indisponivel">A ficha nao foi encontrada no backend.</p>}<footer><a href={`/?ficha=${encodeURIComponent(fichaAberta.membro.ficha_id)}`}><Icon path={mdiOpenInNew} size={.72} />Abrir ficha completa</a>{mestre && <button onClick={() => removerFicha(fichaAberta.membro.ficha_id)}><Icon path={mdiDeleteOutline} size={.72} />Remover da mesa</button>}</footer></section></div>}
-    {!mestre && fichaAberta?.membro?.ficha_id && <div className="ficha-completa-mesa" role="dialog" aria-label={`Ficha de ${fichaAberta.personagem?.nome || fichaAberta.membro.nome}`}><header><div><span>Ficha no tabletop</span><strong>{fichaAberta.personagem?.nome || fichaAberta.membro.nome}</strong></div><button onClick={() => setFichaAberta(null)} title="Fechar ficha"><Icon path={mdiClose} size={.9} /></button></header><iframe title={`Ficha de ${fichaAberta.personagem?.nome || fichaAberta.membro.nome}`} src={`/?ficha=${encodeURIComponent(fichaAberta.personagem?.nome || fichaAberta.membro.ficha_id)}&senha=${encodeURIComponent(fichaAberta.membro.ficha_id)}&embed=mesa`} /></div>}
+    {editorAberto && <div className="cena-editor-fundo" onMouseDown={(event) => event.target === event.currentTarget && setEditorAberto(false)}>
+      <form className="cena-editor" onSubmit={confirmarCena}>
+        <header><div><span>Biblioteca</span><h2>{editando.id ? "Editar cena" : "Nova cena"}</h2></div><button type="button" onClick={() => setEditorAberto(false)}><Icon path={mdiClose} size={.85} /></button></header>
+        <label>Nome<input required value={editando.nome || ""} onChange={(e) => setEditando({ ...editando, nome: e.target.value })} /></label>
+        <label>Descricao<textarea rows="3" value={editando.descricao || ""} onChange={(e) => setEditando({ ...editando, descricao: e.target.value })} /></label>
+        <div className="cena-editor-midias">
+          <label>Imagens da cena · max. 2 MB cada<input type="file" multiple accept="image/webp,image/jpeg,image/png,image/avif" onChange={(e) => selecionarArquivosCena("cena", e.target.files, e.target)} /><small>Selecione uma ou varias imagens.</small></label>
+          <label>Mapas de batalha · max. 5 MB cada<input type="file" multiple accept="image/webp,image/jpeg,image/png,image/avif" onChange={(e) => selecionarArquivosCena("mapa", e.target.files, e.target)} /><small>Selecione um ou varios mapas.</small></label>
+        </div>
+        {(editando.imagensCena?.length > 0 || arquivos.cena.length > 0) && <div className="cena-editor-lista-midias">
+          <strong>Imagens estaticas ({(editando.imagensCena?.length || 0) + arquivos.cena.length})</strong>
+          {(editando.imagensCena || []).map((midia, indice) => <div className="cena-editor-midia-item" key={midia.id}><span>{midia.nome || `Cena ${indice + 1}`}</span><button type="button" onClick={() => removerMidiaExistente("cena", midia.id)} title="Remover imagem"><Icon path={mdiDeleteOutline} size={.68} /></button></div>)}
+          {arquivos.cena.map((item) => <div className="cena-editor-midia-item" key={item.id}><span>{item.nome} <small>novo</small></span><button type="button" onClick={() => removerArquivoPendente("cena", item.id)} title="Remover imagem"><Icon path={mdiDeleteOutline} size={.68} /></button></div>)}
+        </div>}
+        {(editando.mapasBatalha?.length > 0 || arquivos.mapa.length > 0) && <div className="cena-editor-lista-midias">
+          <strong>Mapas de batalha ({(editando.mapasBatalha?.length || 0) + arquivos.mapa.length})</strong>
+          {(editando.mapasBatalha || []).map((midia, indice) => <div className="cena-editor-midia-item cena-editor-mapa-item" key={midia.id}><span>{midia.nome || `Mapa ${indice + 1}`}</span><label>Colunas<input type="number" min="1" max="100" value={midia.larguraGrade || 12} onChange={(e) => atualizarMapaExistente(midia.id, "larguraGrade", e.target.value)} /></label><label>Linhas<input type="number" min="1" max="100" value={midia.alturaGrade || 8} onChange={(e) => atualizarMapaExistente(midia.id, "alturaGrade", e.target.value)} /></label><button type="button" onClick={() => removerMidiaExistente("mapa", midia.id)} title="Remover mapa"><Icon path={mdiDeleteOutline} size={.68} /></button></div>)}
+          {arquivos.mapa.map((item) => <div className="cena-editor-midia-item cena-editor-mapa-item" key={item.id}><span>{item.nome} <small>novo</small></span><label>Colunas<input type="number" min="1" max="100" value={item.larguraGrade} onChange={(e) => atualizarMapaPendente(item.id, "larguraGrade", e.target.value)} /></label><label>Linhas<input type="number" min="1" max="100" value={item.alturaGrade} onChange={(e) => atualizarMapaPendente(item.id, "alturaGrade", e.target.value)} /></label><button type="button" onClick={() => removerArquivoPendente("mapa", item.id)} title="Remover mapa"><Icon path={mdiDeleteOutline} size={.68} /></button></div>)}
+        </div>}
+        <details><summary>Usar URLs em vez de arquivos</summary><label>URL da cena<input value={editando.imagemUrl || ""} onChange={(e) => setEditando({ ...editando, imagemUrl: e.target.value })} /></label><label>URL do mapa<input value={editando.mapaUrl || ""} onChange={(e) => setEditando({ ...editando, mapaUrl: e.target.value })} /></label><small>As URLs sao usadas como midia principal apenas quando nao houver arquivos cadastrados daquele tipo.</small></details>
+        <div className="cena-editor-grade"><label>Colunas padrao<input type="number" min="1" max="100" value={editando.larguraGrade} onChange={(e) => setEditando({ ...editando, larguraGrade: e.target.value })} /></label><label>Linhas padrao<input type="number" min="1" max="100" value={editando.alturaGrade} onChange={(e) => setEditando({ ...editando, alturaGrade: e.target.value })} /></label></div>
+        {erro && <p className="cena-editor-erro">{erro}</p>}
+        <footer><button type="button" onClick={() => setEditorAberto(false)}>Cancelar</button><button type="submit" disabled={salvando}>{salvando ? "Salvando..." : "Salvar na biblioteca"}</button></footer>
+      </form>
+    </div>}
   </main>;
 };
 export default Mesa;

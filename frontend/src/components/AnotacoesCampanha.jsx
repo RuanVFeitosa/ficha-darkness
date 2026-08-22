@@ -72,12 +72,35 @@ const AnotacoesCampanha = ({ campanhaId }) => {
 
   const criar = () => setDialogo({ tipo: "nota", titulo: "Nova anotacao", valor: ativa?.pasta || grupos[0]?.[0] || "Notas" });
   const confirmarCriacaoNota = async (pasta) => {
+    const pastaNormalizada = String(pasta || "Notas").trim() || "Notas";
+
+    // A anotacao precisa ser a operacao principal. Antes, a criacao da pasta
+    // acontecia primeiro e qualquer falha de permissao/tabela no Supabase
+    // impedia completamente a criacao da nota no site publicado.
     if (ativa?.id) await salvarAnotacao(campanhaId, ativa);
-    if (!pastas.some((item) => item.nome.toLowerCase() === pasta.toLowerCase())) {
-      const pastaCriada = await criarPastaAnotacoes(campanhaId, pasta); setPastas((atuais) => [...atuais, pastaCriada]);
+
+    const criada = await salvarAnotacao(campanhaId, novaNota(pastaNormalizada));
+    setNotas((atuais) => [criada, ...atuais.filter((item) => item.id !== criada.id)]);
+    ignorarPrimeiro.current = true;
+    setAtiva(criada);
+    setModoLeitura(false);
+    setAbaAtiva("anotacao");
+
+    if (!pastas.some((item) => item.nome.toLowerCase() === pastaNormalizada.toLowerCase())) {
+      try {
+        const pastaCriada = await criarPastaAnotacoes(campanhaId, pastaNormalizada);
+        setPastas((atuais) => atuais.some((item) => item.id === pastaCriada.id || item.nome.toLowerCase() === pastaCriada.nome.toLowerCase())
+          ? atuais
+          : [...atuais, pastaCriada]);
+      } catch (erroPasta) {
+        // A nota ja foi salva. Mantemos uma pasta virtual na interface para
+        // que uma falha isolada na tabela de pastas nao bloqueie o editor.
+        console.warn("Anotacao criada, mas a pasta nao pôde ser persistida.", erroPasta);
+        setPastas((atuais) => atuais.some((item) => item.nome.toLowerCase() === pastaNormalizada.toLowerCase())
+          ? atuais
+          : [...atuais, { id: `virtual-${pastaNormalizada}`, nome: pastaNormalizada }]);
+      }
     }
-    const criada = await salvarAnotacao(campanhaId, novaNota(pasta));
-    setNotas((atuais) => [criada, ...atuais]); ignorarPrimeiro.current = true; setAtiva(criada); setModoLeitura(false);
   };
   const criarPasta = () => setDialogo({ tipo: "pasta", titulo: "Nova pasta", valor: "" });
   const renomearPasta = (nomeAtual) => setDialogo({ tipo: "renomear", titulo: "Renomear pasta", valor: nomeAtual, nomeAtual });
