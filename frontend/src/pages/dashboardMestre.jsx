@@ -1,4 +1,11 @@
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import Icon from "@mdi/react";
 import {
@@ -87,7 +94,11 @@ const membrosProtegidosPelaDefesa = (item = {}) => {
   }
   if (area.includes("cabeca") || area.includes("face")) return ["cabeca"];
   if (area.includes("torso")) return ["torso"];
-  if (area.includes("braco") || area.includes("mao") || area.includes("empunh")) {
+  if (
+    area.includes("braco") ||
+    area.includes("mao") ||
+    area.includes("empunh")
+  ) {
     return ["bracoDireito", "bracoEsquerdo"];
   }
   if (area.includes("perna") || area.includes("pes")) {
@@ -131,7 +142,10 @@ const reaplicarMelhoriasDaArma = (armaStatus, melhoriaArma = {}) => {
     for (let index = 0; index < quantidade; index += 1) {
       const bonus = resultado.match(/([+-]\d+)/);
       if (bonus) {
-        resultado = resultado.replace(/([+-]\d+)/, `${parseInt(bonus[1], 10) + 1}`);
+        resultado = resultado.replace(
+          /([+-]\d+)/,
+          `${parseInt(bonus[1], 10) + 1}`,
+        );
       } else {
         resultado = resultado
           ? `${resultado}${resultado.includes("|") ? " " : " | "}+1`
@@ -143,18 +157,27 @@ const reaplicarMelhoriasDaArma = (armaStatus, melhoriaArma = {}) => {
 
   const precisaoExtra = nivel("precisao");
   if (precisaoExtra > 0) {
-    status.precision = incrementarTexto(status.precision, precisaoExtra, "Percepção");
+    status.precision = incrementarTexto(
+      status.precision,
+      precisaoExtra,
+      "Percepção",
+    );
   }
 
   const controleExtra = nivel("controle");
   if (controleExtra > 0) {
-    status.control = incrementarTexto(status.control, controleExtra, "Persistência");
+    status.control = incrementarTexto(
+      status.control,
+      controleExtra,
+      "Persistência",
+    );
   }
 
   const velocidadeExtra = nivel("velocidade");
   if (velocidadeExtra > 0) {
     const mobilidade = String(status.mobility || "").trim();
-    const alvoAtual = parseInt(mobilidade.match(/(\d+)\s*alvos?/i)?.[1], 10) || 1;
+    const alvoAtual =
+      parseInt(mobilidade.match(/(\d+)\s*alvos?/i)?.[1], 10) || 1;
     const prefixo = mobilidade.includes("|")
       ? mobilidade.split("|")[0].trim() || "Firmeza"
       : "Firmeza";
@@ -184,7 +207,10 @@ const aplicarAprimoramentosNoStatus = (armaStatus, modificacoes = []) => {
     const texto = String(valor || "").trim();
     const dadosExtras = texto.match(/^(\d+)d$/i);
     if (dadosExtras) {
-      quantidade = Math.max(1, Math.min(12, quantidade + Number(dadosExtras[1]) * direcao));
+      quantidade = Math.max(
+        1,
+        Math.min(12, quantidade + Number(dadosExtras[1]) * direcao),
+      );
       return;
     }
 
@@ -626,7 +652,8 @@ const DashboardMestre = () => {
   const [tipoHabilidadeEditor, setTipoHabilidadeEditor] = useState("absolutas");
   const [especialidadeEditorId, setEspecialidadeEditorId] = useState("");
   const [habilidadeEditando, setHabilidadeEditando] = useState(null);
-  const [habilidadeEditandoCardId, setHabilidadeEditandoCardId] = useState(null);
+  const [habilidadeEditandoCardId, setHabilidadeEditandoCardId] =
+    useState(null);
   const [habilidadeEditandoDados, setHabilidadeEditandoDados] = useState(null);
   const [mostrarFormHabilidade, setMostrarFormHabilidade] = useState(false);
 
@@ -652,11 +679,12 @@ const DashboardMestre = () => {
 
   const STORAGE_NPCS = "darkness_npcs";
 
-  const [subAbaFichas, setSubAbaFichas] = useState("jogadores");
+  const [subAbaNpcs, setSubAbaNpcs] = useState("inimigos");
   const [npcs, setNpcs] = useState([]);
   const [npcEditando, setNpcEditando] = useState(null);
   const [pastasNpcs, setPastasNpcs] = useState([]);
   const [pastaNpcsAtiva, setPastaNpcsAtiva] = useState("todas");
+  
 
   const [rolagensMestre, setRolagensMestre] = useState([]);
   const [painelRolagensAberto, setPainelRolagensAberto] = useState(true);
@@ -787,6 +815,17 @@ const DashboardMestre = () => {
       );
     }
   };
+
+  const fichasJogadores = useMemo(
+    () =>
+      fichas.filter((ficha) => {
+        const personagem = ficha.personagem || ficha;
+
+        return personagem.tipo !== "npc";
+      }),
+    [fichas],
+  );
+
 
   const abrirPopup = ({
     tipo = "info",
@@ -1152,9 +1191,8 @@ const DashboardMestre = () => {
                 : []),
             ]
           : DEFAULT_CATALOGO_LOJA.map(normalizarItemLoja);
-      const catalogoNormalizado = aplicarDefesasAtualizadas(catalogoBase).map(
-        normalizarItemLoja,
-      );
+      const catalogoNormalizado =
+        aplicarDefesasAtualizadas(catalogoBase).map(normalizarItemLoja);
 
       const arvoresLocais = carregarArvoresCustom();
       const arvoresCompartilhadas =
@@ -1250,20 +1288,49 @@ const DashboardMestre = () => {
   }, []);
 
   useEffect(() => {
-    try { setPastasInimigos(JSON.parse(localStorage.getItem("darkness_pastas_inimigos")) || []); } catch { setPastasInimigos([]); }
-    try { setPastasNpcs(JSON.parse(localStorage.getItem("darkness_pastas_npcs")) || []); } catch { setPastasNpcs([]); }
+    try {
+      setPastasInimigos(
+        JSON.parse(localStorage.getItem("darkness_pastas_inimigos")) || [],
+      );
+    } catch {
+      setPastasInimigos([]);
+    }
+    try {
+      setPastasNpcs(
+        JSON.parse(localStorage.getItem("darkness_pastas_npcs")) || [],
+      );
+    } catch {
+      setPastasNpcs([]);
+    }
   }, []);
 
   const criarPastaCatalogo = (tipo) => {
-    const nome = window.prompt(`Nome da pasta de ${tipo === "npc" ? "NPCs" : "inimigos"}:`)?.trim();
+    const nome = window
+      .prompt(`Nome da pasta de ${tipo === "npc" ? "NPCs" : "inimigos"}:`)
+      ?.trim();
     if (!nome) return;
     const atuais = tipo === "npc" ? pastasNpcs : pastasInimigos;
-    if (atuais.some((pasta) => pasta.toLocaleLowerCase("pt-BR") === nome.toLocaleLowerCase("pt-BR"))) return;
+    if (
+      atuais.some(
+        (pasta) =>
+          pasta.toLocaleLowerCase("pt-BR") === nome.toLocaleLowerCase("pt-BR"),
+      )
+    )
+      return;
     const novas = [...atuais, nome].sort((a, b) => a.localeCompare(b, "pt-BR"));
-    localStorage.setItem(tipo === "npc" ? "darkness_pastas_npcs" : "darkness_pastas_inimigos", JSON.stringify(novas));
-    if (tipo === "npc") { setPastasNpcs(novas); setPastaNpcsAtiva(nome); }
-    else { setPastasInimigos(novas); setPastaInimigosAtiva(nome); }
+    localStorage.setItem(
+      tipo === "npc" ? "darkness_pastas_npcs" : "darkness_pastas_inimigos",
+      JSON.stringify(novas),
+    );
+    if (tipo === "npc") {
+      setPastasNpcs(novas);
+      setPastaNpcsAtiva(nome);
+    } else {
+      setPastasInimigos(novas);
+      setPastaInimigosAtiva(nome);
+    }
   };
+
 
   useEffect(() => {
     if (!fichaSelecionada) return;
@@ -2133,28 +2200,28 @@ const DashboardMestre = () => {
         } catch {}
       }
 
-    const personagemFinal = {
-      ...fichaMaisRecente,
-      ...personagemAtualizado,
-    };
+      const personagemFinal = {
+        ...fichaMaisRecente,
+        ...personagemAtualizado,
+      };
 
-    if (!personagemFinal.marcas) personagemFinal.marcas = [];
+      if (!personagemFinal.marcas) personagemFinal.marcas = [];
 
-    salvarFichaLocal(idParaSalvar, personagemFinal);
-    notificarPersonagemAtualizado(idParaSalvar, personagemFinal);
+      salvarFichaLocal(idParaSalvar, personagemFinal);
+      notificarPersonagemAtualizado(idParaSalvar, personagemFinal);
 
-    // Atualiza o personagem apenas se o ID corresponder ao atualmente selecionado
-    if (idParaSalvar === fichaSelecionada) {
-      setPersonagem(personagemFinal);
-    }
+      // Atualiza o personagem apenas se o ID corresponder ao atualmente selecionado
+      if (idParaSalvar === fichaSelecionada) {
+        setPersonagem(personagemFinal);
+      }
 
-    setFichas((atuais) =>
-      atuais.map((ficha) =>
-        ficha.fichaId === idParaSalvar
-          ? { ...ficha, personagem: personagemFinal }
-          : ficha,
-      ),
-    );
+      setFichas((atuais) =>
+        atuais.map((ficha) =>
+          ficha.fichaId === idParaSalvar
+            ? { ...ficha, personagem: personagemFinal }
+            : ficha,
+        ),
+      );
 
       const personagemSalvo = await salvarPersonagem(
         idParaSalvar,
@@ -2311,7 +2378,10 @@ const DashboardMestre = () => {
         const membrosProtegidos = item.membrosProtegidos?.length
           ? item.membrosProtegidos
           : membrosProtegidosPelaDefesa(item);
-        return ehDefesa && membrosAlvo.some((membro) => membrosProtegidos.includes(membro));
+        return (
+          ehDefesa &&
+          membrosAlvo.some((membro) => membrosProtegidos.includes(membro))
+        );
       });
 
       if (defesaConflitante) {
@@ -2368,7 +2438,9 @@ const DashboardMestre = () => {
       .map((resistencia) => resistencia.trim())
       .filter(Boolean);
     const resistenciasAtualizadas = itemCatalogo.resistencia
-      ? [...new Set([...resistenciasAtuais, itemCatalogo.resistencia])].join(" | ")
+      ? [...new Set([...resistenciasAtuais, itemCatalogo.resistencia])].join(
+          " | ",
+        )
       : personagem.resistencias || "";
     const atualizado = {
       ...personagem,
@@ -2398,8 +2470,7 @@ const DashboardMestre = () => {
             ...(bonusDefesaEntregue > 0 || itemCatalogo.resistencia
               ? {
                   bonusDefesa:
-                    (Number(personagem.bonusDefesa) || 0) +
-                    bonusDefesaEntregue,
+                    (Number(personagem.bonusDefesa) || 0) + bonusDefesaEntregue,
                   resistencias: resistenciasAtualizadas,
                   resistenciasDano: [
                     ...(personagem.resistenciasDano || []),
@@ -2774,7 +2845,8 @@ const DashboardMestre = () => {
         let personagemAtual = ficha.personagem;
 
         try {
-          personagemAtual = (await buscarPersonagem(ficha.fichaId)) || personagemAtual;
+          personagemAtual =
+            (await buscarPersonagem(ficha.fichaId)) || personagemAtual;
         } catch {
           // Sem backend, a cópia carregada no dashboard continua sendo usada.
         }
@@ -2838,7 +2910,9 @@ const DashboardMestre = () => {
       }),
     );
 
-    setFichas(resultados.map(({ ficha, personagem }) => ({ ...ficha, personagem })));
+    setFichas(
+      resultados.map(({ ficha, personagem }) => ({ ...ficha, personagem })),
+    );
 
     const fichaAtualizada = resultados.find(
       ({ ficha, alterada }) => alterada && ficha.fichaId === fichaSelecionada,
@@ -2906,8 +2980,7 @@ const DashboardMestre = () => {
       ...itemLojaVazio,
       categoria: abaLojaEditor,
       nivelRito: abaLojaEditor === "ritos" ? nivelRitoDashboard : "iniciante",
-      tipoArma:
-        abaLojaEditor === "municoes-especiais" ? tipoMunicaoEditor : "",
+      tipoArma: abaLojaEditor === "municoes-especiais" ? tipoMunicaoEditor : "",
       subtipo: "nenhum",
     });
     setMostrarFormNovoItem(false);
@@ -2962,7 +3035,9 @@ const DashboardMestre = () => {
       const jaSelecionada = atuais.some((item) => item.id === modificacao.id);
 
       if (jaSelecionada) {
-        const modificacoesArma = atuais.filter((item) => item.id !== modificacao.id);
+        const modificacoesArma = atuais.filter(
+          (item) => item.id !== modificacao.id,
+        );
         return {
           ...atual,
           modificacoesArma,
@@ -3104,9 +3179,7 @@ const DashboardMestre = () => {
           ? String(novoItemLoja.resistencia || "").trim()
           : "",
       resistenciasDano:
-        abaLojaEditor === "defesas"
-          ? novoItemLoja.resistenciasDano || []
-          : [],
+        abaLojaEditor === "defesas" ? novoItemLoja.resistenciasDano || [] : [],
       tipoArma:
         abaLojaEditor === "municoes-especiais"
           ? String(novoItemLoja.tipoArma || "").trim()
@@ -3496,32 +3569,10 @@ const DashboardMestre = () => {
           {aba === "campanha" && <CampanhaDashboard />}
           {aba === "fichas" && (
             <section className="mestre-dashboard-full">
-              <div className="mestre-subtabs">
-                <button
-                  type="button"
-                  className={subAbaFichas === "jogadores" ? "ativa" : ""}
-                  onClick={() => setSubAbaFichas("jogadores")}
-                >
-                  Jogadores
-                </button>
 
-                <button
-                  type="button"
-                  className={subAbaFichas === "npcs" ? "ativa" : ""}
-                  onClick={() => setSubAbaFichas("npcs")}
-                >
-                  NPCs
-                </button>
-
-                {subAbaFichas === "npcs" && (
-                  <><button type="button" onClick={() => criarPastaCatalogo("npc")}>Nova pasta</button><button type="button" onClick={criarNovoNpc}>Criar NPC</button></>
-                )}
-              </div>
-
-              {subAbaFichas === "jogadores" && (
-                <div className="mestre-dashboard-cards">
-                  {fichas.length > 0 ? (
-                    fichas.map((ficha) => (
+              <div className="mestre-dashboard-cards">
+                  {fichasJogadores.length > 0 ? (
+                    fichasJogadores.map((ficha) => (
                       <DashboardFichaCard
                         key={ficha.fichaId || ficha.id}
                         ficha={ficha}
@@ -3535,24 +3586,6 @@ const DashboardMestre = () => {
                     </div>
                   )}
                 </div>
-              )}
-
-              {subAbaFichas === "npcs" && (
-                <><div className="mestre-pastas-catalogo"><button className={pastaNpcsAtiva === "todas" ? "ativa" : ""} onClick={() => setPastaNpcsAtiva("todas")}>Todos <b>{npcs.length}</b></button>{pastasNpcs.map((pasta) => <button key={pasta} className={pastaNpcsAtiva === pasta ? "ativa" : ""} onClick={() => setPastaNpcsAtiva(pasta)}>{pasta} <b>{npcs.filter((npc) => npc.pasta === pasta).length}</b></button>)}<button className={pastaNpcsAtiva === "sem-pasta" ? "ativa" : ""} onClick={() => setPastaNpcsAtiva("sem-pasta")}>Sem pasta</button></div><div className="mestre-dashboard-cards">
-                  {npcs.length > 0 ? (
-                    npcs.filter((npc) => pastaNpcsAtiva === "todas" || (pastaNpcsAtiva === "sem-pasta" ? !npc.pasta : npc.pasta === pastaNpcsAtiva)).map((npc) => (
-                      <DashboardFichaCard
-                        key={npc.fichaId || npc.id}
-                        ficha={npc}
-                        tipo="npc"
-                        onAbrir={abrirCardFicha}
-                      />
-                    ))
-                  ) : (
-                    <div className="mestre-vazio">Nenhum NPC criado.</div>
-                  )}
-                </div></>
-              )}
 
               {modalFichaAberto && personagem && (
                 <div
@@ -3918,9 +3951,14 @@ const DashboardMestre = () => {
                         <div>
                           <span>Entrega do catálogo</span>
                           <h3>Entregar item ao jogador</h3>
-                          <p>Escolha uma categoria, selecione o item e confirme a entrega.</p>
+                          <p>
+                            Escolha uma categoria, selecione o item e confirme a
+                            entrega.
+                          </p>
                         </div>
-                        <strong>{catalogoFiltrado.length} disponível(is)</strong>
+                        <strong>
+                          {catalogoFiltrado.length} disponível(is)
+                        </strong>
                       </div>
 
                       <div className="mestre-entrega-filtro">
@@ -3959,7 +3997,8 @@ const DashboardMestre = () => {
                               <div className="mestre-entrega-card-topo">
                                 <span className="mestre-entrega-card-categoria">
                                   {categoriasFiltroLoja.find(
-                                    (categoria) => categoria.id === item.categoria,
+                                    (categoria) =>
+                                      categoria.id === item.categoria,
                                   )?.nome || item.categoria}
                                 </span>
                                 <span className="mestre-entrega-card-preco">
@@ -3967,14 +4006,26 @@ const DashboardMestre = () => {
                                 </span>
                               </div>
                               <strong>{item.nome}</strong>
-                              <small>{item.detalhe || item.entrega || "Sem descrição."}</small>
+                              <small>
+                                {item.detalhe ||
+                                  item.entrega ||
+                                  "Sem descrição."}
+                              </small>
                               <div className="mestre-entrega-card-dados">
-                                {item.armaStatus?.dmg && <span>DMG {item.armaStatus.dmg}</span>}
-                                {item.defesaBonus > 0 && <span>DEF +{item.defesaBonus}</span>}
-                                {item.resistenciasDano?.[0]?.reducao > 0 && (
-                                  <span>RD {item.resistenciasDano[0].reducao}</span>
+                                {item.armaStatus?.dmg && (
+                                  <span>DMG {item.armaStatus.dmg}</span>
                                 )}
-                                {item.bonusDano && <span>+ {item.bonusDano}</span>}
+                                {item.defesaBonus > 0 && (
+                                  <span>DEF +{item.defesaBonus}</span>
+                                )}
+                                {item.resistenciasDano?.[0]?.reducao > 0 && (
+                                  <span>
+                                    RD {item.resistenciasDano[0].reducao}
+                                  </span>
+                                )}
+                                {item.bonusDano && (
+                                  <span>+ {item.bonusDano}</span>
+                                )}
                               </div>
                               <em>
                                 {itemLojaSelecionadoId === item.id
@@ -3991,12 +4042,14 @@ const DashboardMestre = () => {
                           <span>Categoria ativa</span>
                           <strong>
                             {categoriasFiltroLoja.find(
-                              (categoria) => categoria.id === categoriaLojaAtiva,
+                              (categoria) =>
+                                categoria.id === categoriaLojaAtiva,
                             )?.nome || "Armas de Fogo"}
                           </strong>
                           <small>
-                            {catalogo.find((item) => item.id === itemLojaSelecionadoId)?.nome ||
-                              "Nenhum item selecionado"}
+                            {catalogo.find(
+                              (item) => item.id === itemLojaSelecionadoId,
+                            )?.nome || "Nenhum item selecionado"}
                           </small>
                         </div>
                         <button
@@ -4056,542 +4109,815 @@ const DashboardMestre = () => {
                   </section>
                 </div>
               )}
-              {npcEditando && (
-                <div
-                  className="mestre-modal-overlay"
-                  onClick={() => setNpcEditando(null)}
-                >
-                  <section
-                    className="mestre-modal-ficha minimalista"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {(() => {
-                      const npc = npcs.find((item) => item.id === npcEditando);
-
-                      if (!npc) return null;
-
-                      const atualizarCampoNpc = (campo, valor) => {
-                        atualizarNpc(npc.id, {
-                          [campo]: valor,
-                        });
-                      };
-
-                      const atualizarGrupoNpc = (grupo, chave, valor) => {
-                        atualizarNpc(npc.id, {
-                          [grupo]: {
-                            ...(npc[grupo] || {}),
-                            [chave]: parseInt(valor, 10) || 0,
-                          },
-                        });
-                      };
-
-                      const atualizarMembroNpc = (membro, campo, valor) => {
-                        atualizarNpc(npc.id, {
-                          membros: {
-                            ...(npc.membros || {}),
-                            [membro]: {
-                              ...(npc.membros?.[membro] || {}),
-                              [campo]: Math.max(0, parseInt(valor, 10) || 0),
-                            },
-                          },
-                        });
-                      };
-
-                      const adicionarAtaqueNpc = () => {
-                        atualizarNpc(npc.id, {
-                          ataques: [
-                            ...(npc.ataques || []),
-                            {
-                              id: crypto.randomUUID(),
-                              nome: "Novo Ataque",
-                              dano: "",
-                              descricao: "",
-                            },
-                          ],
-                        });
-                      };
-
-                      const atualizarAtaqueNpc = (ataqueId, campo, valor) => {
-                        atualizarNpc(npc.id, {
-                          ataques: (npc.ataques || []).map((ataque) =>
-                            ataque.id === ataqueId
-                              ? {
-                                  ...ataque,
-                                  [campo]: valor,
-                                }
-                              : ataque,
-                          ),
-                        });
-                      };
-
-                      const removerAtaqueNpc = (ataqueId) => {
-                        atualizarNpc(npc.id, {
-                          ataques: (npc.ataques || []).filter(
-                            (ataque) => ataque.id !== ataqueId,
-                          ),
-                        });
-                      };
-
-                      const adicionarHabilidadeNpc = () => {
-                        atualizarNpc(npc.id, {
-                          habilidades: [
-                            ...(npc.habilidades || []),
-                            {
-                              id: crypto.randomUUID(),
-                              nome: "Nova Habilidade",
-                              descricao: "",
-                            },
-                          ],
-                        });
-                      };
-
-                      const atualizarHabilidadeNpc = (
-                        habilidadeId,
-                        campo,
-                        valor,
-                      ) => {
-                        atualizarNpc(npc.id, {
-                          habilidades: (npc.habilidades || []).map(
-                            (habilidade) =>
-                              habilidade.id === habilidadeId
-                                ? {
-                                    ...habilidade,
-                                    [campo]: valor,
-                                  }
-                                : habilidade,
-                          ),
-                        });
-                      };
-
-                      const removerHabilidadeNpc = (habilidadeId) => {
-                        atualizarNpc(npc.id, {
-                          habilidades: (npc.habilidades || []).filter(
-                            (habilidade) => habilidade.id !== habilidadeId,
-                          ),
-                        });
-                      };
-
-                      return (
-                        <>
-                          <header className="inimigo-ficha-header">
-                            <label className="inimigo-foto-editavel">
-                              <img
-                                src={
-                                  npc.fotoPerfil ||
-                                  "https://placehold.co/300x300"
-                                }
-                                alt={npc.nome}
-                              />
-
-                              <span>Editar imagem</span>
-
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={async (event) => {
-                                  const arquivo = event.target.files?.[0];
-
-                                  if (!arquivo) return;
-
-                                  try {
-                                    const fotoComprimida =
-                                      await compressProfileImage(arquivo);
-                                    atualizarCampoNpc(
-                                      "fotoPerfil",
-                                      fotoComprimida,
-                                    );
-                                  } catch (error) {
-                                    setMensagem(
-                                      error.message ||
-                                        "Nao foi possivel carregar a imagem.",
-                                    );
-                                  }
-
-                                  event.target.value = "";
-                                }}
-                              />
-                            </label>
-
-                            <div className="inimigo-identidade">
-                              <label>
-                                NV
-                                <input
-                                  type="number"
-                                  value={npc.nivel || 1}
-                                  onChange={(e) =>
-                                    atualizarCampoNpc(
-                                      "nivel",
-                                      parseInt(e.target.value, 10) || 1,
-                                    )
-                                  }
-                                />
-                              </label>
-
-                              <input
-                                className="inimigo-nome-input"
-                                value={npc.nome || ""}
-                                onChange={(e) =>
-                                  atualizarCampoNpc("nome", e.target.value)
-                                }
-                              />
-                              <select className="catalogo-pasta-select" value={npc.pasta || ""} onChange={(event) => atualizarCampoNpc("pasta", event.target.value)} aria-label="Pasta do NPC"><option value="">Sem pasta</option>{pastasNpcs.map((pasta) => <option key={pasta} value={pasta}>{pasta}</option>)}</select>
-                            </div>
-
-                            <div className="mestre-modal-header-acoes">
-                              <button
-                                className="duplicarButton"
-                                onClick={() => duplicarNpc(npc)}
-                              >
-                                Duplicar
-                              </button>
-
-                              <button
-                                className="mestre-btn-apagar"
-                                onClick={() => excluirNpc(npc.id)}
-                              >
-                                Apagar
-                              </button>
-
-                              <button
-                                className="mestre-modal-fechar"
-                                onClick={() => setNpcEditando(null)}
-                              >
-                                ×
-                              </button>
-                            </div>
-                          </header>
-
-                          <section className="mestre-modal-bloco full">
-                            <span>Atributos</span>
-
-                            <div className="mestre-modal-atributos linha">
-                              {Object.entries(npc.atributos || {}).map(
-                                ([atributo, valor]) => (
-                                  <label key={atributo}>
-                                    {atributo}
-                                    <input
-                                      type="number"
-                                      value={valor || 0}
-                                      onChange={(e) =>
-                                        atualizarGrupoNpc(
-                                          "atributos",
-                                          atributo,
-                                          e.target.value,
-                                        )
-                                      }
-                                    />
-                                  </label>
-                                ),
-                              )}
-                            </div>
-                          </section>
-
-                          <section className="mestre-modal-bloco full">
-                            <span>Sanidade</span>
-
-                            <div className="mestre-duplo">
-                              <label>
-                                Atual
-                                <input
-                                  type="number"
-                                  value={npc.sanidade?.atual || 0}
-                                  onChange={(e) =>
-                                    atualizarCampoNpc("sanidade", {
-                                      ...(npc.sanidade || {}),
-                                      atual: parseInt(e.target.value, 10) || 0,
-                                    })
-                                  }
-                                />
-                              </label>
-
-                              <label>
-                                Máxima
-                                <input
-                                  type="number"
-                                  value={npc.sanidade?.max || 0}
-                                  onChange={(e) =>
-                                    atualizarCampoNpc("sanidade", {
-                                      ...(npc.sanidade || {}),
-                                      max: parseInt(e.target.value, 10) || 0,
-                                    })
-                                  }
-                                />
-                              </label>
-                            </div>
-                          </section>
-
-                          <section className="mestre-modal-bloco full">
-                            <span>Defesa</span>
-
-                            <input
-                              type="number"
-                              value={npc.defesa || 0}
-                              onChange={(e) =>
-                                atualizarCampoNpc(
-                                  "defesa",
-                                  parseInt(e.target.value, 10) || 0,
-                                )
-                              }
-                            />
-                          </section>
-
-                          <section className="mestre-modal-bloco full">
-                            <span>Membros</span>
-
-                            <div className="mestre-corpo-grid">
-                              {membrosFicha.map((membro) => {
-                                const dados = npc.membros?.[membro.chave] || {
-                                  atual: 0,
-                                  max: 0,
-                                  defesa: 0,
-                                };
-
-                                return (
-                                  <div
-                                    key={membro.chave}
-                                    className="mestre-membro"
-                                  >
-                                    <strong>{membro.nome}</strong>
-
-                                    <label>
-                                      Atual
-                                      <input
-                                        type="number"
-                                        value={dados.atual || 0}
-                                        onChange={(e) =>
-                                          atualizarMembroNpc(
-                                            membro.chave,
-                                            "atual",
-                                            e.target.value,
-                                          )
-                                        }
-                                      />
-                                    </label>
-
-                                    <label>
-                                      Máx
-                                      <input
-                                        type="number"
-                                        value={dados.max || 0}
-                                        onChange={(e) =>
-                                          atualizarMembroNpc(
-                                            membro.chave,
-                                            "max",
-                                            e.target.value,
-                                          )
-                                        }
-                                      />
-                                    </label>
-
-                                    <label>
-                                      Def
-                                      <input
-                                        type="number"
-                                        value={dados.defesa || 0}
-                                        onChange={(e) =>
-                                          atualizarMembroNpc(
-                                            membro.chave,
-                                            "defesa",
-                                            e.target.value,
-                                          )
-                                        }
-                                      />
-                                    </label>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </section>
-
-                          <section className="mestre-modal-bloco full">
-                            <div className="mestre-modal-linha-topo">
-                              <span>Ataques</span>
-
-                              <button
-                                type="button"
-                                onClick={adicionarAtaqueNpc}
-                              >
-                                + Ataque
-                              </button>
-                            </div>
-
-                            <div className="mestre-edit-lista">
-                              {(npc.ataques || []).map((ataque) => (
-                                <div key={ataque.id}>
-                                  <input
-                                    value={ataque.nome || ""}
-                                    onChange={(e) =>
-                                      atualizarAtaqueNpc(
-                                        ataque.id,
-                                        "nome",
-                                        e.target.value,
-                                      )
-                                    }
-                                  />
-
-                                  <input
-                                    value={ataque.dano || ""}
-                                    onChange={(e) =>
-                                      atualizarAtaqueNpc(
-                                        ataque.id,
-                                        "dano",
-                                        e.target.value,
-                                      )
-                                    }
-                                  />
-
-                                  <button
-                                    onClick={() => removerAtaqueNpc(ataque.id)}
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          </section>
-
-                          <section className="mestre-modal-bloco full">
-                            <div className="mestre-modal-linha-topo">
-                              <span>Habilidades</span>
-
-                              <button
-                                type="button"
-                                onClick={adicionarHabilidadeNpc}
-                              >
-                                + Habilidade
-                              </button>
-                            </div>
-
-                            <div className="mestre-edit-lista">
-                              {(npc.habilidades || []).map((habilidade) => (
-                                <div key={habilidade.id}>
-                                  <input
-                                    value={habilidade.nome || ""}
-                                    onChange={(e) =>
-                                      atualizarHabilidadeNpc(
-                                        habilidade.id,
-                                        "nome",
-                                        e.target.value,
-                                      )
-                                    }
-                                  />
-
-                                  <input
-                                    value={habilidade.descricao || ""}
-                                    onChange={(e) =>
-                                      atualizarHabilidadeNpc(
-                                        habilidade.id,
-                                        "descricao",
-                                        e.target.value,
-                                      )
-                                    }
-                                  />
-
-                                  <button
-                                    onClick={() =>
-                                      removerHabilidadeNpc(habilidade.id)
-                                    }
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          </section>
-                        </>
-                      );
-                    })()}
-                  </section>
-                </div>
-              )}
             </section>
           )}
 
           {aba === "inimigos" && (
             <section className="mestre-dashboard-full">
               <div className="mestre-modal-linha-topo">
-                <h2>NPCs <small>› Inimigos</small></h2>
+                <h2>
+                  NPCs <small>› {subAbaNpcs === "inimigos" ? "Inimigos" : "NPCs do mestre"}</small>
+                </h2>
 
-                <button
-                  className="criarInimigo-button"
-                  type="button"
-                  onClick={criarNovoInimigo}
-                >
-                  Criar inimigo
-                </button>
-                <button className="criarInimigo-button secundario" type="button" onClick={() => criarPastaCatalogo("inimigo")}>Nova pasta</button>
+                {subAbaNpcs === "inimigos" ? (
+                  <>
+                    <button
+                      className="criarInimigo-button"
+                      type="button"
+                      onClick={criarNovoInimigo}
+                    >
+                      Criar inimigo
+                    </button>
+                    <button
+                      className="criarInimigo-button secundario"
+                      type="button"
+                      onClick={() => criarPastaCatalogo("inimigo")}
+                    >
+                      Nova pasta
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="criarInimigo-button"
+                      type="button"
+                      onClick={criarNovoNpc}
+                    >
+                      Criar NPC
+                    </button>
+                    <button
+                      className="criarInimigo-button secundario"
+                      type="button"
+                      onClick={() => criarPastaCatalogo("npc")}
+                    >
+                      Nova pasta
+                    </button>
+                  </>
+                )}
               </div>
 
-              <div className="mestre-subtabs mestre-npcs-subtabs"><button className="ativa" type="button">Inimigos</button><button type="button" onClick={() => { setAba("fichas"); setSubAbaFichas("npcs"); }}>NPCs do mestre</button></div>
-              <div className="mestre-pastas-catalogo"><button className={pastaInimigosAtiva === "todas" ? "ativa" : ""} onClick={() => setPastaInimigosAtiva("todas")}>Todos <b>{inimigos.length}</b></button>{pastasInimigos.map((pasta) => <button key={pasta} className={pastaInimigosAtiva === pasta ? "ativa" : ""} onClick={() => setPastaInimigosAtiva(pasta)}>{pasta} <b>{inimigos.filter((inimigo) => inimigo.pasta === pasta).length}</b></button>)}<button className={pastaInimigosAtiva === "sem-pasta" ? "ativa" : ""} onClick={() => setPastaInimigosAtiva("sem-pasta")}>Sem pasta</button></div>
+              <div className="mestre-subtabs mestre-npcs-subtabs">
+                <button
+                  type="button"
+                  className={subAbaNpcs === "inimigos" ? "ativa" : ""}
+                  onClick={() => setSubAbaNpcs("inimigos")}
+                >
+                  Inimigos
+                </button>
 
-              <div className="mestre-fichas-com-party">
-                <div className="mestre-dashboard-cards">
-                  {inimigos.filter((inimigo) => pastaInimigosAtiva === "todas" || (pastaInimigosAtiva === "sem-pasta" ? !inimigo.pasta : inimigo.pasta === pastaInimigosAtiva)).map((inimigo) => (
-                    <DashboardFichaCard
-                      key={inimigo.fichaId || inimigo.id}
-                      ficha={inimigo}
-                      tipo="inimigo"
-                      onAbrir={abrirCardFicha}
-                    />
+                <button
+                  type="button"
+                  className={subAbaNpcs === "mestre" ? "ativa" : ""}
+                  onClick={() => setSubAbaNpcs("mestre")}
+                >
+                  NPCs do mestre
+                </button>
+              </div>
+
+              {subAbaNpcs === "inimigos" && (
+                <>
+                <div className="mestre-pastas-catalogo">
+                  <button
+                    className={pastaInimigosAtiva === "todas" ? "ativa" : ""}
+                    onClick={() => setPastaInimigosAtiva("todas")}
+                  >
+                    Todos <b>{inimigos.length}</b>
+                  </button>
+                  {pastasInimigos.map((pasta) => (
+                    <button
+                      key={pasta}
+                      className={pastaInimigosAtiva === pasta ? "ativa" : ""}
+                      onClick={() => setPastaInimigosAtiva(pasta)}
+                    >
+                      {pasta}{" "}
+                      <b>
+                        {
+                          inimigos.filter((inimigo) => inimigo.pasta === pasta)
+                            .length
+                        }
+                      </b>
+                    </button>
                   ))}
+                  <button
+                    className={pastaInimigosAtiva === "sem-pasta" ? "ativa" : ""}
+                    onClick={() => setPastaInimigosAtiva("sem-pasta")}
+                  >
+                    Sem pasta
+                  </button>
                 </div>
-                {inimigoEditando && (
+  
+                <div className="mestre-fichas-com-party">
+                  <div className="mestre-dashboard-cards">
+                    {inimigos
+                      .filter(
+                        (inimigo) =>
+                          pastaInimigosAtiva === "todas" ||
+                          (pastaInimigosAtiva === "sem-pasta"
+                            ? !inimigo.pasta
+                            : inimigo.pasta === pastaInimigosAtiva),
+                      )
+                      .map((inimigo) => (
+                        <DashboardFichaCard
+                          key={inimigo.fichaId || inimigo.id}
+                          ficha={inimigo}
+                          tipo="inimigo"
+                          onAbrir={abrirCardFicha}
+                        />
+                      ))}
+                  </div>
+                  {inimigoEditando && (
+                    <div
+                      className="mestre-modal-overlay"
+                      onClick={() => setInimigoEditando(null)}
+                    >
+                      <section
+                        className="mestre-modal-ficha minimalista mestre-catalogo-modal mestre-catalogo-modal-inimigo"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {(() => {
+                          const inimigo = inimigos.find(
+                            (i) => i.id === inimigoEditando,
+                          );
+  
+                          if (!inimigo) return null;
+  
+                          const atualizarCampoInimigo = (campo, valor) => {
+                            atualizarInimigo(inimigo.id, {
+                              [campo]: valor,
+                            });
+                          };
+  
+                          const atualizarGrupoInimigo = (grupo, chave, valor) => {
+                            atualizarInimigo(inimigo.id, {
+                              [grupo]: {
+                                ...(inimigo[grupo] || {}),
+                                [chave]: parseInt(valor, 10) || 0,
+                              },
+                            });
+                          };
+  
+                          return (
+                            <>
+                              <header className="inimigo-ficha-header">
+                                <label className="inimigo-foto-editavel">
+                                  <img
+                                    src={
+                                      inimigo.fotoPerfil ||
+                                      "https://placehold.co/300x300"
+                                    }
+                                    alt={inimigo.nome}
+                                  />
+  
+                                  <span>Editar imagem</span>
+  
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={async (event) => {
+                                      const arquivo = event.target.files?.[0];
+                                      if (!arquivo) return;
+  
+                                      try {
+                                        const fotoComprimida =
+                                          await compressProfileImage(arquivo);
+                                        atualizarCampoInimigo(
+                                          "fotoPerfil",
+                                          fotoComprimida,
+                                        );
+                                      } catch (error) {
+                                        setMensagem(
+                                          error.message ||
+                                            "Nao foi possivel carregar a imagem.",
+                                        );
+                                      }
+  
+                                      event.target.value = "";
+                                    }}
+                                  />
+                                </label>
+  
+                                <div className="inimigo-identidade">
+                                  <label>
+                                    NV
+                                    <input
+                                      type="number"
+                                      value={inimigo.nivel || 1}
+                                      onChange={(e) =>
+                                        atualizarCampoInimigo(
+                                          "nivel",
+                                          parseInt(e.target.value, 10) || 1,
+                                        )
+                                      }
+                                    />
+                                  </label>
+  
+                                  <input
+                                    className="inimigo-nome-input"
+                                    value={inimigo.nome || ""}
+                                    onChange={(e) =>
+                                      atualizarCampoInimigo(
+                                        "nome",
+                                        e.target.value,
+                                      )
+                                    }
+                                  />
+                                  <select
+                                    className="catalogo-pasta-select"
+                                    value={inimigo.pasta || ""}
+                                    onChange={(event) =>
+                                      atualizarCampoInimigo(
+                                        "pasta",
+                                        event.target.value,
+                                      )
+                                    }
+                                    aria-label="Pasta do inimigo"
+                                  >
+                                    <option value="">Sem pasta</option>
+                                    {pastasInimigos.map((pasta) => (
+                                      <option key={pasta} value={pasta}>
+                                        {pasta}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+  
+                                <div className="mestre-modal-header-acoes">
+                                  <button
+                                    className="duplicarButton"
+                                    onClick={() => duplicarInimigo(inimigo)}
+                                  >
+                                    Duplicar
+                                  </button>
+  
+                                  <button
+                                    className="mestre-btn-apagar"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      excluirInimigo(inimigo.id);
+                                    }}
+                                  >
+                                    Apagar
+                                  </button>
+  
+                                  <button
+                                    className="mestre-modal-fechar"
+                                    onClick={() => setInimigoEditando(null)}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              </header>
+  
+                              <section className="mestre-modal-bloco full">
+                                <span>Atributos</span>
+  
+                                <div className="mestre-modal-atributos linha">
+                                  {Object.entries(inimigo.atributos || {}).map(
+                                    ([atributo, valor]) => (
+                                      <label key={atributo}>
+                                        {atributo}
+  
+                                        <input
+                                          type="number"
+                                          value={valor}
+                                          onChange={(e) =>
+                                            atualizarGrupoInimigo(
+                                              "atributos",
+                                              atributo,
+                                              e.target.value,
+                                            )
+                                          }
+                                        />
+                                      </label>
+                                    ),
+                                  )}
+                                </div>
+                              </section>
+                              {/* SANIDADE */}
+                              <section className="inimigo-ficha-bloco">
+                                <h3>Sanidade</h3>
+  
+                                <div className="mestre-form-grid">
+                                  <label>
+                                    Atual
+                                    <input
+                                      type="number"
+                                      value={inimigo.sanidade?.atual || 0}
+                                      onChange={(e) =>
+                                        atualizarCampoInimigo("sanidade", {
+                                          ...(inimigo.sanidade || {}),
+                                          atual:
+                                            parseInt(e.target.value, 10) || 0,
+                                        })
+                                      }
+                                    />
+                                  </label>
+  
+                                  <label>
+                                    Máxima
+                                    <input
+                                      type="number"
+                                      value={inimigo.sanidade?.max || 0}
+                                      onChange={(e) =>
+                                        atualizarCampoInimigo("sanidade", {
+                                          ...(inimigo.sanidade || {}),
+                                          max: parseInt(e.target.value, 10) || 0,
+                                        })
+                                      }
+                                    />
+                                  </label>
+                                </div>
+                              </section>
+  
+                              {/* DEFESA */}
+                              <section className="inimigo-ficha-bloco">
+                                <h3>Defesa</h3>
+  
+                                <input
+                                  type="number"
+                                  value={inimigo.defesa || 0}
+                                  onChange={(e) =>
+                                    atualizarCampoInimigo(
+                                      "defesa",
+                                      parseInt(e.target.value, 10) || 0,
+                                    )
+                                  }
+                                />
+                              </section>
+  
+                              {/* MEMBROS */}
+                              <section className="inimigo-ficha-bloco">
+                                <h3>Membros</h3>
+  
+                                <div className="mestre-corpo-grid">
+                                  {membrosFicha.map(({ chave, nome }) => {
+                                    const dados = inimigo.membros?.[chave] || {
+                                      atual: 0,
+                                      max: 0,
+                                      defesa: 0,
+                                    };
+  
+                                    const atualizarMembroInimigo = (
+                                      campo,
+                                      valor,
+                                    ) => {
+                                      atualizarCampoInimigo("membros", {
+                                        ...(inimigo.membros || {}),
+                                        [chave]: {
+                                          ...dados,
+                                          [campo]: Math.max(
+                                            0,
+                                            parseInt(valor, 10) || 0,
+                                          ),
+                                        },
+                                      });
+                                    };
+  
+                                    return (
+                                      <div
+                                        key={chave}
+                                        className="mestre-corpo-item"
+                                      >
+                                        <strong>{nome}</strong>
+  
+                                        <label>
+                                          Atual
+                                          <input
+                                            type="number"
+                                            value={dados.atual || 0}
+                                            onChange={(e) =>
+                                              atualizarMembroInimigo(
+                                                "atual",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+  
+                                        <label>
+                                          Máx
+                                          <input
+                                            type="number"
+                                            value={dados.max || 0}
+                                            onChange={(e) =>
+                                              atualizarMembroInimigo(
+                                                "max",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+  
+                                        <label>
+                                          DEF
+                                          <input
+                                            type="number"
+                                            value={dados.defesa || 0}
+                                            onChange={(e) =>
+                                              atualizarMembroInimigo(
+                                                "defesa",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </section>
+  
+                              {/* ATAQUES */}
+                              <section className="inimigo-ficha-bloco">
+                                <div className="inimigo-bloco-topo">
+                                  <h3>Ataques</h3>
+  
+                                  <button
+                                    className="ataqueButton"
+                                    type="button"
+                                    onClick={() =>
+                                      atualizarCampoInimigo("ataques", [
+                                        ...(inimigo.ataques || []),
+                                        {
+                                          nome: "Novo Ataque",
+                                          alcance: "Corpo a Corpo",
+                                          dano: "1d6",
+                                          efeito: "",
+                                        },
+                                      ])
+                                    }
+                                  >
+                                    + Ataque
+                                  </button>
+                                </div>
+  
+                                {(inimigo.ataques || []).map((ataque, index) => (
+                                  <div
+                                    key={index}
+                                    className="inimigo-ataque-card"
+                                  >
+                                    <input
+                                      value={ataque.nome || ""}
+                                      placeholder="Nome do ataque"
+                                      onChange={(e) => {
+                                        const ataques = [
+                                          ...(inimigo.ataques || []),
+                                        ];
+                                        ataques[index] = {
+                                          ...ataque,
+                                          nome: e.target.value,
+                                        };
+                                        atualizarCampoInimigo("ataques", ataques);
+                                      }}
+                                    />
+  
+                                    <input
+                                      value={ataque.alcance || ""}
+                                      placeholder="Alcance"
+                                      onChange={(e) => {
+                                        const ataques = [
+                                          ...(inimigo.ataques || []),
+                                        ];
+                                        ataques[index] = {
+                                          ...ataque,
+                                          alcance: e.target.value,
+                                        };
+                                        atualizarCampoInimigo("ataques", ataques);
+                                      }}
+                                    />
+  
+                                    <input
+                                      value={ataque.dano || ""}
+                                      placeholder="Dano: 2d6 + 3"
+                                      onChange={(e) => {
+                                        const ataques = [
+                                          ...(inimigo.ataques || []),
+                                        ];
+                                        ataques[index] = {
+                                          ...ataque,
+                                          dano: e.target.value,
+                                        };
+                                        atualizarCampoInimigo("ataques", ataques);
+                                      }}
+                                    />
+  
+                                    <textarea
+                                      value={ataque.efeito || ""}
+                                      placeholder="Efeito do ataque"
+                                      onChange={(e) => {
+                                        const ataques = [
+                                          ...(inimigo.ataques || []),
+                                        ];
+                                        ataques[index] = {
+                                          ...ataque,
+                                          efeito: e.target.value,
+                                        };
+                                        atualizarCampoInimigo("ataques", ataques);
+                                      }}
+                                    />
+  
+                                    <button
+                                      type="button"
+                                      className="mestre-btn-apagar"
+                                      onClick={() =>
+                                        atualizarCampoInimigo(
+                                          "ataques",
+                                          (inimigo.ataques || []).filter(
+                                            (_, i) => i !== index,
+                                          ),
+                                        )
+                                      }
+                                    >
+                                      Remover
+                                    </button>
+                                  </div>
+                                ))}
+                              </section>
+  
+                              {/* HABILIDADES */}
+                              <section className="inimigo-ficha-bloco">
+                                <div className="inimigo-bloco-topo">
+                                  <h3>Habilidades</h3>
+  
+                                  <button
+                                    className="habilidadeButton"
+                                    type="button"
+                                    onClick={() =>
+                                      atualizarCampoInimigo("habilidades", [
+                                        ...(inimigo.habilidades || []),
+                                        {
+                                          nome: "Nova Habilidade",
+                                          descricao: "",
+                                        },
+                                      ])
+                                    }
+                                  >
+                                    + Habilidade
+                                  </button>
+                                </div>
+  
+                                {(inimigo.habilidades || []).map(
+                                  (habilidade, index) => (
+                                    <div
+                                      key={index}
+                                      className="inimigo-ataque-card"
+                                    >
+                                      <input
+                                        value={habilidade.nome || ""}
+                                        placeholder="Nome da habilidade"
+                                        onChange={(e) => {
+                                          const habilidades = [
+                                            ...(inimigo.habilidades || []),
+                                          ];
+                                          habilidades[index] = {
+                                            ...habilidade,
+                                            nome: e.target.value,
+                                          };
+                                          atualizarCampoInimigo(
+                                            "habilidades",
+                                            habilidades,
+                                          );
+                                        }}
+                                      />
+  
+                                      <textarea
+                                        value={habilidade.descricao || ""}
+                                        placeholder="Descrição da habilidade"
+                                        onChange={(e) => {
+                                          const habilidades = [
+                                            ...(inimigo.habilidades || []),
+                                          ];
+                                          habilidades[index] = {
+                                            ...habilidade,
+                                            descricao: e.target.value,
+                                          };
+                                          atualizarCampoInimigo(
+                                            "habilidades",
+                                            habilidades,
+                                          );
+                                        }}
+                                      />
+  
+                                      <button
+                                        type="button"
+                                        className="mestre-btn-apagar"
+                                        onClick={() =>
+                                          atualizarCampoInimigo(
+                                            "habilidades",
+                                            (inimigo.habilidades || []).filter(
+                                              (_, i) => i !== index,
+                                            ),
+                                          )
+                                        }
+                                      >
+                                        Remover
+                                      </button>
+                                    </div>
+                                  ),
+                                )}
+                              </section>
+                            </>
+                          );
+                        })()}
+                      </section>
+                    </div>
+                  )}
+                </div>
+                </>
+              )}
+
+              {subAbaNpcs === "mestre" && (
+                <>
+                    <div className="mestre-pastas-catalogo">
+                      <button
+                        className={pastaNpcsAtiva === "todas" ? "ativa" : ""}
+                        onClick={() => setPastaNpcsAtiva("todas")}
+                      >
+  Todos <b>{npcs.length}</b>
+                    </button>
+                      {pastasNpcs.map((pasta) => (
+                        <button
+                          key={pasta}
+                          className={pastaNpcsAtiva === pasta ? "ativa" : ""}
+                          onClick={() => setPastaNpcsAtiva(pasta)}
+                        >
+                          {pasta}{" "}
+                          <b>
+                            {npcs.filter((npc) => npc.pasta === pasta).length}
+                          </b>
+                        </button>
+                      ))}
+                      <button
+                        className={pastaNpcsAtiva === "sem-pasta" ? "ativa" : ""}
+                        onClick={() => setPastaNpcsAtiva("sem-pasta")}
+                      >
+                        Sem pasta
+                      </button>
+                    </div>
+                    <div className="mestre-dashboard-cards">
+                      {npcs.length > 0 ? (
+    npcs
+      .filter(
+        (npc) =>
+          pastaNpcsAtiva === "todas" ||
+          (pastaNpcsAtiva === "sem-pasta"
+            ? !npc.pasta
+            : npc.pasta === pastaNpcsAtiva)
+      )
+      .map((npc) => (
+        <DashboardFichaCard
+          key={npc.fichaId || npc.id}
+          ficha={npc}
+          tipo="npc"
+          onAbrir={abrirCardFicha}
+        />
+      ))
+                      ) : (
+                        <div className="mestre-vazio">Nenhum NPC criado.</div>
+                      )}
+                    </div>
+                {npcEditando && (
                   <div
                     className="mestre-modal-overlay"
-                    onClick={() => setInimigoEditando(null)}
+                    onClick={() => setNpcEditando(null)}
                   >
                     <section
-                      className="mestre-modal-ficha minimalista"
+                      className="mestre-modal-ficha minimalista mestre-catalogo-modal mestre-catalogo-modal-npc"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {(() => {
-                        const inimigo = inimigos.find(
-                          (i) => i.id === inimigoEditando,
-                        );
-
-                        if (!inimigo) return null;
-
-                        const atualizarCampoInimigo = (campo, valor) => {
-                          atualizarInimigo(inimigo.id, {
+                        const npc = npcs.find((item) => item.id === npcEditando);
+  
+                        if (!npc) return null;
+  
+                        const atualizarCampoNpc = (campo, valor) => {
+                          atualizarNpc(npc.id, {
                             [campo]: valor,
                           });
                         };
-
-                        const atualizarGrupoInimigo = (grupo, chave, valor) => {
-                          atualizarInimigo(inimigo.id, {
+  
+                        const atualizarGrupoNpc = (grupo, chave, valor) => {
+                          atualizarNpc(npc.id, {
                             [grupo]: {
-                              ...(inimigo[grupo] || {}),
+                              ...(npc[grupo] || {}),
                               [chave]: parseInt(valor, 10) || 0,
                             },
                           });
                         };
-
+  
+                        const atualizarMembroNpc = (membro, campo, valor) => {
+                          atualizarNpc(npc.id, {
+                            membros: {
+                              ...(npc.membros || {}),
+                              [membro]: {
+                                ...(npc.membros?.[membro] || {}),
+                                [campo]: Math.max(0, parseInt(valor, 10) || 0),
+                              },
+                            },
+                          });
+                        };
+  
+                        const adicionarAtaqueNpc = () => {
+                          atualizarNpc(npc.id, {
+                            ataques: [
+                              ...(npc.ataques || []),
+                              {
+                                id: crypto.randomUUID(),
+                                nome: "Novo Ataque",
+                                dano: "",
+                                descricao: "",
+                              },
+                            ],
+                          });
+                        };
+  
+                        const atualizarAtaqueNpc = (ataqueId, campo, valor) => {
+                          atualizarNpc(npc.id, {
+                            ataques: (npc.ataques || []).map((ataque) =>
+                              ataque.id === ataqueId
+                                ? {
+                                    ...ataque,
+                                    [campo]: valor,
+                                  }
+                                : ataque,
+                            ),
+                          });
+                        };
+  
+                        const removerAtaqueNpc = (ataqueId) => {
+                          atualizarNpc(npc.id, {
+                            ataques: (npc.ataques || []).filter(
+                              (ataque) => ataque.id !== ataqueId,
+                            ),
+                          });
+                        };
+  
+                        const adicionarHabilidadeNpc = () => {
+                          atualizarNpc(npc.id, {
+                            habilidades: [
+                              ...(npc.habilidades || []),
+                              {
+                                id: crypto.randomUUID(),
+                                nome: "Nova Habilidade",
+                                descricao: "",
+                              },
+                            ],
+                          });
+                        };
+  
+                        const atualizarHabilidadeNpc = (
+                          habilidadeId,
+                          campo,
+                          valor,
+                        ) => {
+                          atualizarNpc(npc.id, {
+                            habilidades: (npc.habilidades || []).map(
+                              (habilidade) =>
+                                habilidade.id === habilidadeId
+                                  ? {
+                                      ...habilidade,
+                                      [campo]: valor,
+                                    }
+                                  : habilidade,
+                            ),
+                          });
+                        };
+  
+                        const removerHabilidadeNpc = (habilidadeId) => {
+                          atualizarNpc(npc.id, {
+                            habilidades: (npc.habilidades || []).filter(
+                              (habilidade) => habilidade.id !== habilidadeId,
+                            ),
+                          });
+                        };
+  
                         return (
                           <>
                             <header className="inimigo-ficha-header">
                               <label className="inimigo-foto-editavel">
                                 <img
                                   src={
-                                    inimigo.fotoPerfil ||
+                                    npc.fotoPerfil ||
                                     "https://placehold.co/300x300"
                                   }
-                                  alt={inimigo.nome}
+                                  alt={npc.nome}
                                 />
-
+  
                                 <span>Editar imagem</span>
-
+  
                                 <input
                                   type="file"
                                   accept="image/*"
                                   onChange={async (event) => {
                                     const arquivo = event.target.files?.[0];
+  
                                     if (!arquivo) return;
-
+  
                                     try {
                                       const fotoComprimida =
                                         await compressProfileImage(arquivo);
-                                      atualizarCampoInimigo(
+                                      atualizarCampoNpc(
                                         "fotoPerfil",
                                         fotoComprimida,
                                       );
@@ -4601,82 +4927,88 @@ const DashboardMestre = () => {
                                           "Nao foi possivel carregar a imagem.",
                                       );
                                     }
-
+  
                                     event.target.value = "";
                                   }}
                                 />
                               </label>
-
+  
                               <div className="inimigo-identidade">
                                 <label>
                                   NV
                                   <input
                                     type="number"
-                                    value={inimigo.nivel || 1}
+                                    value={npc.nivel || 1}
                                     onChange={(e) =>
-                                      atualizarCampoInimigo(
+                                      atualizarCampoNpc(
                                         "nivel",
                                         parseInt(e.target.value, 10) || 1,
                                       )
                                     }
                                   />
                                 </label>
-
+  
                                 <input
                                   className="inimigo-nome-input"
-                                  value={inimigo.nome || ""}
+                                  value={npc.nome || ""}
                                   onChange={(e) =>
-                                    atualizarCampoInimigo(
-                                      "nome",
-                                      e.target.value,
-                                    )
+                                    atualizarCampoNpc("nome", e.target.value)
                                   }
                                 />
-                                <select className="catalogo-pasta-select" value={inimigo.pasta || ""} onChange={(event) => atualizarCampoInimigo("pasta", event.target.value)} aria-label="Pasta do inimigo"><option value="">Sem pasta</option>{pastasInimigos.map((pasta) => <option key={pasta} value={pasta}>{pasta}</option>)}</select>
+                                <select
+                                  className="catalogo-pasta-select"
+                                  value={npc.pasta || ""}
+                                  onChange={(event) =>
+                                    atualizarCampoNpc("pasta", event.target.value)
+                                  }
+                                  aria-label="Pasta do NPC"
+                                >
+                                  <option value="">Sem pasta</option>
+                                  {pastasNpcs.map((pasta) => (
+                                    <option key={pasta} value={pasta}>
+                                      {pasta}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
-
+  
                               <div className="mestre-modal-header-acoes">
                                 <button
                                   className="duplicarButton"
-                                  onClick={() => duplicarInimigo(inimigo)}
+                                  onClick={() => duplicarNpc(npc)}
                                 >
                                   Duplicar
                                 </button>
-
+  
                                 <button
                                   className="mestre-btn-apagar"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    excluirInimigo(inimigo.id);
-                                  }}
+                                  onClick={() => excluirNpc(npc.id)}
                                 >
                                   Apagar
                                 </button>
-
+  
                                 <button
                                   className="mestre-modal-fechar"
-                                  onClick={() => setInimigoEditando(null)}
+                                  onClick={() => setNpcEditando(null)}
                                 >
                                   ×
                                 </button>
                               </div>
                             </header>
-
+  
                             <section className="mestre-modal-bloco full">
                               <span>Atributos</span>
-
+  
                               <div className="mestre-modal-atributos linha">
-                                {Object.entries(inimigo.atributos || {}).map(
+                                {Object.entries(npc.atributos || {}).map(
                                   ([atributo, valor]) => (
                                     <label key={atributo}>
                                       {atributo}
-
                                       <input
                                         type="number"
-                                        value={valor}
+                                        value={valor || 0}
                                         onChange={(e) =>
-                                          atualizarGrupoInimigo(
+                                          atualizarGrupoNpc(
                                             "atributos",
                                             atributo,
                                             e.target.value,
@@ -4688,34 +5020,33 @@ const DashboardMestre = () => {
                                 )}
                               </div>
                             </section>
-                            {/* SANIDADE */}
-                            <section className="inimigo-ficha-bloco">
-                              <h3>Sanidade</h3>
-
-                              <div className="mestre-form-grid">
+  
+                            <section className="mestre-modal-bloco full">
+                              <span>Sanidade</span>
+  
+                              <div className="mestre-duplo">
                                 <label>
                                   Atual
                                   <input
                                     type="number"
-                                    value={inimigo.sanidade?.atual || 0}
+                                    value={npc.sanidade?.atual || 0}
                                     onChange={(e) =>
-                                      atualizarCampoInimigo("sanidade", {
-                                        ...(inimigo.sanidade || {}),
-                                        atual:
-                                          parseInt(e.target.value, 10) || 0,
+                                      atualizarCampoNpc("sanidade", {
+                                        ...(npc.sanidade || {}),
+                                        atual: parseInt(e.target.value, 10) || 0,
                                       })
                                     }
                                   />
                                 </label>
-
+  
                                 <label>
                                   Máxima
                                   <input
                                     type="number"
-                                    value={inimigo.sanidade?.max || 0}
+                                    value={npc.sanidade?.max || 0}
                                     onChange={(e) =>
-                                      atualizarCampoInimigo("sanidade", {
-                                        ...(inimigo.sanidade || {}),
+                                      atualizarCampoNpc("sanidade", {
+                                        ...(npc.sanidade || {}),
                                         max: parseInt(e.target.value, 10) || 0,
                                       })
                                     }
@@ -4723,93 +5054,78 @@ const DashboardMestre = () => {
                                 </label>
                               </div>
                             </section>
-
-                            {/* DEFESA */}
-                            <section className="inimigo-ficha-bloco">
-                              <h3>Defesa</h3>
-
+  
+                            <section className="mestre-modal-bloco full">
+                              <span>Defesa</span>
+  
                               <input
                                 type="number"
-                                value={inimigo.defesa || 0}
+                                value={npc.defesa || 0}
                                 onChange={(e) =>
-                                  atualizarCampoInimigo(
+                                  atualizarCampoNpc(
                                     "defesa",
                                     parseInt(e.target.value, 10) || 0,
                                   )
                                 }
                               />
                             </section>
-
-                            {/* MEMBROS */}
-                            <section className="inimigo-ficha-bloco">
-                              <h3>Membros</h3>
-
+  
+                            <section className="mestre-modal-bloco full">
+                              <span>Membros</span>
+  
                               <div className="mestre-corpo-grid">
-                                {membrosFicha.map(({ chave, nome }) => {
-                                  const dados = inimigo.membros?.[chave] || {
+                                {membrosFicha.map((membro) => {
+                                  const dados = npc.membros?.[membro.chave] || {
                                     atual: 0,
                                     max: 0,
                                     defesa: 0,
                                   };
-
-                                  const atualizarMembroInimigo = (
-                                    campo,
-                                    valor,
-                                  ) => {
-                                    atualizarCampoInimigo("membros", {
-                                      ...(inimigo.membros || {}),
-                                      [chave]: {
-                                        ...dados,
-                                        [campo]: Math.max(
-                                          0,
-                                          parseInt(valor, 10) || 0,
-                                        ),
-                                      },
-                                    });
-                                  };
-
+  
                                   return (
                                     <div
-                                      key={chave}
-                                      className="mestre-corpo-item"
+                                      key={membro.chave}
+                                      className="mestre-membro"
                                     >
-                                      <strong>{nome}</strong>
-
+                                      <strong>{membro.nome}</strong>
+  
                                       <label>
                                         Atual
                                         <input
                                           type="number"
                                           value={dados.atual || 0}
                                           onChange={(e) =>
-                                            atualizarMembroInimigo(
+                                            atualizarMembroNpc(
+                                              membro.chave,
                                               "atual",
                                               e.target.value,
                                             )
                                           }
                                         />
                                       </label>
-
+  
                                       <label>
                                         Máx
                                         <input
                                           type="number"
                                           value={dados.max || 0}
                                           onChange={(e) =>
-                                            atualizarMembroInimigo(
+                                            atualizarMembroNpc(
+                                              membro.chave,
                                               "max",
                                               e.target.value,
                                             )
                                           }
                                         />
                                       </label>
-
+  
                                       <label>
-                                        DEF
+                                        Def
                                         <input
                                           type="number"
                                           value={dados.defesa || 0}
                                           onChange={(e) =>
-                                            atualizarMembroInimigo(
+                                            atualizarMembroNpc(
+                                              membro.chave,
                                               "defesa",
                                               e.target.value,
                                             )
@@ -4821,195 +5137,101 @@ const DashboardMestre = () => {
                                 })}
                               </div>
                             </section>
-
-                            {/* ATAQUES */}
-                            <section className="inimigo-ficha-bloco">
-                              <div className="inimigo-bloco-topo">
-                                <h3>Ataques</h3>
-
+  
+                            <section className="mestre-modal-bloco full">
+                              <div className="mestre-modal-linha-topo">
+                                <span>Ataques</span>
+  
                                 <button
-                                  className="ataqueButton"
                                   type="button"
-                                  onClick={() =>
-                                    atualizarCampoInimigo("ataques", [
-                                      ...(inimigo.ataques || []),
-                                      {
-                                        nome: "Novo Ataque",
-                                        alcance: "Corpo a Corpo",
-                                        dano: "1d6",
-                                        efeito: "",
-                                      },
-                                    ])
-                                  }
+                                  onClick={adicionarAtaqueNpc}
                                 >
                                   + Ataque
                                 </button>
                               </div>
-
-                              {(inimigo.ataques || []).map((ataque, index) => (
-                                <div
-                                  key={index}
-                                  className="inimigo-ataque-card"
-                                >
-                                  <input
-                                    value={ataque.nome || ""}
-                                    placeholder="Nome do ataque"
-                                    onChange={(e) => {
-                                      const ataques = [
-                                        ...(inimigo.ataques || []),
-                                      ];
-                                      ataques[index] = {
-                                        ...ataque,
-                                        nome: e.target.value,
-                                      };
-                                      atualizarCampoInimigo("ataques", ataques);
-                                    }}
-                                  />
-
-                                  <input
-                                    value={ataque.alcance || ""}
-                                    placeholder="Alcance"
-                                    onChange={(e) => {
-                                      const ataques = [
-                                        ...(inimigo.ataques || []),
-                                      ];
-                                      ataques[index] = {
-                                        ...ataque,
-                                        alcance: e.target.value,
-                                      };
-                                      atualizarCampoInimigo("ataques", ataques);
-                                    }}
-                                  />
-
-                                  <input
-                                    value={ataque.dano || ""}
-                                    placeholder="Dano: 2d6 + 3"
-                                    onChange={(e) => {
-                                      const ataques = [
-                                        ...(inimigo.ataques || []),
-                                      ];
-                                      ataques[index] = {
-                                        ...ataque,
-                                        dano: e.target.value,
-                                      };
-                                      atualizarCampoInimigo("ataques", ataques);
-                                    }}
-                                  />
-
-                                  <textarea
-                                    value={ataque.efeito || ""}
-                                    placeholder="Efeito do ataque"
-                                    onChange={(e) => {
-                                      const ataques = [
-                                        ...(inimigo.ataques || []),
-                                      ];
-                                      ataques[index] = {
-                                        ...ataque,
-                                        efeito: e.target.value,
-                                      };
-                                      atualizarCampoInimigo("ataques", ataques);
-                                    }}
-                                  />
-
-                                  <button
-                                    type="button"
-                                    className="mestre-btn-apagar"
-                                    onClick={() =>
-                                      atualizarCampoInimigo(
-                                        "ataques",
-                                        (inimigo.ataques || []).filter(
-                                          (_, i) => i !== index,
-                                        ),
-                                      )
-                                    }
-                                  >
-                                    Remover
-                                  </button>
-                                </div>
-                              ))}
+  
+                              <div className="mestre-edit-lista">
+                                {(npc.ataques || []).map((ataque) => (
+                                  <div key={ataque.id}>
+                                    <input
+                                      value={ataque.nome || ""}
+                                      onChange={(e) =>
+                                        atualizarAtaqueNpc(
+                                          ataque.id,
+                                          "nome",
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+  
+                                    <input
+                                      value={ataque.dano || ""}
+                                      onChange={(e) =>
+                                        atualizarAtaqueNpc(
+                                          ataque.id,
+                                          "dano",
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+  
+                                    <button
+                                      onClick={() => removerAtaqueNpc(ataque.id)}
+                                    >
+                                      ×
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
                             </section>
-
-                            {/* HABILIDADES */}
-                            <section className="inimigo-ficha-bloco">
-                              <div className="inimigo-bloco-topo">
-                                <h3>Habilidades</h3>
-
+  
+                            <section className="mestre-modal-bloco full">
+                              <div className="mestre-modal-linha-topo">
+                                <span>Habilidades</span>
+  
                                 <button
-                                  className="habilidadeButton"
                                   type="button"
-                                  onClick={() =>
-                                    atualizarCampoInimigo("habilidades", [
-                                      ...(inimigo.habilidades || []),
-                                      {
-                                        nome: "Nova Habilidade",
-                                        descricao: "",
-                                      },
-                                    ])
-                                  }
+                                  onClick={adicionarHabilidadeNpc}
                                 >
                                   + Habilidade
                                 </button>
                               </div>
-
-                              {(inimigo.habilidades || []).map(
-                                (habilidade, index) => (
-                                  <div
-                                    key={index}
-                                    className="inimigo-ataque-card"
-                                  >
+  
+                              <div className="mestre-edit-lista">
+                                {(npc.habilidades || []).map((habilidade) => (
+                                  <div key={habilidade.id}>
                                     <input
                                       value={habilidade.nome || ""}
-                                      placeholder="Nome da habilidade"
-                                      onChange={(e) => {
-                                        const habilidades = [
-                                          ...(inimigo.habilidades || []),
-                                        ];
-                                        habilidades[index] = {
-                                          ...habilidade,
-                                          nome: e.target.value,
-                                        };
-                                        atualizarCampoInimigo(
-                                          "habilidades",
-                                          habilidades,
-                                        );
-                                      }}
-                                    />
-
-                                    <textarea
-                                      value={habilidade.descricao || ""}
-                                      placeholder="Descrição da habilidade"
-                                      onChange={(e) => {
-                                        const habilidades = [
-                                          ...(inimigo.habilidades || []),
-                                        ];
-                                        habilidades[index] = {
-                                          ...habilidade,
-                                          descricao: e.target.value,
-                                        };
-                                        atualizarCampoInimigo(
-                                          "habilidades",
-                                          habilidades,
-                                        );
-                                      }}
-                                    />
-
-                                    <button
-                                      type="button"
-                                      className="mestre-btn-apagar"
-                                      onClick={() =>
-                                        atualizarCampoInimigo(
-                                          "habilidades",
-                                          (inimigo.habilidades || []).filter(
-                                            (_, i) => i !== index,
-                                          ),
+                                      onChange={(e) =>
+                                        atualizarHabilidadeNpc(
+                                          habilidade.id,
+                                          "nome",
+                                          e.target.value,
                                         )
                                       }
+                                    />
+  
+                                    <input
+                                      value={habilidade.descricao || ""}
+                                      onChange={(e) =>
+                                        atualizarHabilidadeNpc(
+                                          habilidade.id,
+                                          "descricao",
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
+  
+                                    <button
+                                      onClick={() =>
+                                        removerHabilidadeNpc(habilidade.id)
+                                      }
                                     >
-                                      Remover
+                                      ×
                                     </button>
                                   </div>
-                                ),
-                              )}
+                                ))}
+                              </div>
                             </section>
                           </>
                         );
@@ -5017,7 +5239,8 @@ const DashboardMestre = () => {
                     </section>
                   </div>
                 )}
-              </div>
+                </>
+              )}
             </section>
           )}
 
@@ -5088,7 +5311,10 @@ const DashboardMestre = () => {
               </nav>
 
               {abaLojaEditor === "ritos" && !mostrarFormNovoItem && (
-                <nav className="mestre-ritos-niveis-tabs" aria-label="Níveis dos ritos">
+                <nav
+                  className="mestre-ritos-niveis-tabs"
+                  aria-label="Níveis dos ritos"
+                >
                   {[
                     { id: "iniciante", nome: "I — Iniciante" },
                     { id: "intermediario", nome: "II — Intermediário" },
@@ -5098,9 +5324,7 @@ const DashboardMestre = () => {
                     <button
                       key={nivel.id}
                       type="button"
-                      className={
-                        nivelRitoDashboard === nivel.id ? "ativa" : ""
-                      }
+                      className={nivelRitoDashboard === nivel.id ? "ativa" : ""}
                       onClick={() => {
                         setNivelRitoDashboard(nivel.id);
                         setItemEditandoId(null);
@@ -5113,456 +5337,828 @@ const DashboardMestre = () => {
                 </nav>
               )}
 
-              {abaLojaEditor === "municoes-especiais" && !mostrarFormNovoItem && (
-                <nav
-                  className="mestre-ritos-niveis-tabs"
-                  aria-label="Tipos de arma para munições especiais"
-                >
-                  {[
-                    { id: "pistola", nome: "Pistola" },
-                    { id: "escopeta", nome: "Escopeta" },
-                    { id: "rifle", nome: "Rifle" },
-                    { id: "fuzil", nome: "Fuzil" },
-                    { id: "arco", nome: "Arco" },
-                  ].map((tipo) => (
-                    <button
-                      key={tipo.id}
-                      type="button"
-                      className={tipoMunicaoEditor === tipo.id ? "ativa" : ""}
-                      onClick={() => {
-                        setTipoMunicaoEditor(tipo.id);
-                        setNovoItemLoja((atual) => ({
-                          ...atual,
-                          categoria: "municoes-especiais",
-                          tipoArma: tipo.id,
-                        }));
-                        setItemEditandoId(null);
-                        setItemEditandoDados(null);
-                      }}
-                    >
-                      {tipo.nome}
-                    </button>
-                  ))}
-                </nav>
-              )}
+              {abaLojaEditor === "municoes-especiais" &&
+                !mostrarFormNovoItem && (
+                  <nav
+                    className="mestre-ritos-niveis-tabs"
+                    aria-label="Tipos de arma para munições especiais"
+                  >
+                    {[
+                      { id: "pistola", nome: "Pistola" },
+                      { id: "escopeta", nome: "Escopeta" },
+                      { id: "rifle", nome: "Rifle" },
+                      { id: "fuzil", nome: "Fuzil" },
+                      { id: "arco", nome: "Arco" },
+                    ].map((tipo) => (
+                      <button
+                        key={tipo.id}
+                        type="button"
+                        className={tipoMunicaoEditor === tipo.id ? "ativa" : ""}
+                        onClick={() => {
+                          setTipoMunicaoEditor(tipo.id);
+                          setNovoItemLoja((atual) => ({
+                            ...atual,
+                            categoria: "municoes-especiais",
+                            tipoArma: tipo.id,
+                          }));
+                          setItemEditandoId(null);
+                          setItemEditandoDados(null);
+                        }}
+                      >
+                        {tipo.nome}
+                      </button>
+                    ))}
+                  </nav>
+                )}
 
               {mostrarFormNovoItem && (
-  <form className="mestre-loja-form mestre-loja-form-novo" onSubmit={salvarItemLojaEditor}>
-    <h3>
-      Novo {abasEditorLoja.find((a) => a.id === abaLojaEditor)?.nome}
-    </h3>
+                <form
+                  className="mestre-loja-form mestre-loja-form-novo"
+                  onSubmit={salvarItemLojaEditor}
+                >
+                  <h3>
+                    Novo{" "}
+                    {abasEditorLoja.find((a) => a.id === abaLojaEditor)?.nome}
+                  </h3>
 
-    {/* ===== CAMPO NOME – SEMPRE VISÍVEL ===== */}
-    <label style={{ marginBottom: '8px' }}>
-      Nome do item
-      <input
-        value={novoItemLoja.nome}
-        onChange={(event) => atualizarCampoLoja("nome", event.target.value)}
-        placeholder="Ex: Fuzil de Precisão, Adaga Envenenada..."
-        style={{ fontSize: '1.1rem', fontWeight: 'bold' }}
-      />
-    </label>
-
-    {/* ===== GRID PARA PREÇO E OUTROS CAMPOS GERAIS ===== */}
-    <div className="mestre-form-grid">
-      <label>
-        Preço
-        <input
-          type="number"
-          min="0"
-          value={novoItemLoja.preco}
-          onChange={(event) => atualizarCampoLoja("preco", event.target.value)}
-        />
-      </label>
-
-      {abaLojaEditor === "ritos" && (
-        <nav className="mestre-ritos-niveis-tabs">
-          <label>Níveis do Absoluto</label>
-          {[
-            { id: "iniciante", nome: "I — Iniciante" },
-            { id: "intermediario", nome: "II — Intermediário" },
-            { id: "avancado", nome: "III — Avançado" },
-            { id: "experiente", nome: "IV — Experiente" },
-          ].map((nivel) => (
-            <button
-              key={nivel.id}
-              type="button"
-              className={nivelRitoDashboard === nivel.id ? "ativa" : ""}
-              onClick={() => {
-                setNivelRitoDashboard(nivel.id);
-                setNovoItemLoja((atual) => ({
-                  ...atual,
-                  categoria: "ritos",
-                  nivelRito: nivel.id,
-                }));
-                setItemEditandoId(null);
-              }}
-            >
-              {nivel.nome}
-            </button>
-          ))}
-        </nav>
-      )}
-    </div>
-
-    {/* ===== DESCRIÇÃO / DETALHE ===== */}
-    <label>
-      Descrição / Detalhe
-      <textarea
-        value={novoItemLoja.detalhe}
-        onChange={(event) => atualizarCampoLoja("detalhe", event.target.value)}
-      />
-    </label>
-
-    {abaLojaEditor === "defesas" && (
-      <section className="mestre-arma-status-editor">
-        <h4>Proteção concedida</h4>
-        <div className="mestre-form-grid">
-          <label>
-            Parte do corpo protegida
-            <select
-              value={novoItemLoja.entrega || ""}
-              onChange={(event) => atualizarCampoLoja("entrega", event.target.value)}
-            >
-              <option value="">Selecione</option>
-              <option value="Cabeça">Cabeça</option>
-              <option value="Face">Face</option>
-              <option value="Torso">Torso</option>
-              <option value="Braços">Braços</option>
-              <option value="Mãos">Mãos</option>
-              <option value="Empunhado">Empunhado</option>
-              <option value="Pernas">Pernas</option>
-              <option value="Pés">Pés</option>
-              <option value="Conjunto">Conjunto completo</option>
-            </select>
-          </label>
-          <label>
-            Defesa concedida
-            <input
-              type="number"
-              min="0"
-              value={novoItemLoja.defesaBonus || 0}
-              onChange={(event) => atualizarCampoLoja("defesaBonus", event.target.value)}
-            />
-          </label>
-          <label>
-            Tipo de resistência
-            <input
-              value={novoItemLoja.resistenciasDano?.[0]?.tipo || ""}
-              onChange={(event) =>
-                atualizarCampoLoja("resistenciasDano", [
-                  {
-                    tipo: event.target.value,
-                    reducao: novoItemLoja.resistenciasDano?.[0]?.reducao || 0,
-                  },
-                ])
-              }
-              placeholder="Ex: projetil, impacto, corte"
-            />
-          </label>
-          <label>
-            Redução de dano
-            <input
-              type="number"
-              min="0"
-              value={novoItemLoja.resistenciasDano?.[0]?.reducao || 0}
-              onChange={(event) =>
-                atualizarCampoLoja("resistenciasDano", [
-                  {
-                    tipo: novoItemLoja.resistenciasDano?.[0]?.tipo || "",
-                    reducao: event.target.value,
-                  },
-                ])
-              }
-            />
-          </label>
-          <label>
-            Texto de resistência
-            <input
-              value={novoItemLoja.resistencia || ""}
-              onChange={(event) => atualizarCampoLoja("resistencia", event.target.value)}
-              placeholder="Ex: Projéteis −10"
-            />
-          </label>
-        </div>
-      </section>
-    )}
-
-    {abaLojaEditor === "municoes-especiais" && (
-      <section className="mestre-arma-status-editor">
-        <h4>Características da munição</h4>
-        <div className="mestre-form-grid">
-          <label>
-            Arma compatível
-            <select
-              value={novoItemLoja.tipoArma || ""}
-              onChange={(event) => atualizarCampoLoja("tipoArma", event.target.value)}
-            >
-              <option value="">Selecione</option>
-              <option value="pistola">Pistola</option>
-              <option value="escopeta">Escopeta</option>
-              <option value="rifle">Rifle</option>
-              <option value="fuzil">Fuzil</option>
-              <option value="arco">Arco</option>
-            </select>
-          </label>
-          <label>
-            Quantidade por compra
-            <input
-              type="number"
-              min="1"
-              value={novoItemLoja.quantidade || 0}
-              onChange={(event) => atualizarCampoLoja("quantidade", event.target.value)}
-            />
-          </label>
-          <label>
-            Bônus de dano
-            <input
-              value={novoItemLoja.bonusDano || ""}
-              onChange={(event) => atualizarCampoLoja("bonusDano", event.target.value)}
-              placeholder="Ex: 1d6"
-            />
-          </label>
-          <label>
-            Efeito especial
-            <input
-              value={novoItemLoja.efeito || ""}
-              onChange={(event) => atualizarCampoLoja("efeito", event.target.value)}
-              placeholder="Ex: Incendeia o alvo"
-            />
-          </label>
-        </div>
-      </section>
-    )}
-
-    {/* ===== CAMPOS ESPECÍFICOS PARA ARMAS EXCLUSIVAS ===== */}
-    {abaLojaEditor === "armas-exclusivas" && (
-      <>
-        <label>
-          Tipo de Item
-          <select
-            value={novoItemLoja.subtipo || "nenhum"}
-            onChange={(e) => atualizarCampoLoja("subtipo", e.target.value)}
-          >
-            <option value="nenhum">Item Comum</option>
-            <option value="fogo">Arma de Fogo</option>
-            <option value="corpo">Arma Corpo a Corpo</option>
-          </select>
-        </label>
-
-        <label className="mestre-icone-arma-exclusiva">
-          Ícone da arma
-          <div className="mestre-icone-arma-exclusiva-opcoes">
-            {ICONES_ARMAS_EXCLUSIVAS.map((opcao) => (
-              <button
-                key={opcao.id}
-                type="button"
-                title={opcao.nome}
-                aria-label={`Usar ícone de ${opcao.nome}`}
-                className={novoItemLoja.icone === opcao.icone ? "selecionado" : ""}
-                onClick={() => atualizarCampoLoja("icone", opcao.icone)}
-              >
-                <Icon path={opcao.icone} size={0.95} />
-              </button>
-            ))}
-          </div>
-          <small>Escolha um dos ícones minimalistas disponíveis.</small>
-        </label>
-
-        {novoItemLoja.subtipo === "fogo" && (
-          <div className="mestre-arma-status-editor">
-            <h4>Características da arma de fogo</h4>
-            <div className="mestre-form-grid">
-              <label>Tipo <input value={novoItemLoja.armaStatus?.tipo || ""} onChange={(e) => atualizarArmaStatusLoja("tipo", e.target.value)} placeholder="Ex: Automática" /></label>
-              <label>DMG <input value={novoItemLoja.armaStatus?.dmg || ""} onChange={(e) => atualizarArmaStatusLoja("dmg", e.target.value)} placeholder="Ex: 2d6" /></label>
-              <label>ROF <input value={novoItemLoja.armaStatus?.rof || ""} onChange={(e) => atualizarArmaStatusLoja("rof", e.target.value)} placeholder="Ex: 3" /></label>
-              <label>MAG <input value={novoItemLoja.armaStatus?.mag || ""} onChange={(e) => atualizarArmaStatusLoja("mag", e.target.value)} placeholder="Ex: 12" /></label>
-              <label>Disparos sem desvantagem <input value={novoItemLoja.armaStatus?.disparosSemDesvantagem || ""} onChange={(e) => atualizarArmaStatusLoja("disparosSemDesvantagem", e.target.value)} placeholder="Ex: 3" /></label>
-              <label>Recarga <input value={novoItemLoja.armaStatus?.recarga || ""} onChange={(e) => atualizarArmaStatusLoja("recarga", e.target.value)} placeholder="Ex: Ação completa" /></label>
-              <label>Crítico <input value={novoItemLoja.armaStatus?.critico || ""} onChange={(e) => atualizarArmaStatusLoja("critico", e.target.value)} placeholder="Ex: 2x" /></label>
-              <label>Dano Cabeça <input value={novoItemLoja.armaStatus?.danoCabeca || ""} onChange={(e) => atualizarArmaStatusLoja("danoCabeca", e.target.value)} placeholder="Ex: 2" /></label>
-              <label>Hipfire <input value={novoItemLoja.armaStatus?.hipfire || ""} onChange={(e) => atualizarArmaStatusLoja("hipfire", e.target.value)} placeholder="Ex: +1" /></label>
-              <label>Precision <input value={novoItemLoja.armaStatus?.precision || ""} onChange={(e) => atualizarArmaStatusLoja("precision", e.target.value)} placeholder="Ex: -2" /></label>
-              <label>Control <input value={novoItemLoja.armaStatus?.control || ""} onChange={(e) => atualizarArmaStatusLoja("control", e.target.value)} placeholder="Ex: +3" /></label>
-              <label>Mobility <input value={novoItemLoja.armaStatus?.mobility || ""} onChange={(e) => atualizarArmaStatusLoja("mobility", e.target.value)} placeholder="Ex: -1" /></label>
-            </div>
-          </div>
-        )}
-
-        {novoItemLoja.subtipo === "corpo" && (
-          <div className="mestre-arma-status-editor">
-            <h4>Características da arma corpo a corpo</h4>
-            <div className="mestre-form-grid">
-              <label>Dano <input value={novoItemLoja.dano || ""} onChange={(e) => atualizarCampoLoja("dano", e.target.value)} placeholder="Ex: 1d8+4" /></label>
-              <label>Crítico <input value={novoItemLoja.critico || "1x..."} onChange={(e) => atualizarCampoLoja("critico", e.target.value)} placeholder="Ex: 2x" /></label>
-              <label>Dano Cabeça <input value={novoItemLoja.danoCabeca || "0"} onChange={(e) => atualizarCampoLoja("danoCabeca", e.target.value)} placeholder="Ex: 2" /></label>
-            </div>
-          </div>
-        )}
-
-        {novoItemLoja.subtipo !== "nenhum" && (
-          <details className="mestre-aprimoramentos-exclusiva">
-            <summary>
-              Aprimoramentos da arma ({(novoItemLoja.modificacoesArma || []).length}/3)
-            </summary>
-            <p>Selecione até três aprimoramentos disponíveis na loja.</p>
-            <div className="mestre-aprimoramentos-lista">
-              {MODIFICACOES.filter(
-                (modificacao) =>
-                  modificacao.aplicavel ===
-                    (novoItemLoja.subtipo === "fogo"
-                      ? "arma-fogo"
-                      : "arma-corpo") ||
-                  modificacao.aplicavel === "ambos",
-              ).map((modificacao) => {
-                const selecionada = (novoItemLoja.modificacoesArma || []).some(
-                  (item) => item.id === modificacao.id,
-                );
-
-                return (
-                  <label key={modificacao.id} className="mestre-aprimoramento-opcao">
+                  {/* ===== CAMPO NOME – SEMPRE VISÍVEL ===== */}
+                  <label style={{ marginBottom: "8px" }}>
+                    Nome do item
                     <input
-                      type="checkbox"
-                      checked={selecionada}
-                      onChange={() => alternarModificacaoArmaExclusiva(modificacao)}
+                      value={novoItemLoja.nome}
+                      onChange={(event) =>
+                        atualizarCampoLoja("nome", event.target.value)
+                      }
+                      placeholder="Ex: Fuzil de Precisão, Adaga Envenenada..."
+                      style={{ fontSize: "1.1rem", fontWeight: "bold" }}
                     />
-                    <span>
-                      <strong>{modificacao.nome}</strong>
-                      <small>{modificacao.detalhe}</small>
-                    </span>
                   </label>
-                );
-              })}
-            </div>
-          </details>
-        )}
 
-        {novoItemLoja.subtipo !== "nenhum" && (
-          <section className="mestre-aprimoramento-customizado">
-            <div className="mestre-aprimoramento-customizado-topo">
-              <div>
-                <span>Exclusivo</span>
-                <h4>Aprimoramento Customizado</h4>
-                <p>Um aprimoramento único, vinculado somente a esta arma.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setNovoItemLoja((atual) => ({
-                    ...atual,
-                    aprimoramentoCustomizado: atual.aprimoramentoCustomizado
-                      ? null
-                      : { nome: "", detalhe: "" },
-                  }))
-                }
-              >
-                {novoItemLoja.aprimoramentoCustomizado
-                  ? "Remover"
-                  : "+ Criar exclusivo"}
-              </button>
-            </div>
+                  {/* ===== GRID PARA PREÇO E OUTROS CAMPOS GERAIS ===== */}
+                  <div className="mestre-form-grid">
+                    <label>
+                      Preço
+                      <input
+                        type="number"
+                        min="0"
+                        value={novoItemLoja.preco}
+                        onChange={(event) =>
+                          atualizarCampoLoja("preco", event.target.value)
+                        }
+                      />
+                    </label>
 
-            {novoItemLoja.aprimoramentoCustomizado && (
-              <div className="mestre-aprimoramento-customizado-form">
-                <label>
-                  Nome do aprimoramento
-                  <input
-                    value={novoItemLoja.aprimoramentoCustomizado.nome}
-                    placeholder="Ex: Núcleo de Ruptura"
-                    onChange={(event) =>
-                      setNovoItemLoja((atual) => ({
-                        ...atual,
-                        aprimoramentoCustomizado: {
-                          ...atual.aprimoramentoCustomizado,
-                          nome: event.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  Efeito exclusivo
-                  <textarea
-                    value={novoItemLoja.aprimoramentoCustomizado.detalhe}
-                    placeholder="Descreva o efeito, limite de uso e qualquer condição."
-                    onChange={(event) =>
-                      setNovoItemLoja((atual) => ({
-                        ...atual,
-                        aprimoramentoCustomizado: {
-                          ...atual.aprimoramentoCustomizado,
-                          detalhe: event.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </label>
-              </div>
-            )}
-          </section>
-        )}
-      </>
-    )}
+                    {abaLojaEditor === "ritos" && (
+                      <nav className="mestre-ritos-niveis-tabs">
+                        <label>Níveis do Absoluto</label>
+                        {[
+                          { id: "iniciante", nome: "I — Iniciante" },
+                          { id: "intermediario", nome: "II — Intermediário" },
+                          { id: "avancado", nome: "III — Avançado" },
+                          { id: "experiente", nome: "IV — Experiente" },
+                        ].map((nivel) => (
+                          <button
+                            key={nivel.id}
+                            type="button"
+                            className={
+                              nivelRitoDashboard === nivel.id ? "ativa" : ""
+                            }
+                            onClick={() => {
+                              setNivelRitoDashboard(nivel.id);
+                              setNovoItemLoja((atual) => ({
+                                ...atual,
+                                categoria: "ritos",
+                                nivelRito: nivel.id,
+                              }));
+                              setItemEditandoId(null);
+                            }}
+                          >
+                            {nivel.nome}
+                          </button>
+                        ))}
+                      </nav>
+                    )}
+                  </div>
 
-    {/* ===== CAMPOS PARA OUTRAS CATEGORIAS (ARMAS-FOGO, ETC.) ===== */}
-    {abaLojaEditor !== "ritos" && abaLojaEditor !== "poderes" && abaLojaEditor !== "armas-exclusivas" && (
-      <>
-        <label>
-          Dano
-          <input
-            value={novoItemLoja.dano}
-            onChange={(event) => atualizarCampoLoja("dano", event.target.value)}
-            placeholder="Ex: 1d8+4"
-          />
-        </label>
-        <label>
-          Bônus de dano
-          <input
-            value={novoItemLoja.bonusDano}
-            onChange={(event) => atualizarCampoLoja("bonusDano", event.target.value)}
-            placeholder="Ex: +2 de dano"
-          />
-        </label>
-      </>
-    )}
+                  {/* ===== DESCRIÇÃO / DETALHE ===== */}
+                  <label>
+                    Descrição / Detalhe
+                    <textarea
+                      value={novoItemLoja.detalhe}
+                      onChange={(event) =>
+                        atualizarCampoLoja("detalhe", event.target.value)
+                      }
+                    />
+                  </label>
 
-    {abaLojaEditor === "poderes" && (
-      <label>
-        Absolutismo
-        <textarea
-          value={novoItemLoja.entrega}
-          onChange={(event) => atualizarCampoLoja("entrega", event.target.value)}
-          placeholder="Absolutismo: ..."
-        />
-      </label>
-    )}
+                  {abaLojaEditor === "defesas" && (
+                    <section className="mestre-arma-status-editor">
+                      <h4>Proteção concedida</h4>
+                      <div className="mestre-form-grid">
+                        <label>
+                          Parte do corpo protegida
+                          <select
+                            value={novoItemLoja.entrega || ""}
+                            onChange={(event) =>
+                              atualizarCampoLoja("entrega", event.target.value)
+                            }
+                          >
+                            <option value="">Selecione</option>
+                            <option value="Cabeça">Cabeça</option>
+                            <option value="Face">Face</option>
+                            <option value="Torso">Torso</option>
+                            <option value="Braços">Braços</option>
+                            <option value="Mãos">Mãos</option>
+                            <option value="Empunhado">Empunhado</option>
+                            <option value="Pernas">Pernas</option>
+                            <option value="Pés">Pés</option>
+                            <option value="Conjunto">Conjunto completo</option>
+                          </select>
+                        </label>
+                        <label>
+                          Defesa concedida
+                          <input
+                            type="number"
+                            min="0"
+                            value={novoItemLoja.defesaBonus || 0}
+                            onChange={(event) =>
+                              atualizarCampoLoja(
+                                "defesaBonus",
+                                event.target.value,
+                              )
+                            }
+                          />
+                        </label>
+                        <label>
+                          Tipo de resistência
+                          <input
+                            value={
+                              novoItemLoja.resistenciasDano?.[0]?.tipo || ""
+                            }
+                            onChange={(event) =>
+                              atualizarCampoLoja("resistenciasDano", [
+                                {
+                                  tipo: event.target.value,
+                                  reducao:
+                                    novoItemLoja.resistenciasDano?.[0]
+                                      ?.reducao || 0,
+                                },
+                              ])
+                            }
+                            placeholder="Ex: projetil, impacto, corte"
+                          />
+                        </label>
+                        <label>
+                          Redução de dano
+                          <input
+                            type="number"
+                            min="0"
+                            value={
+                              novoItemLoja.resistenciasDano?.[0]?.reducao || 0
+                            }
+                            onChange={(event) =>
+                              atualizarCampoLoja("resistenciasDano", [
+                                {
+                                  tipo:
+                                    novoItemLoja.resistenciasDano?.[0]?.tipo ||
+                                    "",
+                                  reducao: event.target.value,
+                                },
+                              ])
+                            }
+                          />
+                        </label>
+                        <label>
+                          Texto de resistência
+                          <input
+                            value={novoItemLoja.resistencia || ""}
+                            onChange={(event) =>
+                              atualizarCampoLoja(
+                                "resistencia",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Ex: Projéteis −10"
+                          />
+                        </label>
+                      </div>
+                    </section>
+                  )}
 
-    {abaLojaEditor === "armas-fogo" && (
-      <div className="mestre-arma-status-editor">
-        <h4>Características da arma</h4>
-        <div className="mestre-form-grid">
-          <label>Tipo <input value={novoItemLoja.armaStatus?.tipo || ""} onChange={(e) => atualizarArmaStatusLoja("tipo", e.target.value)} /></label>
-          <label>DMG <input value={novoItemLoja.armaStatus?.dmg || ""} onChange={(e) => atualizarArmaStatusLoja("dmg", e.target.value)} placeholder="2d6" /></label>
-          <label>ROF <input value={novoItemLoja.armaStatus?.rof || ""} onChange={(e) => atualizarArmaStatusLoja("rof", e.target.value)} /></label>
-          <label>MAG <input value={novoItemLoja.armaStatus?.mag || ""} onChange={(e) => atualizarArmaStatusLoja("mag", e.target.value)} /></label>
-          <label>Disparos sem desvantagem <input value={novoItemLoja.armaStatus?.disparosSemDesvantagem || ""} onChange={(e) => atualizarArmaStatusLoja("disparosSemDesvantagem", e.target.value)} /></label>
-          <label>Recarga <input value={novoItemLoja.armaStatus?.recarga || ""} onChange={(e) => atualizarArmaStatusLoja("recarga", e.target.value)} /></label>
-          <label>Crítico <input value={novoItemLoja.armaStatus?.critico || ""} onChange={(e) => atualizarArmaStatusLoja("critico", e.target.value)} /></label>
-          <label>Dano Cabeça <input value={novoItemLoja.armaStatus?.danoCabeca || ""} onChange={(e) => atualizarArmaStatusLoja("danoCabeca", e.target.value)} /></label>
-          <label>Hipfire <input value={novoItemLoja.armaStatus?.hipfire || ""} onChange={(e) => atualizarArmaStatusLoja("hipfire", e.target.value)} /></label>
-          <label>Precision <input value={novoItemLoja.armaStatus?.precision || ""} onChange={(e) => atualizarArmaStatusLoja("precision", e.target.value)} /></label>
-          <label>Control <input value={novoItemLoja.armaStatus?.control || ""} onChange={(e) => atualizarArmaStatusLoja("control", e.target.value)} /></label>
-          <label>Mobility <input value={novoItemLoja.armaStatus?.mobility || ""} onChange={(e) => atualizarArmaStatusLoja("mobility", e.target.value)} /></label>
-        </div>
-      </div>
-    )}
+                  {abaLojaEditor === "municoes-especiais" && (
+                    <section className="mestre-arma-status-editor">
+                      <h4>Características da munição</h4>
+                      <div className="mestre-form-grid">
+                        <label>
+                          Arma compatível
+                          <select
+                            value={novoItemLoja.tipoArma || ""}
+                            onChange={(event) =>
+                              atualizarCampoLoja("tipoArma", event.target.value)
+                            }
+                          >
+                            <option value="">Selecione</option>
+                            <option value="pistola">Pistola</option>
+                            <option value="escopeta">Escopeta</option>
+                            <option value="rifle">Rifle</option>
+                            <option value="fuzil">Fuzil</option>
+                            <option value="arco">Arco</option>
+                          </select>
+                        </label>
+                        <label>
+                          Quantidade por compra
+                          <input
+                            type="number"
+                            min="1"
+                            value={novoItemLoja.quantidade || 0}
+                            onChange={(event) =>
+                              atualizarCampoLoja(
+                                "quantidade",
+                                event.target.value,
+                              )
+                            }
+                          />
+                        </label>
+                        <label>
+                          Bônus de dano
+                          <input
+                            value={novoItemLoja.bonusDano || ""}
+                            onChange={(event) =>
+                              atualizarCampoLoja(
+                                "bonusDano",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Ex: 1d6"
+                          />
+                        </label>
+                        <label>
+                          Efeito especial
+                          <input
+                            value={novoItemLoja.efeito || ""}
+                            onChange={(event) =>
+                              atualizarCampoLoja("efeito", event.target.value)
+                            }
+                            placeholder="Ex: Incendeia o alvo"
+                          />
+                        </label>
+                      </div>
+                    </section>
+                  )}
 
-    {/* ===== BOTÕES ===== */}
-    <div className="mestre-loja-form-acoes">
-      <button type="submit">Adicionar ao catálogo</button>
-      <button type="button" onClick={limparEditorLoja}>Cancelar</button>
-    </div>
-  </form>
-)}
+                  {/* ===== CAMPOS ESPECÍFICOS PARA ARMAS EXCLUSIVAS ===== */}
+                  {abaLojaEditor === "armas-exclusivas" && (
+                    <>
+                      <label>
+                        Tipo de Item
+                        <select
+                          value={novoItemLoja.subtipo || "nenhum"}
+                          onChange={(e) =>
+                            atualizarCampoLoja("subtipo", e.target.value)
+                          }
+                        >
+                          <option value="nenhum">Item Comum</option>
+                          <option value="fogo">Arma de Fogo</option>
+                          <option value="corpo">Arma Corpo a Corpo</option>
+                        </select>
+                      </label>
+
+                      <label className="mestre-icone-arma-exclusiva">
+                        Ícone da arma
+                        <div className="mestre-icone-arma-exclusiva-opcoes">
+                          {ICONES_ARMAS_EXCLUSIVAS.map((opcao) => (
+                            <button
+                              key={opcao.id}
+                              type="button"
+                              title={opcao.nome}
+                              aria-label={`Usar ícone de ${opcao.nome}`}
+                              className={
+                                novoItemLoja.icone === opcao.icone
+                                  ? "selecionado"
+                                  : ""
+                              }
+                              onClick={() =>
+                                atualizarCampoLoja("icone", opcao.icone)
+                              }
+                            >
+                              <Icon path={opcao.icone} size={0.95} />
+                            </button>
+                          ))}
+                        </div>
+                        <small>
+                          Escolha um dos ícones minimalistas disponíveis.
+                        </small>
+                      </label>
+
+                      {novoItemLoja.subtipo === "fogo" && (
+                        <div className="mestre-arma-status-editor">
+                          <h4>Características da arma de fogo</h4>
+                          <div className="mestre-form-grid">
+                            <label>
+                              Tipo{" "}
+                              <input
+                                value={novoItemLoja.armaStatus?.tipo || ""}
+                                onChange={(e) =>
+                                  atualizarArmaStatusLoja(
+                                    "tipo",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Ex: Automática"
+                              />
+                            </label>
+                            <label>
+                              DMG{" "}
+                              <input
+                                value={novoItemLoja.armaStatus?.dmg || ""}
+                                onChange={(e) =>
+                                  atualizarArmaStatusLoja("dmg", e.target.value)
+                                }
+                                placeholder="Ex: 2d6"
+                              />
+                            </label>
+                            <label>
+                              ROF{" "}
+                              <input
+                                value={novoItemLoja.armaStatus?.rof || ""}
+                                onChange={(e) =>
+                                  atualizarArmaStatusLoja("rof", e.target.value)
+                                }
+                                placeholder="Ex: 3"
+                              />
+                            </label>
+                            <label>
+                              MAG{" "}
+                              <input
+                                value={novoItemLoja.armaStatus?.mag || ""}
+                                onChange={(e) =>
+                                  atualizarArmaStatusLoja("mag", e.target.value)
+                                }
+                                placeholder="Ex: 12"
+                              />
+                            </label>
+                            <label>
+                              Disparos sem desvantagem{" "}
+                              <input
+                                value={
+                                  novoItemLoja.armaStatus
+                                    ?.disparosSemDesvantagem || ""
+                                }
+                                onChange={(e) =>
+                                  atualizarArmaStatusLoja(
+                                    "disparosSemDesvantagem",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Ex: 3"
+                              />
+                            </label>
+                            <label>
+                              Recarga{" "}
+                              <input
+                                value={novoItemLoja.armaStatus?.recarga || ""}
+                                onChange={(e) =>
+                                  atualizarArmaStatusLoja(
+                                    "recarga",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Ex: Ação completa"
+                              />
+                            </label>
+                            <label>
+                              Crítico{" "}
+                              <input
+                                value={novoItemLoja.armaStatus?.critico || ""}
+                                onChange={(e) =>
+                                  atualizarArmaStatusLoja(
+                                    "critico",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Ex: 2x"
+                              />
+                            </label>
+                            <label>
+                              Dano Cabeça{" "}
+                              <input
+                                value={
+                                  novoItemLoja.armaStatus?.danoCabeca || ""
+                                }
+                                onChange={(e) =>
+                                  atualizarArmaStatusLoja(
+                                    "danoCabeca",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Ex: 2"
+                              />
+                            </label>
+                            <label>
+                              Hipfire{" "}
+                              <input
+                                value={novoItemLoja.armaStatus?.hipfire || ""}
+                                onChange={(e) =>
+                                  atualizarArmaStatusLoja(
+                                    "hipfire",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Ex: +1"
+                              />
+                            </label>
+                            <label>
+                              Precision{" "}
+                              <input
+                                value={novoItemLoja.armaStatus?.precision || ""}
+                                onChange={(e) =>
+                                  atualizarArmaStatusLoja(
+                                    "precision",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Ex: -2"
+                              />
+                            </label>
+                            <label>
+                              Control{" "}
+                              <input
+                                value={novoItemLoja.armaStatus?.control || ""}
+                                onChange={(e) =>
+                                  atualizarArmaStatusLoja(
+                                    "control",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Ex: +3"
+                              />
+                            </label>
+                            <label>
+                              Mobility{" "}
+                              <input
+                                value={novoItemLoja.armaStatus?.mobility || ""}
+                                onChange={(e) =>
+                                  atualizarArmaStatusLoja(
+                                    "mobility",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Ex: -1"
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      )}
+
+                      {novoItemLoja.subtipo === "corpo" && (
+                        <div className="mestre-arma-status-editor">
+                          <h4>Características da arma corpo a corpo</h4>
+                          <div className="mestre-form-grid">
+                            <label>
+                              Dano{" "}
+                              <input
+                                value={novoItemLoja.dano || ""}
+                                onChange={(e) =>
+                                  atualizarCampoLoja("dano", e.target.value)
+                                }
+                                placeholder="Ex: 1d8+4"
+                              />
+                            </label>
+                            <label>
+                              Crítico{" "}
+                              <input
+                                value={novoItemLoja.critico || "1x..."}
+                                onChange={(e) =>
+                                  atualizarCampoLoja("critico", e.target.value)
+                                }
+                                placeholder="Ex: 2x"
+                              />
+                            </label>
+                            <label>
+                              Dano Cabeça{" "}
+                              <input
+                                value={novoItemLoja.danoCabeca || "0"}
+                                onChange={(e) =>
+                                  atualizarCampoLoja(
+                                    "danoCabeca",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Ex: 2"
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      )}
+
+                      {novoItemLoja.subtipo !== "nenhum" && (
+                        <details className="mestre-aprimoramentos-exclusiva">
+                          <summary>
+                            Aprimoramentos da arma (
+                            {(novoItemLoja.modificacoesArma || []).length}/3)
+                          </summary>
+                          <p>
+                            Selecione até três aprimoramentos disponíveis na
+                            loja.
+                          </p>
+                          <div className="mestre-aprimoramentos-lista">
+                            {MODIFICACOES.filter(
+                              (modificacao) =>
+                                modificacao.aplicavel ===
+                                  (novoItemLoja.subtipo === "fogo"
+                                    ? "arma-fogo"
+                                    : "arma-corpo") ||
+                                modificacao.aplicavel === "ambos",
+                            ).map((modificacao) => {
+                              const selecionada = (
+                                novoItemLoja.modificacoesArma || []
+                              ).some((item) => item.id === modificacao.id);
+
+                              return (
+                                <label
+                                  key={modificacao.id}
+                                  className="mestre-aprimoramento-opcao"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selecionada}
+                                    onChange={() =>
+                                      alternarModificacaoArmaExclusiva(
+                                        modificacao,
+                                      )
+                                    }
+                                  />
+                                  <span>
+                                    <strong>{modificacao.nome}</strong>
+                                    <small>{modificacao.detalhe}</small>
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </details>
+                      )}
+
+                      {novoItemLoja.subtipo !== "nenhum" && (
+                        <section className="mestre-aprimoramento-customizado">
+                          <div className="mestre-aprimoramento-customizado-topo">
+                            <div>
+                              <span>Exclusivo</span>
+                              <h4>Aprimoramento Customizado</h4>
+                              <p>
+                                Um aprimoramento único, vinculado somente a esta
+                                arma.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setNovoItemLoja((atual) => ({
+                                  ...atual,
+                                  aprimoramentoCustomizado:
+                                    atual.aprimoramentoCustomizado
+                                      ? null
+                                      : { nome: "", detalhe: "" },
+                                }))
+                              }
+                            >
+                              {novoItemLoja.aprimoramentoCustomizado
+                                ? "Remover"
+                                : "+ Criar exclusivo"}
+                            </button>
+                          </div>
+
+                          {novoItemLoja.aprimoramentoCustomizado && (
+                            <div className="mestre-aprimoramento-customizado-form">
+                              <label>
+                                Nome do aprimoramento
+                                <input
+                                  value={
+                                    novoItemLoja.aprimoramentoCustomizado.nome
+                                  }
+                                  placeholder="Ex: Núcleo de Ruptura"
+                                  onChange={(event) =>
+                                    setNovoItemLoja((atual) => ({
+                                      ...atual,
+                                      aprimoramentoCustomizado: {
+                                        ...atual.aprimoramentoCustomizado,
+                                        nome: event.target.value,
+                                      },
+                                    }))
+                                  }
+                                />
+                              </label>
+                              <label>
+                                Efeito exclusivo
+                                <textarea
+                                  value={
+                                    novoItemLoja.aprimoramentoCustomizado
+                                      .detalhe
+                                  }
+                                  placeholder="Descreva o efeito, limite de uso e qualquer condição."
+                                  onChange={(event) =>
+                                    setNovoItemLoja((atual) => ({
+                                      ...atual,
+                                      aprimoramentoCustomizado: {
+                                        ...atual.aprimoramentoCustomizado,
+                                        detalhe: event.target.value,
+                                      },
+                                    }))
+                                  }
+                                />
+                              </label>
+                            </div>
+                          )}
+                        </section>
+                      )}
+                    </>
+                  )}
+
+                  {/* ===== CAMPOS PARA OUTRAS CATEGORIAS (ARMAS-FOGO, ETC.) ===== */}
+                  {abaLojaEditor !== "ritos" &&
+                    abaLojaEditor !== "poderes" &&
+                    abaLojaEditor !== "armas-exclusivas" && (
+                      <>
+                        <label>
+                          Dano
+                          <input
+                            value={novoItemLoja.dano}
+                            onChange={(event) =>
+                              atualizarCampoLoja("dano", event.target.value)
+                            }
+                            placeholder="Ex: 1d8+4"
+                          />
+                        </label>
+                        <label>
+                          Bônus de dano
+                          <input
+                            value={novoItemLoja.bonusDano}
+                            onChange={(event) =>
+                              atualizarCampoLoja(
+                                "bonusDano",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Ex: +2 de dano"
+                          />
+                        </label>
+                      </>
+                    )}
+
+                  {abaLojaEditor === "poderes" && (
+                    <label>
+                      Absolutismo
+                      <textarea
+                        value={novoItemLoja.entrega}
+                        onChange={(event) =>
+                          atualizarCampoLoja("entrega", event.target.value)
+                        }
+                        placeholder="Absolutismo: ..."
+                      />
+                    </label>
+                  )}
+
+                  {abaLojaEditor === "armas-fogo" && (
+                    <div className="mestre-arma-status-editor">
+                      <h4>Características da arma</h4>
+                      <div className="mestre-form-grid">
+                        <label>
+                          Tipo{" "}
+                          <input
+                            value={novoItemLoja.armaStatus?.tipo || ""}
+                            onChange={(e) =>
+                              atualizarArmaStatusLoja("tipo", e.target.value)
+                            }
+                          />
+                        </label>
+                        <label>
+                          DMG{" "}
+                          <input
+                            value={novoItemLoja.armaStatus?.dmg || ""}
+                            onChange={(e) =>
+                              atualizarArmaStatusLoja("dmg", e.target.value)
+                            }
+                            placeholder="2d6"
+                          />
+                        </label>
+                        <label>
+                          ROF{" "}
+                          <input
+                            value={novoItemLoja.armaStatus?.rof || ""}
+                            onChange={(e) =>
+                              atualizarArmaStatusLoja("rof", e.target.value)
+                            }
+                          />
+                        </label>
+                        <label>
+                          MAG{" "}
+                          <input
+                            value={novoItemLoja.armaStatus?.mag || ""}
+                            onChange={(e) =>
+                              atualizarArmaStatusLoja("mag", e.target.value)
+                            }
+                          />
+                        </label>
+                        <label>
+                          Disparos sem desvantagem{" "}
+                          <input
+                            value={
+                              novoItemLoja.armaStatus?.disparosSemDesvantagem ||
+                              ""
+                            }
+                            onChange={(e) =>
+                              atualizarArmaStatusLoja(
+                                "disparosSemDesvantagem",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </label>
+                        <label>
+                          Recarga{" "}
+                          <input
+                            value={novoItemLoja.armaStatus?.recarga || ""}
+                            onChange={(e) =>
+                              atualizarArmaStatusLoja("recarga", e.target.value)
+                            }
+                          />
+                        </label>
+                        <label>
+                          Crítico{" "}
+                          <input
+                            value={novoItemLoja.armaStatus?.critico || ""}
+                            onChange={(e) =>
+                              atualizarArmaStatusLoja("critico", e.target.value)
+                            }
+                          />
+                        </label>
+                        <label>
+                          Dano Cabeça{" "}
+                          <input
+                            value={novoItemLoja.armaStatus?.danoCabeca || ""}
+                            onChange={(e) =>
+                              atualizarArmaStatusLoja(
+                                "danoCabeca",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </label>
+                        <label>
+                          Hipfire{" "}
+                          <input
+                            value={novoItemLoja.armaStatus?.hipfire || ""}
+                            onChange={(e) =>
+                              atualizarArmaStatusLoja("hipfire", e.target.value)
+                            }
+                          />
+                        </label>
+                        <label>
+                          Precision{" "}
+                          <input
+                            value={novoItemLoja.armaStatus?.precision || ""}
+                            onChange={(e) =>
+                              atualizarArmaStatusLoja(
+                                "precision",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </label>
+                        <label>
+                          Control{" "}
+                          <input
+                            value={novoItemLoja.armaStatus?.control || ""}
+                            onChange={(e) =>
+                              atualizarArmaStatusLoja("control", e.target.value)
+                            }
+                          />
+                        </label>
+                        <label>
+                          Mobility{" "}
+                          <input
+                            value={novoItemLoja.armaStatus?.mobility || ""}
+                            onChange={(e) =>
+                              atualizarArmaStatusLoja(
+                                "mobility",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ===== BOTÕES ===== */}
+                  <div className="mestre-loja-form-acoes">
+                    <button type="submit">Adicionar ao catálogo</button>
+                    <button type="button" onClick={limparEditorLoja}>
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              )}
 
               <div className="mestre-catalogo-area">
                 <div className="mestre-catalogo">
@@ -6109,332 +6705,337 @@ const DashboardMestre = () => {
                                   </option>
                                 </select>
 
-                                {dados.subtipo === "fogo" && !dados.armaStatus && (
-                                  <div
-                                    className="mestre-arma-status-editor"
-                                    style={{
-                                      marginTop: "8px",
-                                      borderTop:
-                                        "1px solid rgba(255,255,255,0.1)",
-                                      paddingTop: "8px",
-                                    }}
-                                  >
-                                    <h4
-                                      style={{
-                                        fontSize: "0.8rem",
-                                        color: "#d4af37",
-                                      }}
-                                    >
-                                      Características (Fogo)
-                                    </h4>
+                                {dados.subtipo === "fogo" &&
+                                  !dados.armaStatus && (
                                     <div
-                                      className="mestre-form-grid"
+                                      className="mestre-arma-status-editor"
                                       style={{
-                                        gridTemplateColumns: "1fr 1fr",
-                                        gap: "6px",
+                                        marginTop: "8px",
+                                        borderTop:
+                                          "1px solid rgba(255,255,255,0.1)",
+                                        paddingTop: "8px",
                                       }}
                                     >
-                                      <label
+                                      <h4
                                         style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
+                                          fontSize: "0.8rem",
+                                          color: "#d4af37",
                                         }}
                                       >
-                                        Tipo{" "}
-                                        <input
-                                          value={dados.armaStatus?.tipo || ""}
-                                          onChange={(e) =>
-                                            handleArmaStatusChange(
-                                              "tipo",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label
+                                        Características (Fogo)
+                                      </h4>
+                                      <div
+                                        className="mestre-form-grid"
                                         style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
+                                          gridTemplateColumns: "1fr 1fr",
+                                          gap: "6px",
                                         }}
                                       >
-                                        DMG{" "}
-                                        <input
-                                          value={dados.armaStatus?.dmg || ""}
-                                          onChange={(e) =>
-                                            handleArmaStatusChange(
-                                              "dmg",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label
-                                        style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
-                                        }}
-                                      >
-                                        ROF{" "}
-                                        <input
-                                          value={dados.armaStatus?.rof || ""}
-                                          onChange={(e) =>
-                                            handleArmaStatusChange(
-                                              "rof",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label
-                                        style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
-                                        }}
-                                      >
-                                        MAG{" "}
-                                        <input
-                                          value={dados.armaStatus?.mag || ""}
-                                          onChange={(e) =>
-                                            handleArmaStatusChange(
-                                              "mag",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label
-                                        style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
-                                        }}
-                                      >
-                                        Disparos{" "}
-                                        <input
-                                          value={
-                                            dados.armaStatus
-                                              ?.disparosSemDesvantagem || ""
-                                          }
-                                          onChange={(e) =>
-                                            handleArmaStatusChange(
-                                              "disparosSemDesvantagem",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label
-                                        style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
-                                        }}
-                                      >
-                                        Recarga{" "}
-                                        <input
-                                          value={
-                                            dados.armaStatus?.recarga || ""
-                                          }
-                                          onChange={(e) =>
-                                            handleArmaStatusChange(
-                                              "recarga",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label
-                                        style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
-                                        }}
-                                      >
-                                        Crítico{" "}
-                                        <input
-                                          value={
-                                            dados.armaStatus?.critico || ""
-                                          }
-                                          onChange={(e) =>
-                                            handleArmaStatusChange(
-                                              "critico",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label
-                                        style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
-                                        }}
-                                      >
-                                        Dano Cabeça{" "}
-                                        <input
-                                          value={
-                                            dados.armaStatus?.danoCabeca || ""
-                                          }
-                                          onChange={(e) =>
-                                            handleArmaStatusChange(
-                                              "danoCabeca",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label
-                                        style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
-                                        }}
-                                      >
-                                        Hipfire{" "}
-                                        <input
-                                          value={
-                                            dados.armaStatus?.hipfire || ""
-                                          }
-                                          onChange={(e) =>
-                                            handleArmaStatusChange(
-                                              "hipfire",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label
-                                        style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
-                                        }}
-                                      >
-                                        Precision{" "}
-                                        <input
-                                          value={
-                                            dados.armaStatus?.precision || ""
-                                          }
-                                          onChange={(e) =>
-                                            handleArmaStatusChange(
-                                              "precision",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label
-                                        style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
-                                        }}
-                                      >
-                                        Control{" "}
-                                        <input
-                                          value={
-                                            dados.armaStatus?.control || ""
-                                          }
-                                          onChange={(e) =>
-                                            handleArmaStatusChange(
-                                              "control",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label
-                                        style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
-                                        }}
-                                      >
-                                        Mobility{" "}
-                                        <input
-                                          value={
-                                            dados.armaStatus?.mobility || ""
-                                          }
-                                          onChange={(e) =>
-                                            handleArmaStatusChange(
-                                              "mobility",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          Tipo{" "}
+                                          <input
+                                            value={dados.armaStatus?.tipo || ""}
+                                            onChange={(e) =>
+                                              handleArmaStatusChange(
+                                                "tipo",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          DMG{" "}
+                                          <input
+                                            value={dados.armaStatus?.dmg || ""}
+                                            onChange={(e) =>
+                                              handleArmaStatusChange(
+                                                "dmg",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          ROF{" "}
+                                          <input
+                                            value={dados.armaStatus?.rof || ""}
+                                            onChange={(e) =>
+                                              handleArmaStatusChange(
+                                                "rof",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          MAG{" "}
+                                          <input
+                                            value={dados.armaStatus?.mag || ""}
+                                            onChange={(e) =>
+                                              handleArmaStatusChange(
+                                                "mag",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          Disparos{" "}
+                                          <input
+                                            value={
+                                              dados.armaStatus
+                                                ?.disparosSemDesvantagem || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleArmaStatusChange(
+                                                "disparosSemDesvantagem",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          Recarga{" "}
+                                          <input
+                                            value={
+                                              dados.armaStatus?.recarga || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleArmaStatusChange(
+                                                "recarga",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          Crítico{" "}
+                                          <input
+                                            value={
+                                              dados.armaStatus?.critico || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleArmaStatusChange(
+                                                "critico",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          Dano Cabeça{" "}
+                                          <input
+                                            value={
+                                              dados.armaStatus?.danoCabeca || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleArmaStatusChange(
+                                                "danoCabeca",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          Hipfire{" "}
+                                          <input
+                                            value={
+                                              dados.armaStatus?.hipfire || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleArmaStatusChange(
+                                                "hipfire",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          Precision{" "}
+                                          <input
+                                            value={
+                                              dados.armaStatus?.precision || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleArmaStatusChange(
+                                                "precision",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          Control{" "}
+                                          <input
+                                            value={
+                                              dados.armaStatus?.control || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleArmaStatusChange(
+                                                "control",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          Mobility{" "}
+                                          <input
+                                            value={
+                                              dados.armaStatus?.mobility || ""
+                                            }
+                                            onChange={(e) =>
+                                              handleArmaStatusChange(
+                                                "mobility",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
+                                  )}
 
-                                {dados.subtipo === "corpo" && !dados.armaStatus && (
-                                  <div
-                                    className="mestre-arma-status-editor"
-                                    style={{
-                                      marginTop: "8px",
-                                      borderTop:
-                                        "1px solid rgba(255,255,255,0.1)",
-                                      paddingTop: "8px",
-                                    }}
-                                  >
-                                    <h4
-                                      style={{
-                                        fontSize: "0.8rem",
-                                        color: "#d4af37",
-                                      }}
-                                    >
-                                      Características (Corpo a Corpo)
-                                    </h4>
+                                {dados.subtipo === "corpo" &&
+                                  !dados.armaStatus && (
                                     <div
-                                      className="mestre-form-grid"
+                                      className="mestre-arma-status-editor"
                                       style={{
-                                        gridTemplateColumns: "1fr 1fr",
-                                        gap: "6px",
+                                        marginTop: "8px",
+                                        borderTop:
+                                          "1px solid rgba(255,255,255,0.1)",
+                                        paddingTop: "8px",
                                       }}
                                     >
-                                      <label
+                                      <h4
                                         style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
+                                          fontSize: "0.8rem",
+                                          color: "#d4af37",
                                         }}
                                       >
-                                        Dano{" "}
-                                        <input
-                                          value={dados.dano || ""}
-                                          onChange={(e) =>
-                                            handleChange("dano", e.target.value)
-                                          }
-                                        />
-                                      </label>
-                                      <label
+                                        Características (Corpo a Corpo)
+                                      </h4>
+                                      <div
+                                        className="mestre-form-grid"
                                         style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
+                                          gridTemplateColumns: "1fr 1fr",
+                                          gap: "6px",
                                         }}
                                       >
-                                        Crítico{" "}
-                                        <input
-                                          value={dados.critico || "1x..."}
-                                          onChange={(e) =>
-                                            handleChange(
-                                              "critico",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
-                                      <label
-                                        style={{
-                                          fontSize: "0.7rem",
-                                          color: "#aaa",
-                                        }}
-                                      >
-                                        Dano Cabeça{" "}
-                                        <input
-                                          value={dados.danoCabeca || "0"}
-                                          onChange={(e) =>
-                                            handleChange(
-                                              "danoCabeca",
-                                              e.target.value,
-                                            )
-                                          }
-                                        />
-                                      </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          Dano{" "}
+                                          <input
+                                            value={dados.dano || ""}
+                                            onChange={(e) =>
+                                              handleChange(
+                                                "dano",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          Crítico{" "}
+                                          <input
+                                            value={dados.critico || "1x..."}
+                                            onChange={(e) =>
+                                              handleChange(
+                                                "critico",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                        <label
+                                          style={{
+                                            fontSize: "0.7rem",
+                                            color: "#aaa",
+                                          }}
+                                        >
+                                          Dano Cabeça{" "}
+                                          <input
+                                            value={dados.danoCabeca || "0"}
+                                            onChange={(e) =>
+                                              handleChange(
+                                                "danoCabeca",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </label>
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
+                                  )}
                               </>
                             )}
 
@@ -6442,11 +7043,18 @@ const DashboardMestre = () => {
                               dados.categoria === "armas-exclusivas" &&
                               dados.subtipo !== "nenhum" && (
                                 <>
-                                  <details className="mestre-aprimoramentos-exclusiva" open>
+                                  <details
+                                    className="mestre-aprimoramentos-exclusiva"
+                                    open
+                                  >
                                     <summary>
-                                      Aprimoramentos da arma ({(dados.modificacoesArma || []).length}/3)
+                                      Aprimoramentos da arma (
+                                      {(dados.modificacoesArma || []).length}/3)
                                     </summary>
-                                    <p>Adicione, remova ou substitua os aprimoramentos desta arma exclusiva.</p>
+                                    <p>
+                                      Adicione, remova ou substitua os
+                                      aprimoramentos desta arma exclusiva.
+                                    </p>
                                     <div className="mestre-aprimoramentos-lista">
                                       {MODIFICACOES.filter(
                                         (modificacao) =>
@@ -6456,22 +7064,34 @@ const DashboardMestre = () => {
                                               : "arma-corpo") ||
                                           modificacao.aplicavel === "ambos",
                                       ).map((modificacao) => {
-                                        const selecionada = (dados.modificacoesArma || []).some(
-                                          (aprimoramento) => aprimoramento.id === modificacao.id,
+                                        const selecionada = (
+                                          dados.modificacoesArma || []
+                                        ).some(
+                                          (aprimoramento) =>
+                                            aprimoramento.id === modificacao.id,
                                         );
 
                                         return (
-                                          <label key={modificacao.id} className="mestre-aprimoramento-opcao">
+                                          <label
+                                            key={modificacao.id}
+                                            className="mestre-aprimoramento-opcao"
+                                          >
                                             <input
                                               type="checkbox"
                                               checked={selecionada}
                                               onChange={() =>
-                                                alternarModificacaoArmaExclusivaEmEdicao(modificacao)
+                                                alternarModificacaoArmaExclusivaEmEdicao(
+                                                  modificacao,
+                                                )
                                               }
                                             />
                                             <span>
-                                              <strong>{modificacao.nome}</strong>
-                                              <small>{modificacao.detalhe}</small>
+                                              <strong>
+                                                {modificacao.nome}
+                                              </strong>
+                                              <small>
+                                                {modificacao.detalhe}
+                                              </small>
                                             </span>
                                           </label>
                                         );
@@ -6484,7 +7104,10 @@ const DashboardMestre = () => {
                                       <div>
                                         <span>Exclusivo</span>
                                         <h4>Aprimoramento Customizado</h4>
-                                        <p>Edite ou crie o efeito único desta arma.</p>
+                                        <p>
+                                          Edite ou crie o efeito único desta
+                                          arma.
+                                        </p>
                                       </div>
                                       <button
                                         type="button"
@@ -6509,7 +7132,10 @@ const DashboardMestre = () => {
                                         <label>
                                           Nome do aprimoramento
                                           <input
-                                            value={dados.aprimoramentoCustomizado.nome || ""}
+                                            value={
+                                              dados.aprimoramentoCustomizado
+                                                .nome || ""
+                                            }
                                             onChange={(event) =>
                                               setItemEditandoDados((atual) => ({
                                                 ...atual,
@@ -6524,7 +7150,10 @@ const DashboardMestre = () => {
                                         <label>
                                           Efeito exclusivo
                                           <textarea
-                                            value={dados.aprimoramentoCustomizado.detalhe || ""}
+                                            value={
+                                              dados.aprimoramentoCustomizado
+                                                .detalhe || ""
+                                            }
                                             onChange={(event) =>
                                               setItemEditandoDados((atual) => ({
                                                 ...atual,
@@ -6543,35 +7172,65 @@ const DashboardMestre = () => {
                               )}
 
                             {isEditing && abaLojaEditor === "defesas" && (
-                              <div className="mestre-arma-status-editor" style={{ marginTop: "10px" }}>
+                              <div
+                                className="mestre-arma-status-editor"
+                                style={{ marginTop: "10px" }}
+                              >
                                 <h4>Proteção concedida</h4>
                                 <div className="mestre-form-grid">
                                   <label>
                                     Parte protegida
                                     <select
                                       value={dados.entrega || ""}
-                                      onChange={(e) => handleChange("entrega", e.target.value)}
+                                      onChange={(e) =>
+                                        handleChange("entrega", e.target.value)
+                                      }
                                     >
                                       <option value="Cabeça">Cabeça</option>
                                       <option value="Face">Face</option>
                                       <option value="Torso">Torso</option>
                                       <option value="Braços">Braços</option>
                                       <option value="Mãos">Mãos</option>
-                                      <option value="Empunhado">Empunhado</option>
+                                      <option value="Empunhado">
+                                        Empunhado
+                                      </option>
                                       <option value="Pernas">Pernas</option>
                                       <option value="Pés">Pés</option>
-                                      <option value="Conjunto">Conjunto completo</option>
+                                      <option value="Conjunto">
+                                        Conjunto completo
+                                      </option>
                                     </select>
                                   </label>
                                   <label>
                                     Defesa concedida
-                                    <input type="number" min="0" value={dados.defesaBonus || 0} onChange={(e) => handleChange("defesaBonus", e.target.value)} />
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      value={dados.defesaBonus || 0}
+                                      onChange={(e) =>
+                                        handleChange(
+                                          "defesaBonus",
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
                                   </label>
                                   <label>
                                     Tipo de resistência
                                     <input
-                                      value={dados.resistenciasDano?.[0]?.tipo || ""}
-                                      onChange={(e) => handleChange("resistenciasDano", [{ tipo: e.target.value, reducao: dados.resistenciasDano?.[0]?.reducao || 0 }])}
+                                      value={
+                                        dados.resistenciasDano?.[0]?.tipo || ""
+                                      }
+                                      onChange={(e) =>
+                                        handleChange("resistenciasDano", [
+                                          {
+                                            tipo: e.target.value,
+                                            reducao:
+                                              dados.resistenciasDano?.[0]
+                                                ?.reducao || 0,
+                                          },
+                                        ])
+                                      }
                                       placeholder="Ex: projetil"
                                     />
                                   </label>
@@ -6580,47 +7239,105 @@ const DashboardMestre = () => {
                                     <input
                                       type="number"
                                       min="0"
-                                      value={dados.resistenciasDano?.[0]?.reducao || 0}
-                                      onChange={(e) => handleChange("resistenciasDano", [{ tipo: dados.resistenciasDano?.[0]?.tipo || "", reducao: e.target.value }])}
+                                      value={
+                                        dados.resistenciasDano?.[0]?.reducao ||
+                                        0
+                                      }
+                                      onChange={(e) =>
+                                        handleChange("resistenciasDano", [
+                                          {
+                                            tipo:
+                                              dados.resistenciasDano?.[0]
+                                                ?.tipo || "",
+                                            reducao: e.target.value,
+                                          },
+                                        ])
+                                      }
                                     />
                                   </label>
                                   <label>
                                     Texto de resistência
-                                    <input value={dados.resistencia || ""} onChange={(e) => handleChange("resistencia", e.target.value)} />
+                                    <input
+                                      value={dados.resistencia || ""}
+                                      onChange={(e) =>
+                                        handleChange(
+                                          "resistencia",
+                                          e.target.value,
+                                        )
+                                      }
+                                    />
                                   </label>
                                 </div>
                               </div>
                             )}
 
-                            {isEditing && abaLojaEditor === "municoes-especiais" && (
-                              <div className="mestre-arma-status-editor" style={{ marginTop: "10px" }}>
-                                <h4>Características da munição</h4>
-                                <div className="mestre-form-grid">
-                                  <label>
-                                    Arma compatível
-                                    <select value={dados.tipoArma || ""} onChange={(e) => handleChange("tipoArma", e.target.value)}>
-                                      <option value="pistola">Pistola</option>
-                                      <option value="escopeta">Escopeta</option>
-                                      <option value="rifle">Rifle</option>
-                                      <option value="fuzil">Fuzil</option>
-                                      <option value="arco">Arco</option>
-                                    </select>
-                                  </label>
-                                  <label>
-                                    Quantidade por compra
-                                    <input type="number" min="1" value={dados.quantidade || 0} onChange={(e) => handleChange("quantidade", e.target.value)} />
-                                  </label>
-                                  <label>
-                                    Bônus de dano
-                                    <input value={dados.bonusDano || ""} onChange={(e) => handleChange("bonusDano", e.target.value)} placeholder="Ex: 1d6" />
-                                  </label>
-                                  <label>
-                                    Efeito especial
-                                    <input value={dados.efeito || ""} onChange={(e) => handleChange("efeito", e.target.value)} />
-                                  </label>
+                            {isEditing &&
+                              abaLojaEditor === "municoes-especiais" && (
+                                <div
+                                  className="mestre-arma-status-editor"
+                                  style={{ marginTop: "10px" }}
+                                >
+                                  <h4>Características da munição</h4>
+                                  <div className="mestre-form-grid">
+                                    <label>
+                                      Arma compatível
+                                      <select
+                                        value={dados.tipoArma || ""}
+                                        onChange={(e) =>
+                                          handleChange(
+                                            "tipoArma",
+                                            e.target.value,
+                                          )
+                                        }
+                                      >
+                                        <option value="pistola">Pistola</option>
+                                        <option value="escopeta">
+                                          Escopeta
+                                        </option>
+                                        <option value="rifle">Rifle</option>
+                                        <option value="fuzil">Fuzil</option>
+                                        <option value="arco">Arco</option>
+                                      </select>
+                                    </label>
+                                    <label>
+                                      Quantidade por compra
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        value={dados.quantidade || 0}
+                                        onChange={(e) =>
+                                          handleChange(
+                                            "quantidade",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </label>
+                                    <label>
+                                      Bônus de dano
+                                      <input
+                                        value={dados.bonusDano || ""}
+                                        onChange={(e) =>
+                                          handleChange(
+                                            "bonusDano",
+                                            e.target.value,
+                                          )
+                                        }
+                                        placeholder="Ex: 1d6"
+                                      />
+                                    </label>
+                                    <label>
+                                      Efeito especial
+                                      <input
+                                        value={dados.efeito || ""}
+                                        onChange={(e) =>
+                                          handleChange("efeito", e.target.value)
+                                        }
+                                      />
+                                    </label>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
 
                             <div className="loja-item-footer">
                               <span className="loja-preco">
@@ -6696,8 +7413,6 @@ const DashboardMestre = () => {
             </section>
           )}
 
-         
-
           {aba === "habilidades" && (
             <section className="mestre-loja">
               <div className="mestre-loja-editor-topo">
@@ -6713,11 +7428,16 @@ const DashboardMestre = () => {
                     setMostrarFormHabilidade((atual) => !atual);
                   }}
                 >
-                  {mostrarFormHabilidade ? "Fechar formulário" : "+ Adicionar habilidade"}
+                  {mostrarFormHabilidade
+                    ? "Fechar formulário"
+                    : "+ Adicionar habilidade"}
                 </button>
               </div>
 
-              <nav className="mestre-ficha-tabs" aria-label="Classes de habilidades">
+              <nav
+                className="mestre-ficha-tabs"
+                aria-label="Classes de habilidades"
+              >
                 {Object.entries(arvoresEditor).map(([id, arvore]) => (
                   <button
                     key={id}
@@ -6739,7 +7459,10 @@ const DashboardMestre = () => {
                 ))}
               </nav>
 
-              <nav className="mestre-ficha-tabs mestre-habilidades-subabas" aria-label="Categorias de habilidades">
+              <nav
+                className="mestre-ficha-tabs mestre-habilidades-subabas"
+                aria-label="Categorias de habilidades"
+              >
                 {[
                   { id: "absolutas", nome: "Habilidades Absolutas" },
                   { id: "aptidoes", nome: "Aptidões" },
@@ -6794,128 +7517,130 @@ const DashboardMestre = () => {
               )}
 
               {mostrarFormHabilidade && (
-              <form
-                className="mestre-loja-form"
-                onSubmit={salvarHabilidadeEditor}
-              >
-                <h3>
-                  {habilidadeEditando
-                    ? "Editando habilidade"
-                    : "Nova habilidade"}
-                </h3>
+                <form
+                  className="mestre-loja-form"
+                  onSubmit={salvarHabilidadeEditor}
+                >
+                  <h3>
+                    {habilidadeEditando
+                      ? "Editando habilidade"
+                      : "Nova habilidade"}
+                  </h3>
 
-                <label className="mestre-habilidade-contexto">
-                  Classe
-                  <select
-                    value={classeArvoreAtiva}
-                    onChange={(e) => {
-                      setClasseArvoreAtiva(e.target.value);
-                      setEspecialidadeEditorId("");
-                      limparFormHabilidade();
-                    }}
-                  >
-                    {Object.entries(arvoresEditor).map(([id, arvore]) => (
-                      <option key={id} value={id}>
-                        {arvore.classe || id}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="mestre-habilidade-contexto">
-                  Tipo
-                  <select
-                    value={tipoHabilidadeEditor}
-                    onChange={(e) => {
-                      setTipoHabilidadeEditor(e.target.value);
-                      limparFormHabilidade();
-                    }}
-                  >
-                    <option value="absolutas">Habilidades Absolutas</option>
-                    <option value="aptidoes">Aptidões</option>
-                    <option value="especialidade">
-                      Habilidades de Especialidade
-                    </option>
-                  </select>
-                </label>
-
-                {tipoHabilidadeEditor === "especialidade" && (
                   <label className="mestre-habilidade-contexto">
-                    Especialidade
+                    Classe
                     <select
-                      value={especialidadeEditorId}
-                      onChange={(e) => setEspecialidadeEditorId(e.target.value)}
+                      value={classeArvoreAtiva}
+                      onChange={(e) => {
+                        setClasseArvoreAtiva(e.target.value);
+                        setEspecialidadeEditorId("");
+                        limparFormHabilidade();
+                      }}
                     >
-                      <option value="">Selecione</option>
-                      {(
-                        arvoresEditor[classeArvoreAtiva]?.especialidades || []
-                      ).map((esp) => (
-                        <option key={esp.id} value={esp.id}>
-                          {esp.nome}
+                      {Object.entries(arvoresEditor).map(([id, arvore]) => (
+                        <option key={id} value={id}>
+                          {arvore.classe || id}
                         </option>
                       ))}
                     </select>
                   </label>
-                )}
 
-                <label>
-                  Nome
-                  <input
-                    value={formHabilidade.nome}
-                    onChange={(e) =>
-                      setFormHabilidade((prev) => ({
-                        ...prev,
-                        nome: e.target.value,
-                      }))
-                    }
-                  />
-                </label>
+                  <label className="mestre-habilidade-contexto">
+                    Tipo
+                    <select
+                      value={tipoHabilidadeEditor}
+                      onChange={(e) => {
+                        setTipoHabilidadeEditor(e.target.value);
+                        limparFormHabilidade();
+                      }}
+                    >
+                      <option value="absolutas">Habilidades Absolutas</option>
+                      <option value="aptidoes">Aptidões</option>
+                      <option value="especialidade">
+                        Habilidades de Especialidade
+                      </option>
+                    </select>
+                  </label>
 
-                <label>
-                  Custo
-                  <input
-                    value={formHabilidade.custo}
-                    onChange={(e) =>
-                      setFormHabilidade((prev) => ({
-                        ...prev,
-                        custo: e.target.value,
-                      }))
-                    }
-                    placeholder="Ex: 2 PE, Passiva, Reação..."
-                  />
-                </label>
+                  {tipoHabilidadeEditor === "especialidade" && (
+                    <label className="mestre-habilidade-contexto">
+                      Especialidade
+                      <select
+                        value={especialidadeEditorId}
+                        onChange={(e) =>
+                          setEspecialidadeEditorId(e.target.value)
+                        }
+                      >
+                        <option value="">Selecione</option>
+                        {(
+                          arvoresEditor[classeArvoreAtiva]?.especialidades || []
+                        ).map((esp) => (
+                          <option key={esp.id} value={esp.id}>
+                            {esp.nome}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
 
-                <label>
-                  Descrição
-                  <textarea
-                    value={formHabilidade.descricao}
-                    onChange={(e) =>
-                      setFormHabilidade((prev) => ({
-                        ...prev,
-                        descricao: e.target.value,
-                      }))
-                    }
-                  />
-                </label>
+                  <label>
+                    Nome
+                    <input
+                      value={formHabilidade.nome}
+                      onChange={(e) =>
+                        setFormHabilidade((prev) => ({
+                          ...prev,
+                          nome: e.target.value,
+                        }))
+                      }
+                    />
+                  </label>
 
-                <div className="mestre-loja-form-acoes">
-                  <button type="submit">
-                    {habilidadeEditando
-                      ? "Salvar alteração"
-                      : "Criar habilidade"}
-                  </button>
+                  <label>
+                    Custo
+                    <input
+                      value={formHabilidade.custo}
+                      onChange={(e) =>
+                        setFormHabilidade((prev) => ({
+                          ...prev,
+                          custo: e.target.value,
+                        }))
+                      }
+                      placeholder="Ex: 2 PE, Passiva, Reação..."
+                    />
+                  </label>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      limparFormHabilidade();
-                      setMostrarFormHabilidade(false);
-                    }}
-                  >
-                    Cancelar
-                  </button>
-                </div>
-              </form>
+                  <label>
+                    Descrição
+                    <textarea
+                      value={formHabilidade.descricao}
+                      onChange={(e) =>
+                        setFormHabilidade((prev) => ({
+                          ...prev,
+                          descricao: e.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <div className="mestre-loja-form-acoes">
+                    <button type="submit">
+                      {habilidadeEditando
+                        ? "Salvar alteração"
+                        : "Criar habilidade"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        limparFormHabilidade();
+                        setMostrarFormHabilidade(false);
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
               )}
 
               <div className="mestre-catalogo-area">

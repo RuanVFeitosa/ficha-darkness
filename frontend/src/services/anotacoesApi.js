@@ -26,22 +26,69 @@ export const listarAnotacoes = async (campanhaId) => {
 
 export const salvarAnotacao = async (campanhaId, nota) => {
   const agora = new Date().toISOString();
+
   if (!supabaseConfigurado || String(campanhaId).startsWith("demo")) {
     const notas = lerLocais(campanhaId);
-    const registro = { ...nota, id: nota.id || `nota-${Date.now()}`, campanha_id: campanhaId, atualizado_em: agora, criado_em: nota.criado_em || agora };
-    salvarLocais(campanhaId, notas.some((item) => item.id === registro.id) ? notas.map((item) => item.id === registro.id ? registro : item) : [registro, ...notas]);
+
+    const registro = {
+      ...nota,
+      id: nota.id || `nota-${Date.now()}`,
+      campanha_id: campanhaId,
+      atualizado_em: agora,
+      criado_em: nota.criado_em || agora,
+    };
+
+    salvarLocais(
+      campanhaId,
+      notas.some((item) => item.id === registro.id)
+        ? notas.map((item) => item.id === registro.id ? registro : item)
+        : [registro, ...notas]
+    );
+
     return registro;
   }
+
   const payload = {
-    ...(nota.id ? { id: nota.id } : {}), campanha_id: campanhaId,
-    titulo: nota.titulo || "Sem titulo", pasta: nota.pasta || "Notas",
-    conteudo: nota.conteudo || "", atualizado_em: agora,
+    campanha_id: campanhaId,
+    titulo: nota.titulo || "Sem titulo",
+    pasta: nota.pasta || "Notas",
+    conteudo: nota.conteudo || "",
+    atualizado_em: agora,
     documento_url: nota.documento_url || null,
     documento_nome: nota.documento_nome || null,
     documento_tipo: nota.documento_tipo || null,
   };
-  const { data, error } = await supabase.from("anotacoes_campanha").upsert(payload).select().single();
-  if (error) throw error;
+
+  // NOTA EXISTENTE → UPDATE
+  if (nota.id) {
+    const { data, error } = await supabase
+      .from("anotacoes_campanha")
+      .update(payload)
+      .eq("id", nota.id)
+      .eq("campanha_id", campanhaId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Erro ao atualizar anotação:", error);
+      throw error;
+    }
+
+    return data;
+  }
+
+  // NOVA NOTA → INSERT
+  const { data, error } = await supabase
+    .from("anotacoes_campanha")
+    .insert(payload)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Erro ao criar anotação:", error);
+    throw error;
+  }
+
   return data;
 };
 

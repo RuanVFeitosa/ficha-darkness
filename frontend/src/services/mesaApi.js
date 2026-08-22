@@ -111,6 +111,7 @@ const resolverMidiasLocais = async (cena) => {
 };
 
 export const chavePosicaoMapa = (cenaId, midiaId = null) => `${cenaId || "sem-cena"}:${midiaId || "mapa-principal"}`;
+const chaveEstadoTokenMapa = (mapaChave = "mapa-principal") => `__estado:${mapaChave}`;
 const consolidarTokens = (tokens = []) => {
   const unicos = new Map();
   tokens.forEach((token) => {
@@ -126,7 +127,12 @@ const consolidarTokens = (tokens = []) => {
 };
 const aplicarPosicaoDoMapa = (tokens, campanha) => {
   const chave = chavePosicaoMapa(campanha.cena_ativa_id, campanha.midia_ativa_id);
-  return consolidarTokens(tokens).map((token) => ({ ...token, ...(token.posicoes?.[chave] || {}) }));
+  const chaveEstado = chaveEstadoTokenMapa(chave);
+  return consolidarTokens(tokens).map((token) => ({
+    ...token,
+    ...(token.posicoes?.[chave] || {}),
+    ...(token.posicoes?.[chaveEstado] || {}),
+  }));
 };
 
 const normalizarCampanha = (campanha, cenas = [], membros = [], tokens = [], rolagens = [], inimigos = []) => ({
@@ -397,6 +403,61 @@ export const moverToken = async (tokenId, x, y, mapaChave = "mapa-principal") =>
   return tokenAtualizado;
 };
 
+const atualizarEstadoTokenMapa = async (tokenId, mapaChave, mudanca) => {
+  const chaveEstado = chaveEstadoTokenMapa(mapaChave);
+
+  if (!supabaseConfigurado || String(tokenId).startsWith("demo")) {
+    const campanhaId = listarCampanhasDemo().find((campanha) =>
+      (carregarDemo(campanha.id).tokens || []).some((token) => token.id === tokenId)
+    )?.id || "demo";
+    const estado = carregarDemo(campanhaId);
+    let atualizado = null;
+    const tokens = (estado.tokens || TOKENS_DEMO).map((token) => {
+      if (token.id !== tokenId) return token;
+      const estadoAtual = token.posicoes?.[chaveEstado] || {};
+      atualizado = {
+        ...token,
+        posicoes: {
+          ...(token.posicoes || {}),
+          [chaveEstado]: { ...estadoAtual, ...mudanca },
+        },
+      };
+      return atualizado;
+    });
+    salvarDemo({ ...estado, tokens }, campanhaId);
+    return atualizado;
+  }
+
+  const { data: tokenAtual, error: erroConsulta } = await supabase
+    .from("tokens_mapa")
+    .select("*")
+    .eq("id", tokenId)
+    .single();
+  if (erroConsulta) throw erroConsulta;
+
+  const estadoAtual = tokenAtual.posicoes?.[chaveEstado] || {};
+  const { data, error } = await supabase
+    .from("tokens_mapa")
+    .update({
+      posicoes: {
+        ...(tokenAtual.posicoes || {}),
+        [chaveEstado]: { ...estadoAtual, ...mudanca },
+      },
+      atualizado_em: new Date().toISOString(),
+    })
+    .eq("id", tokenId)
+    .select()
+    .single();
+  if (error) throw error;
+  return { ...data, ...mudanca };
+};
+
+export const definirVisibilidadeToken = (tokenId, oculto, mapaChave = "mapa-principal") =>
+  atualizarEstadoTokenMapa(tokenId, mapaChave, { oculto: Boolean(oculto), removido: false });
+
+export const removerTokenDoMapa = (tokenId, mapaChave = "mapa-principal") =>
+  atualizarEstadoTokenMapa(tokenId, mapaChave, { removido: true });
+
 export const registrarRolagem = async (campanhaId, autorNome, rolagem) => {
   const registro = {
     id: `rolagem-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -470,16 +531,18 @@ export const posicionarFichaNoMapa = async (campanhaId, fichaId, personagem, x, 
     const demo = carregarDemo(campanhaId);
     const token = (demo.tokens || []).find((item) => item.ficha_id === fichaId);
     if (!token) throw new Error("Nao foi possivel criar o token desta ficha.");
-    const atualizado = { ...token, x, y, posicoes: { ...(token.posicoes || {}), [mapaChave]: { x, y } } };
+    const chaveEstado = chaveEstadoTokenMapa(mapaChave);
+    const atualizado = { ...token, x, y, oculto: false, removido: false, posicoes: { ...(token.posicoes || {}), [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false } } };
     salvarDemo({ ...demo, tokens: demo.tokens.map((item) => item.id === token.id ? atualizado : item) }, campanhaId);
     return atualizado;
   }
   const { data: token, error: erroToken } = await supabase.from("tokens_mapa").select("*").eq("campanha_id", campanhaId).eq("ficha_id", fichaId).maybeSingle();
   if (erroToken) throw erroToken;
   if (!token) throw new Error("Nao foi possivel criar o token desta ficha.");
-  const { data, error } = await supabase.from("tokens_mapa").update({ x, y, posicoes: { ...(token.posicoes || {}), [mapaChave]: { x, y } } }).eq("id", token.id).select().single();
+  const chaveEstado = chaveEstadoTokenMapa(mapaChave);
+  const { data, error } = await supabase.from("tokens_mapa").update({ x, y, posicoes: { ...(token.posicoes || {}), [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false } } }).eq("id", token.id).select().single();
   if (error) throw error;
-  return data;
+  return { ...data, oculto: false, removido: false };
 };
 
 export const posicionarInimigoNoMapa = async (campanhaId, inimigo, x, y, mapaChave = "mapa-principal") => {
@@ -492,8 +555,8 @@ export const posicionarInimigoNoMapa = async (campanhaId, inimigo, x, y, mapaCha
     const demo = carregarDemo(campanhaId);
     const existente = (demo.tokens || []).find((item) => item.ficha_id === fichaId);
     const token = existente
-      ? { ...existente, nome, imagem_url: imagemUrl, x, y, posicoes: { ...(existente.posicoes || {}), [mapaChave]: { x, y } } }
-      : { id: `demo-token-inimigo-${Date.now()}-${referencia}`, ficha_id: fichaId, nome, imagem_url: imagemUrl, x, y, posicoes: { [mapaChave]: { x, y } } };
+      ? { ...existente, nome, imagem_url: imagemUrl, x, y, oculto: false, removido: false, posicoes: { ...(existente.posicoes || {}), [mapaChave]: { x, y }, [chaveEstadoTokenMapa(mapaChave)]: { oculto: false, removido: false } } }
+      : { id: `demo-token-inimigo-${Date.now()}-${referencia}`, ficha_id: fichaId, nome, imagem_url: imagemUrl, x, y, oculto: false, removido: false, posicoes: { [mapaChave]: { x, y }, [chaveEstadoTokenMapa(mapaChave)]: { oculto: false, removido: false } } };
     salvarDemo({
       ...demo,
       tokens: existente
@@ -512,14 +575,16 @@ export const posicionarInimigoNoMapa = async (campanhaId, inimigo, x, y, mapaCha
   if (erroConsulta) throw erroConsulta;
 
   if (existente) {
-    const { data, error } = await supabase.from("tokens_mapa").update({ nome, imagem_url: imagemUrl, x, y, posicoes: { ...(existente.posicoes || {}), [mapaChave]: { x, y } } }).eq("id", existente.id).select().single();
+    const chaveEstado = chaveEstadoTokenMapa(mapaChave);
+    const { data, error } = await supabase.from("tokens_mapa").update({ nome, imagem_url: imagemUrl, x, y, posicoes: { ...(existente.posicoes || {}), [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false } } }).eq("id", existente.id).select().single();
     if (error) throw error;
-    return data;
+    return { ...data, oculto: false, removido: false };
   }
 
-  const { data, error } = await supabase.from("tokens_mapa").insert({ campanha_id: campanhaId, ficha_id: fichaId, nome, imagem_url: imagemUrl, x, y, posicoes: { [mapaChave]: { x, y } } }).select().single();
+  const chaveEstado = chaveEstadoTokenMapa(mapaChave);
+  const { data, error } = await supabase.from("tokens_mapa").insert({ campanha_id: campanhaId, ficha_id: fichaId, nome, imagem_url: imagemUrl, x, y, posicoes: { [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false } } }).select().single();
   if (error) throw error;
-  return data;
+  return { ...data, oculto: false, removido: false };
 };
 
 export const desvincularFicha = async (campanhaId, fichaId) => {

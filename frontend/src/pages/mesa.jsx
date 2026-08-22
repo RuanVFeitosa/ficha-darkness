@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiAccountPlusOutline, mdiArrowLeft, mdiChevronDown, mdiChevronRight, mdiClose, mdiDeleteOutline, mdiDiceMultiple, mdiFitToScreenOutline, mdiImageOutline, mdiMagnifyMinusOutline, mdiMagnifyPlusOutline, mdiMapOutline, mdiMusicBoxMultipleOutline, mdiNotebookEditOutline, mdiOpenInNew, mdiPencilOutline, mdiPlay, mdiPlus, mdiRefresh, mdiShieldCrownOutline } from "@mdi/js";
-import { ativarCena, atualizarEstadoMusica, atualizarInimigoCampanha, atualizarModoCampanha, buscarCampanhaPorCodigo, chavePosicaoMapa, desvincularFicha, desvincularInimigo, enviarImagemCena, excluirCena, moverToken, ouvirCampanha, posicionarFichaNoMapa, posicionarInimigoNoMapa, registrarRolagem, salvarCena, validarArquivoImagem, vincularFicha, vincularInimigo } from "../services/mesaApi";
+import { ativarCena, atualizarEstadoMusica, atualizarInimigoCampanha, atualizarModoCampanha, buscarCampanhaPorCodigo, chavePosicaoMapa, definirVisibilidadeToken, desvincularFicha, desvincularInimigo, enviarImagemCena, excluirCena, moverToken, ouvirCampanha, posicionarFichaNoMapa, posicionarInimigoNoMapa, registrarRolagem, removerTokenDoMapa, salvarCena, validarArquivoImagem, vincularFicha, vincularInimigo } from "../services/mesaApi";
 import { buscarPersonagem, listarPersonagens, ouvirPersonagens } from "../services/personagemApi";
 import { supabaseConfigurado } from "../services/supabase";
 import { listarHabilidadesSelecionadas } from "../data/Classes/arvoresHabilidades";
@@ -182,6 +182,7 @@ const Mesa = () => {
   const [personagens, setPersonagens] = useState({});
   const [fichaAberta, setFichaAberta] = useState(null);
   const [tokenArrastando, setTokenArrastando] = useState(null);
+  const [menuTokenAberto, setMenuTokenAberto] = useState(null);
   const tokensEmGravacaoRef = useRef(new Set());
   const posicoesTokensPendentesRef = useRef(new Map());
   const [zoomMapa, setZoomMapa] = useState(1);
@@ -197,6 +198,7 @@ const Mesa = () => {
   const [inimigoParaAdicionar, setInimigoParaAdicionar] = useState("");
   const [inimigoAberto, setInimigoAberto] = useState(null);
   const [subAbaNpcs, setSubAbaNpcs] = useState("inimigos");
+  const [pastasNpcsFechadas, setPastasNpcsFechadas] = useState({});
   const [corCena, setCorCena] = useState("");
   const [fichaJogadorId, setFichaJogadorId] = useState(() => fichaUrl || localStorage.getItem(`darkness_mesa_ficha_${codigo}`) || localStorage.getItem("fichaRPG_ultimaFicha") || "");
 
@@ -257,8 +259,11 @@ const Mesa = () => {
           }
           const tokenAtual = atual.tokens.find((item) => item.id === token.id);
           if (!aceitarTokenRemoto(tokenAtual, token)) return tokenAtual;
-          const posicao = token.posicoes?.[mapaChave];
-          return posicao ? { ...token, x: posicao.x, y: posicao.y } : token;
+          const estadoMapa = {
+            ...(token.posicoes?.[mapaChave] || {}),
+            ...(token.posicoes?.[`__estado:${mapaChave}`] || {}),
+          };
+          return { ...token, ...estadoMapa };
         });
         atual.tokens.forEach((token) => {
           if (tokensEmGravacaoRef.current.has(token.id) && !tokens.some((item) => item.id === token.id)) tokens.push(token);
@@ -293,10 +298,11 @@ const Mesa = () => {
         const tokenAtual = atual.tokens.find((token) => token.id === tokenRecebido.id);
         if (!aceitarTokenRemoto(tokenAtual, tokenRecebido)) return atual;
         const mapaChave = chavePosicaoMapa(atual.cenaAtiva?.id, atual.midiaAtivaId);
-        const posicao = tokenRecebido.posicoes?.[mapaChave];
-        const tokenAtualizado = posicao
-          ? { ...tokenRecebido, x: posicao.x, y: posicao.y }
-          : tokenRecebido;
+        const estadoMapa = {
+          ...(tokenRecebido.posicoes?.[mapaChave] || {}),
+          ...(tokenRecebido.posicoes?.[`__estado:${mapaChave}`] || {}),
+        };
+        const tokenAtualizado = { ...tokenRecebido, ...estadoMapa };
         const existe = atual.tokens.some((token) => token.id === tokenRecebido.id);
         return {
           ...atual,
@@ -517,6 +523,10 @@ const Mesa = () => {
 
   const podeMoverToken = (token) => Boolean(token && (mestre || token.ficha_id === fichaJogadorId));
   const mapaChaveAtual = chavePosicaoMapa(campanha?.cenaAtiva?.id, campanha?.midiaAtivaId);
+  const estadoTokenNoMapa = (token, chave = mapaChaveAtual) => ({
+    ...(token?.posicoes?.[chave] || {}),
+    ...(token?.posicoes?.[`__estado:${chave}`] || {}),
+  });
 
   const arrastarToken = (event) => {
     const token = campanha.tokens.find((item) => item.id === tokenArrastando);
@@ -546,6 +556,38 @@ const Mesa = () => {
       setErro(error.message || "Nao foi possivel salvar a posicao do token.");
     } finally {
       tokensEmGravacaoRef.current.delete(tokenId);
+    }
+  };
+
+  const alternarVisibilidadeToken = async (token) => {
+    if (!mestre || !token) return;
+    const oculto = !Boolean(token.oculto);
+    setMenuTokenAberto(null);
+    setCampanha((atual) => ({
+      ...atual,
+      tokens: atual.tokens.map((item) => item.id === token.id ? { ...item, oculto, removido: false } : item),
+    }));
+    try {
+      await definirVisibilidadeToken(token.id, oculto, mapaChaveAtual);
+    } catch (error) {
+      setErro(error.message || "Nao foi possivel alterar a visibilidade do token.");
+      await carregar();
+    }
+  };
+
+  const removerTokenAtualDoMapa = async (token) => {
+    if (!mestre || !token) return;
+    if (!window.confirm(`Remover o token de ${token.nome || "este personagem"} deste mapa?`)) return;
+    setMenuTokenAberto(null);
+    setCampanha((atual) => ({
+      ...atual,
+      tokens: atual.tokens.map((item) => item.id === token.id ? { ...item, removido: true } : item),
+    }));
+    try {
+      await removerTokenDoMapa(token.id, mapaChaveAtual);
+    } catch (error) {
+      setErro(error.message || "Nao foi possivel remover o token deste mapa.");
+      await carregar();
     }
   };
 
@@ -594,6 +636,7 @@ const Mesa = () => {
 
   const iniciarPanMapa = (event) => {
     if (campanha.modo !== "mapa" || event.button !== 0) return;
+    if (!event.target.closest?.(".mesa-token")) setMenuTokenAberto(null);
     if (event.pointerType === "touch") {
       ponteirosMapaRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
       if (ponteirosMapaRef.current.size >= 2) {
@@ -684,6 +727,44 @@ const Mesa = () => {
   const personagemFichaAberta = fichaAberta?.personagem;
   const habilidadesFichaAberta = personagemFichaAberta ? listarHabilidadesSelecionadas(personagemFichaAberta) : [];
   const passivosFichaAberta = personagemFichaAberta ? Object.entries(personagemFichaAberta.habilidadesPassivas || {}).filter(([, valor]) => Number(valor) > 0) : [];
+  const agruparPorPastaNpc = (itens) => {
+    const grupos = new Map();
+    itens.forEach((item) => {
+      const pasta = String(item.pasta || "Sem pasta").trim() || "Sem pasta";
+      if (!grupos.has(pasta)) grupos.set(pasta, []);
+      grupos.get(pasta).push(item);
+    });
+
+    return [...grupos.entries()].sort(([a], [b]) => {
+      if (a === "Sem pasta") return 1;
+      if (b === "Sem pasta") return -1;
+      return a.localeCompare(b, "pt-BR");
+    });
+  };
+
+  const catalogoAtualNpc = catalogoInimigos.filter(
+    (item) => subAbaNpcs === "npcs" ? item.tipo === "npc" : item.tipo !== "npc",
+  );
+
+  const catalogoDisponivelNpc = catalogoAtualNpc.filter(
+    (item) => !(campanha?.inimigos || []).some(
+      (vinculado) => String(vinculado.inimigo_ref) === String(item.id || item.fichaId),
+    ),
+  );
+
+  const inimigosVinculadosDaAba = (campanha?.inimigos || []).filter((item) =>
+    subAbaNpcs === "npcs"
+      ? (item.tipo || item.dados?.tipo) === "npc"
+      : (item.tipo || item.dados?.tipo || "inimigo") !== "npc"
+  );
+
+  const gruposInimigosVinculados = agruparPorPastaNpc(inimigosVinculadosDaAba);
+
+  const alternarPastaNpc = (pasta) => {
+    const chave = `${subAbaNpcs}:${pasta}`;
+    setPastasNpcsFechadas((atual) => ({ ...atual, [chave]: !atual[chave] }));
+  };
+
   const renderizarCenaBiblioteca = (item) => {
     const selecionada = item.id === cena?.id;
     const midias = [...(item.imagensCena || []).map((midia) => ({ ...midia, tipo: "cena", rotulo: "Cena estatica" })), ...(item.mapasBatalha || []).map((midia) => ({ ...midia, tipo: "mapa", rotulo: "Mapa de batalha" }))];
@@ -706,14 +787,112 @@ const Mesa = () => {
 
     <section className={`mesa-palco modo-${campanha.modo}`}><div className={`mesa-imagem ${tokenArrastando ? "arrastando-token" : ""} ${mapaArrastando ? "arrastando-mapa" : ""}`} style={{ backgroundImage: `url(${urlCena(cena, campanha.modo, campanha.midiaAtivaId)})`, "--mapa-proporcao": proporcaoMapa.largura / proporcaoMapa.altura, "--mapa-proporcao-inversa": proporcaoMapa.altura / proporcaoMapa.largura, transform: campanha.modo === "mapa" ? `translate(${panMapa.x}px, ${panMapa.y}px) scale(${zoomMapa})` : "none" }} onWheel={(event) => { if (campanha.modo !== "mapa") return; event.preventDefault(); setZoomMapa((zoom) => Math.max(0.5, Math.min(3, Number((zoom + (event.deltaY < 0 ? 0.1 : -0.1)).toFixed(2))))); }} onDragOver={(event) => { if (mestre && campanha.modo === "mapa") { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; } }} onDrop={soltarFichaNoMapa} onPointerDown={iniciarPanMapa} onPointerMove={(event) => { const usandoPinca = moverPanMapa(event); if (!usandoPinca) arrastarToken(event); }} onPointerUp={(event) => { const usandoPinca = finalizarPanMapa(event); if (tokenArrastando && !usandoPinca) soltarToken(event); }} onPointerCancel={(event) => { setTokenArrastando(null); finalizarPanMapa(event); }} onPointerLeave={(event) => tokenArrastando && soltarToken(event)}>
       {campanha.modo === "mapa" && <div className="mesa-grade" style={{ backgroundSize: `${100 / colunas}% ${100 / linhas}%` }} />}
-      {campanha.modo === "mapa" && campanha.tokens.map((token) => <button key={token.id} className={`mesa-token ${podeMoverToken(token) ? "movivel" : "bloqueado"} ${tokenArrastando === token.id ? "arrastando" : ""}`} style={{ left: `${token.x}%`, top: `${token.y}%` }} title={podeMoverToken(token) ? `Mover ${token.nome}` : token.nome} onPointerDown={(event) => { if (!podeMoverToken(token)) return; event.preventDefault(); event.currentTarget.setPointerCapture?.(event.pointerId); setTokenArrastando(token.id); }}>{token.imagem_url || personagens[token.ficha_id]?.fotoPerfil ? <img src={token.imagem_url || personagens[token.ficha_id]?.fotoPerfil} alt="" draggable="false" /> : token.nome?.slice(0, 2)}</button>)}
+      {campanha.modo === "mapa" && campanha.tokens.filter((token) => {
+        const estado = estadoTokenNoMapa(token);
+        if (estado.removido) return false;
+        if (!mestre && estado.oculto) return false;
+        return true;
+      }).map((token) => {
+        const estado = estadoTokenNoMapa(token);
+        const tokenVisual = { ...token, ...estado };
+        return <React.Fragment key={token.id}>
+          <button
+            className={`mesa-token ${podeMoverToken(tokenVisual) ? "movivel" : "bloqueado"} ${tokenArrastando === token.id ? "arrastando" : ""}`}
+            style={{ left: `${tokenVisual.x}%`, top: `${tokenVisual.y}%`, ...(mestre && tokenVisual.oculto ? { opacity: .38, filter: "grayscale(.8)", outline: "2px dashed rgba(255,255,255,.65)" } : {}) }}
+            title={mestre ? `${tokenVisual.nome} — clique direito para opcoes` : (podeMoverToken(tokenVisual) ? `Mover ${tokenVisual.nome}` : tokenVisual.nome)}
+            onContextMenu={(event) => { if (!mestre) return; event.preventDefault(); event.stopPropagation(); setMenuTokenAberto((atual) => atual === token.id ? null : token.id); }}
+            onPointerDown={(event) => { if (!podeMoverToken(tokenVisual)) return; event.preventDefault(); event.currentTarget.setPointerCapture?.(event.pointerId); setMenuTokenAberto(null); setTokenArrastando(token.id); }}
+          >
+            {tokenVisual.imagem_url || personagens[tokenVisual.ficha_id]?.fotoPerfil ? <img src={tokenVisual.imagem_url || personagens[tokenVisual.ficha_id]?.fotoPerfil} alt="" draggable="false" /> : tokenVisual.nome?.slice(0, 2)}
+          </button>
+          {mestre && menuTokenAberto === token.id && <div
+            role="menu"
+            aria-label={`Opcoes do token ${tokenVisual.nome || "token"}`}
+            onPointerDown={(event) => event.stopPropagation()}
+            onContextMenu={(event) => event.preventDefault()}
+            style={{ position: "absolute", left: `${tokenVisual.x}%`, top: `${tokenVisual.y}%`, transform: "translate(28px, 18px)", zIndex: 80, minWidth: 150, padding: 6, border: "1px solid rgba(255,255,255,.22)", borderRadius: 8, background: "rgba(8,8,8,.96)", boxShadow: "0 10px 28px rgba(0,0,0,.45)", display: "grid", gap: 4 }}
+          >
+            <button type="button" role="menuitem" onClick={() => alternarVisibilidadeToken(tokenVisual)} style={{ padding: "8px 10px", textAlign: "left", border: 0, borderRadius: 5, background: "rgba(255,255,255,.07)", color: "inherit", cursor: "pointer" }}>{tokenVisual.oculto ? "Mostrar token" : "Ocultar token"}</button>
+            <button type="button" role="menuitem" onClick={() => removerTokenAtualDoMapa(tokenVisual)} style={{ padding: "8px 10px", textAlign: "left", border: 0, borderRadius: 5, background: "rgba(180,35,35,.18)", color: "#ffb4b4", cursor: "pointer" }}>Remover do mapa</button>
+          </div>}
+        </React.Fragment>;
+      })}
     </div>{campanha.modo === "mapa" && <div className="mesa-zoom-controles"><button type="button" onClick={() => setZoomMapa((zoom) => Math.max(.5, Number((zoom - .2).toFixed(2))))} title="Diminuir zoom"><Icon path={mdiMagnifyMinusOutline} size={.82} /></button><span>{Math.round(zoomMapa * 100)}%</span><button type="button" onClick={() => setZoomMapa((zoom) => Math.min(3, Number((zoom + .2).toFixed(2))))} title="Aumentar zoom"><Icon path={mdiMagnifyPlusOutline} size={.82} /></button><button type="button" onClick={() => { setZoomMapa(1); setPanMapa({ x: 0, y: 0 }); }} title="Restaurar zoom e posicao"><Icon path={mdiFitToScreenOutline} size={.82} /></button></div>}</section>
     {mestre && <nav className="mesa-lateral-navegacao" aria-label="Conteudo da lateral"><button className={abaLateralMestre === "participantes" ? "ativo" : ""} onClick={() => { setAbaLateralMestre((aba) => aba === "participantes" ? "" : "participantes"); setInimigoAberto(null); }}>Participantes <b>{campanha.membros.length}</b></button><button className={abaLateralMestre === "inimigos" ? "ativo" : ""} onClick={() => setAbaLateralMestre((aba) => aba === "inimigos" ? "" : "inimigos")}>NPCs <b>{campanha.inimigos?.length || 0}</b></button></nav>}
     {!mestre && <nav className="mesa-lateral-navegacao mesa-jogador-navegacao" aria-label="Conteudo do jogador"><button className={abaLateralJogador === "participantes" ? "ativo" : ""} onClick={() => setAbaLateralJogador((aba) => aba === "participantes" ? "" : "participantes")}>Participantes <b>{campanha.membros.length}</b></button><button className={abaLateralJogador === "ficha" ? "ativo" : ""} onClick={() => setAbaLateralJogador((aba) => aba === "ficha" ? "" : "ficha")}>Ficha</button></nav>}
     {!mestre && abaLateralJogador === "participantes" && <aside className="mesa-jogador-participantes"><div className="mesa-lateral-titulo"><Icon path={mdiShieldCrownOutline} size={0.8} /><span>Participantes</span><b>{campanha.membros.length}</b></div><div className="mesa-membros">{campanha.membros.length ? campanha.membros.map((membro) => { const personagem = personagens[membro.ficha_id]; const recursos = recursosParticipante(personagem); return <div className={`mesa-jogador-participante ${membro.ficha_id === fichaJogadorId ? "eu" : ""} ${classesCondicoesMesa(personagem)}`} key={membro.id}><span>{personagem?.fotoPerfil ? <img src={personagem.fotoPerfil} alt="" /> : membro.nome?.slice(0, 2)}</span><div><strong>{personagem?.nome || membro.nome}</strong><small>{personagem ? `Nivel ${personagem.nivel || 1} · ${personagem.classe || "Sem classe"}` : membro.papel}</small><ResumoCondicoesParticipante personagem={personagem} />{recursos.length > 0 && <div className="membro-recursos">{recursos.map((recurso) => <div className={`membro-recurso ${classeRecursoParticipante(recurso)}`} key={recurso.id}><span>{recurso.nome}</span><i><em style={{ width: `${percentualRecurso(recurso.valor)}%` }} /></i><b>{recurso.valor?.atual || 0}/{recurso.valor?.max || 0}</b></div>)}</div>}</div></div>; }) : <p>Nenhuma ficha vinculada ainda.</p>}</div></aside>}
     {!mestre && abaLateralJogador === "ficha" && personagemJogador && <section className="ficha-tablet-mesa" role="dialog" aria-label={`Ficha de ${personagemJogador.nome}`}><header><div><span>Ficha no tabletop</span><strong>{personagemJogador.nome}</strong></div><button onClick={() => setAbaLateralJogador("participantes")} title="Fechar ficha"><Icon path={mdiClose} size={.9} /></button></header><iframe title={`Ficha de ${personagemJogador.nome}`} src={`/?ficha=${encodeURIComponent(personagemJogador.nome || membroJogador.ficha_id)}&senha=${encodeURIComponent(membroJogador.ficha_id)}&embed=mesa`} /></section>}
     {!mestre && abaLateralJogador === "ficha" && !personagemJogador && <aside className="mesa-jogador-participantes"><div className="jogador-escolher-ficha"><strong>Ficha indisponivel</strong><p>Selecione uma ficha vinculada para abri-la na mesa.</p></div></aside>}
-    {mestre && abaLateralMestre === "inimigos" && <aside className="mesa-inimigos-lateral"><div className="mesa-npc-subabas"><button className={subAbaNpcs === "inimigos" ? "ativo" : ""} onClick={() => { setSubAbaNpcs("inimigos"); setInimigoAberto(null); }}>Inimigos <b>{(campanha.inimigos || []).filter((item) => (item.tipo || item.dados?.tipo || "inimigo") !== "npc").length}</b></button><button className={subAbaNpcs === "npcs" ? "ativo" : ""} onClick={() => { setSubAbaNpcs("npcs"); setInimigoAberto(null); }}>NPCs do mestre <b>{(campanha.inimigos || []).filter((item) => (item.tipo || item.dados?.tipo) === "npc").length}</b></button></div>{inimigoAberto ? <div className="mesa-inimigo-ficha"><header><button onClick={() => setInimigoAberto(null)}><Icon path={mdiArrowLeft} size={.7} /></button><span>Ficha do {inimigoAberto.tipo === "npc" ? "NPC" : "inimigo"}</span><button onClick={() => removerInimigo(inimigoAberto)} title="Remover da campanha"><Icon path={mdiDeleteOutline} size={.7} /></button></header><div className="mesa-inimigo-identidade">{inimigoAberto.fotoPerfil ? <img src={inimigoAberto.fotoPerfil} alt="" /> : <span>{inimigoAberto.nome?.slice(0, 2)}</span>}<div><strong>{inimigoAberto.nome}</strong><small>Nivel {inimigoAberto.nivel || 1} · {inimigoAberto.classe || (inimigoAberto.tipo === "npc" ? "NPC" : "Inimigo")}</small></div></div><div className="mesa-inimigo-recursos"><ControleVitalInimigo nome="Sanidade" tipo="sanidade" recurso={inimigoAberto.sanidade} aoAlterar={alterarSanidadeInimigo} /><label className="inimigo-defesa-resumo"><span>Defesa</span><input key={inimigoAberto.defesa} type="number" min="0" defaultValue={inimigoAberto.defesa || 0} onBlur={(event) => alterarDefesaInimigo(event.target.value)} onKeyDown={(event) => event.key === "Enter" && event.currentTarget.blur()} aria-label="Defesa" /></label></div><section className="mesa-inimigo-corpo"><h3>Integridade dos membros</h3><div className="mesa-inimigo-membros">{MEMBROS_INIMIGO_MESA.map(([chave, nome]) => <ControleVitalInimigo key={chave} nome={nome} recurso={inimigoAberto.membros?.[chave]} aoAlterar={(valor) => alterarMembroInimigo(chave, valor)} />)}</div></section><section><h3>Atributos</h3><div className="mesa-inimigo-atributos">{Object.entries(inimigoAberto.atributos || {}).map(([nome, valor]) => <div key={nome}><span>{nome}</span><b>{valor}</b></div>)}</div></section><section><h3>Habilidades e ataques</h3><div className="mesa-inimigo-habilidades">{[...(inimigoAberto.habilidades || []), ...(inimigoAberto.ataques || [])].length ? [...(inimigoAberto.habilidades || []), ...(inimigoAberto.ataques || [])].map((item, index) => <article key={item.id || index}><strong>{item.nome || item.titulo || `Acao ${index + 1}`}</strong><p>{item.descricao || item.efeito || item.dano || "Sem descricao"}</p></article>) : <p>Nenhuma habilidade cadastrada.</p>}</div></section></div> : <><div className="mesa-inimigo-adicionar"><select value={inimigoParaAdicionar} onChange={(event) => setInimigoParaAdicionar(event.target.value)}><option value="">Selecionar {subAbaNpcs === "npcs" ? "NPC" : "inimigo"}...</option>{catalogoInimigos.filter((item) => (subAbaNpcs === "npcs" ? item.tipo === "npc" : item.tipo !== "npc") && !(campanha.inimigos || []).some((vinculado) => String(vinculado.inimigo_ref) === String(item.id || item.fichaId))).map((item) => <option key={item.id || item.fichaId} value={item.id || item.fichaId}>{item.pasta ? `${item.pasta} / ` : ""}{item.nome}</option>)}</select><button onClick={adicionarInimigo} disabled={!inimigoParaAdicionar}><Icon path={mdiPlus} size={.72} /></button></div><div className="mesa-inimigos-lista">{(campanha.inimigos || []).filter((item) => subAbaNpcs === "npcs" ? (item.tipo || item.dados?.tipo) === "npc" : (item.tipo || item.dados?.tipo || "inimigo") !== "npc").length ? (campanha.inimigos || []).filter((item) => subAbaNpcs === "npcs" ? (item.tipo || item.dados?.tipo) === "npc" : (item.tipo || item.dados?.tipo || "inimigo") !== "npc").map((inimigo) => <button key={inimigo.id} draggable title="Arraste para o mapa para criar ou mover o token" onDragStart={(event) => { event.dataTransfer.effectAllowed = "copy"; event.dataTransfer.setData("application/x-darkness-inimigo", String(inimigo.inimigo_ref || inimigo.id)); }} onClick={() => setInimigoAberto(inimigo)}>{inimigo.fotoPerfil ? <img src={inimigo.fotoPerfil} alt="" /> : <span>{inimigo.nome?.slice(0, 2)}</span>}<div><strong>{inimigo.nome}</strong><small>{inimigo.pasta ? `${inimigo.pasta} · ` : ""}Nivel {inimigo.nivel || 1} · Defesa {inimigo.defesa || 0}</small><em>{inimigo.sanidade?.atual || 0}/{inimigo.sanidade?.max || 0} SAN</em></div></button>) : <p>Nenhum {subAbaNpcs === "npcs" ? "NPC" : "inimigo"} nesta campanha.</p>}</div></>}</aside>}
+    {mestre && abaLateralMestre === "inimigos" && <aside className="mesa-inimigos-lateral"><div className="mesa-npc-subabas"><button className={subAbaNpcs === "inimigos" ? "ativo" : ""} onClick={() => { setSubAbaNpcs("inimigos"); setInimigoAberto(null); }}>Inimigos <b>{(campanha.inimigos || []).filter((item) => (item.tipo || item.dados?.tipo || "inimigo") !== "npc").length}</b></button><button className={subAbaNpcs === "npcs" ? "ativo" : ""} onClick={() => { setSubAbaNpcs("npcs"); setInimigoAberto(null); }}>NPCs do mestre <b>{(campanha.inimigos || []).filter((item) => (item.tipo || item.dados?.tipo) === "npc").length}</b></button></div>{inimigoAberto ? <div className="mesa-inimigo-ficha"><header><button onClick={() => setInimigoAberto(null)}><Icon path={mdiArrowLeft} size={.7} /></button><span>Ficha do {inimigoAberto.tipo === "npc" ? "NPC" : "inimigo"}</span><button onClick={() => removerInimigo(inimigoAberto)} title="Remover da campanha"><Icon path={mdiDeleteOutline} size={.7} /></button></header><div className="mesa-inimigo-identidade">{inimigoAberto.fotoPerfil ? <img src={inimigoAberto.fotoPerfil} alt="" /> : <span>{inimigoAberto.nome?.slice(0, 2)}</span>}<div><strong>{inimigoAberto.nome}</strong><small>Nivel {inimigoAberto.nivel || 1} · {inimigoAberto.classe || (inimigoAberto.tipo === "npc" ? "NPC" : "Inimigo")}</small></div></div><div className="mesa-inimigo-recursos"><ControleVitalInimigo nome="Sanidade" tipo="sanidade" recurso={inimigoAberto.sanidade} aoAlterar={alterarSanidadeInimigo} /><label className="inimigo-defesa-resumo"><span>Defesa</span><input key={inimigoAberto.defesa} type="number" min="0" defaultValue={inimigoAberto.defesa || 0} onBlur={(event) => alterarDefesaInimigo(event.target.value)} onKeyDown={(event) => event.key === "Enter" && event.currentTarget.blur()} aria-label="Defesa" /></label></div><section className="mesa-inimigo-corpo"><h3>Integridade dos membros</h3><div className="mesa-inimigo-membros">{MEMBROS_INIMIGO_MESA.map(([chave, nome]) => <ControleVitalInimigo key={chave} nome={nome} recurso={inimigoAberto.membros?.[chave]} aoAlterar={(valor) => alterarMembroInimigo(chave, valor)} />)}</div></section><section><h3>Atributos</h3><div className="mesa-inimigo-atributos">{Object.entries(inimigoAberto.atributos || {}).map(([nome, valor]) => <div key={nome}><span>{nome}</span><b>{valor}</b></div>)}</div></section><section><h3>Habilidades e ataques</h3><div className="mesa-inimigo-habilidades">{[...(inimigoAberto.habilidades || []), ...(inimigoAberto.ataques || [])].length ? [...(inimigoAberto.habilidades || []), ...(inimigoAberto.ataques || [])].map((item, index) => <article key={item.id || index}><strong>{item.nome || item.titulo || `Acao ${index + 1}`}</strong><p>{item.descricao || item.efeito || item.dano || "Sem descricao"}</p></article>) : <p>Nenhuma habilidade cadastrada.</p>}</div></section></div> : <><div className="mesa-inimigo-adicionar">
+  <select value={inimigoParaAdicionar} onChange={(event) => setInimigoParaAdicionar(event.target.value)}>
+    <option value="">Selecionar {subAbaNpcs === "npcs" ? "NPC" : "inimigo"}...</option>
+    {agruparPorPastaNpc(catalogoDisponivelNpc).map(([pasta, itens]) => (
+      <optgroup key={pasta} label={pasta}>
+        {itens.map((item) => (
+          <option key={item.id || item.fichaId} value={item.id || item.fichaId}>
+            {item.nome}
+          </option>
+        ))}
+      </optgroup>
+    ))}
+  </select>
+  <button onClick={adicionarInimigo} disabled={!inimigoParaAdicionar}>
+    <Icon path={mdiPlus} size={.72} />
+  </button>
+</div>
+
+<div className="mesa-inimigos-lista mesa-inimigos-pastas">
+  {gruposInimigosVinculados.length ? gruposInimigosVinculados.map(([pasta, itens]) => {
+    const chavePasta = `${subAbaNpcs}:${pasta}`;
+    const fechada = Boolean(pastasNpcsFechadas[chavePasta]);
+
+    return (
+      <section className="mesa-inimigo-pasta" key={chavePasta}>
+        <button
+          type="button"
+          className="mesa-inimigo-pasta-titulo"
+          onClick={() => alternarPastaNpc(pasta)}
+          aria-expanded={!fechada}
+        >
+          <Icon path={fechada ? mdiChevronRight : mdiChevronDown} size={.58} />
+          <span>{pasta}</span>
+          <b>{itens.length}</b>
+        </button>
+
+        {!fechada && (
+          <div className="mesa-inimigo-pasta-itens">
+            {itens.map((inimigo) => (
+              <button
+                key={inimigo.id}
+                draggable
+                title="Arraste para o mapa para criar ou mover o token"
+                onDragStart={(event) => {
+                  event.dataTransfer.effectAllowed = "copy";
+                  event.dataTransfer.setData(
+                    "application/x-darkness-inimigo",
+                    String(inimigo.inimigo_ref || inimigo.id),
+                  );
+                }}
+                onClick={() => setInimigoAberto(inimigo)}
+              >
+                {inimigo.fotoPerfil
+                  ? <img src={inimigo.fotoPerfil} alt="" />
+                  : <span>{inimigo.nome?.slice(0, 2)}</span>}
+                <div>
+                  <strong>{inimigo.nome}</strong>
+                  <small>Nivel {inimigo.nivel || 1} · Defesa {inimigo.defesa || 0}</small>
+                  <em>{inimigo.sanidade?.atual || 0}/{inimigo.sanidade?.max || 0} SAN</em>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  }) : (
+    <p>Nenhum {subAbaNpcs === "npcs" ? "NPC" : "inimigo"} nesta campanha.</p>
+  )}
+</div></>}</aside>}
     {/* Plano B ativo. O painel detalhado do jogador abaixo foi preservado e esta apenas oculto por CSS. */}
     <aside className={`mesa-lateral ${mestre ? "" : "mesa-ficha-jogador"}`}>{mestre ? <><div className="mesa-lateral-titulo"><Icon path={mdiShieldCrownOutline} size={0.8} /><span>Participantes</span><b>{campanha.membros.length}</b></div><div className="mesa-membros">{campanha.membros.length ? campanha.membros.map((membro) => { const personagem = personagens[membro.ficha_id]; const recursos = recursosParticipante(personagem); return <button className={`participante-condicionado ${classesCondicoesMesa(personagem)}`} key={membro.id} draggable title="Arraste para o mapa para criar ou mover o token" onDragStart={(event) => { event.dataTransfer.effectAllowed = "copy"; event.dataTransfer.setData("application/x-darkness-ficha", membro.ficha_id); }} onClick={() => setFichaAberta({ membro, personagem })}><span>{personagem?.fotoPerfil ? <img src={personagem.fotoPerfil} alt="" /> : membro.nome?.slice(0, 2)}</span><div><strong>{personagem?.nome || membro.nome}</strong><small>{personagem ? `Nivel ${personagem.nivel || 1} · ${personagem.classe || "Sem classe"}` : membro.papel}</small><ResumoCondicoesParticipante personagem={personagem} />{recursos.length > 0 && <div className="membro-recursos">{recursos.map((recurso) => <div className={`membro-recurso ${classeRecursoParticipante(recurso)}`} key={recurso.id}><span>{recurso.nome}</span><i><em style={{ width: `${percentualRecurso(recurso.valor)}%` }} /></i><b>{recurso.valor?.atual || 0}/{recurso.valor?.max || 0}</b></div>)}</div>}</div></button>; }) : <p>Nenhuma ficha vinculada ainda.</p>}</div></> : personagemJogador ? <><div className="mesa-lateral-titulo"><Icon path={mdiShieldCrownOutline} size={0.8} /><span>Minha ficha</span></div><div className="jogador-ficha-identidade">{personagemJogador.fotoPerfil && <img src={personagemJogador.fotoPerfil} alt="" />}<div><strong>{personagemJogador.nome}</strong><small>Nivel {personagemJogador.nivel || 1} · {personagemJogador.classe || "Sem classe"}</small></div></div><div className="jogador-ficha-recursos">{[["SAN", personagemJogador.sanidade], ["ESP", personagemJogador.esperanca], ["INT", calcularIntegridade(personagemJogador)]].map(([nome, recurso]) => <div key={nome}><span>{nome}</span><i><em style={{ width: `${percentualRecurso(recurso)}%` }} /></i><b>{recurso?.atual || 0}/{recurso?.max || 0}</b></div>)}</div><div className="jogador-ficha-listas"><section><h3>Habilidades</h3>{habilidadesJogador.length ? habilidadesJogador.map((item) => <article key={`${item.grupo}-${item.id}`}><strong>{item.nome}</strong><span>{item.grupo}{item.especialidade ? ` · ${item.especialidade}` : ""}</span><p>{item.descricao || item.efeito}</p></article>) : <p>Nenhuma habilidade selecionada.</p>}</section><section><h3>Passivos</h3>{passivosJogador.length ? passivosJogador.map(([nome, valor]) => <div className="jogador-ficha-passivo" key={nome}><span>{nome.replace(/([A-Z])/g, " $1")}</span><b>{valor}</b></div>) : <p>Nenhum passivo adquirido.</p>}</section><section><h3>Rituais e ativos</h3>{personagemJogador.rituais?.length ? personagemJogador.rituais.map((item, index) => <article key={item.id || index}><strong>{item.nome || `Ritual ${index + 1}`}</strong><p>{item.descricao || item.efeito}</p></article>) : <p>Nenhum ritual ou ativo registrado.</p>}</section></div><button className="jogador-abrir-ficha" onClick={() => setFichaAberta({ membro: membroJogador, personagem: personagemJogador })}>Abrir ficha</button></> : <div className="jogador-escolher-ficha"><strong>Qual e a sua ficha?</strong><p>Escolha a ficha vinculada a este jogador.</p><select value={fichaJogadorId} onChange={(event) => { const id = event.target.value; setFichaJogadorId(id); localStorage.setItem(`darkness_mesa_ficha_${codigo}`, id); }}><option value="">Selecionar ficha...</option>{campanha.membros.map((membro) => <option key={membro.id} value={membro.ficha_id}>{personagens[membro.ficha_id]?.nome || membro.nome}</option>)}</select></div>}</aside>
     <footer className="mesa-rodape"><div className="mesa-rolagens-titulo"><Icon path={mdiDiceMultiple} size={0.85} /><span>Rolagens</span></div><div className="mesa-rolagens">{campanha.rolagens.length ? campanha.rolagens.map((rolagem) => { const faces = facesDaRolagem(rolagem); return <div key={rolagem.id}><span>{rolagem.autor_nome}</span><b className={`mesa-resultado-dado d${faces}`} title={`Resultado ${rolagem.resultado} em d${faces}`}><i>{rolagem.resultado}</i></b><small>{rolagem.expressao}</small></div>; }) : <p>As rolagens da sessao aparecerao aqui.</p>}</div></footer>

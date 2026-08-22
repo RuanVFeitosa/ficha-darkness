@@ -4500,3 +4500,450 @@
   }
 }
 .mestre-pastas-catalogo{display:flex;align-items:center;gap:6px;margin:12px 0;padding:8px;overflow-x:auto;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.22)}.mestre-pastas-catalogo button{min-height:32px;display:flex;align-items:center;gap:7px;padding:0 11px;border:1px solid rgba(255,255,255,.12);background:#111;color:#999;white-space:nowrap;cursor:pointer}.mestre-pastas-catalogo button.ativa{border-color:#d4af37;background:rgba(212,175,55,.1);color:#e1c96e}.mestre-pastas-catalogo b{font-size:9px}.mestre-modal-linha-topo h2 small{color:#817b70;font-size:11px;font-weight:400}.criarInimigo-button.secundario{margin-left:6px;background:transparent!important;color:#d4af37!important}.catalogo-pasta-select{min-width:130px;height:34px;padding:0 8px;border:1px solid rgba(255,255,255,.15);background:#0b0b0b;color:#c9c3b8;font-size:9px}.mestre-npcs-subtabs{margin-top:10px}
+
+
+/* =========================================================
+   MODAL EXPANDIDO — NPCs / INIMIGOS
+   Visual editorial compacto para o catálogo do mestre.
+========================================================= */
+
+.mestre-modal-ficha.mestre-catalogo-modal {
+  width: min(1120px, calc(100vw - 56px));
+  max-height: min(880px, calc(100vh - 56px));
+  padding: 0;
+  gap: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 15% -10%, rgba(212, 175, 55, 0.10), transparent 28%),
+    linear-gradient(180deg, #090909 0%, #030303 38%, #000 100%);
+  box-shadow:
+    0 34px 100px rgba(0, 0, 0, 0.88),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  scrollbar-color: rgba(212, 175, 55, 0.55) rgba(255, 255, 255, 0.035);
+  scrollbar-width: thin;
+}
+
+.mestre-modal-ficha.mestre-catalogo-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mestre-modal-ficha.mestre-catalogo-modal::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.mestre-modal-ficha.mestre-catalogo-modal::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.52);
+}
+
+/* Cabeçalho principal */
+.mestre-catalogo-modal .inimigo-ficha-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  min-height: 136px;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.22);
+  background:
+    linear-gradient(90deg, rgba(212, 175, 55, 0.075), transparent 36%),
+    rgba(4, 4, 4, 0.96);
+  backdrop-filter: blur(18px);
+}
+
+.mestre-catalogo-modal-inimigo .inimigo-ficha-header {
+  border-top: 3px solid #b64a42;
+}
+
+.mestre-catalogo-modal-npc .inimigo-ficha-header {
+  border-top: 3px solid #d4af37;
+}
+
+/* Foto */
+.mestre-catalogo-modal .inimigo-foto-editavel {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  min-width: 88px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 14px;
+  background: #111;
+  cursor: pointer;
+}
+
+.mestre-catalogo-modal .inimigo-foto-editavel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mestre-catalogo-modal .inimigo-foto-editavel > span {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 6px 4px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-align: center;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.mestre-catalogo-modal .inimigo-foto-editavel:hover > span {
+  opacity: 1;
+}
+
+.mestre-catalogo-modal .inimigo-foto-editavel input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Identidade */
+.mestre-catalogo-modal .inimigo-identidade {
+  display: grid;
+  grid-template-columns: 66px minmax(220px, 1fr) minmax(145px, 190px);
+  gap: 10px;
+  align-items: end;
+  min-width: 0;
+}
+
+.mestre-catalogo-modal .inimigo-identidade label {
+  gap: 5px;
+  color: #d4af37;
+  font-size: 0.58rem;
+  letter-spacing: 1.2px;
+}
+
+.mestre-catalogo-modal .inimigo-identidade label input,
+.mestre-catalogo-modal .inimigo-nome-input,
+.mestre-catalogo-modal .catalogo-pasta-select {
+  height: 40px;
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #fff;
+}
+
+.mestre-catalogo-modal .inimigo-identidade label input {
+  width: 66px;
+  text-align: center;
+  font-weight: 900;
+}
+
+.mestre-catalogo-modal .inimigo-nome-input {
+  padding: 0 13px;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.mestre-catalogo-modal .catalogo-pasta-select {
+  min-width: 0;
+  padding: 0 10px;
+  color: #d8d0c1;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+/* Ações */
+.mestre-catalogo-modal .mestre-modal-header-acoes {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.mestre-catalogo-modal .mestre-modal-header-acoes button {
+  min-height: 38px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 0.64rem;
+  letter-spacing: 0.8px;
+}
+
+.mestre-catalogo-modal .mestre-modal-fechar {
+  width: 38px;
+  min-width: 38px;
+  padding: 0;
+}
+
+/* Seções */
+.mestre-catalogo-modal > .mestre-modal-bloco,
+.mestre-catalogo-modal > .inimigo-ficha-bloco {
+  margin: 14px 18px 0;
+}
+
+.mestre-catalogo-modal > .mestre-modal-bloco:last-child,
+.mestre-catalogo-modal > .inimigo-ficha-bloco:last-child {
+  margin-bottom: 18px;
+}
+
+.mestre-catalogo-modal .mestre-modal-bloco,
+.mestre-catalogo-modal .inimigo-ficha-bloco {
+  display: grid;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  border-left: 2px solid rgba(212, 175, 55, 0.56);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: none;
+}
+
+.mestre-catalogo-modal .mestre-modal-bloco > span,
+.mestre-catalogo-modal .inimigo-ficha-bloco > h3,
+.mestre-catalogo-modal .inimigo-bloco-topo h3 {
+  margin: 0;
+  color: #e3c35c;
+  font-size: 0.69rem;
+  font-weight: 900;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+}
+
+/* Atributos */
+.mestre-catalogo-modal .mestre-modal-atributos.linha {
+  grid-template-columns: repeat(5, minmax(90px, 1fr));
+  gap: 8px;
+}
+
+.mestre-catalogo-modal .mestre-modal-atributos label {
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.34);
+}
+
+.mestre-catalogo-modal .mestre-modal-atributos label input {
+  min-height: 36px;
+  height: 36px;
+  text-align: center;
+  font-weight: 900;
+}
+
+/* Sanidade + defesa mais compactos */
+.mestre-catalogo-modal .mestre-duplo {
+  gap: 10px;
+}
+
+.mestre-catalogo-modal .mestre-duplo label,
+.mestre-catalogo-modal .inimigo-ficha-bloco label {
+  gap: 5px;
+}
+
+.mestre-catalogo-modal .mestre-duplo input,
+.mestre-catalogo-modal .mestre-modal-bloco.full > input,
+.mestre-catalogo-modal .inimigo-ficha-bloco > input {
+  min-height: 38px;
+  height: 38px;
+}
+
+/* Membros */
+.mestre-catalogo-modal .mestre-corpo-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mestre-catalogo-modal .mestre-membro,
+.mestre-catalogo-modal .mestre-corpo-item {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 2px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.34);
+}
+
+.mestre-catalogo-modal .mestre-membro strong,
+.mestre-catalogo-modal .mestre-corpo-item strong {
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
+  color: #fff;
+  font-size: 0.73rem;
+  letter-spacing: 0.4px;
+}
+
+.mestre-catalogo-modal .mestre-membro label,
+.mestre-catalogo-modal .mestre-corpo-item label {
+  min-width: 0;
+  color: #8f8f8f;
+  font-size: 0.56rem;
+  letter-spacing: 0.6px;
+}
+
+.mestre-catalogo-modal .mestre-membro input,
+.mestre-catalogo-modal .mestre-corpo-item input {
+  min-height: 34px;
+  height: 34px;
+  padding: 0 8px;
+}
+
+/* Ataques / habilidades */
+.mestre-catalogo-modal .inimigo-bloco-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.mestre-catalogo-modal .ataqueButton,
+.mestre-catalogo-modal .habilidadeButton {
+  min-height: 34px;
+  padding: 6px 11px;
+  border-color: rgba(212, 175, 55, 0.22);
+  background: rgba(212, 175, 55, 0.06);
+  color: #e7ce79;
+  font-size: 0.6rem;
+}
+
+.mestre-catalogo-modal .inimigo-ataque-card,
+.mestre-catalogo-modal .mestre-edit-lista > div {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.7fr) minmax(240px, 1.5fr) auto;
+  gap: 9px;
+  align-items: start;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.32);
+}
+
+.mestre-catalogo-modal .inimigo-ataque-card textarea,
+.mestre-catalogo-modal .mestre-edit-lista textarea {
+  min-height: 68px;
+  resize: vertical;
+}
+
+.mestre-catalogo-modal .inimigo-ataque-card .mestre-btn-apagar,
+.mestre-catalogo-modal .mestre-edit-lista .mestre-btn-apagar {
+  min-height: 38px;
+  align-self: start;
+}
+
+/* Pequeno tratamento visual por tipo */
+.mestre-catalogo-modal-inimigo .mestre-modal-bloco,
+.mestre-catalogo-modal-inimigo .inimigo-ficha-bloco {
+  border-left-color: rgba(182, 74, 66, 0.72);
+}
+
+.mestre-catalogo-modal-inimigo .mestre-modal-bloco > span,
+.mestre-catalogo-modal-inimigo .inimigo-ficha-bloco > h3,
+.mestre-catalogo-modal-inimigo .inimigo-bloco-topo h3 {
+  color: #d8847d;
+}
+
+.mestre-catalogo-modal-npc .mestre-modal-bloco,
+.mestre-catalogo-modal-npc .inimigo-ficha-bloco {
+  border-left-color: rgba(212, 175, 55, 0.62);
+}
+
+/* Responsivo */
+@media (max-width: 900px) {
+  .mestre-modal-ficha.mestre-catalogo-modal {
+    width: min(760px, calc(100vw - 28px));
+    max-height: calc(100vh - 28px);
+  }
+
+  .mestre-catalogo-modal .inimigo-ficha-header {
+    position: relative;
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .mestre-catalogo-modal .inimigo-foto-editavel {
+    width: 72px;
+    height: 72px;
+    min-width: 72px;
+  }
+
+  .mestre-catalogo-modal .mestre-modal-header-acoes {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .mestre-catalogo-modal .inimigo-identidade {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .mestre-catalogo-modal .catalogo-pasta-select {
+    grid-column: 1 / -1;
+  }
+
+  .mestre-catalogo-modal .mestre-modal-atributos.linha,
+  .mestre-catalogo-modal .mestre-corpo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mestre-catalogo-modal .inimigo-ataque-card,
+  .mestre-catalogo-modal .mestre-edit-lista > div {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .mestre-modal-overlay {
+    padding: 8px;
+  }
+
+  .mestre-modal-ficha.mestre-catalogo-modal {
+    width: 100%;
+    max-height: calc(100vh - 16px);
+    border-radius: 12px;
+  }
+
+  .mestre-catalogo-modal .inimigo-ficha-header {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .mestre-catalogo-modal .inimigo-foto-editavel {
+    width: 70px;
+    height: 70px;
+  }
+
+  .mestre-catalogo-modal .inimigo-identidade,
+  .mestre-catalogo-modal .mestre-modal-atributos.linha,
+  .mestre-catalogo-modal .mestre-corpo-grid,
+  .mestre-catalogo-modal .mestre-membro,
+  .mestre-catalogo-modal .mestre-corpo-item {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-catalogo-modal .inimigo-identidade label input {
+    width: 100%;
+  }
+
+  .mestre-catalogo-modal .mestre-modal-header-acoes {
+    justify-content: stretch;
+    flex-wrap: wrap;
+  }
+
+  .mestre-catalogo-modal .mestre-modal-header-acoes button {
+    flex: 1;
+  }
+
+  .mestre-catalogo-modal > .mestre-modal-bloco,
+  .mestre-catalogo-modal > .inimigo-ficha-bloco {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+}

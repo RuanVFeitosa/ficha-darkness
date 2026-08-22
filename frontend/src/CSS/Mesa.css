@@ -511,3 +511,131 @@
   }
 }
 .mesa-npc-subabas{position:sticky;top:48px;z-index:3;height:42px;display:grid;grid-template-columns:1fr 1fr;margin-top:48px;border-bottom:1px solid var(--linha);background:#050505}.mesa-npc-subabas button{display:flex;align-items:center;justify-content:center;gap:5px;border:0;border-right:1px solid var(--linha);background:transparent;color:#8f8a81;font-size:8px;text-transform:uppercase;cursor:pointer}.mesa-npc-subabas button.ativo{box-shadow:inset 0 -2px var(--mesa-acento);color:var(--mesa-acento)}.mesa-npc-subabas b{font-size:7px}
+
+/* =========================================================
+   TABLETOP — PASTAS DE NPCs E INIMIGOS
+========================================================= */
+
+.mesa-inimigos-pastas {
+  padding: 8px 10px 14px;
+}
+
+.mesa-inimigo-pasta {
+  border-bottom: 1px solid var(--linha);
+}
+
+.mesa-inimigo-pasta:first-child {
+  border-top: 1px solid var(--linha);
+}
+
+.mesa-inimigo-pasta-titulo {
+  width: 100%;
+  min-height: 34px;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding: 0 7px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.025);
+  color: #aaa49a;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mesa-inimigo-pasta-titulo:hover {
+  background: color-mix(in srgb, var(--mesa-acento) 7%, transparent);
+  color: var(--mesa-texto);
+}
+
+.mesa-inimigo-pasta-titulo svg {
+  color: var(--mesa-acento);
+}
+
+.mesa-inimigo-pasta-titulo span {
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .7px;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mesa-inimigo-pasta-titulo b {
+  min-width: 20px;
+  padding: 2px 5px;
+  border: 1px solid color-mix(in srgb, var(--mesa-acento) 30%, transparent);
+  color: var(--mesa-acento);
+  font-size: 7px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.mesa-inimigo-pasta-itens {
+  display: grid;
+}
+
+.mesa-inimigo-pasta-itens > button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px 5px 10px 14px;
+  border: 0;
+  border-top: 1px solid rgba(220, 213, 195, .09);
+  background: transparent;
+  color: var(--mesa-texto);
+  text-align: left;
+  cursor: pointer;
+}
+
+.mesa-inimigo-pasta-itens > button:hover {
+  background: color-mix(in srgb, var(--mesa-acento) 7%, transparent);
+}
+
+.mesa-inimigo-pasta-itens > button > img,
+.mesa-inimigo-pasta-itens > button > span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  object-fit: cover;
+  border: 1px solid var(--mesa-borda);
+  background: #151515;
+}
+
+.mesa-inimigo-pasta-itens > button > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.mesa-inimigo-pasta-itens strong {
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mesa-inimigo-pasta-itens small,
+.mesa-inimigo-pasta-itens em {
+  color: #8f8a81;
+  font-size: 8px;
+  font-style: normal;
+}
+
+.mesa-inimigo-adicionar optgroup {
+  background: #0c0c0c;
+  color: var(--mesa-acento);
+  font-weight: 800;
+}
+
+.mesa-inimigo-adicionar option {
+  background: #111;
+  color: var(--mesa-texto);
+}
+
