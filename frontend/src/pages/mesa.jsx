@@ -118,7 +118,19 @@ const Mesa = () => {
     try {
       setErro("");
       const dados = await buscarCampanhaPorCodigo(codigo);
-      setCampanha(dados);
+      setCampanha((atual) => {
+        if (!dados || !atual || tokensEmGravacaoRef.current.size === 0) return dados;
+        const protegidos = new Map(
+          atual.tokens
+            .filter((token) => tokensEmGravacaoRef.current.has(token.id))
+            .map((token) => [token.id, token]),
+        );
+        const tokens = (dados.tokens || []).map((token) => protegidos.get(token.id) || token);
+        protegidos.forEach((token, id) => {
+          if (!tokens.some((item) => item.id === id)) tokens.push(token);
+        });
+        return { ...dados, tokens };
+      });
       if (!dados) setErro("Campanha nao encontrada.");
     } catch (error) { setErro(error.message || "Nao foi possivel carregar a mesa."); }
     finally { setCarregando(false); }
@@ -142,6 +154,36 @@ const Mesa = () => {
           if (tokensEmGravacaoRef.current.has(token.id) && !tokens.some((item) => item.id === token.id)) tokens.push(token);
         });
         return { ...atual, tokens };
+      });
+      return;
+    }
+    if (evento?.table === "tokens_mapa") {
+      const tokenRecebido = evento.new;
+      const tokenRemovidoId = evento.old?.id;
+      setCampanha((atual) => {
+        if (!atual) return atual;
+        if (evento.eventType === "DELETE") {
+          if (tokensEmGravacaoRef.current.has(tokenRemovidoId)) return atual;
+          return {
+            ...atual,
+            tokens: atual.tokens.filter((token) => token.id !== tokenRemovidoId),
+          };
+        }
+        if (!tokenRecebido?.id || tokensEmGravacaoRef.current.has(tokenRecebido.id)) {
+          return atual;
+        }
+        const mapaChave = chavePosicaoMapa(atual.cenaAtiva?.id, atual.midiaAtivaId);
+        const posicao = tokenRecebido.posicoes?.[mapaChave];
+        const tokenAtualizado = posicao
+          ? { ...tokenRecebido, x: posicao.x, y: posicao.y }
+          : tokenRecebido;
+        const existe = atual.tokens.some((token) => token.id === tokenRecebido.id);
+        return {
+          ...atual,
+          tokens: existe
+            ? atual.tokens.map((token) => token.id === tokenRecebido.id ? tokenAtualizado : token)
+            : [...atual.tokens, tokenAtualizado],
+        };
       });
       return;
     }

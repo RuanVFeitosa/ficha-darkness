@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Icon from "@mdi/react";
 import {
@@ -618,6 +618,8 @@ const DashboardMestre = () => {
   const [tipoMunicaoEditor, setTipoMunicaoEditor] = useState("pistola");
   const [editandoDashboard, setEditandoDashboard] = useState(false);
   const [modalFichaAberto, setModalFichaAberto] = useState(false);
+  const [salvandoNivel, setSalvandoNivel] = useState(false);
+  const fichasEmGravacaoRef = useRef(new Set());
 
   const [arvoresEditor, setArvoresEditor] = useState({});
   const [classeArvoreAtiva, setClasseArvoreAtiva] = useState("aniquilador");
@@ -1251,6 +1253,7 @@ const DashboardMestre = () => {
     } = {}) => {
       if (fichaAtualizada && fichaAtualizada !== fichaSelecionada) return;
       if (editandoDashboard) return;
+      if (fichasEmGravacaoRef.current.has(fichaSelecionada)) return;
 
       try {
         const personagemAtualizado = await buscarPersonagem(fichaSelecionada);
@@ -1332,6 +1335,8 @@ const DashboardMestre = () => {
     let cancelado = false;
 
     const sincronizarListas = async () => {
+      if (fichasEmGravacaoRef.current.size > 0) return;
+
       try {
         const [fichasApi, arvoresApi] = await Promise.all([
           listarPersonagens(),
@@ -2089,17 +2094,20 @@ const DashboardMestre = () => {
     const idParaSalvar = fichaIdOverride || fichaSelecionada;
     if (!idParaSalvar || !personagemAtualizado) return;
 
-    let fichaMaisRecente = {};
+    fichasEmGravacaoRef.current.add(idParaSalvar);
 
     try {
-      const doBackend = await buscarPersonagem(idParaSalvar);
-      if (doBackend) fichaMaisRecente = doBackend;
-    } catch {
+      let fichaMaisRecente = {};
+
       try {
-        const local = localStorage.getItem(`${STORAGE_KEY}_${idParaSalvar}`);
-        if (local) fichaMaisRecente = JSON.parse(local);
-      } catch {}
-    }
+        const doBackend = await buscarPersonagem(idParaSalvar);
+        if (doBackend) fichaMaisRecente = doBackend;
+      } catch {
+        try {
+          const local = localStorage.getItem(`${STORAGE_KEY}_${idParaSalvar}`);
+          if (local) fichaMaisRecente = JSON.parse(local);
+        } catch {}
+      }
 
     const personagemFinal = {
       ...fichaMaisRecente,
@@ -2124,7 +2132,6 @@ const DashboardMestre = () => {
       ),
     );
 
-    try {
       const personagemSalvo = await salvarPersonagem(
         idParaSalvar,
         personagemFinal,
@@ -2136,11 +2143,15 @@ const DashboardMestre = () => {
       setMensagem(
         mensagemCustom || "Ficha salva. Alterações do jogador preservadas.",
       );
+      return personagemSalvo || personagemFinal;
     } catch {
       setMensagem(
         mensagemCustom ||
           "Ficha salva localmente sem foto. Backend indisponivel.",
       );
+      return personagemAtualizado;
+    } finally {
+      fichasEmGravacaoRef.current.delete(idParaSalvar);
     }
   };
 
@@ -2437,7 +2448,9 @@ const DashboardMestre = () => {
     );
   };
 
-  const subirNivelJogador = () => {
+  const subirNivelJogador = async () => {
+    if (salvandoNivel) return;
+
     const nivelAtual = Math.max(1, parseInt(personagem.nivel, 10) || 1);
     const proximoNivel = Math.min(10, nivelAtual + 1);
     const pontosGanhos = obterCustosNivel(proximoNivel).acumulado;
@@ -2481,13 +2494,20 @@ const DashboardMestre = () => {
     };
 
     setPersonagem(atualizado);
-    salvarFichaSelecionada(atualizado);
-    setMensagem(
-      `Jogador subiu para NV${proximoNivel}, recebeu ${pontosGanhos} pontos, +${recursosGanhos.sanidade} SAN e +${recursosGanhos.esperanca} PE.`,
-    );
+    setSalvandoNivel(true);
+    try {
+      await salvarFichaSelecionada(
+        atualizado,
+        `Jogador subiu para NV${proximoNivel}, recebeu ${pontosGanhos} pontos, +${recursosGanhos.sanidade} SAN e +${recursosGanhos.esperanca} PE.`,
+      );
+    } finally {
+      setSalvandoNivel(false);
+    }
   };
 
-  const diminuirNivelJogador = () => {
+  const diminuirNivelJogador = async () => {
+    if (salvandoNivel) return;
+
     const nivelAtual = Math.max(1, parseInt(personagem.nivel, 10) || 1);
     const proximoNivel = Math.max(1, nivelAtual - 1);
     const pontosRemovidos = obterCustosNivel(nivelAtual).acumulado;
@@ -2552,10 +2572,15 @@ const DashboardMestre = () => {
     };
 
     setPersonagem(atualizado);
-    salvarFichaSelecionada(atualizado);
-    setMensagem(
-      `Jogador voltou para NV${proximoNivel}, perdeu ${pontosRemovidos} pontos, -${recursosRemovidos.sanidade} SAN e -${recursosRemovidos.esperanca} PE.`,
-    );
+    setSalvandoNivel(true);
+    try {
+      await salvarFichaSelecionada(
+        atualizado,
+        `Jogador voltou para NV${proximoNivel}, perdeu ${pontosRemovidos} pontos, -${recursosRemovidos.sanidade} SAN e -${recursosRemovidos.esperanca} PE.`,
+      );
+    } finally {
+      setSalvandoNivel(false);
+    }
   };
 
   const adicionarItemInventario = (event) => {
@@ -3629,6 +3654,7 @@ const DashboardMestre = () => {
                                 <button
                                   className="mestre-btn-nivel"
                                   onClick={diminuirNivelJogador}
+                                  disabled={salvandoNivel}
                                 >
                                   −
                                 </button>
@@ -3638,6 +3664,7 @@ const DashboardMestre = () => {
                                 <button
                                   className="mestre-btn-nivel"
                                   onClick={subirNivelJogador}
+                                  disabled={salvandoNivel}
                                 >
                                   +
                                 </button>
