@@ -510,3 +510,4 @@
     grid-template-columns:repeat(2,minmax(145px,1fr));
   }
 }
+.mesa-npc-subabas{position:sticky;top:48px;z-index:3;height:42px;display:grid;grid-template-columns:1fr 1fr;margin-top:48px;border-bottom:1px solid var(--linha);background:#050505}.mesa-npc-subabas button{display:flex;align-items:center;justify-content:center;gap:5px;border:0;border-right:1px solid var(--linha);background:transparent;color:#8f8a81;font-size:8px;text-transform:uppercase;cursor:pointer}.mesa-npc-subabas button.ativo{box-shadow:inset 0 -2px var(--mesa-acento);color:var(--mesa-acento)}.mesa-npc-subabas b{font-size:7px}

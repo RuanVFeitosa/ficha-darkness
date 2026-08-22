@@ -25,7 +25,6 @@ import {
 } from "../services/syncEvents";
 import { SYNC_INTERVALS, iniciarPollingVisivel } from "../services/syncPolicy";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
-import { SENHA_MESTRE } from "../constants/masterAccess";
 import Icon from "@mdi/react";
 import { mdiAccount } from "@mdi/js";
 import {
@@ -546,9 +545,6 @@ const FichaPersonagem = () => {
   const [ultimoSave, setUltimoSave] = useState(null);
   const [carregado, setCarregado] = useState(false);
   const [seletorMesaAberto, setSeletorMesaAberto] = useState(false);
-  const [acessoRestritoAberto, setAcessoRestritoAberto] = useState(false);
-  const [senhaRestrita, setSenhaRestrita] = useState("");
-  const [erroAcessoRestrito, setErroAcessoRestrito] = useState("");
   const [menuFichaAberto, setMenuFichaAberto] = useState(false);
   const [campanhasDaFicha, setCampanhasDaFicha] = useState([]);
   const [carregandoCampanhas, setCarregandoCampanhas] = useState(false);
@@ -1346,24 +1342,6 @@ const cancelarEdicaoHabilidade = () => {
     } finally {
       setCarregandoCampanhas(false);
     }
-  };
-
-  const solicitarAcessoTabletop = () => {
-    setMenuFichaAberto(false);
-    setSenhaRestrita("");
-    setErroAcessoRestrito("");
-    setAcessoRestritoAberto(true);
-  };
-
-  const confirmarAcessoTabletop = (event) => {
-    event.preventDefault();
-    if (senhaRestrita !== SENHA_MESTRE) {
-      setErroAcessoRestrito("Codigo incorreto.");
-      setSenhaRestrita("");
-      return;
-    }
-    setAcessoRestritoAberto(false);
-    abrirTabletop();
   };
 
   const entrarNoTabletop = (campanha) => {
@@ -6744,10 +6722,10 @@ const cancelarEdicaoHabilidade = () => {
             </button>
             <button
               type="button"
-              onClick={solicitarAcessoTabletop}
+              onClick={() => { setMenuFichaAberto(false); abrirTabletop(); }}
             >
               <Icon path={mdiMapOutline} size={1} />
-              <span>Restrito</span>
+              <span>Mapa</span>
             </button>
           </div>
         )}
@@ -6762,17 +6740,6 @@ const cancelarEdicaoHabilidade = () => {
           <Icon path={menuFichaAberto ? mdiClose : mdiMenu} size={1.15} />
         </button>
       </nav>
-
-      {acessoRestritoAberto && (
-        <div className="acesso-restrito-overlay" onMouseDown={(event) => event.target === event.currentTarget && setAcessoRestritoAberto(false)}>
-          <form className="acesso-restrito-painel" onSubmit={confirmarAcessoTabletop}>
-            <header><div><span>Area protegida</span><h2>RESTRITO</h2></div><button type="button" onClick={() => setAcessoRestritoAberto(false)} title="Fechar"><Icon path={mdiClose} size={0.85} /></button></header>
-            <label>Codigo de acesso<input autoFocus type="password" inputMode="numeric" autoComplete="off" value={senhaRestrita} onChange={(event) => { setSenhaRestrita(event.target.value.replace(/\D/g, "").slice(0, SENHA_MESTRE.length)); setErroAcessoRestrito(""); }} /></label>
-            {erroAcessoRestrito && <p>{erroAcessoRestrito}</p>}
-            <footer><button type="button" onClick={() => setAcessoRestritoAberto(false)}>Cancelar</button><button type="submit">Entrar</button></footer>
-          </form>
-        </div>
-      )}
 
       {seletorMesaAberto && (
         <div

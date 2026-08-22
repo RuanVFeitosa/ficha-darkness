@@ -4499,3 +4499,4 @@
     margin: 0;
   }
 }
+.mestre-pastas-catalogo{display:flex;align-items:center;gap:6px;margin:12px 0;padding:8px;overflow-x:auto;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.22)}.mestre-pastas-catalogo button{min-height:32px;display:flex;align-items:center;gap:7px;padding:0 11px;border:1px solid rgba(255,255,255,.12);background:#111;color:#999;white-space:nowrap;cursor:pointer}.mestre-pastas-catalogo button.ativa{border-color:#d4af37;background:rgba(212,175,55,.1);color:#e1c96e}.mestre-pastas-catalogo b{font-size:9px}.mestre-modal-linha-topo h2 small{color:#817b70;font-size:11px;font-weight:400}.criarInimigo-button.secundario{margin-left:6px;background:transparent!important;color:#d4af37!important}.catalogo-pasta-select{min-width:130px;height:34px;padding:0 8px;border:1px solid rgba(255,255,255,.15);background:#0b0b0b;color:#c9c3b8;font-size:9px}.mestre-npcs-subtabs{margin-top:10px}

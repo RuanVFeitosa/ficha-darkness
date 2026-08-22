@@ -647,12 +647,16 @@ const DashboardMestre = () => {
 
   const [inimigos, setInimigos] = useState([]);
   const [inimigoEditando, setInimigoEditando] = useState(null);
+  const [pastasInimigos, setPastasInimigos] = useState([]);
+  const [pastaInimigosAtiva, setPastaInimigosAtiva] = useState("todas");
 
   const STORAGE_NPCS = "darkness_npcs";
 
   const [subAbaFichas, setSubAbaFichas] = useState("jogadores");
   const [npcs, setNpcs] = useState([]);
   const [npcEditando, setNpcEditando] = useState(null);
+  const [pastasNpcs, setPastasNpcs] = useState([]);
+  const [pastaNpcsAtiva, setPastaNpcsAtiva] = useState("todas");
 
   const [rolagensMestre, setRolagensMestre] = useState([]);
   const [painelRolagensAberto, setPainelRolagensAberto] = useState(true);
@@ -1244,6 +1248,22 @@ const DashboardMestre = () => {
     carregarTudo();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    try { setPastasInimigos(JSON.parse(localStorage.getItem("darkness_pastas_inimigos")) || []); } catch { setPastasInimigos([]); }
+    try { setPastasNpcs(JSON.parse(localStorage.getItem("darkness_pastas_npcs")) || []); } catch { setPastasNpcs([]); }
+  }, []);
+
+  const criarPastaCatalogo = (tipo) => {
+    const nome = window.prompt(`Nome da pasta de ${tipo === "npc" ? "NPCs" : "inimigos"}:`)?.trim();
+    if (!nome) return;
+    const atuais = tipo === "npc" ? pastasNpcs : pastasInimigos;
+    if (atuais.some((pasta) => pasta.toLocaleLowerCase("pt-BR") === nome.toLocaleLowerCase("pt-BR"))) return;
+    const novas = [...atuais, nome].sort((a, b) => a.localeCompare(b, "pt-BR"));
+    localStorage.setItem(tipo === "npc" ? "darkness_pastas_npcs" : "darkness_pastas_inimigos", JSON.stringify(novas));
+    if (tipo === "npc") { setPastasNpcs(novas); setPastaNpcsAtiva(nome); }
+    else { setPastasInimigos(novas); setPastaInimigosAtiva(nome); }
+  };
 
   useEffect(() => {
     if (!fichaSelecionada) return;
@@ -1901,6 +1921,8 @@ const DashboardMestre = () => {
       id: crypto.randomUUID(),
       nome: "Novo NPC",
       classe: "NPC",
+      tipo: "npc",
+      pasta: pastaNpcsAtiva === "todas" ? "" : pastaNpcsAtiva,
       nivel: 1,
 
       atributos: {
@@ -1994,6 +2016,8 @@ const DashboardMestre = () => {
       id: crypto.randomUUID(),
 
       nome: "Novo Inimigo",
+      tipo: "inimigo",
+      pasta: pastaInimigosAtiva === "todas" ? "" : pastaInimigosAtiva,
 
       classe: "aniquilador",
 
@@ -3435,7 +3459,7 @@ const DashboardMestre = () => {
           className={aba === "inimigos" ? "ativa" : ""}
           onClick={() => setAba("inimigos")}
         >
-          Inimigos
+          NPCs
         </button>
         <button
           className={aba === "loja" ? "ativa" : ""}
@@ -3490,9 +3514,7 @@ const DashboardMestre = () => {
                 </button>
 
                 {subAbaFichas === "npcs" && (
-                  <button type="button" onClick={criarNovoNpc}>
-                    Criar NPC
-                  </button>
+                  <><button type="button" onClick={() => criarPastaCatalogo("npc")}>Nova pasta</button><button type="button" onClick={criarNovoNpc}>Criar NPC</button></>
                 )}
               </div>
 
@@ -3516,9 +3538,9 @@ const DashboardMestre = () => {
               )}
 
               {subAbaFichas === "npcs" && (
-                <div className="mestre-dashboard-cards">
+                <><div className="mestre-pastas-catalogo"><button className={pastaNpcsAtiva === "todas" ? "ativa" : ""} onClick={() => setPastaNpcsAtiva("todas")}>Todos <b>{npcs.length}</b></button>{pastasNpcs.map((pasta) => <button key={pasta} className={pastaNpcsAtiva === pasta ? "ativa" : ""} onClick={() => setPastaNpcsAtiva(pasta)}>{pasta} <b>{npcs.filter((npc) => npc.pasta === pasta).length}</b></button>)}<button className={pastaNpcsAtiva === "sem-pasta" ? "ativa" : ""} onClick={() => setPastaNpcsAtiva("sem-pasta")}>Sem pasta</button></div><div className="mestre-dashboard-cards">
                   {npcs.length > 0 ? (
-                    npcs.map((npc) => (
+                    npcs.filter((npc) => pastaNpcsAtiva === "todas" || (pastaNpcsAtiva === "sem-pasta" ? !npc.pasta : npc.pasta === pastaNpcsAtiva)).map((npc) => (
                       <DashboardFichaCard
                         key={npc.fichaId || npc.id}
                         ficha={npc}
@@ -3529,7 +3551,7 @@ const DashboardMestre = () => {
                   ) : (
                     <div className="mestre-vazio">Nenhum NPC criado.</div>
                   )}
-                </div>
+                </div></>
               )}
 
               {modalFichaAberto && personagem && (
@@ -4212,6 +4234,7 @@ const DashboardMestre = () => {
                                   atualizarCampoNpc("nome", e.target.value)
                                 }
                               />
+                              <select className="catalogo-pasta-select" value={npc.pasta || ""} onChange={(event) => atualizarCampoNpc("pasta", event.target.value)} aria-label="Pasta do NPC"><option value="">Sem pasta</option>{pastasNpcs.map((pasta) => <option key={pasta} value={pasta}>{pasta}</option>)}</select>
                             </div>
 
                             <div className="mestre-modal-header-acoes">
@@ -4487,7 +4510,7 @@ const DashboardMestre = () => {
           {aba === "inimigos" && (
             <section className="mestre-dashboard-full">
               <div className="mestre-modal-linha-topo">
-                <h2>Inimigos</h2>
+                <h2>NPCs <small>› Inimigos</small></h2>
 
                 <button
                   className="criarInimigo-button"
@@ -4496,11 +4519,15 @@ const DashboardMestre = () => {
                 >
                   Criar inimigo
                 </button>
+                <button className="criarInimigo-button secundario" type="button" onClick={() => criarPastaCatalogo("inimigo")}>Nova pasta</button>
               </div>
+
+              <div className="mestre-subtabs mestre-npcs-subtabs"><button className="ativa" type="button">Inimigos</button><button type="button" onClick={() => { setAba("fichas"); setSubAbaFichas("npcs"); }}>NPCs do mestre</button></div>
+              <div className="mestre-pastas-catalogo"><button className={pastaInimigosAtiva === "todas" ? "ativa" : ""} onClick={() => setPastaInimigosAtiva("todas")}>Todos <b>{inimigos.length}</b></button>{pastasInimigos.map((pasta) => <button key={pasta} className={pastaInimigosAtiva === pasta ? "ativa" : ""} onClick={() => setPastaInimigosAtiva(pasta)}>{pasta} <b>{inimigos.filter((inimigo) => inimigo.pasta === pasta).length}</b></button>)}<button className={pastaInimigosAtiva === "sem-pasta" ? "ativa" : ""} onClick={() => setPastaInimigosAtiva("sem-pasta")}>Sem pasta</button></div>
 
               <div className="mestre-fichas-com-party">
                 <div className="mestre-dashboard-cards">
-                  {inimigos.map((inimigo) => (
+                  {inimigos.filter((inimigo) => pastaInimigosAtiva === "todas" || (pastaInimigosAtiva === "sem-pasta" ? !inimigo.pasta : inimigo.pasta === pastaInimigosAtiva)).map((inimigo) => (
                     <DashboardFichaCard
                       key={inimigo.fichaId || inimigo.id}
                       ficha={inimigo}
@@ -4605,6 +4632,7 @@ const DashboardMestre = () => {
                                     )
                                   }
                                 />
+                                <select className="catalogo-pasta-select" value={inimigo.pasta || ""} onChange={(event) => atualizarCampoInimigo("pasta", event.target.value)} aria-label="Pasta do inimigo"><option value="">Sem pasta</option>{pastasInimigos.map((pasta) => <option key={pasta} value={pasta}>{pasta}</option>)}</select>
                               </div>
 
                               <div className="mestre-modal-header-acoes">

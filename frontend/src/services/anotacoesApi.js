@@ -32,10 +32,38 @@ export const salvarAnotacao = async (campanhaId, nota) => {
     salvarLocais(campanhaId, notas.some((item) => item.id === registro.id) ? notas.map((item) => item.id === registro.id ? registro : item) : [registro, ...notas]);
     return registro;
   }
-  const payload = { ...(nota.id ? { id: nota.id } : {}), campanha_id: campanhaId, titulo: nota.titulo || "Sem titulo", pasta: nota.pasta || "Notas", conteudo: nota.conteudo || "", atualizado_em: agora };
+  const payload = {
+    ...(nota.id ? { id: nota.id } : {}), campanha_id: campanhaId,
+    titulo: nota.titulo || "Sem titulo", pasta: nota.pasta || "Notas",
+    conteudo: nota.conteudo || "", atualizado_em: agora,
+    documento_url: nota.documento_url || null,
+    documento_nome: nota.documento_nome || null,
+    documento_tipo: nota.documento_tipo || null,
+  };
   const { data, error } = await supabase.from("anotacoes_campanha").upsert(payload).select().single();
   if (error) throw error;
   return data;
+};
+
+export const enviarDocumentoAnotacao = async (campanhaId, arquivo) => {
+  const permitidos = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
+  if (!permitidos.includes(arquivo?.type)) throw new Error("Selecione um arquivo PDF, DOC ou DOCX.");
+  if (arquivo.size > 25 * 1024 * 1024) throw new Error("O arquivo deve ter no maximo 25 MB.");
+
+  if (!supabaseConfigurado || String(campanhaId).startsWith("demo")) {
+    return { url: URL.createObjectURL(arquivo), nome: arquivo.name, tipo: arquivo.type, temporario: true };
+  }
+
+  const nomeSeguro = arquivo.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+  const caminho = `${campanhaId}/${Date.now()}-${nomeSeguro}`;
+  const { error } = await supabase.storage.from("documentos-campanha").upload(caminho, arquivo, { upsert: false, contentType: arquivo.type });
+  if (error) throw error;
+  const url = supabase.storage.from("documentos-campanha").getPublicUrl(caminho).data.publicUrl;
+  return { url, nome: arquivo.name, tipo: arquivo.type };
 };
 
 export const excluirAnotacao = async (campanhaId, notaId) => {

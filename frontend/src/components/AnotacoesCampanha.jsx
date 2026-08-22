@@ -2,11 +2,27 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Icon from "@mdi/react";
-import { mdiChevronDown, mdiChevronRight, mdiDeleteOutline, mdiFileDocumentOutline, mdiFolderOutline, mdiFolderPlusOutline, mdiMagnify, mdiPencilOutline, mdiPlus } from "@mdi/js";
-import { criarPastaAnotacoes, excluirAnotacao, listarAnotacoes, listarPastasAnotacoes, renomearPastaAnotacoes, salvarAnotacao } from "../services/anotacoesApi";
+import { mdiChevronDown, mdiChevronRight, mdiClose, mdiDeleteOutline, mdiFileDocumentOutline, mdiFolderOutline, mdiFolderPlusOutline, mdiLinkVariant, mdiMagnify, mdiOpenInNew, mdiPaperclip, mdiPencilOutline, mdiPlus, mdiUpload } from "@mdi/js";
+import { criarPastaAnotacoes, enviarDocumentoAnotacao, excluirAnotacao, listarAnotacoes, listarPastasAnotacoes, renomearPastaAnotacoes, salvarAnotacao } from "../services/anotacoesApi";
 import "../CSS/AnotacoesCampanha.css";
 
 const novaNota = (pasta = "Notas") => ({ titulo: "Nova anotacao", pasta, conteudo: "# Nova anotacao\n\nComece a escrever sua narracao..." });
+
+const urlVisualizacao = (url, tipo = "") => {
+  if (!url) return "";
+  try {
+    const destino = new URL(url);
+    if (!/^https?:$/.test(destino.protocol) && destino.protocol !== "blob:") return "";
+    if (/docs\.google\.com$/i.test(destino.hostname)) {
+      destino.pathname = destino.pathname.replace(/\/(edit|view)(\/.*)?$/, "/preview");
+      return destino.toString();
+    }
+    if (/wordprocessingml|msword/i.test(tipo) || /\.docx?(?:$|[?#])/i.test(url)) {
+      return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+    }
+    return destino.toString();
+  } catch { return ""; }
+};
 
 const AnotacoesCampanha = ({ campanhaId }) => {
   const [notas, setNotas] = useState([]);
@@ -17,6 +33,8 @@ const AnotacoesCampanha = ({ campanhaId }) => {
   const [fechadas, setFechadas] = useState({});
   const [estado, setEstado] = useState("Carregando...");
   const [dialogo, setDialogo] = useState(null);
+  const [abaAtiva, setAbaAtiva] = useState("anotacao");
+  const arquivoRef = useRef(null);
   const ignorarPrimeiro = useRef(true);
 
   useEffect(() => {
@@ -101,7 +119,31 @@ const AnotacoesCampanha = ({ campanhaId }) => {
         setNotas((atuais) => atuais.map((item) => item.id === salva.id ? salva : item));
       } catch (erro) { setEstado(erro.message || "Erro ao salvar"); return; }
     }
-    ignorarPrimeiro.current = true; setAtiva(nota); setEstado("");
+    ignorarPrimeiro.current = true; setAtiva(nota); setEstado(""); setAbaAtiva("anotacao");
+  };
+  const anexarUrl = () => setDialogo({ tipo: "documento", titulo: "Vincular documento", valor: ativa?.documento_url || "", nome: ativa?.documento_nome || "" });
+  const confirmarDocumento = () => {
+    const url = urlVisualizacao(dialogo.valor);
+    if (!url) { setEstado("Informe uma URL valida (http ou https)"); return; }
+    let nome = dialogo.nome.trim();
+    if (!nome) { try { nome = new URL(dialogo.valor).hostname; } catch { nome = "Documento externo"; } }
+    editar({ documento_url: dialogo.valor.trim(), documento_nome: nome, documento_tipo: "url" });
+    setDialogo(null); setAbaAtiva("documento");
+  };
+  const enviarArquivo = async (event) => {
+    const arquivo = event.target.files?.[0];
+    event.target.value = "";
+    if (!arquivo) return;
+    setEstado("Enviando documento...");
+    try {
+      const documento = await enviarDocumentoAnotacao(campanhaId, arquivo);
+      editar({ documento_url: documento.url, documento_nome: documento.nome, documento_tipo: documento.tipo });
+      setAbaAtiva("documento"); setEstado(documento.temporario ? "Disponivel nesta sessao" : "Documento anexado");
+    } catch (erro) { setEstado(erro.message || "Nao foi possivel enviar o documento."); }
+  };
+  const removerDocumento = () => {
+    editar({ documento_url: null, documento_nome: null, documento_tipo: null });
+    setAbaAtiva("anotacao");
   };
   const palavras = ativa?.conteudo?.trim() ? ativa.conteudo.trim().split(/\s+/).length : 0;
 
@@ -113,13 +155,13 @@ const AnotacoesCampanha = ({ campanhaId }) => {
     </aside>
     <main className="anotacoes-editor">
       {ativa ? <>
-        <header><div className="anotacoes-caminho"><Icon path={mdiFolderOutline} size={.62} /><input aria-label="Pasta da anotacao" value={ativa.pasta} onChange={(e) => editar({ pasta: e.target.value })} /></div><div><span className="anotacoes-estado">{estado}</span><button className={!modoLeitura ? "ativo" : ""} onClick={() => setModoLeitura(false)} title="Editar"><Icon path={mdiPencilOutline} size={.7} /></button><button className={modoLeitura ? "ativo" : ""} onClick={() => setModoLeitura(true)} title="Modo leitura"><Icon path={mdiFileDocumentOutline} size={.7} /></button><button className="perigo" onClick={remover} title="Excluir"><Icon path={mdiDeleteOutline} size={.7} /></button></div></header>
-        <input className="anotacoes-titulo" value={ativa.titulo} onChange={(e) => editar({ titulo: e.target.value })} aria-label="Titulo da anotacao" />
-        {modoLeitura ? <article className="anotacoes-markdown"><ReactMarkdown remarkPlugins={[remarkGfm]}>{ativa.conteudo}</ReactMarkdown></article> : <textarea className="anotacoes-texto" value={ativa.conteudo} onChange={(e) => editar({ conteudo: e.target.value })} spellCheck="true" />}
+        <header><div className="anotacoes-caminho"><Icon path={mdiFolderOutline} size={.62} /><input aria-label="Pasta da anotacao" value={ativa.pasta} onChange={(e) => editar({ pasta: e.target.value })} /></div><div><span className="anotacoes-estado">{estado}</span><button onClick={anexarUrl} title="Vincular URL"><Icon path={mdiLinkVariant} size={.7} /></button><button onClick={() => arquivoRef.current?.click()} title="Enviar PDF, DOC ou DOCX"><Icon path={mdiUpload} size={.7} /></button><input ref={arquivoRef} className="anotacoes-arquivo-input" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={enviarArquivo} /><button className={abaAtiva === "anotacao" && !modoLeitura ? "ativo" : ""} onClick={() => { setModoLeitura(false); setAbaAtiva("anotacao"); }} title="Editar"><Icon path={mdiPencilOutline} size={.7} /></button><button className={abaAtiva === "anotacao" && modoLeitura ? "ativo" : ""} onClick={() => { setModoLeitura(true); setAbaAtiva("anotacao"); }} title="Modo leitura"><Icon path={mdiFileDocumentOutline} size={.7} /></button><button className="perigo" onClick={remover} title="Excluir"><Icon path={mdiDeleteOutline} size={.7} /></button></div></header>
+        <nav className="anotacoes-abas" aria-label="Conteudo da anotacao"><button className={abaAtiva === "anotacao" ? "ativo" : ""} onClick={() => setAbaAtiva("anotacao")}><Icon path={mdiFileDocumentOutline} size={.62} />Anotação</button>{ativa.documento_url && <button className={abaAtiva === "documento" ? "ativo" : ""} onClick={() => setAbaAtiva("documento")} title={ativa.documento_nome || "Documento vinculado"}><Icon path={mdiPaperclip} size={.62} /><span>{ativa.documento_nome || "Documento"}</span></button>}</nav>
+        {abaAtiva === "documento" && ativa.documento_url ? <section className="anotacoes-conteudo-documento" aria-label={`Documento ${ativa.documento_nome || "anexado"}`}><header><div><span>{ativa.documento_tipo === "url" ? "Link vinculado" : "Arquivo vinculado"}</span><strong>{ativa.documento_nome || "Documento"}</strong></div><a href={ativa.documento_url} target="_blank" rel="noreferrer" title="Abrir em nova guia"><Icon path={mdiOpenInNew} size={.72} /></a><button className="perigo" onClick={removerDocumento} title="Desvincular documento"><Icon path={mdiClose} size={.72} /></button></header><iframe src={urlVisualizacao(ativa.documento_url, ativa.documento_tipo)} title={ativa.documento_nome || "Documento da anotacao"} /></section> : <section className="anotacoes-conteudo-nota"><input className="anotacoes-titulo" value={ativa.titulo} onChange={(e) => editar({ titulo: e.target.value })} aria-label="Titulo da anotacao" />{modoLeitura ? <article className="anotacoes-markdown"><ReactMarkdown remarkPlugins={[remarkGfm]}>{ativa.conteudo}</ReactMarkdown></article> : <textarea className="anotacoes-texto" value={ativa.conteudo} onChange={(e) => editar({ conteudo: e.target.value })} spellCheck="true" />}</section>}
         <footer><span>{palavras} palavras</span><span>{ativa.conteudo?.length || 0} caracteres</span><span>Markdown</span></footer>
       </> : <div className="anotacoes-vazio"><Icon path={mdiFileDocumentOutline} size={1.7} /><strong>Seu arquivo de narracao esta vazio</strong><p>Crie notas para lugares, personagens, pistas e sessoes.</p><button onClick={criar}><Icon path={mdiPlus} size={.7} />Criar primeira anotacao</button></div>}
     </main>
-    {dialogo && <div className="anotacoes-dialogo-fundo" onMouseDown={(e) => e.target === e.currentTarget && setDialogo(null)}><form className="anotacoes-dialogo" onSubmit={confirmarDialogo}><header><span>Organizacao do arquivo</span><strong>{dialogo.titulo}</strong></header><label>{dialogo.tipo === "nota" ? "Pasta da anotacao" : "Nome da pasta"}<input autoFocus value={dialogo.valor} onChange={(e) => setDialogo((atual) => ({ ...atual, valor: e.target.value }))} placeholder={dialogo.tipo === "nota" ? "Ex.: Ato II / Locais" : "Ex.: Personagens importantes"} /></label>{dialogo.tipo === "nota" && pastas.length > 0 && <div className="anotacoes-pastas-sugestoes">{pastas.map((pasta) => <button type="button" key={pasta.id} onClick={() => setDialogo((atual) => ({ ...atual, valor: pasta.nome }))}><Icon path={mdiFolderOutline} size={.58} />{pasta.nome}</button>)}</div>}<footer><button type="button" onClick={() => setDialogo(null)}>Cancelar</button><button type="submit" disabled={!dialogo.valor.trim()}>{dialogo.tipo === "renomear" ? "Salvar nome" : "Criar"}</button></footer></form></div>}
+    {dialogo && <div className="anotacoes-dialogo-fundo" onMouseDown={(e) => e.target === e.currentTarget && setDialogo(null)}><form className="anotacoes-dialogo" onSubmit={(e) => { e.preventDefault(); dialogo.tipo === "documento" ? confirmarDocumento() : confirmarDialogo(e); }}><header><span>{dialogo.tipo === "documento" ? "Referencia de leitura" : "Organizacao do arquivo"}</span><strong>{dialogo.titulo}</strong></header>{dialogo.tipo === "documento" ? <><label>URL do documento<input autoFocus type="url" value={dialogo.valor} onChange={(e) => setDialogo((atual) => ({ ...atual, valor: e.target.value }))} placeholder="https://docs.google.com/... ou https://.../arquivo.pdf" /></label><label>Nome para exibir (opcional)<input value={dialogo.nome} onChange={(e) => setDialogo((atual) => ({ ...atual, nome: e.target.value }))} placeholder="Ex.: Narracao do Ato II" /></label><p className="anotacoes-dialogo-ajuda">No Google Docs, use um link com acesso liberado para quem possui o link.</p></> : <><label>{dialogo.tipo === "nota" ? "Pasta da anotacao" : "Nome da pasta"}<input autoFocus value={dialogo.valor} onChange={(e) => setDialogo((atual) => ({ ...atual, valor: e.target.value }))} placeholder={dialogo.tipo === "nota" ? "Ex.: Ato II / Locais" : "Ex.: Personagens importantes"} /></label>{dialogo.tipo === "nota" && pastas.length > 0 && <div className="anotacoes-pastas-sugestoes">{pastas.map((pasta) => <button type="button" key={pasta.id} onClick={() => setDialogo((atual) => ({ ...atual, valor: pasta.nome }))}><Icon path={mdiFolderOutline} size={.58} />{pasta.nome}</button>)}</div>}</>}<footer><button type="button" onClick={() => setDialogo(null)}>Cancelar</button><button type="submit" disabled={!dialogo.valor.trim()}>{dialogo.tipo === "documento" ? "Vincular" : dialogo.tipo === "renomear" ? "Salvar nome" : "Criar"}</button></footer></form></div>}
   </section>;
 };
 
