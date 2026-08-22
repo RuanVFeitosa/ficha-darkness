@@ -26,6 +26,17 @@ const calcularIntegridade = (personagem) => Object.values(personagem?.membros ||
 const percentualRecurso = (recurso) => recurso?.max > 0
   ? Math.max(0, Math.min(100, ((Number(recurso.atual) || 0) / recurso.max) * 100))
   : 0;
+const dataToken = (token) => {
+  const tempo = Date.parse(token?.atualizado_em || "");
+  return Number.isFinite(tempo) ? tempo : 0;
+};
+const aceitarTokenRemoto = (atual, remoto) => {
+  if (!atual) return true;
+  const dataAtual = dataToken(atual);
+  const dataRemota = dataToken(remoto);
+  if (dataAtual && dataRemota) return dataRemota >= dataAtual;
+  return true;
+};
 const eventoMudaApresentacao = (evento, campanha) => {
   if (evento?.detail?.estado) {
     const estado = evento.detail.estado;
@@ -119,13 +130,19 @@ const Mesa = () => {
       setErro("");
       const dados = await buscarCampanhaPorCodigo(codigo);
       setCampanha((atual) => {
-        if (!dados || !atual || tokensEmGravacaoRef.current.size === 0) return dados;
+        if (!dados || !atual) return dados;
         const protegidos = new Map(
           atual.tokens
             .filter((token) => tokensEmGravacaoRef.current.has(token.id))
             .map((token) => [token.id, token]),
         );
-        const tokens = (dados.tokens || []).map((token) => protegidos.get(token.id) || token);
+        const atuais = new Map((atual.tokens || []).map((token) => [token.id, token]));
+        const tokens = (dados.tokens || []).map((token) => {
+          const protegido = protegidos.get(token.id);
+          if (protegido) return protegido;
+          const existente = atuais.get(token.id);
+          return aceitarTokenRemoto(existente, token) ? token : existente;
+        });
         protegidos.forEach((token, id) => {
           if (!tokens.some((item) => item.id === id)) tokens.push(token);
         });
@@ -147,6 +164,8 @@ const Mesa = () => {
           if (tokensEmGravacaoRef.current.has(token.id)) {
             return atual.tokens.find((item) => item.id === token.id) || token;
           }
+          const tokenAtual = atual.tokens.find((item) => item.id === token.id);
+          if (!aceitarTokenRemoto(tokenAtual, token)) return tokenAtual;
           const posicao = token.posicoes?.[mapaChave];
           return posicao ? { ...token, x: posicao.x, y: posicao.y } : token;
         });
@@ -172,6 +191,8 @@ const Mesa = () => {
         if (!tokenRecebido?.id || tokensEmGravacaoRef.current.has(tokenRecebido.id)) {
           return atual;
         }
+        const tokenAtual = atual.tokens.find((token) => token.id === tokenRecebido.id);
+        if (!aceitarTokenRemoto(tokenAtual, tokenRecebido)) return atual;
         const mapaChave = chavePosicaoMapa(atual.cenaAtiva?.id, atual.midiaAtivaId);
         const posicao = tokenRecebido.posicoes?.[mapaChave];
         const tokenAtualizado = posicao
@@ -352,7 +373,8 @@ const Mesa = () => {
     const { x, y } = calcularPosicaoToken(event);
     tokensEmGravacaoRef.current.add(tokenId);
     setTokenArrastando(null);
-    setCampanha((atual) => ({ ...atual, tokens: atual.tokens.map((item) => item.id === tokenId ? { ...item, x, y } : item) }));
+    const movimentoIniciadoEm = new Date().toISOString();
+    setCampanha((atual) => ({ ...atual, tokens: atual.tokens.map((item) => item.id === tokenId ? { ...item, x, y, atualizado_em: movimentoIniciadoEm } : item) }));
     try {
       const confirmado = await moverToken(tokenId, x, y, mapaChaveAtual);
       if (confirmado) {
