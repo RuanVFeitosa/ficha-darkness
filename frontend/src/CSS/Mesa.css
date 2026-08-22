@@ -71,6 +71,37 @@
 .mesa-biblioteca,.biblioteca-cabecalho { background:rgba(0,0,0,.97) }.biblioteca-cabecalho>button,.biblioteca-fichas button,.cena-editor footer button:last-child { background:var(--mesa-acento); border-color:var(--mesa-acento); color:#050505 }.biblioteca-lista article.selecionado { border-color:var(--mesa-acento) }.biblioteca-item-acoes button:first-child { background:var(--mesa-acento); color:#050505 }
 .mesa-token { border-color:var(--mesa-acento); background:color-mix(in srgb,var(--mesa-secundaria) 35%,#111); box-shadow:0 0 0 1px #000,0 4px 15px #000 }.mesa-token:hover,.mesa-token.arrastando { box-shadow:0 0 0 4px color-mix(in srgb,var(--mesa-acento) 24%,transparent),0 7px 20px #000 }
 .mesa-narrativa span,.mesa-lateral-titulo,.mesa-rolagens-titulo,.jogador-ficha-listas h3 { color:var(--mesa-acento) }.membro-recurso>i>em,.jogador-ficha-recursos em { background:var(--mesa-acento) }.membro-recurso.esperanca>i>em { background:#d4af37 }.membro-recurso.integridade>i>em { background:#fff8ea }
+
+/* Cores funcionais dos status, independentes da paleta da cena. */
+.membro-recurso.sanidade>i>em { background:#3b82f6 }
+.membro-recurso.esperanca>i>em { background:#d4af37 }
+.membro-recurso.membro.saudavel>i>em { background:#35a866 }
+.membro-recurso.membro.ferido>i>em { background:#d4af37 }
+.membro-recurso.membro.critico>i>em { background:#d14343 }
+.membro-recursos:has(.membro-recurso.membro) { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:8px }
+.membro-recursos:has(.membro-recurso.membro) .membro-recurso.sanidade,
+.membro-recursos:has(.membro-recurso.membro) .membro-recurso.esperanca { grid-column:1 / -1 }
+.membro-recurso.membro { grid-template-columns:20px minmax(20px,1fr) 42px; gap:4px }
+.membro-recurso.membro>span,.membro-recurso.membro>b { font-size:7px }
+
+/* Participantes: leitura confortavel sem perder o resumo corporal. */
+.mesa-shell.modo-atual-mapa .mesa-lateral,
+.mesa-shell.modo-atual-mapa .mesa-lateral-navegacao,
+.mesa-shell.modo-atual-mapa .mesa-inimigos-lateral,
+.mesa-shell.modo-atual-mapa .mesa-jogador-participantes { width:300px }
+.mesa-membros { padding:12px }
+.mesa-membros>button { gap:12px; padding:14px 7px }
+.mesa-membros>button>span,
+.mesa-jogador-participante>span { width:44px; height:44px }
+.mesa-membros strong,.mesa-jogador-participante strong { font-size:13px }
+.mesa-membros small,.mesa-jogador-participante small { font-size:8px; line-height:1.35 }
+.membro-recursos { gap:5px; margin-top:8px }
+.membro-recurso { grid-template-columns:28px minmax(38px,1fr) 54px; gap:6px }
+.membro-recurso>span,.membro-recurso>b { font-size:9px }
+.membro-recurso>i { height:4px }
+.membro-recurso.membro { grid-template-columns:23px minmax(28px,1fr) 48px; gap:5px }
+.membro-recurso.membro>span,.membro-recurso.membro>b { font-size:8px }
+.mesa-jogador-participante { grid-template-columns:44px minmax(0,1fr); gap:12px; padding:14px }
 .mesa-rolagens>div { border-left-color:var(--mesa-acento); background:color-mix(in srgb,var(--mesa-texto) 4%,#000) }.mesa-resultado-dado { background:var(--mesa-acento); color:#050505 }.jogador-abrir-ficha { border-color:var(--mesa-acento); background:var(--mesa-acento); color:#050505 }
 .cena-editor,.ficha-mesa-resumo,.ficha-completa-mesa { border-color:var(--mesa-borda); background:var(--mesa-fundo) }.cena-editor input,.cena-editor textarea,.biblioteca-fichas select,.jogador-escolher-ficha select { border-color:var(--mesa-borda); background:#000; color:var(--mesa-texto) }.ficha-completa-mesa>header { background:#000 }.ficha-completa-mesa>header span { color:var(--mesa-acento) }
 .visao-mestre .mesa-membros>button[draggable="true"] { cursor:grab }.visao-mestre .mesa-membros>button[draggable="true"]:active { cursor:grabbing }
@@ -86,3 +117,323 @@
 @media(max-width:760px){.mesa-anotacoes-painel{right:0;bottom:96px;width:auto;height:auto;min-width:0;min-height:0;max-width:none;max-height:none;resize:none}}
 .mesa-musica-painel{position:fixed;z-index:20;top:76px;bottom:126px;left:18px;width:min(620px,calc(100vw - 306px));display:grid;grid-template-rows:48px minmax(0,1fr);border:1px solid var(--mesa-borda);background:rgba(8,8,8,.98);box-shadow:0 24px 80px #000;overflow:hidden}.mesa-musica-painel>header{display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid var(--linha)}.mesa-musica-painel>header>div{display:grid;gap:3px}.mesa-musica-painel>header span{color:var(--mesa-acento);font-size:8px;text-transform:uppercase}.mesa-musica-painel>header strong{font-size:12px}.mesa-musica-painel>header button{width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--linha);background:transparent;color:var(--mesa-texto);cursor:pointer}.mesa-musica-painel .musica-conteudo{grid-template-columns:1fr;grid-template-rows:minmax(150px,.7fr) minmax(250px,1.3fr)}
 @media(max-width:760px){.mesa-musica-painel{top:58px;right:0;bottom:96px;left:0;width:auto}}
+
+/* Teste visual: superficies translucidas sobre o mapa. */
+.mesa-topo,
+.mesa-lateral,
+.mesa-rodape,
+.mesa-lateral-navegacao,
+.mesa-inimigos-lateral,
+.mesa-inimigos-atalho,
+.mesa-jogador-participantes {
+  background:rgba(5,6,6,.72);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.mesa-lateral-abas,
+.ficha-tablet-mesa>header,
+.ficha-completa-mesa>header,
+.biblioteca-cabecalho {
+  background:rgba(8,9,9,.68);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+}
+.mesa-biblioteca,
+.mesa-anotacoes-painel,
+.mesa-musica-painel,
+.ficha-mesa-resumo,
+.ficha-completa-mesa,
+.cena-editor {
+  background:rgba(8,9,9,.82);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+.mesa-rolagens>div,
+.mesa-zoom-controles,
+.mesa-variacoes-ativas,
+.biblioteca-midias-ativas,
+.biblioteca-midias-ativas button {
+  background:rgba(9,10,10,.62);
+  backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px);
+}
+
+/* No mapa de batalha, a imagem continua por tras de toda a interface. */
+.mesa-shell.modo-atual-mapa .mesa-palco {
+  position:fixed;
+  z-index:0;
+  inset:0;
+}
+.mesa-shell.modo-atual-mapa .mesa-topo,
+.mesa-shell.modo-atual-mapa .mesa-rodape {
+  position:relative;
+  z-index:10;
+}
+.mesa-shell.modo-atual-mapa .mesa-lateral,
+.mesa-shell.modo-atual-mapa .mesa-inimigos-lateral,
+.mesa-shell.modo-atual-mapa .mesa-jogador-participantes,
+.mesa-shell.modo-atual-mapa .mesa-lateral-navegacao {
+  background:rgba(3,4,4,.56);
+}
+.mesa-shell.modo-atual-mapa .mesa-rodape {
+  background:rgba(3,4,4,.5);
+}
+.mesa-shell.modo-atual-mapa .mesa-rolagens>div {
+  background:rgba(5,6,6,.44);
+}
+
+/* Dimensoes finais da lateral de participantes. Mantido no fim para
+   prevalecer sobre as regras antigas do modo mapa. */
+@media (min-width:761px) {
+  .mesa-shell.modo-atual-mapa .mesa-lateral,
+  .mesa-shell.modo-atual-mapa .mesa-lateral-navegacao,
+  .mesa-shell.modo-atual-mapa .mesa-inimigos-lateral,
+  .mesa-shell.modo-atual-mapa .mesa-jogador-participantes {
+    width:380px;
+  }
+}
+.membro-recursos:has(.membro-recurso.membro) {
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  column-gap:12px;
+}
+.membro-recurso {
+  min-width:0;
+}
+.membro-recurso>span {
+  white-space:nowrap;
+}
+.membro-recurso>i {
+  min-width:0;
+}
+.membro-recurso>b {
+  min-width:54px;
+  white-space:nowrap;
+}
+.membro-recurso.membro {
+  grid-template-columns:24px minmax(42px,1fr) 58px;
+  column-gap:6px;
+}
+.membro-recurso.membro>b {
+  min-width:58px;
+}
+
+/* Jogadores veem apenas identidade e condicoes publicas dos participantes. */
+:is(.mesa-jogador-participante,.participante-condicionado) .membro-recursos { display:none }
+.participante-condicoes { display:flex; flex-wrap:wrap; gap:4px; margin-top:5px }
+.participante-condicoes>span { max-width:100%; padding:3px 6px; border:1px solid color-mix(in srgb,var(--mesa-acento) 34%,#383838); background:rgba(255,255,255,.035); color:#c8c5be; font-size:8px; line-height:1.2; text-transform:uppercase; white-space:normal }
+.participante-condicoes>.sem-condicoes { border-color:#303231; color:#777b77 }
+:is(.mesa-jogador-participante,.participante-condicionado)>span { position:relative; isolation:isolate }
+:is(.mesa-jogador-participante,.participante-condicionado)>span::after { content:""; position:absolute; z-index:2; inset:0; pointer-events:none }
+:is(.mesa-jogador-participante,.participante-condicionado).sangrando>span::after { background:linear-gradient(180deg,rgba(150,0,0,.8),transparent 48%),radial-gradient(circle at 72% 78%,rgba(120,0,0,.75),transparent 45%); mix-blend-mode:multiply }
+:is(.mesa-jogador-participante,.participante-condicionado).congelado>span img { filter:saturate(.45) contrast(1.15) hue-rotate(155deg) }
+:is(.mesa-jogador-participante,.participante-condicionado).congelado>span::after { box-shadow:inset 0 0 12px rgba(122,218,255,.9) }
+:is(.mesa-jogador-participante,.participante-condicionado).em-chamas>span img { filter:saturate(1.45) contrast(1.15) }
+:is(.mesa-jogador-participante,.participante-condicionado).em-chamas>span::after { background:linear-gradient(0deg,rgba(255,72,0,.7),transparent 62%); animation:participanteFogo 1s ease-in-out infinite alternate }
+:is(.mesa-jogador-participante,.participante-condicionado).envenenado>span img,
+:is(.mesa-jogador-participante,.participante-condicionado).infectado>span img { filter:sepia(.25) saturate(1.5) hue-rotate(55deg) }
+:is(.mesa-jogador-participante,.participante-condicionado).intimidado>span img,
+:is(.mesa-jogador-participante,.participante-condicionado).desanimado>span img { filter:brightness(.55) saturate(.55) }
+:is(.mesa-jogador-participante,.participante-condicionado).atordoado>span img,
+:is(.mesa-jogador-participante,.participante-condicionado).incapacitado>span img,
+:is(.mesa-jogador-participante,.participante-condicionado).inconsciente>span img { filter:grayscale(1) blur(1px) brightness(.65) }
+:is(.mesa-jogador-participante,.participante-condicionado).petrificante>span img { filter:grayscale(.85) contrast(1.25) }
+:is(.mesa-jogador-participante,.participante-condicionado).estado-critico>span { border-color:#d14343; box-shadow:inset 0 0 12px rgba(209,67,67,.4) }
+:is(.mesa-jogador-participante,.participante-condicionado).marcado>span::after { background:linear-gradient(#e32828,#e32828) center/72% 1px no-repeat,linear-gradient(#e32828,#e32828) center/1px 72% no-repeat,radial-gradient(circle,transparent 38%,rgba(227,40,40,.9) 40%,transparent 44%) }
+:is(.mesa-jogador-participante,.participante-condicionado).exposto>span::after { background:linear-gradient(#fff,#fff) center/72% 1px no-repeat,linear-gradient(#fff,#fff) center/1px 72% no-repeat,radial-gradient(circle,transparent 38%,rgba(255,255,255,.85) 40%,transparent 44%) }
+:is(.mesa-jogador-participante,.participante-condicionado).surto-adrenalina>span { animation:participanteAdrenalina .75s ease-in-out infinite alternate }
+@keyframes participanteFogo { from { opacity:.55 } to { opacity:1 } }
+@keyframes participanteAdrenalina { from { filter:contrast(1) } to { filter:contrast(1.35) saturate(1.5) } }
+
+/* Sobreposicoes completas da ficha aplicadas aos retratos em Participantes. */
+:is(.mesa-jogador-participante,.participante-condicionado)>span,
+:is(.mesa-jogador-participante,.participante-condicionado)>span::after,
+:is(.mesa-jogador-participante,.participante-condicionado)>span img { border-radius:50% }
+:is(.mesa-jogador-participante,.participante-condicionado).electrocutado>span { animation:participanteChoque .15s infinite }
+:is(.mesa-jogador-participante,.participante-condicionado).electrocutado>span::after { background:repeating-linear-gradient(45deg,rgba(0,150,255,.28),rgba(0,150,255,.28) 3px,transparent 3px,transparent 9px); box-shadow:inset 0 0 14px rgba(0,180,255,.95) }
+:is(.mesa-jogador-participante,.participante-condicionado).intoxicado>span img { filter:hue-rotate(90deg) saturate(1.6) }
+:is(.mesa-jogador-participante,.participante-condicionado).infectado>span::after { background:radial-gradient(circle at 30% 20%,rgba(0,255,80,.65),transparent 12%),linear-gradient(35deg,transparent 35%,rgba(0,255,80,.55) 36%,transparent 39%),linear-gradient(120deg,transparent 40%,rgba(0,180,60,.55) 41%,transparent 44%),rgba(60,255,80,.12) }
+:is(.mesa-jogador-participante,.participante-condicionado).cego>span img,
+:is(.mesa-jogador-participante,.participante-condicionado).cegueira-temporaria>span img { filter:invert(1) grayscale(1) contrast(1.4) }
+:is(.mesa-jogador-participante,.participante-condicionado).cego>span::after,
+:is(.mesa-jogador-participante,.participante-condicionado).cegueira-temporaria>span::after { background:rgba(0,0,0,.16) }
+:is(.mesa-jogador-participante,.participante-condicionado).surdo>span::after,
+:is(.mesa-jogador-participante,.participante-condicionado).silenciado>span::after { background:repeating-linear-gradient(90deg,transparent,transparent 6px,rgba(255,255,255,.18) 7px) }
+:is(.mesa-jogador-participante,.participante-condicionado).paralisado>span::after,
+:is(.mesa-jogador-participante,.participante-condicionado).restrito>span::after { background:repeating-linear-gradient(-45deg,rgba(150,150,150,.58),rgba(150,150,150,.58) 5px,transparent 5px,transparent 11px),repeating-linear-gradient(45deg,transparent 0 8px,rgba(60,60,60,.48) 8px 11px,transparent 11px 18px) }
+:is(.mesa-jogador-participante,.participante-condicionado).acorrentado>span::after { background:repeating-linear-gradient(45deg,transparent 0 7px,rgba(210,210,210,.78) 7px 10px,transparent 10px 17px),repeating-linear-gradient(-45deg,transparent 0 8px,rgba(90,90,90,.82) 8px 11px,transparent 11px 19px); box-shadow:inset 0 0 9px rgba(0,0,0,.75) }
+:is(.mesa-jogador-participante,.participante-condicionado).desorientado>span,
+:is(.mesa-jogador-participante,.participante-condicionado).confuso>span,
+:is(.mesa-jogador-participante,.participante-condicionado).sob-pressao>span { animation:participanteMente 1.5s infinite }
+:is(.mesa-jogador-participante,.participante-condicionado).desorientado>span::after,
+:is(.mesa-jogador-participante,.participante-condicionado).confuso>span::after,
+:is(.mesa-jogador-participante,.participante-condicionado).sob-pressao>span::after { background:rgba(160,80,255,.2) }
+:is(.mesa-jogador-participante,.participante-condicionado).enfraquecido>span img,
+:is(.mesa-jogador-participante,.participante-condicionado).debilitado>span img,
+:is(.mesa-jogador-participante,.participante-condicionado).exaurido>span img,
+:is(.mesa-jogador-participante,.participante-condicionado).desidratado>span img { filter:grayscale(.65) brightness(.72) }
+:is(.mesa-jogador-participante,.participante-condicionado).hipertermia>span img { filter:sepia(.4) saturate(1.5) brightness(.8) }
+@keyframes participanteChoque { 0%,100% { transform:translate(0) } 25% { transform:translate(1px,-1px) } 50% { transform:translate(-1px,1px) } 75% { transform:translate(1px,1px) } }
+@keyframes participanteMente { 0%,100% { transform:skew(0deg) } 50% { transform:skew(1.5deg) } }
+
+.participante-condicionado .membro-recursos { display:grid }
+
+.mesa-ferramentas-mestre { display:flex; align-items:center; gap:8px }
+
+/* Experiencia dedicada para celulares. */
+@media (max-width:760px) {
+  .mesa-shell {
+    height:100dvh;
+    min-height:100dvh;
+    grid-template-columns:1fr;
+    grid-template-rows:58px minmax(0,1fr) 78px;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .mesa-shell.visao-mestre { grid-template-rows:104px minmax(0,1fr) 78px }
+  .mesa-topo { min-width:0; height:auto; padding:0 8px; gap:8px }
+  .visao-mestre .mesa-topo { display:grid; grid-template-columns:40px minmax(0,1fr) 40px; grid-template-rows:54px 50px; align-items:center }
+  .visao-mestre .mesa-topo>a { grid-column:1; grid-row:1 }
+  .visao-mestre .mesa-topo>div:nth-child(2) { grid-column:2; grid-row:1; max-width:none }
+  .visao-mestre .mesa-topo>.mesa-atualizar { grid-column:3; grid-row:1 }
+  .mesa-ferramentas-mestre { grid-column:1/-1; grid-row:2; width:100%; gap:6px; overflow-x:auto; scrollbar-width:none }
+  .mesa-ferramentas-mestre::-webkit-scrollbar { display:none }
+  .mesa-ferramentas-mestre .mesa-cenas-botao { flex:1 0 42px; width:auto; min-width:42px; height:40px }
+  .mesa-ferramentas-mestre .mesa-modos { flex:0 0 auto; height:40px }
+  .mesa-ferramentas-mestre .mesa-modos button { width:40px; height:40px }
+  .visao-jogador .mesa-topo { display:grid; grid-template-columns:40px minmax(0,1fr) 40px }
+  .visao-jogador .mesa-topo>div:nth-child(2) { max-width:none }
+  .mesa-topo>a,.mesa-atualizar { width:40px; height:40px }
+  .mesa-topo span { font-size:8px }
+  .mesa-topo strong { font-size:13px }
+  .mesa-status { display:none }
+
+  .mesa-palco,.mesa-shell.modo-atual-mapa .mesa-palco { position:relative; inset:auto; grid-column:1; grid-row:2; min-height:0; padding:0 }
+  .mesa-imagem { border:0; background-size:cover }
+  .modo-mapa .mesa-imagem { background-size:contain }
+  .mesa-imagem::after { box-shadow:inset 0 0 38px rgba(0,0,0,.45) }
+  .mesa-token { width:52px; border-width:2px; box-shadow:0 0 0 2px #000,0 5px 16px #000 }
+  .mesa-narrativa { left:16px; right:16px; bottom:22px; max-width:none }
+  .mesa-narrativa span { font-size:8px }
+  .mesa-narrativa h1 { margin:6px 0 8px; font-size:clamp(27px,9vw,38px); line-height:1.05 }
+  .mesa-narrativa p { display:-webkit-box; overflow:hidden; font-size:11px; line-height:1.5; -webkit-line-clamp:3; -webkit-box-orient:vertical }
+
+  .mesa-rodape { position:relative; z-index:20; grid-column:1; grid-row:3; height:78px; grid-template-columns:48px minmax(0,1fr); padding-bottom:env(safe-area-inset-bottom) }
+  .mesa-rolagens-titulo { width:48px; padding:0; justify-content:center }
+  .mesa-rolagens-titulo span { display:none }
+  .mesa-rolagens { gap:6px; padding:8px; scroll-snap-type:x proximity }
+  .mesa-rolagens>div { min-width:104px; padding:6px 8px; scroll-snap-align:start }
+  .mesa-rolagens span,.mesa-rolagens small { font-size:8px }
+  .mesa-rolagens b { font-size:17px }
+
+  .mesa-lateral-navegacao,
+  .mesa-shell.modo-atual-mapa .mesa-lateral-navegacao,
+  .mesa-shell.modo-atual-mapa .mesa-jogador-navegacao {
+    display:grid!important;
+    position:fixed;
+    z-index:42;
+    top:auto;
+    right:8px;
+    bottom:calc(86px + env(safe-area-inset-bottom));
+    left:8px;
+    width:auto;
+    height:48px;
+    border:1px solid var(--mesa-borda);
+    background:rgba(5,6,6,.9);
+    box-shadow:0 10px 28px rgba(0,0,0,.55);
+    backdrop-filter:blur(12px);
+  }
+  .mesa-lateral-navegacao button { min-height:46px; font-size:9px }
+
+  .mesa-lateral,
+  .mesa-shell.modo-atual-mapa .mesa-lateral,
+  .mesa-inimigos-lateral,
+  .mesa-shell.modo-atual-mapa .mesa-inimigos-lateral,
+  .mesa-jogador-participantes,
+  .mesa-shell.modo-atual-mapa .mesa-jogador-participantes {
+    display:block;
+    position:fixed;
+    z-index:40;
+    top:auto;
+    right:8px;
+    bottom:calc(134px + env(safe-area-inset-bottom));
+    left:8px;
+    width:auto;
+    height:min(58dvh,520px);
+    margin:0;
+    padding-top:0;
+    border:1px solid var(--mesa-borda);
+    background:rgba(4,5,5,.94);
+    box-shadow:0 -18px 48px rgba(0,0,0,.7);
+    border-radius:6px 6px 0 0;
+    backdrop-filter:blur(14px);
+    overflow:auto;
+  }
+  .mesa-inimigos-lateral,.mesa-shell.modo-atual-mapa .mesa-inimigos-lateral { z-index:41 }
+  .painel-lateral-fechado .mesa-lateral,
+  .painel-lateral-fechado .mesa-inimigos-lateral,
+  .painel-lateral-fechado .mesa-jogador-participantes { display:none!important }
+  .mesa-lateral-titulo { position:sticky; top:0; z-index:3; height:46px; background:rgba(5,6,6,.94); backdrop-filter:blur(10px) }
+  .mesa-membros { padding:6px 12px 14px }
+  .mesa-membros>button,.mesa-jogador-participante { padding:12px 5px }
+  .participante-condicoes>span { font-size:8px; padding:4px 7px }
+
+  .ficha-tablet-mesa,
+  .mesa-shell.modo-atual-mapa.jogador-ficha-ativa .ficha-tablet-mesa {
+    position:fixed;
+    z-index:39;
+    top:58px;
+    right:0;
+    bottom:134px;
+    left:0;
+    width:auto;
+    height:auto;
+    margin:0;
+    border:0;
+  }
+  .jogador-ficha-ativa .mesa-palco,
+  .mesa-shell.modo-atual-mapa.jogador-ficha-ativa .mesa-palco { visibility:visible; opacity:.18; pointer-events:none }
+
+  .mesa-zoom-controles { left:8px; bottom:calc(142px + env(safe-area-inset-bottom)); padding:3px; flex-direction:column; gap:2px }
+  .mesa-zoom-controles button { width:38px; height:38px }
+  .mesa-zoom-controles span { min-width:38px; font-size:8px }
+
+  .mesa-biblioteca,.mesa-anotacoes-painel,.mesa-musica-painel {
+    top:104px;
+    right:0;
+    bottom:78px;
+    left:0;
+    width:auto;
+    max-width:none;
+    height:auto;
+    max-height:none;
+    border:0;
+  }
+  .biblioteca-cabecalho { position:sticky; top:0; z-index:4 }
+  .cena-editor { width:100vw; max-width:none; max-height:100dvh; border:0 }
+  .cena-editor-fundo { padding:0 }
+  .mesa-variacoes-ativas { top:112px; max-width:calc(100vw - 20px) }
+  .mesa-variacoes-ativas span { display:none }
+  .mesa-musica-ouvinte { right:8px; bottom:calc(142px + env(safe-area-inset-bottom)); left:auto; width:min(260px,calc(100vw - 64px)); max-width:none }
+}
+
+@media (max-width:420px) {
+  .mesa-shell.visao-mestre { grid-template-rows:100px minmax(0,1fr) 72px }
+  .visao-mestre .mesa-topo { grid-template-rows:52px 48px }
+  .mesa-ferramentas-mestre .mesa-cenas-botao { min-width:40px }
+  .mesa-lateral-navegacao { bottom:calc(80px + env(safe-area-inset-bottom)) }
+  .mesa-lateral,.mesa-inimigos-lateral,.mesa-jogador-participantes { bottom:calc(128px + env(safe-area-inset-bottom)); height:min(62dvh,480px) }
+  .mesa-rodape { height:72px }
+  .mesa-zoom-controles { bottom:calc(136px + env(safe-area-inset-bottom)) }
+}
+
+@media (max-height:500px) and (orientation:landscape) {
+  .mesa-shell,.mesa-shell.visao-mestre { grid-template-rows:52px minmax(0,1fr) 62px }
+  .visao-mestre .mesa-topo { display:flex; height:52px }
+  .mesa-ferramentas-mestre { margin-left:auto; width:auto; grid-column:auto; overflow:visible }
+  .mesa-ferramentas-mestre .mesa-cenas-botao { flex:0 0 38px; height:38px }
+  .mesa-ferramentas-mestre .mesa-modos,.mesa-ferramentas-mestre .mesa-modos button { height:38px }
+  .mesa-lateral-navegacao { right:8px; bottom:70px; left:auto; width:min(340px,52vw) }
+  .mesa-lateral,.mesa-inimigos-lateral,.mesa-jogador-participantes { top:60px; right:8px; bottom:118px; left:auto; width:min(340px,52vw); height:auto }
+  .mesa-biblioteca,.mesa-anotacoes-painel,.mesa-musica-painel { top:52px; bottom:62px }
+  .mesa-zoom-controles { bottom:70px; flex-direction:row }
+  .mesa-rodape { height:62px }
+}

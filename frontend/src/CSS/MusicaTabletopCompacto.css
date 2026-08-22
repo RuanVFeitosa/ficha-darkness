@@ -42,3 +42,20 @@
   .musica-ouvinte .musica-capa-ouvinte { width:44px; height:44px }
   .musica-ouvinte .musica-volume-local { right:36px; bottom:5px; left:60px }
 }
+
+/* Mestre: a lista exibe as capas e os controles ficam logo abaixo. */
+.mesa-musica-painel.mesa-musica-painel { height:min(410px,calc(100vh - 202px)) }
+.mesa-musica-painel .musica-tabletop:not(.musica-ouvinte) .musica-conteudo { grid-template-columns:1fr; grid-template-rows:minmax(150px,1fr) 86px; gap:8px }
+.mesa-musica-painel .musica-tabletop:not(.musica-ouvinte) .musica-player { position:relative; display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:50px 35px; min-height:86px; overflow:hidden }
+.mesa-musica-painel .musica-tabletop:not(.musica-ouvinte) .musica-player>header { grid-column:1; grid-row:1; padding:0 12px }
+.mesa-musica-painel .musica-tabletop:not(.musica-ouvinte) .musica-player>header button { width:30px; height:30px }
+.mesa-musica-painel .musica-tabletop:not(.musica-ouvinte) .musica-youtube-player { position:absolute; z-index:-1; right:0; bottom:0; width:200px; height:200px; min-height:200px; opacity:.001; pointer-events:none }
+.mesa-musica-painel .musica-tabletop:not(.musica-ouvinte) .musica-youtube-player iframe { width:200px!important; height:200px!important }
+.mesa-musica-painel .musica-tabletop:not(.musica-ouvinte) .musica-volume { grid-column:1; grid-row:2; padding:0 12px; border-top:1px solid var(--linha,rgba(255,255,255,.12)) }
+.mesa-musica-painel .musica-lista>div>button { min-height:58px; grid-template-columns:74px minmax(0,1fr) 22px }
+.mesa-musica-painel .musica-lista img { width:74px }
+
+@media(max-width:700px) {
+  .mesa-musica-painel.mesa-musica-painel { height:min(390px,calc(100vh - 154px)) }
+  .mesa-musica-painel .musica-tabletop:not(.musica-ouvinte) .musica-conteudo { grid-template-rows:minmax(130px,1fr) 86px }
+}

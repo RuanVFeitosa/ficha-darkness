@@ -1,3 +1,5 @@
+import { supabase, supabaseConfigurado } from "./supabase";
+
 const getApiUrl = () => {
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL.replace(/\/$/, "");
@@ -73,7 +75,55 @@ export const salvarPersonagem = async (fichaId, personagem) => {
     body: JSON.stringify(personagem),
   });
 
-  return data.personagem;
+  const personagemSalvo = data.personagem;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("darkness:personagem-atualizado", {
+      detail: { fichaId, personagem: personagemSalvo },
+    }));
+    try {
+      const canal = new BroadcastChannel("darkness-personagens");
+      canal.postMessage({ fichaId, personagem: personagemSalvo });
+      canal.close();
+    } catch {
+      // BroadcastChannel pode estar indisponivel em navegadores antigos.
+    }
+  }
+  return personagemSalvo;
+};
+
+export const ouvirPersonagens = (fichasIds, aoAtualizar) => {
+  const ids = new Set((fichasIds || []).map(String));
+  if (!ids.size || typeof aoAtualizar !== "function") return () => {};
+
+  const receber = (mensagem) => {
+    const fichaId = String(mensagem?.fichaId || mensagem?.id || "");
+    const personagem = mensagem?.personagem;
+    if (ids.has(fichaId) && personagem) aoAtualizar(fichaId, personagem);
+  };
+  const eventoLocal = (evento) => receber(evento.detail);
+  window.addEventListener("darkness:personagem-atualizado", eventoLocal);
+
+  let canalNavegador;
+  try {
+    canalNavegador = new BroadcastChannel("darkness-personagens");
+    canalNavegador.onmessage = (evento) => receber(evento.data);
+  } catch {
+    canalNavegador = null;
+  }
+
+  const canalSupabase = supabaseConfigurado
+    ? supabase.channel(`personagens-mesa-${ids.size}-${Date.now()}`).on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "personagens" },
+      (evento) => receber(evento.new),
+    ).subscribe()
+    : null;
+
+  return () => {
+    window.removeEventListener("darkness:personagem-atualizado", eventoLocal);
+    canalNavegador?.close();
+    if (canalSupabase) supabase.removeChannel(canalSupabase);
+  };
 };
 
 export const apagarPersonagem = async (fichaId) => {
