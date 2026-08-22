@@ -509,7 +509,17 @@ const Mesa = () => {
       let mapasBatalha = [...(editando.mapasBatalha || []), ...novosMapas];
       if (!imagensCena.length && editando.imagemUrl) imagensCena = [{ id: idMidiaLocal("cena-url"), nome: "Cena principal", url: editando.imagemUrl }];
       if (!mapasBatalha.length && editando.mapaUrl) mapasBatalha = [{ id: idMidiaLocal("mapa-url"), nome: "Mapa principal", url: editando.mapaUrl, larguraGrade: Number(editando.larguraGrade || 12), alturaGrade: Number(editando.alturaGrade || 8) }];
-      await salvarCena(campanha.id, { ...editando, imagensCena, mapasBatalha, imagemUrl: imagensCena[0]?.url || "", mapaUrl: mapasBatalha[0]?.url || "" });
+      await salvarCena(campanha.id, {
+        ...editando,
+        // Mantém os dois formatos sincronizados para evitar que os valores antigos
+        // vindos do Supabase sobrescrevam as listas atualizadas durante a edição.
+        imagensCena,
+        mapasBatalha,
+        imagens_cena: imagensCena,
+        mapas_batalha: mapasBatalha,
+        imagemUrl: imagensCena[0]?.url || "",
+        mapaUrl: mapasBatalha[0]?.url || "",
+      });
       await carregar(); setEditorAberto(false);
     } catch (error) { setErro(error.message || "Nao foi possivel salvar a cena."); }
     finally { setSalvando(false); }

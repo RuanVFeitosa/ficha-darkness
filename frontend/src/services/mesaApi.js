@@ -90,11 +90,19 @@ const resolverImagemLocal = async (url) => {
   return resolvida;
 };
 
-const normalizarMidiasCena = (cena) => {
-  const imagens = Array.isArray(cena.imagens_cena || cena.imagensCena) ? (cena.imagens_cena || cena.imagensCena) : [];
-  const mapas = Array.isArray(cena.mapas_batalha || cena.mapasBatalha) ? (cena.mapas_batalha || cena.mapasBatalha) : [];
-  const imagemAntiga = cena.imagem_url || cena.imagemUrl;
-  const mapaAntigo = cena.mapa_url || cena.mapaUrl;
+const normalizarMidiasCena = (cena = {}) => {
+  // Durante a edição existem, ao mesmo tempo, os campos vindos do Supabase
+  // (imagens_cena/mapas_batalha) e os campos usados pela interface
+  // (imagensCena/mapasBatalha). A interface precisa ter prioridade, inclusive
+  // quando o array está vazio, para que adicionar/remover mídias seja persistido.
+  const temImagensDaInterface = Object.prototype.hasOwnProperty.call(cena, "imagensCena");
+  const temMapasDaInterface = Object.prototype.hasOwnProperty.call(cena, "mapasBatalha");
+  const imagensOrigem = temImagensDaInterface ? cena.imagensCena : cena.imagens_cena;
+  const mapasOrigem = temMapasDaInterface ? cena.mapasBatalha : cena.mapas_batalha;
+  const imagens = Array.isArray(imagensOrigem) ? imagensOrigem : [];
+  const mapas = Array.isArray(mapasOrigem) ? mapasOrigem : [];
+  const imagemAntiga = cena.imagemUrl || cena.imagem_url;
+  const mapaAntigo = cena.mapaUrl || cena.mapa_url;
   return {
     ...cena,
     imagensCena: imagens.length ? imagens : imagemAntiga ? [{ id: `cena-${cena.id || "nova"}-1`, nome: "Cena principal", url: imagemAntiga }] : [],
@@ -304,14 +312,24 @@ export const salvarCena = async (campanhaId, cena) => {
     const cenas = demo.cenas.some((item) => item.id === id) ? demo.cenas.map((item) => item.id === id ? nova : item) : [...demo.cenas, nova];
     salvarDemo({ ...demo, cenas }, campanhaId); return nova;
   }
+  const imagensPersistidas = normalizada.imagensCena.map(({ urlPersistida, ...midia }) => ({
+    ...midia,
+    url: urlPersistida || midia.url,
+  }));
+  const mapasPersistidos = normalizada.mapasBatalha.map(({ urlPersistida, ...midia }) => ({
+    ...midia,
+    url: urlPersistida || midia.url,
+    larguraGrade: Number(midia.larguraGrade || cena.larguraGrade || cena.largura_grade || 12),
+    alturaGrade: Number(midia.alturaGrade || cena.alturaGrade || cena.altura_grade || 8),
+  }));
   const payload = {
     ...(cena.id ? { id: cena.id } : {}), campanha_id: campanhaId, nome: cena.nome,
-    descricao: cena.descricao || "", imagem_url: cena.imagemUrl || cena.imagem_url || null,
-    mapa_url: cena.mapaUrl || cena.mapa_url || null, largura_grade: Number(cena.larguraGrade || cena.largura_grade || 12),
+    descricao: cena.descricao || "", imagem_url: imagensPersistidas[0]?.url || null,
+    mapa_url: mapasPersistidos[0]?.url || null, largura_grade: Number(cena.larguraGrade || cena.largura_grade || 12),
     altura_grade: Number(cena.alturaGrade || cena.altura_grade || 8), ordem: Number(cena.ordem || 0),
     pasta: String(cena.pasta || "Sem pasta").trim() || "Sem pasta",
-    imagens_cena: normalizada.imagensCena,
-    mapas_batalha: normalizada.mapasBatalha,
+    imagens_cena: imagensPersistidas,
+    mapas_batalha: mapasPersistidos,
   };
   const { data, error } = await supabase.from("cenas").upsert(payload).select().single();
   if (error) throw error; return data;
