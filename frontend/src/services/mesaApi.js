@@ -1,4 +1,4 @@
-import { supabase, supabaseConfigurado } from "./supabase";
+import { supabase, supabaseConfigurado, supabaseObrigatorioAusente } from "./supabase";
 
 const CENAS_DEMO_PADRAO = [
   { id: "sala-marcos", nome: "A sala de Marcos", descricao: "A chuva bate contra os vidros. Algo se move no corredor.", imagemUrl: "/SalaMarcos.webp", mapaUrl: "/SalaMarcos.webp", larguraGrade: 12, alturaGrade: 8, ordem: 0 },
@@ -174,6 +174,9 @@ export const listarCampanhas = async () => {
 export const listarCampanhasDaFicha = async (fichaId) => {
   const id = String(fichaId || "").trim();
   if (!id) return [];
+  if (supabaseObrigatorioAusente) {
+    throw new Error("O tabletop online nao esta conectado ao Supabase. Configure REACT_APP_SUPABASE_URL e REACT_APP_SUPABASE_ANON_KEY no Vercel e publique novamente.");
+  }
   if (!supabaseConfigurado) {
     const campanhas = listarCampanhasDemo();
     const completas = await Promise.all(campanhas.map((campanha) => buscarCampanhaPorCodigo(campanha.codigo)));
@@ -207,8 +210,7 @@ export const criarCampanhaMesa = async (nome) => {
     return campanha;
   }
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Entre com a conta do mestre para criar uma campanha.");
-  const { data, error } = await supabase.from("campanhas").insert({ nome: String(nome).trim(), codigo, mestre_id: user.id }).select().single();
+  const { data, error } = await supabase.from("campanhas").insert({ nome: String(nome).trim(), codigo, mestre_id: user?.id || null }).select().single();
   if (error) throw error;
   return data;
 };

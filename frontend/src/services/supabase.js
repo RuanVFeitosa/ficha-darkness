@@ -4,6 +4,7 @@ const supabaseUrl = process.env.REACT_APP_SUPABASE_URL?.trim();
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY?.trim();
 
 export const supabaseConfigurado = Boolean(supabaseUrl && supabaseAnonKey);
+export const supabaseObrigatorioAusente = process.env.NODE_ENV === "production" && !supabaseConfigurado;
 
 export const supabase = supabaseConfigurado
   ? createClient(supabaseUrl, supabaseAnonKey, {
