@@ -101,6 +101,7 @@ const Mesa = () => {
   const [personagens, setPersonagens] = useState({});
   const [fichaAberta, setFichaAberta] = useState(null);
   const [tokenArrastando, setTokenArrastando] = useState(null);
+  const tokensEmGravacaoRef = useRef(new Set());
   const [zoomMapa, setZoomMapa] = useState(1);
   const [panMapa, setPanMapa] = useState({ x: 0, y: 0 });
   const [mapaArrastando, setMapaArrastando] = useState(false);
@@ -131,8 +132,14 @@ const Mesa = () => {
         if (!atual) return atual;
         const mapaChave = chavePosicaoMapa(atual.cenaAtiva?.id, atual.midiaAtivaId);
         const tokens = (evento.tokens || []).map((token) => {
+          if (tokensEmGravacaoRef.current.has(token.id)) {
+            return atual.tokens.find((item) => item.id === token.id) || token;
+          }
           const posicao = token.posicoes?.[mapaChave];
           return posicao ? { ...token, x: posicao.x, y: posicao.y } : token;
+        });
+        atual.tokens.forEach((token) => {
+          if (tokensEmGravacaoRef.current.has(token.id) && !tokens.some((item) => item.id === token.id)) tokens.push(token);
         });
         return { ...atual, tokens };
       });
@@ -297,12 +304,20 @@ const Mesa = () => {
   const soltarToken = async (event) => {
     if (!tokenArrastando) return;
     const tokenId = tokenArrastando;
+    if (tokensEmGravacaoRef.current.has(tokenId)) return;
     const token = campanha.tokens.find((item) => item.id === tokenId);
     if (!podeMoverToken(token)) { setTokenArrastando(null); return; }
     const { x, y } = calcularPosicaoToken(event);
+    tokensEmGravacaoRef.current.add(tokenId);
     setTokenArrastando(null);
     setCampanha((atual) => ({ ...atual, tokens: atual.tokens.map((item) => item.id === tokenId ? { ...item, x, y } : item) }));
-    await moverToken(tokenId, x, y, mapaChaveAtual);
+    try {
+      await moverToken(tokenId, x, y, mapaChaveAtual);
+    } catch (error) {
+      setErro(error.message || "Nao foi possivel salvar a posicao do token.");
+    } finally {
+      tokensEmGravacaoRef.current.delete(tokenId);
+    }
   };
 
   const soltarFichaNoMapa = async (event) => {
