@@ -526,6 +526,34 @@ export const ouvirCampanha = (campanhaId, aoMudar) => {
       window.removeEventListener("darkness:campanha-demo", aoAlterarLocal);
     };
   }
+  let intervaloFallback = null;
+  let consultaTokensEmAndamento = false;
+  const sincronizarTokens = async () => {
+    if (consultaTokensEmAndamento || document.visibilityState !== "visible") return;
+    consultaTokensEmAndamento = true;
+    try {
+      const { data, error } = await supabase
+        .from("tokens_mapa")
+        .select("*")
+        .eq("campanha_id", campanhaId);
+      if (error) throw error;
+      aoMudar({ tipo: "tokens_sincronizados", tokens: data || [] });
+    } catch (error) {
+      console.warn("Nao foi possivel sincronizar os tokens da mesa.", error);
+    } finally {
+      consultaTokensEmAndamento = false;
+    }
+  };
+  const iniciarFallback = () => {
+    if (intervaloFallback) return;
+    sincronizarTokens();
+    intervaloFallback = window.setInterval(sincronizarTokens, 3000);
+  };
+  const pararFallback = () => {
+    if (!intervaloFallback) return;
+    window.clearInterval(intervaloFallback);
+    intervaloFallback = null;
+  };
   const canal = supabase
     .channel(`mesa:${campanhaId}`)
     .on("postgres_changes", { event: "*", schema: "public", table: "campanhas", filter: `id=eq.${campanhaId}` }, aoMudar)
@@ -535,5 +563,9 @@ export const ouvirCampanha = (campanhaId, aoMudar) => {
     .on("postgres_changes", { event: "*", schema: "public", table: "inimigos_campanha", filter: `campanha_id=eq.${campanhaId}` }, aoMudar)
     .on("postgres_changes", { event: "INSERT", schema: "public", table: "rolagens", filter: `campanha_id=eq.${campanhaId}` }, aoMudar)
     .subscribe();
-  return () => supabase.removeChannel(canal);
+  iniciarFallback();
+  return () => {
+    pararFallback();
+    supabase.removeChannel(canal);
+  };
 };

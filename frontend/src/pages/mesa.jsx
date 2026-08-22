@@ -126,6 +126,18 @@ const Mesa = () => {
   useEffect(() => { carregar(); }, [carregar]);
   useEffect(() => { campanhaRef.current = campanha; }, [campanha]);
   useEffect(() => campanha?.id ? ouvirCampanha(campanha.id, (evento) => {
+    if (evento?.tipo === "tokens_sincronizados") {
+      setCampanha((atual) => {
+        if (!atual) return atual;
+        const mapaChave = chavePosicaoMapa(atual.cenaAtiva?.id, atual.midiaAtivaId);
+        const tokens = (evento.tokens || []).map((token) => {
+          const posicao = token.posicoes?.[mapaChave];
+          return posicao ? { ...token, x: posicao.x, y: posicao.y } : token;
+        });
+        return { ...atual, tokens };
+      });
+      return;
+    }
     if (!eventoMudaApresentacao(evento, campanhaRef.current)) {
       carregar();
       return;
