@@ -2,14 +2,14 @@ import React, { lazy, Suspense, useEffect, useState } from "react";
 import PageTransition from "./pages/pageTransition";
 import "./App.css";
 import "./CSS/Responsive.css";
-
-const MESTRE_AUTH_KEY = "darkness_mestre_autorizado";
+import { MESTRE_AUTH_KEY } from "./constants/masterAccess";
 
 const ArvoreHabilidades = lazy(() => import("./pages/arvoreHabilidades"));
 const CriarPersonagem = lazy(() => import("./pages/criarPersonagem"));
 const DashboardMestre = lazy(() => import("./pages/dashboardMestre"));
 const FichaPersonagem = lazy(() => import("./pages/fichaPersonagem"));
 const LojaHelena = lazy(() => import("./pages/lojaHelena"));
+const Mesa = lazy(() => import("./pages/mesa"));
 const TelaInicial = lazy(() => import("./pages/telaInicial"));
 const UpgradeNivel = lazy(() => import("./pages/upgradeNivel"));
 
@@ -59,6 +59,7 @@ function App() {
   const estaNaArvoreHabilidades = params.get("habilidades") === "1";
   const estaNoUpgrade = params.get("upgrade") === "1";
   const estaNoDashboardMestre = params.get("mestre") === "1";
+  const estaNaMesa = Boolean(params.get("campanha"));
   const mestreAutorizado =
     sessionStorage.getItem(MESTRE_AUTH_KEY) === "true";
 
@@ -67,7 +68,9 @@ function App() {
       <PageTransition active={transitionActive} />
 
       <Suspense fallback={null}>
-        {estaNoDashboardMestre && mestreAutorizado ? (
+        {estaNaMesa ? (
+          <Mesa />
+        ) : estaNoDashboardMestre && mestreAutorizado ? (
           <DashboardMestre />
         ) : estaNaArvoreHabilidades ? (
           <ArvoreHabilidades />

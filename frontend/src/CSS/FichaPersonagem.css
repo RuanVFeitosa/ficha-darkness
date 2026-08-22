@@ -305,7 +305,8 @@ body {
    ========================================================= */
 
 .botao-loja-flutuante,
-.botao-upgrade-flutuante {
+.botao-upgrade-flutuante,
+.botao-mesa-flutuante {
   position: fixed;
 
   left: 24px;
@@ -350,6 +351,10 @@ body {
   bottom: 152px;
 }
 
+.botao-mesa-flutuante {
+  bottom: 204px;
+}
+
 .botao-party-flutuante {
   bottom: 88px;
 }
@@ -380,6 +385,7 @@ body {
 
 .botao-loja-flutuante:hover,
 .botao-upgrade-flutuante:hover,
+.botao-mesa-flutuante:hover,
 .botao-party-flutuante:hover,
 .botao-mestre-flutuante:hover {
   border-color: var(--cor-primaria);
@@ -12139,4 +12145,375 @@ body {
 
 .defesa-detalhes-modal-resistencias > span {
   grid-column: 1 / -1;
+}
+
+/* Ajustes da ficha completa quando ela e aberta dentro do tabletop. */
+.ficha-embutida-mesa .sanidade-completa {
+  width: 230px;
+  min-width: 230px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+}
+
+.ficha-embutida-mesa .barra-rpg-header {
+  display: grid;
+  grid-template-columns: minmax(68px, 1fr) 24px minmax(72px, auto) 24px;
+  align-items: center;
+  gap: 4px;
+}
+
+.ficha-embutida-mesa .barra-rpg-label {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.ficha-embutida-mesa .barra-rpg-valores {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  white-space: nowrap;
+}
+
+.ficha-embutida-mesa .barra-rpg-input.atual,
+.ficha-embutida-mesa .barra-rpg-input.max {
+  width: 30px;
+  min-width: 30px;
+  padding: 0;
+}
+
+.ficha-embutida-mesa .barra-btn {
+  width: 24px;
+  min-width: 24px;
+  margin: 0;
+}
+
+.ficha-embutida-mesa .barra-rpg-track,
+.ficha-embutida-mesa .barra-rpg-track-esperanca-track {
+  width: 100%;
+  margin-left: 0;
+}
+
+.ficha-embutida-mesa {
+  width: 100%;
+  max-width: none;
+  padding: 74px 18px 28px !important;
+}
+
+.ficha-embutida-mesa .main-content {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.ficha-embutida-mesa .profile-section,
+.ficha-embutida-mesa .profile-container,
+.ficha-embutida-mesa .sanidade-section,
+.ficha-embutida-mesa .sanidade-container {
+  width: 100%;
+  min-width: 0;
+}
+
+.ficha-embutida-mesa .sanidade-inputs {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) 150px 230px;
+  align-items: center;
+  justify-items: center;
+  gap: 18px;
+}
+
+.ficha-embutida-mesa .identidade-personagem {
+  width: 100%;
+  max-width: 300px;
+  min-width: 0;
+}
+
+.ficha-embutida-mesa .profile-wrapper,
+.ficha-embutida-mesa .profile {
+  width: 140px;
+  height: 140px;
+}
+
+.ficha-embutida-mesa .atributos-linha {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 10px 16px;
+}
+
+.ficha-embutida-mesa .atributos-linha > .atributoCompleto {
+  min-width: 0;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 8px;
+  padding: 0;
+}
+
+.ficha-embutida-mesa .atributo-dado {
+  width: 46px;
+  min-width: 46px;
+}
+
+.ficha-embutida-mesa .atributo-item {
+  grid-template-columns: minmax(110px, 1fr) 62px;
+  gap: 8px;
+}
+
+.ficha-embutida-mesa .atributo-nome {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  font-size: .74rem;
+}
+
+.ficha-embutida-mesa .sidebar-container,
+.ficha-embutida-mesa .sidebar-conteudo {
+  width: 100%;
+  min-width: 0;
+}
+
+.ficha-embutida-mesa .sidebar-abas {
+  width: 100%;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  scrollbar-width: thin;
+}
+
+.ficha-embutida-mesa .sidebar-abas .aba-btn {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: max-content !important;
+}
+
+.ficha-embutida-mesa .ficha-identificacao-secreta {
+  display: none;
+}
+
+.ficha-embutida-mesa .botao-mesa-flutuante {
+  display: none;
+}
+
+.acesso-restrito-overlay { position:fixed; z-index:10020; inset:0; display:grid; place-items:center; padding:18px; background:rgba(0,0,0,.82); backdrop-filter:blur(6px) }.acesso-restrito-painel { width:min(390px,100%); display:grid; gap:18px; padding:18px; border:1px solid var(--cor-borda,#5b554b); background:#0b0c0c; box-shadow:0 22px 70px #000; color:var(--cor-texto,#eee9df) }.acesso-restrito-painel>header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding-bottom:14px; border-bottom:1px solid rgba(230,223,209,.15) }.acesso-restrito-painel header span { color:var(--cor-primaria,#d4af37); font-size:9px; text-transform:uppercase }.acesso-restrito-painel h2 { margin:5px 0 0; font-size:22px; letter-spacing:0 }.acesso-restrito-painel header button { width:32px; height:32px; display:grid; place-items:center; border:1px solid rgba(230,223,209,.18); background:transparent; color:inherit; cursor:pointer }.acesso-restrito-painel label { display:grid; gap:8px; color:#aaa49a; font-size:9px; text-transform:uppercase }.acesso-restrito-painel input { width:100%; height:46px; padding:0 12px; border:1px solid var(--cor-borda,#5b554b); border-radius:0; background:#050606; color:inherit; font-size:18px; text-align:center; letter-spacing:4px }.acesso-restrito-painel>p { margin:0; color:#d78b82; font-size:10px }.acesso-restrito-painel>footer { display:flex; justify-content:flex-end; gap:8px }.acesso-restrito-painel footer button { min-height:38px; padding:0 14px; border:1px solid rgba(230,223,209,.2); background:transparent; color:inherit; font-size:9px; text-transform:uppercase; cursor:pointer }.acesso-restrito-painel footer button:last-child { border-color:var(--cor-primaria,#d4af37); background:var(--cor-primaria,#d4af37); color:#050505 }
+
+.seletor-mesa-overlay {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.84);
+  backdrop-filter: blur(7px);
+}
+
+.seletor-mesa-painel {
+  width: min(460px, 100%);
+  max-height: min(620px, calc(100vh - 36px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--cor-primaria);
+  border-radius: 6px;
+  background: var(--cor-fundo, #070707);
+  color: var(--cor-texto, #fff);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.72);
+}
+
+.seletor-mesa-painel > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.seletor-mesa-painel header span,
+.seletor-mesa-painel small {
+  color: var(--cor-primaria);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.seletor-mesa-painel h2 {
+  margin: 6px 0 0;
+  font-size: 1.45rem;
+}
+
+.seletor-mesa-painel header button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--cor-borda);
+  background: transparent;
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+
+.seletor-mesa-lista {
+  min-height: 90px;
+  display: grid;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.seletor-mesa-lista > p {
+  margin: 0;
+  align-self: center;
+  padding: 20px;
+  color: color-mix(in srgb, var(--cor-texto) 68%, transparent);
+  text-align: center;
+}
+
+.seletor-mesa-lista > button {
+  width: 100%;
+  min-height: 68px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--cor-secundaria) 42%, transparent);
+  color: var(--cor-texto);
+  text-align: left;
+  cursor: pointer;
+}
+
+.seletor-mesa-lista > button:hover {
+  border-color: var(--cor-primaria);
+  background: var(--cor-secundaria);
+}
+
+.seletor-mesa-lista > button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.seletor-mesa-lista > button span {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.seletor-mesa-lista strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.seletor-mesa-erro {
+  color: #ff9187 !important;
+}
+
+.menu-ficha-flutuante {
+  position: fixed;
+  z-index: 80;
+  left: 24px;
+  bottom: 24px;
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.menu-ficha-gatilho {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--cor-fundo) 88%, transparent);
+  color: var(--cor-texto);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.48);
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.menu-ficha-gatilho:hover,
+.menu-ficha-gatilho.aberto {
+  border-color: var(--cor-primaria);
+  background: var(--cor-secundaria);
+}
+
+.menu-ficha-opcoes {
+  width: 158px;
+  display: grid;
+  gap: 6px;
+  padding: 7px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--cor-fundo) 94%, transparent);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(8px);
+}
+
+.menu-ficha-opcoes button {
+  width: 100%;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--cor-texto);
+  font-weight: 800;
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.menu-ficha-opcoes button:hover {
+  border-color: var(--cor-primaria);
+  background: var(--cor-secundaria);
+}
+
+.ficha-embutida-mesa .menu-ficha-flutuante {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .menu-ficha-flutuante {
+    left: 12px;
+    bottom: 12px;
+  }
+
+  .menu-ficha-gatilho {
+    width: 46px;
+    height: 46px;
+  }
+}
+
+@media (max-width: 720px) {
+  .botao-mesa-flutuante {
+    left: 12px;
+    bottom: 184px;
+    min-width: 104px;
+    min-height: 44px;
+    padding: 9px 12px;
+  }
+}
+
+@media (max-width: 720px) {
+  .ficha-embutida-mesa {
+    padding: 70px 12px 24px !important;
+  }
+
+  .ficha-embutida-mesa .sanidade-inputs {
+    grid-template-columns: 1fr;
+  }
+
+  .ficha-embutida-mesa .atributos-linha {
+    grid-template-columns: 1fr;
+  }
 }

@@ -14,6 +14,10 @@ import {
   buscarPersonagem,
   salvarPersonagem,
 } from "../services/personagemApi";
+import {
+  buscarCampanhaPorCodigo,
+  listarCampanhas,
+} from "../services/mesaApi";
 import { compressProfileImage } from "../services/imageCompression";
 import {
   notificarPersonagemAtualizado,
@@ -22,6 +26,7 @@ import {
 } from "../services/syncEvents";
 import { SYNC_INTERVALS, iniciarPollingVisivel } from "../services/syncPolicy";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
+import { SENHA_MESTRE } from "../constants/masterAccess";
 import Icon from "@mdi/react";
 import { mdiAccount } from "@mdi/js";
 import {
@@ -48,6 +53,9 @@ import {
   mdiFlask,
   mdiSleep,
   mdiCircleSmall,
+  mdiMapOutline,
+  mdiClose,
+  mdiMenu,
 } from "@mdi/js";
 import { obterIconeItem } from "../utils/itemIcons";
 import {
@@ -538,6 +546,14 @@ const FichaPersonagem = () => {
   const [tipoDanoRecebido, setTipoDanoRecebido] = useState("geral");
   const [ultimoSave, setUltimoSave] = useState(null);
   const [carregado, setCarregado] = useState(false);
+  const [seletorMesaAberto, setSeletorMesaAberto] = useState(false);
+  const [acessoRestritoAberto, setAcessoRestritoAberto] = useState(false);
+  const [senhaRestrita, setSenhaRestrita] = useState("");
+  const [erroAcessoRestrito, setErroAcessoRestrito] = useState("");
+  const [menuFichaAberto, setMenuFichaAberto] = useState(false);
+  const [campanhasDaFicha, setCampanhasDaFicha] = useState([]);
+  const [carregandoCampanhas, setCarregandoCampanhas] = useState(false);
+  const [erroCampanhas, setErroCampanhas] = useState("");
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
   const [receitasCriacaoAtuais, setReceitasCriacaoAtuais] = useState(() => {
     try {
@@ -1318,6 +1334,55 @@ const cancelarEdicaoHabilidade = () => {
     window.location.href = montarUrlFicha(personagem, fichaId, "?upgrade=1");
   };
 
+  const abrirTabletop = async () => {
+    setSeletorMesaAberto(true);
+    setCarregandoCampanhas(true);
+    setErroCampanhas("");
+    try {
+      const campanhas = await listarCampanhas();
+      const completas = await Promise.all(
+        campanhas
+          .filter((campanha) => campanha.codigo)
+          .map((campanha) => buscarCampanhaPorCodigo(campanha.codigo)),
+      );
+      setCampanhasDaFicha(
+        completas.filter((campanha) =>
+          campanha?.membros?.some((membro) => membro.ficha_id === fichaId),
+        ),
+      );
+    } catch (error) {
+      setErroCampanhas(
+        error.message || "Nao foi possivel carregar as campanhas.",
+      );
+    } finally {
+      setCarregandoCampanhas(false);
+    }
+  };
+
+  const solicitarAcessoTabletop = () => {
+    setMenuFichaAberto(false);
+    setSenhaRestrita("");
+    setErroAcessoRestrito("");
+    setAcessoRestritoAberto(true);
+  };
+
+  const confirmarAcessoTabletop = (event) => {
+    event.preventDefault();
+    if (senhaRestrita !== SENHA_MESTRE) {
+      setErroAcessoRestrito("Codigo incorreto.");
+      setSenhaRestrita("");
+      return;
+    }
+    setAcessoRestritoAberto(false);
+    abrirTabletop();
+  };
+
+  const entrarNoTabletop = (campanha) => {
+    localStorage.setItem(ULTIMA_FICHA_KEY, fichaId);
+    const nomeUrl = normalizarFichaId(personagem?.nome || fichaId);
+    window.location.href = `/?campanha=${encodeURIComponent(campanha.codigo)}&ficha=${encodeURIComponent(nomeUrl)}&senha=${encodeURIComponent(fichaId)}`;
+  };
+
   const abrirArvoreHabilidades = () => {
     window.location.href = montarUrlFicha(
       personagem,
@@ -1522,6 +1587,10 @@ const cancelarEdicaoHabilidade = () => {
         detail: novaRolagem,
       }),
     );
+
+    if (new URLSearchParams(window.location.search).get("embed") === "mesa" && window.parent !== window) {
+      window.parent.postMessage({ tipo: "darkness:rolagem-tabletop", autor: personagem.nome || "Jogador", rolagem: novaRolagem }, window.location.origin);
+    }
   };
 
   const rolarDado = (faces) => {
@@ -6656,7 +6725,7 @@ const cancelarEdicaoHabilidade = () => {
 
   return (
     <div
-      className="ficha-container"
+      className={new URLSearchParams(window.location.search).get("embed") === "mesa" ? "ficha-container ficha-embutida-mesa" : "ficha-container"}
       style={{
         "--cor-primaria": personagem.temaFicha?.primaria,
         "--cor-secundaria": personagem.temaFicha?.secundaria,
@@ -6665,22 +6734,99 @@ const cancelarEdicaoHabilidade = () => {
         "--cor-borda": personagem.temaFicha?.borda,
       }}
     >
-      <button
-        className="botao-mestre-flutuante"
-        onClick={abrirUpgradeNivel}
-        title="Abrir upgrade de nivel"
-      >
-        <Icon path={mdiDiceD20} size={1.2} />
-        <span>Upgrade</span>
-      </button>
-      <button
-        className="botao-loja-flutuante"
-        onClick={abrirLoja}
-        title="Abrir loja da Helena"
-      >
-        <Icon path={mdiStorefrontOutline} size={1.2} />
-        <span>Loja</span>
-      </button>
+      <nav className="menu-ficha-flutuante" aria-label="Atalhos da ficha">
+        {menuFichaAberto && (
+          <div className="menu-ficha-opcoes">
+            <button type="button" onClick={abrirUpgradeNivel}>
+              <Icon path={mdiDiceD20} size={1} />
+              <span>Upgrade</span>
+            </button>
+            <button type="button" onClick={abrirLoja}>
+              <Icon path={mdiStorefrontOutline} size={1} />
+              <span>Loja</span>
+            </button>
+            <button
+              type="button"
+              onClick={solicitarAcessoTabletop}
+            >
+              <Icon path={mdiMapOutline} size={1} />
+              <span>Restrito</span>
+            </button>
+          </div>
+        )}
+        <button
+          type="button"
+          className={`menu-ficha-gatilho${menuFichaAberto ? " aberto" : ""}`}
+          aria-expanded={menuFichaAberto}
+          aria-label={menuFichaAberto ? "Fechar menu da ficha" : "Abrir menu da ficha"}
+          title={menuFichaAberto ? "Fechar menu" : "Abrir menu"}
+          onClick={() => setMenuFichaAberto((aberto) => !aberto)}
+        >
+          <Icon path={menuFichaAberto ? mdiClose : mdiMenu} size={1.15} />
+        </button>
+      </nav>
+
+      {acessoRestritoAberto && (
+        <div className="acesso-restrito-overlay" onMouseDown={(event) => event.target === event.currentTarget && setAcessoRestritoAberto(false)}>
+          <form className="acesso-restrito-painel" onSubmit={confirmarAcessoTabletop}>
+            <header><div><span>Area protegida</span><h2>RESTRITO</h2></div><button type="button" onClick={() => setAcessoRestritoAberto(false)} title="Fechar"><Icon path={mdiClose} size={0.85} /></button></header>
+            <label>Codigo de acesso<input autoFocus type="password" inputMode="numeric" autoComplete="off" value={senhaRestrita} onChange={(event) => { setSenhaRestrita(event.target.value.replace(/\D/g, "").slice(0, SENHA_MESTRE.length)); setErroAcessoRestrito(""); }} /></label>
+            {erroAcessoRestrito && <p>{erroAcessoRestrito}</p>}
+            <footer><button type="button" onClick={() => setAcessoRestritoAberto(false)}>Cancelar</button><button type="submit">Entrar</button></footer>
+          </form>
+        </div>
+      )}
+
+      {seletorMesaAberto && (
+        <div
+          className="seletor-mesa-overlay"
+          onClick={() => setSeletorMesaAberto(false)}
+        >
+          <section
+            className="seletor-mesa-painel"
+            aria-label="Escolher campanha"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header>
+              <div>
+                <span>Entrar no tabletop</span>
+                <h2>Escolha uma campanha</h2>
+              </div>
+              <button
+                type="button"
+                title="Fechar"
+                onClick={() => setSeletorMesaAberto(false)}
+              >
+                <Icon path={mdiClose} size={0.85} />
+              </button>
+            </header>
+
+            <div className="seletor-mesa-lista">
+              {carregandoCampanhas ? (
+                <p>Carregando campanhas...</p>
+              ) : erroCampanhas ? (
+                <p className="seletor-mesa-erro">{erroCampanhas}</p>
+              ) : campanhasDaFicha.length ? (
+                campanhasDaFicha.map((campanha) => (
+                  <button
+                    key={campanha.id}
+                    type="button"
+                    onClick={() => entrarNoTabletop(campanha)}
+                  >
+                    <Icon path={mdiMapOutline} size={1} />
+                    <span>
+                      <strong>{campanha.nome}</strong>
+                      <small>Entrar com {personagem.nome || fichaId}</small>
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <p>Esta ficha ainda nao foi adicionada a nenhuma campanha.</p>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
 
       <aside
         className="ficha-identificacao-secreta"

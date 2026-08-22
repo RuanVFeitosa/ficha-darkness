@@ -50,6 +50,7 @@ import {
   salvarArvoresCustom,
 } from "../data/Classes/arvoresHabilidades";
 import { receitasCriacao as RECEITAS_PADRAO } from "../components/data/receitasCriacao";
+import CampanhaDashboard from "../components/CampanhaDashboard";
 import {
   CATEGORIAS_LOJA,
   DEFAULT_CATALOGO_LOJA,
@@ -3394,6 +3395,12 @@ const DashboardMestre = () => {
 
       <nav className="mestre-tabs" aria-label="Areas do dashboard">
         <button
+          className={aba === "campanha" ? "ativa" : ""}
+          onClick={() => setAba("campanha")}
+        >
+          Campanha
+        </button>
+        <button
           className={aba === "fichas" ? "ativa" : ""}
           onClick={() => setAba("fichas")}
         >
@@ -3437,6 +3444,7 @@ const DashboardMestre = () => {
       {false && <section className="mestre-dashboard-full"></section>}
       <div className="mestre-layout-com-rolagens">
         <div className="mestre-conteudo-principal">
+          {aba === "campanha" && <CampanhaDashboard />}
           {aba === "fichas" && (
             <section className="mestre-dashboard-full">
               <div className="mestre-subtabs">

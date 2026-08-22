@@ -3,8 +3,9 @@ const getApiUrl = () => {
     return process.env.REACT_APP_API_URL.replace(/\/$/, "");
   }
 
-  const isCraDevServer =
-    window.location.hostname === "localhost" && window.location.port === "3000";
+  const isCraDevServer = ["localhost", "127.0.0.1"].includes(
+    window.location.hostname,
+  );
 
   if (isCraDevServer) {
     return "http://localhost:4000/api";

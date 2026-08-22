@@ -9,10 +9,8 @@ import {
 } from "@mdi/js";
 import { buscarPersonagem } from "../services/personagemApi";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
+import { MESTRE_AUTH_KEY, SENHA_MESTRE } from "../constants/masterAccess";
 import "../CSS/TelaInicial.css";
-
-const SENHA_MESTRE = "13062000";
-const MESTRE_AUTH_KEY = "darkness_mestre_autorizado";
 
 const normalizarFichaId = (valor) =>
   String(valor || "")
