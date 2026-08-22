@@ -352,7 +352,33 @@ export const moverToken = async (tokenId, x, y, mapaChave = "mapa-principal") =>
     nova_y: y,
     mapa_chave: mapaChave,
   });
-  if (error) throw error;
+  if (error) {
+    const { data: tokenAtual, error: erroConsulta } = await supabase
+      .from("tokens_mapa")
+      .select("*")
+      .eq("id", tokenId)
+      .single();
+    if (erroConsulta) throw error;
+    const { data: atualizado, error: erroAtualizacao } = await supabase
+      .from("tokens_mapa")
+      .update({
+        x,
+        y,
+        posicoes: {
+          ...(tokenAtual.posicoes || {}),
+          [mapaChave]: { x, y },
+        },
+        atualizado_em: new Date().toISOString(),
+      })
+      .eq("id", tokenId)
+      .select()
+      .maybeSingle();
+    if (erroAtualizacao) throw erroAtualizacao;
+    if (!atualizado) {
+      throw new Error("O Supabase recusou a gravacao do token. Aplique a migracao 016 de permissoes.");
+    }
+    return atualizado;
+  }
   const tokenAtualizado = Array.isArray(data) ? data[0] : data;
   if (!tokenAtualizado) throw new Error("O Supabase nao confirmou a nova posicao do token.");
   return tokenAtualizado;
