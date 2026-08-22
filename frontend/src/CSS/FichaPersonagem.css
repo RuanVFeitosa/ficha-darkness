@@ -12455,6 +12455,10 @@ body {
   backdrop-filter: blur(8px);
 }
 
+.menu-ficha-identidade {
+  display: none;
+}
+
 .menu-ficha-opcoes button {
   width: 100%;
   min-height: 44px;
@@ -12485,12 +12489,65 @@ body {
 @media (max-width: 720px) {
   .menu-ficha-flutuante {
     left: 12px;
-    bottom: 12px;
+    top: 12px;
+    bottom: auto;
+    justify-items: start;
   }
 
   .menu-ficha-gatilho {
+    order: 1;
     width: 46px;
     height: 46px;
+  }
+
+  .menu-ficha-opcoes {
+    order: 2;
+    width: min(290px, calc(100vw - 24px));
+    max-height: calc(100vh - 78px);
+    overflow-y: auto;
+  }
+
+  .menu-ficha-identidade {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 7px 7px 12px;
+    border-bottom: 1px solid var(--cor-borda);
+  }
+
+  .menu-ficha-identidade>img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border: 1px solid var(--cor-borda);
+    border-radius: 50%;
+  }
+
+  .menu-ficha-identidade>div {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+
+  .menu-ficha-identidade span,
+  .menu-ficha-identidade small {
+    color: color-mix(in srgb, var(--cor-texto) 62%, transparent);
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+
+  .menu-ficha-identidade strong {
+    overflow: hidden;
+    color: var(--cor-texto);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .menu-ficha-identidade small b {
+    color: var(--cor-primaria);
+    font-weight: 800;
   }
 }
 

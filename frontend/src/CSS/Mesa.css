@@ -192,6 +192,33 @@
     width:380px;
   }
 }
+
+/* Controles de recursos da ficha de inimigo no tabletop. */
+.mesa-inimigo-recursos { grid-template-columns:minmax(0,1fr) 88px }
+.mesa-inimigo-recursos .inimigo-defesa-resumo { align-content:center; justify-items:center; border-right:0 }
+.inimigo-defesa-resumo input { width:58px; height:34px; border:1px solid var(--linha); border-radius:0; background:#080808; color:var(--mesa-texto); font-size:12px; font-weight:800; text-align:center; appearance:textfield }
+.inimigo-defesa-resumo input:focus { border-color:var(--mesa-acento); outline:none }
+.inimigo-defesa-resumo input::-webkit-inner-spin-button { appearance:none }
+.inimigo-vital { display:grid; gap:7px; min-width:0; padding:10px }
+.inimigo-vital>div:first-child { display:flex; justify-content:space-between; gap:8px; align-items:center }
+.inimigo-vital>i { display:block; height:5px; overflow:hidden; background:#292824 }
+.inimigo-vital>i>em { display:block; height:100%; background:#39b978; transition:width .18s ease }
+.inimigo-vital.ferido>i>em { background:#d4af37 }
+.inimigo-vital.critico>i>em { background:#d14343 }
+.inimigo-vital.sanidade>i>em { background:#3b82f6 }
+.inimigo-vital-controles { display:grid!important; grid-template-columns:30px minmax(0,1fr) 30px; gap:5px; padding:0!important; border:0!important }
+.inimigo-vital-controles button,.inimigo-vital-controles input { width:100%; height:30px; border:1px solid var(--linha); border-radius:0; background:#080808; color:var(--mesa-texto); text-align:center; font:inherit }
+.inimigo-vital-controles button { color:var(--mesa-acento); font-size:16px; cursor:pointer }
+.inimigo-vital-controles button:hover { border-color:var(--mesa-acento); background:color-mix(in srgb,var(--mesa-acento) 10%,#080808) }
+.inimigo-vital-controles button:disabled { opacity:.35; cursor:not-allowed }
+.inimigo-vital-controles input { min-width:0; font-size:10px; appearance:textfield }
+.inimigo-vital-controles input::-webkit-inner-spin-button { appearance:none }
+.mesa-inimigo-membros { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px }
+.mesa-inimigo-membros .inimigo-vital { border:1px solid var(--linha); background:rgba(255,255,255,.025) }
+
+@media (max-width:420px) {
+  .mesa-inimigo-membros { grid-template-columns:1fr }
+}
 .membro-recursos:has(.membro-recurso.membro) {
   grid-template-columns:repeat(2,minmax(0,1fr));
   column-gap:12px;
@@ -455,4 +482,31 @@
   height:min(100cqh,calc(100cqw * var(--mapa-proporcao-inversa)));
   flex:none;
   background-size:100% 100%;
+}
+
+/* A lateral completa do mestre usa a mesma largura em cena e mapa. */
+@media (min-width:761px) {
+  .mesa-shell.visao-mestre:not(.modo-atual-mapa) {
+    grid-template-columns:minmax(0,1fr) 420px;
+  }
+  .mesa-shell.visao-mestre .mesa-lateral,
+  .mesa-shell.visao-mestre .mesa-lateral-navegacao,
+  .mesa-shell.visao-mestre .mesa-inimigos-lateral,
+  .mesa-shell.modo-atual-mapa.visao-mestre .mesa-lateral,
+  .mesa-shell.modo-atual-mapa.visao-mestre .mesa-lateral-navegacao,
+  .mesa-shell.modo-atual-mapa.visao-mestre .mesa-inimigos-lateral {
+    width:420px;
+    max-width:420px;
+    overflow-x:hidden;
+  }
+  .visao-mestre .mesa-membros,
+  .visao-mestre .mesa-membros>button,
+  .visao-mestre .mesa-membros>button>div,
+  .visao-mestre .membro-recursos {
+    min-width:0;
+    max-width:100%;
+  }
+  .visao-mestre .membro-recursos:has(.membro-recurso.membro) {
+    grid-template-columns:repeat(2,minmax(145px,1fr));
+  }
 }

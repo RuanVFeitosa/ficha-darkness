@@ -559,6 +559,33 @@ export const desvincularInimigo = async (campanhaId, inimigoId) => {
   if (error) throw error;
 };
 
+export const atualizarInimigoCampanha = async (campanhaId, inimigo) => {
+  const { id, campanha_id, inimigo_ref, criado_em, dados, ...conteudo } = inimigo || {};
+  const novosDados = {
+    ...(dados || {}),
+    ...conteudo,
+    id: inimigo_ref || dados?.id || conteudo.fichaId,
+  };
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    const atualizado = { ...inimigo, dados: novosDados };
+    salvarDemo({
+      ...demo,
+      inimigos: (demo.inimigos || []).map((item) => item.id === id ? atualizado : item),
+    }, campanhaId);
+    return atualizado;
+  }
+  const { data, error } = await supabase
+    .from("inimigos_campanha")
+    .update({ nome: conteudo.nome || "Inimigo", dados: novosDados })
+    .eq("id", id)
+    .eq("campanha_id", campanhaId)
+    .select()
+    .single();
+  if (error) throw error;
+  return { ...(data.dados || {}), ...data };
+};
+
 export const ouvirCampanha = (campanhaId, aoMudar) => {
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
     const chave = chaveDemo(campanhaId);

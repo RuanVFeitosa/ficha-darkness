@@ -6726,6 +6726,14 @@ const cancelarEdicaoHabilidade = () => {
       <nav className="menu-ficha-flutuante" aria-label="Atalhos da ficha">
         {menuFichaAberto && (
           <div className="menu-ficha-opcoes">
+            <div className="menu-ficha-identidade">
+              {personagem.fotoPerfil && <img src={personagem.fotoPerfil} alt="" />}
+              <div>
+                <span>Jogador</span>
+                <strong>{personagem.nome || "Personagem"}</strong>
+                <small>Codigo da ficha: <b>{fichaId}</b></small>
+              </div>
+            </div>
             <button type="button" onClick={abrirUpgradeNivel}>
               <Icon path={mdiDiceD20} size={1} />
               <span>Upgrade</span>
