@@ -1,4 +1,4 @@
-import { ativarCena, buscarCampanhaPorCodigo, criarCampanhaMesa, desvincularFicha, excluirCena, listarCampanhas, moverToken, salvarCena, validarArquivoImagem, vincularFicha } from "./mesaApi";
+import { ativarCena, atualizarEstadoMusica, buscarCampanhaPorCodigo, criarCampanhaMesa, desvincularFicha, excluirCena, listarCampanhas, listarCampanhasDaFicha, moverToken, salvarCena, salvarMusicasCampanha, validarArquivoImagem, vincularFicha } from "./mesaApi";
 
 describe("biblioteca local da mesa", () => {
   test("limita o tamanho das cenas e mapas antes do upload", () => {
@@ -44,6 +44,14 @@ describe("biblioteca local da mesa", () => {
     campanha = await buscarCampanhaPorCodigo("DARK26");
     expect(campanha.membros.some((item) => item.ficha_id === "agente-7")).toBe(false);
     expect(campanha.tokens.some((item) => item.ficha_id === "agente-7")).toBe(false);
+  });
+
+  test("lista somente as campanhas vinculadas a ficha", async () => {
+    await vincularFicha("demo", "agente-mobile", { nome: "Agente Mobile" });
+    const campanhas = await listarCampanhasDaFicha("agente-mobile");
+
+    expect(campanhas).toHaveLength(1);
+    expect(campanhas[0]).toEqual(expect.objectContaining({ codigo: "DARK26" }));
   });
 
   test("salva a nova posicao de um token", async () => {
@@ -116,5 +124,35 @@ describe("biblioteca local da mesa", () => {
     expect(campanha.cenaAtiva.imagensCena).toHaveLength(2);
     expect(campanha.cenaAtiva.mapasBatalha).toHaveLength(2);
     expect(campanha.midiaAtivaId).toBe("mapa-2");
+  });
+
+  test("salva a playlist manual da campanha", async () => {
+    await salvarMusicasCampanha("demo", [
+      { id: "tema-1", nome: "Tema da convergencia", url: "https://youtube.com/watch?v=dQw4w9WgXcQ", capa: "https://exemplo.com/capa.webp" },
+    ]);
+    expect((await buscarCampanhaPorCodigo("DARK26")).musicas).toContainEqual(expect.objectContaining({
+      id: "tema-1",
+      nome: "Tema da convergencia",
+      url: "https://youtube.com/watch?v=dQw4w9WgXcQ",
+    }));
+  });
+
+  test("compartilha o estado atual da musica com a campanha", async () => {
+    await atualizarEstadoMusica("demo", {
+      indice: 2,
+      tempo: 37,
+      tocando: true,
+      volume: 54,
+      repetindo: true,
+    });
+
+    expect((await buscarCampanhaPorCodigo("DARK26")).musicaEstado).toEqual(expect.objectContaining({
+      indice: 2,
+      tempo: 37,
+      tocando: true,
+      volume: 54,
+      repetindo: true,
+      atualizadoEm: expect.any(String),
+    }));
   });
 });

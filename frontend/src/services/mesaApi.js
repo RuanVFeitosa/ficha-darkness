@@ -126,6 +126,8 @@ const normalizarCampanha = (campanha, cenas = [], membros = [], tokens = [], rol
   tokens: aplicarPosicaoDoMapa(tokens, campanha),
   rolagens,
   inimigos: inimigos.map((item) => ({ ...(item.dados || {}), ...item })),
+  musicas: Array.isArray(campanha.musicas) ? campanha.musicas : [],
+  musicaEstado: campanha.musica_estado || null,
 });
 
 export const buscarCampanhaPorCodigo = async (codigo) => {
@@ -137,7 +139,7 @@ export const buscarCampanhaPorCodigo = async (codigo) => {
     const demo = carregarDemo(campanha.id);
     const cenas = await Promise.all(demo.cenas.map(resolverMidiasLocais));
     const tokens = aplicarPosicaoDoMapa(demo.tokens || TOKENS_DEMO, { cena_ativa_id: demo.cenaAtivaId, midia_ativa_id: demo.midiaAtivaId });
-    return { ...CAMPANHA_DEMO, ...campanha, modo: demo.modo, midiaAtivaId: demo.midiaAtivaId || null, cenas, membros: demo.membros || MEMBROS_DEMO, tokens, rolagens: demo.rolagens || CAMPANHA_DEMO.rolagens, inimigos: demo.inimigos || [], cenaAtiva: cenas.find((cena) => cena.id === demo.cenaAtivaId) || cenas[0] };
+    return { ...CAMPANHA_DEMO, ...campanha, modo: demo.modo, midiaAtivaId: demo.midiaAtivaId || null, cenas, membros: demo.membros || MEMBROS_DEMO, tokens, rolagens: demo.rolagens || CAMPANHA_DEMO.rolagens, inimigos: demo.inimigos || [], musicas: demo.musicas || [], musicaEstado: demo.musicaEstado || null, cenaAtiva: cenas.find((cena) => cena.id === demo.cenaAtivaId) || cenas[0] };
   }
 
   const { data: campanha, error } = await supabase
@@ -167,6 +169,32 @@ export const listarCampanhas = async () => {
   const { data, error } = await supabase.from("campanhas").select("*").order("criado_em", { ascending: false });
   if (error) throw error;
   return data || [];
+};
+
+export const listarCampanhasDaFicha = async (fichaId) => {
+  const id = String(fichaId || "").trim();
+  if (!id) return [];
+  if (!supabaseConfigurado) {
+    const campanhas = listarCampanhasDemo();
+    const completas = await Promise.all(campanhas.map((campanha) => buscarCampanhaPorCodigo(campanha.codigo)));
+    return completas.filter((campanha) => campanha?.membros?.some((membro) => membro.ficha_id === id));
+  }
+
+  const { data: vinculos, error } = await supabase
+    .from("membros_campanha")
+    .select("campanha_id")
+    .eq("ficha_id", id);
+  if (error) throw error;
+  const ids = [...new Set((vinculos || []).map((item) => item.campanha_id).filter(Boolean))];
+  if (!ids.length) return [];
+
+  const { data: campanhas, error: erroCampanhas } = await supabase
+    .from("campanhas")
+    .select("codigo")
+    .in("id", ids)
+    .order("criado_em", { ascending: false });
+  if (erroCampanhas) throw erroCampanhas;
+  return Promise.all((campanhas || []).map((campanha) => buscarCampanhaPorCodigo(campanha.codigo)));
 };
 
 export const criarCampanhaMesa = async (nome) => {
@@ -209,6 +237,35 @@ export const ativarCena = async (campanhaId, cenaId, modo = "cena", midiaId = nu
   }
   const { error } = await supabase.from("campanhas").update({ cena_ativa_id: cenaId, modo, midia_ativa_id: midiaId }).eq("id", campanhaId);
   if (error) throw error;
+};
+
+export const salvarMusicasCampanha = async (campanhaId, musicas) => {
+  const normalizadas = (musicas || []).map((musica, indice) => ({
+    id: musica.id || `musica-${Date.now()}-${indice}`,
+    nome: String(musica.nome || `Musica ${indice + 1}`).trim(),
+    url: String(musica.url || "").trim(),
+    capa: String(musica.capa || "").trim(),
+  })).filter((musica) => musica.url);
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    salvarDemo({ ...demo, musicas: normalizadas }, campanhaId);
+    return normalizadas;
+  }
+  const { error } = await supabase.from("campanhas").update({ musicas: normalizadas }).eq("id", campanhaId);
+  if (error) throw error;
+  return normalizadas;
+};
+
+export const atualizarEstadoMusica = async (campanhaId, estado) => {
+  const musicaEstado = { ...estado, atualizadoEm: new Date().toISOString() };
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    salvarDemo({ ...demo, musicaEstado }, campanhaId);
+    return musicaEstado;
+  }
+  const { error } = await supabase.from("campanhas").update({ musica_estado: musicaEstado }).eq("id", campanhaId);
+  if (error) throw error;
+  return musicaEstado;
 };
 
 export const salvarCena = async (campanhaId, cena) => {

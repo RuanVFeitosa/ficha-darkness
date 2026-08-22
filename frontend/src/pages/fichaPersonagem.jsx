@@ -15,8 +15,7 @@ import {
   salvarPersonagem,
 } from "../services/personagemApi";
 import {
-  buscarCampanhaPorCodigo,
-  listarCampanhas,
+  listarCampanhasDaFicha,
 } from "../services/mesaApi";
 import { compressProfileImage } from "../services/imageCompression";
 import {
@@ -1339,17 +1338,7 @@ const cancelarEdicaoHabilidade = () => {
     setCarregandoCampanhas(true);
     setErroCampanhas("");
     try {
-      const campanhas = await listarCampanhas();
-      const completas = await Promise.all(
-        campanhas
-          .filter((campanha) => campanha.codigo)
-          .map((campanha) => buscarCampanhaPorCodigo(campanha.codigo)),
-      );
-      setCampanhasDaFicha(
-        completas.filter((campanha) =>
-          campanha?.membros?.some((membro) => membro.ficha_id === fichaId),
-        ),
-      );
+      setCampanhasDaFicha(await listarCampanhasDaFicha(fichaId));
     } catch (error) {
       setErroCampanhas(
         error.message || "Nao foi possivel carregar as campanhas.",
