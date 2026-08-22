@@ -113,6 +113,7 @@ const Mesa = () => {
   const [fichaAberta, setFichaAberta] = useState(null);
   const [tokenArrastando, setTokenArrastando] = useState(null);
   const tokensEmGravacaoRef = useRef(new Set());
+  const posicoesTokensPendentesRef = useRef(new Map());
   const [zoomMapa, setZoomMapa] = useState(1);
   const [panMapa, setPanMapa] = useState({ x: 0, y: 0 });
   const [mapaArrastando, setMapaArrastando] = useState(false);
@@ -141,6 +142,14 @@ const Mesa = () => {
           const protegido = protegidos.get(token.id);
           if (protegido) return protegido;
           const existente = atuais.get(token.id);
+          const pendente = posicoesTokensPendentesRef.current.get(token.id);
+          if (pendente) {
+            const posicaoRemota = token.posicoes?.[pendente.mapaChave] || token;
+            const confirmou = Math.abs(Number(posicaoRemota.x) - pendente.x) < 0.001
+              && Math.abs(Number(posicaoRemota.y) - pendente.y) < 0.001;
+            if (confirmou) posicoesTokensPendentesRef.current.delete(token.id);
+            else return existente || token;
+          }
           return aceitarTokenRemoto(existente, token) ? token : existente;
         });
         protegidos.forEach((token, id) => {
@@ -161,6 +170,14 @@ const Mesa = () => {
         if (!atual) return atual;
         const mapaChave = chavePosicaoMapa(atual.cenaAtiva?.id, atual.midiaAtivaId);
         const tokens = (evento.tokens || []).map((token) => {
+          const pendente = posicoesTokensPendentesRef.current.get(token.id);
+          if (pendente) {
+            const posicaoRemota = token.posicoes?.[pendente.mapaChave] || token;
+            const confirmou = Math.abs(Number(posicaoRemota.x) - pendente.x) < 0.001
+              && Math.abs(Number(posicaoRemota.y) - pendente.y) < 0.001;
+            if (confirmou) posicoesTokensPendentesRef.current.delete(token.id);
+            else return atual.tokens.find((item) => item.id === token.id) || token;
+          }
           if (tokensEmGravacaoRef.current.has(token.id)) {
             return atual.tokens.find((item) => item.id === token.id) || token;
           }
@@ -190,6 +207,14 @@ const Mesa = () => {
         }
         if (!tokenRecebido?.id || tokensEmGravacaoRef.current.has(tokenRecebido.id)) {
           return atual;
+        }
+        const pendente = posicoesTokensPendentesRef.current.get(tokenRecebido.id);
+        if (pendente) {
+          const posicaoRemota = tokenRecebido.posicoes?.[pendente.mapaChave] || tokenRecebido;
+          const confirmou = Math.abs(Number(posicaoRemota.x) - pendente.x) < 0.001
+            && Math.abs(Number(posicaoRemota.y) - pendente.y) < 0.001;
+          if (!confirmou) return atual;
+          posicoesTokensPendentesRef.current.delete(tokenRecebido.id);
         }
         const tokenAtual = atual.tokens.find((token) => token.id === tokenRecebido.id);
         if (!aceitarTokenRemoto(tokenAtual, tokenRecebido)) return atual;
@@ -372,6 +397,7 @@ const Mesa = () => {
     if (!podeMoverToken(token)) { setTokenArrastando(null); return; }
     const { x, y } = calcularPosicaoToken(event);
     tokensEmGravacaoRef.current.add(tokenId);
+    posicoesTokensPendentesRef.current.set(tokenId, { x, y, mapaChave: mapaChaveAtual });
     setTokenArrastando(null);
     setCampanha((atual) => ({ ...atual, tokens: atual.tokens.map((item) => item.id === tokenId ? { ...item, x, y } : item) }));
     try {
@@ -380,6 +406,7 @@ const Mesa = () => {
         setCampanha((atual) => ({ ...atual, tokens: atual.tokens.map((item) => item.id === tokenId ? { ...item, ...confirmado, x, y } : item) }));
       }
     } catch (error) {
+      posicoesTokensPendentesRef.current.delete(tokenId);
       setErro(error.message || "Nao foi possivel salvar a posicao do token.");
     } finally {
       tokensEmGravacaoRef.current.delete(tokenId);
