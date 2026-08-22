@@ -373,8 +373,7 @@ const Mesa = () => {
     const { x, y } = calcularPosicaoToken(event);
     tokensEmGravacaoRef.current.add(tokenId);
     setTokenArrastando(null);
-    const movimentoIniciadoEm = new Date().toISOString();
-    setCampanha((atual) => ({ ...atual, tokens: atual.tokens.map((item) => item.id === tokenId ? { ...item, x, y, atualizado_em: movimentoIniciadoEm } : item) }));
+    setCampanha((atual) => ({ ...atual, tokens: atual.tokens.map((item) => item.id === tokenId ? { ...item, x, y } : item) }));
     try {
       const confirmado = await moverToken(tokenId, x, y, mapaChaveAtual);
       if (confirmado) {

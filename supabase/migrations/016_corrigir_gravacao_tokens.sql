@@ -4,6 +4,7 @@
 grant select, update on public.tokens_mapa to anon, authenticated;
 
 drop policy if exists "tabletop publico move tokens" on public.tokens_mapa;
+drop policy if exists "tabletop move tokens" on public.tokens_mapa;
 create policy "tabletop move tokens"
 on public.tokens_mapa
 for update
