@@ -111,9 +111,22 @@ const resolverMidiasLocais = async (cena) => {
 };
 
 export const chavePosicaoMapa = (cenaId, midiaId = null) => `${cenaId || "sem-cena"}:${midiaId || "mapa-principal"}`;
+const consolidarTokens = (tokens = []) => {
+  const unicos = new Map();
+  tokens.forEach((token) => {
+    const chave = token.ficha_id
+      ? `${token.campanha_id || "campanha"}:${token.ficha_id}`
+      : token.id;
+    const existente = unicos.get(chave);
+    const dataExistente = Date.parse(existente?.atualizado_em || "") || 0;
+    const dataToken = Date.parse(token?.atualizado_em || "") || 0;
+    if (!existente || dataToken >= dataExistente) unicos.set(chave, token);
+  });
+  return [...unicos.values()];
+};
 const aplicarPosicaoDoMapa = (tokens, campanha) => {
   const chave = chavePosicaoMapa(campanha.cena_ativa_id, campanha.midia_ativa_id);
-  return tokens.map((token) => ({ ...token, ...(token.posicoes?.[chave] || {}) }));
+  return consolidarTokens(tokens).map((token) => ({ ...token, ...(token.posicoes?.[chave] || {}) }));
 };
 
 const normalizarCampanha = (campanha, cenas = [], membros = [], tokens = [], rolagens = [], inimigos = []) => ({
@@ -569,7 +582,7 @@ export const ouvirCampanha = (campanhaId, aoMudar) => {
         .select("*")
         .eq("campanha_id", campanhaId);
       if (error) throw error;
-      aoMudar({ tipo: "tokens_sincronizados", tokens: data || [] });
+      aoMudar({ tipo: "tokens_sincronizados", tokens: consolidarTokens(data || []) });
     } catch (error) {
       console.warn("Nao foi possivel sincronizar os tokens da mesa.", error);
     } finally {
