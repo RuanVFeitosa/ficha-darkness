@@ -346,10 +346,16 @@ export const moverToken = async (tokenId, x, y, mapaChave = "mapa-principal") =>
     salvarDemo({ ...estado, tokens: (estado.tokens || TOKENS_DEMO).map((token) => token.id === tokenId ? { ...token, x, y, posicoes: { ...(token.posicoes || {}), [mapaChave]: { x, y } } } : token) }, campanhaId);
     return;
   }
-  const { data: atual, error: erroConsulta } = await supabase.from("tokens_mapa").select("posicoes").eq("id", tokenId).single();
-  if (erroConsulta) throw erroConsulta;
-  const { error } = await supabase.from("tokens_mapa").update({ x, y, posicoes: { ...(atual?.posicoes || {}), [mapaChave]: { x, y } } }).eq("id", tokenId);
+  const { data, error } = await supabase.rpc("mover_token_tabletop", {
+    token_alvo: tokenId,
+    nova_x: x,
+    nova_y: y,
+    mapa_chave: mapaChave,
+  });
   if (error) throw error;
+  const tokenAtualizado = Array.isArray(data) ? data[0] : data;
+  if (!tokenAtualizado) throw new Error("O Supabase nao confirmou a nova posicao do token.");
+  return tokenAtualizado;
 };
 
 export const registrarRolagem = async (campanhaId, autorNome, rolagem) => {

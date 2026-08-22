@@ -312,7 +312,10 @@ const Mesa = () => {
     setTokenArrastando(null);
     setCampanha((atual) => ({ ...atual, tokens: atual.tokens.map((item) => item.id === tokenId ? { ...item, x, y } : item) }));
     try {
-      await moverToken(tokenId, x, y, mapaChaveAtual);
+      const confirmado = await moverToken(tokenId, x, y, mapaChaveAtual);
+      if (confirmado) {
+        setCampanha((atual) => ({ ...atual, tokens: atual.tokens.map((item) => item.id === tokenId ? { ...item, ...confirmado, x, y } : item) }));
+      }
     } catch (error) {
       setErro(error.message || "Nao foi possivel salvar a posicao do token.");
     } finally {
