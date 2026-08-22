@@ -156,8 +156,11 @@ const Mesa = () => {
   const posicoesTokensPendentesRef = useRef(new Map());
   const [zoomMapa, setZoomMapa] = useState(1);
   const [panMapa, setPanMapa] = useState({ x: 0, y: 0 });
+  const [proporcaoMapa, setProporcaoMapa] = useState({ largura: 1, altura: 1 });
   const [mapaArrastando, setMapaArrastando] = useState(false);
   const inicioPanMapaRef = useRef(null);
+  const ponteirosMapaRef = useRef(new Map());
+  const inicioPincaMapaRef = useRef(null);
   const [abaLateralMestre, setAbaLateralMestre] = useState(telaMobileInicial ? "" : "participantes");
   const [abaLateralJogador, setAbaLateralJogador] = useState(telaMobileInicial ? "" : "participantes");
   const [catalogoInimigos, setCatalogoInimigos] = useState([]);
@@ -286,6 +289,20 @@ const Mesa = () => {
     let ativo = true;
     if (!url) { setCorCena(""); return undefined; }
     corInterfaceDaImagem(url).then((cor) => ativo && setCorCena(cor)).catch(() => ativo && setCorCena(""));
+    return () => { ativo = false; };
+  }, [campanha?.cenaAtiva, campanha?.midiaAtivaId, campanha?.modo]);
+  useEffect(() => {
+    if (campanha?.modo !== "mapa") return undefined;
+    const url = urlCena(campanha?.cenaAtiva, "mapa", campanha?.midiaAtivaId);
+    if (!url) return undefined;
+    let ativo = true;
+    const imagem = new Image();
+    imagem.onload = () => {
+      if (ativo && imagem.naturalWidth > 0 && imagem.naturalHeight > 0) {
+        setProporcaoMapa({ largura: imagem.naturalWidth, altura: imagem.naturalHeight });
+      }
+    };
+    imagem.src = url;
     return () => { ativo = false; };
   }, [campanha?.cenaAtiva, campanha?.midiaAtivaId, campanha?.modo]);
   const carregarFichas = useCallback(() => {
@@ -508,6 +525,29 @@ const Mesa = () => {
 
   const iniciarPanMapa = (event) => {
     if (campanha.modo !== "mapa" || event.button !== 0) return;
+    if (event.pointerType === "touch") {
+      ponteirosMapaRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (ponteirosMapaRef.current.size >= 2) {
+        const [primeiro, segundo] = [...ponteirosMapaRef.current.values()];
+        const palco = event.currentTarget.closest(".mesa-palco")?.getBoundingClientRect();
+        const centroPalco = palco
+          ? { x: palco.left + palco.width / 2, y: palco.top + palco.height / 2 }
+          : { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        inicioPincaMapaRef.current = {
+          distancia: Math.hypot(segundo.x - primeiro.x, segundo.y - primeiro.y) || 1,
+          centro: { x: (primeiro.x + segundo.x) / 2, y: (primeiro.y + segundo.y) / 2 },
+          centroPalco,
+          zoom: zoomMapa,
+          pan: { ...panMapa },
+        };
+        inicioPanMapaRef.current = null;
+        setMapaArrastando(false);
+        setTokenArrastando(null);
+        event.preventDefault();
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        return;
+      }
+    }
     if (event.target.closest?.(".mesa-token")) return;
     event.preventDefault();
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -516,16 +556,49 @@ const Mesa = () => {
   };
 
   const moverPanMapa = (event) => {
+    if (event.pointerType === "touch" && ponteirosMapaRef.current.has(event.pointerId)) {
+      ponteirosMapaRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+    const inicioPinca = inicioPincaMapaRef.current;
+    if (inicioPinca && ponteirosMapaRef.current.size >= 2) {
+      const [primeiro, segundo] = [...ponteirosMapaRef.current.values()];
+      const distancia = Math.hypot(segundo.x - primeiro.x, segundo.y - primeiro.y) || 1;
+      const centroAtual = { x: (primeiro.x + segundo.x) / 2, y: (primeiro.y + segundo.y) / 2 };
+      const zoom = Math.max(.5, Math.min(3, inicioPinca.zoom * (distancia / inicioPinca.distancia)));
+      const proporcao = zoom / inicioPinca.zoom;
+      setZoomMapa(Number(zoom.toFixed(3)));
+      setPanMapa({
+        x: centroAtual.x - inicioPinca.centroPalco.x
+          - (inicioPinca.centro.x - inicioPinca.centroPalco.x - inicioPinca.pan.x) * proporcao,
+        y: centroAtual.y - inicioPinca.centroPalco.y
+          - (inicioPinca.centro.y - inicioPinca.centroPalco.y - inicioPinca.pan.y) * proporcao,
+      });
+      event.preventDefault();
+      return true;
+    }
     const inicio = inicioPanMapaRef.current;
     if (!inicio || tokenArrastando) return;
     setPanMapa({ x: inicio.panX + event.clientX - inicio.ponteiroX, y: inicio.panY + event.clientY - inicio.ponteiroY });
+    return false;
   };
 
   const finalizarPanMapa = (event) => {
+    if (event.pointerType === "touch") {
+      const estavaEmPinca = Boolean(inicioPincaMapaRef.current);
+      ponteirosMapaRef.current.delete(event.pointerId);
+      if (ponteirosMapaRef.current.size < 2) inicioPincaMapaRef.current = null;
+      if (estavaEmPinca) {
+        inicioPanMapaRef.current = null;
+        setMapaArrastando(false);
+        event.currentTarget.releasePointerCapture?.(event.pointerId);
+        return true;
+      }
+    }
     if (!inicioPanMapaRef.current) return;
     inicioPanMapaRef.current = null;
     setMapaArrastando(false);
     event.currentTarget.releasePointerCapture?.(event.pointerId);
+    return false;
   };
 
   if (carregando) return <main className="mesa-estado">Abrindo a mesa...</main>;
@@ -562,7 +635,7 @@ const Mesa = () => {
     {mestre && musicaAberta && <aside className="mesa-musica-painel"><header><div><span>Trilha da sessao</span><strong>Playlist da campanha</strong></div><button onClick={() => setMusicaAberta(false)} title="Fechar musica"><Icon path={mdiClose} size={.85} /></button></header><MusicaTabletop campanhaId={campanha.id} musicasCampanha={campanha.musicas || []} estadoRemoto={campanha.musicaEstado} aoAlterarEstado={(estado) => atualizarEstadoMusica(campanha.id, estado)} /></aside>}
     {!mestre && campanha.musicas?.length > 0 && <aside className="mesa-musica-ouvinte"><MusicaTabletop campanhaId={campanha.id} musicasCampanha={campanha.musicas} estadoRemoto={campanha.musicaEstado} controlavel={false} /></aside>}
 
-    <section className={`mesa-palco modo-${campanha.modo}`}><div className={`mesa-imagem ${tokenArrastando ? "arrastando-token" : ""} ${mapaArrastando ? "arrastando-mapa" : ""}`} style={{ backgroundImage: `url(${urlCena(cena, campanha.modo, campanha.midiaAtivaId)})`, transform: campanha.modo === "mapa" ? `translate(${panMapa.x}px, ${panMapa.y}px) scale(${zoomMapa})` : "none" }} onWheel={(event) => { if (campanha.modo !== "mapa") return; event.preventDefault(); setZoomMapa((zoom) => Math.max(0.5, Math.min(3, Number((zoom + (event.deltaY < 0 ? 0.1 : -0.1)).toFixed(2))))); }} onDragOver={(event) => { if (mestre && campanha.modo === "mapa") { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; } }} onDrop={soltarFichaNoMapa} onPointerDown={iniciarPanMapa} onPointerMove={(event) => { arrastarToken(event); moverPanMapa(event); }} onPointerUp={(event) => { if (tokenArrastando) soltarToken(event); finalizarPanMapa(event); }} onPointerCancel={(event) => { setTokenArrastando(null); finalizarPanMapa(event); }} onPointerLeave={(event) => tokenArrastando && soltarToken(event)}>
+    <section className={`mesa-palco modo-${campanha.modo}`}><div className={`mesa-imagem ${tokenArrastando ? "arrastando-token" : ""} ${mapaArrastando ? "arrastando-mapa" : ""}`} style={{ backgroundImage: `url(${urlCena(cena, campanha.modo, campanha.midiaAtivaId)})`, "--mapa-proporcao": proporcaoMapa.largura / proporcaoMapa.altura, "--mapa-proporcao-inversa": proporcaoMapa.altura / proporcaoMapa.largura, transform: campanha.modo === "mapa" ? `translate(${panMapa.x}px, ${panMapa.y}px) scale(${zoomMapa})` : "none" }} onWheel={(event) => { if (campanha.modo !== "mapa") return; event.preventDefault(); setZoomMapa((zoom) => Math.max(0.5, Math.min(3, Number((zoom + (event.deltaY < 0 ? 0.1 : -0.1)).toFixed(2))))); }} onDragOver={(event) => { if (mestre && campanha.modo === "mapa") { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; } }} onDrop={soltarFichaNoMapa} onPointerDown={iniciarPanMapa} onPointerMove={(event) => { const usandoPinca = moverPanMapa(event); if (!usandoPinca) arrastarToken(event); }} onPointerUp={(event) => { const usandoPinca = finalizarPanMapa(event); if (tokenArrastando && !usandoPinca) soltarToken(event); }} onPointerCancel={(event) => { setTokenArrastando(null); finalizarPanMapa(event); }} onPointerLeave={(event) => tokenArrastando && soltarToken(event)}>
       {campanha.modo === "mapa" && <div className="mesa-grade" style={{ backgroundSize: `${100 / colunas}% ${100 / linhas}%` }} />}
       {campanha.modo === "mapa" && campanha.tokens.map((token) => <button key={token.id} className={`mesa-token ${podeMoverToken(token) ? "movivel" : "bloqueado"} ${tokenArrastando === token.id ? "arrastando" : ""}`} style={{ left: `${token.x}%`, top: `${token.y}%` }} title={podeMoverToken(token) ? `Mover ${token.nome}` : token.nome} onPointerDown={(event) => { if (!podeMoverToken(token)) return; event.preventDefault(); event.currentTarget.setPointerCapture?.(event.pointerId); setTokenArrastando(token.id); }}>{token.imagem_url || personagens[token.ficha_id]?.fotoPerfil ? <img src={token.imagem_url || personagens[token.ficha_id]?.fotoPerfil} alt="" draggable="false" /> : token.nome?.slice(0, 2)}</button>)}
     </div>{campanha.modo === "mapa" && <div className="mesa-zoom-controles"><button type="button" onClick={() => setZoomMapa((zoom) => Math.max(.5, Number((zoom - .2).toFixed(2))))} title="Diminuir zoom"><Icon path={mdiMagnifyMinusOutline} size={.82} /></button><span>{Math.round(zoomMapa * 100)}%</span><button type="button" onClick={() => setZoomMapa((zoom) => Math.min(3, Number((zoom + .2).toFixed(2))))} title="Aumentar zoom"><Icon path={mdiMagnifyPlusOutline} size={.82} /></button><button type="button" onClick={() => { setZoomMapa(1); setPanMapa({ x: 0, y: 0 }); }} title="Restaurar zoom e posicao"><Icon path={mdiFitToScreenOutline} size={.82} /></button></div>}</section>

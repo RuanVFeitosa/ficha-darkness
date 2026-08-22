@@ -367,6 +367,10 @@
     backdrop-filter:blur(14px);
     overflow:auto;
   }
+  /* O resumo antigo do jogador foi preservado no codigo, mas o fluxo mobile
+     usa apenas Participantes e a ficha integrada nas abas inferiores. */
+  .visao-jogador>.mesa-lateral,
+  .mesa-shell.modo-atual-mapa.visao-jogador>.mesa-lateral { display:none!important }
   .mesa-inimigos-lateral,.mesa-shell.modo-atual-mapa .mesa-inimigos-lateral { z-index:41 }
   .painel-lateral-fechado .mesa-lateral,
   .painel-lateral-fechado .mesa-inimigos-lateral,
@@ -436,4 +440,19 @@
   .mesa-biblioteca,.mesa-anotacoes-painel,.mesa-musica-painel { top:52px; bottom:62px }
   .mesa-zoom-controles { bottom:70px; flex-direction:row }
   .mesa-rodape { height:62px }
+}
+
+/* O tabuleiro ocupa o retangulo real da imagem. As coordenadas percentuais
+   dos tokens passam a representar o mesmo ponto no desktop e no celular. */
+.mesa-palco.modo-mapa {
+  container-type:size;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+}
+.mesa-palco.modo-mapa>.mesa-imagem {
+  width:min(100cqw,calc(100cqh * var(--mapa-proporcao)));
+  height:min(100cqh,calc(100cqw * var(--mapa-proporcao-inversa)));
+  flex:none;
+  background-size:100% 100%;
 }
