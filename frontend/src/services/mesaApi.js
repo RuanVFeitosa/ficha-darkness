@@ -22,9 +22,9 @@ const carregarDemo = (campanhaId = "demo") => {
     if (salvo && Array.isArray(salvo.cenas)) return salvo;
   } catch {}
   if (campanhaId === "demo") {
-    return { cenas: CENAS_DEMO_PADRAO, cenaAtivaId: CENAS_DEMO_PADRAO[0].id, modo: "cena", membros: MEMBROS_DEMO, tokens: TOKENS_DEMO };
+    return { cenas: CENAS_DEMO_PADRAO, cenaAtivaId: CENAS_DEMO_PADRAO[0].id, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: MEMBROS_DEMO, tokens: TOKENS_DEMO };
   }
-  return { cenas: [], cenaAtivaId: null, modo: "cena", membros: [], tokens: [] };
+  return { cenas: [], cenaAtivaId: null, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: [], tokens: [] };
 };
 const salvarDemo = (estado, campanhaId = "demo") => {
   localStorage.setItem(chaveDemo(campanhaId), JSON.stringify(estado));
@@ -143,11 +143,29 @@ const aplicarPosicaoDoMapa = (tokens, campanha) => {
   }));
 };
 
-const normalizarCampanha = (campanha, cenas = [], membros = [], tokens = [], rolagens = [], inimigos = []) => ({
+const normalizarCampanha = (campanha, cenas = [], membros = [], tokens = [], rolagens = [], inimigos = [], iniciativas = [], documentosInvestigacao = []) => ({
   ...campanha,
   cenaAtiva: (cenas.map(normalizarMidiasCena).find((cena) => cena.id === campanha.cena_ativa_id) || cenas.map(normalizarMidiasCena)[0] || null),
   midiaAtivaId: campanha.midia_ativa_id || null,
   modo: campanha.modo || "cena",
+  combateAtivo: Boolean(campanha.combate_ativo),
+  investigacaoAtiva: Boolean(campanha.investigacao_ativa),
+  iniciativas: Object.fromEntries((iniciativas || []).map((item) => [item.ficha_id, Number(item.valor) || 0])),
+  documentosInvestigacao: (documentosInvestigacao || []).map((item) => ({
+    ...item,
+    categoria: item.categoria || "evidencia",
+    mimeType: item.mime_type || item.mimeType || "",
+    arquivoNome: item.arquivo_nome || item.arquivoNome || "",
+    storagePath: item.storage_path || item.storagePath || "",
+    criadoEm: item.criado_em || item.criadoEm || null,
+    visualizarTodos:
+      item.visualizar_todos ?? item.visualizarTodos ?? true,
+    jogadoresVisiveis: Array.isArray(item.jogadores_visiveis)
+      ? item.jogadores_visiveis.map(String)
+      : Array.isArray(item.jogadoresVisiveis)
+        ? item.jogadoresVisiveis.map(String)
+        : [],
+  })),
   cenas: cenas.map(normalizarMidiasCena),
   membros,
   tokens: aplicarPosicaoDoMapa(tokens, campanha),
@@ -166,7 +184,12 @@ export const buscarCampanhaPorCodigo = async (codigo) => {
     const demo = carregarDemo(campanha.id);
     const cenas = await Promise.all(demo.cenas.map(resolverMidiasLocais));
     const tokens = aplicarPosicaoDoMapa(demo.tokens || TOKENS_DEMO, { cena_ativa_id: demo.cenaAtivaId, midia_ativa_id: demo.midiaAtivaId });
-    return { ...CAMPANHA_DEMO, ...campanha, modo: demo.modo, midiaAtivaId: demo.midiaAtivaId || null, cenas, membros: demo.membros || MEMBROS_DEMO, tokens, rolagens: demo.rolagens || CAMPANHA_DEMO.rolagens, inimigos: demo.inimigos || [], musicas: demo.musicas || [], musicaEstado: demo.musicaEstado || null, cenaAtiva: cenas.find((cena) => cena.id === demo.cenaAtivaId) || cenas[0] };
+    const documentosInvestigacao = await Promise.all((demo.documentosInvestigacao || []).map(async (documento) => ({
+      ...documento,
+      urlPersistida: documento.urlPersistida || documento.url,
+      url: await resolverImagemLocal(documento.urlPersistida || documento.url),
+    })));
+    return { ...CAMPANHA_DEMO, ...campanha, modo: demo.modo, combateAtivo: Boolean(demo.combateAtivo), investigacaoAtiva: Boolean(demo.investigacaoAtiva), iniciativas: demo.iniciativas || {}, documentosInvestigacao, midiaAtivaId: demo.midiaAtivaId || null, cenas, membros: demo.membros || MEMBROS_DEMO, tokens, rolagens: demo.rolagens || CAMPANHA_DEMO.rolagens, inimigos: demo.inimigos || [], musicas: demo.musicas || [], musicaEstado: demo.musicaEstado || null, cenaAtiva: cenas.find((cena) => cena.id === demo.cenaAtivaId) || cenas[0] };
   }
 
   const { data: campanha, error } = await supabase
@@ -177,18 +200,20 @@ export const buscarCampanhaPorCodigo = async (codigo) => {
   if (error) throw error;
   if (!campanha) return null;
 
-  const [cenas, membros, tokens, rolagens, inimigos] = await Promise.all([
+  const [cenas, membros, tokens, rolagens, inimigos, iniciativas, documentosInvestigacao] = await Promise.all([
     supabase.from("cenas").select("*").eq("campanha_id", campanha.id).order("ordem"),
     supabase.from("membros_campanha").select("*").eq("campanha_id", campanha.id),
     supabase.from("tokens_mapa").select("*").eq("campanha_id", campanha.id),
     supabase.from("rolagens").select("*").eq("campanha_id", campanha.id).order("criado_em", { ascending: false }).limit(30),
     supabase.from("inimigos_campanha").select("*").eq("campanha_id", campanha.id).order("criado_em"),
+    supabase.from("iniciativas_campanha").select("*").eq("campanha_id", campanha.id),
+    supabase.from("documentos_investigacao").select("*").eq("campanha_id", campanha.id).order("criado_em", { ascending: false }),
   ]);
-  [cenas, membros, tokens, rolagens, inimigos].forEach(({ error: erro }) => {
+  [cenas, membros, tokens, rolagens, inimigos, iniciativas, documentosInvestigacao].forEach(({ error: erro }) => {
     if (erro) throw erro;
   });
 
-  return normalizarCampanha(campanha, cenas.data, membros.data, tokens.data, rolagens.data, inimigos.data);
+  return normalizarCampanha(campanha, cenas.data, membros.data, tokens.data, rolagens.data, inimigos.data, iniciativas.data, documentosInvestigacao.data);
 };
 
 export const listarCampanhas = async () => {
@@ -233,7 +258,7 @@ export const criarCampanhaMesa = async (nome) => {
     const campanhas = listarCampanhasDemo();
     const campanha = { id: `demo-${Date.now()}`, codigo, nome: String(nome).trim(), modo: "cena", criado_em: new Date().toISOString() };
     salvarCampanhasDemo([campanha, ...campanhas]);
-    salvarDemo({ cenas: [], cenaAtivaId: null, modo: "cena", membros: [], tokens: [] }, campanha.id);
+    salvarDemo({ cenas: [], cenaAtivaId: null, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: [], tokens: [] }, campanha.id);
     return campanha;
   }
   const { data: { user } } = await supabase.auth.getUser();
@@ -257,6 +282,87 @@ export const atualizarModoCampanha = async (campanhaId, modo) => {
     const demo = carregarDemo(campanhaId); salvarDemo({ ...demo, modo }, campanhaId); return;
   }
   const { error } = await supabase.from("campanhas").update({ modo }).eq("id", campanhaId);
+  if (error) throw error;
+};
+
+export const atualizarModoCombate = async (campanhaId, ativo, limparIniciativas = false) => {
+  const combateAtivo = Boolean(ativo);
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    salvarDemo({
+      ...demo,
+      combateAtivo,
+      investigacaoAtiva: combateAtivo ? false : Boolean(demo.investigacaoAtiva),
+      iniciativas: limparIniciativas ? {} : (demo.iniciativas || {}),
+    }, campanhaId);
+    return;
+  }
+  const payload = { combate_ativo: combateAtivo };
+  if (combateAtivo) payload.investigacao_ativa = false;
+  const { error } = await supabase.from("campanhas").update(payload).eq("id", campanhaId);
+  if (error) throw error;
+  if (limparIniciativas) {
+    const { error: erroLimpeza } = await supabase.from("iniciativas_campanha").delete().eq("campanha_id", campanhaId);
+    if (erroLimpeza) throw erroLimpeza;
+  }
+};
+
+export const atualizarModoInvestigacao = async (campanhaId, ativo, limparIniciativas = false) => {
+  const investigacaoAtiva = Boolean(ativo);
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    salvarDemo({
+      ...demo,
+      investigacaoAtiva,
+      combateAtivo: investigacaoAtiva ? false : Boolean(demo.combateAtivo),
+      iniciativas: limparIniciativas ? {} : (demo.iniciativas || {}),
+    }, campanhaId);
+    return;
+  }
+  const payload = { investigacao_ativa: investigacaoAtiva };
+  if (investigacaoAtiva) payload.combate_ativo = false;
+  const { error } = await supabase.from("campanhas").update(payload).eq("id", campanhaId);
+  if (error) throw error;
+  if (limparIniciativas) {
+    const { error: erroLimpeza } = await supabase.from("iniciativas_campanha").delete().eq("campanha_id", campanhaId);
+    if (erroLimpeza) throw erroLimpeza;
+  }
+};
+
+export const definirIniciativa = async (campanhaId, fichaId, valor, nome = "") => {
+  const ficha = String(fichaId || "").trim();
+  if (!ficha) throw new Error("Ficha invalida para iniciativa.");
+  const iniciativa = Math.max(0, Number(valor) || 0);
+
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    salvarDemo({
+      ...demo,
+      iniciativas: { ...(demo.iniciativas || {}), [ficha]: iniciativa },
+    }, campanhaId);
+    return { campanha_id: campanhaId, ficha_id: ficha, valor: iniciativa, nome };
+  }
+
+  const { data, error } = await supabase
+    .from("iniciativas_campanha")
+    .upsert({ campanha_id: campanhaId, ficha_id: ficha, valor: iniciativa, nome: String(nome || "") }, { onConflict: "campanha_id,ficha_id" })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const removerIniciativa = async (campanhaId, fichaId) => {
+  const ficha = String(fichaId || "").trim();
+  if (!ficha) return;
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    const iniciativas = { ...(demo.iniciativas || {}) };
+    delete iniciativas[ficha];
+    salvarDemo({ ...demo, iniciativas }, campanhaId);
+    return;
+  }
+  const { error } = await supabase.from("iniciativas_campanha").delete().eq("campanha_id", campanhaId).eq("ficha_id", ficha);
   if (error) throw error;
 };
 
@@ -375,6 +481,214 @@ export const enviarImagemCena = async (campanhaId, arquivo, tipo) => {
   const { error } = await supabase.storage.from("mapas").upload(caminho, arquivo, { upsert: false });
   if (error) throw error;
   return supabase.storage.from("mapas").getPublicUrl(caminho).data.publicUrl;
+};
+
+export const LIMITE_DOCUMENTO_INVESTIGACAO = { bytes: 12 * 1024 * 1024, rotulo: "12 MB" };
+const TIPOS_DOCUMENTO_INVESTIGACAO = new Set([
+  "application/pdf",
+  "image/webp",
+  "image/jpeg",
+  "image/png",
+  "image/avif",
+]);
+
+export const validarArquivoInvestigacao = (arquivo) => {
+  if (!arquivo) return null;
+  if (!TIPOS_DOCUMENTO_INVESTIGACAO.has(arquivo.type)) {
+    throw new Error("Formato nao permitido. Envie PDF, WebP, JPEG, PNG ou AVIF.");
+  }
+  if (arquivo.size > LIMITE_DOCUMENTO_INVESTIGACAO.bytes) {
+    throw new Error(`A evidencia deve ter no maximo ${LIMITE_DOCUMENTO_INVESTIGACAO.rotulo}.`);
+  }
+  return arquivo;
+};
+
+export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados = {}) => {
+  validarArquivoInvestigacao(arquivo);
+  const categoria = metadados.categoria === "item" ? "item" : "evidencia";
+  const nomeBase = String(metadados.nome || arquivo?.name || "Documento").trim() || "Documento";
+  const descricao = String(metadados.descricao || "").trim();
+  const mimeType = arquivo?.type || "application/octet-stream";
+  const visualizarTodos = metadados.visualizarTodos !== false;
+  const jogadoresVisiveis = visualizarTodos
+    ? []
+    : [...new Set((metadados.jogadoresVisiveis || []).map((id) => String(id || "").trim()).filter(Boolean))];
+
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    let url = "";
+    if (typeof indexedDB !== "undefined") {
+      const chave = `${campanhaId}-investigacao-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      url = await guardarImagemLocal(arquivo, chave);
+    } else {
+      url = await new Promise((resolve, reject) => {
+        const leitor = new FileReader();
+        leitor.onload = () => resolve(leitor.result);
+        leitor.onerror = reject;
+        leitor.readAsDataURL(arquivo);
+      });
+    }
+    const documento = {
+      id: `documento-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      campanha_id: campanhaId,
+      nome: nomeBase,
+      descricao,
+      categoria,
+      mime_type: mimeType,
+      mimeType,
+      arquivo_nome: arquivo?.name || "",
+      arquivoNome: arquivo?.name || "",
+      url,
+      urlPersistida: url,
+      visualizar_todos: visualizarTodos,
+      visualizarTodos,
+      jogadores_visiveis: jogadoresVisiveis,
+      jogadoresVisiveis,
+      criado_em: new Date().toISOString(),
+      criadoEm: new Date().toISOString(),
+    };
+    salvarDemo({
+      ...demo,
+      documentosInvestigacao: [documento, ...(demo.documentosInvestigacao || [])],
+    }, campanhaId);
+    return { ...documento, url: await resolverImagemLocal(url) };
+  }
+
+  const extensao = arquivo.name.split(".").pop()?.toLowerCase() || (mimeType === "application/pdf" ? "pdf" : "bin");
+  const sufixo = typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2, 10);
+  const storagePath = `${campanhaId}/investigacao/documento-${Date.now()}-${sufixo}.${extensao}`;
+  const { error: erroUpload } = await supabase.storage
+    .from("evidencias")
+    .upload(storagePath, arquivo, { upsert: false, contentType: mimeType });
+  if (erroUpload) throw erroUpload;
+
+  const url = supabase.storage.from("evidencias").getPublicUrl(storagePath).data.publicUrl;
+  const { data, error } = await supabase
+    .from("documentos_investigacao")
+    .insert({
+      campanha_id: campanhaId,
+      nome: nomeBase,
+      descricao,
+      categoria,
+      mime_type: mimeType,
+      arquivo_nome: arquivo.name,
+      url,
+      storage_path: storagePath,
+      visualizar_todos: visualizarTodos,
+      jogadores_visiveis: jogadoresVisiveis,
+    })
+    .select()
+    .single();
+  if (error) {
+    await supabase.storage.from("evidencias").remove([storagePath]).catch(() => {});
+    throw error;
+  }
+  return {
+    ...data,
+    mimeType: data.mime_type,
+    arquivoNome: data.arquivo_nome,
+    storagePath: data.storage_path,
+    criadoEm: data.criado_em,
+    visualizarTodos: data.visualizar_todos ?? true,
+    jogadoresVisiveis: Array.isArray(data.jogadores_visiveis)
+      ? data.jogadores_visiveis.map(String)
+      : [],
+  };
+};
+
+export const atualizarVisibilidadeDocumentoInvestigacao = async (
+  campanhaId,
+  documentoId,
+  visibilidade = {},
+) => {
+  if (!campanhaId || !documentoId) {
+    throw new Error("Documento invalido para atualizar a visibilidade.");
+  }
+
+  const visualizarTodos = visibilidade.visualizarTodos !== false;
+  const jogadoresVisiveis = visualizarTodos
+    ? []
+    : [...new Set(
+        (visibilidade.jogadoresVisiveis || [])
+          .map((id) => String(id || "").trim())
+          .filter(Boolean),
+      )];
+
+  if (!visualizarTodos && !jogadoresVisiveis.length) {
+    throw new Error("Selecione pelo menos um jogador para visualizar o documento.");
+  }
+
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    let atualizado = null;
+    const documentos = (demo.documentosInvestigacao || []).map((item) => {
+      if (String(item.id) !== String(documentoId)) return item;
+      atualizado = {
+        ...item,
+        visualizar_todos: visualizarTodos,
+        visualizarTodos,
+        jogadores_visiveis: jogadoresVisiveis,
+        jogadoresVisiveis,
+      };
+      return atualizado;
+    });
+    if (!atualizado) throw new Error("Documento nao encontrado.");
+    salvarDemo({ ...demo, documentosInvestigacao: documentos }, campanhaId);
+    return atualizado;
+  }
+
+  const { data, error } = await supabase
+    .from("documentos_investigacao")
+    .update({
+      visualizar_todos: visualizarTodos,
+      jogadores_visiveis: jogadoresVisiveis,
+    })
+    .eq("id", documentoId)
+    .eq("campanha_id", campanhaId)
+    .select()
+    .single();
+  if (error) throw error;
+
+  return {
+    ...data,
+    mimeType: data.mime_type,
+    arquivoNome: data.arquivo_nome,
+    storagePath: data.storage_path,
+    criadoEm: data.criado_em,
+    visualizarTodos: data.visualizar_todos ?? true,
+    jogadoresVisiveis: Array.isArray(data.jogadores_visiveis)
+      ? data.jogadores_visiveis.map(String)
+      : [],
+  };
+};
+
+export const excluirDocumentoInvestigacao = async (campanhaId, documento) => {
+  const id = typeof documento === "string" ? documento : documento?.id;
+  if (!id) return;
+
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    salvarDemo({
+      ...demo,
+      documentosInvestigacao: (demo.documentosInvestigacao || []).filter((item) => item.id !== id),
+    }, campanhaId);
+    return;
+  }
+
+  const registro = typeof documento === "object" ? documento : null;
+  const storagePath = registro?.storagePath || registro?.storage_path;
+  const { error } = await supabase
+    .from("documentos_investigacao")
+    .delete()
+    .eq("id", id)
+    .eq("campanha_id", campanhaId);
+  if (error) throw error;
+  if (storagePath) {
+    const { error: erroStorage } = await supabase.storage.from("evidencias").remove([storagePath]);
+    if (erroStorage) console.warn("Documento removido da mesa, mas o arquivo nao pode ser apagado do Storage.", erroStorage);
+  }
 };
 
 export const moverToken = async (tokenId, x, y, mapaChave = "mapa-principal") => {
@@ -717,6 +1031,8 @@ export const ouvirCampanha = (campanhaId, aoMudar) => {
     .on("postgres_changes", { event: "*", schema: "public", table: "cenas", filter: `campanha_id=eq.${campanhaId}` }, aoMudar)
     .on("postgres_changes", { event: "*", schema: "public", table: "membros_campanha", filter: `campanha_id=eq.${campanhaId}` }, aoMudar)
     .on("postgres_changes", { event: "*", schema: "public", table: "inimigos_campanha", filter: `campanha_id=eq.${campanhaId}` }, aoMudar)
+    .on("postgres_changes", { event: "*", schema: "public", table: "iniciativas_campanha", filter: `campanha_id=eq.${campanhaId}` }, aoMudar)
+    .on("postgres_changes", { event: "*", schema: "public", table: "documentos_investigacao", filter: `campanha_id=eq.${campanhaId}` }, aoMudar)
     .on("postgres_changes", { event: "INSERT", schema: "public", table: "rolagens", filter: `campanha_id=eq.${campanhaId}` }, aoMudar)
     .subscribe();
   iniciarFallback();
