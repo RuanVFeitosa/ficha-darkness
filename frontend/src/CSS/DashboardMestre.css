@@ -1884,7 +1884,11 @@
   text-align: left;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.34));
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.055),
+    rgba(0, 0, 0, 0.34)
+  );
   color: #fff;
   cursor: pointer;
   transition:
@@ -1898,7 +1902,11 @@
   transform: translateY(-2px);
   border-color: #d4af37;
   box-shadow: 0 9px 24px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(145deg, rgba(212, 175, 55, 0.2), rgba(28, 22, 4, 0.82));
+  background: linear-gradient(
+    145deg,
+    rgba(212, 175, 55, 0.2),
+    rgba(28, 22, 4, 0.82)
+  );
 }
 
 .mestre-entrega-card-topo {
@@ -1936,7 +1944,9 @@
   color: #e5c038;
 }
 
-.mestre-entrega-card > strong { font-size: 1rem; }
+.mestre-entrega-card > strong {
+  font-size: 1rem;
+}
 
 .mestre-entrega-card small {
   color: #ccc;
@@ -1966,7 +1976,9 @@
   text-transform: uppercase;
 }
 
-.mestre-entrega-card.selecionado em { color: #e5c038; }
+.mestre-entrega-card.selecionado em {
+  color: #e5c038;
+}
 
 .mestre-entrega-loja {
   display: flex;
@@ -1985,9 +1997,13 @@
   gap: 3px;
 }
 
-.mestre-entrega-info strong { color: #fff; }
+.mestre-entrega-info strong {
+  color: #fff;
+}
 
-.mestre-entrega-info small { color: #aaa; }
+.mestre-entrega-info small {
+  color: #aaa;
+}
 
 .mestre-entrega-loja button {
   min-height: 42px;
@@ -2005,10 +2021,19 @@
 }
 
 @media (max-width: 560px) {
-  .mestre-entrega-cabecalho { align-items: stretch; flex-direction: column; }
-  .mestre-entrega-cabecalho > strong { align-self: flex-start; }
-  .mestre-entrega-loja { align-items: stretch; }
-  .mestre-entrega-loja button { width: 100%; }
+  .mestre-entrega-cabecalho {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .mestre-entrega-cabecalho > strong {
+    align-self: flex-start;
+  }
+  .mestre-entrega-loja {
+    align-items: stretch;
+  }
+  .mestre-entrega-loja button {
+    width: 100%;
+  }
 }
 
 .mestre-inventario-form h3 {
@@ -2231,7 +2256,7 @@
   flex: 1;
   margin: 0;
   color: #d2d2d2;
-  font-size: 0.70rem;
+  font-size: 0.7rem;
   line-height: 1.5;
 }
 
@@ -2293,7 +2318,11 @@
   padding: 16px;
   border: 1px solid rgba(212, 175, 55, 0.36);
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(10, 10, 10, 0.9));
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.1),
+    rgba(10, 10, 10, 0.9)
+  );
 }
 
 .mestre-aprimoramentos-exclusiva summary {
@@ -2324,7 +2353,10 @@
   border-radius: 8px;
   background: linear-gradient(145deg, #151515, #080808);
   cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
 }
 
 .mestre-aprimoramento-opcao input {
@@ -2379,7 +2411,11 @@
   padding: 16px;
   border: 1px solid rgba(138, 95, 255, 0.55);
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(89, 45, 180, 0.22), rgba(8, 8, 14, 0.98));
+  background: linear-gradient(
+    135deg,
+    rgba(89, 45, 180, 0.22),
+    rgba(8, 8, 14, 0.98)
+  );
 }
 
 .mestre-aprimoramento-customizado-topo {
@@ -2402,8 +2438,13 @@
   margin: 3px 0 0;
 }
 
-.mestre-aprimoramento-customizado-topo h4 { color: #fff; }
-.mestre-aprimoramento-customizado-topo p { color: #c9c4d9; font-size: 0.8rem; }
+.mestre-aprimoramento-customizado-topo h4 {
+  color: #fff;
+}
+.mestre-aprimoramento-customizado-topo p {
+  color: #c9c4d9;
+  font-size: 0.8rem;
+}
 
 .mestre-aprimoramento-customizado-form {
   display: grid;
@@ -2441,7 +2482,10 @@
   background: #101010;
   color: #d8d8d8;
   cursor: pointer;
-  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
 }
 
 .mestre-icone-arma-exclusiva-opcoes button:hover,
@@ -2459,7 +2503,7 @@
   text-transform: none;
 }
 
-.mestre-loja  {
+.mestre-loja {
   width: 100%;
   height: 100%;
   display: flex;
@@ -4499,8 +4543,58 @@
     margin: 0;
   }
 }
-.mestre-pastas-catalogo{display:flex;align-items:center;gap:6px;margin:12px 0;padding:8px;overflow-x:auto;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.22)}.mestre-pastas-catalogo button{min-height:32px;display:flex;align-items:center;gap:7px;padding:0 11px;border:1px solid rgba(255,255,255,.12);background:#111;color:#999;white-space:nowrap;cursor:pointer}.mestre-pastas-catalogo button.ativa{border-color:#d4af37;background:rgba(212,175,55,.1);color:#e1c96e}.mestre-pastas-catalogo b{font-size:9px}.mestre-modal-linha-topo h2 small{color:#817b70;font-size:11px;font-weight:400}.criarInimigo-button.secundario{margin-left:6px;background:transparent!important;color:#d4af37!important}.catalogo-pasta-select{min-width:130px;height:34px;padding:0 8px;border:1px solid rgba(255,255,255,.15);background:#0b0b0b;color:#c9c3b8;font-size:9px}.mestre-npcs-subtabs{margin-top:10px}
-
+.mestre-pastas-catalogo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 8px;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+}
+.mestre-pastas-catalogo button {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #111;
+  color: #999;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mestre-pastas-catalogo button.ativa {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.1);
+  color: #e1c96e;
+}
+.mestre-pastas-catalogo b {
+  font-size: 9px;
+}
+.mestre-modal-linha-topo h2 small {
+  color: #817b70;
+  font-size: 11px;
+  font-weight: 400;
+}
+.criarInimigo-button.secundario {
+  margin-left: 6px;
+  background: transparent !important;
+  color: #d4af37 !important;
+}
+.catalogo-pasta-select {
+  min-width: 130px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #0b0b0b;
+  color: #c9c3b8;
+  font-size: 9px;
+}
+.mestre-npcs-subtabs {
+  margin-top: 10px;
+}
 
 /* =========================================================
    MODAL EXPANDIDO — NPCs / INIMIGOS
@@ -4517,7 +4611,11 @@
   border: 1px solid rgba(212, 175, 55, 0.32);
   border-radius: 18px;
   background:
-    radial-gradient(circle at 15% -10%, rgba(212, 175, 55, 0.10), transparent 28%),
+    radial-gradient(
+      circle at 15% -10%,
+      rgba(212, 175, 55, 0.1),
+      transparent 28%
+    ),
     linear-gradient(180deg, #090909 0%, #030303 38%, #000 100%);
   box-shadow:
     0 34px 100px rgba(0, 0, 0, 0.88),

@@ -788,6 +788,22 @@ const atualizarEstadoTokenMapa = async (tokenId, mapaChave, mudanca) => {
 export const definirVisibilidadeToken = (tokenId, oculto, mapaChave = "mapa-principal") =>
   atualizarEstadoTokenMapa(tokenId, mapaChave, { oculto: Boolean(oculto), removido: false });
 
+export const configurarLanternaToken = (tokenId, lanterna, mapaChave = "mapa-principal") =>
+  atualizarEstadoTokenMapa(tokenId, mapaChave, {
+    lanterna: {
+      ativa: Boolean(lanterna?.ativa),
+      alcance: Math.max(4, Math.min(60, Number(lanterna?.alcance) || 18)),
+      cor: String(lanterna?.cor || "#f4c76b"),
+      direcao: Number(lanterna?.direcao) || 0,
+      abertura: Math.max(20, Math.min(140, Number(lanterna?.abertura) || 70)),
+    },
+  });
+
+export const definirRotacaoToken = (tokenId, rotacao, mapaChave = "mapa-principal") =>
+  atualizarEstadoTokenMapa(tokenId, mapaChave, {
+    rotacao: Number(rotacao) || 0,
+  });
+
 export const removerTokenDoMapa = (tokenId, mapaChave = "mapa-principal") =>
   atualizarEstadoTokenMapa(tokenId, mapaChave, { removido: true });
 

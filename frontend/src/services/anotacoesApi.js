@@ -9,6 +9,17 @@ const salvarLocais = (campanhaId, notas) => localStorage.setItem(chaveLocal(camp
 const chavePastas = (campanhaId) => `darkness_anotacoes_pastas_${campanhaId}`;
 const lerPastasLocais = (campanhaId) => { try { return JSON.parse(localStorage.getItem(chavePastas(campanhaId))) || []; } catch { return []; } };
 const tabelaAusente = (error) => error?.code === "42P01" || /pastas_anotacoes.*(not exist|schema cache)/i.test(error?.message || "");
+const tabelaAnotacoesAusente = (error) =>
+  error?.code === "42P01" ||
+  /anotacoes_campanha.*(not exist|schema cache|could not find)/i.test(
+    error?.message || "",
+  );
+const colunasDocumentoAusentes = (error) =>
+  /documento_(url|nome|tipo).*?(not exist|schema cache|could not find)/i.test(
+    error?.message || "",
+  ) ||
+  /could not find.*documento_(url|nome|tipo)/i.test(error?.message || "");
+const payloadSemDocumento = ({ documento_url, documento_nome, documento_tipo, ...payload }) => payload;
 const criarPastaLocal = (campanhaId, nome) => {
   const pastas = lerPastasLocais(campanhaId);
   const existente = pastas.find((item) => item.nome.toLowerCase() === nome.toLowerCase());
@@ -16,11 +27,32 @@ const criarPastaLocal = (campanhaId, nome) => {
   const pasta = { id: `pasta-${Date.now()}`, campanha_id: campanhaId, nome };
   localStorage.setItem(chavePastas(campanhaId), JSON.stringify([...pastas, pasta])); return pasta;
 };
+const salvarAnotacaoLocal = (campanhaId, nota) => {
+  const agora = new Date().toISOString();
+  const notas = lerLocais(campanhaId);
+  const registro = {
+    ...nota,
+    id: nota.id || `nota-${Date.now()}`,
+    campanha_id: campanhaId,
+    atualizado_em: agora,
+    criado_em: nota.criado_em || agora,
+  };
+  salvarLocais(
+    campanhaId,
+    notas.some((item) => item.id === registro.id)
+      ? notas.map((item) => item.id === registro.id ? registro : item)
+      : [registro, ...notas],
+  );
+  return registro;
+};
 
 export const listarAnotacoes = async (campanhaId) => {
   if (!supabaseConfigurado || String(campanhaId).startsWith("demo")) return lerLocais(campanhaId);
   const { data, error } = await supabase.from("anotacoes_campanha").select("*").eq("campanha_id", campanhaId).order("atualizado_em", { ascending: false });
-  if (error) throw error;
+  if (error) {
+    if (tabelaAnotacoesAusente(error)) return lerLocais(campanhaId);
+    throw error;
+  }
   return data || [];
 };
 
@@ -28,24 +60,7 @@ export const salvarAnotacao = async (campanhaId, nota) => {
   const agora = new Date().toISOString();
 
   if (!supabaseConfigurado || String(campanhaId).startsWith("demo")) {
-    const notas = lerLocais(campanhaId);
-
-    const registro = {
-      ...nota,
-      id: nota.id || `nota-${Date.now()}`,
-      campanha_id: campanhaId,
-      atualizado_em: agora,
-      criado_em: nota.criado_em || agora,
-    };
-
-    salvarLocais(
-      campanhaId,
-      notas.some((item) => item.id === registro.id)
-        ? notas.map((item) => item.id === registro.id ? registro : item)
-        : [registro, ...notas]
-    );
-
-    return registro;
+    return salvarAnotacaoLocal(campanhaId, nota);
   }
 
   const payload = {
@@ -61,7 +76,7 @@ export const salvarAnotacao = async (campanhaId, nota) => {
 
   // NOTA EXISTENTE → UPDATE
   if (nota.id) {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("anotacoes_campanha")
       .update(payload)
       .eq("id", nota.id)
@@ -69,7 +84,19 @@ export const salvarAnotacao = async (campanhaId, nota) => {
       .select()
       .single();
 
+    if (error && colunasDocumentoAusentes(error)) {
+      ({ data, error } = await supabase
+        .from("anotacoes_campanha")
+        .update(payloadSemDocumento(payload))
+        .eq("id", nota.id)
+        .eq("campanha_id", campanhaId)
+        .select()
+        .single());
+    }
+
     if (error) {
+      if (tabelaAnotacoesAusente(error))
+        return salvarAnotacaoLocal(campanhaId, nota);
       console.error("Erro ao atualizar anotação:", error);
       throw error;
     }
@@ -78,13 +105,23 @@ export const salvarAnotacao = async (campanhaId, nota) => {
   }
 
   // NOVA NOTA → INSERT
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("anotacoes_campanha")
     .insert(payload)
     .select()
     .single();
 
+  if (error && colunasDocumentoAusentes(error)) {
+    ({ data, error } = await supabase
+      .from("anotacoes_campanha")
+      .insert(payloadSemDocumento(payload))
+      .select()
+      .single());
+  }
+
   if (error) {
+    if (tabelaAnotacoesAusente(error))
+      return salvarAnotacaoLocal(campanhaId, nota);
     console.error("Erro ao criar anotação:", error);
     throw error;
   }
@@ -119,7 +156,13 @@ export const excluirAnotacao = async (campanhaId, notaId) => {
     return;
   }
   const { error } = await supabase.from("anotacoes_campanha").delete().eq("id", notaId).eq("campanha_id", campanhaId);
-  if (error) throw error;
+  if (error) {
+    if (tabelaAnotacoesAusente(error)) {
+      salvarLocais(campanhaId, lerLocais(campanhaId).filter((item) => item.id !== notaId));
+      return;
+    }
+    throw error;
+  }
 };
 
 export const listarPastasAnotacoes = async (campanhaId) => {

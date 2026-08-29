@@ -16,7 +16,10 @@ import {
   mdiDiceMultiple,
   mdiFileDocumentMultipleOutline,
   mdiFitToScreenOutline,
+  mdiFlashlight,
+  mdiFlashlightOff,
   mdiImageOutline,
+  mdiLightbulbOnOutline,
   mdiMagnify,
   mdiMagnifyMinusOutline,
   mdiMagnifyPlusOutline,
@@ -28,6 +31,7 @@ import {
   mdiPlay,
   mdiPlus,
   mdiRefresh,
+  mdiRotateRight,
   mdiShieldCrownOutline,
   mdiSwordCross,
   mdiUploadOutline,
@@ -42,7 +46,9 @@ import {
   atualizarVisibilidadeDocumentoInvestigacao,
   buscarCampanhaPorCodigo,
   definirIniciativa,
+  definirRotacaoToken,
   chavePosicaoMapa,
+  configurarLanternaToken,
   definirVisibilidadeToken,
   desvincularFicha,
   desvincularInimigo,
@@ -73,6 +79,9 @@ import { listarHabilidadesSelecionadas } from "../data/Classes/arvoresHabilidade
 import { condicoes } from "../components/data/condicoes";
 import AnotacoesCampanha from "../components/AnotacoesCampanha";
 import MusicaTabletop from "../components/MusicaTabletop";
+import MapLightingLayer, {
+  pontoVisivelPorLuz,
+} from "../components/MapLightingLayer";
 import "../CSS/Mesa.css";
 
 const cenaVazia = {
@@ -364,6 +373,8 @@ const Mesa = () => {
   const [personagens, setPersonagens] = useState({});
   const [fichaAberta, setFichaAberta] = useState(null);
   const [tokenArrastando, setTokenArrastando] = useState(null);
+  const [tokenGirando, setTokenGirando] = useState(null);
+  const rotacaoPendenteRef = useRef(null);
   const [menuTokenAberto, setMenuTokenAberto] = useState(null);
   const tokensEmGravacaoRef = useRef(new Set());
   const posicoesTokensPendentesRef = useRef(new Map());
@@ -371,6 +382,10 @@ const Mesa = () => {
   const [panMapa, setPanMapa] = useState({ x: 0, y: 0 });
   const [proporcaoMapa, setProporcaoMapa] = useState({ largura: 1, altura: 1 });
   const [mapaArrastando, setMapaArrastando] = useState(false);
+  const [editorIluminacaoAberto, setEditorIluminacaoAberto] = useState(false);
+  const [configuracaoIluminacao, setConfiguracaoIluminacao] = useState(null);
+  const [salvandoIluminacao, setSalvandoIluminacao] = useState(false);
+  const salvamentoIluminacaoTimerRef = useRef(null);
   const inicioPanMapaRef = useRef(null);
   const ponteirosMapaRef = useRef(new Map());
   const inicioPincaMapaRef = useRef(null);
@@ -1404,6 +1419,27 @@ const Mesa = () => {
     ...(token?.posicoes?.[`__estado:${chave}`] || {}),
   });
 
+  const atualizarEstadoLocalToken = (tokenId, mudanca) => {
+    const chaveEstado = `__estado:${mapaChaveAtual}`;
+    setCampanha((atual) => ({
+      ...atual,
+      tokens: atual.tokens.map((item) =>
+        item.id === tokenId
+          ? {
+              ...item,
+              posicoes: {
+                ...(item.posicoes || {}),
+                [chaveEstado]: {
+                  ...(item.posicoes?.[chaveEstado] || {}),
+                  ...mudanca,
+                },
+              },
+            }
+          : item,
+      ),
+    }));
+  };
+
   const arrastarToken = (event) => {
     const token = campanha.tokens.find((item) => item.id === tokenArrastando);
     if (!tokenArrastando || !podeMoverToken(token) || campanha.modo !== "mapa")
@@ -1412,9 +1448,65 @@ const Mesa = () => {
     setCampanha((atual) => ({
       ...atual,
       tokens: atual.tokens.map((item) =>
-        item.id === tokenArrastando ? { ...item, x, y } : item,
+        item.id === tokenArrastando
+          ? {
+              ...item,
+              x,
+              y,
+              posicoes: {
+                ...(item.posicoes || {}),
+                [mapaChaveAtual]: { x, y },
+              },
+            }
+          : item,
       ),
     }));
+  };
+
+  const girarToken = (event) => {
+    if (!tokenGirando) return;
+    const token = campanha.tokens.find((item) => item.id === tokenGirando);
+    if (!podeMoverToken(token)) return;
+    const visual = { ...token, ...estadoTokenNoMapa(token) };
+    const area = event.currentTarget.getBoundingClientRect();
+    const centroX = area.left + (Number(visual.x) / 100) * area.width;
+    const centroY = area.top + (Number(visual.y) / 100) * area.height;
+    const anguloPonteiro = Math.atan2(
+      event.clientY - centroY,
+      event.clientX - centroX,
+    );
+    const rotacaoAtual = Number(visual.rotacao) || 0;
+    const rotacao =
+      anguloPonteiro +
+      Math.round((rotacaoAtual - anguloPonteiro) / (Math.PI * 2)) *
+        Math.PI *
+        2;
+    const lanterna = visual.lanterna?.ativa
+      ? { ...visual.lanterna, direcao: rotacao }
+      : visual.lanterna;
+    rotacaoPendenteRef.current = { tokenId: token.id, rotacao, lanterna };
+    atualizarEstadoLocalToken(token.id, { rotacao, ...(lanterna ? { lanterna } : {}) });
+  };
+
+  const finalizarRotacaoToken = async (event) => {
+    if (!tokenGirando) return;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    const pendente = rotacaoPendenteRef.current;
+    setTokenGirando(null);
+    rotacaoPendenteRef.current = null;
+    if (!pendente) return;
+    try {
+      await definirRotacaoToken(pendente.tokenId, pendente.rotacao, mapaChaveAtual);
+      if (pendente.lanterna)
+        await configurarLanternaToken(
+          pendente.tokenId,
+          pendente.lanterna,
+          mapaChaveAtual,
+        );
+    } catch (error) {
+      setErro(error.message || "Nao foi possivel salvar a direcao do token.");
+      await carregar();
+    }
   };
 
   const soltarToken = async (event) => {
@@ -1474,6 +1566,46 @@ const Mesa = () => {
       setErro(
         error.message || "Nao foi possivel alterar a visibilidade do token.",
       );
+      await carregar();
+    }
+  };
+
+  const atualizarLanternaToken = async (token, mudanca) => {
+    if (
+      !token ||
+      (!mestre && String(token.ficha_id) !== String(fichaJogadorId))
+    )
+      return;
+    const lanterna = {
+      ativa: Boolean(token.lanterna?.ativa),
+      alcance: Number(token.lanterna?.alcance) || 18,
+      cor: token.lanterna?.cor || "#f4c76b",
+      direcao: Number(token.lanterna?.direcao ?? token.rotacao) || 0,
+      abertura: Number(token.lanterna?.abertura) || 70,
+      ...mudanca,
+    };
+    const chaveEstado = `__estado:${mapaChaveAtual}`;
+    setCampanha((atual) => ({
+      ...atual,
+      tokens: atual.tokens.map((item) =>
+        item.id === token.id
+          ? {
+              ...item,
+              posicoes: {
+                ...(item.posicoes || {}),
+                [chaveEstado]: {
+                  ...(item.posicoes?.[chaveEstado] || {}),
+                  lanterna,
+                },
+              },
+            }
+          : item,
+      ),
+    }));
+    try {
+      await configurarLanternaToken(token.id, lanterna, mapaChaveAtual);
+    } catch (error) {
+      setErro(error.message || "Nao foi possivel configurar a lanterna.");
       await carregar();
     }
   };
@@ -1597,7 +1729,12 @@ const Mesa = () => {
         return;
       }
     }
-    if (event.target.closest?.(".mesa-token")) return;
+    if (
+      event.target.closest?.(
+        ".mesa-token, .mesa-token-rotacao, .mesa-token-lanterna-toggle",
+      )
+    )
+      return;
     event.preventDefault();
     event.currentTarget.setPointerCapture?.(event.pointerId);
     inicioPanMapaRef.current = {
@@ -1681,6 +1818,102 @@ const Mesa = () => {
     return false;
   };
 
+  const cenaMapaAtual = campanha?.cenaAtiva;
+  const mapaAtualIluminacao = cenaMapaAtual
+    ? midiasDaCena(cenaMapaAtual, "mapa").find(
+        (item) => item.id === campanha?.midiaAtivaId,
+      ) || midiasDaCena(cenaMapaAtual, "mapa")[0]
+    : null;
+  const chaveMapaIluminacao = `${cenaMapaAtual?.id || ""}:${mapaAtualIluminacao?.id || ""}`;
+  const assinaturaIluminacaoRemota = JSON.stringify(
+    mapaAtualIluminacao?.iluminacao || null,
+  );
+
+  useEffect(() => {
+    setConfiguracaoIluminacao(
+      mapaAtualIluminacao?.iluminacao || {
+        paredes: [],
+        portas: [],
+        luzes: [],
+        escuridao: 0,
+        periodo: "dia",
+      },
+    );
+    setEditorIluminacaoAberto(false);
+    // A chave representa a troca real de mapa; o rascunho nao deve ser
+    // reiniciado a cada atualizacao remota de tokens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chaveMapaIluminacao]);
+
+  useEffect(() => {
+    if (editorIluminacaoAberto) return;
+    setConfiguracaoIluminacao(
+      mapaAtualIluminacao?.iluminacao || {
+        paredes: [],
+        portas: [],
+        luzes: [],
+        escuridao: 0,
+        periodo: "dia",
+      },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assinaturaIluminacaoRemota, editorIluminacaoAberto]);
+
+  const salvarConfiguracaoIluminacao = async (configuracaoOverride = null) => {
+    if (!cenaMapaAtual || !mapaAtualIluminacao) return;
+    const configuracaoParaSalvar = Array.isArray(configuracaoOverride?.portas)
+      ? configuracaoOverride
+      : configuracaoIluminacao;
+    setSalvandoIluminacao(true);
+    setErro("");
+    try {
+      const mapasBatalha = midiasDaCena(cenaMapaAtual, "mapa").map((mapa) =>
+        mapa.id === mapaAtualIluminacao.id
+          ? { ...mapa, iluminacao: configuracaoParaSalvar }
+          : mapa,
+      );
+      await salvarCena(campanha.id, {
+        ...cenaMapaAtual,
+        mapasBatalha,
+        mapas_batalha: mapasBatalha,
+      });
+      setCampanha((atual) => {
+        const cenas = atual.cenas.map((item) =>
+          item.id === cenaMapaAtual.id
+            ? { ...item, mapasBatalha, mapas_batalha: mapasBatalha }
+            : item,
+        );
+        return {
+          ...atual,
+          cenas,
+          cenaAtiva: cenas.find((item) => item.id === cenaMapaAtual.id),
+        };
+      });
+    } catch (error) {
+      setErro(error.message || "Nao foi possivel salvar a iluminacao do mapa.");
+    } finally {
+      setSalvandoIluminacao(false);
+    }
+  };
+
+  const alterarConfiguracaoIluminacao = (proxima) => {
+    setConfiguracaoIluminacao(proxima);
+    if (salvamentoIluminacaoTimerRef.current)
+      clearTimeout(salvamentoIluminacaoTimerRef.current);
+    salvamentoIluminacaoTimerRef.current = setTimeout(() => {
+      salvamentoIluminacaoTimerRef.current = null;
+      salvarConfiguracaoIluminacao(proxima);
+    }, 450);
+  };
+
+  useEffect(
+    () => () => {
+      if (salvamentoIluminacaoTimerRef.current)
+        clearTimeout(salvamentoIluminacaoTimerRef.current);
+    },
+    [],
+  );
+
   if (carregando) return <main className="mesa-estado">Abrindo a mesa...</main>;
   if (erro && !campanha)
     return (
@@ -1705,6 +1938,48 @@ const Mesa = () => {
   const personagemJogador = membroJogador
     ? personagens[membroJogador.ficha_id]
     : null;
+  const luzesDosTokens = (campanha.tokens || [])
+    .map((token) => ({ ...token, ...estadoTokenNoMapa(token) }))
+    .filter(
+      (token) =>
+        token.lanterna?.ativa &&
+        !token.removido &&
+        !token.oculto &&
+        (mestre || String(token.ficha_id) === String(fichaJogadorId)),
+    )
+    .map((token) => ({
+      id: `lanterna-${token.id}`,
+      tokenId: token.id,
+      x: Number(token.x) || 0,
+      y: Number(token.y) || 0,
+      alcance: Number(token.lanterna.alcance) || 18,
+      cor: token.lanterna.cor || "#f4c76b",
+      tipo: "cone",
+      direcao: Number(token.lanterna.direcao) || 0,
+      abertura: Number(token.lanterna.abertura) || 70,
+    }));
+  const configuracaoVisao = configuracaoIluminacao || {};
+  const periodoMapa =
+    configuracaoVisao.periodo ||
+    (Number(configuracaoVisao.escuridao) > 0 ? "noite" : "dia");
+  const bloqueadoresVisao = [
+    ...(configuracaoVisao.paredes || []),
+    ...(configuracaoVisao.portas || []).filter((porta) => !porta.aberta),
+  ];
+  const luzDoJogador = !mestre
+    ? luzesDosTokens.find(
+        (luz) =>
+          String(
+            campanha.tokens.find((token) => token.id === luz.tokenId)?.ficha_id,
+          ) === String(fichaJogadorId),
+      )
+    : null;
+  const tokenVisivelParaJogador = (token) => {
+    if (mestre || periodoMapa !== "noite") return true;
+    if (String(token.ficha_id) === String(fichaJogadorId)) return true;
+    if (!luzDoJogador) return false;
+    return pontoVisivelPorLuz(luzDoJogador, token, bloqueadoresVisao);
+  };
   const personagemFichaAberta = fichaAberta?.personagem;
   const habilidadesFichaAberta = personagemFichaAberta
     ? listarHabilidadesSelecionadas(personagemFichaAberta)
@@ -2041,6 +2316,28 @@ const Mesa = () => {
               <Icon path={mdiMagnify} size={0.78} />
               {campanha.investigacaoAtiva ? "Encerrar" : "Investigacao"}
             </button>
+            {campanha.modo === "mapa" && (
+              <button
+                className={`mesa-cenas-botao ${editorIluminacaoAberto ? "ativo" : ""}`}
+                onClick={() => {
+                  setEditorIluminacaoAberto((aberto) => !aberto);
+                  if (!mapaAtualIluminacao?.iluminacao) {
+                    setConfiguracaoIluminacao({
+                      paredes: [],
+                      portas: [],
+                      luzes: [],
+                      escuridao: 0.82,
+                      periodo: "dia",
+                    });
+                  }
+                }}
+                disabled={!mapaAtualIluminacao}
+                title="Editar paredes, luzes e visao"
+              >
+                <Icon path={mdiLightbulbOnOutline} size={0.78} />
+                Iluminacao
+              </button>
+            )}
             <div className="mesa-modos" aria-label="Modo da mesa">
               <button
                 className={campanha.modo === "cena" ? "ativo" : ""}
@@ -2135,8 +2432,11 @@ const Mesa = () => {
           <AnotacoesCampanha campanhaId={campanha.id} />
         </aside>
       )}
-      {mestre && musicaAberta && (
-        <aside className="mesa-musica-painel">
+      {mestre && (
+        <aside
+          className={`mesa-musica-painel ${musicaAberta ? "aberto" : "fechado"}`}
+          aria-hidden={!musicaAberta}
+        >
           <header>
             <div>
               <span>Trilha da sessao</span>
@@ -2205,15 +2505,24 @@ const Mesa = () => {
           onDrop={soltarFichaNoMapa}
           onPointerDown={iniciarPanMapa}
           onPointerMove={(event) => {
+            if (tokenGirando) {
+              girarToken(event);
+              return;
+            }
             const usandoPinca = moverPanMapa(event);
             if (!usandoPinca) arrastarToken(event);
           }}
           onPointerUp={(event) => {
+            if (tokenGirando) {
+              finalizarRotacaoToken(event);
+              return;
+            }
             const usandoPinca = finalizarPanMapa(event);
             if (tokenArrastando && !usandoPinca) soltarToken(event);
           }}
           onPointerCancel={(event) => {
             setTokenArrastando(null);
+            if (tokenGirando) finalizarRotacaoToken(event);
             finalizarPanMapa(event);
           }}
           onPointerLeave={(event) => tokenArrastando && soltarToken(event)}
@@ -2224,12 +2533,23 @@ const Mesa = () => {
               style={{ backgroundSize: `${100 / colunas}% ${100 / linhas}%` }}
             />
           )}
+          {campanha.modo === "mapa" && configuracaoIluminacao && (
+            <MapLightingLayer
+              configuracao={configuracaoIluminacao}
+              luzesTokens={luzesDosTokens}
+              editando={mestre && editorIluminacaoAberto}
+              aoAlterar={alterarConfiguracaoIluminacao}
+              salvando={salvandoIluminacao}
+            />
+          )}
           {campanha.modo === "mapa" &&
             campanha.tokens
               .filter((token) => {
                 const estado = estadoTokenNoMapa(token);
                 if (estado.removido) return false;
                 if (!mestre && estado.oculto) return false;
+                if (!tokenVisivelParaJogador({ ...token, ...estado }))
+                  return false;
                 return true;
               })
               .map((token) => {
@@ -2238,10 +2558,11 @@ const Mesa = () => {
                 return (
                   <React.Fragment key={token.id}>
                     <button
-                      className={`mesa-token ${podeMoverToken(tokenVisual) ? "movivel" : "bloqueado"} ${tokenArrastando === token.id ? "arrastando" : ""}`}
+                      className={`mesa-token ${podeMoverToken(tokenVisual) ? "movivel" : "bloqueado"} ${tokenArrastando === token.id ? "arrastando" : ""} ${tokenGirando === token.id ? "girando" : ""}`}
                       style={{
                         left: `${tokenVisual.x}%`,
                         top: `${tokenVisual.y}%`,
+                        rotate: `${Number(tokenVisual.rotacao) || 0}rad`,
                         ...(mestre && tokenVisual.oculto
                           ? {
                               opacity: 0.38,
@@ -2288,7 +2609,76 @@ const Mesa = () => {
                       ) : (
                         tokenVisual.nome?.slice(0, 2)
                       )}
+                      {mestre && tokenVisual.lanterna?.ativa && (
+                        <span
+                          className="mesa-token-direcao"
+                        />
+                      )}
                     </button>
+                    {podeMoverToken(tokenVisual) && !editorIluminacaoAberto && (
+                      <button
+                        type="button"
+                        className={`mesa-token-rotacao ${tokenGirando === token.id ? "girando" : ""}`}
+                        style={{
+                          left: `${tokenVisual.x}%`,
+                          top: `${tokenVisual.y}%`,
+                          transform: `translate(calc(-50% + ${Math.cos(Number(tokenVisual.rotacao) || 0) * 34}px), calc(-50% + ${Math.sin(Number(tokenVisual.rotacao) || 0) * 34}px))`,
+                        }}
+                        title={`Girar ${tokenVisual.nome}`}
+                        aria-label={`Girar ${tokenVisual.nome}`}
+                        onPointerDown={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          event.currentTarget.setPointerCapture?.(event.pointerId);
+                          setTokenArrastando(null);
+                          setTokenGirando(token.id);
+                        }}
+                      >
+                        <Icon path={mdiRotateRight} size={0.6} />
+                      </button>
+                    )}
+                    {!mestre &&
+                      podeMoverToken(tokenVisual) &&
+                      !editorIluminacaoAberto && (
+                        <button
+                          type="button"
+                          className={`mesa-token-lanterna-toggle ${tokenVisual.lanterna?.ativa ? "ativa" : ""}`}
+                          style={{
+                            left: `${tokenVisual.x}%`,
+                            top: `${tokenVisual.y}%`,
+                          }}
+                          title={
+                            tokenVisual.lanterna?.ativa
+                              ? "Desligar lanterna"
+                              : "Ligar lanterna"
+                          }
+                          aria-label={
+                            tokenVisual.lanterna?.ativa
+                              ? "Desligar lanterna"
+                              : "Ligar lanterna"
+                          }
+                          onPointerDown={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                          }}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            atualizarLanternaToken(tokenVisual, {
+                              ativa: !tokenVisual.lanterna?.ativa,
+                            });
+                          }}
+                        >
+                          <Icon
+                            path={
+                              tokenVisual.lanterna?.ativa
+                                ? mdiFlashlight
+                                : mdiFlashlightOff
+                            }
+                            size={0.62}
+                          />
+                        </button>
+                      )}
                     {mestre && menuTokenAberto === token.id && (
                       <div
                         role="menu"
@@ -2329,6 +2719,72 @@ const Mesa = () => {
                             ? "Mostrar token"
                             : "Ocultar token"}
                         </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() =>
+                            atualizarLanternaToken(tokenVisual, {
+                              ativa: !tokenVisual.lanterna?.ativa,
+                            })
+                          }
+                          style={{
+                            padding: "8px 10px",
+                            textAlign: "left",
+                            border: "1px solid rgba(244,199,107,.18)",
+                            borderRadius: 5,
+                            background: tokenVisual.lanterna?.ativa
+                              ? "rgba(244,199,107,.2)"
+                              : "rgba(255,255,255,.07)",
+                            color: tokenVisual.lanterna?.ativa
+                              ? "#ffe3a0"
+                              : "inherit",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {tokenVisual.lanterna?.ativa
+                            ? "Apagar lanterna"
+                            : "Acender lanterna"}
+                        </button>
+                        {tokenVisual.lanterna?.ativa && (
+                          <div className="mesa-token-lanterna-controles">
+                            <label className="mesa-token-lanterna-alcance">
+                              <span>
+                                Alcance
+                                <b>{Number(tokenVisual.lanterna?.alcance) || 18}</b>
+                              </span>
+                              <input
+                                type="range"
+                                min="4"
+                                max="60"
+                                step="1"
+                                value={Number(tokenVisual.lanterna?.alcance) || 18}
+                                onChange={(event) =>
+                                  atualizarLanternaToken(tokenVisual, {
+                                    alcance: Number(event.target.value),
+                                  })
+                                }
+                              />
+                            </label>
+                            <label className="mesa-token-lanterna-alcance">
+                              <span>
+                                Abertura
+                                <b>{Number(tokenVisual.lanterna?.abertura) || 70}°</b>
+                              </span>
+                              <input
+                                type="range"
+                                min="20"
+                                max="140"
+                                step="5"
+                                value={Number(tokenVisual.lanterna?.abertura) || 70}
+                                onChange={(event) =>
+                                  atualizarLanternaToken(tokenVisual, {
+                                    abertura: Number(event.target.value),
+                                  })
+                                }
+                              />
+                            </label>
+                          </div>
+                        )}
                         <button
                           type="button"
                           role="menuitem"
