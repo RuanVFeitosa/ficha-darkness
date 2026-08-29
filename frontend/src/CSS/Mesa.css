@@ -4559,6 +4559,20 @@
   opacity: .4;
   cursor: not-allowed;
 }
+.documentos-envio-estado {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(99, 185, 132, 0.35);
+  background: rgba(41, 105, 66, 0.12);
+  color: #8ed5a8;
+  font-size: 9px;
+  line-height: 1.45;
+}
+.documentos-envio-estado.erro {
+  border-color: rgba(218, 87, 87, 0.45);
+  background: rgba(126, 34, 34, 0.16);
+  color: #ffaaa0;
+}
 
 .documentos-lista {
   display: grid;

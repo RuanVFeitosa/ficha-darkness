@@ -408,6 +408,7 @@ const Mesa = () => {
   const [visibilidadeDocumentoEditando, setVisibilidadeDocumentoEditando] = useState(null);
   const [salvandoVisibilidadeDocumento, setSalvandoVisibilidadeDocumento] = useState(false);
   const [enviandoDocumento, setEnviandoDocumento] = useState(false);
+  const [estadoEnvioDocumento, setEstadoEnvioDocumento] = useState("");
   const [novoDocumento, setNovoDocumento] = useState({
     nome: "",
     descricao: "",
@@ -1016,6 +1017,7 @@ const Mesa = () => {
     event.preventDefault();
     if (!mestre || !campanha?.id || !novoDocumento.arquivo || enviandoDocumento) return;
     setEnviandoDocumento(true);
+    setEstadoEnvioDocumento("Enviando arquivo...");
     setErro("");
     try {
       validarArquivoInvestigacao(novoDocumento.arquivo);
@@ -1048,8 +1050,11 @@ const Mesa = () => {
         jogadoresVisiveis: [],
       });
       if (arquivoDocumentoRef.current) arquivoDocumentoRef.current.value = "";
+      setEstadoEnvioDocumento("Documento compartilhado com sucesso.");
     } catch (error) {
-      setErro(error.message || "Nao foi possivel compartilhar o documento.");
+      const mensagem = error.message || "Nao foi possivel compartilhar o documento.";
+      setErro(mensagem);
+      setEstadoEnvioDocumento(`Erro: ${mensagem}`);
     } finally {
       setEnviandoDocumento(false);
     }
@@ -3157,10 +3162,12 @@ const Mesa = () => {
                       validarArquivoInvestigacao(arquivo);
                       setNovoDocumento((atual) => ({ ...atual, arquivo }));
                       setErro("");
+                      setEstadoEnvioDocumento("");
                     } catch (error) {
                       event.target.value = "";
                       setNovoDocumento((atual) => ({ ...atual, arquivo: null }));
                       setErro(error.message || "Arquivo invalido.");
+                      setEstadoEnvioDocumento(`Erro: ${error.message || "Arquivo invalido."}`);
                     }
                   }}
                 />
@@ -3178,6 +3185,14 @@ const Mesa = () => {
                 {enviandoDocumento ? "Enviando..." : "Enviar aos jogadores"}
               </button>
             </div>
+            {estadoEnvioDocumento && (
+              <p
+                className={`documentos-envio-estado ${estadoEnvioDocumento.startsWith("Erro:") ? "erro" : ""}`}
+                role="status"
+              >
+                {estadoEnvioDocumento}
+              </p>
+            )}
           </form>
           <div className="documentos-lista">
             {documentosDisponiveis.length ? (

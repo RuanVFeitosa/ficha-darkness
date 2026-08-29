@@ -562,7 +562,11 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
   const { error: erroUpload } = await supabase.storage
     .from("evidencias")
     .upload(storagePath, arquivo, { upsert: false, contentType: mimeType });
-  if (erroUpload) throw erroUpload;
+  if (erroUpload) {
+    throw new Error(
+      `Falha no armazenamento de evidencias: ${erroUpload.message || "upload recusado"}`,
+    );
+  }
 
   const url = supabase.storage.from("evidencias").getPublicUrl(storagePath).data.publicUrl;
   const { data, error } = await supabase
@@ -583,7 +587,9 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
     .single();
   if (error) {
     await supabase.storage.from("evidencias").remove([storagePath]).catch(() => {});
-    throw error;
+    throw new Error(
+      `Arquivo enviado, mas o registro do documento falhou: ${error.message || "gravacao recusada"}`,
+    );
   }
   return {
     ...data,
