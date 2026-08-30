@@ -10,6 +10,8 @@ import {
   TABELA_EVOLUCAO,
   obterCustosNivel,
 } from "../data/evolucaoPersonagem";
+import { obterMarcosProgressao } from "../data/progressaoAvancada";
+import { marcarPassivosAtualizados, mesclarPassivosPorRevisao } from "../utils/personagemMerge";
 
 const STORAGE_KEY = "fichaRPG_personagem";
 const DEFAULT_FICHA_ID = "principal";
@@ -74,6 +76,7 @@ const UpgradeNivel = () => {
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
   const nivelAtual = Math.max(1, parseInt(personagem.nivel, 10) || 1);
   const passouDoNivel5 = nivelAtual > 5;
+  const marcosProgressao = useMemo(() => obterMarcosProgressao(personagem), [personagem]);
 
   const limitesUpgrade = {
     passivos: passouDoNivel5 ? 20 : 10,
@@ -213,7 +216,7 @@ const UpgradeNivel = () => {
           if (!personagemApi.pontosIntegridade) {
             personagemApi.pontosIntegridade = { gastos: 0 };
           }
-          setPersonagem(personagemApi);
+          setPersonagem((atual) => mesclarPassivosPorRevisao(personagemApi, atual));
         }
       })
       .catch(() => {
@@ -237,6 +240,30 @@ const UpgradeNivel = () => {
     setTrilha(novaTrilha);
     setDistribuicao({});
     setMensagem("");
+  };
+
+  const selecionarMarco = async (nivel, opcao) => {
+    if (nivelAtual < nivel) return;
+    const atualizado = structuredClone(personagem);
+    atualizado.progressaoAvancada = {
+      ...(atualizado.progressaoAvancada || {}),
+      [nivel]: { ...opcao, nivel, tipo: marcosProgressao[nivel].tipo, escolhidoEm: new Date().toISOString() },
+    };
+    atualizado.habilidadesCriadas = [
+      ...(atualizado.habilidadesCriadas || []).filter((item) => item.origemNivelAvancado !== nivel),
+      { id: `marco-${nivel}-${opcao.id}`, tipo: nivel === 10 ? "poderAbsoluto" : "habilidade", nome: opcao.nome, descricao: opcao.descricao, custo: 0, recurso: "marco", status: "aprovado", origem: "progressao-avancada", origemNivelAvancado: nivel, criadaEm: new Date().toISOString() },
+    ];
+    setPersonagem(atualizado);
+    localStorage.setItem(storageKey, JSON.stringify(atualizado));
+    notificarPersonagemAtualizado(fichaId, atualizado);
+    try {
+      const salvo = await salvarPersonagem(fichaId, atualizado);
+      notificarPersonagemAtualizado(fichaId, salvo || atualizado);
+      mostrarNotificacao(`${opcao.nome} foi incorporado à progressão.`, "sucesso");
+    } catch (error) {
+      console.warn("Backend indisponível. Marco salvo localmente.", error);
+      mostrarNotificacao(`${opcao.nome} foi salvo localmente.`, "sucesso");
+    }
   };
 
   const atualizarDistribuicao = (chave, valor) => {
@@ -479,6 +506,7 @@ const UpgradeNivel = () => {
               ...(atualizado.habilidadesPassivas || {}),
               [chavePassivo]: Math.max(0, valorAtual - pontosRemover),
             };
+            Object.assign(atualizado, marcarPassivosAtualizados(atualizado));
             const pontosADevolver = pontosRemover;
             atualizado.pontosEvolucao = {
               ...(atualizado.pontosEvolucao || {}),
@@ -682,6 +710,7 @@ const UpgradeNivel = () => {
         const aumento = parseInt(valor, 10) || 0;
         atualizado.habilidadesPassivas[chave] = Math.min(limitesUpgrade.passivos, atual + aumento);
       });
+      Object.assign(atualizado, marcarPassivosAtualizados(atualizado));
     }
 
     setPersonagem(atualizado);
@@ -807,14 +836,14 @@ const UpgradeNivel = () => {
         <section className="upgrade-shell">
           {/* Trilhas */}
           <div className="upgrade-trilhas">
-            {["passivos", "atributos", "habilidades", "integridade"].map((item) => (
+            {["passivos", "atributos", "habilidades", "integridade", "marcos"].map((item) => (
               <button
                 key={item}
                 type="button"
                 className={trilha === item ? "ativa" : ""}
                 onClick={() => alterarTrilha(item)}
               >
-                {item === "integridade" ? "Integridade" : item.charAt(0).toUpperCase() + item.slice(1)}
+                {item === "integridade" ? "Integridade" : item === "marcos" ? "Marcos NV5+" : item.charAt(0).toUpperCase() + item.slice(1)}
               </button>
             ))}
           </div>
@@ -822,14 +851,18 @@ const UpgradeNivel = () => {
           {/* Pontos restantes */}
           <div className="upgrade-pontos">
             <span>
-              {trilha === "habilidades"
+              {trilha === "marcos"
+                ? "Progressão avançada"
+                : trilha === "habilidades"
                 ? "Saldo para habilidades"
                 : trilha === "integridade"
                 ? `Integridade disponível: ${disponiveisIntegridade}`
                 : `Distribuindo pontos em ${trilha}`}
             </span>
             <strong>
-              {trilha === "habilidades"
+              {trilha === "marcos"
+                ? `${Object.entries(marcosProgressao).filter(([nivel, marco]) => marco.opcoes.some((opcao) => opcao.id === personagem.progressaoAvancada?.[nivel]?.id)).length} de 6 marcos escolhidos`
+                : trilha === "habilidades"
                 ? `${pontosEvolucaoDisponiveis} pontos disponíveis`
                 : trilha === "integridade"
                 ? `${restantesIntegridade} pontos restantes`
@@ -983,6 +1016,64 @@ const UpgradeNivel = () => {
             </div>
           )}
 
+          {/* MARCOS NV5+ */}
+          {trilha === "marcos" && (
+            <div className="upgrade-marcos">
+              <div className="upgrade-marcos-intro">
+                <span>ASCENSÃO</span>
+                <h2>Marcos de evolução</h2>
+                <p>
+                  A partir do nível 5, cada avanço muda a forma como o personagem atua.
+                  Escolha um legado por nível; escolhas anteriores podem ser substituídas aqui.
+                </p>
+              </div>
+
+              {Object.entries(marcosProgressao).map(([nivel, marco]) => {
+                const numeroNivel = Number(nivel);
+                const bloqueado = nivelAtual < numeroNivel;
+                const escolhaSalva = personagem.progressaoAvancada?.[nivel];
+                const escolhaAtual = marco.opcoes.some((opcao) => opcao.id === escolhaSalva?.id)
+                  ? escolhaSalva
+                  : null;
+
+                return (
+                  <article
+                    key={nivel}
+                    className={`upgrade-marco ${bloqueado ? "bloqueado" : ""} ${escolhaAtual ? "concluido" : ""}`}
+                  >
+                    <header className="upgrade-marco-header">
+                      <div className="upgrade-marco-nivel">NV {nivel}</div>
+                      <div>
+                        <span>{marco.tipo}</span>
+                        <h3>{marco.titulo}</h3>
+                      </div>
+                      <b>{bloqueado ? `Disponível no NV ${nivel}` : escolhaAtual ? "Escolhido" : "Disponível"}</b>
+                    </header>
+
+                    <div className="upgrade-marco-opcoes">
+                      {marco.opcoes.map((opcao) => {
+                        const selecionada = escolhaAtual?.id === opcao.id;
+                        return (
+                          <button
+                            key={opcao.id}
+                            type="button"
+                            className={selecionada ? "selecionada" : ""}
+                            disabled={bloqueado}
+                            onClick={() => selecionarMarco(numeroNivel, opcao)}
+                          >
+                            <span className="upgrade-marco-seletor">{selecionada ? "✓" : "+"}</span>
+                            <strong>{opcao.nome}</strong>
+                            <small>{opcao.descricao}</small>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
           {/* HABILIDADES */}
           {trilha === "habilidades" && (
             <div className="upgrade-habilidades-info">
@@ -1091,7 +1182,7 @@ const UpgradeNivel = () => {
           )}
 
           {/* Botão confirmar upgrade */}
-          {trilha !== "habilidades" && (
+          {trilha !== "habilidades" && trilha !== "marcos" && (
             <button
               type="button"
               className="upgrade-confirmar"

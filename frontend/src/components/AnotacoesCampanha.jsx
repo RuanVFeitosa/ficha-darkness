@@ -4,6 +4,7 @@ import remarkGfm from "remark-gfm";
 import Icon from "@mdi/react";
 import { mdiChevronDown, mdiChevronRight, mdiClose, mdiDeleteOutline, mdiFileDocumentOutline, mdiFolderOutline, mdiFolderPlusOutline, mdiLinkVariant, mdiMagnify, mdiOpenInNew, mdiPaperclip, mdiPencilOutline, mdiPlus, mdiUpload } from "@mdi/js";
 import { criarPastaAnotacoes, enviarDocumentoAnotacao, excluirAnotacao, listarAnotacoes, listarPastasAnotacoes, renomearPastaAnotacoes, salvarAnotacao } from "../services/anotacoesApi";
+import { alertarDialogo, confirmarDialogo as confirmarDialogoGlobal } from "./DialogoGlobal";
 import "../CSS/AnotacoesCampanha.css";
 
 const novaNota = (pasta = "Notas") => ({ titulo: "Nova anotacao", pasta, conteudo: "# Nova anotacao\n\nComece a escrever sua narracao..." });
@@ -77,8 +78,6 @@ const AnotacoesCampanha = ({ campanhaId }) => {
     // A anotacao precisa ser a operacao principal. Antes, a criacao da pasta
     // acontecia primeiro e qualquer falha de permissao/tabela no Supabase
     // impedia completamente a criacao da nota no site publicado.
-    if (ativa?.id) await salvarAnotacao(campanhaId, ativa);
-
     const criada = await salvarAnotacao(campanhaId, novaNota(pastaNormalizada));
     setNotas((atuais) => [criada, ...atuais.filter((item) => item.id !== criada.id)]);
     ignorarPrimeiro.current = true;
@@ -126,10 +125,14 @@ const AnotacoesCampanha = ({ campanhaId }) => {
       } else if (dialogo.tipo === "renomear") await confirmarRenomeacao(dialogo.nomeAtual, valor);
       else await confirmarCriacaoNota(valor);
       setDialogo(null); setEstado("Salvo");
-    } catch (erro) { setEstado(erro.message || "Nao foi possivel concluir a acao."); }
+    } catch (erro) {
+      const mensagem = erro.message || "Nao foi possivel concluir a acao.";
+      setEstado(mensagem);
+      await alertarDialogo(`Erro ao criar anotacao: ${mensagem}`, { titulo: "Anotacao nao criada" });
+    }
   };
   const remover = async () => {
-    if (!ativa || !window.confirm(`Excluir a anotacao "${ativa.titulo}"?`)) return;
+    if (!ativa || !await confirmarDialogoGlobal(`Excluir a anotacao "${ativa.titulo}"?`, { titulo: "Excluir anotacao", confirmarTexto: "Excluir", perigo: true })) return;
     await excluirAnotacao(campanhaId, ativa.id);
     const restantes = notas.filter((item) => item.id !== ativa.id); setNotas(restantes); ignorarPrimeiro.current = true; setAtiva(restantes[0] || null);
   };

@@ -105,21 +105,28 @@ const normalizarMidiasCena = (cena = {}) => {
   const mapaAntigo = cena.mapaUrl || cena.mapa_url;
   return {
     ...cena,
+    lojaDisponivel: Boolean(cena.loja_disponivel ?? cena.lojaDisponivel),
+    cenaEspecial: cena.cena_especial || cena.cenaEspecial || null,
     imagensCena: imagens.length ? imagens : imagemAntiga ? [{ id: `cena-${cena.id || "nova"}-1`, nome: "Cena principal", url: imagemAntiga }] : [],
     mapasBatalha: mapas.length ? mapas : mapaAntigo ? [{ id: `mapa-${cena.id || "nova"}-1`, nome: "Mapa principal", url: mapaAntigo, larguraGrade: cena.largura_grade || cena.larguraGrade || 12, alturaGrade: cena.altura_grade || cena.alturaGrade || 8 }] : [],
   };
 };
 const resolverMidiasLocais = async (cena) => {
   const normalizada = normalizarMidiasCena(cena);
-  const [imagensCena, mapasBatalha] = await Promise.all([
+  const [imagensCena, mapasBatalha, midiaEspecialUrl, audioEspecialUrl] = await Promise.all([
     Promise.all(normalizada.imagensCena.map(async (midia) => ({ ...midia, urlPersistida: midia.url, url: await resolverImagemLocal(midia.url) }))),
     Promise.all(normalizada.mapasBatalha.map(async (midia) => ({ ...midia, urlPersistida: midia.url, url: await resolverImagemLocal(midia.url) }))),
+    resolverImagemLocal(normalizada.cenaEspecial?.midiaUrl),
+    resolverImagemLocal(normalizada.cenaEspecial?.audioUrl),
   ]);
-  return { ...normalizada, imagensCena, mapasBatalha };
+  return { ...normalizada, imagensCena, mapasBatalha, cenaEspecial: normalizada.cenaEspecial ? { ...normalizada.cenaEspecial, midiaUrlPersistida: normalizada.cenaEspecial.midiaUrl, audioUrlPersistida: normalizada.cenaEspecial.audioUrl, midiaUrl: midiaEspecialUrl, audioUrl: audioEspecialUrl } : null };
 };
+const urlPersistivel = (urlAtual, urlPersistida) =>
+  String(urlAtual || "").startsWith("blob:") ? (urlPersistida || urlAtual) : urlAtual;
 
 export const chavePosicaoMapa = (cenaId, midiaId = null) => `${cenaId || "sem-cena"}:${midiaId || "mapa-principal"}`;
 const chaveEstadoTokenMapa = (mapaChave = "mapa-principal") => `__estado:${mapaChave}`;
+const CHAVE_ESTADO_GLOBAL_TOKEN = chaveEstadoTokenMapa("global");
 const consolidarTokens = (tokens = []) => {
   const unicos = new Map();
   tokens.forEach((token) => {
@@ -140,6 +147,7 @@ const aplicarPosicaoDoMapa = (tokens, campanha) => {
     ...token,
     ...(token.posicoes?.[chave] || {}),
     ...(token.posicoes?.[chaveEstado] || {}),
+    ...(token.posicoes?.[CHAVE_ESTADO_GLOBAL_TOKEN] || {}),
   }));
 };
 
@@ -173,6 +181,8 @@ const normalizarCampanha = (campanha, cenas = [], membros = [], tokens = [], rol
   inimigos: inimigos.map((item) => ({ ...(item.dados || {}), ...item })),
   musicas: Array.isArray(campanha.musicas) ? campanha.musicas : [],
   musicaEstado: campanha.musica_estado || null,
+  soundpad: Array.isArray(campanha.soundpad) ? campanha.soundpad : [],
+  soundpadEstado: campanha.soundpad_estado || { ativos: {} },
 });
 
 export const buscarCampanhaPorCodigo = async (codigo) => {
@@ -189,7 +199,12 @@ export const buscarCampanhaPorCodigo = async (codigo) => {
       urlPersistida: documento.urlPersistida || documento.url,
       url: await resolverImagemLocal(documento.urlPersistida || documento.url),
     })));
-    return { ...CAMPANHA_DEMO, ...campanha, modo: demo.modo, combateAtivo: Boolean(demo.combateAtivo), investigacaoAtiva: Boolean(demo.investigacaoAtiva), iniciativas: demo.iniciativas || {}, documentosInvestigacao, midiaAtivaId: demo.midiaAtivaId || null, cenas, membros: demo.membros || MEMBROS_DEMO, tokens, rolagens: demo.rolagens || CAMPANHA_DEMO.rolagens, inimigos: demo.inimigos || [], musicas: demo.musicas || [], musicaEstado: demo.musicaEstado || null, cenaAtiva: cenas.find((cena) => cena.id === demo.cenaAtivaId) || cenas[0] };
+    const soundpad = await Promise.all((demo.soundpad || []).map(async (som) => ({
+      ...som,
+      urlPersistida: som.urlPersistida || som.url,
+      url: await resolverImagemLocal(som.urlPersistida || som.url),
+    })));
+    return { ...CAMPANHA_DEMO, ...campanha, modo: demo.modo, combateAtivo: Boolean(demo.combateAtivo), investigacaoAtiva: Boolean(demo.investigacaoAtiva), iniciativas: demo.iniciativas || {}, documentosInvestigacao, midiaAtivaId: demo.midiaAtivaId || null, cenas, membros: demo.membros || MEMBROS_DEMO, tokens, rolagens: demo.rolagens || CAMPANHA_DEMO.rolagens, inimigos: demo.inimigos || [], musicas: demo.musicas || [], musicaEstado: demo.musicaEstado || null, soundpad, soundpadEstado: demo.soundpadEstado || { ativos: {} }, cenaAtiva: cenas.find((cena) => cena.id === demo.cenaAtivaId) || cenas[0] };
   }
 
   const { data: campanha, error } = await supabase
@@ -391,6 +406,25 @@ export const salvarMusicasCampanha = async (campanhaId, musicas) => {
   return normalizadas;
 };
 
+export const ordenarCenasCampanha = async (campanhaId, cenas) => {
+  const ordenadas = (cenas || []).map((cena, ordem) => ({ ...cena, ordem }));
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    const ordens = new Map(ordenadas.map((cena) => [cena.id, cena.ordem]));
+    const atualizadas = (demo.cenas || [])
+      .map((cena) => ({ ...cena, ordem: ordens.get(cena.id) ?? cena.ordem ?? 0 }))
+      .sort((a, b) => a.ordem - b.ordem);
+    salvarDemo({ ...demo, cenas: atualizadas }, campanhaId);
+    return atualizadas;
+  }
+  const resultados = await Promise.all(
+    ordenadas.map((cena) => supabase.from("cenas").update({ ordem: cena.ordem }).eq("id", cena.id).eq("campanha_id", campanhaId)),
+  );
+  const falha = resultados.find((resultado) => resultado.error);
+  if (falha?.error) throw falha.error;
+  return ordenadas;
+};
+
 export const atualizarEstadoMusica = async (campanhaId, estado) => {
   const musicaEstado = { ...estado, atualizadoEm: new Date().toISOString() };
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
@@ -403,6 +437,31 @@ export const atualizarEstadoMusica = async (campanhaId, estado) => {
   return musicaEstado;
 };
 
+export const salvarSoundpadCampanha = async (campanhaId, sons) => {
+  const soundpad = (sons || []).map((som, ordem) => ({
+    ...som,
+    url: urlPersistivel(som.url, som.urlPersistida),
+    urlPersistida: undefined,
+    ordem,
+  }));
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId); salvarDemo({ ...demo, soundpad }, campanhaId); return soundpad;
+  }
+  const { error } = await supabase.from("campanhas").update({ soundpad }).eq("id", campanhaId);
+  if (error) throw error;
+  return soundpad;
+};
+
+export const atualizarEstadoSoundpad = async (campanhaId, estado) => {
+  const soundpadEstado = { ...(estado || {}), atualizadoEm: new Date().toISOString() };
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId); salvarDemo({ ...demo, soundpadEstado }, campanhaId); return soundpadEstado;
+  }
+  const { error } = await supabase.from("campanhas").update({ soundpad_estado: soundpadEstado }).eq("id", campanhaId);
+  if (error) throw error;
+  return soundpadEstado;
+};
+
 export const salvarCena = async (campanhaId, cena) => {
   const normalizada = normalizarMidiasCena(cena);
   if (!supabaseConfigurado || campanhaId === "demo") {
@@ -412,6 +471,11 @@ export const salvarCena = async (campanhaId, cena) => {
       ...normalizada,
       imagensCena: normalizada.imagensCena.map((midia) => ({ ...midia, url: String(midia.url || "").startsWith("local-image://") ? midia.url : (midia.urlPersistida || midia.url) })),
       mapasBatalha: normalizada.mapasBatalha.map((midia) => ({ ...midia, url: String(midia.url || "").startsWith("local-image://") ? midia.url : (midia.urlPersistida || midia.url) })),
+      cenaEspecial: normalizada.cenaEspecial ? {
+        ...normalizada.cenaEspecial,
+        midiaUrl: urlPersistivel(normalizada.cenaEspecial.midiaUrl, normalizada.cenaEspecial.midiaUrlPersistida),
+        audioUrl: urlPersistivel(normalizada.cenaEspecial.audioUrl, normalizada.cenaEspecial.audioUrlPersistida),
+      } : null,
       id,
       ordem: cena.ordem ?? demo.cenas.length,
     };
@@ -436,6 +500,12 @@ export const salvarCena = async (campanhaId, cena) => {
     pasta: String(cena.pasta || "Sem pasta").trim() || "Sem pasta",
     imagens_cena: imagensPersistidas,
     mapas_batalha: mapasPersistidos,
+    loja_disponivel: Boolean(cena.lojaDisponivel ?? cena.loja_disponivel),
+    cena_especial: cena.cenaEspecial ? {
+      ...cena.cenaEspecial,
+      midiaUrl: urlPersistivel(cena.cenaEspecial.midiaUrl, cena.cenaEspecial.midiaUrlPersistida),
+      audioUrl: urlPersistivel(cena.cenaEspecial.audioUrl, cena.cenaEspecial.audioUrlPersistida),
+    } : (cena.cena_especial || null),
   };
   const { data, error } = await supabase.from("cenas").upsert(payload).select().single();
   if (error) throw error; return data;
@@ -454,14 +524,26 @@ export const excluirCena = async (campanhaId, cenaId) => {
 export const LIMITES_UPLOAD_IMAGEM = {
   cena: { bytes: 2 * 1024 * 1024, rotulo: "2 MB" },
   mapa: { bytes: 5 * 1024 * 1024, rotulo: "5 MB" },
+  especial: { bytes: 25 * 1024 * 1024, rotulo: "25 MB" },
+  audio: { bytes: 20 * 1024 * 1024, rotulo: "20 MB" },
 };
 const TIPOS_IMAGEM_PERMITIDOS = new Set(["image/webp", "image/jpeg", "image/png", "image/avif"]);
+const TIPOS_ESPECIAIS_PERMITIDOS = new Set([...TIPOS_IMAGEM_PERMITIDOS, "image/gif", "video/mp4", "video/webm"]);
+const TIPOS_AUDIO_PERMITIDOS = new Set(["audio/mpeg", "audio/ogg", "audio/wav", "audio/webm", "audio/mp4", "audio/x-m4a"]);
 
 export const validarArquivoImagem = (arquivo, tipo = "cena") => {
   if (!arquivo) return null;
   const limite = LIMITES_UPLOAD_IMAGEM[tipo] || LIMITES_UPLOAD_IMAGEM.cena;
-  if (!TIPOS_IMAGEM_PERMITIDOS.has(arquivo.type)) throw new Error("Formato nao permitido. Use WebP, JPEG, PNG ou AVIF.");
-  if (arquivo.size > limite.bytes) throw new Error(`${tipo === "mapa" ? "O mapa de batalha" : "A cena estatica"} deve ter no maximo ${limite.rotulo}. Converta a imagem para WebP antes de enviar.`);
+  const tipos = tipo === "especial" ? TIPOS_ESPECIAIS_PERMITIDOS : tipo === "audio" ? TIPOS_AUDIO_PERMITIDOS : TIPOS_IMAGEM_PERMITIDOS;
+  if (!tipos.has(arquivo.type)) {
+    if (tipo === "especial") throw new Error("Formato nao permitido. Use GIF, MP4, WebM, WebP, JPEG, PNG ou AVIF.");
+    if (tipo === "audio") throw new Error("Formato de audio nao permitido. Use MP3, OGG, WAV, WebM ou M4A.");
+    throw new Error("Formato nao permitido. Use WebP, JPEG, PNG ou AVIF.");
+  }
+  if (arquivo.size > limite.bytes) {
+    const nome = tipo === "mapa" ? "O mapa de batalha" : tipo === "especial" ? "A midia especial" : tipo === "audio" ? "A musica" : "A cena estatica";
+    throw new Error(`${nome} deve ter no maximo ${limite.rotulo}.`);
+  }
   return arquivo;
 };
 
@@ -569,7 +651,7 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
   }
 
   const url = supabase.storage.from("evidencias").getPublicUrl(storagePath).data.publicUrl;
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("documentos_investigacao")
     .insert({
       campanha_id: campanhaId,
@@ -585,12 +667,88 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
     })
     .select()
     .single();
+  const colunasVisibilidadeAusentes =
+    error &&
+    /(?:jogadores_visiveis|visualizar_todos).*?(?:schema cache|could not find|not exist)/i.test(
+      error.message || "",
+    );
+  if (colunasVisibilidadeAusentes) {
+    ({ data, error } = await supabase
+      .from("documentos_investigacao")
+      .insert({
+        campanha_id: campanhaId,
+        nome: nomeBase,
+        descricao,
+        categoria,
+        mime_type: mimeType,
+        arquivo_nome: arquivo.name,
+        url,
+        storage_path: storagePath,
+      })
+      .select()
+      .single());
+  }
   if (error) {
     await supabase.storage.from("evidencias").remove([storagePath]).catch(() => {});
     throw new Error(
       `Arquivo enviado, mas o registro do documento falhou: ${error.message || "gravacao recusada"}`,
     );
   }
+  return {
+    ...data,
+    mimeType: data.mime_type,
+    arquivoNome: data.arquivo_nome,
+    storagePath: data.storage_path,
+    criadoEm: data.criado_em,
+    visualizarTodos: data.visualizar_todos ?? true,
+    jogadoresVisiveis: Array.isArray(data.jogadores_visiveis)
+      ? data.jogadores_visiveis.map(String)
+      : [],
+  };
+};
+
+export const salvarEvidenciaInterativa = async (campanhaId, metadados = {}) => {
+  const modelo = metadados.modeloInterativo === "modern-pc" ? "modern-pc" : "msdos";
+  const nomePadrao = modelo === "modern-pc" ? "Computador moderno" : "Terminal MS-DOS";
+  const nome = String(metadados.nome || nomePadrao).trim() || nomePadrao;
+  const descricao = String(metadados.descricao || "Computador encontrado durante a investigacao.").trim();
+  const visualizarTodos = metadados.visualizarTodos !== false;
+  const jogadoresVisiveis = visualizarTodos
+    ? []
+    : [...new Set((metadados.jogadoresVisiveis || []).map((id) => String(id || "").trim()).filter(Boolean))];
+  const registro = {
+    campanha_id: campanhaId,
+    nome,
+    descricao,
+    categoria: "interativa",
+    mime_type: modelo === "modern-pc" ? "application/x-darkness-modern-pc" : "application/x-darkness-msdos",
+    arquivo_nome: modelo === "modern-pc" ? "Computador moderno" : "MS-DOS 6.13",
+    url: modelo === "modern-pc" ? "/interactive/modern-pc/index.html" : "/interactive/ms-dos/index.html",
+    storage_path: modelo === "modern-pc" ? "interactive:modern-pc" : "interactive:msdos",
+    visualizar_todos: visualizarTodos,
+    jogadores_visiveis: jogadoresVisiveis,
+  };
+
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    const documento = {
+      ...registro,
+      id: `interativo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      criado_em: new Date().toISOString(),
+    };
+    salvarDemo({
+      ...demo,
+      documentosInvestigacao: [documento, ...(demo.documentosInvestigacao || [])],
+    }, campanhaId);
+    return documento;
+  }
+
+  const { data, error } = await supabase
+    .from("documentos_investigacao")
+    .insert(registro)
+    .select()
+    .single();
+  if (error) throw new Error(`Nao foi possivel criar a evidencia interativa: ${error.message}`);
   return {
     ...data,
     mimeType: data.mime_type,
@@ -810,8 +968,13 @@ export const definirRotacaoToken = (tokenId, rotacao, mapaChave = "mapa-principa
     rotacao: Number(rotacao) || 0,
   });
 
-export const removerTokenDoMapa = (tokenId, mapaChave = "mapa-principal") =>
-  atualizarEstadoTokenMapa(tokenId, mapaChave, { removido: true });
+export const definirTamanhoToken = (tokenId, tamanho, mapaChave = "mapa-principal") =>
+  atualizarEstadoTokenMapa(tokenId, mapaChave, {
+    tamanho: Math.max(0.5, Math.min(3, Number(tamanho) || 1)),
+  });
+
+export const removerTokenDoMapa = (tokenId) =>
+  atualizarEstadoTokenMapa(tokenId, "global", { removido: true });
 
 export const registrarRolagem = async (campanhaId, autorNome, rolagem) => {
   const registro = {
@@ -887,7 +1050,7 @@ export const posicionarFichaNoMapa = async (campanhaId, fichaId, personagem, x, 
     const token = (demo.tokens || []).find((item) => item.ficha_id === fichaId);
     if (!token) throw new Error("Nao foi possivel criar o token desta ficha.");
     const chaveEstado = chaveEstadoTokenMapa(mapaChave);
-    const atualizado = { ...token, x, y, oculto: false, removido: false, posicoes: { ...(token.posicoes || {}), [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false } } };
+    const atualizado = { ...token, x, y, oculto: false, removido: false, posicoes: { ...(token.posicoes || {}), [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false }, [CHAVE_ESTADO_GLOBAL_TOKEN]: { ...(token.posicoes?.[CHAVE_ESTADO_GLOBAL_TOKEN] || {}), removido: false } } };
     salvarDemo({ ...demo, tokens: demo.tokens.map((item) => item.id === token.id ? atualizado : item) }, campanhaId);
     return atualizado;
   }
@@ -895,7 +1058,7 @@ export const posicionarFichaNoMapa = async (campanhaId, fichaId, personagem, x, 
   if (erroToken) throw erroToken;
   if (!token) throw new Error("Nao foi possivel criar o token desta ficha.");
   const chaveEstado = chaveEstadoTokenMapa(mapaChave);
-  const { data, error } = await supabase.from("tokens_mapa").update({ x, y, posicoes: { ...(token.posicoes || {}), [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false } } }).eq("id", token.id).select().single();
+  const { data, error } = await supabase.from("tokens_mapa").update({ x, y, posicoes: { ...(token.posicoes || {}), [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false }, [CHAVE_ESTADO_GLOBAL_TOKEN]: { ...(token.posicoes?.[CHAVE_ESTADO_GLOBAL_TOKEN] || {}), removido: false } } }).eq("id", token.id).select().single();
   if (error) throw error;
   return { ...data, oculto: false, removido: false };
 };
@@ -910,8 +1073,8 @@ export const posicionarInimigoNoMapa = async (campanhaId, inimigo, x, y, mapaCha
     const demo = carregarDemo(campanhaId);
     const existente = (demo.tokens || []).find((item) => item.ficha_id === fichaId);
     const token = existente
-      ? { ...existente, nome, imagem_url: imagemUrl, x, y, oculto: false, removido: false, posicoes: { ...(existente.posicoes || {}), [mapaChave]: { x, y }, [chaveEstadoTokenMapa(mapaChave)]: { oculto: false, removido: false } } }
-      : { id: `demo-token-inimigo-${Date.now()}-${referencia}`, ficha_id: fichaId, nome, imagem_url: imagemUrl, x, y, oculto: false, removido: false, posicoes: { [mapaChave]: { x, y }, [chaveEstadoTokenMapa(mapaChave)]: { oculto: false, removido: false } } };
+      ? { ...existente, nome, imagem_url: imagemUrl, x, y, oculto: false, removido: false, posicoes: { ...(existente.posicoes || {}), [mapaChave]: { x, y }, [chaveEstadoTokenMapa(mapaChave)]: { oculto: false, removido: false }, [CHAVE_ESTADO_GLOBAL_TOKEN]: { ...(existente.posicoes?.[CHAVE_ESTADO_GLOBAL_TOKEN] || {}), removido: false } } }
+      : { id: `demo-token-inimigo-${Date.now()}-${referencia}`, ficha_id: fichaId, nome, imagem_url: imagemUrl, x, y, oculto: false, removido: false, posicoes: { [mapaChave]: { x, y }, [chaveEstadoTokenMapa(mapaChave)]: { oculto: false, removido: false }, [CHAVE_ESTADO_GLOBAL_TOKEN]: { removido: false } } };
     salvarDemo({
       ...demo,
       tokens: existente
@@ -931,13 +1094,13 @@ export const posicionarInimigoNoMapa = async (campanhaId, inimigo, x, y, mapaCha
 
   if (existente) {
     const chaveEstado = chaveEstadoTokenMapa(mapaChave);
-    const { data, error } = await supabase.from("tokens_mapa").update({ nome, imagem_url: imagemUrl, x, y, posicoes: { ...(existente.posicoes || {}), [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false } } }).eq("id", existente.id).select().single();
+    const { data, error } = await supabase.from("tokens_mapa").update({ nome, imagem_url: imagemUrl, x, y, posicoes: { ...(existente.posicoes || {}), [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false }, [CHAVE_ESTADO_GLOBAL_TOKEN]: { ...(existente.posicoes?.[CHAVE_ESTADO_GLOBAL_TOKEN] || {}), removido: false } } }).eq("id", existente.id).select().single();
     if (error) throw error;
     return { ...data, oculto: false, removido: false };
   }
 
   const chaveEstado = chaveEstadoTokenMapa(mapaChave);
-  const { data, error } = await supabase.from("tokens_mapa").insert({ campanha_id: campanhaId, ficha_id: fichaId, nome, imagem_url: imagemUrl, x, y, posicoes: { [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false } } }).select().single();
+  const { data, error } = await supabase.from("tokens_mapa").insert({ campanha_id: campanhaId, ficha_id: fichaId, nome, imagem_url: imagemUrl, x, y, posicoes: { [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false }, [CHAVE_ESTADO_GLOBAL_TOKEN]: { removido: false } } }).select().single();
   if (error) throw error;
   return { ...data, oculto: false, removido: false };
 };

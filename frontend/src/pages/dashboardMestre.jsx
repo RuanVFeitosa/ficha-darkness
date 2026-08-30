@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { confirmarDialogo, solicitarDialogo } from "../components/DialogoGlobal";
 import Icon from "@mdi/react";
 import {
   mdiAccountPlus,
@@ -1304,10 +1305,11 @@ const DashboardMestre = () => {
     }
   }, []);
 
-  const criarPastaCatalogo = (tipo) => {
-    const nome = window
-      .prompt(`Nome da pasta de ${tipo === "npc" ? "NPCs" : "inimigos"}:`)
-      ?.trim();
+  const criarPastaCatalogo = async (tipo) => {
+    const nome = (await solicitarDialogo(
+      `Nome da pasta de ${tipo === "npc" ? "NPCs" : "inimigos"}:`,
+      { titulo: "Nova pasta", confirmarTexto: "Criar", placeholder: "Nome da pasta" },
+    ))?.trim();
     if (!nome) return;
     const atuais = tipo === "npc" ? pastasNpcs : pastasInimigos;
     if (
@@ -1331,7 +1333,7 @@ const DashboardMestre = () => {
     }
   };
 
-  const excluirPastaCatalogo = (tipo, pasta) => {
+  const excluirPastaCatalogo = async (tipo, pasta) => {
     if (!pasta) return;
 
     const itensNaPasta =
@@ -1345,8 +1347,9 @@ const DashboardMestre = () => {
         : "";
 
     if (
-      !window.confirm(
+      !await confirmarDialogo(
         `Excluir a pasta "${pasta}"?${descricaoItens}`,
+        { titulo: "Excluir pasta", confirmarTexto: "Excluir", perigo: true },
       )
     ) {
       return;
@@ -1607,7 +1610,7 @@ const DashboardMestre = () => {
   const criarMarca = (e) => {
     e.preventDefault();
     if (!formMarca.nome.trim()) {
-      setMensagem("Informe o nome da marca.");
+      setMensagem("Informe o nome do Destino.");
       return;
     }
     const nova = {
@@ -1619,12 +1622,12 @@ const DashboardMestre = () => {
     };
     salvarMarcas([...marcas, nova]);
     limparFormMarca();
-    setMensagem(`Marca "${nova.nome}" criada.`);
+    setMensagem(`Destino "${nova.nome}" criado.`);
   };
 
   const adicionarHabilidadeMarca = () => {
     if (formMarca.habilidades.length >= 3) {
-      setMensagem("Limite de 3 habilidades por marca.");
+      setMensagem("Limite de 3 habilidades por Destino.");
       return;
     }
     setFormMarca((prev) => ({
@@ -1671,19 +1674,19 @@ const DashboardMestre = () => {
     );
     salvarMarcas(novaLista);
     limparFormMarca();
-    setMensagem("Marca atualizada.");
+    setMensagem("Destino atualizado.");
   };
 
   const excluirMarca = (id) => {
     abrirPopup({
       tipo: "perigo",
-      titulo: "Excluir Marca",
-      mensagem: "Deseja remover esta marca permanentemente?",
+      titulo: "Excluir Destino",
+      mensagem: "Deseja remover este Destino permanentemente?",
       confirmarTexto: "Excluir",
       onConfirmar: () => {
         salvarMarcas(marcas.filter((m) => m.id !== id));
         if (marcaEditando === id) limparFormMarca();
-        setMensagem("Marca removida.");
+        setMensagem("Destino removido.");
       },
     });
   };
@@ -1701,7 +1704,7 @@ const DashboardMestre = () => {
 
   const atribuirMarca = async () => {
     if (!personagemSelecionadoId || !marcaSelecionadaId) {
-      setMensagem("Selecione um personagem e uma marca.");
+      setMensagem("Selecione um personagem e um Destino.");
       return;
     }
     const personagem = fichas.find(
@@ -1713,12 +1716,12 @@ const DashboardMestre = () => {
     }
     const marca = marcas.find((m) => m.id === marcaSelecionadaId);
     if (!marca) {
-      setMensagem("Marca não encontrada.");
+      setMensagem("Destino não encontrado.");
       return;
     }
 
     if ((personagem.personagem.marcas || []).some((m) => m.id === marca.id)) {
-      setMensagem(`${personagem.personagem.nome} já possui esta marca.`);
+      setMensagem(`${personagem.personagem.nome} já possui este Destino.`);
       return;
     }
 
@@ -1752,7 +1755,7 @@ const DashboardMestre = () => {
     // Chama salvarFichaSelecionada passando o ID do personagem alvo
     await salvarFichaSelecionada(
       personagemAtualizado,
-      `Marca "${marca.nome}" atribuída a ${personagem.personagem.nome}.`,
+      `Destino "${marca.nome}" atribuído a ${personagem.personagem.nome}.`,
       personagemSelecionadoId,
     );
 
@@ -3623,7 +3626,7 @@ const DashboardMestre = () => {
           className={aba === "marcas" ? "ativa" : ""}
           onClick={() => setAba("marcas")}
         >
-          Marcas
+          Destinos
         </button>
       </nav>
 
@@ -4237,7 +4240,7 @@ const DashboardMestre = () => {
                   NPCs do mestre
                 </button>
               </div>
-
+              
               {subAbaNpcs === "inimigos" && (
                 <>
                 <div className="mestre-pastas-catalogo">
@@ -7938,7 +7941,7 @@ const DashboardMestre = () => {
                   className="marcas-form"
                   onSubmit={marcaEditando ? salvarEdicaoMarca : criarMarca}
                 >
-                  <h3>{marcaEditando ? "Editar Marca" : "Nova Marca"}</h3>
+                  <h3>{marcaEditando ? "Editar Destino" : "Novo Destino"}</h3>
 
                   <label>
                     Nome
@@ -7961,7 +7964,7 @@ const DashboardMestre = () => {
                           descricao: e.target.value,
                         })
                       }
-                      placeholder="Descreva a essência da marca..."
+                      placeholder="Descreva a essência do Destino..."
                       rows="2"
                     />
                   </label>
@@ -8069,7 +8072,7 @@ const DashboardMestre = () => {
                 <div className="marcas-lista">
                   {/* SEÇÃO DE ATRIBUIÇÃO */}
                   <div className="marcas-atribuicao">
-                    <h3>Atribuir Marca a um Jogador</h3>
+                    <h3>Atribuir Destino a um Jogador</h3>
 
                     <div className="marcas-atribuicao-grid">
                       <label>
@@ -8090,7 +8093,7 @@ const DashboardMestre = () => {
                       </label>
 
                       <label>
-                        Marca
+                        Destino
                         <select
                           value={marcaSelecionadaId}
                           onChange={(e) =>
@@ -8142,7 +8145,7 @@ const DashboardMestre = () => {
                     )}
                   </div>
                   <div className="marcas-lista-header">
-                    <span>Marcas existentes ({marcas.length})</span>
+                    <span>Destinos existentes ({marcas.length})</span>
                   </div>
                   <div className="marcas-lista-grid">
                     {marcas.length === 0 && (
@@ -8153,14 +8156,14 @@ const DashboardMestre = () => {
                           padding: "30px 0",
                         }}
                       >
-                        Nenhuma marca criada ainda.
+                        Nenhum Destino criado ainda.
                       </div>
                     )}
                     {marcas.map((marca) => (
                       <div key={marca.id} className="marcas-card">
                         <div className="marcas-card-topo">
                           <div>
-                            <span className="marcas-tag">MARCA</span>
+                            <span className="marcas-tag">DESTINO</span>
                             <h4>{marca.nome}</h4>
                           </div>
                           <div className="marcas-card-acoes">

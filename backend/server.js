@@ -325,6 +325,54 @@ const normalizeShopItem = (item, index = 0) => {
     modificacao: item?.modificacao || null,
   };
 };
+const personagemWriteLocks = new Map();
+
+const revisaoPassivos = (personagem = {}) =>
+  Math.max(0, Number(personagem?.sincronizacaoCampos?.habilidadesPassivas) || 0);
+
+const protegerPassivosContraSobrescrita = (armazenado, recebido) => {
+  if (!armazenado?.habilidadesPassivas || !recebido) return recebido;
+
+  const revisaoArmazenada = revisaoPassivos(armazenado);
+  const revisaoRecebida = revisaoPassivos(recebido);
+  const passivosDiferentes =
+    JSON.stringify(armazenado.habilidadesPassivas) !==
+    JSON.stringify(recebido.habilidadesPassivas);
+
+  // Revisões iguais representam clientes antigos ou cópias da mesma versão.
+  // Nesse caso, uma alteração sem nova revisão nunca pode apagar o servidor.
+  if (passivosDiferentes && revisaoRecebida <= revisaoArmazenada) {
+    return {
+      ...recebido,
+      habilidadesPassivas: armazenado.habilidadesPassivas,
+      sincronizacaoCampos: {
+        ...(recebido.sincronizacaoCampos || {}),
+        habilidadesPassivas: revisaoArmazenada,
+      },
+    };
+  }
+
+  return recebido;
+};
+
+const executarComBloqueioDeFicha = async (fichaId, operacao) => {
+  const chave = sanitizeFichaId(fichaId);
+  const anterior = personagemWriteLocks.get(chave) || Promise.resolve();
+  let liberar;
+  const bloqueioAtual = new Promise((resolve) => { liberar = resolve; });
+  const filaAtual = anterior.catch(() => {}).then(() => bloqueioAtual);
+  personagemWriteLocks.set(chave, filaAtual);
+
+  await anterior.catch(() => {});
+  try {
+    return await operacao();
+  } finally {
+    liberar();
+    if (personagemWriteLocks.get(chave) === filaAtual) {
+      personagemWriteLocks.delete(chave);
+    }
+  }
+};
 
 const getSupabaseRestUrl = (pathAndQuery = "") => {
   const baseUrl = SUPABASE_URL.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "");
@@ -839,7 +887,14 @@ const handleRequest = async (req, res) => {
 
       }
 
-      const saved = await writePersonagem(fichaId, personagem);
+      const saved = await executarComBloqueioDeFicha(fichaId, async () => {
+        const armazenado = await readPersonagem(fichaId);
+        const personagemProtegido = protegerPassivosContraSobrescrita(
+          armazenado,
+          personagem,
+        );
+        return writePersonagem(fichaId, personagemProtegido);
+      });
       return sendJson({ req, res, statusCode: 200, payload: { fichaId, personagem: saved } });
 
     }

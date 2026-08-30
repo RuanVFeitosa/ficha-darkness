@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../CSS/FichaPersonagem.css";
 import "../CSS/CondicoesProfile.css";
+import { alertarDialogo, confirmarDialogo } from "../components/DialogoGlobal";
 
 import { condicoes } from "../components/data/condicoes";
 import { receitasCriacao } from "../components/data/receitasCriacao";
@@ -56,6 +57,7 @@ import {
   mdiMenu,
 } from "@mdi/js";
 import { obterIconeItem } from "../utils/itemIcons";
+import { marcarPassivosAtualizados, mesclarPassivosPorRevisao } from "../utils/personagemMerge";
 import {
   listarHabilidadesSelecionadas,
   obterArvoreClasse,
@@ -655,6 +657,7 @@ const FichaPersonagem = () => {
   const [subAbaMarcaSelecionada, setSubAbaMarcaSelecionada] = useState(null);
 
   const [marcaModalAberto, setMarcaModalAberto] = useState(false);
+  const [destinoSaindo, setDestinoSaindo] = useState(false);
   const [marcaSelecionada, setMarcaSelecionada] = useState(null);
   const [habilidadeEscolhidaIndex, setHabilidadeEscolhidaIndex] =
     useState(null);
@@ -727,6 +730,7 @@ const FichaPersonagem = () => {
   };
 
   const abrirModalMarca = (marca) => {
+    setDestinoSaindo(false);
     setMarcaSelecionada(marca);
     setHabilidadeEscolhidaIndex(null);
     setMarcaModalAberto(true);
@@ -810,7 +814,12 @@ const FichaPersonagem = () => {
             ];
           }
 
-          setPersonagem(personagemApi);
+          const personagemLocalRaw = lerLocalSeguro(storageKey);
+          let personagemLocal = null;
+          try {
+            personagemLocal = personagemLocalRaw ? JSON.parse(personagemLocalRaw) : null;
+          } catch {}
+          setPersonagem(mesclarPassivosPorRevisao(personagemApi, personagemLocal));
           console.log("BACKEND:", personagemApi);
 
           console.log("✅ Dados carregados do backend");
@@ -858,7 +867,9 @@ const FichaPersonagem = () => {
       if (personagemSincronizado) {
         if (!cancelado) {
           ignorarProximoSalvamentoRef.current = true;
-          setPersonagem(personagemSincronizado);
+          setPersonagem((atual) =>
+            mesclarPassivosPorRevisao(personagemSincronizado, atual),
+          );
         }
         return;
       }
@@ -867,7 +878,7 @@ const FichaPersonagem = () => {
         const personagemApi = await buscarPersonagem(fichaId);
         if (!cancelado && personagemApi) {
           ignorarProximoSalvamentoRef.current = true;
-          setPersonagem(personagemApi);
+          setPersonagem((atual) => mesclarPassivosPorRevisao(personagemApi, atual));
         }
       } catch (error) {
         const dadosSalvos = lerLocalSeguro(storageKey);
@@ -907,7 +918,8 @@ const FichaPersonagem = () => {
 
       try {
         ignorarProximoSalvamentoRef.current = true;
-        setPersonagem(JSON.parse(event.newValue));
+        const recebido = JSON.parse(event.newValue);
+        setPersonagem((atual) => mesclarPassivosPorRevisao(recebido, atual));
       } catch {
         console.warn("Nao foi possivel ler a ficha atualizada localmente.");
       }
@@ -1271,13 +1283,13 @@ const FichaPersonagem = () => {
   };
 
   const atualizarHabilidadePassiva = (habilidade, valor) => {
-    setPersonagem((prev) => ({
-      ...prev,
-      habilidadesPassivas: {
-        ...prev.habilidadesPassivas,
-        [habilidade]: Math.max(0, Math.min(100, parseInt(valor) || 0)),
-      },
-    }));
+    setPersonagem((prev) => marcarPassivosAtualizados({
+        ...prev,
+        habilidadesPassivas: {
+          ...prev.habilidadesPassivas,
+          [habilidade]: Math.max(0, Math.min(100, parseInt(valor) || 0)),
+        },
+      }));
   };
 
   const iniciarEdicaoHabilidade = (habilidade) => {
@@ -3531,7 +3543,7 @@ const cancelarEdicaoHabilidade = () => {
   };
 
   // Cria uma nova habilidade e adiciona ao array 'marcas'
-  const venderHabilidadeCriada = (habilidade) => {
+  const venderHabilidadeCriada = async (habilidade) => {
     const custo = Math.max(0, parseInt(habilidade.custo, 10) || 0);
     const nomeRecurso =
       habilidade.recurso === "evolucao"
@@ -3541,8 +3553,9 @@ const cancelarEdicaoHabilidade = () => {
           : "Sanidade";
 
     if (
-      !window.confirm(
+      !await confirmarDialogo(
         `Vender "${habilidade.nome}" e recuperar ${custo} de ${nomeRecurso}?`,
+        { titulo: "Vender habilidade", confirmarTexto: "Vender", perigo: true },
       )
     )
       return;
@@ -3593,7 +3606,7 @@ const cancelarEdicaoHabilidade = () => {
     });
   };
 
-  const aceitarMarca = () => {
+  const aceitarMarca = async () => {
     if (!marcaSelecionada) return;
 
     // Pega apenas a habilidade escolhida (se houver)
@@ -3627,9 +3640,20 @@ const cancelarEdicaoHabilidade = () => {
     };
 
     setPersonagem(personagemAtualizado);
-    setMarcaModalAberto(false);
-    setMarcaSelecionada(null);
-    setHabilidadeEscolhidaIndex(null);
+    await alertarDialogo(
+      "Você escolheu o Absoluto, você escolheu a Mim.",
+      {
+        titulo: "O Absoluto",
+        confirmarTexto: "Aceitar",
+      },
+    );
+    setDestinoSaindo(true);
+    window.setTimeout(() => {
+      setMarcaModalAberto(false);
+      setMarcaSelecionada(null);
+      setHabilidadeEscolhidaIndex(null);
+      setDestinoSaindo(false);
+    }, 700);
   };
 
   const bonusDefesa = parseInt(personagem.bonusDefesa, 10) || 0;
@@ -4321,9 +4345,11 @@ const cancelarEdicaoHabilidade = () => {
           {subAbaHabilidade.startsWith("marca-") && subAbaMarcaSelecionada && (
             <section className="marca-detalhes-section">
               <div className="marca-detalhes-card">
+                <img className="marca-detalhes-simbolo" src="/OAbsoluto.webp" alt="" aria-hidden="true" />
                 <div className="marca-detalhes-header">
-                  <span>MARCA</span>
+                  <span>VÍNCULO COM O ABSOLUTO</span>
                   <h2>{subAbaMarcaSelecionada.nome}</h2>
+                  <i>DESTINO ACEITO</i>
                 </div>
 
                 <div className="marca-detalhes-descricao">
@@ -4332,7 +4358,7 @@ const cancelarEdicaoHabilidade = () => {
 
                 <div className="marca-detalhes-grid">
                   <div className="marca-detalhes-beneficios">
-                    <h4>✦ Benefícios</h4>
+                    <h4><span>01</span> Benefícios</h4>
                     <p>
                       {subAbaMarcaSelecionada.beneficios ||
                         "Nenhum benefício listado."}
@@ -4340,7 +4366,7 @@ const cancelarEdicaoHabilidade = () => {
                   </div>
 
                   <div className="marca-detalhes-penalidades">
-                    <h4>✧ Penalidades</h4>
+                    <h4><span>02</span> Penalidades</h4>
                     <p>
                       {subAbaMarcaSelecionada.penalidades ||
                         "Nenhuma penalidade listada."}
@@ -4350,12 +4376,12 @@ const cancelarEdicaoHabilidade = () => {
 
                 {subAbaMarcaSelecionada.habilidades?.length > 0 && (
                   <div className="marca-detalhes-habilidades">
-                    <h4>⚡ Habilidades Adquiridas</h4>
+                    <h4><span>03</span> Manifestação escolhida</h4>
                     <div className="marca-habilidades-lista-detalhes">
                       {subAbaMarcaSelecionada.habilidades.map((hab, idx) => (
                         <div key={idx} className="marca-habilidade-item">
-                          <strong>{hab.nome}</strong>
-                          <p>{hab.descricao}</p>
+                          <b>{String(idx + 1).padStart(2, "0")}</b>
+                          <div><strong>{hab.nome}</strong><p>{hab.descricao}</p></div>
                         </div>
                       ))}
                     </div>
@@ -6672,7 +6698,7 @@ const cancelarEdicaoHabilidade = () => {
     }
 
     if (!arquivo.type.startsWith("image/")) {
-      alert("Escolha um arquivo de imagem válido.");
+      await alertarDialogo("Escolha um arquivo de imagem válido.", { titulo: "Arquivo invalido" });
       event.target.value = "";
       return;
     }
@@ -6684,7 +6710,7 @@ const cancelarEdicaoHabilidade = () => {
         fotoPerfil: fotoComprimida,
       }));
     } catch (error) {
-      alert(error.message || "Nao foi possivel carregar a imagem.");
+      await alertarDialogo(error.message || "Nao foi possivel carregar a imagem.", { titulo: "Falha ao carregar imagem" });
     }
 
     event.target.value = "";
@@ -6812,7 +6838,7 @@ const cancelarEdicaoHabilidade = () => {
                 className="marca-pendente-btn"
                 onClick={() => abrirModalMarca(marcasPendentes[0])}
               >
-                ✦ Nova Marca Disponível
+                ✦ Escolher seu Destino
               </button>
             )}
             {/* Sanidade */}
@@ -6861,22 +6887,6 @@ const cancelarEdicaoHabilidade = () => {
                         className="dado-personagem perfil-info-bloqueada"
                         maxLength={40}
                       />
-                      {/* EXIBIR MARCAS */}
-                      {personagem.marcas && personagem.marcas.length > 0 && (
-                        <div className="marcas-personagem-perfil">
-                          {personagem.marcas.map((marca, index) => (
-                            <span key={index} className="marca-perfil-nome">
-                              {marca.nome}
-                              {!marca.aceita && (
-                                <span className="marca-pendente-tag">
-                                  {" "}
-                                  pendente
-                                </span>
-                              )}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -7131,31 +7141,50 @@ const cancelarEdicaoHabilidade = () => {
           </div>
 
           <div className="sidebar-conteudo">{conteudoAbas[abaAtiva]}</div>
-          {/* MODAL DE MARCA */}
+          {/* CONEXÃO COM O ABSOLUTO */}
           {marcaModalAberto && marcaSelecionada && (
             <div
-              className="marca-modal-overlay"
-              onClick={() => setMarcaModalAberto(false)}
+              className={`marca-conexao ${destinoSaindo ? "saindo" : ""}`}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="marca-conexao-titulo"
             >
-              <div className="marca-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="marca-conexao-simbolo" aria-hidden="true">
+                <img src="/OAbsoluto.webp" alt="" />
+                <span className="marca-conexao-pulso pulso-um" />
+                <span className="marca-conexao-pulso pulso-dois" />
+              </div>
+
+              <header className="marca-conexao-topo">
+                <span>PROTOCOLO DE CONEXÃO</span>
                 <button
-                  className="marca-modal-fechar"
+                  className="marca-conexao-voltar"
                   onClick={() => setMarcaModalAberto(false)}
                 >
-                  ×
+                  ← Retornar à ficha
                 </button>
+              </header>
 
-                <div className="marca-modal-header">
-                  <span>MARCA</span>
-                  <h2>{marcaSelecionada.nome}</h2>
+              <main className="marca-conexao-conteudo">
+                <div className="marca-conexao-chamada">
+                  <span className="marca-conexao-indice">CONEXÃO ESTABELECIDA</span>
+                  <p>O Absoluto reconheceu um caminho para você.</p>
+                  <h1 id="marca-conexao-titulo">ESCOLHA SEU DESTINO</h1>
+                  <div className="marca-conexao-linha"><i /><b>ABSOLUTO</b><i /></div>
+                </div>
+
+                <section className="marca-conexao-marca">
+                  <div className="marca-conexao-identidade">
+                    <span>DESTINO DISPONÍVEL</span>
+                    <h2>{marcaSelecionada.nome}</h2>
+                  </div>
                   <p className="marca-descricao">
                     {marcaSelecionada.descricao}
                   </p>
-                </div>
 
-                <div className="marca-modal-corpo">
+                  <div className="marca-conexao-efeitos">
                   <div className="marca-beneficios">
-                    <h4>✦ Benefícios</h4>
+                      <h3><span>01</span> Benefícios</h3>
                     <p>
                       {marcaSelecionada.beneficios ||
                         "Nenhum benefício listado."}
@@ -7163,16 +7192,20 @@ const cancelarEdicaoHabilidade = () => {
                   </div>
 
                   <div className="marca-penalidades">
-                    <h4>✧ Penalidades</h4>
+                      <h3><span>02</span> Penalidades</h3>
                     <p>
                       {marcaSelecionada.penalidades ||
                         "Nenhuma penalidade listada."}
                     </p>
                   </div>
+                  </div>
 
                   {marcaSelecionada.habilidades?.length > 0 && (
                     <div className="marca-habilidades">
-                      <h4>⚡ Escolha uma habilidade</h4>
+                      <div className="marca-conexao-secao-titulo">
+                        <span>03</span>
+                        <div><h3>Escolha uma habilidade</h3><p>Seu Destino manifestará apenas uma destas formas.</p></div>
+                      </div>
                       <div className="marca-habilidades-lista">
                         {marcaSelecionada.habilidades.map((hab, index) => (
                           <button
@@ -7184,8 +7217,8 @@ const cancelarEdicaoHabilidade = () => {
                             }`}
                             onClick={() => setHabilidadeEscolhidaIndex(index)}
                           >
-                            <strong>{hab.nome}</strong>
-                            <span>{hab.descricao}</span>
+                            <i>{habilidadeEscolhidaIndex === index ? "●" : "○"}</i>
+                            <div><strong>{hab.nome}</strong><span>{hab.descricao}</span></div>
                           </button>
                         ))}
                       </div>
@@ -7197,21 +7230,22 @@ const cancelarEdicaoHabilidade = () => {
                       className="marca-aceitar-btn"
                       onClick={aceitarMarca}
                       disabled={
-                        marcaSelecionada.habilidades?.length > 0 &&
-                        habilidadeEscolhidaIndex === null
+                        destinoSaindo ||
+                        (marcaSelecionada.habilidades?.length > 0 &&
+                          habilidadeEscolhidaIndex === null)
                       }
                     >
-                      Aceitar Marca
+                      Aceitar o Destino
                     </button>
                     <button
                       className="marca-recusar-btn"
                       onClick={() => setMarcaModalAberto(false)}
                     >
-                      Recusar
+                      Recusar por enquanto
                     </button>
                   </div>
-                </div>
-              </div>
+                </section>
+              </main>
             </div>
           )}
           {/* MODAL DE ROLAGEM */}

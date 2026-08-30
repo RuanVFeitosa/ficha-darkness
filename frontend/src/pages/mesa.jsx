@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import Icon from "@mdi/react";
+import { confirmarDialogo } from "../components/DialogoGlobal";
 import {
   mdiAccountPlusOutline,
   mdiArrowLeft,
@@ -34,11 +35,14 @@ import {
   mdiRotateRight,
   mdiShieldCrownOutline,
   mdiSwordCross,
+  mdiStoreOutline,
+  mdiViewDashboardOutline,
   mdiUploadOutline,
 } from "@mdi/js";
 import {
   ativarCena,
   atualizarEstadoMusica,
+  atualizarEstadoSoundpad,
   atualizarInimigoCampanha,
   atualizarModoCampanha,
   atualizarModoCombate,
@@ -47,6 +51,7 @@ import {
   buscarCampanhaPorCodigo,
   definirIniciativa,
   definirRotacaoToken,
+  definirTamanhoToken,
   chavePosicaoMapa,
   configurarLanternaToken,
   definirVisibilidadeToken,
@@ -64,6 +69,7 @@ import {
   removerTokenDoMapa,
   salvarCena,
   salvarDocumentoInvestigacao,
+  salvarEvidenciaInterativa,
   validarArquivoImagem,
   validarArquivoInvestigacao,
   vincularFicha,
@@ -79,6 +85,7 @@ import { listarHabilidadesSelecionadas } from "../data/Classes/arvoresHabilidade
 import { condicoes } from "../components/data/condicoes";
 import AnotacoesCampanha from "../components/AnotacoesCampanha";
 import MusicaTabletop from "../components/MusicaTabletop";
+import SoundpadTabletop from "../components/SoundpadTabletop";
 import MapLightingLayer, {
   pontoVisivelPorLuz,
 } from "../components/MapLightingLayer";
@@ -87,15 +94,28 @@ import "../CSS/Mesa.css";
 const cenaVazia = {
   nome: "",
   descricao: "",
+  pasta: "Sem pasta",
   imagemUrl: "",
   mapaUrl: "",
   imagensCena: [],
   mapasBatalha: [],
+  cenaEspecial: null,
   larguraGrade: 12,
   alturaGrade: 8,
+  lojaDisponivel: false,
 };
 const idMidiaLocal = (tipo = "midia") =>
   `${tipo}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const extrairYoutubeId = (valor) => {
+  try {
+    const url = new URL(String(valor || "").trim());
+    if (url.hostname.includes("youtu.be")) return url.pathname.slice(1).split("/")[0];
+    if (url.pathname.startsWith("/shorts/") || url.pathname.startsWith("/embed/")) return url.pathname.split("/")[2];
+    return url.searchParams.get("v") || "";
+  } catch {
+    return String(valor || "").match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/)?.[1] || "";
+  }
+};
 const midiasDaCena = (cena, tipo) =>
   tipo === "mapa" ? cena?.mapasBatalha || [] : cena?.imagensCena || [];
 const urlCena = (cena, tipo, midiaId = null) => {
@@ -362,11 +382,15 @@ const Mesa = () => {
   const [midiasRecolhidas, setMidiasRecolhidas] = useState(true);
   const [anotacoesAbertas, setAnotacoesAbertas] = useState(false);
   const [musicaAberta, setMusicaAberta] = useState(false);
+  const [soundpadAberto, setSoundpadAberto] = useState(false);
+  const [aplicativoMesaAberto, setAplicativoMesaAberto] = useState(null);
   const [editorAberto, setEditorAberto] = useState(false);
   const [editando, setEditando] = useState(cenaVazia);
-  const [arquivos, setArquivos] = useState({ cena: [], mapa: [] });
+  const [arquivos, setArquivos] = useState({ cena: [], mapa: [], especial: [], audio: [] });
   const [salvando, setSalvando] = useState(false);
   const [transicao, setTransicao] = useState(false);
+  const audioCenaEspecialRef = useRef(null);
+  const [audioEspecialPronto, setAudioEspecialPronto] = useState(false);
   const [fichasDisponiveis, setFichasDisponiveis] = useState([]);
   const [erroFichas, setErroFichas] = useState("");
   const [fichaParaVincular, setFichaParaVincular] = useState("");
@@ -405,6 +429,7 @@ const Mesa = () => {
   const [salvandoInvestigacao, setSalvandoInvestigacao] = useState(false);
   const [iniciativasRascunho, setIniciativasRascunho] = useState({});
   const [documentoAberto, setDocumentoAberto] = useState(null);
+  const [abaEvidenciaInterativa, setAbaEvidenciaInterativa] = useState("terminal");
   const [visibilidadeDocumentoEditando, setVisibilidadeDocumentoEditando] = useState(null);
   const [salvandoVisibilidadeDocumento, setSalvandoVisibilidadeDocumento] = useState(false);
   const [enviandoDocumento, setEnviandoDocumento] = useState(false);
@@ -413,6 +438,7 @@ const Mesa = () => {
     nome: "",
     descricao: "",
     categoria: "evidencia",
+    modeloInterativo: "msdos",
     arquivo: null,
     visualizarTodos: true,
     jogadoresVisiveis: [],
@@ -425,6 +451,13 @@ const Mesa = () => {
       localStorage.getItem("fichaRPG_ultimaFicha") ||
       "",
   );
+  useEffect(() => {
+    if (
+      !mestre &&
+      aplicativoMesaAberto === "loja" &&
+      !campanha?.cenaAtiva?.lojaDisponivel
+    ) setAplicativoMesaAberto(null);
+  }, [aplicativoMesaAberto, campanha?.cenaAtiva?.lojaDisponivel, mestre]);
   const modoIniciativaAtivo = Boolean(
     campanha?.combateAtivo || campanha?.investigacaoAtiva,
   );
@@ -437,6 +470,14 @@ const Mesa = () => {
       ? "investigacao"
       : "normal";
   const documentosDisponiveis = campanha?.documentosInvestigacao || [];
+  const nomeDocumentoExibicao = (documento) => {
+    const computadorModerno = String(
+      documento?.mimeType || documento?.mime_type || "",
+    ).includes("modern-pc");
+    if (computadorModerno && (!documento?.nome || documento.nome === "Terminal MS-DOS"))
+      return "Computador moderno";
+    return documento?.nome || (computadorModerno ? "Computador moderno" : "Documento");
+  };
   const documentoVisivelParaFicha = useCallback(
     (documento, fichaId = fichaJogadorId) => {
       if (!documento) return false;
@@ -451,8 +492,9 @@ const Mesa = () => {
   const documentosVisiveisJogador = documentosDisponiveis.filter((documento) =>
     documentoVisivelParaFicha(documento),
   );
-  const mostrarDocumentosJogador =
-    Boolean(campanha?.investigacaoAtiva) || documentosVisiveisJogador.length > 0;
+  // Documentos compartilhados pertencem a campanha, nao ao estado temporario
+  // da investigacao. A aba deve continuar acessivel antes e depois desse modo.
+  const mostrarDocumentosJogador = true;
 
   useEffect(() => {
     if (mestre || !documentoAberto) return;
@@ -656,6 +698,22 @@ const Mesa = () => {
     };
   }, [campanha?.cenaAtiva, campanha?.midiaAtivaId, campanha?.modo]);
   useEffect(() => {
+    setAudioEspecialPronto(false);
+    if (campanha?.modo !== "especial" || !campanha?.cenaAtiva?.cenaEspecial?.audioUrl) return undefined;
+    const timer = setTimeout(() => setAudioEspecialPronto(true), Math.max(0, Number(campanha.cenaAtiva.cenaEspecial.atrasoAudio) || 0));
+    return () => {
+      clearTimeout(timer);
+      setAudioEspecialPronto(false);
+    };
+  }, [campanha?.cenaAtiva?.id, campanha?.cenaAtiva?.cenaEspecial, campanha?.modo]);
+  useEffect(() => {
+    const audio = audioCenaEspecialRef.current;
+    if (!audio || !audioEspecialPronto) return undefined;
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+    return () => { audio.pause(); audio.currentTime = 0; };
+  }, [audioEspecialPronto]);
+  useEffect(() => {
     if (campanha?.modo !== "mapa") return undefined;
     const url = urlCena(campanha?.cenaAtiva, "mapa", campanha?.midiaAtivaId);
     if (!url) return undefined;
@@ -792,7 +850,7 @@ const Mesa = () => {
   };
 
   const removerFicha = async (fichaId) => {
-    if (!window.confirm("Remover esta ficha da mesa e apagar seu token?"))
+    if (!await confirmarDialogo("Remover esta ficha da mesa e apagar seu token?", { titulo: "Remover ficha", confirmarTexto: "Remover", perigo: true }))
       return;
     await desvincularFicha(campanha.id, fichaId);
     setFichaAberta(null);
@@ -809,8 +867,9 @@ const Mesa = () => {
   };
   const removerInimigo = async (inimigo) => {
     if (
-      !window.confirm(
+      !await confirmarDialogo(
         `Remover ${inimigo.nome || "este inimigo"} desta campanha?`,
+        { titulo: "Remover inimigo", confirmarTexto: "Remover", perigo: true },
       )
     )
       return;
@@ -1015,25 +1074,42 @@ const Mesa = () => {
 
   const enviarDocumentoParaInvestigacao = async (event) => {
     event.preventDefault();
-    if (!mestre || !campanha?.id || !novoDocumento.arquivo || enviandoDocumento) return;
+    const evidenciaInterativa = novoDocumento.categoria === "interativa";
+    if (
+      !mestre ||
+      !campanha?.id ||
+      (!evidenciaInterativa && !novoDocumento.arquivo) ||
+      enviandoDocumento
+    )
+      return;
     setEnviandoDocumento(true);
     setEstadoEnvioDocumento("Enviando arquivo...");
     setErro("");
     try {
-      validarArquivoInvestigacao(novoDocumento.arquivo);
-      const salvo = await salvarDocumentoInvestigacao(
-        campanha.id,
-        novoDocumento.arquivo,
-        {
-          nome: novoDocumento.nome || novoDocumento.arquivo.name.replace(/\.[^.]+$/, ""),
+      if (!evidenciaInterativa) validarArquivoInvestigacao(novoDocumento.arquivo);
+      const metadadosDocumento = {
+          nome:
+            novoDocumento.nome ||
+            (evidenciaInterativa
+              ? novoDocumento.modeloInterativo === "modern-pc"
+                ? "Computador moderno"
+                : "Terminal MS-DOS"
+              : novoDocumento.arquivo.name.replace(/\.[^.]+$/, "")),
           descricao: novoDocumento.descricao,
           categoria: novoDocumento.categoria,
+          modeloInterativo: novoDocumento.modeloInterativo || "msdos",
           visualizarTodos: novoDocumento.visualizarTodos,
           jogadoresVisiveis: novoDocumento.visualizarTodos
             ? []
             : novoDocumento.jogadoresVisiveis,
-        },
-      );
+        };
+      const salvo = evidenciaInterativa
+        ? await salvarEvidenciaInterativa(campanha.id, metadadosDocumento)
+        : await salvarDocumentoInvestigacao(
+            campanha.id,
+            novoDocumento.arquivo,
+            metadadosDocumento,
+          );
       setCampanha((atual) => ({
         ...atual,
         documentosInvestigacao: [
@@ -1045,6 +1121,7 @@ const Mesa = () => {
         nome: "",
         descricao: "",
         categoria: "evidencia",
+        modeloInterativo: "msdos",
         arquivo: null,
         visualizarTodos: true,
         jogadoresVisiveis: [],
@@ -1062,7 +1139,7 @@ const Mesa = () => {
 
   const removerDocumentoDaInvestigacao = async (documento) => {
     if (!mestre || !campanha?.id || !documento?.id) return;
-    if (!window.confirm(`Remover "${documento.nome || "este documento"}" do visualizador?`)) return;
+    if (!await confirmarDialogo(`Remover "${documento.nome || "este documento"}" do visualizador?`, { titulo: "Remover documento", confirmarTexto: "Remover", perigo: true })) return;
     try {
       await excluirDocumentoInvestigacao(campanha.id, documento);
       setCampanha((atual) => ({
@@ -1253,6 +1330,7 @@ const Mesa = () => {
           nome: midia.nome || `Mapa ${indice + 1}`,
           larguraGrade: Number(midia.larguraGrade || larguraGrade),
           alturaGrade: Number(midia.alturaGrade || alturaGrade),
+          exibirGrade: midia.exibirGrade !== false,
         }))
       : [];
     setEditando(
@@ -1263,12 +1341,13 @@ const Mesa = () => {
             mapaUrl: urlCena(cena, "mapa"),
             imagensCena,
             mapasBatalha,
+            cenaEspecial: cena.cenaEspecial || null,
             larguraGrade,
             alturaGrade,
           }
         : { ...cenaVazia, imagensCena: [], mapasBatalha: [] },
     );
-    setArquivos({ cena: [], mapa: [] });
+    setArquivos({ cena: [], mapa: [], especial: [], audio: [] });
     setEditorAberto(true);
   };
 
@@ -1277,7 +1356,7 @@ const Mesa = () => {
     setSalvando(true);
     setErro("");
     try {
-      const [novasImagens, novosMapas] = await Promise.all([
+      const [novasImagens, novosMapas, midiaEspecialUrl, audioEspecialUrl] = await Promise.all([
         Promise.all(
           arquivos.cena.map(async (item) => ({
             id: item.id,
@@ -1296,6 +1375,8 @@ const Mesa = () => {
             alturaGrade: Number(item.alturaGrade || editando.alturaGrade || 8),
           })),
         ),
+        arquivos.especial[0] ? enviarImagemCena(campanha.id, arquivos.especial[0].arquivo, "especial") : null,
+        arquivos.audio[0] ? enviarImagemCena(campanha.id, arquivos.audio[0].arquivo, "audio") : null,
       ]);
       let imagensCena = [...(editando.imagensCena || []), ...novasImagens];
       let mapasBatalha = [...(editando.mapasBatalha || []), ...novosMapas];
@@ -1327,6 +1408,13 @@ const Mesa = () => {
         mapas_batalha: mapasBatalha,
         imagemUrl: imagensCena[0]?.url || "",
         mapaUrl: mapasBatalha[0]?.url || "",
+        cenaEspecial: editando.cenaEspecial?.ativo ? {
+          ...editando.cenaEspecial,
+          midiaUrl: midiaEspecialUrl || editando.cenaEspecial.midiaUrl || "",
+          audioUrl: audioEspecialUrl || editando.cenaEspecial.audioUrl || "",
+          tipoMidia: arquivos.especial[0]?.arquivo?.type?.startsWith("video/") ? "video" : (editando.cenaEspecial.tipoMidia || "imagem"),
+          atrasoAudio: Math.max(0, Number(editando.cenaEspecial.atrasoAudio) || 0),
+        } : null,
       });
       await carregar();
       setEditorAberto(false);
@@ -1346,7 +1434,7 @@ const Mesa = () => {
       setArquivos((atuais) => ({
         ...atuais,
         [tipo]: [
-          ...atuais[tipo],
+          ...(tipo === "especial" || tipo === "audio" ? [] : atuais[tipo]),
           ...selecionados.map((arquivo) => ({
             id: idMidiaLocal(tipo),
             nome: arquivo.name.replace(/\.[^.]+$/, ""),
@@ -1355,6 +1443,7 @@ const Mesa = () => {
               ? {
                   larguraGrade: Number(editando.larguraGrade || 12),
                   alturaGrade: Number(editando.alturaGrade || 8),
+                  exibirGrade: true,
                 }
               : {}),
           })),
@@ -1395,7 +1484,7 @@ const Mesa = () => {
     }));
 
   const removerCena = async (cena) => {
-    if (!window.confirm(`Excluir "${cena.nome}" da biblioteca?`)) return;
+    if (!await confirmarDialogo(`Excluir "${cena.nome}" da biblioteca?`, { titulo: "Excluir cena", confirmarTexto: "Excluir", perigo: true })) return;
     await excluirCena(campanha.id, cena.id);
     await carregar();
   };
@@ -1422,6 +1511,7 @@ const Mesa = () => {
   const estadoTokenNoMapa = (token, chave = mapaChaveAtual) => ({
     ...(token?.posicoes?.[chave] || {}),
     ...(token?.posicoes?.[`__estado:${chave}`] || {}),
+    ...(token?.posicoes?.["__estado:global"] || {}),
   });
 
   const atualizarEstadoLocalToken = (tokenId, mudanca) => {
@@ -1575,6 +1665,24 @@ const Mesa = () => {
     }
   };
 
+  const alterarTamanhoToken = async (token, tamanhoSolicitado) => {
+    if (
+      !token ||
+      (!mestre && String(token.ficha_id) !== String(fichaJogadorId))
+    ) return;
+    const tamanho = Math.max(
+      0.5,
+      Math.min(3, Number(Number(tamanhoSolicitado).toFixed(2)) || 1),
+    );
+    atualizarEstadoLocalToken(token.id, { tamanho });
+    try {
+      await definirTamanhoToken(token.id, tamanho, mapaChaveAtual);
+    } catch (error) {
+      setErro(error.message || "Nao foi possivel salvar o tamanho do token.");
+      await carregar();
+    }
+  };
+
   const atualizarLanternaToken = async (token, mudanca) => {
     if (
       !token ||
@@ -1618,8 +1726,9 @@ const Mesa = () => {
   const removerTokenAtualDoMapa = async (token) => {
     if (!mestre || !token) return;
     if (
-      !window.confirm(
-        `Remover o token de ${token.nome || "este personagem"} deste mapa?`,
+      !await confirmarDialogo(
+        `Remover o token de ${token.nome || "este personagem"} de todos os mapas? Ele so voltara quando for colocado novamente.`,
+        { titulo: "Remover token", confirmarTexto: "Remover", perigo: true },
       )
     )
       return;
@@ -1627,13 +1736,25 @@ const Mesa = () => {
     setCampanha((atual) => ({
       ...atual,
       tokens: atual.tokens.map((item) =>
-        item.id === token.id ? { ...item, removido: true } : item,
+        item.id === token.id
+          ? {
+              ...item,
+              removido: true,
+              posicoes: {
+                ...(item.posicoes || {}),
+                "__estado:global": {
+                  ...(item.posicoes?.["__estado:global"] || {}),
+                  removido: true,
+                },
+              },
+            }
+          : item,
       ),
     }));
     try {
-      await removerTokenDoMapa(token.id, mapaChaveAtual);
+      await removerTokenDoMapa(token.id);
     } catch (error) {
-      setErro(error.message || "Nao foi possivel remover o token deste mapa.");
+      setErro(error.message || "Nao foi possivel remover o token dos mapas.");
       await carregar();
     }
   };
@@ -2165,6 +2286,11 @@ const Mesa = () => {
                 <Icon path={mdiMapOutline} size={0.72} />
               </button>
             )}
+            {item.cenaEspecial?.ativo && item.cenaEspecial?.midiaUrl && (
+              <button onClick={() => apresentar(item, "especial")} title="Exibir cena especial">
+                <Icon path={mdiMusicBoxMultipleOutline} size={0.72} />
+              </button>
+            )}
             <button onClick={() => abrirEditor(item)} title="Editar">
               <Icon path={mdiPencilOutline} size={0.72} />
             </button>
@@ -2244,7 +2370,7 @@ const Mesa = () => {
     >
       <div className={`mesa-transicao ${transicao ? "ativa" : ""}`}>
         <span>
-          {campanha.modo === "mapa" ? "Voltando a cena" : "Preparando o mapa"}
+          {campanha.modo === "especial" ? "Iniciando cena especial" : campanha.modo === "mapa" ? "Preparando o mapa" : "Voltando a cena"}
         </span>
       </div>
       <header className="mesa-topo">
@@ -2265,11 +2391,20 @@ const Mesa = () => {
         {mestre && (
           <div className="mesa-ferramentas-mestre">
             <button
+              className={`mesa-cenas-botao ${aplicativoMesaAberto === "dashboard" ? "ativo" : ""}`}
+              onClick={() => setAplicativoMesaAberto((atual) => atual === "dashboard" ? null : "dashboard")}
+              title="Abrir dashboard dentro do tabletop"
+            >
+              <Icon path={mdiViewDashboardOutline} size={0.78} />
+              Dashboard
+            </button>
+            <button
               className={`mesa-cenas-botao ${bibliotecaAberta ? "ativo" : ""}`}
               onClick={() => {
                 setBibliotecaAberta((valor) => !valor);
                 setAnotacoesAbertas(false);
                 setMusicaAberta(false);
+                setSoundpadAberto(false);
               }}
             >
               <Icon path={mdiImageOutline} size={0.78} />
@@ -2281,6 +2416,7 @@ const Mesa = () => {
                 setAnotacoesAbertas((valor) => !valor);
                 setBibliotecaAberta(false);
                 setMusicaAberta(false);
+                setSoundpadAberto(false);
               }}
             >
               <Icon path={mdiNotebookEditOutline} size={0.78} />
@@ -2292,10 +2428,23 @@ const Mesa = () => {
                 setMusicaAberta((valor) => !valor);
                 setBibliotecaAberta(false);
                 setAnotacoesAbertas(false);
+                setSoundpadAberto(false);
               }}
             >
               <Icon path={mdiMusicBoxMultipleOutline} size={0.78} />
               Musica
+            </button>
+            <button
+              className={`mesa-cenas-botao ${soundpadAberto ? "ativo" : ""}`}
+              onClick={() => {
+                setSoundpadAberto((valor) => !valor);
+                setMusicaAberta(false);
+                setBibliotecaAberta(false);
+                setAnotacoesAbertas(false);
+              }}
+            >
+              <Icon path={mdiMusicBoxMultipleOutline} size={0.78} />
+              Soundpad
             </button>
             <button
               className={`mesa-cenas-botao mesa-combate-botao ${campanha.combateAtivo ? "ativo" : ""}`}
@@ -2359,6 +2508,18 @@ const Mesa = () => {
                 <Icon path={mdiMapOutline} size={0.82} />
               </button>
             </div>
+          </div>
+        )}
+        {!mestre && campanha.cenaAtiva?.lojaDisponivel && (
+          <div className="mesa-ferramentas-jogador">
+            <button
+              className={`mesa-cenas-botao ${aplicativoMesaAberto === "loja" ? "ativo" : ""}`}
+              onClick={() => setAplicativoMesaAberto((atual) => atual === "loja" ? null : "loja")}
+              title="Abrir loja desta cena"
+            >
+              <Icon path={mdiStoreOutline} size={0.78} />
+              Loja
+            </button>
           </div>
         )}
         <button className="mesa-atualizar" onClick={carregar} title="Atualizar">
@@ -2474,6 +2635,39 @@ const Mesa = () => {
           />
         </aside>
       )}
+      {mestre && (
+        <aside className={`mesa-soundpad-painel ${soundpadAberto ? "aberto" : "fechado"}`} aria-hidden={!soundpadAberto}>
+          <header><div><span>Efeitos rapidos</span><strong>Soundpad da campanha</strong></div><button onClick={() => setSoundpadAberto(false)} title="Fechar soundpad"><Icon path={mdiClose} size={0.85} /></button></header>
+          <SoundpadTabletop sons={campanha.soundpad || []} estadoRemoto={campanha.soundpadEstado} aoAlterarEstado={(estado) => atualizarEstadoSoundpad(campanha.id, estado)} />
+        </aside>
+      )}
+      {!mestre && campanha.soundpad?.length > 0 && (
+        <SoundpadTabletop sons={campanha.soundpad} estadoRemoto={campanha.soundpadEstado} controlavel={false} />
+      )}
+
+      {campanha.modo === "especial" && cena.cenaEspecial?.midiaUrl && (
+        <section className={`cena-especial cena-especial-${cena.cenaEspecial.transicao || "cinema"}`} aria-label={`Cena especial: ${cena.nome}`}>
+          {cena.cenaEspecial.tipoMidia === "video" ? (
+            <video src={cena.cenaEspecial.midiaUrl} autoPlay loop={cena.cenaEspecial.loop !== false} muted playsInline />
+          ) : (
+            <img src={cena.cenaEspecial.midiaUrl} alt={cena.nome} />
+          )}
+          <div className="cena-especial-vinheta" />
+          {cena.cenaEspecial.exibirTitulo !== false && (
+            <div className="cena-especial-titulo"><span>{cena.descricao}</span><strong>{cena.nome}</strong></div>
+          )}
+          {audioEspecialPronto && extrairYoutubeId(cena.cenaEspecial.audioUrl) ? (
+            <iframe
+              className="cena-especial-youtube"
+              title="Musica da cena especial"
+              src={`https://www.youtube.com/embed/${extrairYoutubeId(cena.cenaEspecial.audioUrl)}?autoplay=1&controls=0&loop=${cena.cenaEspecial.loopAudio !== false ? 1 : 0}&playlist=${extrairYoutubeId(cena.cenaEspecial.audioUrl)}&playsinline=1&rel=0`}
+              allow="autoplay; encrypted-media"
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          ) : audioEspecialPronto && cena.cenaEspecial.audioUrl ? <audio ref={audioCenaEspecialRef} src={cena.cenaEspecial.audioUrl} loop={cena.cenaEspecial.loopAudio !== false} autoPlay preload="auto" /> : null}
+          {mestre && <button className="cena-especial-sair" onClick={() => trocarModo("cena")}><Icon path={mdiClose} size={0.8} />Encerrar</button>}
+        </section>
+      )}
 
       <section className={`mesa-palco modo-${campanha.modo}`}>
         <div
@@ -2532,7 +2726,7 @@ const Mesa = () => {
           }}
           onPointerLeave={(event) => tokenArrastando && soltarToken(event)}
         >
-          {campanha.modo === "mapa" && (
+          {campanha.modo === "mapa" && mapaAtualIluminacao?.exibirGrade !== false && (
             <div
               className="mesa-grade"
               style={{ backgroundSize: `${100 / colunas}% ${100 / linhas}%` }}
@@ -2567,6 +2761,7 @@ const Mesa = () => {
                       style={{
                         left: `${tokenVisual.x}%`,
                         top: `${tokenVisual.y}%`,
+                        width: `${46 * (Number(tokenVisual.tamanho) || 1)}px`,
                         rotate: `${Number(tokenVisual.rotacao) || 0}rad`,
                         ...(mestre && tokenVisual.oculto
                           ? {
@@ -2584,7 +2779,10 @@ const Mesa = () => {
                             : tokenVisual.nome
                       }
                       onContextMenu={(event) => {
-                        if (!mestre) return;
+                        if (
+                          !mestre &&
+                          String(tokenVisual.ficha_id) !== String(fichaJogadorId)
+                        ) return;
                         event.preventDefault();
                         event.stopPropagation();
                         setMenuTokenAberto((atual) =>
@@ -2627,7 +2825,7 @@ const Mesa = () => {
                         style={{
                           left: `${tokenVisual.x}%`,
                           top: `${tokenVisual.y}%`,
-                          transform: `translate(calc(-50% + ${Math.cos(Number(tokenVisual.rotacao) || 0) * 34}px), calc(-50% + ${Math.sin(Number(tokenVisual.rotacao) || 0) * 34}px))`,
+                          transform: `translate(calc(-50% + ${Math.cos(Number(tokenVisual.rotacao) || 0) * (23 * (Number(tokenVisual.tamanho) || 1) + 11)}px), calc(-50% + ${Math.sin(Number(tokenVisual.rotacao) || 0) * (23 * (Number(tokenVisual.tamanho) || 1) + 11)}px))`,
                         }}
                         title={`Girar ${tokenVisual.nome}`}
                         aria-label={`Girar ${tokenVisual.nome}`}
@@ -2684,7 +2882,7 @@ const Mesa = () => {
                           />
                         </button>
                       )}
-                    {mestre && menuTokenAberto === token.id && (
+                    {(mestre || String(tokenVisual.ficha_id) === String(fichaJogadorId)) && menuTokenAberto === token.id && (
                       <div
                         role="menu"
                         aria-label={`Opcoes do token ${tokenVisual.nome || "token"}`}
@@ -2709,6 +2907,7 @@ const Mesa = () => {
                         <button
                           type="button"
                           role="menuitem"
+                          hidden={!mestre}
                           onClick={() => alternarVisibilidadeToken(tokenVisual)}
                           style={{
                             padding: "8px 10px",
@@ -2724,9 +2923,18 @@ const Mesa = () => {
                             ? "Mostrar token"
                             : "Ocultar token"}
                         </button>
+                        <div className="mesa-token-tamanho-controles">
+                          <span>Tamanho <b>{Math.round((Number(tokenVisual.tamanho) || 1) * 100)}%</b></span>
+                          <div>
+                            <button type="button" onClick={() => alterarTamanhoToken(tokenVisual, (Number(tokenVisual.tamanho) || 1) - 0.25)} disabled={(Number(tokenVisual.tamanho) || 1) <= 0.5} title="Diminuir token">−</button>
+                            <button type="button" onClick={() => alterarTamanhoToken(tokenVisual, 1)} title="Restaurar tamanho">1:1</button>
+                            <button type="button" onClick={() => alterarTamanhoToken(tokenVisual, (Number(tokenVisual.tamanho) || 1) + 0.25)} disabled={(Number(tokenVisual.tamanho) || 1) >= 3} title="Aumentar token">+</button>
+                          </div>
+                        </div>
                         <button
                           type="button"
                           role="menuitem"
+                          hidden={!mestre}
                           onClick={() =>
                             atualizarLanternaToken(tokenVisual, {
                               ativa: !tokenVisual.lanterna?.ativa,
@@ -2750,7 +2958,7 @@ const Mesa = () => {
                             ? "Apagar lanterna"
                             : "Acender lanterna"}
                         </button>
-                        {tokenVisual.lanterna?.ativa && (
+                        {mestre && tokenVisual.lanterna?.ativa && (
                           <div className="mesa-token-lanterna-controles">
                             <label className="mesa-token-lanterna-alcance">
                               <span>
@@ -2793,6 +3001,7 @@ const Mesa = () => {
                         <button
                           type="button"
                           role="menuitem"
+                          hidden={!mestre}
                           onClick={() => removerTokenAtualDoMapa(tokenVisual)}
                           style={{
                             padding: "8px 10px",
@@ -3061,6 +3270,7 @@ const Mesa = () => {
               >
                 <option value="evidencia">Evidencia</option>
                 <option value="item">Item</option>
+                <option value="interativa">Evidencia interativa</option>
               </select>
               <input
                 type="text"
@@ -3144,7 +3354,17 @@ const Mesa = () => {
                 </div>
               )}
             </div>
-            <div className="documentos-envio-acoes">
+            <div className={`documentos-envio-acoes ${novoDocumento.categoria === "interativa" ? "interativa" : ""}`}>
+              {novoDocumento.categoria === "interativa" ? (
+                <div className="evidencia-interativa-modelos">
+                  <button type="button" className={novoDocumento.modeloInterativo === "msdos" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "msdos" }))}>
+                    <b>C:\&gt;</b><span><strong>MS-DOS 6.13</strong><small>Terminal classico</small></span>
+                  </button>
+                  <button type="button" className={novoDocumento.modeloInterativo === "modern-pc" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "modern-pc" }))}>
+                    <b>PC</b><span><strong>Computador moderno</strong><small>Internet, mensagens e arquivos</small></span>
+                  </button>
+                </div>
+              ) : (
               <label className={`documento-arquivo-seletor ${novoDocumento.arquivo ? "selecionado" : ""}`}>
                 <Icon path={mdiFileDocumentMultipleOutline} size={0.68} />
                 <span>{novoDocumento.arquivo?.name || "Selecionar arquivo"}</span>
@@ -3172,17 +3392,22 @@ const Mesa = () => {
                   }}
                 />
               </label>
+              )}
               <button
                 type="submit"
                 disabled={
-                  !novoDocumento.arquivo ||
+                  (novoDocumento.categoria !== "interativa" && !novoDocumento.arquivo) ||
                   enviandoDocumento ||
                   (!novoDocumento.visualizarTodos &&
                     !(novoDocumento.jogadoresVisiveis || []).length)
                 }
               >
                 <Icon path={mdiUploadOutline} size={0.68} />
-                {enviandoDocumento ? "Enviando..." : "Enviar aos jogadores"}
+                {enviandoDocumento
+                  ? "Enviando..."
+                  : novoDocumento.categoria === "interativa"
+                    ? "Disponibilizar sistema"
+                    : "Enviar aos jogadores"}
               </button>
             </div>
             {estadoEnvioDocumento && (
@@ -3214,18 +3439,23 @@ const Mesa = () => {
                     <button
                       type="button"
                       className="documento-card-abrir"
-                      onClick={() => setDocumentoAberto(documento)}
+                      onClick={() => {
+                        setAbaEvidenciaInterativa("terminal");
+                        setDocumentoAberto(documento);
+                      }}
                     >
                       <div className="documento-card-preview">
-                        {String(documento.mimeType || documento.mime_type || "").startsWith("image/") ? (
+                        {documento.categoria === "interativa" ? (
+                          <span>{String(documento.mimeType || documento.mime_type).includes("modern-pc") ? "PC" : "DOS"}</span>
+                        ) : String(documento.mimeType || documento.mime_type || "").startsWith("image/") ? (
                           <img src={documento.url} alt="" />
                         ) : (
                           <span>PDF</span>
                         )}
                       </div>
                       <div>
-                        <small>{documento.categoria === "item" ? "Item" : "Evidencia"}</small>
-                        <strong>{documento.nome}</strong>
+                        <small>{documento.categoria === "interativa" ? "Evidencia interativa" : documento.categoria === "item" ? "Item" : "Evidencia"}</small>
+                        <strong>{nomeDocumentoExibicao(documento)}</strong>
                         <p>{documento.descricao || documento.arquivoNome || documento.arquivo_nome || "Clique para visualizar"}</p>
                         <em className="documento-visibilidade-resumo">
                           {nomesVisibilidadeDocumento(documento)}
@@ -3357,18 +3587,23 @@ const Mesa = () => {
                   <button
                     type="button"
                     className="documento-card-abrir"
-                    onClick={() => setDocumentoAberto(documento)}
+                    onClick={() => {
+                      setAbaEvidenciaInterativa("terminal");
+                      setDocumentoAberto(documento);
+                    }}
                   >
                     <div className="documento-card-preview">
-                      {String(documento.mimeType || documento.mime_type || "").startsWith("image/") ? (
+                      {documento.categoria === "interativa" ? (
+                        <span>{String(documento.mimeType || documento.mime_type).includes("modern-pc") ? "PC" : "DOS"}</span>
+                      ) : String(documento.mimeType || documento.mime_type || "").startsWith("image/") ? (
                         <img src={documento.url} alt="" />
                       ) : (
                         <span>PDF</span>
                       )}
                     </div>
                     <div>
-                      <small>{documento.categoria === "item" ? "Item" : "Evidencia"}</small>
-                      <strong>{documento.nome}</strong>
+                      <small>{documento.categoria === "interativa" ? "Evidencia interativa" : documento.categoria === "item" ? "Item" : "Evidencia"}</small>
+                      <strong>{nomeDocumentoExibicao(documento)}</strong>
                       <p>{documento.descricao || "Clique para examinar"}</p>
                     </div>
                   </button>
@@ -4018,15 +4253,33 @@ const Mesa = () => {
       {documentoAberto && (
         <div className="documento-visualizador-fundo">
           <section
-            className="documento-visualizador"
+            className={`documento-visualizador ${documentoAberto.categoria === "interativa" ? "interativo" : ""}`}
             role="dialog"
-            aria-label={`Visualizador de ${documentoAberto.nome || "documento"}`}
+            aria-label={`Visualizador de ${nomeDocumentoExibicao(documentoAberto)}`}
           >
             <header>
               <div>
-                <small>{documentoAberto.categoria === "item" ? "Item" : "Evidencia"}</small>
-                <strong>{documentoAberto.nome}</strong>
+                <small>{documentoAberto.categoria === "interativa" ? "Evidencia interativa" : documentoAberto.categoria === "item" ? "Item" : "Evidencia"}</small>
+                <strong>{nomeDocumentoExibicao(documentoAberto)}</strong>
               </div>
+              {mestre && documentoAberto.categoria === "interativa" && (
+                <nav className="evidencia-interativa-abas" aria-label="Visualizacao da evidencia interativa">
+                  <button
+                    type="button"
+                    className={abaEvidenciaInterativa === "terminal" ? "ativo" : ""}
+                    onClick={() => setAbaEvidenciaInterativa("terminal")}
+                  >
+                    {String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc") ? "Computador" : "Terminal"}
+                  </button>
+                  <button
+                    type="button"
+                    className={abaEvidenciaInterativa === "conteudo" ? "ativo" : ""}
+                    onClick={() => setAbaEvidenciaInterativa("conteudo")}
+                  >
+                    Conteudo
+                  </button>
+                </nav>
+              )}
               <button
                 type="button"
                 onClick={() => setDocumentoAberto(null)}
@@ -4036,7 +4289,49 @@ const Mesa = () => {
               </button>
             </header>
             <div className="documento-visualizador-conteudo">
-              {String(documentoAberto.mimeType || documentoAberto.mime_type || "").startsWith("image/") ? (
+              {documentoAberto.categoria === "interativa" ? (
+                <iframe
+                  className="evidencia-interativa-frame"
+                  title={documentoAberto.nome || "Computador interativo"}
+                  src={
+                    String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc")
+                      ? `/interactive/modern-pc/index.html${mestre && abaEvidenciaInterativa === "conteudo" ? "?admin=1" : ""}`
+                      : mestre && abaEvidenciaInterativa === "conteudo"
+                        ? "/interactive/ms-dos/index.html#/admin-secreto-123"
+                        : documentoAberto.url || "/interactive/ms-dos/index.html"
+                  }
+                  onLoad={(event) => {
+                    if (
+                      !mestre ||
+                      abaEvidenciaInterativa !== "conteudo"
+                    )
+                      return;
+                    try {
+                      const documentoFrame = event.currentTarget.contentDocument;
+                      if (documentoFrame?.documentElement) {
+                        documentoFrame.documentElement.style.setProperty("height", "100%", "important");
+                        documentoFrame.documentElement.style.setProperty("overflow", "hidden", "important");
+                      }
+                      if (documentoFrame?.body) {
+                        documentoFrame.body.style.setProperty("height", "100%", "important");
+                        documentoFrame.body.style.setProperty("min-height", "0", "important");
+                        documentoFrame.body.style.setProperty("overflow", "hidden", "important");
+                      }
+                      const appFrame = documentoFrame?.getElementById("app");
+                      if (appFrame) {
+                        appFrame.style.setProperty("height", "100%", "important");
+                        appFrame.style.setProperty("min-height", "0", "important");
+                        appFrame.style.setProperty("overflow-x", "hidden", "important");
+                        appFrame.style.setProperty("overflow-y", "auto", "important");
+                        appFrame.style.setProperty("overscroll-behavior", "contain", "important");
+                      }
+                    } catch (error) {
+                      console.warn("Nao foi possivel liberar a rolagem do painel MS-DOS.", error);
+                    }
+                  }}
+                  allow="autoplay"
+                />
+              ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "").startsWith("image/") ? (
                 <img src={documentoAberto.url} alt={documentoAberto.nome || "Evidencia"} />
               ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "") === "application/pdf" ? (
                 <iframe
@@ -4058,6 +4353,23 @@ const Mesa = () => {
             )}
           </section>
         </div>
+      )}
+      {aplicativoMesaAberto && (
+        <section className="mesa-aplicativo-painel" role="dialog" aria-label={aplicativoMesaAberto === "dashboard" ? "Dashboard do mestre" : "Loja da cena"}>
+          <header>
+            <div>
+              <span>{aplicativoMesaAberto === "dashboard" ? "Ferramentas do mestre" : "Disponivel nesta cena"}</span>
+              <strong>{aplicativoMesaAberto === "dashboard" ? "Dashboard" : "Loja"}</strong>
+            </div>
+            <button type="button" onClick={() => setAplicativoMesaAberto(null)} title="Fechar">
+              <Icon path={mdiClose} size={0.82} />
+            </button>
+          </header>
+          <iframe
+            title={aplicativoMesaAberto === "dashboard" ? "Dashboard do mestre" : "Loja"}
+            src={aplicativoMesaAberto === "dashboard" ? "/?mestre=1&embutido=1" : `/?loja=1&senha=${encodeURIComponent(fichaJogadorId)}&embutido=1`}
+          />
+        </section>
       )}
       <footer className="mesa-rodape">
         <div className="mesa-rolagens-titulo">
@@ -4104,16 +4416,24 @@ const Mesa = () => {
                 <Icon path={mdiClose} size={0.85} />
               </button>
             </header>
-            <label>
-              Nome
-              <input
-                required
-                value={editando.nome || ""}
-                onChange={(e) =>
-                  setEditando({ ...editando, nome: e.target.value })
-                }
-              />
-            </label>
+            <div className="cena-editor-linha">
+              <label>
+                Nome
+                <input
+                  required
+                  value={editando.nome || ""}
+                  onChange={(e) => setEditando({ ...editando, nome: e.target.value })}
+                />
+              </label>
+              <label>
+                Pasta
+                <input
+                  value={editando.pasta || "Sem pasta"}
+                  onChange={(e) => setEditando({ ...editando, pasta: e.target.value })}
+                  placeholder="Ex.: Ato II"
+                />
+              </label>
+            </div>
             <label>
               Descricao
               <textarea
@@ -4150,6 +4470,26 @@ const Mesa = () => {
                 <small>Selecione um ou varios mapas.</small>
               </label>
             </div>
+            <section className="cena-editor-especial">
+              <label className="cena-editor-loja">
+                <input
+                  type="checkbox"
+                  checked={Boolean(editando.cenaEspecial?.ativo)}
+                  onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...(editando.cenaEspecial || {}), ativo: e.target.checked, transicao: editando.cenaEspecial?.transicao || "cinema", loop: editando.cenaEspecial?.loop !== false, loopAudio: editando.cenaEspecial?.loopAudio !== false, exibirTitulo: editando.cenaEspecial?.exibirTitulo !== false } })}
+                />
+                <span><strong>Cena especial em tela cheia</strong><small>Para aberturas, revelacoes e confrontos importantes.</small></span>
+              </label>
+              {editando.cenaEspecial?.ativo && <div className="cena-editor-especial-campos">
+                <label>GIF, imagem ou video · max. 25 MB<input type="file" accept="image/gif,image/webp,image/jpeg,image/png,image/avif,video/mp4,video/webm" onChange={(e) => selecionarArquivosCena("especial", e.target.files, e.target)} /><small>{arquivos.especial[0]?.arquivo.name || editando.cenaEspecial.midiaUrl || "Nenhuma midia selecionada"}</small></label>
+                <label>Musica de fundo · max. 20 MB<input type="file" accept="audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4" onChange={(e) => selecionarArquivosCena("audio", e.target.files, e.target)} /><small>{arquivos.audio[0]?.arquivo.name || editando.cenaEspecial.audioUrl || "Sem trilha propria"}</small></label>
+                <label>URL da midia<input value={editando.cenaEspecial.midiaUrl || ""} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, midiaUrl: e.target.value } })} placeholder="https://.../abertura.gif" /></label>
+                <label>URL da musica ou YouTube<input value={editando.cenaEspecial.audioUrl || ""} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, audioUrl: e.target.value, audioUrlPersistida: "" } })} placeholder="https://youtube.com/watch?v=..." /><small>Aceita um video do YouTube ou um link direto de audio.</small></label>
+                <label>Transicao<select value={editando.cenaEspecial.transicao || "cinema"} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, transicao: e.target.value } })}><option value="cinema">Cortinas de cinema</option><option value="fade">Fade sombrio</option><option value="impacto">Impacto</option></select></label>
+                <label>Atraso da musica (ms)<input type="number" min="0" max="30000" step="100" value={editando.cenaEspecial.atrasoAudio || 0} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, atrasoAudio: e.target.value } })} /></label>
+                <label className="cena-especial-opcao"><input type="checkbox" checked={editando.cenaEspecial.exibirTitulo !== false} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, exibirTitulo: e.target.checked } })} />Exibir titulo</label>
+                <label className="cena-especial-opcao"><input type="checkbox" checked={editando.cenaEspecial.loop !== false} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, loop: e.target.checked } })} />Repetir video</label>
+              </div>}
+            </section>
             {(editando.imagensCena?.length > 0 || arquivos.cena.length > 0) && (
               <div className="cena-editor-lista-midias">
                 <strong>
@@ -4229,6 +4569,10 @@ const Mesa = () => {
                         }
                       />
                     </label>
+                    <label className="cena-editor-grade-toggle">
+                      <input type="checkbox" checked={midia.exibirGrade !== false} onChange={(e) => atualizarMapaExistente(midia.id, "exibirGrade", e.target.checked)} />
+                      Exibir grade
+                    </label>
                     <button
                       type="button"
                       onClick={() => removerMidiaExistente("mapa", midia.id)}
@@ -4277,6 +4621,10 @@ const Mesa = () => {
                           )
                         }
                       />
+                    </label>
+                    <label className="cena-editor-grade-toggle">
+                      <input type="checkbox" checked={item.exibirGrade !== false} onChange={(e) => atualizarMapaPendente(item.id, "exibirGrade", e.target.checked)} />
+                      Exibir grade
                     </label>
                     <button
                       type="button"
@@ -4340,6 +4688,17 @@ const Mesa = () => {
                 />
               </label>
             </div>
+            <label className="cena-editor-loja">
+              <input
+                type="checkbox"
+                checked={Boolean(editando.lojaDisponivel)}
+                onChange={(e) => setEditando({ ...editando, lojaDisponivel: e.target.checked })}
+              />
+              <span>
+                <strong>Loja disponível nesta cena</strong>
+                <small>Jogadores poderão abrir a Loja diretamente no tabletop enquanto esta cena estiver ativa.</small>
+              </span>
+            </label>
             {erro && <p className="cena-editor-erro">{erro}</p>}
             <footer>
               <button type="button" onClick={() => setEditorAberto(false)}>

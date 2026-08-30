@@ -1,0 +1,46 @@
+.dialogo-global {
+  --dialogo-destaque: #b7b84d;
+  position: fixed;
+  inset: 0;
+  z-index: 50000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(2, 3, 3, 0.78);
+  backdrop-filter: blur(7px) saturate(65%);
+  animation: dialogo-fundo 160ms ease-out;
+}
+
+.dialogo-global__painel {
+  position: relative;
+  width: min(470px, 100%);
+  overflow: hidden;
+  color: #e7e4d8;
+  border: 1px solid rgba(183, 184, 77, 0.55);
+  background: linear-gradient(145deg, rgba(22, 24, 21, 0.99), rgba(7, 8, 7, 0.99));
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.72), inset 0 0 40px rgba(183, 184, 77, 0.025);
+  animation: dialogo-painel 180ms ease-out;
+}
+
+.dialogo-global__linha-superior { height: 3px; background: linear-gradient(90deg, transparent, var(--dialogo-destaque), transparent); }
+.dialogo-global__painel--perigo { --dialogo-destaque: #b8524f; border-color: rgba(184, 82, 79, 0.65); }
+.dialogo-global__cabecalho { display: grid; grid-template-columns: 42px 1fr auto; gap: 14px; align-items: center; padding: 22px 24px 18px; border-bottom: 1px solid rgba(255,255,255,.09); }
+.dialogo-global__icone { display: grid; place-items: center; width: 38px; height: 38px; color: var(--dialogo-destaque); border: 1px solid color-mix(in srgb, var(--dialogo-destaque) 58%, transparent); background: color-mix(in srgb, var(--dialogo-destaque) 9%, transparent); }
+.dialogo-global__rotulo { display: block; margin-bottom: 5px; color: var(--dialogo-destaque); font: 600 8px/1.2 monospace; letter-spacing: .16em; }
+.dialogo-global h2 { margin: 0; color: #f2f0e7; font: 400 23px/1.15 Georgia, serif; }
+.dialogo-global__fechar { align-self: start; display: grid; place-items: center; width: 34px; height: 34px; color: #aaa99f; border: 1px solid rgba(255,255,255,.14); background: transparent; cursor: pointer; }
+.dialogo-global__fechar:hover { color: white; border-color: var(--dialogo-destaque); }
+.dialogo-global__conteudo { padding: 24px; }
+.dialogo-global__conteudo p { margin: 0; color: #c9c7bd; font: 13px/1.65 monospace; white-space: pre-wrap; }
+.dialogo-global__conteudo input { box-sizing: border-box; width: 100%; margin-top: 18px; padding: 13px 14px; color: #f2f0e7; outline: none; border: 1px solid rgba(183,184,77,.4); background: #090a09; font: 13px monospace; }
+.dialogo-global__conteudo input:focus { border-color: var(--dialogo-destaque); box-shadow: 0 0 0 2px color-mix(in srgb, var(--dialogo-destaque) 12%, transparent); }
+.dialogo-global__acoes { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px 22px; border-top: 1px solid rgba(255,255,255,.07); }
+.dialogo-global__botao { min-width: 110px; padding: 12px 17px; border: 1px solid transparent; font: 600 10px monospace; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; }
+.dialogo-global__botao--secundario { color: #bdbbb2; border-color: rgba(255,255,255,.15); background: transparent; }
+.dialogo-global__botao--principal { color: #090a08; border-color: #c5c665; background: var(--dialogo-destaque); }
+.dialogo-global__botao--perigo { color: #fff; border-color: #ce6662; background: #8f3936; }
+.dialogo-global__botao:hover { filter: brightness(1.13); }
+.dialogo-global__botao:disabled { opacity: .38; cursor: not-allowed; }
+@keyframes dialogo-fundo { from { opacity: 0; } }
+@keyframes dialogo-painel { from { opacity: 0; transform: translateY(10px) scale(.985); } }
+@media (max-width: 540px) { .dialogo-global { padding: 14px; } .dialogo-global__cabecalho, .dialogo-global__conteudo { padding-left: 18px; padding-right: 18px; } .dialogo-global__acoes { padding: 14px 18px 18px; } .dialogo-global__botao { flex: 1; min-width: 0; } }

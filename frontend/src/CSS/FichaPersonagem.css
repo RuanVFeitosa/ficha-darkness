@@ -645,7 +645,9 @@ body {
   color: #f5efe4;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
 .marca-habilidade-btn strong {
@@ -730,7 +732,9 @@ body {
   letter-spacing: 1px;
   cursor: pointer;
   animation: pulsarBranco 1.2s ease-in-out infinite;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .marca-pendente-btn:hover {
@@ -1291,6 +1295,428 @@ body {
   outline: 2px solid var(--cor-secundaria);
 }
 
+/* Tela de conexão com o Absoluto — escolha de Marca */
+.marca-conexao {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  overflow-y: auto;
+  background: #f4f3ef;
+  color: #090909;
+  isolation: isolate;
+  animation: marcaConexaoEntrada 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.marca-conexao.saindo {
+  pointer-events: none;
+  animation: marcaConexaoSaida 0.7s cubic-bezier(0.4, 0, 0.8, 0.2) both;
+}
+
+.marca-conexao::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  opacity: 0.14;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0 3px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+}
+
+.marca-conexao-simbolo {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: -2;
+  width: min(82vw, 1200px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  opacity: 0.075;
+  pointer-events: none;
+}
+
+.marca-conexao-simbolo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: invert(1) grayscale(1) contrast(1.35);
+  animation: marcaSimboloForma 1.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.marca-conexao-pulso {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18%;
+  aspect-ratio: 1;
+  border: 1px solid #000;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: marcaPulso 2.8s ease-out infinite;
+}
+
+.marca-conexao-pulso.pulso-dois {
+  animation-delay: 1.4s;
+}
+
+.marca-conexao-topo {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 66px;
+  padding: 0 clamp(20px, 4vw, 68px);
+  border-bottom: 1px solid #111;
+  background: rgba(244, 243, 239, 0.91);
+  backdrop-filter: blur(12px);
+}
+
+.marca-conexao-topo > span {
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+}
+
+.marca-conexao-voltar {
+  padding: 10px 14px;
+  border: 1px solid #111;
+  background: transparent;
+  color: #111;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.marca-conexao-voltar:hover {
+  background: #090909;
+  color: #fff;
+}
+
+.marca-conexao-conteudo {
+  width: min(1050px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: clamp(42px, 7vh, 90px) 0 80px;
+}
+
+.marca-conexao-chamada {
+  max-width: 750px;
+  margin: 0 auto clamp(40px, 6vh, 70px);
+  text-align: center;
+  animation: marcaConteudoSurge 0.8s 0.45s both;
+}
+
+.marca-conexao-indice {
+  display: inline-block;
+  padding: 7px 12px;
+  border: 1px solid #111;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.marca-conexao-chamada > p {
+  margin: 24px 0 7px;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.marca-conexao-chamada h1 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 4rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.marca-conexao-linha {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 25px;
+}
+.marca-conexao-linha i {
+  flex: 1;
+  height: 1px;
+  background: #111;
+}
+.marca-conexao-linha b {
+  font-size: 0.62rem;
+  letter-spacing: 4px;
+}
+
+.marca-conexao-marca {
+  border: 2px solid #090909;
+  background: transparent;
+  box-shadow: 12px 12px 0 #090909;
+  animation: marcaConteudoSurge 0.8s 0.65s both;
+}
+
+.marca-conexao-identidade {
+  padding: clamp(22px, 4vw, 42px);
+  border-bottom: 1px solid #111;
+}
+.marca-conexao-identidade span {
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+}
+.marca-conexao-identidade h2 {
+  max-width: 1500px;
+  margin: 8px 0 0;
+  color: #090909;
+  font-size: clamp(1.7rem, 4vw, 3.5rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+.marca-conexao .marca-descricao {
+  margin: 0;
+  padding: 24px clamp(22px, 4vw, 42px);
+  border: 0;
+  border-bottom: 1px solid #111;
+  color: #111;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+.marca-conexao-efeitos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid #111;
+}
+.marca-conexao .marca-beneficios,
+.marca-conexao .marca-penalidades {
+  margin: 0;
+  padding: clamp(22px, 4vw, 38px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.marca-conexao .marca-beneficios {
+  border-right: 1px solid #111;
+}
+.marca-conexao .marca-beneficios h3,
+.marca-conexao .marca-penalidades h3,
+.marca-conexao-secao-titulo h3 {
+  margin: 0 0 14px;
+  color: #090909;
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.marca-conexao .marca-beneficios h3 span,
+.marca-conexao .marca-penalidades h3 span {
+  margin-right: 8px;
+  color: #777;
+}
+.marca-conexao .marca-beneficios p,
+.marca-conexao .marca-penalidades p {
+  color: #181818;
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+.marca-conexao .marca-habilidades {
+  padding: clamp(22px, 4vw, 42px);
+  border-bottom: 1px solid #111;
+}
+.marca-conexao-secao-titulo {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+.marca-conexao-secao-titulo > span {
+  color: #777;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+.marca-conexao-secao-titulo h3 {
+  margin-bottom: 4px;
+}
+.marca-conexao-secao-titulo p {
+  margin: 0;
+  color: #555;
+  font-size: 0.76rem;
+}
+.marca-conexao .marca-habilidades-lista {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.marca-conexao .marca-habilidade-btn {
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  min-height: 130px;
+  padding: 18px;
+  border: 1px solid #111;
+  border-radius: 0;
+  background: transparent;
+  color: #111;
+}
+.marca-conexao .marca-habilidade-btn > i {
+  font-style: normal;
+  font-size: 1rem;
+}
+.marca-conexao .marca-habilidade-btn strong {
+  color: #090909;
+  text-transform: uppercase;
+}
+.marca-conexao .marca-habilidade-btn span {
+  display: block;
+  margin-top: 7px;
+  color: #444;
+  line-height: 1.45;
+}
+.marca-conexao .marca-habilidade-btn:hover,
+.marca-conexao .marca-habilidade-btn.selecionada {
+  border-color: #090909;
+  background: #090909;
+  box-shadow: none;
+}
+.marca-conexao .marca-habilidade-btn:hover strong,
+.marca-conexao .marca-habilidade-btn:hover span,
+.marca-conexao .marca-habilidade-btn:hover i,
+.marca-conexao .marca-habilidade-btn.selecionada strong,
+.marca-conexao .marca-habilidade-btn.selecionada span,
+.marca-conexao .marca-habilidade-btn.selecionada i {
+  color: #fff;
+}
+.marca-conexao .marca-acoes {
+  margin: 0;
+  padding: clamp(22px, 4vw, 36px);
+  justify-content: flex-end;
+}
+.marca-conexao .marca-aceitar-btn,
+.marca-conexao .marca-recusar-btn {
+  min-height: 48px;
+  border-radius: 0;
+  padding: 0 24px;
+}
+.marca-conexao .marca-aceitar-btn {
+  order: 2;
+  border-color: #090909;
+  background: #090909;
+  color: #fff;
+}
+.marca-conexao .marca-aceitar-btn:hover:not(:disabled) {
+  background: transparent;
+  color: #090909;
+}
+.marca-conexao .marca-recusar-btn {
+  border-color: #090909;
+  color: #090909;
+}
+.marca-conexao .marca-recusar-btn:hover {
+  border-color: #090909;
+  background: #dddcd7;
+}
+
+@keyframes marcaConexaoEntrada {
+  from {
+    opacity: 0;
+    clip-path: circle(0 at 50% 50%);
+  }
+  to {
+    opacity: 1;
+    clip-path: circle(150% at 50% 50%);
+  }
+}
+@keyframes marcaConexaoSaida {
+  from {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  to {
+    opacity: 0;
+    filter: brightness(2);
+  }
+}
+@keyframes marcaSimboloForma {
+  from {
+    opacity: 0;
+    transform: scale(0.65) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+@keyframes marcaConteudoSurge {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes marcaPulso {
+  0% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  75%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(4.5);
+  }
+}
+
+@media (max-width: 760px) {
+  .marca-conexao-topo {
+    min-height: 58px;
+    padding: 0 14px;
+  }
+  .marca-conexao-topo > span {
+    display: none;
+  }
+  .marca-conexao-voltar {
+    margin-left: auto;
+  }
+  .marca-conexao-conteudo {
+    width: min(100% - 24px, 620px);
+    padding-top: 35px;
+  }
+  .marca-conexao-efeitos {
+    grid-template-columns: 1fr;
+  }
+  .marca-conexao .marca-beneficios {
+    border-right: 0;
+    border-bottom: 1px solid #111;
+  }
+  .marca-conexao .marca-habilidades-lista {
+    grid-template-columns: 1fr;
+  }
+  .marca-conexao-marca {
+    box-shadow: 6px 6px 0 #090909;
+  }
+  .marca-conexao .marca-acoes {
+    flex-direction: column;
+  }
+  .marca-conexao .marca-aceitar-btn {
+    order: initial;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marca-conexao,
+  .marca-conexao-simbolo img,
+  .marca-conexao-chamada,
+  .marca-conexao-marca {
+    animation: none;
+  }
+  .marca-conexao-pulso {
+    display: none;
+  }
+}
+
 .atributo-destino .atributo-dado {
   color: var(--cor-primaria);
 }
@@ -1315,7 +1741,10 @@ body {
   font-weight: 800;
   letter-spacing: 0.06em;
   cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 .destino-rolar-btn:hover {
@@ -2715,7 +3144,11 @@ body {
 
 .aprimoramento-exclusivo-aplicado {
   border-color: rgba(151, 104, 255, 0.55);
-  background: linear-gradient(135deg, rgba(88, 45, 180, 0.18), rgba(0, 0, 0, 0.35));
+  background: linear-gradient(
+    135deg,
+    rgba(88, 45, 180, 0.18),
+    rgba(0, 0, 0, 0.35)
+  );
 }
 
 .aprimoramento-exclusivo-aplicado .modificacoes-titulo,
@@ -3673,8 +4106,6 @@ body {
 
   color: var(--cor-texto);
 }
-
-
 
 /* ÍCONE */
 .item-visualizer-icone {
@@ -7280,121 +7711,230 @@ body {
    MARCA DETALHES - ABA HABILIDADES
 ========================================================= */
 .marca-detalhes-section {
-  padding: 0.5rem 0;
+  padding: 10px 0;
 }
 
 .marca-detalhes-card {
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 12px;
-  padding: 24px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.42);
+  background: linear-gradient(
+    145deg,
+    rgba(11, 12, 11, 0.96),
+    rgba(0, 0, 0, 0.98)
+  );
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.04),
+    0 22px 70px rgba(0, 0, 0, 0.35);
+}
+
+.marca-detalhes-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.2;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0 3px,
+    rgba(255, 255, 255, 0.025) 4px
+  );
+  pointer-events: none;
+}
+
+.marca-detalhes-simbolo {
+  position: absolute;
+  z-index: -2;
+  top: 50%;
+  right: -9%;
+  width: min(58vw, 660px);
+  transform: translateY(-50%);
+  opacity: 0.07;
+  filter: grayscale(1) contrast(1.25);
+  pointer-events: none;
+}
+
+.marca-detalhes-header {
+  position: relative;
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: clamp(24px, 4vw, 48px);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+}
+
+.marca-detalhes-header::before {
+  content: "DESTINO";
+  position: absolute;
+  top: 22px;
+  right: clamp(24px, 4vw, 48px);
+  color: rgba(212, 175, 55, 0.2);
+  font-size: clamp(2.4rem, 7vw, 6rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.06em;
 }
 
 .marca-detalhes-header span {
-  color: var(--cor-primaria);
-  font-size: 0.7rem;
+  color: #d4af37;
+  font-size: 0.62rem;
   font-weight: 900;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   text-transform: uppercase;
 }
 
 .marca-detalhes-header h2 {
-  margin: 6px 0 12px;
-  color: var(--cor-texto);
-  font-size: 1.5rem;
+  max-width: 780px;
+  margin: 9px 0 13px;
+  color: #f3f0e7;
+  font-size: clamp(1.7rem, 4vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -0.025em;
   text-transform: uppercase;
 }
 
+.marca-detalhes-header i {
+  padding: 6px 9px;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  color: #d4af37;
+  font-size: 0.58rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
 .marca-detalhes-descricao {
-  margin-bottom: 20px;
-  padding: 12px 16px;
-  border-left: 3px solid var(--cor-primaria);
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 4px;
+  margin: 0;
+  padding: 22px clamp(24px, 4vw, 48px);
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.025);
 }
 
 .marca-detalhes-descricao p {
+  max-width: 900px;
   margin: 0;
-  color: var(--cor-texto-secundario);
-  line-height: 1.5;
+  color: #c7c3b8;
+  font-size: 0.92rem;
+  line-height: 1.65;
 }
 
 .marca-detalhes-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 0;
+  margin: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .marca-detalhes-beneficios,
 .marca-detalhes-penalidades {
-  padding: 14px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border-left: 3px solid #2ecc71;
+  min-height: 150px;
+  padding: clamp(24px, 4vw, 42px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
+.marca-detalhes-beneficios {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
 .marca-detalhes-penalidades {
-  border-left-color: #e74c3c;
+  background: rgba(120, 20, 20, 0.035);
 }
 
 .marca-detalhes-beneficios h4,
 .marca-detalhes-penalidades h4,
 .marca-detalhes-habilidades h4 {
-  margin: 0 0 8px;
-  color: var(--cor-primaria);
-  font-size: 0.8rem;
+  margin: 0 0 15px;
+  color: #e7e2d6;
+  font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+}
+
+.marca-detalhes-beneficios h4 span,
+.marca-detalhes-penalidades h4 span,
+.marca-detalhes-habilidades h4 span {
+  margin-right: 9px;
+  color: #d4af37;
 }
 
 .marca-detalhes-beneficios p,
 .marca-detalhes-penalidades p {
   margin: 0;
-  color: var(--cor-texto-secundario);
-  font-size: 0.9rem;
-  line-height: 1.5;
+  color: #bdb9ae;
+  font-size: 0.86rem;
+  line-height: 1.65;
   white-space: pre-wrap;
 }
 
 .marca-detalhes-habilidades {
-  padding: 14px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(212, 175, 55, 0.15);
+  padding: clamp(24px, 4vw, 42px);
+  border: 0;
+  border-radius: 0;
+  background: rgba(212, 175, 55, 0.025);
 }
 
 .marca-habilidades-lista-detalhes {
   display: grid;
-  gap: 12px;
-  margin-top: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .marca-habilidade-item {
-  padding: 12px;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.3);
-  border-left: 3px solid var(--cor-primaria);
+  min-height: 100px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 15px;
+  align-items: start;
+  padding: 18px;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.46);
+}
+
+.marca-habilidade-item > b {
+  color: #d4af37;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
 }
 
 .marca-habilidade-item strong {
   display: block;
-  color: var(--cor-texto);
-  font-size: 0.95rem;
-  margin-bottom: 4px;
+  color: #f3f0e7;
+  font-size: 0.88rem;
+  margin-bottom: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
 }
 
 .marca-habilidade-item p {
   margin: 0;
-  color: var(--cor-texto-secundario);
-  font-size: 0.85rem;
-  line-height: 1.4;
+  color: #aaa69d;
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 @media (max-width: 700px) {
   .marca-detalhes-grid {
     grid-template-columns: 1fr;
+  }
+  .marca-detalhes-beneficios {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .marca-detalhes-header::before {
+    opacity: 0.55;
+  }
+  .marca-detalhes-simbolo {
+    width: 110vw;
+    right: -45%;
   }
 }
 
@@ -7644,8 +8184,7 @@ body {
   border: 1px solid rgba(212, 175, 55, 0.42);
   border-radius: 10px;
   background:
-    linear-gradient(135deg, rgba(212, 175, 55, 0.12), transparent 48%),
-    #0b0b0b;
+    linear-gradient(135deg, rgba(212, 175, 55, 0.12), transparent 48%), #0b0b0b;
 }
 
 .municao-carregada-painel > header {
@@ -7667,10 +8206,18 @@ body {
   background: rgba(212, 175, 55, 0.11);
 }
 
-.municao-carregada-painel.tipo-explosiva .municao-carregada-icone { color: #ff9f43; }
-.municao-carregada-painel.tipo-incendiaria .municao-carregada-icone { color: #ff5d3c; }
-.municao-carregada-painel.tipo-acida .municao-carregada-icone { color: #84d65a; }
-.municao-carregada-painel.tipo-sonifera .municao-carregada-icone { color: #a58bff; }
+.municao-carregada-painel.tipo-explosiva .municao-carregada-icone {
+  color: #ff9f43;
+}
+.municao-carregada-painel.tipo-incendiaria .municao-carregada-icone {
+  color: #ff5d3c;
+}
+.municao-carregada-painel.tipo-acida .municao-carregada-icone {
+  color: #84d65a;
+}
+.municao-carregada-painel.tipo-sonifera .municao-carregada-icone {
+  color: #a58bff;
+}
 
 .municao-carregada-painel > header > div {
   display: grid;
@@ -7794,11 +8341,21 @@ body {
   background: currentColor;
 }
 
-.municao-capsulas.tipo-explosiva { color: #ff9f43; }
-.municao-capsulas.tipo-incendiaria { color: #ff5d3c; }
-.municao-capsulas.tipo-acida { color: #84d65a; }
-.municao-capsulas.tipo-sonifera { color: #a58bff; }
-.municao-capsulas.tipo-padrao { color: #d5aa48; }
+.municao-capsulas.tipo-explosiva {
+  color: #ff9f43;
+}
+.municao-capsulas.tipo-incendiaria {
+  color: #ff5d3c;
+}
+.municao-capsulas.tipo-acida {
+  color: #84d65a;
+}
+.municao-capsulas.tipo-sonifera {
+  color: #a58bff;
+}
+.municao-capsulas.tipo-padrao {
+  color: #d5aa48;
+}
 
 .membro-defesa-equipada {
   display: inline-flex;
@@ -11459,7 +12016,9 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.96);
   border-radius: 7px;
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18), 0 7px 16px rgba(0, 0, 0, 0.34);
+  box-shadow:
+    0 0 0 3px rgba(212, 175, 55, 0.18),
+    0 7px 16px rgba(0, 0, 0, 0.34);
 }
 
 .item-inventario.inventario-card.arma-selecionada .inventario-card-icone svg,
@@ -11807,14 +12366,18 @@ body {
 }
 
 /* Visual renovado para os presets de rolagem. */
-.rolagens-presets-container { gap: 18px; }
+.rolagens-presets-container {
+  gap: 18px;
+}
 
 .rolagem-preset-editor,
 .rolagens-presets-salvos {
   padding: 18px;
   border: 1px solid rgba(212, 175, 55, 0.28);
   border-radius: 14px;
-  background: linear-gradient(125deg, rgba(212, 175, 55, 0.075), transparent 42%), rgba(6, 6, 6, 0.7);
+  background:
+    linear-gradient(125deg, rgba(212, 175, 55, 0.075), transparent 42%),
+    rgba(6, 6, 6, 0.7);
 }
 
 .rolagens-presets-salvos {
@@ -11845,7 +12408,10 @@ body {
   font-size: 1rem;
 }
 
-.rolagem-preset-cabecalho small { color: var(--cor-texto-secundario); font-size: 0.72rem; }
+.rolagem-preset-cabecalho small {
+  color: var(--cor-texto-secundario);
+  font-size: 0.72rem;
+}
 
 .rolagem-preset-cabecalho > strong {
   display: grid;
@@ -11884,7 +12450,9 @@ body {
   color: #090909;
 }
 
-.rolagens-presets-grid { gap: 12px; }
+.rolagens-presets-grid {
+  gap: 12px;
+}
 
 .rolagem-preset-card {
   grid-template-columns: minmax(0, 1fr) auto;
@@ -11892,14 +12460,25 @@ body {
   padding: 14px;
   border-color: rgba(255, 255, 255, 0.14);
   border-radius: 9px;
-  background: linear-gradient(125deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.26));
-  transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
+  background: linear-gradient(
+    125deg,
+    rgba(255, 255, 255, 0.055),
+    rgba(0, 0, 0, 0.26)
+  );
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    background 0.18s ease;
 }
 
 .rolagem-preset-card:hover {
   border-color: rgba(212, 175, 55, 0.65);
   transform: translateY(-2px);
-  background: linear-gradient(125deg, rgba(212, 175, 55, 0.1), rgba(0, 0, 0, 0.4));
+  background: linear-gradient(
+    125deg,
+    rgba(212, 175, 55, 0.1),
+    rgba(0, 0, 0, 0.4)
+  );
 }
 
 .rolagem-preset-info code {
@@ -11918,7 +12497,10 @@ body {
   margin-top: 0;
 }
 
-.rolagem-preset-acoes-card button { min-height: 30px; padding: 0 10px; }
+.rolagem-preset-acoes-card button {
+  min-height: 30px;
+  padding: 0 10px;
+}
 
 @media (max-width: 700px) {
   .rolagem-preset-form {
@@ -11938,7 +12520,9 @@ body {
   min-width: 0;
 }
 
-.visualizer-nome-acoes h2 { min-width: 0; }
+.visualizer-nome-acoes h2 {
+  min-width: 0;
+}
 
 /* Botão minimalista para renomear no visualizador. */
 .item-renomear-btn {
@@ -11953,9 +12537,15 @@ body {
   color: var(--cor-texto);
   cursor: pointer;
   padding: 0;
-  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease;
 }
-.item-renomear-btn svg { display: block; }
+.item-renomear-btn svg {
+  display: block;
+}
 .item-renomear-btn:hover {
   border-color: var(--cor-primaria);
   background: rgba(212, 175, 55, 0.13);
@@ -12263,7 +12853,7 @@ body {
 .ficha-embutida-mesa .atributo-nome {
   white-space: nowrap;
   overflow-wrap: normal;
-  font-size: .74rem;
+  font-size: 0.74rem;
 }
 
 .ficha-embutida-mesa .sidebar-container,
@@ -12295,7 +12885,98 @@ body {
   display: none;
 }
 
-.acesso-restrito-overlay { position:fixed; z-index:10020; inset:0; display:grid; place-items:center; padding:18px; background:rgba(0,0,0,.82); backdrop-filter:blur(6px) }.acesso-restrito-painel { width:min(390px,100%); display:grid; gap:18px; padding:18px; border:1px solid var(--cor-borda,#5b554b); background:#0b0c0c; box-shadow:0 22px 70px #000; color:var(--cor-texto,#eee9df) }.acesso-restrito-painel>header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding-bottom:14px; border-bottom:1px solid rgba(230,223,209,.15) }.acesso-restrito-painel header span { color:var(--cor-primaria,#d4af37); font-size:9px; text-transform:uppercase }.acesso-restrito-painel h2 { margin:5px 0 0; font-size:22px; letter-spacing:0 }.acesso-restrito-painel header button { width:32px; height:32px; display:grid; place-items:center; border:1px solid rgba(230,223,209,.18); background:transparent; color:inherit; cursor:pointer }.acesso-restrito-painel label { display:grid; gap:8px; color:#aaa49a; font-size:9px; text-transform:uppercase }.acesso-restrito-painel input { width:100%; height:46px; padding:0 12px; border:1px solid var(--cor-borda,#5b554b); border-radius:0; background:#050606; color:inherit; font-size:18px; text-align:center; letter-spacing:4px }.acesso-restrito-painel>p { margin:0; color:#d78b82; font-size:10px }.acesso-restrito-painel>footer { display:flex; justify-content:flex-end; gap:8px }.acesso-restrito-painel footer button { min-height:38px; padding:0 14px; border:1px solid rgba(230,223,209,.2); background:transparent; color:inherit; font-size:9px; text-transform:uppercase; cursor:pointer }.acesso-restrito-painel footer button:last-child { border-color:var(--cor-primaria,#d4af37); background:var(--cor-primaria,#d4af37); color:#050505 }
+.acesso-restrito-overlay {
+  position: fixed;
+  z-index: 10020;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(6px);
+}
+.acesso-restrito-painel {
+  width: min(390px, 100%);
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid var(--cor-borda, #5b554b);
+  background: #0b0c0c;
+  box-shadow: 0 22px 70px #000;
+  color: var(--cor-texto, #eee9df);
+}
+.acesso-restrito-painel > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(230, 223, 209, 0.15);
+}
+.acesso-restrito-painel header span {
+  color: var(--cor-primaria, #d4af37);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+.acesso-restrito-painel h2 {
+  margin: 5px 0 0;
+  font-size: 22px;
+  letter-spacing: 0;
+}
+.acesso-restrito-painel header button {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(230, 223, 209, 0.18);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.acesso-restrito-painel label {
+  display: grid;
+  gap: 8px;
+  color: #aaa49a;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+.acesso-restrito-painel input {
+  width: 100%;
+  height: 46px;
+  padding: 0 12px;
+  border: 1px solid var(--cor-borda, #5b554b);
+  border-radius: 0;
+  background: #050606;
+  color: inherit;
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 4px;
+}
+.acesso-restrito-painel > p {
+  margin: 0;
+  color: #d78b82;
+  font-size: 10px;
+}
+.acesso-restrito-painel > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.acesso-restrito-painel footer button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(230, 223, 209, 0.2);
+  background: transparent;
+  color: inherit;
+  font-size: 9px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.acesso-restrito-painel footer button:last-child {
+  border-color: var(--cor-primaria, #d4af37);
+  background: var(--cor-primaria, #d4af37);
+  color: #050505;
+}
 
 .seletor-mesa-overlay {
   position: fixed;
@@ -12516,7 +13197,7 @@ body {
     border-bottom: 1px solid var(--cor-borda);
   }
 
-  .menu-ficha-identidade>img {
+  .menu-ficha-identidade > img {
     width: 48px;
     height: 48px;
     object-fit: cover;
@@ -12524,7 +13205,7 @@ body {
     border-radius: 50%;
   }
 
-  .menu-ficha-identidade>div {
+  .menu-ficha-identidade > div {
     min-width: 0;
     display: grid;
     gap: 3px;

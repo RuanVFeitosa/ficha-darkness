@@ -1307,3 +1307,29 @@
 .habilidade-enviada p { margin: 8px 0 0; color: var(--text-muted); line-height: 1.4; }
 .habilidade-enviada b { height: fit-content; color: #fff; font-size: .72rem; letter-spacing: 1px; text-transform: uppercase; }
 @media (max-width: 620px) { .upgrade-habilidades-topo, .habilidade-enviada { flex-direction: column; } .criador-habilidade-form { grid-template-columns: 1fr; } .recursos-habilidade-resumo { grid-template-columns: 1fr; } .criador-habilidade-form .criador-descricao, .criador-habilidade-form .upgrade-confirmar { grid-column: auto; } }
+
+/* Progressão avançada: marcos dos níveis 5 a 10 */
+.upgrade-marcos { display: grid; gap: 16px; }
+.upgrade-marcos-intro { padding: 4px 2px 14px; border-bottom: 1px solid rgba(212,175,55,.2); }
+.upgrade-marcos-intro > span { color: var(--gold); font-size: .68rem; font-weight: 900; letter-spacing: 2px; }
+.upgrade-marcos-intro h2 { margin: 6px 0 8px; color: #fff; font-size: 1.45rem; text-transform: uppercase; }
+.upgrade-marcos-intro p { max-width: 760px; margin: 0; color: var(--text-muted); line-height: 1.55; }
+.upgrade-marco { overflow: hidden; border: 1px solid rgba(255,255,255,.13); border-radius: 10px; background: linear-gradient(135deg, rgba(255,255,255,.035), rgba(0,0,0,.25)); transition: border-color .2s ease, opacity .2s ease; }
+.upgrade-marco.concluido { border-color: rgba(212,175,55,.5); }
+.upgrade-marco.bloqueado { opacity: .5; }
+.upgrade-marco-header { display: grid; grid-template-columns: auto 1fr auto; gap: 13px; align-items: center; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.09); }
+.upgrade-marco-nivel { display: grid; place-items: center; min-width: 54px; min-height: 42px; border: 1px solid var(--border-gold); border-radius: 7px; color: var(--gold); font-size: .8rem; font-weight: 900; letter-spacing: 1px; }
+.upgrade-marco-header span { color: var(--gold); font-size: .65rem; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; }
+.upgrade-marco-header h3 { margin: 3px 0 0; color: #fff; font-size: 1rem; text-transform: uppercase; }
+.upgrade-marco-header b { color: var(--text-muted); font-size: .68rem; letter-spacing: .8px; text-transform: uppercase; }
+.upgrade-marco.concluido .upgrade-marco-header b { color: var(--gold); }
+.upgrade-marco-opcoes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 12px; }
+.upgrade-marco-opcoes button { position: relative; display: grid; gap: 7px; min-height: 126px; padding: 16px 15px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: rgba(0,0,0,.35); color: inherit; text-align: left; cursor: pointer; transition: border-color .16s ease, background .16s ease, transform .16s ease; }
+.upgrade-marco-opcoes button:not(:disabled):hover { transform: translateY(-2px); border-color: rgba(212,175,55,.65); background: rgba(212,175,55,.07); }
+.upgrade-marco-opcoes button.selecionada { border-color: var(--gold); background: linear-gradient(145deg, rgba(212,175,55,.16), rgba(212,175,55,.04)); box-shadow: inset 3px 0 0 var(--gold); }
+.upgrade-marco-opcoes button:disabled { cursor: not-allowed; }
+.upgrade-marco-opcoes strong { padding-right: 24px; color: #fff; font-size: .9rem; text-transform: uppercase; }
+.upgrade-marco-opcoes small { color: var(--text-muted); font: inherit; font-size: .78rem; line-height: 1.45; }
+.upgrade-marco-seletor { position: absolute; top: 12px; right: 12px; color: var(--gold); font-size: 1rem; font-weight: 900; }
+@media (max-width: 800px) { .upgrade-marco-opcoes { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .upgrade-marco-header { grid-template-columns: auto 1fr; } .upgrade-marco-header b { grid-column: 2; } }

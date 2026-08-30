@@ -3,6 +3,7 @@ import PageTransition from "./pages/pageTransition";
 import "./App.css";
 import "./CSS/Responsive.css";
 import { MESTRE_AUTH_KEY } from "./constants/masterAccess";
+import DialogoGlobal from "./components/DialogoGlobal";
 
 const ArvoreHabilidades = lazy(() => import("./pages/arvoreHabilidades"));
 const CriarPersonagem = lazy(() => import("./pages/criarPersonagem"));
@@ -66,6 +67,7 @@ function App() {
   return (
     <div className="App">
       <PageTransition active={transitionActive} />
+      <DialogoGlobal />
 
       <Suspense fallback={null}>
         {estaNaMesa ? (
