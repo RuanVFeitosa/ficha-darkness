@@ -1,4 +1,5 @@
 import { supabase, supabaseConfigurado } from "./supabase";
+import { iniciarPollingVisivel, SYNC_INTERVALS } from "./syncPolicy";
 
 const getApiUrl = () => {
   if (process.env.REACT_APP_API_URL) {
@@ -95,11 +96,37 @@ export const ouvirPersonagens = (fichasIds, aoAtualizar) => {
   const ids = new Set((fichasIds || []).map(String));
   if (!ids.size || typeof aoAtualizar !== "function") return () => {};
 
+  let ativo = true;
+  let consultando = false;
+  const revisoes = new Map();
   const receber = (mensagem) => {
     const fichaId = String(mensagem?.fichaId || mensagem?.id || "");
     const personagem = mensagem?.personagem;
-    if (ids.has(fichaId) && personagem) aoAtualizar(fichaId, personagem);
+    if (ativo && ids.has(fichaId) && personagem) {
+      revisoes.set(fichaId, (revisoes.get(fichaId) || 0) + 1);
+      aoAtualizar(fichaId, personagem);
+    }
   };
+  // A API também atende mesas cujo backend não usa Realtime do Supabase.
+  const atualizarRemotos = async () => {
+    if (!ativo || consultando) return;
+    consultando = true;
+    try {
+      await Promise.all([...ids].map(async (fichaId) => {
+        const revisao = revisoes.get(fichaId) || 0;
+        try {
+          const personagem = await buscarPersonagem(fichaId);
+          if (ativo && revisao === (revisoes.get(fichaId) || 0)) receber({ fichaId, personagem });
+        } catch {
+          // Mantém a última aparência recebida e tenta novamente no próximo ciclo.
+        }
+      }));
+    } finally {
+      consultando = false;
+    }
+  };
+  const pararPolling = iniciarPollingVisivel(atualizarRemotos, SYNC_INTERVALS.mesaPersonagens);
+  atualizarRemotos();
   const eventoLocal = (evento) => receber(evento.detail);
   window.addEventListener("darkness:personagem-atualizado", eventoLocal);
 
@@ -114,12 +141,14 @@ export const ouvirPersonagens = (fichasIds, aoAtualizar) => {
   const canalSupabase = supabaseConfigurado
     ? supabase.channel(`personagens-mesa-${ids.size}-${Date.now()}`).on(
       "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "personagens" },
+      { event: "*", schema: "public", table: "personagens" },
       (evento) => receber(evento.new),
     ).subscribe()
     : null;
 
   return () => {
+    ativo = false;
+    pararPolling();
     window.removeEventListener("darkness:personagem-atualizado", eventoLocal);
     canalNavegador?.close();
     if (canalSupabase) supabase.removeChannel(canalSupabase);

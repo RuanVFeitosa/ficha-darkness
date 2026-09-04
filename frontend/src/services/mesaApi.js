@@ -507,8 +507,30 @@ export const salvarCena = async (campanhaId, cena) => {
       audioUrl: urlPersistivel(cena.cenaEspecial.audioUrl, cena.cenaEspecial.audioUrlPersistida),
     } : (cena.cena_especial || null),
   };
-  const { data, error } = await supabase.from("cenas").upsert(payload).select().single();
-  if (error) throw error; return data;
+  let { data, error } = await supabase.from("cenas").upsert(payload).select().single();
+
+  // Compatibilidade com bancos que ainda não executaram a migração 027.
+  // A cena continua sendo salva; somente a disponibilidade da Loja aguarda a
+  // coluna correspondente no Supabase.
+  if (error && /loja_disponivel/i.test(`${error.message || ""} ${error.details || ""}`)) {
+    const payloadCompativel = { ...payload };
+    delete payloadCompativel.loja_disponivel;
+    const tentativaCompativel = await supabase
+      .from("cenas")
+      .upsert(payloadCompativel)
+      .select()
+      .single();
+    data = tentativaCompativel.data;
+    error = tentativaCompativel.error;
+    if (!error) {
+      console.warn(
+        "A coluna cenas.loja_disponivel ainda não existe. A cena foi salva sem essa opção.",
+      );
+    }
+  }
+
+  if (error) throw error;
+  return data;
 };
 
 export const excluirCena = async (campanhaId, cenaId) => {

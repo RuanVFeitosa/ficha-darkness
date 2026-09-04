@@ -302,7 +302,7 @@ const MapLightingLayer = ({ configuracao, luzesTokens = [], editando, aoAlterar,
           <span><Icon path={mdiEyeOutline} size={0.65} /> Editor de visão</span>
           <div className="mapa-periodo" aria-label="Periodo do mapa">
             <button className={dados.periodo === "dia" ? "ativo" : ""} onClick={() => aoAlterar({ ...dados, periodo: "dia" })} title="Desativar iluminacao e oclusao"><Icon path={mdiWeatherSunny} size={0.72} /> Dia</button>
-            <button className={dados.periodo === "noite" ? "ativo" : ""} onClick={() => aoAlterar({ ...dados, periodo: "noite" })} title="Ativar iluminacao e oclusao"><Icon path={mdiWeatherNight} size={0.72} /> Noite</button>
+            <button className={dados.periodo === "noite" ? "ativo" : ""} onClick={() => aoAlterar({ ...dados, periodo: "noite", escuridao: Number(dados.escuridao) > 0 ? dados.escuridao : VAZIO.escuridao })} title="Ativar iluminacao e oclusao"><Icon path={mdiWeatherNight} size={0.72} /> Noite</button>
           </div>
           <button className={ferramenta === "parede" ? "ativo" : ""} onClick={() => setFerramenta("parede")} title="Desenhar parede"><Icon path={mdiWall} size={0.75} /> Parede</button>
           <button className={ferramenta === "porta" ? "ativo" : ""} onClick={() => setFerramenta("porta")} title="Desenhar porta fechada"><Icon path={mdiDoor} size={0.75} /> Porta</button>

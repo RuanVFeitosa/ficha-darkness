@@ -76,7 +76,6 @@ import {
   vincularInimigo,
 } from "../services/mesaApi";
 import {
-  buscarPersonagem,
   listarPersonagens,
   ouvirPersonagens,
 } from "../services/personagemApi";
@@ -90,6 +89,7 @@ import MapLightingLayer, {
   pontoVisivelPorLuz,
 } from "../components/MapLightingLayer";
 import "../CSS/Mesa.css";
+import { estiloBordaToken } from "../utils/tokenAppearance";
 
 const cenaVazia = {
   nome: "",
@@ -410,6 +410,8 @@ const Mesa = () => {
   const [configuracaoIluminacao, setConfiguracaoIluminacao] = useState(null);
   const [salvandoIluminacao, setSalvandoIluminacao] = useState(false);
   const salvamentoIluminacaoTimerRef = useRef(null);
+  const filaIluminacaoRef = useRef(Promise.resolve());
+  const iluminacaoPendenteRef = useRef(null);
   const inicioPanMapaRef = useRef(null);
   const ponteirosMapaRef = useRef(new Map());
   const inicioPincaMapaRef = useRef(null);
@@ -759,18 +761,6 @@ const Mesa = () => {
     }
   }, [mestre]);
   useEffect(() => {
-    if (!campanha?.membros?.length) return;
-    Promise.all(
-      campanha.membros.map(async (membro) => {
-        try {
-          return [membro.ficha_id, await buscarPersonagem(membro.ficha_id)];
-        } catch {
-          return [membro.ficha_id, null];
-        }
-      }),
-    ).then((entradas) => setPersonagens(Object.fromEntries(entradas)));
-  }, [campanha?.membros]);
-  useEffect(() => {
     const fichasIds = (campanha?.membros || [])
       .map((membro) => membro.ficha_id)
       .filter(Boolean);
@@ -808,7 +798,7 @@ const Mesa = () => {
       });
   }, [campanha?.id, campanha?.membros, campanha?.tokens, carregar]);
   useEffect(() => {
-    if (mestre || !campanha?.id) return undefined;
+    if (!campanha?.id) return undefined;
     const receberRolagem = async (event) => {
       if (
         event.origin !== window.location.origin ||
@@ -1972,7 +1962,7 @@ const Mesa = () => {
   }, [chaveMapaIluminacao]);
 
   useEffect(() => {
-    if (editorIluminacaoAberto) return;
+    if (editorIluminacaoAberto || salvandoIluminacao || salvamentoIluminacaoTimerRef.current || iluminacaoPendenteRef.current?.chave === chaveMapaIluminacao) return;
     setConfiguracaoIluminacao(
       mapaAtualIluminacao?.iluminacao || {
         paredes: [],
@@ -1983,7 +1973,7 @@ const Mesa = () => {
       },
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [assinaturaIluminacaoRemota, editorIluminacaoAberto]);
+  }, [assinaturaIluminacaoRemota, editorIluminacaoAberto, salvandoIluminacao]);
 
   const salvarConfiguracaoIluminacao = async (configuracaoOverride = null) => {
     if (!cenaMapaAtual || !mapaAtualIluminacao) return;
@@ -2003,6 +1993,8 @@ const Mesa = () => {
         mapasBatalha,
         mapas_batalha: mapasBatalha,
       });
+      if (iluminacaoPendenteRef.current?.configuracao === configuracaoParaSalvar)
+        iluminacaoPendenteRef.current = null;
       setCampanha((atual) => {
         const cenas = atual.cenas.map((item) =>
           item.id === cenaMapaAtual.id
@@ -2012,7 +2004,7 @@ const Mesa = () => {
         return {
           ...atual,
           cenas,
-          cenaAtiva: cenas.find((item) => item.id === cenaMapaAtual.id),
+          cenaAtiva: cenas.find((item) => item.id === atual.cenaAtiva?.id),
         };
       });
     } catch (error) {
@@ -2023,12 +2015,15 @@ const Mesa = () => {
   };
 
   const alterarConfiguracaoIluminacao = (proxima) => {
+    iluminacaoPendenteRef.current = { chave: chaveMapaIluminacao, configuracao: proxima };
     setConfiguracaoIluminacao(proxima);
     if (salvamentoIluminacaoTimerRef.current)
       clearTimeout(salvamentoIluminacaoTimerRef.current);
     salvamentoIluminacaoTimerRef.current = setTimeout(() => {
       salvamentoIluminacaoTimerRef.current = null;
-      salvarConfiguracaoIluminacao(proxima);
+      filaIluminacaoRef.current = filaIluminacaoRef.current.then(() =>
+        salvarConfiguracaoIluminacao(proxima),
+      );
     }, 450);
   };
 
@@ -2070,8 +2065,7 @@ const Mesa = () => {
       (token) =>
         token.lanterna?.ativa &&
         !token.removido &&
-        !token.oculto &&
-        (mestre || String(token.ficha_id) === String(fichaJogadorId)),
+        !token.oculto,
     )
     .map((token) => ({
       id: `lanterna-${token.id}`,
@@ -2103,8 +2097,13 @@ const Mesa = () => {
   const tokenVisivelParaJogador = (token) => {
     if (mestre || periodoMapa !== "noite") return true;
     if (String(token.ficha_id) === String(fichaJogadorId)) return true;
-    if (!luzDoJogador) return false;
-    return pontoVisivelPorLuz(luzDoJogador, token, bloqueadoresVisao);
+    if (luzDoJogador && pontoVisivelPorLuz(luzDoJogador, token, bloqueadoresVisao)) return true;
+    const luzDoOutroToken = luzesDosTokens.find((luz) => luz.tokenId === token.id);
+    return (campanha.tokens || [])
+      .filter((item) => String(item.ficha_id) === String(fichaJogadorId))
+      .map((item) => ({ ...item, ...estadoTokenNoMapa(item) }))
+      .some((proprio) => !proprio.removido && !proprio.oculto &&
+        pontoVisivelPorLuz(luzDoOutroToken, proprio, bloqueadoresVisao));
   };
   const personagemFichaAberta = fichaAberta?.personagem;
   const habilidadesFichaAberta = personagemFichaAberta
@@ -2763,6 +2762,7 @@ const Mesa = () => {
                         top: `${tokenVisual.y}%`,
                         width: `${46 * (Number(tokenVisual.tamanho) || 1)}px`,
                         rotate: `${Number(tokenVisual.rotacao) || 0}rad`,
+                        ...estiloBordaToken(personagens[tokenVisual.ficha_id]?.coresToken),
                         ...(mestre && tokenVisual.oculto
                           ? {
                               opacity: 0.38,

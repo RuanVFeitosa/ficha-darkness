@@ -1,4 +1,5 @@
 export const SYNC_INTERVALS = {
+  mesaPersonagens: 10000,
   ficha: 45000,
   loja: 60000,
   dashboardFicha: 30000,

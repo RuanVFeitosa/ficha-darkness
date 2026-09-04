@@ -1,0 +1,8 @@
+.customizacao-token { margin: 0; }
+.customizacao-token p { margin-bottom: 16px; }
+.customizacao-token-preview { position: relative; width: 100px; aspect-ratio: 1; box-sizing: border-box; border: 4px solid #d2b467; border-radius: 50%; overflow: hidden; background: #24211b; margin-bottom: 18px; }
+.customizacao-token-preview img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.customizacao-token-preview span { position: absolute; inset: 0; display: grid; place-items: center; background: #24211b; color: #fff; }
+.customizacao-token-acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.customizacao-token-acoes button { padding: 8px 12px; cursor: pointer; }
+.customizacao-token-acoes button:disabled { opacity: .45; cursor: default; }

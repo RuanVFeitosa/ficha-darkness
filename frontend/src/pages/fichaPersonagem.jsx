@@ -10,6 +10,7 @@ import profile from "../assets/IMG/OAbsoluto.webp";
 import corpoHumano from "../assets/IMG/corpo_humano.webp";
 import { descricoesHabilidades } from "../components/descricoesHabilidades";
 import ModalDescricao from "../components/modal/modalDescricao";
+import PersonalizacaoToken from "../components/PersonalizacaoToken";
 import {
   buscarArvoresHabilidades,
   buscarPersonagem,
@@ -17,6 +18,7 @@ import {
 } from "../services/personagemApi";
 import {
   listarCampanhasDaFicha,
+  registrarRolagem,
 } from "../services/mesaApi";
 import { compressProfileImage } from "../services/imageCompression";
 import {
@@ -1559,7 +1561,11 @@ const cancelarEdicaoHabilidade = () => {
 
     const atualizado = [novaRolagem, ...historico].slice(0, 3);
 
-    localStorage.setItem(chave, JSON.stringify(atualizado));
+    try {
+      localStorage.setItem(chave, JSON.stringify(atualizado));
+    } catch (error) {
+      console.warn("Nao foi possivel guardar o historico local de rolagens.", error);
+    }
 
     window.dispatchEvent(
       new CustomEvent("darkness:nova-rolagem", {
@@ -1569,6 +1575,15 @@ const cancelarEdicaoHabilidade = () => {
 
     if (new URLSearchParams(window.location.search).get("embed") === "mesa" && window.parent !== window) {
       window.parent.postMessage({ tipo: "darkness:rolagem-tabletop", autor: personagem.nome || "Jogador", rolagem: novaRolagem }, window.location.origin);
+    } else {
+      listarCampanhasDaFicha(fichaId)
+        .then((campanhas) => Promise.all(campanhas.map((campanha) =>
+          registrarRolagem(campanha.id, personagem.nome || "Jogador", novaRolagem),
+        )))
+        .catch((error) => {
+          console.error("Nao foi possivel enviar a rolagem para o tabletop.", error);
+          window.alert("A rolagem foi feita, mas nao foi possivel envia-la ao tabletop. Verifique sua conexao.");
+        });
     }
   };
 
@@ -6494,7 +6509,14 @@ const cancelarEdicaoHabilidade = () => {
             className={subAbaPersonalizacao === "customizacao" ? "ativa" : ""}
             onClick={() => setSubAbaPersonalizacao("customizacao")}
           >
-            Customização
+            Customização da Ficha
+          </button>
+
+          <button
+            className={subAbaPersonalizacao === "token" ? "ativa" : ""}
+            onClick={() => setSubAbaPersonalizacao("token")}
+          >
+            Token do Tabletop
           </button>
 
           <button
@@ -6545,6 +6567,12 @@ const cancelarEdicaoHabilidade = () => {
             >
               Restaurar Tema Padrão
             </button>
+          </div>
+        )}
+
+        {subAbaPersonalizacao === "token" && (
+          <div className="customizacao-bloco">
+            <PersonalizacaoToken personagem={personagem} aoAlterar={(coresToken) => setPersonagem((atual) => ({ ...atual, coresToken }))} />
           </div>
         )}
 
