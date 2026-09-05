@@ -730,10 +730,11 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
 };
 
 export const salvarEvidenciaInterativa = async (campanhaId, metadados = {}) => {
-  const modelo = metadados.modeloInterativo === "modern-pc" ? "modern-pc" : "msdos";
-  const nomePadrao = modelo === "modern-pc" ? "Computador moderno" : "Terminal MS-DOS";
+  const modelo = ["modern-pc", "cassete"].includes(metadados.modeloInterativo) ? metadados.modeloInterativo : "msdos";
+  if (modelo === "cassete" && !metadados.audioUrl) throw new Error("Selecione um áudio para a fita cassete.");
+  const nomePadrao = modelo === "cassete" ? "Fita cassete" : modelo === "modern-pc" ? "Computador moderno" : "Terminal MS-DOS";
   const nome = String(metadados.nome || nomePadrao).trim() || nomePadrao;
-  const descricao = String(metadados.descricao || "Computador encontrado durante a investigacao.").trim();
+  const descricao = String(metadados.descricao || (modelo === "cassete" ? "Gravação encontrada durante a investigação." : "Computador encontrado durante a investigacao.")).trim();
   const visualizarTodos = metadados.visualizarTodos !== false;
   const jogadoresVisiveis = visualizarTodos
     ? []
@@ -743,10 +744,10 @@ export const salvarEvidenciaInterativa = async (campanhaId, metadados = {}) => {
     nome,
     descricao,
     categoria: "interativa",
-    mime_type: modelo === "modern-pc" ? "application/x-darkness-modern-pc" : "application/x-darkness-msdos",
-    arquivo_nome: modelo === "modern-pc" ? "Computador moderno" : "MS-DOS 6.13",
-    url: modelo === "modern-pc" ? "/interactive/modern-pc/index.html" : "/interactive/ms-dos/index.html",
-    storage_path: modelo === "modern-pc" ? "interactive:modern-pc" : "interactive:msdos",
+    mime_type: modelo === "cassete" ? "application/x-darkness-cassete" : modelo === "modern-pc" ? "application/x-darkness-modern-pc" : "application/x-darkness-msdos",
+    arquivo_nome: modelo === "cassete" ? "Fita cassete" : modelo === "modern-pc" ? "Computador moderno" : "MS-DOS 6.13",
+    url: modelo === "cassete" ? metadados.audioUrl : modelo === "modern-pc" ? "/interactive/modern-pc/index.html" : "/interactive/ms-dos/index.html",
+    storage_path: modelo === "cassete" ? "interactive:cassete" : modelo === "modern-pc" ? "interactive:modern-pc" : "interactive:msdos",
     visualizar_todos: visualizarTodos,
     jogadores_visiveis: jogadoresVisiveis,
   };
@@ -762,7 +763,7 @@ export const salvarEvidenciaInterativa = async (campanhaId, metadados = {}) => {
       ...demo,
       documentosInvestigacao: [documento, ...(demo.documentosInvestigacao || [])],
     }, campanhaId);
-    return documento;
+    return { ...documento, urlPersistida: documento.url, url: await resolverImagemLocal(documento.url) };
   }
 
   const { data, error } = await supabase

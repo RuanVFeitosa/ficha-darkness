@@ -4655,7 +4655,8 @@
   gap: 7px;
 }
 .documentos-envio-acoes.interativa {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
 }
 .evidencia-interativa-modelo {
   min-width: 0;
@@ -4688,13 +4689,31 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.evidencia-interativa-modelos { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; min-width:0; }
-.evidencia-interativa-modelos button { min-height:54px; display:flex; align-items:center; gap:10px; padding:8px 12px; border:1px solid var(--linha); background:#0b0d0d; color:#8d8980; text-align:left; cursor:pointer; }
-.evidencia-interativa-modelos button.ativo { border-color:#75f59c; background:rgba(46,202,96,.1); color:#75f59c; }
-.evidencia-interativa-modelos button>b { min-width:34px; font:700 14px "Courier New",monospace; }
-.evidencia-interativa-modelos button span { display:grid; gap:3px; }
-.evidencia-interativa-modelos button strong { color:inherit; font-size:10px; text-transform:uppercase; }
-.evidencia-interativa-modelos button small { color:#777; font-size:8px; }
+.evidencia-interativa-configuracao { min-width:0; display:grid; gap:12px; }
+.evidencia-modelos-titulo { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px; padding-top:4px; }
+.evidencia-modelos-titulo>span { color:#c2bfa5; font-size:9px; font-weight:700; letter-spacing:1.2px; }
+.evidencia-modelos-titulo>small { color:#858579; font-size:9px; }
+.evidencia-interativa-modelos { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; min-width:0; }
+.evidencia-interativa-modelos button { position:relative; min-width:0; min-height:124px; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; gap:12px; padding:14px 10px; border:1px solid #34362c; border-radius:6px; background:linear-gradient(145deg,#171a14,#0c0e0b); color:#c0beac; text-align:left; cursor:pointer; transition:border-color .18s,background .18s; }
+.evidencia-interativa-modelos button:hover { border-color:#8a8b59; background:#1c2016; }
+.evidencia-interativa-modelos button.ativo { border-color:#b5b765; background:linear-gradient(145deg,#2c301b,#161c10); color:#e3e5ae; box-shadow:inset 0 2px 0 #b5b765; }
+.evidencia-interativa-modelos button.ativo:after { content:""; position:absolute; top:10px; right:10px; width:5px; height:5px; border-radius:50%; background:#d8df87; box-shadow:0 0 8px #c5d26866; }
+.evidencia-interativa-modelos button>b { display:flex; align-items:center; justify-content:center; width:36px; height:30px; border:1px solid #ffffff18; border-radius:4px; background:#0003; font:700 13px "Courier New",monospace; }
+.evidencia-interativa-modelos button span { min-width:0; display:grid; gap:6px; }
+.evidencia-interativa-modelos button strong { color:inherit; font-size:10px; line-height:1.5; text-transform:uppercase; overflow-wrap:normal; }
+.evidencia-interativa-modelos button small { color:#a09f8e; font-size:9px; line-height:1.5; }
+.cassete-upload { position:relative; display:flex; align-items:center; gap:12px; min-width:0; padding:16px 12px; border:1px dashed #646747; border-radius:6px; background:#aeb26308; cursor:pointer; }
+.cassete-upload:hover,.cassete-upload:focus-within { border-color:#c7cc82; background:#aeb26312; }
+.cassete-upload-icone { color:#bdc27a; flex-shrink:0; }
+.cassete-upload-texto { display:grid; gap:6px; min-width:0; flex:1; }
+.cassete-upload-texto strong { color:#d9d8bd; font-size:11px; font-weight:500; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.cassete-upload-texto small { color:#949582; font-size:9px; line-height:1.5; }
+.cassete-upload-acao { flex-shrink:0; padding:7px 9px; border:1px solid #76794c; border-radius:3px; color:#d3d79b; font-size:9px; }
+.cassete-upload input { position:absolute; width:1px; height:1px; opacity:0; }
+.cassete-upload.selecionado { border-style:solid; border-color:#8c9657; }
+.documentos-envio-acoes.interativa>button { min-height:44px; border-radius:4px; font-size:10px; letter-spacing:.6px; }
+.evidencia-interativa-modelos button:focus-visible { outline:2px solid #dee3a1; outline-offset:3px; }
+@media(max-width:360px) { .evidencia-interativa-modelos { grid-template-columns:1fr; } .evidencia-interativa-modelos button { flex-direction:row; min-height:72px; align-items:center; } .cassete-upload { flex-wrap:wrap; } }
 .documento-arquivo-seletor {
   min-width: 0;
   height: 36px;
@@ -5170,3 +5189,15 @@
     grid-template-columns: 1fr;
   }
 }
+
+.mapa-deteccao { position: relative; color: #ccd2c0; font-size: 12px; }
+.mapa-deteccao summary { cursor: pointer; padding: 10px; border: 1px solid #737955; }
+.mapa-deteccao>div { position: absolute; bottom: calc(100% + 12px); left: 0; width: min(360px, calc(100vw - 32px)); max-height: 65vh; overflow: auto; padding: 18px; background: #11160f; border: 1px solid #737955; box-shadow: 0 8px 30px #000b; display: grid; gap: 12px; }
+.mapa-deteccao p { margin: 0; line-height: 1.6; }
+.mapa-editor-barra .mapa-deteccao label { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; }
+.mapa-editor-barra .mapa-deteccao input[type=checkbox] { width: auto; }
+/* Let the analysis panel open below the toolbar without clipping its controls. */
+.mapa-editor-barra:has(.mapa-deteccao) { overflow: visible; flex-wrap: wrap; width: max-content; white-space: normal; }
+.mapa-deteccao>div { top: calc(100% + 12px); bottom: auto; z-index: 2; }
+.mapa-editor-barra .mapa-deteccao label { height: auto; min-height: 30px; }
+.mapa-editor-barra .mapa-deteccao button { height: auto; min-height: 34px; white-space: normal; }

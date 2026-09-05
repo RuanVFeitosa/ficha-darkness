@@ -1,0 +1,128 @@
+/* DOS-style administration. Scoped to the master's panel. */
+#app .admin-page {
+  --dos-green: #a8c58a;
+  --dos-bright: #d8e8b5;
+  --dos-line: #657b51;
+  --dos-amber: #e0bc77;
+  background: #090d08;
+  color: var(--dos-green);
+  padding: 24px;
+  font: 14px/1.6 "Courier New", Courier, monospace;
+  color-scheme: dark;
+}
+
+#app .admin-container { max-width: 1120px; }
+#app .admin-container::before {
+  content: "MICROSOFT(R) MS-DOS 6.13 / GERENCIADOR DE ARQUIVOS";
+  display: block;
+  padding: 0 0 12px;
+  color: #7f956c;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+#app .admin-header {
+  border: 3px double var(--dos-line);
+  border-radius: 0;
+  background: #172112;
+  padding: 15px 20px;
+  margin-bottom: 24px;
+  gap: 16px;
+  box-shadow: 6px 6px 0 #000;
+}
+#app .admin-header h1 { font-size: 0; }
+#app .admin-header h1::before {
+  content: "C:\\DOS> CONTROLE DO MESTRE";
+  color: var(--dos-bright);
+  font-size: clamp(14px, 2vw, 18px);
+  font-weight: bold;
+  letter-spacing: .5px;
+}
+#app .admin-nav { gap: 12px; }
+#app .admin-badge {
+  border: 0;
+  border-radius: 0;
+  padding: 3px 8px;
+  color: #10170c;
+  background: var(--dos-green);
+  font-size: 0;
+}
+#app .admin-badge::before { content: "[ MESTRE ]"; font-size: 11px; }
+#app .admin-card {
+  position: relative;
+  border: 1px solid var(--dos-line);
+  border-radius: 0;
+  background: #0c1209;
+  padding: 22px;
+  margin-bottom: 24px;
+  box-shadow: 5px 5px 0 #000;
+}
+#app .admin-card h2 {
+  color: var(--dos-amber);
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+#app .card-header { padding-bottom: 14px; border-bottom: 1px dashed #46563b; gap: 14px; }
+#app .card-header h2 { margin: 0; }
+#app .form-group { margin-bottom: 18px; }
+#app .form-group label { color: var(--dos-green); font-size: 12px; letter-spacing: .5px; }
+#app .form-input,
+#app .form-textarea {
+  border: 1px solid #526744;
+  border-radius: 0;
+  background: #030702;
+  color: var(--dos-bright);
+  caret-color: #e8efbd;
+  padding: 11px 12px;
+  font: 14px/1.6 "Courier New", Courier, monospace;
+  box-shadow: inset 3px 3px 0 #000;
+  transition: none;
+}
+#app .form-textarea { min-height: 160px; tab-size: 4; }
+#app .form-input::placeholder,
+#app .form-textarea::placeholder { color: #718161; opacity: 1; }
+#app .form-input:focus,
+#app .form-textarea:focus { border-color: var(--dos-bright); box-shadow: inset 3px 3px 0 #000; outline: 1px solid var(--dos-bright); outline-offset: 2px; }
+#app .admin-page button,
+#app .admin-page .back-link {
+  border: 1px solid var(--dos-line);
+  border-radius: 0;
+  padding: 8px 12px;
+  background: #1b2714;
+  color: var(--dos-bright);
+  font: bold 12px/1.5 "Courier New", Courier, monospace;
+  text-decoration: none;
+  box-shadow: 3px 3px 0 #000;
+  transition: none;
+  min-height: 36px;
+}
+#app .admin-page .btn-add { background: #a8c58a; color: #10170c; border-color: #c9dba6; min-height: 44px; text-transform: uppercase; letter-spacing: 1px; }
+#app .admin-page .btn-danger,
+#app .admin-page .btn-delete { color: #e3ac8c; border-color: #84614a; background: #271b13; }
+#app .admin-page button:hover,
+#app .admin-page .back-link:hover { background: var(--dos-bright); color: #10170c; border-color: var(--dos-bright); box-shadow: 3px 3px 0 #000; }
+#app .admin-page button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+#app .admin-page button:focus-visible,
+#app .admin-page .back-link:focus-visible { outline: 2px solid var(--dos-amber); outline-offset: 4px; }
+#app .card-actions { gap: 9px; }
+#app .document-grid { gap: 16px; }
+#app .doc-card { border: 1px solid #475d38; border-radius: 0; padding: 16px; background: #11190d; transition: none; }
+#app .doc-card:hover { border-color: var(--dos-green); transform: none; box-shadow: none; }
+#app .doc-header { gap: 12px; border-bottom: 1px solid #34462a; padding-bottom: 10px; }
+#app .doc-name { color: var(--dos-bright); font-size: 13px; }
+#app .doc-size { color: #94a57f; white-space: nowrap; font-size: 11px; }
+#app .doc-preview { background: #070c05; border: 0; border-left: 2px solid #708453; border-radius: 0; color: #b7c5a0; padding: 12px; font-size: 12px; line-height: 1.7; }
+#app .doc-meta { color: #8a9b76; font-size: 11px; }
+#app .doc-actions { gap: 10px; }
+#app .empty-state { color: #9caf86; padding: 30px 12px; }
+#app .admin-container::after { content: "C:\\DOS> _"; display: block; padding: 0 0 8px; color: var(--dos-green); font-size: 13px; }
+@media (max-width: 600px) {
+  #app .admin-page { padding: 14px; }
+  #app .admin-container::before { font-size: 9px; letter-spacing: .4px; }
+  #app .admin-header, #app .admin-card { padding: 16px; }
+  #app .admin-nav { width: 100%; justify-content: space-between; }
+  #app .card-actions { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #app .admin-page button, #app .admin-page .back-link { font-size: 11px; }
+}

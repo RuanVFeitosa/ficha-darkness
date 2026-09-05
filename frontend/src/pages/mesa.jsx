@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import Icon from "@mdi/react";
+import ReprodutorCassete from "../components/ReprodutorCassete";
 import { confirmarDialogo } from "../components/DialogoGlobal";
 import {
   mdiAccountPlusOutline,
@@ -1077,11 +1078,15 @@ const Mesa = () => {
     setErro("");
     try {
       if (!evidenciaInterativa) validarArquivoInvestigacao(novoDocumento.arquivo);
+      const fitaCassete = evidenciaInterativa && novoDocumento.modeloInterativo === "cassete";
+      if (fitaCassete && !novoDocumento.arquivo) throw new Error("Selecione um áudio para a fita cassete.");
+      const audioUrl = fitaCassete ? await enviarImagemCena(campanha.id, novoDocumento.arquivo, "audio") : "";
       const metadadosDocumento = {
+          audioUrl,
           nome:
             novoDocumento.nome ||
             (evidenciaInterativa
-              ? novoDocumento.modeloInterativo === "modern-pc"
+              ? novoDocumento.modeloInterativo === "cassete" ? "Fita cassete" : novoDocumento.modeloInterativo === "modern-pc"
                 ? "Computador moderno"
                 : "Terminal MS-DOS"
               : novoDocumento.arquivo.name.replace(/\.[^.]+$/, "")),
@@ -2733,6 +2738,8 @@ const Mesa = () => {
           )}
           {campanha.modo === "mapa" && configuracaoIluminacao && (
             <MapLightingLayer
+              key={chaveMapaIluminacao}
+              mapaUrl={mapaAtualIluminacao?.url}
               configuracao={configuracaoIluminacao}
               luzesTokens={luzesDosTokens}
               editando={mestre && editorIluminacaoAberto}
@@ -3356,13 +3363,25 @@ const Mesa = () => {
             </div>
             <div className={`documentos-envio-acoes ${novoDocumento.categoria === "interativa" ? "interativa" : ""}`}>
               {novoDocumento.categoria === "interativa" ? (
+                <div className="evidencia-interativa-configuracao">
+                  <div className="evidencia-modelos-titulo"><span>FORMATO DA EVIDÊNCIA</span><small>Escolha uma experiência</small></div>
                 <div className="evidencia-interativa-modelos">
-                  <button type="button" className={novoDocumento.modeloInterativo === "msdos" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "msdos" }))}>
+                  <button type="button" aria-pressed={novoDocumento.modeloInterativo === "cassete"} className={novoDocumento.modeloInterativo === "cassete" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "cassete", arquivo: null }))}>
+                    <b>◉◉</b><span><strong>Fita cassete</strong><small>Áudio e rebobinamento</small></span>
+                  </button>
+
+                  <button type="button" aria-pressed={novoDocumento.modeloInterativo === "msdos"} className={novoDocumento.modeloInterativo === "msdos" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "msdos" }))}>
                     <b>C:\&gt;</b><span><strong>MS-DOS 6.13</strong><small>Terminal classico</small></span>
                   </button>
-                  <button type="button" className={novoDocumento.modeloInterativo === "modern-pc" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "modern-pc" }))}>
+                  <button type="button" aria-pressed={novoDocumento.modeloInterativo === "modern-pc"} className={novoDocumento.modeloInterativo === "modern-pc" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "modern-pc" }))}>
                     <b>PC</b><span><strong>Computador moderno</strong><small>Internet, mensagens e arquivos</small></span>
                   </button>
+                </div>
+                  {novoDocumento.modeloInterativo === "cassete" && <label className={`cassete-upload ${novoDocumento.arquivo ? "selecionado" : ""}`}><span className="cassete-upload-icone"><Icon path={mdiUploadOutline} size={0.9} /></span><span className="cassete-upload-texto"><strong>{novoDocumento.arquivo?.name || "Selecione o áudio da fita"}</strong><small>MP3, OGG, WAV ou M4A · até 20 MB</small></span><span className="cassete-upload-acao">{novoDocumento.arquivo ? "Trocar" : "Escolher"}</span><input aria-label="Selecionar áudio da fita" type="file" accept="audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4" onChange={(event) => {
+                    const arquivo = event.target.files?.[0] || null;
+                    try { if (arquivo) validarArquivoImagem(arquivo, "audio"); setNovoDocumento((atual) => ({ ...atual, arquivo })); setErro(""); }
+                    catch (error) { event.target.value = ""; setNovoDocumento((atual) => ({ ...atual, arquivo: null })); setErro(error.message); }
+                  }} /></label>}
                 </div>
               ) : (
               <label className={`documento-arquivo-seletor ${novoDocumento.arquivo ? "selecionado" : ""}`}>
@@ -3406,7 +3425,7 @@ const Mesa = () => {
                 {enviandoDocumento
                   ? "Enviando..."
                   : novoDocumento.categoria === "interativa"
-                    ? "Disponibilizar sistema"
+                    ? novoDocumento.modeloInterativo === "cassete" ? "Compartilhar fita cassete" : "Disponibilizar sistema"
                     : "Enviar aos jogadores"}
               </button>
             </div>
@@ -4262,7 +4281,7 @@ const Mesa = () => {
                 <small>{documentoAberto.categoria === "interativa" ? "Evidencia interativa" : documentoAberto.categoria === "item" ? "Item" : "Evidencia"}</small>
                 <strong>{nomeDocumentoExibicao(documentoAberto)}</strong>
               </div>
-              {mestre && documentoAberto.categoria === "interativa" && (
+              {mestre && documentoAberto.categoria === "interativa" && !String(documentoAberto.mimeType || documentoAberto.mime_type).includes("cassete") && (
                 <nav className="evidencia-interativa-abas" aria-label="Visualizacao da evidencia interativa">
                   <button
                     type="button"
@@ -4289,7 +4308,9 @@ const Mesa = () => {
               </button>
             </header>
             <div className="documento-visualizador-conteudo">
-              {documentoAberto.categoria === "interativa" ? (
+              {String(documentoAberto.mimeType || documentoAberto.mime_type).includes("cassete") ? (
+                <ReprodutorCassete key={documentoAberto.id} documento={documentoAberto} />
+              ) : documentoAberto.categoria === "interativa" ? (
                 <iframe
                   className="evidencia-interativa-frame"
                   title={documentoAberto.nome || "Computador interativo"}
@@ -4300,35 +4321,6 @@ const Mesa = () => {
                         ? "/interactive/ms-dos/index.html#/admin-secreto-123"
                         : documentoAberto.url || "/interactive/ms-dos/index.html"
                   }
-                  onLoad={(event) => {
-                    if (
-                      !mestre ||
-                      abaEvidenciaInterativa !== "conteudo"
-                    )
-                      return;
-                    try {
-                      const documentoFrame = event.currentTarget.contentDocument;
-                      if (documentoFrame?.documentElement) {
-                        documentoFrame.documentElement.style.setProperty("height", "100%", "important");
-                        documentoFrame.documentElement.style.setProperty("overflow", "hidden", "important");
-                      }
-                      if (documentoFrame?.body) {
-                        documentoFrame.body.style.setProperty("height", "100%", "important");
-                        documentoFrame.body.style.setProperty("min-height", "0", "important");
-                        documentoFrame.body.style.setProperty("overflow", "hidden", "important");
-                      }
-                      const appFrame = documentoFrame?.getElementById("app");
-                      if (appFrame) {
-                        appFrame.style.setProperty("height", "100%", "important");
-                        appFrame.style.setProperty("min-height", "0", "important");
-                        appFrame.style.setProperty("overflow-x", "hidden", "important");
-                        appFrame.style.setProperty("overflow-y", "auto", "important");
-                        appFrame.style.setProperty("overscroll-behavior", "contain", "important");
-                      }
-                    } catch (error) {
-                      console.warn("Nao foi possivel liberar a rolagem do painel MS-DOS.", error);
-                    }
-                  }}
                   allow="autoplay"
                 />
               ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "").startsWith("image/") ? (
