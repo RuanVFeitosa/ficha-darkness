@@ -4,14 +4,19 @@ import MusicaTabletop from "./MusicaTabletop";
 
 let player;
 let events;
-const musicas = [{ id: "1", nome: "Trilha", url: "https://youtu.be/abcdefghijk" }];
+let indicePlayer;
+const musicas = [
+  { id: "1", nome: "Trilha", url: "https://youtu.be/abcdefghijk" },
+  { id: "2", nome: "Batalha", url: "https://youtu.be/lmnopqrstuv" },
+];
 
 beforeEach(() => {
   localStorage.clear();
+  indicePlayer = 0;
   player = {
     cuePlaylist: jest.fn(),
     setVolume: jest.fn(),
-    getPlaylistIndex: jest.fn(() => 0),
+    getPlaylistIndex: jest.fn(() => indicePlayer),
     getCurrentTime: jest.fn(() => 120),
     seekTo: jest.fn(),
     playVideo: jest.fn(),
@@ -65,6 +70,15 @@ test("a repetição continua desligada por padrão", async () => {
   terminar();
   expect(player.seekTo).not.toHaveBeenCalled();
   expect(player.playVideo).not.toHaveBeenCalled();
+});
+
+test("impede o avanço automático do YouTube enquanto a faixa repete", async () => {
+  await montar();
+  fireEvent.click(screen.getByTitle("Repetir musica"));
+  indicePlayer = 1;
+  act(() => events.onStateChange({ target: player, data: 1 }));
+  expect(player.playVideoAt).toHaveBeenLastCalledWith(0);
+  expect(screen.getAllByText("Trilha")[0].closest("button")).toHaveClass("ativo");
 });
 
 test("ouvinte reinicia a faixa quando a repetição remota está ativa", async () => {

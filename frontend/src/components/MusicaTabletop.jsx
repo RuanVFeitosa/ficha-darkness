@@ -175,6 +175,7 @@ const MusicaTabletop = ({
     repetindo: false,
   });
   const repetindoRef = useRef(false);
+  const indiceRepeticaoRef = useRef(0);
   useEffect(() => {
     repetindoRef.current = repetindo;
     estadoRef.current = { indice: indiceAtual, tocando, volume, repetindo };
@@ -199,6 +200,7 @@ const MusicaTabletop = ({
       return;
     const player = playerRef.current;
     const indice = Math.max(0, Number(estadoRemoto.indice) || 0);
+    indiceRepeticaoRef.current = indice;
     const decorrido =
       estadoRemoto.tocando && estadoRemoto.atualizadoEm
         ? Math.max(
@@ -344,13 +346,28 @@ const MusicaTabletop = ({
                 0,
                 event.target.getPlaylistIndex?.() || 0,
               );
+              if (
+                event.data === YT.PlayerState.PLAYING &&
+                repetindoRef.current &&
+                indice !== indiceRepeticaoRef.current
+              ) {
+                event.target.playVideoAt(indiceRepeticaoRef.current);
+                return;
+              }
               const reiniciando =
                 event.data === YT.PlayerState.ENDED && repetindoRef.current;
               setTocando(event.data === YT.PlayerState.PLAYING || reiniciando);
-              setIndiceAtual(indice);
+              const indiceEfetivo = reiniciando
+                ? indiceRepeticaoRef.current
+                : indice;
+              setIndiceAtual(indiceEfetivo);
               if (reiniciando) {
-                event.target.seekTo(0, true);
-                event.target.playVideo();
+                if (indice === indiceRepeticaoRef.current) {
+                  event.target.seekTo(0, true);
+                  event.target.playVideo();
+                } else event.target.playVideoAt(indiceRepeticaoRef.current);
+              } else if (!repetindoRef.current) {
+                indiceRepeticaoRef.current = indice;
               }
               if (
                 controlavel &&
@@ -361,7 +378,7 @@ const MusicaTabletop = ({
                 ].includes(event.data)
               )
                 publicarEstado({
-                  indice,
+                  indice: indiceEfetivo,
                   tocando: event.data === YT.PlayerState.PLAYING || reiniciando,
                   tempo:
                     event.data === YT.PlayerState.ENDED
@@ -417,6 +434,7 @@ const MusicaTabletop = ({
   };
   const tocarFaixa = (indice) => {
     if (!controlavel) return;
+    indiceRepeticaoRef.current = indice;
     playerRef.current?.playVideoAt?.(indice);
     setIndiceAtual(indice);
     publicarEstado({ indice, tempo: 0, tocando: true });
@@ -505,6 +523,7 @@ const MusicaTabletop = ({
               <button
                 disabled={!controlavel}
                 onClick={() => {
+                  indiceRepeticaoRef.current = Math.max(0, indiceAtual - 1);
                   playerRef.current?.previousVideo?.();
                   publicarEstado({
                     indice: Math.max(0, indiceAtual - 1),
@@ -539,6 +558,10 @@ const MusicaTabletop = ({
               <button
                 disabled={!controlavel}
                 onClick={() => {
+                  indiceRepeticaoRef.current = Math.min(
+                    faixas.length - 1,
+                    indiceAtual + 1,
+                  );
                   playerRef.current?.nextVideo?.();
                   publicarEstado({
                     indice: Math.min(faixas.length - 1, indiceAtual + 1),
@@ -555,6 +578,11 @@ const MusicaTabletop = ({
                 className={repetindo ? "ativo" : ""}
                 onClick={() => {
                   const valor = !repetindo;
+                  if (valor)
+                    indiceRepeticaoRef.current = Math.max(
+                      0,
+                      playerRef.current?.getPlaylistIndex?.() ?? indiceAtual,
+                    );
                   repetindoRef.current = valor;
                   setRepetindo(valor);
                   publicarEstado({ repetindo: valor });
