@@ -32,6 +32,8 @@ import {
 } from "@mdi/js";
 import "../CSS/DashboardMestre.css";
 import {
+  buscarDestinos,
+  salvarDestinos,
   apagarPersonagem,
   buscarArvoresHabilidades,
   buscarCatalogoLoja,
@@ -42,6 +44,7 @@ import {
   buscarPersonagem,
   salvarPersonagem,
 } from "../services/personagemApi";
+import { atualizarDestinoNaFicha } from "../utils/destinos";
 import { compressProfileImage } from "../services/imageCompression";
 import { obterIconeItem } from "../utils/itemIcons";
 import {
@@ -659,7 +662,12 @@ const DashboardMestre = () => {
   const [mostrarFormHabilidade, setMostrarFormHabilidade] = useState(false);
 
   const [personagemSelecionado, setPersonagemSelecionado] = useState(null); // objeto completo do personagem
-  const [marcas, setMarcas] = useState([]);
+  const [marcas, setMarcas] = useState(() => {
+    try { const dados = JSON.parse(localStorage.getItem("darkness_marcas")); return Array.isArray(dados) ? dados : []; }
+    catch { return []; }
+  });
+  const marcasGravandoRef = useRef(false);
+  const [marcasCarregadas, setMarcasCarregadas] = useState(false);
   const [marcaEditando, setMarcaEditando] = useState(null);
   const [formMarca, setFormMarca] = useState({
     nome: "",
@@ -942,18 +950,39 @@ const DashboardMestre = () => {
 
   const STORAGE_MARCAS = "darkness_marcas";
 
-  const carregarMarcas = () => {
-    try {
-      const dados = JSON.parse(localStorage.getItem(STORAGE_MARCAS)) || [];
-      setMarcas(dados);
-    } catch {
-      setMarcas([]);
-    }
+  useEffect(() => {
+    let ativo = true;
+    buscarDestinos().then(async (remotos) => {
+      let locais = [];
+      try { locais = localStorage.getItem("darkness_marcas_migradas") ? [] : JSON.parse(localStorage.getItem(STORAGE_MARCAS)) || []; } catch {}
+      const faltantes = Array.isArray(locais) ? locais.filter((m) => !remotos.some((r) => r.id === m.id)) : [];
+      const lista = [...remotos, ...faltantes];
+      if (faltantes.length) await salvarDestinos(lista);
+      try { localStorage.setItem("darkness_marcas_migradas", "true"); } catch {}
+      if (ativo) {
+        setMarcas(lista);
+        setMarcasCarregadas(true);
+        try { localStorage.setItem(STORAGE_MARCAS, JSON.stringify(lista)); } catch {}
+      }
+    }).catch(() => {
+      if (ativo) setMensagem("Não foi possível carregar os Destinos online. A cópia deste navegador foi preservada.");
+    });
+    return () => { ativo = false; };
+  }, []);
+
+  const salvarMarcas = async (novaLista) => {
+    await salvarDestinos(novaLista);
+    setMarcas(novaLista);
+    try { localStorage.setItem(STORAGE_MARCAS, JSON.stringify(novaLista)); } catch {}
   };
 
-  const salvarMarcas = (novaLista) => {
-    setMarcas(novaLista);
-    localStorage.setItem(STORAGE_MARCAS, JSON.stringify(novaLista));
+  const executarOperacaoMarca = async (operacao) => {
+    if (marcasGravandoRef.current) return;
+    if (!marcasCarregadas) { setMensagem("Destinos online indisponíveis ou carregando. Aguarde ou recarregue a página para tentar novamente."); return; }
+    marcasGravandoRef.current = true;
+    try { await operacao(); }
+    catch (error) { setMensagem("Não foi possível concluir a operação do Destino. " + error.message); }
+    finally { marcasGravandoRef.current = false; }
   };
 
   const limparReceitaEditor = () => {
@@ -1609,20 +1638,22 @@ const DashboardMestre = () => {
   };
   const criarMarca = (e) => {
     e.preventDefault();
-    if (!formMarca.nome.trim()) {
-      setMensagem("Informe o nome do Destino.");
-      return;
-    }
-    const nova = {
-      id: crypto.randomUUID(),
-      ...formMarca,
-      habilidades: formMarca.habilidades || [],
-      atribuidaA: [],
-      createdAt: Date.now(),
-    };
-    salvarMarcas([...marcas, nova]);
-    limparFormMarca();
-    setMensagem(`Destino "${nova.nome}" criado.`);
+    return executarOperacaoMarca(async () => {
+      if (!formMarca.nome.trim()) {
+        setMensagem("Informe o nome do Destino.");
+        return;
+      }
+      const nova = {
+        id: crypto.randomUUID(),
+        ...formMarca,
+        habilidades: formMarca.habilidades || [],
+        atribuidaA: [],
+        createdAt: Date.now(),
+      };
+      await salvarMarcas([...marcas, nova]);
+      limparFormMarca();
+      setMensagem(`Destino "${nova.nome}" criado.`);
+    });
   };
 
   const adicionarHabilidadeMarca = () => {
@@ -1664,17 +1695,22 @@ const DashboardMestre = () => {
 
   const salvarEdicaoMarca = (e) => {
     e.preventDefault();
-    const atualizada = {
-      ...formMarca,
-      id: marcaEditando,
-      atribuidaA: marcas.find((m) => m.id === marcaEditando)?.atribuidaA || [],
-    };
-    const novaLista = marcas.map((m) =>
-      m.id === marcaEditando ? atualizada : m,
-    );
-    salvarMarcas(novaLista);
-    limparFormMarca();
-    setMensagem("Destino atualizado.");
+    return executarOperacaoMarca(async () => {
+      if (!formMarca.nome.trim()) { setMensagem("Informe o nome do Destino."); return; }
+      const anterior = marcas.find((m) => m.id === marcaEditando);
+      if (!anterior) throw new Error("Destino não encontrado.");
+      const atualizada = { ...anterior, ...formMarca };
+      const fichasAtuais = await listarPersonagens();
+      for (const ficha of fichasAtuais) {
+        if (!(ficha.personagem.marcas || []).some((m) => m.id === atualizada.id)) continue;
+        const recente = await buscarPersonagem(ficha.fichaId);
+        const novasMarcas = atualizarDestinoNaFicha(recente.marcas || [], anterior, atualizada);
+        await salvarFichaSelecionada({ marcas: novasMarcas }, null, ficha.fichaId, true);
+      }
+      await salvarMarcas(marcas.map((m) => m.id === atualizada.id ? atualizada : m));
+      limparFormMarca();
+      setMensagem("Destino atualizado nas fichas e na lista.");
+    });
   };
 
   const excluirMarca = (id) => {
@@ -1683,11 +1719,11 @@ const DashboardMestre = () => {
       titulo: "Excluir Destino",
       mensagem: "Deseja remover este Destino permanentemente?",
       confirmarTexto: "Excluir",
-      onConfirmar: () => {
-        salvarMarcas(marcas.filter((m) => m.id !== id));
+      onConfirmar: () => executarOperacaoMarca(async () => {
+        await salvarMarcas(marcas.filter((m) => m.id !== id));
         if (marcaEditando === id) limparFormMarca();
         setMensagem("Destino removido.");
-      },
+      }),
     });
   };
 
@@ -1702,7 +1738,7 @@ const DashboardMestre = () => {
     setMarcaEditando(null);
   };
 
-  const atribuirMarca = async () => {
+  const atribuirMarca = () => executarOperacaoMarca(async () => {
     if (!personagemSelecionadoId || !marcaSelecionadaId) {
       setMensagem("Selecione um personagem e um Destino.");
       return;
@@ -1720,7 +1756,8 @@ const DashboardMestre = () => {
       return;
     }
 
-    if ((personagem.personagem.marcas || []).some((m) => m.id === marca.id)) {
+    const recente = await buscarPersonagem(personagemSelecionadoId);
+    if ((recente.marcas || []).some((m) => m.id === marca.id)) {
       setMensagem(`${personagem.personagem.nome} já possui este Destino.`);
       return;
     }
@@ -1732,14 +1769,13 @@ const DashboardMestre = () => {
     };
 
     const personagemAtualizado = {
-      ...personagem.personagem,
-      marcas: [...(personagem.personagem.marcas || []), marcaParaAdicionar],
+      marcas: [...(recente.marcas || []), marcaParaAdicionar],
     };
 
     const marcaAtualizada = {
       ...marca,
       atribuidaA: [
-        ...(marca.atribuidaA || []),
+        ...(marca.atribuidaA || []).filter((f) => f.fichaId !== personagemSelecionadoId),
         {
           fichaId: personagemSelecionadoId,
           nome: personagem.personagem.nome || personagemSelecionadoId,
@@ -1750,20 +1786,21 @@ const DashboardMestre = () => {
     const novaListaMarcas = marcas.map((m) =>
       m.id === marcaSelecionadaId ? marcaAtualizada : m,
     );
-    salvarMarcas(novaListaMarcas);
+    await salvarMarcas(novaListaMarcas);
 
     // Chama salvarFichaSelecionada passando o ID do personagem alvo
     await salvarFichaSelecionada(
       personagemAtualizado,
       `Destino "${marca.nome}" atribuído a ${personagem.personagem.nome}.`,
       personagemSelecionadoId,
+      true,
     );
 
     // Resetar seleção
     setPersonagemSelecionadoId("");
     setPersonagemSelecionado(null);
     setMarcaSelecionadaId("");
-  };
+  });
 
   const handlePersonagemChange = (fichaId) => {
     setPersonagemSelecionadoId(fichaId);
@@ -2248,6 +2285,7 @@ const DashboardMestre = () => {
     personagemAtualizado = personagem,
     mensagemCustom = null,
     fichaIdOverride = null,
+    exigirOnline = false,
   ) => {
     const idParaSalvar = fichaIdOverride || fichaSelecionada;
     if (!idParaSalvar || !personagemAtualizado) return;
@@ -2260,7 +2298,8 @@ const DashboardMestre = () => {
       try {
         const doBackend = await buscarPersonagem(idParaSalvar);
         if (doBackend) fichaMaisRecente = doBackend;
-      } catch {
+      } catch (error) {
+        if (exigirOnline) throw error;
         try {
           const local = localStorage.getItem(`${STORAGE_KEY}_${idParaSalvar}`);
           if (local) fichaMaisRecente = JSON.parse(local);
@@ -2274,6 +2313,7 @@ const DashboardMestre = () => {
 
       if (!personagemFinal.marcas) personagemFinal.marcas = [];
 
+      if (exigirOnline) await salvarPersonagem(idParaSalvar, personagemFinal);
       salvarFichaLocal(idParaSalvar, personagemFinal);
       notificarPersonagemAtualizado(idParaSalvar, personagemFinal);
 
@@ -2290,7 +2330,7 @@ const DashboardMestre = () => {
         ),
       );
 
-      const personagemSalvo = await salvarPersonagem(
+      const personagemSalvo = exigirOnline ? personagemFinal : await salvarPersonagem(
         idParaSalvar,
         personagemFinal,
       );
@@ -2302,7 +2342,8 @@ const DashboardMestre = () => {
         mensagemCustom || "Ficha salva. Alterações do jogador preservadas.",
       );
       return personagemSalvo || personagemFinal;
-    } catch {
+    } catch (error) {
+      if (exigirOnline) throw error;
       setMensagem(
         mensagemCustom ||
           "Ficha salva localmente sem foto. Backend indisponivel.",

@@ -10,6 +10,8 @@ const DATA_DIR = process.env.DATA_DIR
 const BUILD_DIR = path.join(__dirname, "..", "frontend", "build");
 const SERVE_FRONTEND = process.env.SERVE_FRONTEND !== "false";
 const DEFAULT_FICHA_ID = "principal";
+const DESTINOS_RECORD_ID = "__destinos__";
+const DESTINOS_FILE = path.join(DATA_DIR, "destinos.json");
 const SKILL_TREES_RECORD_ID = "__arvores_habilidades__";
 const SHOP_CATALOG_RECORD_ID = "__catalogo_loja__";
 const SHOP_CATALOG_FILE = path.join(DATA_DIR, "loja-catalogo.json");
@@ -509,7 +511,7 @@ const listPersonagens = async () => {
     const personagens = rows
       .filter(
         (row) =>
-          row.id !== SKILL_TREES_RECORD_ID && row.id !== SHOP_CATALOG_RECORD_ID,
+          row.id !== DESTINOS_RECORD_ID && row.id !== SKILL_TREES_RECORD_ID && row.id !== SHOP_CATALOG_RECORD_ID,
       )
       .map((row) => ({
         fichaId: row.id,
@@ -536,6 +538,7 @@ const listPersonagens = async () => {
         .filter(
           (file) =>
             file.endsWith(".json") &&
+            file !== "destinos.json" &&
             file !== "loja-catalogo.json" &&
             file !== "arvores-habilidades.json",
         )
@@ -587,6 +590,28 @@ const deletePersonagem = async (id) => {
 
     throw error;
   }
+};
+
+const readDestinos = async () => {
+  if (USE_SUPABASE) {
+    const rows = await requestSupabase("?id=eq." + DESTINOS_RECORD_ID + "&select=personagem&limit=1");
+    return rows[0]?.personagem?.destinos || [];
+  }
+  try { return JSON.parse(await fs.readFile(DESTINOS_FILE, "utf8")); }
+  catch (error) { if (error.code === "ENOENT") return []; throw error; }
+};
+const writeDestinos = async (destinos) => {
+  if (!Array.isArray(destinos) || destinos.some((d) => !d || typeof d.id !== "string" || typeof d.nome !== "string" || !d.nome.trim())) throw new Error("Destinos invalidos");
+  if (USE_SUPABASE) {
+    await requestSupabase("?on_conflict=id", {
+      method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+      body: JSON.stringify({ id: DESTINOS_RECORD_ID, personagem: { tipo: "destinos", destinos }, updated_at: new Date().toISOString() }),
+    });
+  } else {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    await fs.writeFile(DESTINOS_FILE, JSON.stringify(destinos, null, 2));
+  }
+  return destinos;
 };
 
 const readShopCatalog = async () => {
@@ -763,6 +788,13 @@ const handleRequest = async (req, res) => {
 
     }
 
+    if (url.pathname === "/api/destinos" && req.method === "GET") {
+      return sendJson({ req, res, statusCode: 200, payload: { destinos: await readDestinos() } });
+    }
+    if (url.pathname === "/api/destinos" && req.method === "PUT") {
+      const body = await readJsonBody(req);
+      return sendJson({ req, res, statusCode: 200, payload: { destinos: await writeDestinos(body.destinos) } });
+    }
     if (url.pathname === "/api/loja/catalogo" && req.method === "GET") {
       const catalogo = await readShopCatalog();
       const etag = computeEtag({ catalogo });

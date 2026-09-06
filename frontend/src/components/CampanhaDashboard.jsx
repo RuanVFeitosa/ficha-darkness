@@ -41,6 +41,8 @@ const cenaVazia = {
   pasta: "Sem pasta",
   imagensCena: [],
   mapasBatalha: [],
+  visualizarTodos: true,
+  jogadoresVisiveis: [],
 };
 const urlCena = (cena, tipo) =>
   tipo === "mapa"
@@ -250,6 +252,15 @@ const CampanhaDashboard = () => {
     setEditorAberto(true);
     setErro("");
   };
+  const alternarJogadorCena = (fichaId) => {
+    const id = String(fichaId || "");
+    setEditando((atual) => {
+      const selecionados = new Set((atual.jogadoresVisiveis || []).map(String));
+      if (selecionados.has(id)) selecionados.delete(id);
+      else selecionados.add(id);
+      return { ...atual, jogadoresVisiveis: [...selecionados] };
+    });
+  };
   const adicionarMidia = (tipo) => {
     const chave = tipo === "cena" ? "imagensCena" : "mapasBatalha";
     const prefixo = tipo === "cena" ? "Imagem" : "Mapa";
@@ -302,6 +313,10 @@ const CampanhaDashboard = () => {
   };
   const confirmar = async (event) => {
     event.preventDefault();
+    if (editando.visualizarTodos === false && !editando.jogadoresVisiveis?.length) {
+      setErro("Selecione pelo menos um jogador para visualizar esta cena.");
+      return;
+    }
     setSalvando(true);
     setErro("");
     try {
@@ -843,7 +858,10 @@ const CampanhaDashboard = () => {
                           <p>{cena.descricao || "Sem descricao"}</p>
                           <small>
                             {cena.imagensCena?.length || 0} cenas estaticas ·{" "}
-                            {cena.mapasBatalha?.length || 0} mapas
+                            {cena.mapasBatalha?.length || 0} mapas ·{" "}
+                            {cena.visualizarTodos === false
+                              ? `${cena.jogadoresVisiveis?.length || 0} jogador(es)`
+                              : "todos os jogadores"}
                           </small>
                         </div>
                         <div className="campanha-cena-acoes">
@@ -1283,6 +1301,43 @@ const CampanhaDashboard = () => {
                 }
               />
             </label>
+            <section className="campanha-cena-visibilidade">
+              <div>
+                <strong>Visibilidade da cena</strong>
+                <small>
+                  {editando.visualizarTodos !== false
+                    ? "Todos os jogadores verão esta cena quando ela estiver ativa."
+                    : "Apenas as fichas selecionadas verão a cena."}
+                </small>
+              </div>
+              <button
+                type="button"
+                className={editando.visualizarTodos !== false ? "ativo" : ""}
+                onClick={() => setEditando((atual) => ({
+                  ...atual,
+                  visualizarTodos: atual.visualizarTodos === false,
+                }))}
+              >
+                {editando.visualizarTodos !== false ? "Todos" : "Específicos"}
+              </button>
+              {editando.visualizarTodos === false && (
+                <div className="campanha-cena-jogadores">
+                  {(campanha.membros || []).map((membro) => {
+                    const fichaId = String(membro.ficha_id || "");
+                    const selecionado = (editando.jogadoresVisiveis || [])
+                      .map(String)
+                      .includes(fichaId);
+                    return (
+                      <label key={membro.id || fichaId} className={selecionado ? "selecionado" : ""}>
+                        <input type="checkbox" checked={selecionado} onChange={() => alternarJogadorCena(fichaId)} />
+                        <span>{membro.nome || fichaId}</span>
+                      </label>
+                    );
+                  })}
+                  {!campanha.membros?.length && <small>Vincule fichas à campanha antes de restringir a cena.</small>}
+                </div>
+              )}
+            </section>
             <section className="campanha-midias-editor">
               <header>
                 <div>

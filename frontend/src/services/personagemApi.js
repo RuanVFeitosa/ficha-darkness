@@ -188,3 +188,8 @@ export const salvarArvoresHabilidades = async (arvores) => {
 
   return data.arvores || {};
 };
+
+export const buscarDestinos = async () => (await request("/destinos")).destinos || [];
+export const salvarDestinos = async (destinos) => (await request("/destinos", {
+  method: "PUT", body: JSON.stringify({ destinos }),
+})).destinos;

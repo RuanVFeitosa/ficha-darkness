@@ -94,6 +94,7 @@ import MapLightingLayer, {
 import "../CSS/Mesa.css";
 import { estiloBordaToken } from "../utils/tokenAppearance";
 import { limitarMovimentoToken } from "../utils/tokenCollision";
+import { cenaVisivelParaJogador } from "../utils/sceneVisibility";
 
 const cenaVazia = {
   nome: "",
@@ -107,6 +108,8 @@ const cenaVazia = {
   larguraGrade: 12,
   alturaGrade: 8,
   lojaDisponivel: false,
+  visualizarTodos: true,
+  jogadoresVisiveis: [],
 };
 const idMidiaLocal = (tipo = "midia") =>
   `${tipo}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -458,13 +461,19 @@ const Mesa = () => {
       localStorage.getItem("fichaRPG_ultimaFicha") ||
       "",
   );
+  const cenaAtivaVisivel =
+    mestre || cenaVisivelParaJogador(campanha?.cenaAtiva, fichaJogadorId)
+      ? campanha?.cenaAtiva
+      : null;
+  const cenaRestrita =
+    !mestre && Boolean(campanha?.cenaAtiva) && !cenaAtivaVisivel;
   useEffect(() => {
     if (
       !mestre &&
       aplicativoMesaAberto === "loja" &&
-      !campanha?.cenaAtiva?.lojaDisponivel
+      !cenaAtivaVisivel?.lojaDisponivel
     ) setAplicativoMesaAberto(null);
-  }, [aplicativoMesaAberto, campanha?.cenaAtiva?.lojaDisponivel, mestre]);
+  }, [aplicativoMesaAberto, cenaAtivaVisivel?.lojaDisponivel, mestre]);
   const modoIniciativaAtivo = Boolean(
     campanha?.combateAtivo || campanha?.investigacaoAtiva,
   );
@@ -688,7 +697,7 @@ const Mesa = () => {
   );
   useEffect(() => {
     const url = urlCena(
-      campanha?.cenaAtiva,
+      cenaAtivaVisivel,
       campanha?.modo,
       campanha?.midiaAtivaId,
     );
@@ -703,16 +712,16 @@ const Mesa = () => {
     return () => {
       ativo = false;
     };
-  }, [campanha?.cenaAtiva, campanha?.midiaAtivaId, campanha?.modo]);
+  }, [cenaAtivaVisivel, campanha?.midiaAtivaId, campanha?.modo]);
   useEffect(() => {
     setAudioEspecialPronto(false);
-    if (campanha?.modo !== "especial" || !campanha?.cenaAtiva?.cenaEspecial?.audioUrl) return undefined;
-    const timer = setTimeout(() => setAudioEspecialPronto(true), Math.max(0, Number(campanha.cenaAtiva.cenaEspecial.atrasoAudio) || 0));
+    if (campanha?.modo !== "especial" || !cenaAtivaVisivel?.cenaEspecial?.audioUrl) return undefined;
+    const timer = setTimeout(() => setAudioEspecialPronto(true), Math.max(0, Number(cenaAtivaVisivel.cenaEspecial.atrasoAudio) || 0));
     return () => {
       clearTimeout(timer);
       setAudioEspecialPronto(false);
     };
-  }, [campanha?.cenaAtiva?.id, campanha?.cenaAtiva?.cenaEspecial, campanha?.modo]);
+  }, [cenaAtivaVisivel?.id, cenaAtivaVisivel?.cenaEspecial, campanha?.modo]);
   useEffect(() => {
     const audio = audioCenaEspecialRef.current;
     if (!audio || !audioEspecialPronto) return undefined;
@@ -722,7 +731,7 @@ const Mesa = () => {
   }, [audioEspecialPronto]);
   useEffect(() => {
     if (campanha?.modo !== "mapa") return undefined;
-    const url = urlCena(campanha?.cenaAtiva, "mapa", campanha?.midiaAtivaId);
+    const url = urlCena(cenaAtivaVisivel, "mapa", campanha?.midiaAtivaId);
     if (!url) return undefined;
     let ativo = true;
     const imagem = new Image();
@@ -738,7 +747,7 @@ const Mesa = () => {
     return () => {
       ativo = false;
     };
-  }, [campanha?.cenaAtiva, campanha?.midiaAtivaId, campanha?.modo]);
+  }, [cenaAtivaVisivel, campanha?.midiaAtivaId, campanha?.modo]);
   const carregarFichas = useCallback(() => {
     setErroFichas("");
     listarPersonagens()
@@ -1350,8 +1359,22 @@ const Mesa = () => {
     setEditorAberto(true);
   };
 
+  const alternarJogadorCena = (fichaId) => {
+    const id = String(fichaId || "");
+    setEditando((atual) => {
+      const selecionados = new Set((atual.jogadoresVisiveis || []).map(String));
+      if (selecionados.has(id)) selecionados.delete(id);
+      else selecionados.add(id);
+      return { ...atual, jogadoresVisiveis: [...selecionados] };
+    });
+  };
+
   const confirmarCena = async (event) => {
     event.preventDefault();
+    if (editando.visualizarTodos === false && !editando.jogadoresVisiveis?.length) {
+      setErro("Selecione pelo menos um jogador para visualizar esta cena.");
+      return;
+    }
     setSalvando(true);
     setErro("");
     try {
@@ -2067,7 +2090,7 @@ const Mesa = () => {
       </main>
     );
 
-  const cena = campanha.cenaAtiva;
+  const cena = cenaAtivaVisivel;
   const midiaAtiva =
     midiasDaCena(cena, campanha.modo).find(
       (item) => item.id === campanha.midiaAtivaId,
@@ -2283,7 +2306,9 @@ const Mesa = () => {
             <span>{selecionada ? "No ar" : "Cena salva"}</span>
             <strong>{item.nome}</strong>
             <small>
-              {urlCena(item, "mapa") ? "Mapa preparado" : "Sem mapa"}
+              {item.visualizarTodos === false
+                ? `${item.jogadoresVisiveis?.length || 0} jogador(es) podem ver`
+                : urlCena(item, "mapa") ? "Mapa preparado" : "Sem mapa"}
             </small>
           </div>
           <div className="biblioteca-item-acoes">
@@ -2525,7 +2550,7 @@ const Mesa = () => {
             </div>
           </div>
         )}
-        {!mestre && campanha.cenaAtiva?.lojaDisponivel && (
+        {!mestre && cena?.lojaDisponivel && (
           <div className="mesa-ferramentas-jogador">
             <button
               className={`mesa-cenas-botao ${aplicativoMesaAberto === "loja" ? "ativo" : ""}`}
@@ -2660,7 +2685,7 @@ const Mesa = () => {
         <SoundpadTabletop sons={campanha.soundpad} estadoRemoto={campanha.soundpadEstado} controlavel={false} />
       )}
 
-      {campanha.modo === "especial" && cena.cenaEspecial?.midiaUrl && (
+      {campanha.modo === "especial" && cena?.cenaEspecial?.midiaUrl && (
         <section className={`cena-especial cena-especial-${cena.cenaEspecial.transicao || "cinema"}`} aria-label={`Cena especial: ${cena.nome}`}>
           {cena.cenaEspecial.tipoMidia === "video" ? (
             <video src={cena.cenaEspecial.midiaUrl} autoPlay loop={cena.cenaEspecial.loop !== false} muted playsInline />
@@ -2684,7 +2709,13 @@ const Mesa = () => {
         </section>
       )}
 
-      <section className={`mesa-palco modo-${campanha.modo}`}>
+      <section className={`mesa-palco modo-${campanha.modo} ${cenaRestrita ? "cena-restrita" : ""}`}>
+        {cenaRestrita && (
+          <div className="mesa-cena-restrita" role="status">
+            <span>Cena reservada</span>
+            <strong>Aguarde as próximas instruções do mestre</strong>
+          </div>
+        )}
         <div
           className={`mesa-imagem ${tokenArrastando ? "arrastando-token" : ""} ${mapaArrastando ? "arrastando-mapa" : ""}`}
           style={{
@@ -2752,13 +2783,13 @@ const Mesa = () => {
           }}
           onPointerLeave={(event) => tokenArrastando && soltarToken(event)}
         >
-          {campanha.modo === "mapa" && mapaAtualIluminacao?.exibirGrade !== false && (
+          {cena && campanha.modo === "mapa" && mapaAtualIluminacao?.exibirGrade !== false && (
             <div
               className="mesa-grade"
               style={{ backgroundSize: `${100 / colunas}% ${100 / linhas}%` }}
             />
           )}
-          {campanha.modo === "mapa" && configuracaoIluminacao && (
+          {cena && campanha.modo === "mapa" && configuracaoIluminacao && (
             <MapLightingLayer
               key={chaveMapaIluminacao}
               mapaUrl={mapaAtualIluminacao?.url}
@@ -2770,7 +2801,7 @@ const Mesa = () => {
               salvando={salvandoIluminacao}
             />
           )}
-          {campanha.modo === "mapa" &&
+          {cena && campanha.modo === "mapa" &&
             campanha.tokens
               .filter((token) => {
                 const estado = estadoTokenNoMapa(token);
@@ -4460,6 +4491,54 @@ const Mesa = () => {
                 }
               />
             </label>
+            <section className="cena-editor-visibilidade">
+              <div className="cena-editor-visibilidade-cabecalho">
+                <div>
+                  <strong>Visibilidade da cena</strong>
+                  <small>
+                    {editando.visualizarTodos !== false
+                      ? "Todos os jogadores verão esta cena quando ela estiver ativa."
+                      : "Apenas as fichas selecionadas verão a cena."}
+                  </small>
+                </div>
+                <button
+                  type="button"
+                  className={editando.visualizarTodos !== false ? "ativo" : ""}
+                  onClick={() => setEditando((atual) => ({
+                    ...atual,
+                    visualizarTodos: atual.visualizarTodos === false,
+                  }))}
+                >
+                  {editando.visualizarTodos !== false ? "Todos" : "Específicos"}
+                </button>
+              </div>
+              {editando.visualizarTodos === false && (
+                <div className="cena-editor-jogadores">
+                  {(campanha.membros || []).map((membro) => {
+                    const fichaId = String(membro.ficha_id || "");
+                    const selecionado = (editando.jogadoresVisiveis || [])
+                      .map(String)
+                      .includes(fichaId);
+                    return (
+                      <label key={membro.id || fichaId} className={selecionado ? "selecionado" : ""}>
+                        <input
+                          type="checkbox"
+                          checked={selecionado}
+                          onChange={() => alternarJogadorCena(fichaId)}
+                        />
+                        <span>
+                          <b>{membro.nome || fichaId}</b>
+                          <small>{fichaId}</small>
+                        </span>
+                      </label>
+                    );
+                  })}
+                  {!campanha.membros?.length && (
+                    <small>Vincule fichas à campanha antes de restringir a cena.</small>
+                  )}
+                </div>
+              )}
+            </section>
             <div className="cena-editor-midias">
               <label>
                 Imagens da cena · max. 2 MB cada

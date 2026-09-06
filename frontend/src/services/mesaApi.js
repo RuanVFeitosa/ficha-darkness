@@ -106,6 +106,12 @@ const normalizarMidiasCena = (cena = {}) => {
   const mapaAntigo = cena.mapaUrl || cena.mapa_url;
   return {
     ...cena,
+    visualizarTodos: cena.visualizar_todos ?? cena.visualizarTodos ?? true,
+    jogadoresVisiveis: Array.isArray(cena.jogadores_visiveis)
+      ? cena.jogadores_visiveis.map(String)
+      : Array.isArray(cena.jogadoresVisiveis)
+        ? cena.jogadoresVisiveis.map(String)
+        : [],
     lojaDisponivel: Boolean(cena.loja_disponivel ?? cena.lojaDisponivel),
     cenaEspecial: cena.cena_especial || cena.cenaEspecial || null,
     imagensCena: imagens.length ? imagens : imagemAntiga ? [{ id: `cena-${cena.id || "nova"}-1`, nome: "Cena principal", url: imagemAntiga }] : [],
@@ -502,6 +508,10 @@ export const salvarCena = async (campanhaId, cena) => {
     imagens_cena: imagensPersistidas,
     mapas_batalha: mapasPersistidos,
     loja_disponivel: Boolean(cena.lojaDisponivel ?? cena.loja_disponivel),
+    visualizar_todos: cena.visualizarTodos ?? cena.visualizar_todos ?? true,
+    jogadores_visiveis: (cena.visualizarTodos ?? cena.visualizar_todos ?? true)
+      ? []
+      : [...new Set((cena.jogadoresVisiveis || cena.jogadores_visiveis || []).map(String))],
     cena_especial: cena.cenaEspecial ? {
       ...cena.cenaEspecial,
       midiaUrl: urlPersistivel(cena.cenaEspecial.midiaUrl, cena.cenaEspecial.midiaUrlPersistida),

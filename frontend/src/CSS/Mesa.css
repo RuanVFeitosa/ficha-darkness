@@ -2086,6 +2086,23 @@
 .cena-editor-loja>span { display:grid; gap:4px; }
 .cena-editor-loja strong { color:#e7dfcf; font-size:10px; }
 .cena-editor-loja small { color:#858078; font-size:8px; line-height:1.4; }
+.cena-editor-visibilidade { display:grid; gap:11px; padding:13px 14px; border:1px solid rgba(212,175,55,.25); background:rgba(212,175,55,.035); }
+.cena-editor-visibilidade-cabecalho { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+.cena-editor-visibilidade-cabecalho>div { display:grid; gap:4px; }
+.cena-editor-visibilidade-cabecalho strong { color:#e7dfcf; font-size:10px; text-transform:uppercase; }
+.cena-editor-visibilidade-cabecalho small,.cena-editor-jogadores small { color:#858078; font-size:8px; line-height:1.4; }
+.cena-editor-visibilidade-cabecalho>button { padding:8px 11px; border:1px solid #49443b; background:#111; color:#aaa49a; font-size:8px; text-transform:uppercase; cursor:pointer; }
+.cena-editor-visibilidade-cabecalho>button.ativo { border-color:var(--mesa-acento); color:var(--mesa-acento); }
+.cena-editor-jogadores { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:7px; }
+.cena-editor-jogadores label { display:flex; align-items:center; gap:8px; padding:9px; border:1px solid #39362f; background:#0d0e0e; cursor:pointer; }
+.cena-editor-jogadores label.selecionado { border-color:var(--mesa-acento); background:color-mix(in srgb,var(--mesa-acento) 8%,#0d0e0e); }
+.cena-editor-jogadores input { width:14px!important; height:14px; accent-color:var(--mesa-acento); }
+.cena-editor-jogadores span { display:grid; min-width:0; text-transform:none; }
+.cena-editor-jogadores b { overflow:hidden; color:#d9d2c6; font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
+.mesa-palco.cena-restrita .mesa-imagem { visibility:hidden; pointer-events:none; }
+.mesa-cena-restrita { position:absolute; z-index:5; inset:0; display:grid; place-content:center; gap:9px; padding:30px; background:radial-gradient(circle at center,rgba(50,45,36,.22),transparent 48%),#080909; text-align:center; }
+.mesa-cena-restrita span { color:var(--mesa-acento); font-size:9px; letter-spacing:.18em; text-transform:uppercase; }
+.mesa-cena-restrita strong { color:#d9d2c6; font:400 clamp(18px,3vw,28px) Georgia,serif; }
 @media(max-width:760px){.mesa-aplicativo-painel{inset:48px 0 0}.mesa-ferramentas-jogador .mesa-cenas-botao{min-width:62px}}
 
 /* Editor de cenas alinhado ao acabamento do dashboard da campanha. */
