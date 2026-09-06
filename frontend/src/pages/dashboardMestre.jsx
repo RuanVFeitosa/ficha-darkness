@@ -1825,6 +1825,43 @@ const DashboardMestre = () => {
     setMarcaSelecionadaId("");
   });
 
+  const removerMarcaDoPersonagem = (marca, vinculo) => {
+    abrirPopup({
+      tipo: "perigo",
+      titulo: "Remover Destino do jogador",
+      mensagem: `Remover "${marca.nome}" da ficha de ${vinculo.nome || vinculo.fichaId}?`,
+      confirmarTexto: "Remover",
+      onConfirmar: () => executarOperacaoMarca(async () => {
+        const recente = await buscarPersonagem(vinculo.fichaId);
+        const marcasDaFicha = (recente.marcas || []).filter(
+          (destino) => destino.id !== marca.id,
+        );
+
+        await salvarFichaSelecionada(
+          { marcas: marcasDaFicha },
+          null,
+          vinculo.fichaId,
+          true,
+        );
+
+        const marcasAtualizadas = marcas.map((destino) =>
+          destino.id === marca.id
+            ? {
+                ...destino,
+                atribuidaA: (destino.atribuidaA || []).filter(
+                  (jogador) => jogador.fichaId !== vinculo.fichaId,
+                ),
+              }
+            : destino,
+        );
+        await salvarMarcas(marcasAtualizadas);
+        setMensagem(
+          `Destino "${marca.nome}" removido de ${vinculo.nome || vinculo.fichaId}.`,
+        );
+      }),
+    });
+  };
+
   const handlePersonagemChange = (fichaId) => {
     setPersonagemSelecionadoId(fichaId);
     const ficha = fichas.find((f) => f.fichaId === fichaId);
@@ -5156,7 +5193,7 @@ const DashboardMestre = () => {
                                   className="mestre-modal-fechar"
                                   onClick={() => setNpcEditando(null)}
                                 >
-                                  ×
+                                  Remover
                                 </button>
                               </div>
                             </header>
@@ -8334,6 +8371,14 @@ const DashboardMestre = () => {
                                   }}
                                 />
                                 <span>{p.nome}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removerMarcaDoPersonagem(marca, p)}
+                                  title={`Remover ${marca.nome} de ${p.nome}`}
+                                  aria-label={`Remover ${marca.nome} de ${p.nome}`}
+                                >
+                                  ×
+                                </button>
                               </div>
                             ))}
                           </div>

@@ -4161,6 +4161,33 @@
   font-weight: 700;
 }
 
+.marcas-personagem-chip button {
+  min-width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  margin-left: 2px;
+  padding: 0 7px;
+  border: 1px solid rgba(224, 92, 92, 0.38);
+  border-radius: 999px;
+  background: rgba(120, 25, 25, 0.18);
+  color: #ffb5b5;
+  font: inherit;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.marcas-personagem-chip button:hover {
+  border-color: #ff6b6b;
+  background: #8f2525;
+  color: #fff;
+}
+
 .marcas-card-acoes {
   display: flex;
   gap: 6px;

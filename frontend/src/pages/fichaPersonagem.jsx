@@ -670,6 +670,38 @@ const FichaPersonagem = () => {
   const marcasPendentes = (personagem.marcas || []).filter((m) => !m.aceita);
   const temMarcaPendente = marcasPendentes.length > 0;
 
+  useEffect(() => {
+    const destinosAtuais = personagem.marcas || [];
+
+    if (subAbaHabilidade.startsWith("marca-")) {
+      const destinoId = subAbaHabilidade.slice("marca-".length);
+      const destinoAtual = destinosAtuais.find(
+        (destino) => String(destino.id) === destinoId && destino.aceita,
+      );
+      if (destinoAtual) {
+        setSubAbaMarcaSelecionada(destinoAtual);
+      } else {
+        setSubAbaHabilidade("arquetipo");
+        setSubAbaMarcaSelecionada(null);
+      }
+    }
+
+    if (
+      marcaSelecionada &&
+      !destinosAtuais.some(
+        (destino) => String(destino.id) === String(marcaSelecionada.id),
+      )
+    ) {
+      setMarcaModalAberto(false);
+      setMarcaSelecionada(null);
+      setHabilidadeEscolhidaIndex(null);
+    }
+  }, [
+    personagem.marcas,
+    subAbaHabilidade,
+    marcaSelecionada,
+  ]);
+
   const abrirVisualizador = (item, index) => {
     const ehDefesa =
       item?.categoria === "defesas" ||

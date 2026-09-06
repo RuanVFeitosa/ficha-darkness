@@ -7752,9 +7752,9 @@ body {
   position: absolute;
   z-index: -2;
   top: 50%;
-  right: -9%;
+  left: 50%;
   width: min(58vw, 660px);
-  transform: translateY(-50%);
+  transform: translate(-50%, -50%);
   opacity: 0.07;
   filter: grayscale(1) contrast(1.25);
   pointer-events: none;
@@ -7765,22 +7765,11 @@ body {
   min-height: 170px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  align-items: flex-start;
+  justify-content: center;
+  align-items: center;
   padding: clamp(24px, 4vw, 48px);
   border-bottom: 1px solid var(--marca-detalhes-linha);
-}
-
-.marca-detalhes-header::before {
-  content: "DESTINO";
-  position: absolute;
-  top: 22px;
-  right: clamp(24px, 4vw, 48px);
-  color: rgba(212, 175, 55, 0.2);
-  font-size: clamp(2.4rem, 7vw, 6rem);
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.06em;
+  text-align: center;
 }
 
 .marca-detalhes-header span {
@@ -7821,10 +7810,11 @@ body {
 
 .marca-detalhes-descricao p {
   max-width: 900px;
-  margin: 0;
+  margin: 0 auto;
   color: #c7c3b8;
   font-size: 0.92rem;
   line-height: 1.65;
+  text-align: center;
 }
 
 .marca-detalhes-grid {
@@ -7842,6 +7832,7 @@ body {
   border: 0;
   border-radius: 0;
   background: transparent;
+  text-align: center;
 }
 
 .marca-detalhes-beneficios {
@@ -7883,6 +7874,7 @@ body {
   border: 0;
   border-radius: 0;
   background: rgba(212, 175, 55, 0.025);
+  text-align: center;
 }
 
 .marca-habilidades-lista-detalhes {
@@ -7894,14 +7886,16 @@ body {
 
 .marca-habilidade-item {
   min-height: 100px;
-  display: grid;
-  grid-template-columns: auto 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 15px;
-  align-items: start;
+  align-items: center;
+  justify-content: center;
   padding: 18px;
   border: 1px solid var(--marca-detalhes-linha);
   border-radius: 0;
   background: rgba(0, 0, 0, 0.46);
+  text-align: center;
 }
 
 .marca-habilidade-item > b {
@@ -7934,12 +7928,9 @@ body {
     border-right: 0;
     border-bottom: 1px solid var(--marca-detalhes-linha);
   }
-  .marca-detalhes-header::before {
-    opacity: 0.55;
-  }
   .marca-detalhes-simbolo {
     width: 110vw;
-    right: -45%;
+    left: 50%;
   }
 }
 
