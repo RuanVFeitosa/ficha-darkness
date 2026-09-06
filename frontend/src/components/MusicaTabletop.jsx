@@ -190,7 +190,7 @@ const MusicaTabletop = ({
       tempo: Number(playerRef.current?.getCurrentTime?.() || 0),
       tocando: atual.tocando,
       volume: atual.volume,
-      repetindo: atual.repetindo,
+      repetindo: repetindoRef.current,
       ...mudancas,
     });
   };
@@ -209,7 +209,8 @@ const MusicaTabletop = ({
     if (player.getPlaylistIndex?.() !== indice) player.playVideoAt?.(indice);
     player.seekTo?.((Number(estadoRemoto.tempo) || 0) + decorrido, true);
     player.setVolume?.(estadoRef.current.volume);
-    setRepetindo(Boolean(estadoRemoto.repetindo));
+    repetindoRef.current = Boolean(estadoRemoto.repetindo);
+    setRepetindo(repetindoRef.current);
     if (estadoRemoto.tocando) player.playVideo?.();
     else player.pauseVideo?.();
   }, [controlavel, estadoRemoto, playerPronto]);
@@ -343,10 +344,14 @@ const MusicaTabletop = ({
                 0,
                 event.target.getPlaylistIndex?.() || 0,
               );
-              setTocando(event.data === YT.PlayerState.PLAYING);
+              const reiniciando =
+                event.data === YT.PlayerState.ENDED && repetindoRef.current;
+              setTocando(event.data === YT.PlayerState.PLAYING || reiniciando);
               setIndiceAtual(indice);
-              if (event.data === YT.PlayerState.ENDED && repetindoRef.current)
-                event.target.playVideoAt(indice);
+              if (reiniciando) {
+                event.target.seekTo(0, true);
+                event.target.playVideo();
+              }
               if (
                 controlavel &&
                 [
@@ -357,7 +362,7 @@ const MusicaTabletop = ({
               )
                 publicarEstado({
                   indice,
-                  tocando: event.data === YT.PlayerState.PLAYING,
+                  tocando: event.data === YT.PlayerState.PLAYING || reiniciando,
                   tempo:
                     event.data === YT.PlayerState.ENDED
                       ? 0
@@ -550,6 +555,7 @@ const MusicaTabletop = ({
                 className={repetindo ? "ativo" : ""}
                 onClick={() => {
                   const valor = !repetindo;
+                  repetindoRef.current = valor;
                   setRepetindo(valor);
                   publicarEstado({ repetindo: valor });
                 }}
