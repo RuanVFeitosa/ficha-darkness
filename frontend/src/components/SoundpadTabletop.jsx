@@ -24,6 +24,9 @@ const SoundpadTabletop = ({ sons = [], estadoRemoto, controlavel = true, aoAlter
   const [sonsProntos, setSonsProntos] = useState({});
   const audiosRef = useRef(new Map());
   const animacoesRef = useRef(new Map());
+  const reproducoesEncerradasRef = useRef(new Map());
+  const estadoAtualRef = useRef(estado);
+  estadoAtualRef.current = estado;
   useEffect(() => { setEstado(estadoRemoto || { ativos: {} }); }, [estadoRemoto]);
 
   useEffect(() => {
@@ -58,6 +61,7 @@ const SoundpadTabletop = ({ sons = [], estadoRemoto, controlavel = true, aoAlter
       const ajustes = estado?.ajustes?.[som.id] || {};
       const configurado = { ...som, ...ajustes };
       const ativo = Boolean(ativos[som.id]);
+      const reproducao = JSON.stringify(ativos[som.id]);
       let audio = audiosRef.current.get(som.id);
       if (audio && audio.src !== new URL(som.url, window.location.href).href) {
         audio.pause();
@@ -65,6 +69,7 @@ const SoundpadTabletop = ({ sons = [], estadoRemoto, controlavel = true, aoAlter
         audio = null;
       }
       animacoesRef.current.get(som.id)?.();
+      if (ativo && reproducoesEncerradasRef.current.get(som.id) === reproducao) return;
       if (ativo) {
         if (!audio) {
           audio = new Audio(som.url);
@@ -72,9 +77,23 @@ const SoundpadTabletop = ({ sons = [], estadoRemoto, controlavel = true, aoAlter
           audio.loop = Boolean(configurado.loop);
           audio.volume = 0;
           audiosRef.current.set(som.id, audio);
-          audio.play().then(() => setErroAudio("")).catch(() => setErroAudio("O navegador bloqueou o audio ou a URL nao pode ser reproduzida."));
         }
         audio.loop = Boolean(configurado.loop);
+        audio.onended = () => {
+          if (audio.loop || audiosRef.current.get(som.id) !== audio) return;
+          const atual = estadoAtualRef.current;
+          if (JSON.stringify(atual?.ativos?.[som.id]) !== reproducao) return;
+          animacoesRef.current.get(som.id)?.();
+          animacoesRef.current.delete(som.id);
+          reproducoesEncerradasRef.current.set(som.id, reproducao);
+          audio.pause();
+          const restantes = { ...atual.ativos };
+          delete restantes[som.id];
+          const novo = { ...atual, ativos: restantes, atualizadoEm: new Date().toISOString() };
+          estadoAtualRef.current = novo;
+          setEstado(novo);
+          if (controlavel) aoAlterarEstado?.(novo);
+        };
         const destino = Math.max(0, Math.min(1, ((Number(configurado.volume) || 70) / 100) * ((Number(estado?.volumeGeral) || 100) / 100)));
         const aplicarFadeIn = () => {
           setErroAudio("");
@@ -84,16 +103,17 @@ const SoundpadTabletop = ({ sons = [], estadoRemoto, controlavel = true, aoAlter
         if (audio.paused) audio.play().then(aplicarFadeIn).catch(() => setErroAudio("O navegador bloqueou o audio ou a URL nao pode ser reproduzida."));
         else aplicarFadeIn();
       } else if (audio) {
+        audio.onended = null;
         animacoesRef.current.set(som.id, animarVolume(audio, 0, configurado.fadeOut ?? 0.8, () => {
           audio.pause(); audio.currentTime = 0;
         }));
       }
     });
-  }, [estado, sons]);
+  }, [estado, sons, controlavel, aoAlterarEstado]);
 
   useEffect(() => () => {
     animacoesRef.current.forEach((cancelar) => cancelar?.());
-    audiosRef.current.forEach((audio) => { audio.pause(); audio.currentTime = 0; });
+    audiosRef.current.forEach((audio) => { audio.onended = null; audio.pause(); audio.currentTime = 0; });
   }, []);
 
   const publicar = (ativos) => {
