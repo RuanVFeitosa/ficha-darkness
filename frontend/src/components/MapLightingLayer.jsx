@@ -319,7 +319,7 @@ const MapLightingLayer = ({ configuracao, luzesTokens = [], observadores = null,
       </svg>
       {editando && typeof document !== "undefined" && createPortal(
         <div className="mapa-editor-barra" onPointerDown={(evento) => evento.stopPropagation()}>
-          <span><Icon path={mdiEyeOutline} size={0.65} /> Editor de visão</span>
+          <span title="Arraste com o botão direito ou do meio para mover o mapa. Use a roda para zoom."><Icon path={mdiEyeOutline} size={0.65} /> Editor de visão · Direito: mover · Roda: zoom</span>
           <div className="mapa-periodo" aria-label="Periodo do mapa">
             <button className={dados.periodo === "dia" ? "ativo" : ""} onClick={() => aoAlterar({ ...dados, periodo: "dia" })} title="Luz ambiente diurna; paredes e portas continuam bloqueando a visao"><Icon path={mdiWeatherSunny} size={0.72} /> Dia</button>
             <button className={dados.periodo === "noite" ? "ativo" : ""} onClick={() => aoAlterar({ ...dados, periodo: "noite", escuridao: Number(dados.escuridao) > 0 ? dados.escuridao : VAZIO.escuridao })} title="Ativar iluminacao e oclusao"><Icon path={mdiWeatherNight} size={0.72} /> Noite</button>

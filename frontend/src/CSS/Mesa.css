@@ -211,6 +211,9 @@
   pointer-events: auto;
   touch-action: none;
 }
+.arrastando-mapa .mapa-iluminacao.editando {
+  cursor: grabbing;
+}
 .mapa-escuridao {
   fill: #020303;
   pointer-events: none;

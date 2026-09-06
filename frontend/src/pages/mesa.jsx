@@ -92,6 +92,7 @@ import MapLightingLayer, {
 } from "../components/MapLightingLayer";
 import "../CSS/Mesa.css";
 import { estiloBordaToken } from "../utils/tokenAppearance";
+import { limitarMovimentoToken } from "../utils/tokenCollision";
 
 const cenaVazia = {
   nome: "",
@@ -399,6 +400,7 @@ const Mesa = () => {
   const [personagens, setPersonagens] = useState({});
   const [fichaAberta, setFichaAberta] = useState(null);
   const [tokenArrastando, setTokenArrastando] = useState(null);
+  const movimentoTokenRef = useRef(null);
   const [tokenGirando, setTokenGirando] = useState(null);
   const rotacaoPendenteRef = useRef(null);
   const [menuTokenAberto, setMenuTokenAberto] = useState(null);
@@ -1531,11 +1533,22 @@ const Mesa = () => {
     }));
   };
 
+  const calcularMovimentoToken = (event, token) => {
+    const visual = { ...token, ...estadoTokenNoMapa(token) };
+    const movimento = movimentoTokenRef.current;
+    const origem = movimento?.tokenId === token.id && movimento.mapaChave === mapaChaveAtual
+      ? movimento.posicao
+      : { x: Number(visual.x) || 0, y: Number(visual.y) || 0 };
+    const posicao = limitarMovimentoToken(origem, calcularPosicaoToken(event), configuracaoIluminacao);
+    movimentoTokenRef.current = { tokenId: token.id, mapaChave: mapaChaveAtual, posicao };
+    return posicao;
+  };
+
   const arrastarToken = (event) => {
     const token = campanha.tokens.find((item) => item.id === tokenArrastando);
     if (!tokenArrastando || !podeMoverToken(token) || campanha.modo !== "mapa")
       return;
-    const { x, y } = calcularPosicaoToken(event);
+    const { x, y } = calcularMovimentoToken(event, token);
     setCampanha((atual) => ({
       ...atual,
       tokens: atual.tokens.map((item) =>
@@ -1609,7 +1622,8 @@ const Mesa = () => {
       setTokenArrastando(null);
       return;
     }
-    const { x, y } = calcularPosicaoToken(event);
+    const { x, y } = calcularMovimentoToken(event, token);
+    movimentoTokenRef.current = null;
     tokensEmGravacaoRef.current.add(tokenId);
     posicoesTokensPendentesRef.current.set(tokenId, {
       x,
@@ -1620,7 +1634,7 @@ const Mesa = () => {
     setCampanha((atual) => ({
       ...atual,
       tokens: atual.tokens.map((item) =>
-        item.id === tokenId ? { ...item, x, y } : item,
+        item.id === tokenId ? { ...item, x, y, posicoes: { ...(item.posicoes || {}), [mapaChaveAtual]: { x, y } } } : item,
       ),
     }));
     try {
@@ -1817,7 +1831,9 @@ const Mesa = () => {
   };
 
   const iniciarPanMapa = (event) => {
-    if (campanha.modo !== "mapa" || event.button !== 0) return;
+    const navegandoEditor = mestre && editorIluminacaoAberto &&
+      (event.button === 1 || event.button === 2);
+    if (campanha.modo !== "mapa" || (event.button !== 0 && !navegandoEditor)) return;
     if (!event.target.closest?.(".mesa-token")) setMenuTokenAberto(null);
     if (event.pointerType === "touch") {
       ponteirosMapaRef.current.set(event.pointerId, {
@@ -1852,7 +1868,7 @@ const Mesa = () => {
       }
     }
     if (
-      event.target.closest?.(
+      !navegandoEditor && event.target.closest?.(
         ".mesa-token, .mesa-token-rotacao, .mesa-token-lanterna-toggle",
       )
     )
@@ -2701,6 +2717,17 @@ const Mesa = () => {
           }}
           onDrop={soltarFichaNoMapa}
           onPointerDown={iniciarPanMapa}
+          onPointerDownCapture={(event) => {
+            if (campanha.modo === "mapa" && mestre && editorIluminacaoAberto &&
+                (event.button === 1 || event.button === 2)) {
+              event.stopPropagation();
+              iniciarPanMapa(event);
+            }
+          }}
+          onContextMenu={(event) => {
+            if (campanha.modo === "mapa" && mestre && editorIluminacaoAberto)
+              event.preventDefault();
+          }}
           onPointerMove={(event) => {
             if (tokenGirando) {
               girarToken(event);
@@ -2798,6 +2825,7 @@ const Mesa = () => {
                           event.pointerId,
                         );
                         setMenuTokenAberto(null);
+                        movimentoTokenRef.current = null;
                         setTokenArrastando(token.id);
                       }}
                     >
