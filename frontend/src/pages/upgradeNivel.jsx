@@ -12,6 +12,10 @@ import {
 } from "../data/evolucaoPersonagem";
 import { obterMarcosProgressao } from "../data/progressaoAvancada";
 import { marcarPassivosAtualizados, mesclarPassivosPorRevisao } from "../utils/personagemMerge";
+import {
+  ehHabilidadeProgressaoAvancada,
+  listarHabilidadesCriadasJogador,
+} from "../utils/habilidadesProgressao";
 
 const STORAGE_KEY = "fichaRPG_personagem";
 const DEFAULT_FICHA_ID = "principal";
@@ -77,6 +81,7 @@ const UpgradeNivel = () => {
   const nivelAtual = Math.max(1, parseInt(personagem.nivel, 10) || 1);
   const passouDoNivel5 = nivelAtual > 5;
   const marcosProgressao = useMemo(() => obterMarcosProgressao(personagem), [personagem]);
+  const habilidadesCriadasJogador = listarHabilidadesCriadasJogador(personagem);
 
   const limitesUpgrade = {
     passivos: passouDoNivel5 ? 20 : 10,
@@ -249,10 +254,9 @@ const UpgradeNivel = () => {
       ...(atualizado.progressaoAvancada || {}),
       [nivel]: { ...opcao, nivel, tipo: marcosProgressao[nivel].tipo, escolhidoEm: new Date().toISOString() },
     };
-    atualizado.habilidadesCriadas = [
-      ...(atualizado.habilidadesCriadas || []).filter((item) => item.origemNivelAvancado !== nivel),
-      { id: `marco-${nivel}-${opcao.id}`, tipo: nivel === 10 ? "poderAbsoluto" : "habilidade", nome: opcao.nome, descricao: opcao.descricao, custo: 0, recurso: "marco", status: "aprovado", origem: "progressao-avancada", origemNivelAvancado: nivel, criadaEm: new Date().toISOString() },
-    ];
+    atualizado.habilidadesCriadas = (atualizado.habilidadesCriadas || []).filter(
+      (item) => !ehHabilidadeProgressaoAvancada(item),
+    );
     setPersonagem(atualizado);
     localStorage.setItem(storageKey, JSON.stringify(atualizado));
     notificarPersonagemAtualizado(fichaId, atualizado);
@@ -1099,7 +1103,22 @@ const UpgradeNivel = () => {
               </div>
               <div className="habilidades-enviadas">
                 <h3>Suas solicitações</h3>
-                {(personagem.habilidadesCriadas || []).length ? personagem.habilidadesCriadas.map((habilidade) => <article key={habilidade.id} className={`habilidade-enviada ${habilidade.status || "pendente"}`}><div><strong>{habilidade.nome}</strong><span>{habilidade.tipo === "rito" ? "Rito" : habilidade.tipo === "poderAbsoluto" ? "Poder Absoluto" : "Habilidade"} · {habilidade.custo} {habilidade.recurso === "evolucao" ? "Pontos de Evolução" : habilidade.recurso}</span><p>{habilidade.descricao}</p></div><b>{habilidade.status || "pendente"}</b></article>) : <p>Nenhuma solicitação enviada.</p>}
+                {habilidadesCriadasJogador.length ? (
+                  habilidadesCriadasJogador.map((habilidade) => (
+                    <article key={habilidade.id} className={`habilidade-enviada ${habilidade.status || "pendente"}`}>
+                      <div>
+                        <strong>{habilidade.nome}</strong>
+                        <span>
+                          {habilidade.tipo === "rito" ? "Rito" : habilidade.tipo === "poderAbsoluto" ? "Poder Absoluto" : "Habilidade"} · {habilidade.custo} {habilidade.recurso === "evolucao" ? "Pontos de Evolução" : habilidade.recurso}
+                        </span>
+                        <p>{habilidade.descricao}</p>
+                      </div>
+                      <b>{habilidade.status || "pendente"}</b>
+                    </article>
+                  ))
+                ) : (
+                  <p>Nenhuma solicitação enviada.</p>
+                )}
               </div>
             </div>
           )}

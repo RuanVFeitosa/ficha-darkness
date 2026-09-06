@@ -7347,10 +7347,23 @@ body {
   border-radius: 18px;
 
   background: var(--fundo-elevado);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.habilidade-expandivel:hover {
+  border-color: var(--cor-primaria);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.habilidade-expandivel-cabecalho {
+  display: flex;
+  align-items: stretch;
 }
 
 .habilidade-expandivel-topo {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   min-height: 120px;
   padding: 22px;
 
@@ -7366,6 +7379,28 @@ body {
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.habilidade-expandivel-acao {
+  width: 88px;
+  margin: 16px 16px 16px 0;
+  border: 1px solid rgba(224, 92, 92, 0.65);
+  border-radius: 10px;
+  background: rgba(120, 25, 25, 0.18);
+  color: #ffb5b5;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.habilidade-expandivel-acao:hover {
+  border-color: #ff8585;
+  background: #8f2525;
+  color: #fff;
 }
 
 .habilidade-expandivel-topo span {
@@ -7502,7 +7537,7 @@ body {
    HABILIDADES CRIADAS - LAYOUT LADO A LADO
    ========================================================= */
 .habilidades-criadas-section {
-  padding: 0.5rem 0;
+  padding: 0.75rem 0;
 }
 
 .habilidades-criadas-lado-a-lado {
@@ -7572,7 +7607,11 @@ body {
 
 /* Lista de habilidades criadas */
 .lista-habilidades-criadas-bloco h5 {
-  margin-bottom: 0.8rem;
+  margin: 0 0 0.45rem;
+  color: var(--cor-texto);
+  font-size: 1rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
 }
 
 .habilidades-criadas-ajuda {
@@ -7584,104 +7623,39 @@ body {
 
 .habilidades-criadas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 0.8rem;
-  max-height: 400px;
-  overflow-y: auto;
-  padding-right: 4px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+  align-items: start;
+  overflow: visible;
 }
 
-.habilidade-criada-card {
-  background: #000000;
-  border: 1px solid #979797;
-  border-radius: 8px;
-  padding: 0.8rem 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.5rem;
+.habilidade-expandivel.criada {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.035), transparent 45%),
+    var(--fundo-elevado);
 }
 
-.habilidade-criada-info {
-  flex: 1;
+.habilidade-expandivel.criada.pendente {
+  border-left: 3px solid #d4af37;
 }
 
-.habilidade-criada-info strong {
-  display: block;
-  font-size: 1rem;
-  color: #f5efe4;
-}
-
-.custo-badge {
-  display: inline-block;
-  background: #2c3e50;
-  color: #ecf0f1;
-  font-size: 0.7rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  margin: 0.2rem 0 0.4rem 0;
-}
-
-.habilidade-criada-info p {
-  margin: 0.3rem 0 0 0;
-  font-size: 0.9rem;
-  color: #b0b0b0;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.btn-remover-habilidade {
-  background: transparent;
-  border: none;
-  color: #e74c3c;
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  transition: background 0.2s;
-  line-height: 1;
-}
-
-.btn-remover-habilidade:hover {
-  background: #2c2c2c;
-}
-
-.habilidade-criada-card.aprovada {
+.habilidade-expandivel.criada.aprovada,
+.habilidade-expandivel.criada.aprovado {
   border-left: 3px solid #4cc56b;
 }
 
-.habilidade-criada-card.recusada {
+.habilidade-expandivel.criada.recusada,
+.habilidade-expandivel.criada.recusado {
   border-left: 3px solid #e05c5c;
 }
 
-.status-habilidade-criada {
-  display: inline-block;
-  margin-top: 0.45rem;
-  color: #d4af37;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+.habilidade-expandivel.criada .habilidade-expandivel-topo span {
+  letter-spacing: 2px;
 }
 
-.btn-vender-habilidade {
-  align-self: flex-start;
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid rgba(224, 92, 92, 0.65);
-  border-radius: 6px;
-  background: rgba(120, 25, 25, 0.22);
-  color: #ffb5b5;
-  font: inherit;
-  font-size: 0.75rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.btn-vender-habilidade:hover {
-  background: #8f2525;
-  color: #fff;
+.habilidade-expandivel.criada .habilidade-expandivel-topo strong {
+  max-width: 150px;
+  text-align: center;
 }
 
 .sem-habilidades {
@@ -7701,7 +7675,7 @@ body {
   }
 
   .habilidades-criadas-grid {
-    max-height: 300px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 }
 
@@ -7710,13 +7684,18 @@ body {
     padding: 0.8rem;
   }
 
-  .habilidade-criada-card {
-    flex-direction: column;
-    align-items: stretch;
+  .habilidades-criadas-grid {
+    grid-template-columns: 1fr;
   }
 
-  .btn-remover-habilidade {
-    align-self: flex-end;
+  .habilidade-expandivel-cabecalho {
+    flex-direction: column;
+  }
+
+  .habilidade-expandivel-acao {
+    width: auto;
+    min-height: 38px;
+    margin: -6px 16px 16px;
   }
 }
 

@@ -61,6 +61,10 @@ import {
 import { obterIconeItem } from "../utils/itemIcons";
 import { marcarPassivosAtualizados, mesclarPassivosPorRevisao } from "../utils/personagemMerge";
 import {
+  listarHabilidadesCriadasJogador,
+  listarHabilidadesProgressaoAvancada,
+} from "../utils/habilidadesProgressao";
+import {
   listarHabilidadesSelecionadas,
   obterArvoreClasse,
   salvarArvoresCustom,
@@ -3534,9 +3538,13 @@ const cancelarEdicaoHabilidade = () => {
     (habilidade) => habilidade.grupo === "Aptidão",
   );
 
-  const habilidadesEspecialismo = habilidadesSelecionadas.filter(
-    (habilidade) => habilidade.grupo === "Especialismo",
-  );
+  const habilidadesEspecialismo = [
+    ...habilidadesSelecionadas.filter(
+      (habilidade) => habilidade.grupo === "Especialismo",
+    ),
+    ...listarHabilidadesProgressaoAvancada(personagem),
+  ];
+  const habilidadesCriadasJogador = listarHabilidadesCriadasJogador(personagem);
 
   const calcularValorAtivo = (atributo, ativo) => {
     const modAtributo = calcularModificadorAtivo(
@@ -3690,6 +3698,8 @@ const cancelarEdicaoHabilidade = () => {
     habilidade,
     tipo = "APTIDÃO",
     classeExtra = "",
+    selo,
+    acao,
   }) => {
     const [aberto, setAberto] = useState(false);
 
@@ -3703,18 +3713,30 @@ const cancelarEdicaoHabilidade = () => {
       <article
         className={`habilidade-expandivel ${classeExtra} ${aberto ? "aberto" : ""}`}
       >
-        <button
-          type="button"
-          className="habilidade-expandivel-topo"
-          onClick={() => setAberto((prev) => !prev)}
-        >
-          <div>
-            <span>{tipo}</span>
-            <h3>{habilidade.nome}</h3>
-          </div>
+        <div className="habilidade-expandivel-cabecalho">
+          <button
+            type="button"
+            className="habilidade-expandivel-topo"
+            onClick={() => setAberto((prev) => !prev)}
+            aria-expanded={aberto}
+          >
+            <div>
+              <span>{tipo}</span>
+              <h3>{habilidade.nome}</h3>
+            </div>
 
-          {habilidade.custo && <strong>{habilidade.custo}</strong>}
-        </button>
+            {(selo || habilidade.custo) && <strong>{selo || habilidade.custo}</strong>}
+          </button>
+          {acao && (
+            <button
+              type="button"
+              className="habilidade-expandivel-acao"
+              onClick={acao.onClick}
+            >
+              {acao.rotulo}
+            </button>
+          )}
+        </div>
 
         <div className="habilidade-expandivel-corpo">
           <p>{descricao}</p>
@@ -4271,7 +4293,11 @@ const cancelarEdicaoHabilidade = () => {
                   <CardHabilidadeRecolhivel
                     key={habilidade.id}
                     habilidade={habilidade}
-                    tipo="ESPECIALISMO"
+                    tipo={
+                      habilidade.nivel
+                        ? `ESPECIALISMO · NÍVEL ${habilidade.nivel}`
+                        : "ESPECIALISMO"
+                    }
                     classeExtra="especialismo"
                   />
                 ))
@@ -4315,38 +4341,32 @@ const cancelarEdicaoHabilidade = () => {
                   habilidade, você recupera o valor investido.
                 </p>
                 <div className="habilidades-criadas-grid">
-                  {(personagem.habilidadesCriadas || []).length > 0 ? (
-                    personagem.habilidadesCriadas.map((habilidade) => (
-                      <div
-                        key={habilidade.id}
-                        className={`habilidade-criada-card ${habilidade.status || "pendente"}`}
-                      >
-                        <div className="habilidade-criada-info">
-                          <strong>{habilidade.nome}</strong>
-                          <span className="custo-badge">
-                            {habilidade.tipo === "rito"
-                              ? "Rito"
-                              : habilidade.tipo === "poderAbsoluto"
-                                ? "Poder Absoluto"
-                                : "Habilidade"}{" "}
-                            · {habilidade.custo}{" "}
-                            {habilidade.recurso === "evolucao"
-                              ? "Pontos de Evolução"
-                              : habilidade.recurso}
-                          </span>
-                          <span className="status-habilidade-criada">
-                            {habilidade.status || "pendente"}
-                          </span>
-                          <p>{habilidade.descricao || "Sem descrição."}</p>
-                        </div>
-                        <button
-                          className="btn-vender-habilidade"
-                          onClick={() => venderHabilidadeCriada(habilidade)}
-                        >
-                          Vender
-                        </button>
-                      </div>
-                    ))
+                  {habilidadesCriadasJogador.length > 0 ? (
+                    habilidadesCriadasJogador.map((habilidade) => {
+                      const tipoCriada = habilidade.tipo === "rito"
+                        ? "RITO CRIADO"
+                        : habilidade.tipo === "poderAbsoluto"
+                          ? "PODER ABSOLUTO CRIADO"
+                          : "HABILIDADE CRIADA";
+                      const recurso = habilidade.recurso === "evolucao"
+                        ? "PONTOS DE EVOLUÇÃO"
+                        : String(habilidade.recurso || "").toUpperCase();
+                      const status = habilidade.status || "pendente";
+
+                      return (
+                        <CardHabilidadeRecolhivel
+                          key={habilidade.id}
+                          habilidade={habilidade}
+                          tipo={`${tipoCriada} · ${status}`}
+                          selo={`${habilidade.custo || 0} ${recurso}`.trim()}
+                          classeExtra={`criada ${status}`}
+                          acao={{
+                            rotulo: "Vender",
+                            onClick: () => venderHabilidadeCriada(habilidade),
+                          }}
+                        />
+                      );
+                    })
                   ) : (
                     <p className="sem-habilidades">
                       Nenhuma habilidade criada ainda.
