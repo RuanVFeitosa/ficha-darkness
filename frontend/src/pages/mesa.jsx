@@ -88,6 +88,7 @@ import MusicaTabletop from "../components/MusicaTabletop";
 import SoundpadTabletop from "../components/SoundpadTabletop";
 import MapLightingLayer, {
   pontoVisivelPorLuz,
+  pontoVisivelPorObservadores,
 } from "../components/MapLightingLayer";
 import "../CSS/Mesa.css";
 import { estiloBordaToken } from "../utils/tokenAppearance";
@@ -2091,24 +2092,17 @@ const Mesa = () => {
     ...(configuracaoVisao.paredes || []),
     ...(configuracaoVisao.portas || []).filter((porta) => !porta.aberta),
   ];
-  const luzDoJogador = !mestre
-    ? luzesDosTokens.find(
-        (luz) =>
-          String(
-            campanha.tokens.find((token) => token.id === luz.tokenId)?.ficha_id,
-          ) === String(fichaJogadorId),
-      )
-    : null;
+  const observadoresJogador = (campanha.tokens || [])
+    .filter((token) => fichaJogadorId != null && String(token.ficha_id) === String(fichaJogadorId))
+    .map((token) => ({ ...token, ...estadoTokenNoMapa(token) }))
+    .filter((token) => !token.removido && !token.oculto);
   const tokenVisivelParaJogador = (token) => {
-    if (mestre || periodoMapa !== "noite") return true;
-    if (String(token.ficha_id) === String(fichaJogadorId)) return true;
-    if (luzDoJogador && pontoVisivelPorLuz(luzDoJogador, token, bloqueadoresVisao)) return true;
-    const luzDoOutroToken = luzesDosTokens.find((luz) => luz.tokenId === token.id);
-    return (campanha.tokens || [])
-      .filter((item) => String(item.ficha_id) === String(fichaJogadorId))
-      .map((item) => ({ ...item, ...estadoTokenNoMapa(item) }))
-      .some((proprio) => !proprio.removido && !proprio.oculto &&
-        pontoVisivelPorLuz(luzDoOutroToken, proprio, bloqueadoresVisao));
+    if (mestre) return true;
+    if (fichaJogadorId != null && String(token.ficha_id) === String(fichaJogadorId)) return true;
+    if (!pontoVisivelPorObservadores(observadoresJogador, token, bloqueadoresVisao)) return false;
+    if (periodoMapa !== "noite") return true;
+    return [...(configuracaoVisao.luzes || []), ...luzesDosTokens]
+      .some((luz) => pontoVisivelPorLuz(luz, token, bloqueadoresVisao));
   };
   const personagemFichaAberta = fichaAberta?.personagem;
   const habilidadesFichaAberta = personagemFichaAberta
@@ -2742,6 +2736,7 @@ const Mesa = () => {
               mapaUrl={mapaAtualIluminacao?.url}
               configuracao={configuracaoIluminacao}
               luzesTokens={luzesDosTokens}
+              observadores={mestre ? null : observadoresJogador}
               editando={mestre && editorIluminacaoAberto}
               aoAlterar={alterarConfiguracaoIluminacao}
               salvando={salvandoIluminacao}

@@ -56,7 +56,12 @@ export const pontoVisivelPorLuz = (luz, ponto, bloqueadores = []) => {
   });
 };
 
-const poligonoVisibilidade = (luz, paredes) => {
+export const pontoVisivelPorObservadores = (observadores, ponto, bloqueadores = []) =>
+  observadores.some((origem) => pontoVisivelPorLuz(
+    { x: Number(origem.x), y: Number(origem.y), alcance: 150 }, ponto, bloqueadores,
+  ));
+
+export const poligonoVisibilidade = (luz, paredes) => {
   const alcance = Number(luz.alcance || 22);
   const direcional = luz.tipo === "cone";
   const direcao = Number(luz.direcao) || 0;
@@ -98,7 +103,7 @@ const poligonoVisibilidade = (luz, paredes) => {
         const relativoB = Math.atan2(Math.sin(b - direcao), Math.cos(b - direcao));
         return relativoA - relativoB;
       })
-    : angulos.sort((a, b) => a - b);
+    : angulos.map((angulo) => Math.atan2(Math.sin(angulo), Math.cos(angulo))).sort((a, b) => a - b);
   const pontos = ordenados.map((angulo) => {
       let ponto = {
         x: luz.x + Math.cos(angulo) * alcance,
@@ -126,7 +131,7 @@ const normalizar = (configuracao) => ({
     (Number(configuracao?.escuridao) > 0 ? "noite" : "dia"),
 });
 
-const MapLightingLayer = ({ configuracao, luzesTokens = [], editando, aoAlterar, salvando }) => {
+const MapLightingLayer = ({ configuracao, luzesTokens = [], observadores = null, editando, aoAlterar, salvando }) => {
   const svgRef = useRef(null);
   const [ferramenta, setFerramenta] = useState("parede");
   const [paredeRascunho, setParedeRascunho] = useState(null);
@@ -138,6 +143,12 @@ const MapLightingLayer = ({ configuracao, luzesTokens = [], editando, aoAlterar,
   const pontosLuz = useMemo(
     () => [...dados.luzes, ...luzesTokens].map((luz) => ({ ...luz, poligono: poligonoVisibilidade(luz, bloqueadores) })),
     [dados.luzes, bloqueadores, luzesTokens],
+  );
+  const camposVisao = useMemo(
+    () => observadores?.map((origem) => poligonoVisibilidade(
+      { x: Number(origem.x), y: Number(origem.y), alcance: 150 }, bloqueadores,
+    )),
+    [observadores, bloqueadores],
   );
 
   const pontoDoEvento = (evento) => {
@@ -196,6 +207,12 @@ const MapLightingLayer = ({ configuracao, luzesTokens = [], editando, aoAlterar,
         onPointerCancel={() => setParedeRascunho(null)}
       >
         <defs>
+          {camposVisao && (
+            <mask id="mascara-visao-jogador" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+              <rect width="100" height="100" fill="white" />
+              {camposVisao.map((pontos, indice) => <polygon key={indice} points={pontos} fill="black" />)}
+            </mask>
+          )}
           {pontosLuz.map((luz) => (
             <React.Fragment key={luz.id}>
               <radialGradient id={`gradiente-${luz.id}`} cx="50%" cy="50%" r="50%">
@@ -215,6 +232,9 @@ const MapLightingLayer = ({ configuracao, luzesTokens = [], editando, aoAlterar,
         </defs>
         {dados.periodo === "noite" && (
           <rect className="mapa-escuridao" width="100" height="100" opacity={dados.escuridao} mask="url(#mascara-escuridao)" />
+        )}
+        {camposVisao && !editando && (
+          <rect className="mapa-fora-de-visao" width="100" height="100" fill="#020303" mask="url(#mascara-visao-jogador)" />
         )}
         {editando && (
           <g className="mapa-geometria-editor">
@@ -301,7 +321,7 @@ const MapLightingLayer = ({ configuracao, luzesTokens = [], editando, aoAlterar,
         <div className="mapa-editor-barra" onPointerDown={(evento) => evento.stopPropagation()}>
           <span><Icon path={mdiEyeOutline} size={0.65} /> Editor de visão</span>
           <div className="mapa-periodo" aria-label="Periodo do mapa">
-            <button className={dados.periodo === "dia" ? "ativo" : ""} onClick={() => aoAlterar({ ...dados, periodo: "dia" })} title="Desativar iluminacao e oclusao"><Icon path={mdiWeatherSunny} size={0.72} /> Dia</button>
+            <button className={dados.periodo === "dia" ? "ativo" : ""} onClick={() => aoAlterar({ ...dados, periodo: "dia" })} title="Luz ambiente diurna; paredes e portas continuam bloqueando a visao"><Icon path={mdiWeatherSunny} size={0.72} /> Dia</button>
             <button className={dados.periodo === "noite" ? "ativo" : ""} onClick={() => aoAlterar({ ...dados, periodo: "noite", escuridao: Number(dados.escuridao) > 0 ? dados.escuridao : VAZIO.escuridao })} title="Ativar iluminacao e oclusao"><Icon path={mdiWeatherNight} size={0.72} /> Noite</button>
           </div>
           <button className={ferramenta === "parede" ? "ativo" : ""} onClick={() => setFerramenta("parede")} title="Desenhar parede"><Icon path={mdiWall} size={0.75} /> Parede</button>
