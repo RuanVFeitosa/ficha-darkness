@@ -1,4 +1,5 @@
 import { supabase, supabaseConfigurado, supabaseObrigatorioAusente } from "./supabase";
+import { tipoAudioUpload } from "../utils/audioUpload";
 
 const CENAS_DEMO_PADRAO = [
   { id: "sala-marcos", nome: "A sala de Marcos", descricao: "A chuva bate contra os vidros. Algo se move no corredor.", imagemUrl: "/SalaMarcos.webp", mapaUrl: "/SalaMarcos.webp", larguraGrade: 12, alturaGrade: 8, ordem: 0 },
@@ -551,15 +552,14 @@ export const LIMITES_UPLOAD_IMAGEM = {
 };
 const TIPOS_IMAGEM_PERMITIDOS = new Set(["image/webp", "image/jpeg", "image/png", "image/avif"]);
 const TIPOS_ESPECIAIS_PERMITIDOS = new Set([...TIPOS_IMAGEM_PERMITIDOS, "image/gif", "video/mp4", "video/webm"]);
-const TIPOS_AUDIO_PERMITIDOS = new Set(["audio/mpeg", "audio/ogg", "audio/wav", "audio/webm", "audio/mp4", "audio/x-m4a"]);
 
 export const validarArquivoImagem = (arquivo, tipo = "cena") => {
   if (!arquivo) return null;
   const limite = LIMITES_UPLOAD_IMAGEM[tipo] || LIMITES_UPLOAD_IMAGEM.cena;
-  const tipos = tipo === "especial" ? TIPOS_ESPECIAIS_PERMITIDOS : tipo === "audio" ? TIPOS_AUDIO_PERMITIDOS : TIPOS_IMAGEM_PERMITIDOS;
-  if (!tipos.has(arquivo.type)) {
+  const tipos = tipo === "especial" ? TIPOS_ESPECIAIS_PERMITIDOS : TIPOS_IMAGEM_PERMITIDOS;
+  if (tipo === "audio" ? !tipoAudioUpload(arquivo) : !tipos.has(arquivo.type)) {
     if (tipo === "especial") throw new Error("Formato nao permitido. Use GIF, MP4, WebM, WebP, JPEG, PNG ou AVIF.");
-    if (tipo === "audio") throw new Error("Formato de audio nao permitido. Use MP3, OGG, WAV, WebM ou M4A.");
+    if (tipo === "audio") throw new Error("Formato de audio nao permitido. Use MP3, OGG, Opus, WAV, WebM, M4A, MP4, AAC ou FLAC.");
     throw new Error("Formato nao permitido. Use WebP, JPEG, PNG ou AVIF.");
   }
   if (arquivo.size > limite.bytes) {
@@ -582,7 +582,10 @@ export const enviarImagemCena = async (campanhaId, arquivo, tipo) => {
   const extensao = arquivo.name.split(".").pop()?.toLowerCase() || "webp";
   const sufixo = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2, 10);
   const caminho = `${campanhaId}/${tipo}-${Date.now()}-${sufixo}.${extensao}`;
-  const { error } = await supabase.storage.from("mapas").upload(caminho, arquivo, { upsert: false });
+  const { error } = await supabase.storage.from("mapas").upload(caminho, arquivo, {
+    upsert: false,
+    ...(tipo === "audio" ? { contentType: tipoAudioUpload(arquivo) } : {}),
+  });
   if (error) throw error;
   return supabase.storage.from("mapas").getPublicUrl(caminho).data.publicUrl;
 };

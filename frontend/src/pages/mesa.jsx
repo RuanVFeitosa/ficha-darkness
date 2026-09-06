@@ -1,3 +1,4 @@
+import { ACEITAR_AUDIO } from "../utils/audioUpload";
 import React, {
   useCallback,
   useEffect,
@@ -3400,7 +3401,7 @@ const Mesa = () => {
                     <b>PC</b><span><strong>Computador moderno</strong><small>Internet, mensagens e arquivos</small></span>
                   </button>
                 </div>
-                  {novoDocumento.modeloInterativo === "cassete" && <label className={`cassete-upload ${novoDocumento.arquivo ? "selecionado" : ""}`}><span className="cassete-upload-icone"><Icon path={mdiUploadOutline} size={0.9} /></span><span className="cassete-upload-texto"><strong>{novoDocumento.arquivo?.name || "Selecione o áudio da fita"}</strong><small>MP3, OGG, WAV ou M4A · até 20 MB</small></span><span className="cassete-upload-acao">{novoDocumento.arquivo ? "Trocar" : "Escolher"}</span><input aria-label="Selecionar áudio da fita" type="file" accept="audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4" onChange={(event) => {
+                  {novoDocumento.modeloInterativo === "cassete" && <label className={`cassete-upload ${novoDocumento.arquivo ? "selecionado" : ""}`}><span className="cassete-upload-icone"><Icon path={mdiUploadOutline} size={0.9} /></span><span className="cassete-upload-texto"><strong>{novoDocumento.arquivo?.name || "Selecione o áudio da fita"}</strong><small>MP3, OGG, WAV ou M4A · até 20 MB</small></span><span className="cassete-upload-acao">{novoDocumento.arquivo ? "Trocar" : "Escolher"}</span><input aria-label="Selecionar áudio da fita" type="file" accept={ACEITAR_AUDIO} onChange={(event) => {
                     const arquivo = event.target.files?.[0] || null;
                     try { if (arquivo) validarArquivoImagem(arquivo, "audio"); setNovoDocumento((atual) => ({ ...atual, arquivo })); setErro(""); }
                     catch (error) { event.target.value = ""; setNovoDocumento((atual) => ({ ...atual, arquivo: null })); setErro(error.message); }
@@ -4496,7 +4497,7 @@ const Mesa = () => {
               </label>
               {editando.cenaEspecial?.ativo && <div className="cena-editor-especial-campos">
                 <label>GIF, imagem ou video · max. 25 MB<input type="file" accept="image/gif,image/webp,image/jpeg,image/png,image/avif,video/mp4,video/webm" onChange={(e) => selecionarArquivosCena("especial", e.target.files, e.target)} /><small>{arquivos.especial[0]?.arquivo.name || editando.cenaEspecial.midiaUrl || "Nenhuma midia selecionada"}</small></label>
-                <label>Musica de fundo · max. 20 MB<input type="file" accept="audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4" onChange={(e) => selecionarArquivosCena("audio", e.target.files, e.target)} /><small>{arquivos.audio[0]?.arquivo.name || editando.cenaEspecial.audioUrl || "Sem trilha propria"}</small></label>
+                <label>Musica de fundo · max. 20 MB<input type="file" accept={ACEITAR_AUDIO} onChange={(e) => selecionarArquivosCena("audio", e.target.files, e.target)} /><small>{arquivos.audio[0]?.arquivo.name || editando.cenaEspecial.audioUrl || "Sem trilha propria"}</small></label>
                 <label>URL da midia<input value={editando.cenaEspecial.midiaUrl || ""} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, midiaUrl: e.target.value } })} placeholder="https://.../abertura.gif" /></label>
                 <label>URL da musica ou YouTube<input value={editando.cenaEspecial.audioUrl || ""} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, audioUrl: e.target.value, audioUrlPersistida: "" } })} placeholder="https://youtube.com/watch?v=..." /><small>Aceita um video do YouTube ou um link direto de audio.</small></label>
                 <label>Transicao<select value={editando.cenaEspecial.transicao || "cinema"} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, transicao: e.target.value } })}><option value="cinema">Cortinas de cinema</option><option value="fade">Fade sombrio</option><option value="impacto">Impacto</option></select></label>

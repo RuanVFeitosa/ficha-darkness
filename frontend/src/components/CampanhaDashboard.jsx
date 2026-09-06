@@ -1,3 +1,4 @@
+import { ACEITAR_AUDIO } from "../utils/audioUpload";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Icon from "@mdi/react";
 import {
@@ -1037,7 +1038,7 @@ const CampanhaDashboard = () => {
                   Arquivo de audio
                   <input
                     type="file"
-                    accept="audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4"
+                    accept={ACEITAR_AUDIO}
                     onChange={(e) =>
                       selecionarAudioSom(som.id, e.target.files[0], e.target)
                     }
