@@ -45,7 +45,10 @@ import {
   salvarPersonagem,
 } from "../services/personagemApi";
 import { atualizarDestinoNaFicha } from "../utils/destinos";
-import { compressProfileImage } from "../services/imageCompression";
+import {
+  compressBackgroundImage,
+  compressProfileImage,
+} from "../services/imageCompression";
 import { obterIconeItem } from "../utils/itemIcons";
 import {
   notificarArvoresAtualizadas,
@@ -675,6 +678,8 @@ const DashboardMestre = () => {
     beneficios: "",
     penalidades: "",
     habilidades: [],
+    corLinhas: "#111111",
+    imagemFundo: "",
   });
   const [personagemSelecionadoId, setPersonagemSelecionadoId] = useState("");
   const [marcaSelecionadaId, setMarcaSelecionadaId] = useState("");
@@ -1690,7 +1695,23 @@ const DashboardMestre = () => {
       beneficios: marca.beneficios,
       penalidades: marca.penalidades,
       habilidades: marca.habilidades || [],
+      corLinhas: marca.corLinhas || "#111111",
+      imagemFundo: marca.imagemFundo || "",
     });
+  };
+
+  const selecionarImagemFundoMarca = async (event) => {
+    const arquivo = event.target.files?.[0];
+    event.target.value = "";
+    if (!arquivo) return;
+    try {
+      setMensagem("Preparando imagem do Destino...");
+      const imagemFundo = await compressBackgroundImage(arquivo);
+      setFormMarca((atual) => ({ ...atual, imagemFundo }));
+      setMensagem("Imagem de fundo preparada.");
+    } catch (error) {
+      setMensagem(error.message || "Não foi possível preparar a imagem.");
+    }
   };
 
   const salvarEdicaoMarca = (e) => {
@@ -1734,6 +1755,8 @@ const DashboardMestre = () => {
       beneficios: "",
       penalidades: "",
       habilidades: [],
+      corLinhas: "#111111",
+      imagemFundo: "",
     });
     setMarcaEditando(null);
   };
@@ -8039,6 +8062,58 @@ const DashboardMestre = () => {
                       rows="2"
                     />
                   </label>
+
+                  <section className="marcas-aparencia-editor">
+                    <div className="marcas-aparencia-topo">
+                      <div>
+                        <strong>Aparência da conexão</strong>
+                        <small>Personalize a tela que o jogador verá ao abrir este Destino.</small>
+                      </div>
+                      <label className="marcas-cor-linhas">
+                        Cor das linhas
+                        <span>
+                          <input
+                            type="color"
+                            value={formMarca.corLinhas || "#111111"}
+                            onChange={(e) => setFormMarca({
+                              ...formMarca,
+                              corLinhas: e.target.value,
+                            })}
+                          />
+                          <input
+                            type="text"
+                            value={formMarca.corLinhas || "#111111"}
+                            readOnly
+                            aria-label="Código da cor das linhas"
+                          />
+                        </span>
+                      </label>
+                    </div>
+                    <label className="marcas-imagem-fundo">
+                      Imagem de fundo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={selecionarImagemFundoMarca}
+                      />
+                      <span>
+                        {formMarca.imagemFundo
+                          ? "Trocar imagem"
+                          : "Escolher imagem"}
+                      </span>
+                    </label>
+                    {formMarca.imagemFundo && (
+                      <div className="marcas-imagem-preview">
+                        <img src={formMarca.imagemFundo} alt="Prévia do fundo do Destino" />
+                        <button
+                          type="button"
+                          onClick={() => setFormMarca({ ...formMarca, imagemFundo: "" })}
+                        >
+                          Remover imagem
+                        </button>
+                      </div>
+                    )}
+                  </section>
 
                   <div className="marcas-habilidades-container">
                     <label>Habilidades opcionais (máx. 3)</label>

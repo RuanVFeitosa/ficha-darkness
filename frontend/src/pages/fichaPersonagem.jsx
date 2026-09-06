@@ -4359,7 +4359,22 @@ const cancelarEdicaoHabilidade = () => {
 
           {subAbaHabilidade.startsWith("marca-") && subAbaMarcaSelecionada && (
             <section className="marca-detalhes-section">
-              <div className="marca-detalhes-card">
+              <div
+                className="marca-detalhes-card"
+                style={{
+                  "--marca-detalhes-linha":
+                    subAbaMarcaSelecionada.corLinhas || "#d4af37",
+                }}
+              >
+                {subAbaMarcaSelecionada.imagemFundo && (
+                  <div
+                    className="marca-detalhes-fundo"
+                    style={{
+                      backgroundImage: `url(${subAbaMarcaSelecionada.imagemFundo})`,
+                    }}
+                    aria-hidden="true"
+                  />
+                )}
                 <img className="marca-detalhes-simbolo" src="/OAbsoluto.webp" alt="" aria-hidden="true" />
                 <div className="marca-detalhes-header">
                   <span>VÍNCULO COM O ABSOLUTO</span>
@@ -7176,7 +7191,17 @@ const cancelarEdicaoHabilidade = () => {
               role="dialog"
               aria-modal="true"
               aria-labelledby="marca-conexao-titulo"
+              style={{
+                "--marca-linha": marcaSelecionada.corLinhas || "#111111",
+              }}
             >
+              {marcaSelecionada.imagemFundo && (
+                <div
+                  className="marca-conexao-fundo"
+                  aria-hidden="true"
+                  style={{ backgroundImage: `url(${marcaSelecionada.imagemFundo})` }}
+                />
+              )}
               <div className="marca-conexao-simbolo" aria-hidden="true">
                 <img src="/OAbsoluto.webp" alt="" />
                 <span className="marca-conexao-pulso pulso-um" />

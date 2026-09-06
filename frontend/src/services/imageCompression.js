@@ -75,3 +75,39 @@ export const compressProfileImage = async (file) => {
 
   return dataUrl;
 };
+
+export const compressBackgroundImage = async (file) => {
+  if (!file?.type?.startsWith("image/")) {
+    throw new Error("Escolha um arquivo de imagem valido.");
+  }
+
+  const originalDataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Nao foi possivel ler a imagem."));
+    reader.readAsDataURL(file);
+  });
+  const image = await loadImage(originalDataUrl);
+  const ratio = Math.min(
+    1,
+    1600 / Math.max(image.naturalWidth, image.naturalHeight),
+  );
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * ratio));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * ratio));
+  const context = canvas.getContext("2d", { alpha: false });
+  context.fillStyle = "#f4f3ef";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  let quality = 0.78;
+  let dataUrl = await canvasToDataUrl(canvas, "image/jpeg", quality);
+  while (getDataUrlBytes(dataUrl) > 420 * 1024 && quality > 0.38) {
+    quality -= 0.08;
+    dataUrl = await canvasToDataUrl(canvas, "image/jpeg", quality);
+  }
+  if (getDataUrlBytes(dataUrl) > 600 * 1024) {
+    throw new Error("A imagem continua muito grande após a compressão. Escolha outra imagem.");
+  }
+  return dataUrl;
+};

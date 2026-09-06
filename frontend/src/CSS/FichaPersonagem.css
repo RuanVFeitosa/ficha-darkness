@@ -1297,6 +1297,7 @@ body {
 
 /* Tela de conexão com o Absoluto — escolha de Marca */
 .marca-conexao {
+  --marca-linha: #111111;
   position: fixed;
   inset: 0;
   z-index: 10050;
@@ -1305,6 +1306,17 @@ body {
   color: #090909;
   isolation: isolate;
   animation: marcaConexaoEntrada 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.marca-conexao-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  background-position: center;
+  background-size: cover;
+  opacity: 0.28;
+  filter: grayscale(0.15) contrast(0.9);
+  pointer-events: none;
 }
 
 .marca-conexao.saindo {
@@ -1316,7 +1328,7 @@ body {
   content: "";
   position: fixed;
   inset: 0;
-  z-index: -3;
+  z-index: -1;
   opacity: 0.14;
   background-image: repeating-linear-gradient(
     0deg,
@@ -1352,7 +1364,7 @@ body {
   left: 50%;
   width: 18%;
   aspect-ratio: 1;
-  border: 1px solid #000;
+  border: 1px solid var(--marca-linha);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   animation: marcaPulso 2.8s ease-out infinite;
@@ -1371,7 +1383,7 @@ body {
   justify-content: space-between;
   min-height: 66px;
   padding: 0 clamp(20px, 4vw, 68px);
-  border-bottom: 1px solid #111;
+  border-bottom: 1px solid var(--marca-linha);
   background: rgba(244, 243, 239, 0.91);
   backdrop-filter: blur(12px);
 }
@@ -1384,7 +1396,7 @@ body {
 
 .marca-conexao-voltar {
   padding: 10px 14px;
-  border: 1px solid #111;
+  border: 1px solid var(--marca-linha);
   background: transparent;
   color: #111;
   font: inherit;
@@ -1417,7 +1429,7 @@ body {
 .marca-conexao-indice {
   display: inline-block;
   padding: 7px 12px;
-  border: 1px solid #111;
+  border: 1px solid var(--marca-linha);
   font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 2px;
@@ -1447,7 +1459,7 @@ body {
 .marca-conexao-linha i {
   flex: 1;
   height: 1px;
-  background: #111;
+  background: var(--marca-linha);
 }
 .marca-conexao-linha b {
   font-size: 0.62rem;
@@ -1455,15 +1467,16 @@ body {
 }
 
 .marca-conexao-marca {
-  border: 2px solid #090909;
-  background: transparent;
-  box-shadow: 12px 12px 0 #090909;
+  border: 2px solid var(--marca-linha);
+  background: rgba(244, 243, 239, 0.78);
+  box-shadow: 12px 12px 0 var(--marca-linha);
+  backdrop-filter: blur(2px);
   animation: marcaConteudoSurge 0.8s 0.65s both;
 }
 
 .marca-conexao-identidade {
   padding: clamp(22px, 4vw, 42px);
-  border-bottom: 1px solid #111;
+  border-bottom: 1px solid var(--marca-linha);
 }
 .marca-conexao-identidade span {
   font-size: 0.65rem;
@@ -1482,7 +1495,7 @@ body {
   margin: 0;
   padding: 24px clamp(22px, 4vw, 42px);
   border: 0;
-  border-bottom: 1px solid #111;
+  border-bottom: 1px solid var(--marca-linha);
   color: #111;
   font-size: 1rem;
   line-height: 1.65;
@@ -1490,7 +1503,7 @@ body {
 .marca-conexao-efeitos {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border-bottom: 1px solid #111;
+  border-bottom: 1px solid var(--marca-linha);
 }
 .marca-conexao .marca-beneficios,
 .marca-conexao .marca-penalidades {
@@ -1501,7 +1514,7 @@ body {
   background: transparent;
 }
 .marca-conexao .marca-beneficios {
-  border-right: 1px solid #111;
+  border-right: 1px solid var(--marca-linha);
 }
 .marca-conexao .marca-beneficios h3,
 .marca-conexao .marca-penalidades h3,
@@ -1525,7 +1538,7 @@ body {
 }
 .marca-conexao .marca-habilidades {
   padding: clamp(22px, 4vw, 42px);
-  border-bottom: 1px solid #111;
+  border-bottom: 1px solid var(--marca-linha);
 }
 .marca-conexao-secao-titulo {
   display: flex;
@@ -1554,7 +1567,7 @@ body {
   align-items: start;
   min-height: 130px;
   padding: 18px;
-  border: 1px solid #111;
+  border: 1px solid var(--marca-linha);
   border-radius: 0;
   background: transparent;
   color: #111;
@@ -1575,7 +1588,7 @@ body {
 }
 .marca-conexao .marca-habilidade-btn:hover,
 .marca-conexao .marca-habilidade-btn.selecionada {
-  border-color: #090909;
+  border-color: var(--marca-linha);
   background: #090909;
   box-shadow: none;
 }
@@ -7715,10 +7728,11 @@ body {
 }
 
 .marca-detalhes-card {
+  --marca-detalhes-linha: #d4af37;
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  border: 1px solid rgba(212, 175, 55, 0.42);
+  border: 1px solid var(--marca-detalhes-linha);
   background: linear-gradient(
     145deg,
     rgba(11, 12, 11, 0.96),
@@ -7727,6 +7741,18 @@ body {
   box-shadow:
     inset 0 1px rgba(255, 255, 255, 0.04),
     0 22px 70px rgba(0, 0, 0, 0.35);
+}
+
+.marca-detalhes-fundo {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.34;
+  filter: saturate(0.78) contrast(1.08);
+  pointer-events: none;
 }
 
 .marca-detalhes-card::before {
@@ -7763,7 +7789,7 @@ body {
   justify-content: flex-end;
   align-items: flex-start;
   padding: clamp(24px, 4vw, 48px);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+  border-bottom: 1px solid var(--marca-detalhes-linha);
 }
 
 .marca-detalhes-header::before {
@@ -7798,7 +7824,7 @@ body {
 
 .marca-detalhes-header i {
   padding: 6px 9px;
-  border: 1px solid rgba(212, 175, 55, 0.5);
+  border: 1px solid var(--marca-detalhes-linha);
   color: #d4af37;
   font-size: 0.58rem;
   font-style: normal;
@@ -7810,7 +7836,7 @@ body {
   margin: 0;
   padding: 22px clamp(24px, 4vw, 48px);
   border: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--marca-detalhes-linha);
   background: rgba(255, 255, 255, 0.025);
 }
 
@@ -7827,7 +7853,7 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 0;
   margin: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--marca-detalhes-linha);
 }
 
 .marca-detalhes-beneficios,
@@ -7840,7 +7866,7 @@ body {
 }
 
 .marca-detalhes-beneficios {
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid var(--marca-detalhes-linha);
 }
 .marca-detalhes-penalidades {
   background: rgba(120, 20, 20, 0.035);
@@ -7894,7 +7920,7 @@ body {
   gap: 15px;
   align-items: start;
   padding: 18px;
-  border: 1px solid rgba(212, 175, 55, 0.28);
+  border: 1px solid var(--marca-detalhes-linha);
   border-radius: 0;
   background: rgba(0, 0, 0, 0.46);
 }
@@ -7927,7 +7953,7 @@ body {
   }
   .marca-detalhes-beneficios {
     border-right: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--marca-detalhes-linha);
   }
   .marca-detalhes-header::before {
     opacity: 0.55;
