@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import Icon from "@mdi/react";
 import ReprodutorCassete from "../components/ReprodutorCassete";
+import ComputadorModerno from "../components/ComputadorModerno";
 import { confirmarDialogo } from "../components/DialogoGlobal";
 import {
   mdiAccountPlusOutline,
@@ -4365,6 +4366,8 @@ const Mesa = () => {
             <div className="documento-visualizador-conteudo">
               {String(documentoAberto.mimeType || documentoAberto.mime_type).includes("cassete") ? (
                 <ReprodutorCassete key={documentoAberto.id} documento={documentoAberto} />
+              ) : String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc") ? (
+                <ComputadorModerno key={`${documentoAberto.id}-${abaEvidenciaInterativa}`} campanhaId={campanha.id} documento={documentoAberto} admin={mestre && abaEvidenciaInterativa === "conteudo"} />
               ) : documentoAberto.categoria === "interativa" ? (
                 <iframe
                   className="evidencia-interativa-frame"

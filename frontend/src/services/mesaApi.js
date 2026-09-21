@@ -742,6 +742,26 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
   };
 };
 
+export const lerConteudoComputador = async (campanhaId, documentoId) => {
+  if (!supabaseConfigurado || String(campanhaId).startsWith('demo')) {
+    return carregarDemo(campanhaId).documentosInvestigacao?.find(d => String(d.id) === String(documentoId))?.conteudo_interativo ?? null;
+  }
+  const { data, error } = await supabase.from('documentos_investigacao').select('conteudo_interativo').eq('campanha_id', campanhaId).eq('id', documentoId).single();
+  if (error) throw new Error(`Não foi possível carregar o PC: ${error.message}`);
+  return data.conteudo_interativo;
+};
+
+export const salvarConteudoComputador = async (campanhaId, documentoId, content) => {
+  if (!content || !['pages', 'messages', 'files', 'emails'].every(k => Array.isArray(content[k]))) throw new Error('Conteúdo do PC inválido.');
+  if (!supabaseConfigurado || String(campanhaId).startsWith('demo')) {
+    const demo = carregarDemo(campanhaId);
+    salvarDemo({ ...demo, documentosInvestigacao: (demo.documentosInvestigacao || []).map(d => String(d.id) === String(documentoId) ? { ...d, conteudo_interativo: content } : d) }, campanhaId);
+    return;
+  }
+  const { error } = await supabase.from('documentos_investigacao').update({ conteudo_interativo: content }).eq('campanha_id', campanhaId).eq('id', documentoId).select('id').single();
+  if (error) throw new Error(error.message);
+};
+
 export const salvarEvidenciaInterativa = async (campanhaId, metadados = {}) => {
   const modelo = ["modern-pc", "cassete"].includes(metadados.modeloInterativo) ? metadados.modeloInterativo : "msdos";
   if (modelo === "cassete" && !metadados.audioUrl) throw new Error("Selecione um áudio para a fita cassete.");
