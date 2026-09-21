@@ -13,6 +13,7 @@ const LojaHelena = lazy(() => import("./pages/lojaHelena"));
 const Mesa = lazy(() => import("./pages/mesa"));
 const TelaInicial = lazy(() => import("./pages/telaInicial"));
 const UpgradeNivel = lazy(() => import("./pages/upgradeNivel"));
+const FichaEspiral = lazy(() => import("./pages/fichaEspiral"));
 
 function App() {
   const [search, setSearch] = useState(window.location.search);
@@ -32,9 +33,15 @@ function App() {
 
       if (!link) return;
 
-      const href = link.getAttribute("href");
+      let href = link.getAttribute("href");
 
       if (!href || !href.startsWith("?")) return;
+
+      const destination = new URLSearchParams(href);
+      if (new URLSearchParams(window.location.search).get('sistema') === 'darkness' && !destination.has('sistema')) {
+        destination.set('sistema', 'darkness');
+        href = `?${destination.toString()}`;
+      }
 
       event.preventDefault();
 
@@ -52,7 +59,14 @@ function App() {
     return () => window.removeEventListener("click", handleClick);
   }, []);
 
+  useEffect(() => {
+    const onPopState = () => setSearch(window.location.search);
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   const params = new URLSearchParams(search);
+  const sistemaAnterior = params.get("sistema") === "darkness";
 
   const temFicha = Boolean(params.get("ficha"));
   const estaCriando = params.get("criar") === "1";
@@ -63,6 +77,10 @@ function App() {
   const estaNaMesa = Boolean(params.get("campanha"));
   const mestreAutorizado =
     sessionStorage.getItem(MESTRE_AUTH_KEY) === "true";
+
+  if (!sistemaAnterior && !estaNaMesa && !estaNoDashboardMestre && !estaNaLoja && !estaNaArvoreHabilidades && !estaNoUpgrade) {
+    return <Suspense fallback={<div style={{ color: '#aaa', padding: 40 }}>Abrindo arquivo ESPIRAL…</div>}><FichaEspiral key={params.get('ficha') || 'principal'} /></Suspense>;
+  }
 
   return (
     <div className="App">
