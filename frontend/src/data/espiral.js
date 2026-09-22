@@ -16,7 +16,7 @@ export const VERTENTES = {
   Obstinada: ['Recusa', 'O benefício de Forçar-se diverge entre as páginas 58 e 154. Combine com o mestre e ajuste os dados de Pressão manualmente.'],
 };
 export const integrityMax = (stage, table) => (table === 'creation' ? 25 + stage * 5 : 9 + stage * 3);
-export const freshSheet = () => ({ version: 1, name: '', occupation: '', player: '', age: '', vertente: 'Metódica', attributes: { pulso: 2, razao: 2, sentido: 2, voz: 2 }, resources: Object.fromEntries(RESOURCES.map(r => [r, 0])), integrityTable: 'creation', integrity: 35, sanity: 10, hope: 10, pressure: 0, failures: 0, purpose: '', notes: '', inventory: '', abilities: '', injuries: [], phase: 'creation' });
+export const freshSheet = () => ({ version: 1, name: '', profileImage: '', occupation: '', player: '', age: '', vertente: 'Metódica', attributes: { pulso: 2, razao: 2, sentido: 2, voz: 2 }, resources: Object.fromEntries(RESOURCES.map(r => [r, 0])), integrityTable: 'creation', integrity: 35, sanity: 10, hope: 10, pressure: 0, failures: 0, purpose: '', notes: '', inventory: '', abilities: '', injuries: [], weapons: [], protections: [], phase: 'creation' });
 export function creationWarnings(sheet) {
   const stages = Object.values(sheet.attributes);
   const spent = stages.reduce((sum, stage) => sum + [-1, 0, 1, 3, 6][stage - 1], 0);
@@ -28,4 +28,17 @@ export function resolveRoll(dice, pressure, sides, difficulty) {
   const margin = best - difficulty;
   const ones = pressure.filter(n => n === 1).length;
   return { dice, pressure, best, margin, difficulty, outcome: margin <= -3 ? 'Falha grave' : margin < 0 ? 'Falha' : margin === 0 ? 'Sucesso com consequência' : margin < 3 ? 'Sucesso' : 'Sucesso excepcional', stress: ['Controle', 'Abalo', 'Crise', 'Ruptura'][Math.min(3, ones)], mastery: dice.filter(n => n === sides).length + pressure.filter(n => n === 6).length >= 2 };
+}
+
+// Rolagens livres são úteis para dano, tabelas e efeitos que não usam a
+// reserva padrão. O limite impede que uma fórmula acidental trave a ficha.
+export function parseDiceFormula(value) {
+  const formula = String(value || '').replace(/\s+/g, '').toLowerCase();
+  const match = formula.match(/^(\d*)d(4|6|8|10|12|20|100)([+-]\d+)?$/);
+  if (!match) return null;
+  const amount = Number(match[1] || 1);
+  const sides = Number(match[2]);
+  const modifier = Number(match[3] || 0);
+  if (!Number.isInteger(amount) || amount < 1 || amount > 50) return null;
+  return { amount, sides, modifier, formula: `${amount}d${sides}${modifier ? (modifier > 0 ? `+${modifier}` : modifier) : ''}` };
 }

@@ -7,13 +7,16 @@ import {
   freshSheet,
   integrityMax,
   creationWarnings,
+  parseDiceFormula,
   resolveRoll,
 } from "../data/espiral";
 import "../CSS/FichaEspiral.css";
+import { compressProfileImage } from "../services/imageCompression";
 
 const clamp = (value, max) => Math.max(0, Math.min(max, Number(value) || 0));
-const DICE_SYMBOLS = ["△", "⬡", "◇", "⬟", "⬢"];
 const randomDie = (sides) => {
+  if (!window.crypto?.getRandomValues)
+    return Math.floor(Math.random() * sides) + 1;
   const a = new Uint32Array(1);
   const limit = Math.floor(4294967296 / sides) * sides;
   do {
@@ -21,6 +24,8 @@ const randomDie = (sides) => {
   } while (a[0] >= limit);
   return (a[0] % sides) + 1;
 };
+const uniqueId = () =>
+  window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
 function Spiral({ small = false }) {
   const points = Array.from({ length: 500 }, (_, i) => {
     const t = (i / 499) * Math.PI * 9;
@@ -93,6 +98,137 @@ function SectionTitle({ number, title, aside }) {
     </div>
   );
 }
+const BODY_REGIONS = [
+  "Cabeça",
+  "Torso",
+  "Braço esquerdo",
+  "Braço direito",
+  "Perna esquerda",
+  "Perna direita",
+];
+const injuryLevel = {
+  Superficial: 1,
+  Moderada: 2,
+  Grave: 3,
+  Crítica: 3,
+  "Catastrófica / Fatal": 4,
+};
+function BodyMap({ injuries, selectedRegion, onSelect }) {
+  const levelFor = (region) =>
+    Math.max(
+      0,
+      ...injuries
+        .filter((injury) => injury.region === region)
+        .map((injury) => injuryLevel[injury.severity] || 0),
+    );
+  const part = (region, shape, labelX, labelY) => (
+    <g
+      key={region}
+      className={`es-body-part level-${levelFor(region)} ${selectedRegion === region ? "selected" : ""}`}
+      role="button"
+      tabIndex="0"
+      aria-label={`Selecionar ${region}${levelFor(region) ? ", lesionado" : ", saudável"}`}
+      onClick={() => onSelect(region)}
+      onKeyDown={(event) =>
+        (event.key === "Enter" || event.key === " ") && onSelect(region)
+      }
+    >
+      {shape}
+      <text x={labelX} y={labelY}>
+        {region.replace(" esquerdo", " esq.").replace(" direito", " dir.")}
+      </text>
+    </g>
+  );
+  return (
+    <div className="es-body-map">
+      <div className="es-body-map-heading">
+        <span>MAPA CORPORAL</span>
+        <small>Clique em uma região para registrar uma lesão</small>
+      </div>
+      <svg
+        viewBox="0 0 330 550"
+        role="img"
+        aria-label="Mapa corporal interativo com regiões de lesão"
+      >
+        {part(
+          "Cabeça",
+          <ellipse
+            className="es-body-shape"
+            cx="165"
+            cy="58"
+            rx="31"
+            ry="42"
+          />,
+          165,
+          18,
+        )}
+        {part(
+          "Torso",
+          <path
+            className="es-body-shape"
+            d="M130 104 Q112 113 108 155 L113 292 Q122 337 165 350 Q208 337 217 292 L222 155 Q218 113 200 104 Q165 120 130 104Z"
+          />,
+          165,
+          220,
+        )}
+        {part(
+          "Braço esquerdo",
+          <path
+            className="es-body-shape"
+            d="M119 122 Q98 126 91 156 L73 279 Q70 317 87 345 L103 338 L96 278 L113 178 L130 145Z"
+          />,
+          48,
+          238,
+        )}
+        {part(
+          "Braço direito",
+          <path
+            className="es-body-shape"
+            d="M211 122 Q232 126 239 156 L257 279 Q260 317 243 345 L227 338 L234 278 L217 178 L200 145Z"
+          />,
+          282,
+          238,
+        )}
+        {part(
+          "Perna esquerda",
+          <path
+            className="es-body-shape"
+            d="M130 337 Q119 365 121 425 L126 508 Q127 528 148 529 L158 523 L151 502 L157 414 L164 356Z"
+          />,
+          88,
+          428,
+        )}
+        {part(
+          "Perna direita",
+          <path
+            className="es-body-shape"
+            d="M200 337 Q211 365 209 425 L204 508 Q203 528 182 529 L172 523 L179 502 L173 414 L166 356Z"
+          />,
+          242,
+          428,
+        )}
+      </svg>
+      <div className="es-body-legend">
+        <span>
+          <i className="healthy" />
+          Saudável
+        </span>
+        <span>
+          <i className="moderate" />
+          Moderada
+        </span>
+        <span>
+          <i className="severe" />
+          Grave / crítica
+        </span>
+        <span>
+          <i className="fatal" />
+          Catastrófica / fatal
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export default function FichaEspiral() {
   const id =
@@ -112,14 +248,26 @@ export default function FichaEspiral() {
   const [resource, setResource] = useState("Investigação");
   const [difficulty, setDifficulty] = useState(4);
   const [modifier, setModifier] = useState(0);
+  const [extraDiceCount, setExtraDiceCount] = useState(0);
+  const [extraDiceSides, setExtraDiceSides] = useState(6);
   const [history, setHistory] = useState([]);
+  const [rolling, setRolling] = useState(false);
+  const [rollModalOpen, setRollModalOpen] = useState(false);
+  const [resourceToRoll, setResourceToRoll] = useState(null);
+  const [attributeToRoll, setAttributeToRoll] = useState("sentido");
+  const [customFormula, setCustomFormula] = useState("1d20");
+  const [formulaError, setFormulaError] = useState("");
   const [region, setRegion] = useState("Torso");
   const [severity, setSeverity] = useState("Moderada");
   const [injuryNote, setInjuryNote] = useState("");
   const fileInput = useRef(null);
+  const profileInput = useRef(null);
   const [notice, setNotice] = useState("");
   const maximum = integrityMax(sheet.attributes.pulso, sheet.integrityTable);
   const budget = creationWarnings(sheet);
+  const defense = sheet.attributes.sentido + 2;
+  const weapons = Array.isArray(sheet.weapons) ? sheet.weapons : [];
+  const protections = Array.isArray(sheet.protections) ? sheet.protections : [];
   const update = (key, value) =>
     setSheet((previous) => ({ ...previous, [key]: value }));
   useEffect(() => {
@@ -150,29 +298,120 @@ export default function FichaEspiral() {
       };
     });
   }
-  function roll() {
-    const sides = sheet.attributes[attribute] * 2 + 2;
-    const count = Math.max(1, 1 + sheet.resources[resource] + modifier);
+  const updateEquipment = (key, id, field, value) =>
+    update(
+      key,
+      (Array.isArray(sheet[key]) ? sheet[key] : []).map((item) =>
+        item.id === id ? { ...item, [field]: value } : item,
+      ),
+    );
+  const removeEquipment = (key, id) =>
+    update(
+      key,
+      (Array.isArray(sheet[key]) ? sheet[key] : []).filter(
+        (item) => item.id !== id,
+      ),
+    );
+  async function importProfileImage(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setNotice("Selecione um arquivo de imagem para o retrato.");
+      return;
+    }
+    try {
+      setNotice("Preparando foto de perfil…");
+      update("profileImage", await compressProfileImage(file));
+      setNotice("Foto de perfil atualizada.");
+    } catch (error) {
+      setNotice(error?.message || "Não foi possível preparar esta imagem.");
+    }
+  }
+  function roll(resourceOverride = resource, attributeOverride = attribute) {
+    if (rolling) return;
+    setResource(resourceOverride);
+    setAttribute(attributeOverride);
+    const sides = sheet.attributes[attributeOverride] * 2 + 2;
+    const count = Math.max(1, 1 + sheet.resources[resourceOverride] + modifier);
     const pressureCount =
       sheet.pressure +
-      (resource === "Controle Mental" && sheet.sanity === 0 ? 1 : 0);
-    const result = resolveRoll(
+      (resourceOverride === "Controle Mental" && sheet.sanity === 0 ? 1 : 0);
+    const extra = Array.from({ length: extraDiceCount }, () =>
+      randomDie(extraDiceSides),
+    );
+    const baseResult = resolveRoll(
       Array.from({ length: count }, () => randomDie(sides)),
       Array.from({ length: pressureCount }, () => randomDie(6)),
       sides,
       difficulty,
     );
+    const best = Math.max(baseResult.best, ...extra);
+    const margin = best - difficulty;
+    const result = {
+      ...baseResult,
+      extra,
+      extraSides: extraDiceSides,
+      best,
+      margin,
+      outcome:
+        margin <= -3
+          ? "Falha grave"
+          : margin < 0
+            ? "Falha"
+            : margin === 0
+              ? "Sucesso com consequência"
+              : margin < 3
+                ? "Sucesso"
+                : "Sucesso excepcional",
+    };
+    setRolling(true);
     setHistory((previous) =>
       [
         {
           ...result,
-          label: `${ATTRIBUTES[attribute].name} + ${resource}`,
+          label: `${ATTRIBUTES[attributeOverride].name} + ${resourceOverride}`,
+          attribute: attributeOverride,
           sides,
+          type: "test",
+          at: Date.now(),
         },
         ...previous,
-      ].slice(0, 8),
+      ].slice(0, 12),
     );
+    setRollModalOpen(true);
     update("pressure", 0);
+    window.setTimeout(() => setRolling(false), 650);
+  }
+  function rollFormula() {
+    if (rolling) return;
+    const parsed = parseDiceFormula(customFormula);
+    if (!parsed) {
+      setFormulaError(
+        "Use 1d4 a 50d100, com modificador opcional (ex.: 2d6+3).",
+      );
+      return;
+    }
+    setFormulaError("");
+    const dice = Array.from({ length: parsed.amount }, () =>
+      randomDie(parsed.sides),
+    );
+    setRolling(true);
+    setHistory((previous) =>
+      [
+        {
+          type: "formula",
+          label: parsed.formula,
+          dice,
+          pressure: [],
+          total: dice.reduce((sum, die) => sum + die, parsed.modifier),
+          modifier: parsed.modifier,
+          at: Date.now(),
+        },
+        ...previous,
+      ].slice(0, 12),
+    );
+    window.setTimeout(() => setRolling(false), 650);
   }
   function exportSheet() {
     const url = URL.createObjectURL(
@@ -215,6 +454,8 @@ export default function FichaEspiral() {
           "inventory",
           "abilities",
         ].every((k) => typeof data[k] === "string") ||
+        (data.profileImage !== undefined &&
+          typeof data.profileImage !== "string") ||
         !["integrity", "sanity", "hope", "pressure", "failures"].every(
           (k) => Number.isInteger(data[k]) && data[k] >= 0,
         ) ||
@@ -258,7 +499,7 @@ export default function FichaEspiral() {
         <a href="/" className="es-brand">
           <Spiral small />
           <span>ESPIRAL</span>
-          <span className="es-brand-caption">ARQUIVO DE PERSONAGEM</span>
+          <span className="es-brand-caption">NOME DO PERSONAGEM</span>
         </a>
         <span className="es-save" role="status">
           <i />
@@ -279,35 +520,127 @@ export default function FichaEspiral() {
           <span>/</span> FICHA
         </div>
         <section className="es-hero">
-           <div className="es-hero-art">
+          <aside className="es-attribute-rail" aria-label="Atributos">
+            <div className="es-rail-attributes">
+              {Object.entries(ATTRIBUTES).map(([key, attr]) => {
+                const stage = sheet.attributes[key];
+                return (
+                  <label
+                    className={`es-rail-attribute ${attribute === key ? "selected" : ""}`}
+                    key={key}
+                  >
+                    <span className="es-rail-name">{attr.name}</span>
+                    <select
+                      aria-label={`Estágio de ${attr.name}`}
+                      value={stage}
+                      onChange={(e) =>
+                        changeAttribute(key, Number(e.target.value))
+                      }
+                      onFocus={() => setAttribute(key)}
+                    >
+                      {attr.stages.map((stage, i) => (
+                        <option key={stage} value={i + 1}>
+                          {stage} · d{i * 2 + 4}
+                        </option>
+                      ))}
+                    </select>
+                    <b
+                      className={`es-rail-value die-d${stage * 2 + 2}`}
+                      aria-hidden="true"
+                    >
+                      {stage}
+                    </b>
+                    <small className="es-rail-stage">ESTÁGIO {stage}</small>
+                    <em className="es-rail-detail">
+                      {attr.stages[stage - 1]} ·{" "}
+                      <i
+                        className={`es-die-icon die-d${stage * 2 + 2}`}
+                        aria-hidden="true"
+                      />{" "}
+                      d{stage * 2 + 2}
+                    </em>
+                  </label>
+                );
+              })}
+            </div>
+          </aside>
+          <div className="es-hero-art">
             <Spiral />
+            <button
+              className="es-profile-photo"
+              type="button"
+              onClick={() => profileInput.current?.click()}
+              aria-label="Escolher foto de perfil"
+              title="Escolher foto de perfil"
+            >
+              {sheet.profileImage ? (
+                <img
+                  src={sheet.profileImage}
+                  alt={`Retrato de ${sheet.name || "personagem"}`}
+                />
+              ) : (
+                <span>
+                  {(sheet.name || "?").trim().slice(0, 1).toUpperCase()}
+                </span>
+              )}
+            </button>
+            <input
+              ref={profileInput}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={importProfileImage}
+            />
+            {sheet.name && <h1>{sheet.name}</h1>}
             <span>O QUE RESTA DE VOCÊ?</span>
           </div>
-
-         
           <div className="es-hero-vitals">
             <div className="hero-vital hero-integrity">
-              <span>INTEGRIDADE</span>
-              <strong>
-                {sheet.integrity} / {maximum}
-              </strong>
+              <div className="hero-integrity-heading">
+                <span>INTEGRIDADE</span>
+                <strong>
+                  <Counter
+                    label="Integridade"
+                    value={sheet.integrity}
+                    max={maximum}
+                    onChange={(v) => update("integrity", v)}
+                  />{" "}
+                  / {maximum}
+                </strong>
+              </div>
               <div>
                 <i style={{ width: `${(sheet.integrity / maximum) * 100}%` }} />
               </div>
             </div>
             <div className="hero-vital hero-sanity">
-              <span>SANIDADE</span>
               <div className="hero-dots">
+                <span>SANIDADE</span>
                 {Array.from({ length: 10 }, (_, i) => (
-                  <i key={i} className={i < sheet.sanity ? "on" : ""} />
+                  <button
+                    type="button"
+                    key={i}
+                    aria-label={"Sanidade " + (i + 1)}
+                    aria-pressed={i < sheet.sanity}
+                    className={i < sheet.sanity ? "on" : ""}
+                    onClick={() =>
+                      update("sanity", i < sheet.sanity ? i : i + 1)
+                    }
+                  />
                 ))}
               </div>
             </div>
             <div className="hero-vital hero-hope">
-              <span>ESPERANÇA</span>
               <div className="hero-dots">
+                <span>ESPERANÇA</span>
                 {Array.from({ length: 10 }, (_, i) => (
-                  <i key={i} className={i < sheet.hope ? "on" : ""} />
+                  <button
+                    type="button"
+                    key={i}
+                    aria-label={"Esperança " + (i + 1)}
+                    aria-pressed={i < sheet.hope}
+                    className={i < sheet.hope ? "on" : ""}
+                    onClick={() => update("hope", i < sheet.hope ? i : i + 1)}
+                  />
                 ))}
               </div>
             </div>
@@ -350,6 +683,15 @@ export default function FichaEspiral() {
                 ))}
               </select>
             </label>
+            <button
+              type="button"
+              className="es-profile-upload"
+              onClick={() => profileInput.current?.click()}
+            >
+              {sheet.profileImage
+                ? "Trocar foto de perfil"
+                : "Adicionar foto de perfil"}
+            </button>
             <label className="es-field">
               <span>Momento da ficha</span>
               <select
@@ -384,75 +726,6 @@ export default function FichaEspiral() {
           <div className="es-content">
             {tab === "Visão geral" && (
               <>
-                <SectionTitle
-                  number="01"
-                  title="O que ainda resiste"
-                  aside="ESTADO ATUAL"
-                />
-                <div className="es-vitals">
-                  {[
-                    ["integrity", "Integridade", maximum, "O corpo persiste."],
-                  ].map(([key, label, max, hint]) => (
-                    <section key={key} className={`es-vital es-${key}`}>
-                      <div className="es-vital-label">
-                        {label}
-                        <span>↳</span>
-                      </div>
-                      <div className="es-vital-value">
-                        <strong>{String(sheet[key]).padStart(2, "0")}</strong>
-                        <span>/ {max}</span>
-                      </div>
-                      <div className="es-meter">
-                        <span
-                          style={{ width: `${(sheet[key] / max) * 100}%` }}
-                        />
-                      </div>
-                      <div className="es-vital-bottom">
-                        <small>{hint}</small>
-                        <Counter
-                          label={label}
-                          value={sheet[key]}
-                          max={max}
-                          onChange={(v) => update(key, v)}
-                        />
-                      </div>
-                    </section>
-                  ))}
-                  {[
-                    ["sanity", "Sanidade"],
-                    ["hope", "Esperança"],
-                  ].map(([key, label]) => (
-                    <section
-                      key={key}
-                      className={`es-vital es-${key} es-vital-dots`}
-                    >
-                      <div className="es-vital-label">
-                        {label}
-                        <span>{key === "sanity" ? "◈" : "✳"}</span>
-                      </div>
-                      <div className="es-dot-line">
-                        {Array.from({ length: 10 }, (_, index) => (
-                          <button
-                            type="button"
-                            key={index}
-                            aria-label={`${label} ${index + 1}`}
-                            className={index < sheet[key] ? "filled" : ""}
-                            onClick={() =>
-                              update(
-                                key,
-                                index < sheet[key] ? index : index + 1,
-                              )
-                            }
-                          />
-                        ))}
-                      </div>
-                      <div className="es-vital-bottom">
-                        <small>10 pontos</small>
-                        <strong>{sheet[key]}/10</strong>
-                      </div>
-                    </section>
-                  ))}
-                </div>
                 {(sheet.integrity === 0 ||
                   sheet.sanity === 0 ||
                   sheet.hope === 0) && (
@@ -467,48 +740,6 @@ export default function FichaEspiral() {
                 )}
                 <SectionTitle
                   number="02"
-                  title="Atributos"
-                  aside="COMO VOCÊ ENFRENTA O MUNDO"
-                />
-                <div className="es-attributes">
-                  {Object.entries(ATTRIBUTES).map(([key, attr], index) => (
-                    <div
-                      className={`es-attribute ${attribute === key ? "selected" : ""}`}
-                      key={key}
-                    >
-                      <div className="es-attribute-top">
-                        <span>0{index + 1}</span>
-                        <button
-                          onClick={() => setAttribute(key)}
-                          aria-label={`Usar ${attr.name} na rolagem`}
-                        >
-                          ↗
-                        </button>
-                      </div>
-                      <h3>{attr.name}</h3>
-                      <div className="es-die">
-                        <i>{DICE_SYMBOLS[sheet.attributes[key] - 1]}</i>
-                        <strong>d{sheet.attributes[key] * 2 + 2}</strong>
-                      </div>
-                      <select
-                        aria-label={`Estágio de ${attr.name}`}
-                        value={sheet.attributes[key]}
-                        onChange={(e) =>
-                          changeAttribute(key, Number(e.target.value))
-                        }
-                      >
-                        {attr.stages.map((stage, i) => (
-                          <option key={stage} value={i + 1}>
-                            {stage} · d{i * 2 + 4}
-                          </option>
-                        ))}
-                      </select>
-                      <p>{attr.hint}</p>
-                    </div>
-                  ))}
-                </div>
-                <SectionTitle
-                  number="03"
                   title="Recursos"
                   aside="O QUE A EXPERIÊNCIA DEIXOU"
                 />
@@ -516,7 +747,25 @@ export default function FichaEspiral() {
                   {RESOURCES.map((name, i) => (
                     <div className="es-resource" key={name}>
                       <button
-                        className={resource === name ? "active" : ""}
+                        type="button"
+                        className="es-resource-roll"
+                        aria-label={`Rolar ${name}`}
+                        title={`Escolher atributo para rolar ${name}`}
+                        onClick={() => {
+                          setResourceToRoll(name);
+                          setAttributeToRoll(attribute);
+                        }}
+                        disabled={rolling}
+                      >
+                        <span className="es-resource-die" aria-hidden="true">
+                          <i />
+                          <i />
+                          <i />
+                          <i />
+                        </span>
+                      </button>
+                      <button
+                        className={`es-resource-name ${resource === name ? "active" : ""}`}
                         onClick={() => setResource(name)}
                       >
                         {name}
@@ -551,6 +800,182 @@ export default function FichaEspiral() {
                     </div>
                   ))}
                 </div>
+                <section
+                  className="es-combat-kit"
+                  aria-label="Defesa, armas e proteções"
+                >
+                  <div className="es-defense-card">
+                    <span className="es-eyebrow">DEFESA</span>
+                    <strong>{defense}</strong>
+                    <div>
+                      <b>
+                        {
+                          ATTRIBUTES.sentido.stages[
+                            sheet.attributes.sentido - 1
+                          ]
+                        }
+                      </b>
+                      <small>
+                        Sentido d{sheet.attributes.sentido * 2 + 2} · Defesa
+                        base
+                      </small>
+                    </div>
+                  </div>
+                  <div className="es-equipment-column">
+                    <header>
+                      <div>
+                        <span className="es-eyebrow">ARMAS</span>
+                        <small>Armas, dano e munição</small>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          update("weapons", [
+                            ...weapons,
+                            { id: uniqueId(), name: "", damage: "", ammo: "" },
+                          ])
+                        }
+                      >
+                        + Arma
+                      </button>
+                    </header>
+                    {weapons.length === 0 ? (
+                      <p className="es-equipment-empty">
+                        Nenhuma arma equipada.
+                      </p>
+                    ) : (
+                      weapons.map((weapon) => (
+                        <div className="es-equipment-row" key={weapon.id}>
+                          <input
+                            aria-label="Nome da arma"
+                            value={weapon.name}
+                            onChange={(event) =>
+                              updateEquipment(
+                                "weapons",
+                                weapon.id,
+                                "name",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Nome da arma"
+                          />
+                          <input
+                            aria-label="Dano da arma"
+                            value={weapon.damage}
+                            onChange={(event) =>
+                              updateEquipment(
+                                "weapons",
+                                weapon.id,
+                                "damage",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Dano"
+                          />
+                          <input
+                            aria-label="Munição da arma"
+                            value={weapon.ammo}
+                            onChange={(event) =>
+                              updateEquipment(
+                                "weapons",
+                                weapon.id,
+                                "ammo",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Munição"
+                          />
+                          <button
+                            type="button"
+                            aria-label="Remover arma"
+                            onClick={() =>
+                              removeEquipment("weapons", weapon.id)
+                            }
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="es-equipment-column">
+                    <header>
+                      <div>
+                        <span className="es-eyebrow">PROTEÇÕES</span>
+                        <small>Armaduras e equipamentos defensivos</small>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          update("protections", [
+                            ...protections,
+                            { id: uniqueId(), name: "", value: "", region: "" },
+                          ])
+                        }
+                      >
+                        + Proteção
+                      </button>
+                    </header>
+                    {protections.length === 0 ? (
+                      <p className="es-equipment-empty">
+                        Nenhuma proteção equipada.
+                      </p>
+                    ) : (
+                      protections.map((protection) => (
+                        <div className="es-equipment-row" key={protection.id}>
+                          <input
+                            aria-label="Nome da proteção"
+                            value={protection.name}
+                            onChange={(event) =>
+                              updateEquipment(
+                                "protections",
+                                protection.id,
+                                "name",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Proteção"
+                          />
+                          <input
+                            aria-label="Valor da proteção"
+                            value={protection.value}
+                            onChange={(event) =>
+                              updateEquipment(
+                                "protections",
+                                protection.id,
+                                "value",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Valor"
+                          />
+                          <input
+                            aria-label="Região protegida"
+                            value={protection.region}
+                            onChange={(event) =>
+                              updateEquipment(
+                                "protections",
+                                protection.id,
+                                "region",
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Região"
+                          />
+                          <button
+                            type="button"
+                            aria-label="Remover proteção"
+                            onClick={() =>
+                              removeEquipment("protections", protection.id)
+                            }
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </section>
                 {sheet.phase === "creation" && (
                   <details className="es-rules">
                     <summary>
@@ -584,65 +1009,65 @@ export default function FichaEspiral() {
                   Integridade mede o que você ainda suporta. Lesões registram o
                   que aconteceu.
                 </p>
-                <div className="es-injury-form">
-                  <label className="es-field">
-                    <span>Região</span>
-                    <select
-                      value={region}
-                      onChange={(e) => setRegion(e.target.value)}
-                    >
-                      {[
-                        "Cabeça",
-                        "Torso",
-                        "Braço esquerdo",
-                        "Braço direito",
-                        "Perna esquerda",
-                        "Perna direita",
-                      ].map((r) => (
-                        <option key={r}>{r}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="es-field">
-                    <span>Gravidade</span>
-                    <select
-                      value={severity}
-                      onChange={(e) => setSeverity(e.target.value)}
-                    >
-                      {[
-                        "Superficial",
-                        "Moderada",
-                        "Grave",
-                        "Crítica",
-                        "Catastrófica / Fatal",
-                      ].map((r) => (
-                        <option key={r}>{r}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <Field
-                    label="Descrição da lesão"
-                    value={injuryNote}
-                    onChange={setInjuryNote}
-                    placeholder="O que deixou essa marca?"
+                <div className="es-injury-workspace">
+                  <BodyMap
+                    injuries={sheet.injuries}
+                    selectedRegion={region}
+                    onSelect={setRegion}
                   />
-                  <button
-                    className="es-primary"
-                    onClick={() => {
-                      update("injuries", [
-                        ...sheet.injuries,
-                        {
-                          id: window.crypto.randomUUID(),
-                          region,
-                          severity,
-                          note: injuryNote,
-                        },
-                      ]);
-                      setInjuryNote("");
-                    }}
-                  >
-                    Registrar lesão +
-                  </button>
+                  <div className="es-injury-form">
+                    <label className="es-field">
+                      <span>Região</span>
+                      <select
+                        value={region}
+                        onChange={(e) => setRegion(e.target.value)}
+                      >
+                        {BODY_REGIONS.map((r) => (
+                          <option key={r}>{r}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="es-field">
+                      <span>Gravidade</span>
+                      <select
+                        value={severity}
+                        onChange={(e) => setSeverity(e.target.value)}
+                      >
+                        {[
+                          "Superficial",
+                          "Moderada",
+                          "Grave",
+                          "Crítica",
+                          "Catastrófica / Fatal",
+                        ].map((r) => (
+                          <option key={r}>{r}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <Field
+                      label="Descrição da lesão"
+                      value={injuryNote}
+                      onChange={setInjuryNote}
+                      placeholder="O que deixou essa marca?"
+                    />
+                    <button
+                      className="es-primary"
+                      onClick={() => {
+                        update("injuries", [
+                          ...sheet.injuries,
+                          {
+                            id: window.crypto.randomUUID(),
+                            region,
+                            severity,
+                            note: injuryNote,
+                          },
+                        ]);
+                        setInjuryNote("");
+                      }}
+                    >
+                      Registrar lesão +
+                    </button>
+                  </div>
                 </div>
                 <p className="es-help">
                   Impacto: 1–3 superficial · 4–6 moderada · 7–9 grave · 10–12
@@ -780,30 +1205,7 @@ export default function FichaEspiral() {
               </div>
               <h2>Faça sua escolha.</h2>
               <p>A intenção vem antes dos dados.</p>
-              <label className="es-field">
-                <span>Atributo</span>
-                <select
-                  value={attribute}
-                  onChange={(e) => setAttribute(e.target.value)}
-                >
-                  {Object.entries(ATTRIBUTES).map(([k, a]) => (
-                    <option key={k} value={k}>
-                      {a.name} · d{sheet.attributes[k] * 2 + 2}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="es-field">
-                <span>Recurso</span>
-                <select
-                  value={resource}
-                  onChange={(e) => setResource(e.target.value)}
-                >
-                  {RESOURCES.map((r) => (
-                    <option key={r}>{r}</option>
-                  ))}
-                </select>
-              </label>
+
               <div className="es-roll-numbers">
                 <Field
                   label="Dificuldade"
@@ -836,52 +1238,118 @@ export default function FichaEspiral() {
                   onChange={(v) => update("pressure", v)}
                 />
               </div>
-              <div className="es-pool">
-                <span>RESERVA</span>
-                <strong>
-                  {Math.max(1, 1 + sheet.resources[resource] + modifier)}d
-                  {sheet.attributes[attribute] * 2 + 2}
-                  {sheet.pressure > 0 && <em> + {sheet.pressure}d6</em>}
-                </strong>
+              <div className="es-extra-dice">
+                <div>
+                  <span>Dados adicionais</span>
+                  <small>Entram na reserva desta rolagem</small>
+                </div>
+                <Counter
+                  label="Quantidade de dados adicionais"
+                  value={extraDiceCount}
+                  max={20}
+                  onChange={setExtraDiceCount}
+                />
+                <label className="es-extra-die-type">
+                  <span className="sr-only">Tipo dos dados adicionais</span>
+                  <select
+                    aria-label="Tipo dos dados adicionais"
+                    value={extraDiceSides}
+                    onChange={(event) =>
+                      setExtraDiceSides(Number(event.target.value))
+                    }
+                  >
+                    {[4, 6, 8, 10, 12].map((sides) => (
+                      <option key={sides} value={sides}>
+                        d{sides}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
-              <button className="es-primary" onClick={roll}>
-                Rolar os dados <span>↗</span>
-              </button>
-              <small className="es-roll-help">
-                O maior dado define o resultado.
-                <br />A Pressão é consumida ao rolar.
-              </small>
+              <div className="es-custom-roll">
+                <label className="es-field">
+                  <span>Rolagem livre</span>
+                  <input
+                    aria-label="Fórmula de rolagem livre"
+                    value={customFormula}
+                    onChange={(event) => setCustomFormula(event.target.value)}
+                    onKeyDown={(event) =>
+                      event.key === "Enter" && rollFormula()
+                    }
+                    placeholder="Ex.: 2d6+3"
+                  />
+                </label>
+                <button type="button" onClick={rollFormula} disabled={rolling}>
+                  Rolar fórmula
+                </button>
+                {formulaError && <small role="alert">{formulaError}</small>}
+              </div>
               {history[0] && (
                 <div className="es-result" role="status">
                   <span className="es-eyebrow">ÚLTIMA ROLAGEM</span>
-                  <h3>{history[0].outcome}</h3>
+                  <h3>
+                    {history[0].type === "formula"
+                      ? history[0].label
+                      : history[0].outcome}
+                  </h3>
                   <div className="es-result-dice">
                     {history[0].dice.map((d, i) => (
-                      <span key={`d${i}`}>{d}</span>
+                      <span className={rolling ? "rolling" : ""} key={`d${i}`}>
+                        {rolling ? "?" : d}
+                      </span>
                     ))}
                     {history[0].pressure.map((d, i) => (
                       <span className="pressure" key={`p${i}`}>
                         {d}
                       </span>
                     ))}
+                    {history[0].extra?.map((d, i) => (
+                      <span className="extra" key={`e${i}`}>
+                        {d}
+                      </span>
+                    ))}
                   </div>
-                  <p>
-                    Maior: {history[0].best} · Margem:{" "}
-                    {history[0].margin > 0 ? "+" : ""}
-                    {history[0].margin}
-                  </p>
-                  <p>
-                    {history[0].stress}
-                    {history[0].mastery ? " · Domínio" : ""}
-                  </p>
-                  {history[0].stress !== "Controle" && (
-                    <small>
-                      Resolva a consequência de{" "}
-                      {history[0].stress.toLowerCase()} com o mestre. Em
-                      Ruptura, retire 2 de Sanidade ou Esperança.
-                    </small>
+                  {history[0].type === "formula" ? (
+                    <p>
+                      Total: {history[0].total}
+                      {history[0].modifier
+                        ? ` (dados ${history[0].modifier > 0 ? "+" : ""}${history[0].modifier})`
+                        : ""}
+                    </p>
+                  ) : (
+                    <>
+                      <p>
+                        Maior: {history[0].best} · Margem:{" "}
+                        {history[0].margin > 0 ? "+" : ""}
+                        {history[0].margin}
+                      </p>
+                      <p>
+                        {history[0].stress}
+                        {history[0].mastery ? " · Domínio" : ""}
+                      </p>
+                      {history[0].stress !== "Controle" && (
+                        <small>
+                          Resolva a consequência de{" "}
+                          {history[0].stress.toLowerCase()} com o mestre. Em
+                          Ruptura, retire 2 de Sanidade ou Esperança.
+                        </small>
+                      )}
+                    </>
                   )}
                 </div>
+              )}
+              {history.length > 1 && (
+                <details className="es-roll-history">
+                  <summary>Histórico de rolagens ({history.length})</summary>
+                  {history.slice(1).map((entry) => (
+                    <p key={entry.at}>
+                      <b>{entry.label}</b> ·{" "}
+                      {entry.type === "formula"
+                        ? `Total ${entry.total}`
+                        : `${entry.outcome} (${entry.best})`}
+                    </p>
+                  ))}
+                </details>
               )}
             </section>
             <section className="es-purpose">
@@ -960,6 +1428,134 @@ export default function FichaEspiral() {
           <span>VOCÊ AINDA ESTÁ AQUI.</span>
         </footer>
       </main>
+      {rollModalOpen && history[0] && (
+        <div
+          className="es-roll-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !rolling)
+              setRollModalOpen(false);
+          }}
+        >
+          <section
+            className="es-roll-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="es-roll-modal-title"
+          >
+            <span className="es-eyebrow">ROLAGEM DE RECURSO</span>
+            <h2 id="es-roll-modal-title">{history[0].label}</h2>
+            <p>Teste de {ATTRIBUTES[history[0].attribute].name}</p>
+            <code>
+              {history[0].dice.length}d{history[0].sides}
+              {history[0].pressure.length
+                ? ` + ${history[0].pressure.length}d6`
+                : ""}
+              {history[0].extra?.length
+                ? ` + ${history[0].extra.length}d${history[0].extraSides}`
+                : ""}
+            </code>
+            <div className="es-roll-modal-dice" aria-label="Dados rolados">
+              {history[0].dice.map((die, index) => (
+                <span
+                  key={`modal-die-${index}`}
+                  className={rolling ? "rolling" : ""}
+                >
+                  {rolling ? "?" : die}
+                </span>
+              ))}
+              {history[0].pressure.map((die, index) => (
+                <span
+                  key={`modal-pressure-${index}`}
+                  className={`pressure ${rolling ? "rolling" : ""}`}
+                >
+                  {rolling ? "?" : die}
+                </span>
+              ))}
+              {history[0].extra?.map((die, index) => (
+                <span
+                  key={`modal-extra-${index}`}
+                  className={`extra ${rolling ? "rolling" : ""}`}
+                >
+                  {rolling ? "?" : die}
+                </span>
+              ))}
+            </div>
+            {!rolling && (
+              <>
+                <span className="es-eyebrow">RESULTADO</span>
+                <strong>{history[0].best}</strong>
+                <h3>{history[0].outcome}</h3>
+                <p>
+                  Margem {history[0].margin > 0 ? "+" : ""}
+                  {history[0].margin}
+                  {history[0].mastery ? " · Domínio" : ""}
+                </p>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => setRollModalOpen(false)}
+              disabled={rolling}
+            >
+              Fechar
+            </button>
+          </section>
+        </div>
+      )}
+      {resourceToRoll && (
+        <div
+          className="es-roll-modal-backdrop es-attribute-picker-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setResourceToRoll(null);
+          }}
+        >
+          <section
+            className="es-attribute-picker"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="es-attribute-picker-title"
+          >
+            <span className="es-eyebrow">PREPARAR ROLAGEM</span>
+            <h2 id="es-attribute-picker-title">{resourceToRoll}</h2>
+            <p>Escolha o Atributo que será usado neste teste.</p>
+            <div className="es-attribute-options">
+              {Object.entries(ATTRIBUTES).map(([key, item]) => (
+                <button
+                  type="button"
+                  key={key}
+                  className={attributeToRoll === key ? "selected" : ""}
+                  onClick={() => setAttributeToRoll(key)}
+                >
+                  <span>{item.name}</span>
+                  <small>
+                    {item.stages[sheet.attributes[key] - 1]} · d
+                    {sheet.attributes[key] * 2 + 2}
+                  </small>
+                </button>
+              ))}
+            </div>
+            <div className="es-attribute-picker-actions">
+              <button type="button" onClick={() => setResourceToRoll(null)}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="confirm"
+                onClick={() => {
+                  const selectedResource = resourceToRoll;
+                  const selectedAttribute = attributeToRoll;
+                  setResourceToRoll(null);
+                  roll(selectedResource, selectedAttribute);
+                }}
+              >
+                Rolar {ATTRIBUTES[attributeToRoll].name} + {resourceToRoll}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
