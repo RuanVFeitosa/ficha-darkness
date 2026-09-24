@@ -31,6 +31,7 @@ import {
   mdiTargetVariant,
 } from "@mdi/js";
 import "../CSS/DashboardMestre.css";
+import "../CSS/DashboardMestreEspiral.css";
 import {
   buscarDestinos,
   salvarDestinos,
@@ -78,10 +79,42 @@ import {
   calcularGanhoRecursosNivel,
   obterCustosNivel,
 } from "../data/evolucaoPersonagem";
+import { ATTRIBUTES, integrityMax } from "../data/espiral";
 
 const STORAGE_KEY = "fichaRPG_personagem";
 const CATALOGO_STORAGE_KEY = "lojaHelena_catalogo";
 const RECEITAS_STORAGE_KEY = "darkness_receitas_criacao";
+
+const isFichaEspiral = (personagem = {}) =>
+  personagem?.version === 1 && personagem?.attributes && !personagem?.atributos;
+
+const listarFichasEspiralLocais = () => {
+  const prefixo = "espiral:sheet:v1:";
+  const fichas = [];
+
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const chave = localStorage.key(index);
+    if (!chave?.startsWith(prefixo) || chave.startsWith(`${prefixo}darkness-`)) continue;
+
+    try {
+      const personagem = JSON.parse(localStorage.getItem(chave));
+      if (isFichaEspiral(personagem)) {
+        fichas.push({
+          fichaId: `espiral:${chave.slice(prefixo.length)}`,
+          espiralId: chave.slice(prefixo.length),
+          personagem,
+          sistema: "espiral",
+        });
+      }
+    } catch {
+      // Uma ficha local incompleta não deve impedir a leitura das demais.
+    }
+  }
+
+  return fichas.sort((a, b) =>
+    String(a.personagem.name || "").localeCompare(String(b.personagem.name || ""), "pt-BR"),
+  );
+};
 
 const membrosProtegidosPelaDefesa = (item = {}) => {
   const area = `${item.areaDefesa || ""} ${item.entrega || item.detalhes || ""}`
@@ -450,53 +483,109 @@ const CampoNumeroEditavel = ({ valor, onConfirmar, ...props }) => {
   );
 };
 
+const ResourceDots = ({ atual = 0, max = 0, tipo }) => {
+  const total = Math.max(0, Math.min(100, Number.parseInt(max, 10) || 0));
+  const preenchidos = Math.max(0, Math.min(total, Number.parseInt(atual, 10) || 0));
+
+  return (
+    <div className={`mestre-resource-dots ${tipo}`} aria-label={`${preenchidos} de ${total}`}>
+      {Array.from({ length: total }, (_, index) => (
+        <i key={index} className={index < preenchidos ? "ativo" : ""} />
+      ))}
+    </div>
+  );
+};
+
 const DashboardFichaCard = memo(({ ficha, tipo = "jogador", onAbrir }) => {
   const personagemCard = ficha.personagem || ficha;
+  const fichaEspiral = isFichaEspiral(personagemCard);
   const membros = personagemCard.membros || {};
   const imagem =
-    personagemCard.fotoPerfil || "https://placehold.co/600x800?text=Sem+Foto";
+    personagemCard.profileImage ||
+    personagemCard.fotoPerfil ||
+    "https://placehold.co/600x800?text=Sem+Foto";
+  const atributosResumo = fichaEspiral
+    ? Object.entries(personagemCard.attributes || {}).map(([atributo, valor]) => {
+        const estagio = Math.max(1, Math.min(5, Number(valor || 1)));
+        return [
+          ATTRIBUTES[atributo]?.name || atributo,
+          [4, 6, 8, 10, 12][estagio - 1],
+          ATTRIBUTES[atributo]?.stages?.[estagio - 1] || "",
+        ];
+      })
+    : Object.entries(personagemCard.atributos || {});
+  const integridadeMaxima = fichaEspiral
+    ? integrityMax(personagemCard.attributes?.pulso, personagemCard.integrityTable)
+    : 0;
+  const sanidadeAtual = fichaEspiral
+    ? Number(personagemCard.sanity || 0)
+    : Number(personagemCard.sanidade?.atual || 0);
+  const sanidadeMaxima = fichaEspiral ? 10 : Number(personagemCard.sanidade?.max || 0);
+  const esperancaAtual = fichaEspiral
+    ? Number(personagemCard.hope || 0)
+    : Number(personagemCard.esperanca?.atual || 0);
+  const esperancaMaxima = fichaEspiral ? 10 : Number(personagemCard.esperanca?.max || 0);
 
   return (
     <article
-      className="mestre-card-personagem"
+      className={`mestre-card-personagem ${fichaEspiral ? "espiral-card" : "darkness-card"}`}
       onClick={() => onAbrir(ficha, tipo)}
-      style={{ backgroundImage: `url(${imagem})` }}
     >
       <div className="mestre-card-overlay" />
 
       <div className="mestre-card-conteudo">
-        <div className="mestre-card-info">
-          <small>
-            NV{" "}
-            {tipo === "inimigo"
-              ? numeroRomanoDashboard(personagemCard.nivel)
-              : personagemCard.nivel || 1}
-          </small>{" "}
-          {personagemCard.nomeJogador && (
-            <em className="mestre-card-jogador">
-              {personagemCard.nomeJogador}
-            </em>
-          )}
-          <h3>{personagemCard.nome || "Sem nome"}</h3>
-          <span>{personagemCard.classe || "Sem classe"}</span>
-        </div>
-
         <div className="mestre-card-atributos">
-          {Object.entries(personagemCard.atributos || {})
-            .slice(0, 5)
-            .map(([atributo, valor]) => (
+          {atributosResumo
+            .slice(0, fichaEspiral ? 4 : atributosResumo.length)
+            .map(([atributo, valor, estagio]) => (
               <div key={atributo}>
-                <span>{atributo.slice(0, 3).toUpperCase()}</span>
+                <span>{atributo}</span>
+                {estagio && <small>{estagio}</small>}
                 <strong>{valor}</strong>
               </div>
             ))}
         </div>
 
-        <div className="mestre-card-barras">
-          <div className="mestre-card-membros">
+        <div className="mestre-card-retrato">
+          <img src={imagem} alt={`Retrato de ${personagemCard.name || personagemCard.nome || "personagem"}`} />
+          <div className="mestre-card-info">
+            <small>
+              NV{" "}
+              {fichaEspiral
+                ? "ARQUIVO ESPIRAL"
+                : tipo === "inimigo"
+                ? numeroRomanoDashboard(personagemCard.nivel)
+                : personagemCard.nivel || 1}
+            </small>{" "}
+            {(personagemCard.player || personagemCard.nomeJogador) && (
+              <em className="mestre-card-jogador">
+                {personagemCard.player || personagemCard.nomeJogador}
+              </em>
+            )}
+            <h3>{personagemCard.name || personagemCard.nome || "Sem nome"}</h3>
+            <span>{personagemCard.occupation || personagemCard.classe || "Sem ocupação"}</span>
+          </div>
+        </div>
+
+        <div className={`mestre-card-barras ${fichaEspiral ? "espiral-status" : "darkness-status"}`}>
+          <div className={`mestre-card-membros ${fichaEspiral ? "espiral-integrity" : ""}`}>
             <label>INTEGRIDADE</label>
 
-            {membrosFicha.map(({ chave, nome }) => {
+            {fichaEspiral ? (
+              <div className="mestre-card-membro-mini">
+                <div className="barra vermelho">
+                  <span
+                    style={{
+                      width: porcentagemRecurso(
+                        personagemCard.integrity,
+                        integridadeMaxima,
+                      ),
+                    }}
+                  />
+                </div>
+                <small>{personagemCard.integrity || 0} / {integridadeMaxima}</small>
+              </div>
+            ) : membrosFicha.map(({ chave, nome }) => {
               const dados = membros[chave] || { atual: 0, max: 0 };
 
               return (
@@ -521,38 +610,30 @@ const DashboardFichaCard = memo(({ ficha, tipo = "jogador", onAbrir }) => {
 
           <div>
             <label>SANIDADE</label>
-            <div className="barra roxo">
-              <span
-                style={{
-                  width: porcentagemRecurso(
-                    personagemCard.sanidade?.atual,
-                    personagemCard.sanidade?.max,
-                  ),
-                }}
-              />
-            </div>
+            {fichaEspiral ? (
+              <ResourceDots atual={sanidadeAtual} max={sanidadeMaxima} tipo="sanidade" />
+            ) : (
+              <div className="barra roxo">
+                <span style={{ width: porcentagemRecurso(sanidadeAtual, sanidadeMaxima) }} />
+              </div>
+            )}
             <small>
-              {personagemCard.sanidade?.atual || 0} /{" "}
-              {personagemCard.sanidade?.max || 0}
+              {sanidadeAtual} / {sanidadeMaxima}
             </small>
           </div>
 
           {tipo === "jogador" && (
             <div>
               <label>ESPERANCA</label>
-              <div className="barra dourado">
-                <span
-                  style={{
-                    width: porcentagemRecurso(
-                      personagemCard.esperanca?.atual,
-                      personagemCard.esperanca?.max,
-                    ),
-                  }}
-                />
-              </div>
+              {fichaEspiral ? (
+                <ResourceDots atual={esperancaAtual} max={esperancaMaxima} tipo="esperanca" />
+              ) : (
+                <div className="barra dourado">
+                  <span style={{ width: porcentagemRecurso(esperancaAtual, esperancaMaxima) }} />
+                </div>
+              )}
               <small>
-                {personagemCard.esperanca?.atual || 0} /{" "}
-                {personagemCard.esperanca?.max || 0}
+                {esperancaAtual} / {esperancaMaxima}
               </small>
             </div>
           )}
@@ -561,6 +642,58 @@ const DashboardFichaCard = memo(({ ficha, tipo = "jogador", onAbrir }) => {
     </article>
   );
 });
+
+const ModalFichaEspiral = ({ ficha, onClose, onSalvar }) => {
+  const sheet = ficha?.personagem || ficha;
+  const [novoItem, setNovoItem] = useState("");
+  const [novaHabilidade, setNovaHabilidade] = useState("");
+  const maxIntegrity = integrityMax(sheet.attributes?.pulso, sheet.integrityTable);
+  const atributos = Object.entries(sheet.attributes || {});
+  const recursos = Object.entries(sheet.resources || {}).filter(([, grau]) => Number(grau) > 0);
+  const inventario = String(sheet.inventory || "").split("\n").map((item) => item.trim()).filter(Boolean);
+  const habilidades = String(sheet.abilities || "").split("\n").map((item) => item.trim()).filter(Boolean);
+  const alterarLista = (campo, lista) => onSalvar({ [campo]: lista.join("\n") });
+
+  return (
+    <div className="mestre-modal-overlay espiral-leitura-overlay" onClick={onClose}>
+      <section className="mestre-modal-ficha espiral-leitura" onClick={(event) => event.stopPropagation()}>
+        <header className="espiral-leitura-cabecalho">
+          <div>
+            <span>Arquivo ESPIRAL // agente</span>
+            <h2>{sheet.name || "Sem nome"}</h2>
+            <p>{[sheet.pronoun, sheet.occupation, sheet.vertente].filter(Boolean).join(" · ") || "Sem identificação"}</p>
+          </div>
+          <div className="espiral-leitura-acoes">
+            <button type="button" className="espiral-abrir-ficha" onClick={() => { window.location.href = `/?ficha=${encodeURIComponent(ficha.espiralId || "principal")}`; }}>Abrir ficha completa</button>
+            <button type="button" className="mestre-modal-fechar" onClick={onClose} aria-label="Fechar ficha">×</button>
+          </div>
+        </header>
+
+        <div className="espiral-leitura-corpo">
+          <img className="espiral-leitura-retrato" src={sheet.profileImage || "https://placehold.co/300x300?text=Sem+Foto"} alt={`Retrato de ${sheet.name || "agente"}`} />
+          <section className="espiral-leitura-atributos">
+            <span>ATRIBUTOS</span>
+            {atributos.map(([id, nivel]) => {
+              const estagio = Math.max(1, Math.min(5, Number(nivel || 1)));
+              return <div key={id}><b>{ATTRIBUTES[id]?.name || id}</b><small>{ATTRIBUTES[id]?.stages?.[estagio - 1]}</small><strong>d{[4, 6, 8, 10, 12][estagio - 1]}</strong></div>;
+            })}
+          </section>
+          <section className="espiral-leitura-status">
+            <span>STATUS ATUAL</span>
+            <div><label>INTEGRIDADE</label><i className="integrity"><i style={{ width: porcentagemRecurso(sheet.integrity, maxIntegrity) }} /></i><b>{sheet.integrity || 0} / {maxIntegrity}</b></div>
+            <div><label>SANIDADE</label><i className="points sanity" style={{ "--points": Math.max(0, Math.min(10, Number(sheet.sanity || 0))) }} /><b>{sheet.sanity || 0} / 10</b></div>
+            <div><label>ESPERANÇA</label><i className="points hope" style={{ "--points": Math.max(0, Math.min(10, Number(sheet.hope || 0))) }} /><b>{sheet.hope || 0} / 10</b></div>
+          </section>
+        </div>
+        <section className="espiral-leitura-recursos"><span>RECURSOS</span>{recursos.length ? recursos.map(([nome, grau]) => <div key={nome}><b>{nome}</b><small>GRAU {Number(grau) + 1}</small></div>) : <p>Nenhum recurso treinado.</p>}</section>
+        <section className="espiral-leitura-edicao">
+          <div className="espiral-edicao-bloco"><span>INVENTÁRIO <em>{inventario.length}</em></span><div className="espiral-edicao-lista">{inventario.length ? inventario.map((item, index) => <div key={`${item}-${index}`}><b>{item}</b><button type="button" aria-label={`Remover ${item}`} onClick={() => alterarLista("inventory", inventario.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>) : <small>Nenhum item no inventário.</small>}</div><form onSubmit={(event) => { event.preventDefault(); if (novoItem.trim()) { alterarLista("inventory", [...inventario, novoItem.trim()]); setNovoItem(""); } }}><input value={novoItem} onChange={(event) => setNovoItem(event.target.value)} placeholder="Adicionar item" /><button type="submit">Dar item</button></form></div>
+          <div className="espiral-edicao-bloco"><span>HABILIDADES <em>{habilidades.length}</em></span><div className="espiral-edicao-lista">{habilidades.length ? habilidades.map((item, index) => <div key={`${item}-${index}`}><b>{item}</b><button type="button" aria-label={`Remover ${item}`} onClick={() => alterarLista("abilities", habilidades.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>) : <small>Nenhuma habilidade registrada.</small>}</div><form onSubmit={(event) => { event.preventDefault(); if (novaHabilidade.trim()) { alterarLista("abilities", [...habilidades, novaHabilidade.trim()]); setNovaHabilidade(""); } }}><input value={novaHabilidade} onChange={(event) => setNovaHabilidade(event.target.value)} placeholder="Adicionar habilidade" /><button type="submit">Dar habilidade</button></form></div>
+        </section>
+      </section>
+    </div>
+  );
+};
 
 const normalizarFichaId = (valor) =>
   String(valor || "")
@@ -641,6 +774,7 @@ const DashboardMestre = () => {
   const [categoriaLojaAtiva, setCategoriaLojaAtiva] = useState("armas-fogo");
   const [abaFicha, setAbaFicha] = useState("perfil");
   const [aba, setAba] = useState("fichas");
+  const [subAbaFichas, setSubAbaFichas] = useState("espiral");
   const [mensagem, setMensagem] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [abaLojaEditor, setAbaLojaEditor] = useState("armas-fogo");
@@ -651,6 +785,7 @@ const DashboardMestre = () => {
   const [tipoMunicaoEditor, setTipoMunicaoEditor] = useState("pistola");
   const [editandoDashboard, setEditandoDashboard] = useState(false);
   const [modalFichaAberto, setModalFichaAberto] = useState(false);
+  const [fichaEspiralAberta, setFichaEspiralAberta] = useState(null);
   const [salvandoNivel, setSalvandoNivel] = useState(false);
   const fichasEmGravacaoRef = useRef(new Set());
 
@@ -838,6 +973,16 @@ const DashboardMestre = () => {
         return personagem.tipo !== "npc";
       }),
     [fichas],
+  );
+
+  const fichasDaSubAba = useMemo(
+    () => fichasJogadores.filter((ficha) => {
+      const personagemFicha = ficha.personagem || ficha;
+      return subAbaFichas === "espiral"
+        ? isFichaEspiral(personagemFicha)
+        : !isFichaEspiral(personagemFicha);
+    }),
+    [fichasJogadores, subAbaFichas],
   );
 
 
@@ -1233,7 +1378,9 @@ const DashboardMestre = () => {
       const arvoresCompartilhadas =
         Object.keys(arvoresApi || {}).length > 0 ? arvoresApi : arvoresLocais;
 
-      setFichas(fichasNormalizadas);
+      const fichasEspiral = listarFichasEspiralLocais();
+      const fichasCompletas = [...fichasEspiral, ...fichasNormalizadas];
+      setFichas(fichasCompletas);
       setCatalogo(catalogoNormalizado);
       setReceitasCriacaoDashboard(receitasCriacaoLocais);
       salvarArvoresCustom(arvoresCompartilhadas);
@@ -1264,12 +1411,15 @@ const DashboardMestre = () => {
         });
       }
 
-      if (fichasNormalizadas.length > 0 && !fichaSelecionada) {
-        setFichaSelecionada(fichasNormalizadas[0].fichaId);
-        setPersonagem(fichasNormalizadas[0].personagem);
+      if (fichasCompletas.length > 0 && !fichaSelecionada) {
+        setFichaSelecionada(fichasCompletas[0].fichaId);
+        setPersonagem(fichasCompletas[0].personagem);
       }
     } catch (error) {
-      const fichasLocais = listarFichasLocais();
+      const fichasLocais = [
+        ...listarFichasEspiralLocais(),
+        ...listarFichasLocais(),
+      ];
       const catalogoLocal = localStorage.getItem(CATALOGO_STORAGE_KEY);
       setArvoresEditor(obterTodasArvores());
 
@@ -1434,7 +1584,7 @@ const DashboardMestre = () => {
 
 
   useEffect(() => {
-    if (!fichaSelecionada) return;
+    if (!fichaSelecionada || fichaSelecionada.startsWith("espiral:")) return;
 
     const sincronizarFichaSelecionada = async ({
       fichaId: fichaAtualizada,
@@ -1533,16 +1683,18 @@ const DashboardMestre = () => {
 
         if (cancelado) return;
 
-        setFichas(
-          fichasApi.map((ficha) => ({
+        const fichasDarkness = fichasApi.map((ficha) => ({
             ...ficha,
             personagem: {
               ...estadoInicial,
               ...(ficha.personagem || {}),
               lojaCreditos: ficha.personagem?.lojaCreditos ?? 900,
             },
-          })),
-        );
+          }));
+
+        // A sincronização remota só conhece o Darkness. Reanexamos as fichas
+        // ESPIRAL salvas localmente em toda atualização para elas não sumirem.
+        setFichas([...listarFichasEspiralLocais(), ...fichasDarkness]);
 
         if (arvoresApi && Object.keys(arvoresApi).length > 0) {
           salvarArvoresCustom(arvoresApi);
@@ -1584,6 +1736,20 @@ const DashboardMestre = () => {
       pararArvores();
       pararPolling();
     };
+  }, []);
+
+  useEffect(() => {
+    const atualizarFichasEspiral = (event) => {
+      if (event.key && !event.key.startsWith("espiral:sheet:v1:")) return;
+
+      setFichas((atuais) => [
+        ...listarFichasEspiralLocais(),
+        ...atuais.filter((ficha) => !isFichaEspiral(ficha.personagem || ficha)),
+      ]);
+    };
+
+    window.addEventListener("storage", atualizarFichasEspiral);
+    return () => window.removeEventListener("storage", atualizarFichasEspiral);
   }, []);
 
   useEffect(() => {
@@ -3462,6 +3628,10 @@ const DashboardMestre = () => {
     const personagemCard = ficha.personagem || ficha;
 
     if (tipo === "jogador") {
+      if (ficha.sistema === "espiral" || isFichaEspiral(personagemCard)) {
+        setFichaEspiralAberta(ficha);
+        return;
+      }
       setFichaSelecionada(ficha.fichaId);
       setPersonagem({
         ...estadoInicial,
@@ -3478,6 +3648,22 @@ const DashboardMestre = () => {
     }
 
     setInimigoEditando(personagemCard.id);
+  }, []);
+
+  const salvarFichaEspiralDoMestre = useCallback((ficha, alteracoes) => {
+    const id = ficha?.espiralId;
+    if (!id) return;
+    const chave = `espiral:sheet:v1:${id}`;
+    const atualizada = { ...(ficha.personagem || ficha), ...alteracoes };
+    try {
+      localStorage.setItem(chave, JSON.stringify(atualizada));
+      const proxima = { ...ficha, personagem: atualizada };
+      setFichaEspiralAberta(proxima);
+      setFichas((atuais) => atuais.map((item) => item.fichaId === ficha.fichaId ? proxima : item));
+      setMensagem("Ficha ESPIRAL atualizada.");
+    } catch (error) {
+      setMensagem("Não foi possível salvar a ficha ESPIRAL.");
+    }
   }, []);
 
   // Mantido temporariamente para comparar o card antigo durante a migração de performance.
@@ -3630,9 +3816,12 @@ const DashboardMestre = () => {
           <Icon path={mdiArrowLeft} size={0.9} />
           Inicio
         </button>
-        <div>
-          <span>Controle do narrador</span>
-          <h1>Dashboard do Mestre</h1>
+        <div className="mestre-identidade-espiral">
+          <span className="mestre-sigilo" aria-hidden="true">◉</span>
+          <div>
+            <span>Arquivo de operação // mestre</span>
+            <h1>ESPIRAL</h1>
+          </div>
         </div>
         <button
           className="mestre-hamburguer"
@@ -3683,42 +3872,42 @@ const DashboardMestre = () => {
 
       {mensagem && <p className="mestre-mensagem">{mensagem}</p>}
 
-      <nav className="mestre-tabs" aria-label="Areas do dashboard">
+      <nav className="mestre-tabs" aria-label="Áreas do arquivo do mestre">
         <button
           className={aba === "campanha" ? "ativa" : ""}
           onClick={() => setAba("campanha")}
         >
-          Campanha
+          Operação
         </button>
         <button
           className={aba === "fichas" ? "ativa" : ""}
           onClick={() => setAba("fichas")}
         >
-          Fichas
+          Agentes
         </button>
         <button
           className={aba === "inimigos" ? "ativa" : ""}
           onClick={() => setAba("inimigos")}
         >
-          NPCs
+          Presenças
         </button>
         <button
           className={aba === "loja" ? "ativa" : ""}
           onClick={() => setAba("loja")}
         >
-          Loja
+          Acervo
         </button>
         <button
           className={aba === "habilidades" ? "ativa" : ""}
           onClick={() => setAba("habilidades")}
         >
-          Habilidades
+          Protocolos
         </button>
         <button
           className={aba === "analises" ? "ativa" : ""}
           onClick={() => setAba("analises")}
         >
-          Análises{" "}
+          Triagem{" "}
           {habilidadesPendentes.length
             ? `(${habilidadesPendentes.length})`
             : ""}
@@ -3727,7 +3916,7 @@ const DashboardMestre = () => {
           className={aba === "marcas" ? "ativa" : ""}
           onClick={() => setAba("marcas")}
         >
-          Destinos
+          Marcas
         </button>
       </nav>
 
@@ -3737,10 +3926,30 @@ const DashboardMestre = () => {
           {aba === "campanha" && <CampanhaDashboard />}
           {aba === "fichas" && (
             <section className="mestre-dashboard-full">
+              <div className="mestre-subtabs-fichas" role="tablist" aria-label="Sistemas de fichas">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={subAbaFichas === "espiral"}
+                  className={subAbaFichas === "espiral" ? "ativa" : ""}
+                  onClick={() => setSubAbaFichas("espiral")}
+                >
+                  ESPIRAL <small>{fichasJogadores.filter((ficha) => isFichaEspiral(ficha.personagem || ficha)).length}</small>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={subAbaFichas === "darkness"}
+                  className={subAbaFichas === "darkness" ? "ativa" : ""}
+                  onClick={() => setSubAbaFichas("darkness")}
+                >
+                  DARKNESS <small>{fichasJogadores.filter((ficha) => !isFichaEspiral(ficha.personagem || ficha)).length}</small>
+                </button>
+              </div>
 
               <div className="mestre-dashboard-cards">
-                  {fichasJogadores.length > 0 ? (
-                    fichasJogadores.map((ficha) => (
+                  {fichasDaSubAba.length > 0 ? (
+                    fichasDaSubAba.map((ficha) => (
                       <DashboardFichaCard
                         key={ficha.fichaId || ficha.id}
                         ficha={ficha}
@@ -3750,10 +3959,18 @@ const DashboardMestre = () => {
                     ))
                   ) : (
                     <div className="mestre-vazio">
-                      Nenhuma ficha encontrada.
+                      Nenhuma ficha {subAbaFichas === "espiral" ? "ESPIRAL" : "Darkness"} encontrada.
                     </div>
                   )}
                 </div>
+
+              {fichaEspiralAberta && (
+                <ModalFichaEspiral
+                  ficha={fichaEspiralAberta}
+                  onClose={() => setFichaEspiralAberta(null)}
+                  onSalvar={(alteracoes) => salvarFichaEspiralDoMestre(fichaEspiralAberta, alteracoes)}
+                />
+              )}
 
               {modalFichaAberto && personagem && (
                 <div
@@ -3925,7 +4142,7 @@ const DashboardMestre = () => {
                           className="mestre-abrir-ficha"
                           onClick={() => {
                             window.open(
-                              `/?ficha=${encodeURIComponent(fichaSelecionada)}`,
+                              `/?sistema=darkness&ficha=${encodeURIComponent(fichaSelecionada)}`,
                               "_blank",
                             );
                           }}
@@ -8396,8 +8613,8 @@ const DashboardMestre = () => {
           <section className="painel-rolagens-mestre">
             <div className="painel-rolagens-topo">
               <div>
-                <span>Tempo real</span>
-                <h3>Rolagens dos Jogadores</h3>
+                <span>Canal de escuta // tempo real</span>
+                <h3>Rolagens de campo</h3>
               </div>
 
               <div className="painel-rolagens-acoes">

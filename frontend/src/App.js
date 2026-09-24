@@ -4,6 +4,7 @@ import "./App.css";
 import "./CSS/Responsive.css";
 import { MESTRE_AUTH_KEY } from "./constants/masterAccess";
 import DialogoGlobal from "./components/DialogoGlobal";
+import LojaEspiral from "./pages/lojaEspiral";
 
 const ArvoreHabilidades = lazy(() => import("./pages/arvoreHabilidades"));
 const CriarPersonagem = lazy(() => import("./pages/criarPersonagem"));
@@ -50,6 +51,7 @@ function App() {
       setTimeout(() => {
         window.history.pushState({}, "", href);
         setSearch(window.location.search);
+        setTimeout(() => setTransitionActive(false), 300);
       }, 700);
 
     };
@@ -71,6 +73,7 @@ function App() {
   const temFicha = Boolean(params.get("ficha"));
   const estaCriando = params.get("criar") === "1";
   const estaNaLoja = params.get("loja") === "1";
+  const estaNaLojaEspiral = params.get("lojaEspiral") === "1";
   const estaNaArvoreHabilidades = params.get("habilidades") === "1";
   const estaNoUpgrade = params.get("upgrade") === "1";
   const estaNoDashboardMestre = params.get("mestre") === "1";
@@ -78,7 +81,7 @@ function App() {
   const mestreAutorizado =
     sessionStorage.getItem(MESTRE_AUTH_KEY) === "true";
 
-  if (!sistemaAnterior && !estaNaMesa && !estaNoDashboardMestre && !estaNaLoja && !estaNaArvoreHabilidades && !estaNoUpgrade) {
+  if (!sistemaAnterior && !estaNaMesa && !estaNoDashboardMestre && !estaNaLoja && !estaNaLojaEspiral && !estaNaArvoreHabilidades && !estaNoUpgrade) {
     return <><DialogoGlobal /><Suspense fallback={<div style={{ color: '#aaa', padding: 40 }}>Abrindo arquivo ESPIRAL…</div>}><FichaEspiral key={params.get('ficha') || 'principal'} /></Suspense></>;
   }
 
@@ -87,7 +90,7 @@ function App() {
       <PageTransition active={transitionActive} />
       <DialogoGlobal />
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<div style={{ color: "#eee", padding: 40 }}>Abrindo a loja…</div>}>
         {estaNaMesa ? (
           <Mesa />
         ) : estaNoDashboardMestre && mestreAutorizado ? (
@@ -96,6 +99,8 @@ function App() {
           <ArvoreHabilidades />
         ) : estaNoUpgrade ? (
           <UpgradeNivel />
+        ) : estaNaLojaEspiral ? (
+          <LojaEspiral />
         ) : estaNaLoja ? (
           <LojaHelena />
         ) : temFicha ? (

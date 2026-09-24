@@ -1184,7 +1184,7 @@ const CriarPersonagem = () => {
         JSON.stringify(personagemCriado),
       );
       const personagemUrl = criarSlugPersonagem(personagemCriado.nome || form.nome);
-      window.location.href = `/?ficha=${encodeURIComponent(personagemUrl)}&senha=${encodeURIComponent(fichaId)}`;
+      window.location.href = `/?sistema=darkness&ficha=${encodeURIComponent(personagemUrl)}&senha=${encodeURIComponent(fichaId)}`;
     } catch (error) {
       setErro(`Nao foi possivel criar a ficha. ${error.message}`);
       setSalvando(false);

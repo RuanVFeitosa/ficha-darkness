@@ -16,7 +16,7 @@ export const VERTENTES = {
   Obstinada: ['Recusa', 'O benefício de Forçar-se diverge entre as páginas 58 e 154. Combine com o mestre e ajuste os dados de Pressão manualmente.'],
 };
 export const integrityMax = (stage) => 25 + stage * 5;
-export const freshSheet = () => ({ version: 1, name: '', profileImage: '', occupation: '', player: '', pronoun: '', age: '', vertente: 'Metódica', attributes: { pulso: 2, razao: 2, sentido: 2, voz: 2 }, resources: Object.fromEntries(RESOURCES.map(r => [r, 0])), integrityTable: 'creation', integrity: 35, sanity: 10, hope: 10, pressure: 0, failures: 0, purpose: '', notes: '', inventory: '', abilities: '', abilityProgress: [{ name: '', detail: '', level: 1 }, { name: '', detail: '', level: 1 }], injuries: [], weapons: [], protections: [], phase: 'creation' });
+export const freshSheet = () => ({ version: 1, name: '', profileImage: '', occupation: '', player: '', pronoun: '', age: '', vertente: 'Metódica', attributes: { pulso: 2, razao: 2, sentido: 2, voz: 2 }, resources: Object.fromEntries(RESOURCES.map(r => [r, 0])), integrityTable: 'creation', integrity: 35, sanity: 10, hope: 10, pressure: 0, failures: 0, purpose: '', notes: '', inventory: '', abilities: '', abilityProgress: [{ name: '', detail: '', level: 1 }, { name: '', detail: '', level: 1 }], injuries: [], weapons: [{ id: 'desarmado', name: 'Desarmado', damage: '1d4', ammo: '' }], protections: [], phase: 'creation' });
 export function creationWarnings(sheet) {
   const stages = Object.values(sheet.attributes);
   const spent = stages.reduce((sum, stage) => sum + [-1, 0, 1, 3, 6][stage - 1], 0);

@@ -102,6 +102,7 @@ const montarUrlFicha = (personagem, fichaId, destino = "") => {
   const params = new URLSearchParams({
     ficha: nomeUrl,
     senha: fichaId,
+    sistema: "darkness",
   });
 
   return destino ? `${destino}&${params.toString()}` : `?${params.toString()}`;
@@ -1406,7 +1407,7 @@ const cancelarEdicaoHabilidade = () => {
     try {
       localStorage.setItem(chaveDestino, JSON.stringify(convertDarknessToEspiral({ ...personagem, fichaId }, { pulseSource: fontePulso })));
       setMenuFichaAberto(false);
-      window.location.href = `/?ficha=${encodeURIComponent(destino)}`;
+      window.location.href = `/?sistema=darkness&ficha=${encodeURIComponent(destino)}`;
     } catch (error) {
       await alertarDialogo(
         error?.message || "Não foi possível salvar a ficha ESPIRAL neste dispositivo.",

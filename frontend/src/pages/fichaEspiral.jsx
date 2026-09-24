@@ -11,6 +11,7 @@ import {
   resolveRoll,
 } from "../data/espiral";
 import "../CSS/FichaEspiral.css";
+import "../CSS/InventarioEspiral.css";
 import { compressProfileImage } from "../services/imageCompression";
 import { buscarPersonagem } from "../services/personagemApi";
 import { convertDarknessToEspiral } from "../utils/darknessToEspiral";
@@ -576,6 +577,11 @@ export default function FichaEspiral() {
         : sheet.sanity === 0
           ? "Colapso psicológico"
           : "Em jogo";
+  const inventarioVisual = [
+    ...(sheet.weapons || []).map((item) => ({ icon: "▰", name: item.name, detail: item.damage || "Arma" })),
+    ...(sheet.protections || []).map((item) => ({ icon: "⬡", name: item.name, detail: item.value ? `Proteção ${item.value}` : "Proteção" })),
+    ...String(sheet.inventory || "").split("\n").map((item) => item.trim()).filter(Boolean).map((name) => ({ icon: "◆", name, detail: "Equipamento" })),
+  ];
   return (
     <div className="espiral-app">
       <header className="es-topbar">
@@ -592,6 +598,7 @@ export default function FichaEspiral() {
           <i />
           {saveState}
         </span>
+        <a className="es-store-link" href={`?lojaEspiral=1&ficha=${encodeURIComponent(id)}`}>Loja da Helena</a>
         <button
           className="es-icon-button"
           onClick={exportSheet}
@@ -1278,11 +1285,14 @@ export default function FichaEspiral() {
                     Registre armas, dano, munição, proteção, ferramentas e
                     objetos importantes.
                   </p>
-                  <textarea
-                    value={sheet.inventory}
-                    onChange={(e) => update("inventory", e.target.value)}
-                    placeholder="O essencial. O que pesa. O que você não consegue deixar para trás."
-                  />
+                  <div className="es-inventory-items" aria-label="Itens do inventário">
+                    {inventarioVisual.length ? inventarioVisual.map((item, index) => (
+                      <div className="es-inventory-item" key={`${item.name}-${index}`}>
+                        <span className="es-inventory-icon" aria-hidden="true">{item.icon}</span>
+                        <div><b>{item.name}</b><small>{item.detail}</small></div>
+                      </div>
+                    )) : <p className="es-inventory-empty">Nenhum item registrado.</p>}
+                  </div>
                 </label>
               </>
             )}

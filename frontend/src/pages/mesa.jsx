@@ -3713,7 +3713,7 @@ const Mesa = () => {
           </header>
           <iframe
             title={`Ficha de ${personagemJogador.nome}`}
-            src={`/?ficha=${encodeURIComponent(personagemJogador.nome || membroJogador.ficha_id)}&senha=${encodeURIComponent(membroJogador.ficha_id)}&embed=mesa`}
+            src={`/?sistema=darkness&ficha=${encodeURIComponent(personagemJogador.nome || membroJogador.ficha_id)}&senha=${encodeURIComponent(membroJogador.ficha_id)}&embed=mesa`}
           />
         </section>
       )}

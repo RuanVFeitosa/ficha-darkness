@@ -640,6 +640,18 @@
   color: #ddd;
   font-size: 16px;
 }
+.es-store-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid #666;
+  color: #f4f4f4 !important;
+  font: 10px "Courier New", monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.es-store-link:hover { background: #f4f4f4; color: #000 !important; }
 .es-equipment-row .es-damage-roll {
   padding: 0 4px;
   border-color: #777;
