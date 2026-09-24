@@ -43,10 +43,22 @@ export const solicitarDialogo = (mensagem, opcoes = {}) => abrirDialogo({
   ...opcoes,
 });
 
+export const selecionarDialogo = (mensagem, opcoes = {}) => abrirDialogo({
+  tipo: "selecao",
+  titulo: "Escolha uma opção",
+  confirmarTexto: "Continuar",
+  cancelarTexto: "Cancelar",
+  valorInicial: "",
+  opcoes: [],
+  mensagem,
+  ...opcoes,
+});
+
 const iconePorTipo = {
   aviso: mdiInformationOutline,
   confirmacao: mdiHelpCircleOutline,
   entrada: mdiInformationOutline,
+  selecao: mdiHelpCircleOutline,
 };
 
 const DialogoGlobal = () => {
@@ -65,7 +77,7 @@ const DialogoGlobal = () => {
     if (!dialogo) return undefined;
     setValor(dialogo.valorInicial || "");
     const timer = window.setTimeout(() => {
-      (dialogo.tipo === "entrada" ? campoRef : confirmarRef).current?.focus();
+      (["entrada", "selecao"].includes(dialogo.tipo) ? campoRef : confirmarRef).current?.focus();
     }, 30);
     return () => window.clearTimeout(timer);
   }, [dialogo]);
@@ -79,7 +91,7 @@ const DialogoGlobal = () => {
   useEffect(() => {
     if (!dialogo) return undefined;
     const aoPressionar = (evento) => {
-      if (evento.key === "Escape" && dialogo.tipo !== "aviso") concluir(dialogo.tipo === "entrada" ? null : false);
+      if (evento.key === "Escape" && dialogo.tipo !== "aviso") concluir(["entrada", "selecao"].includes(dialogo.tipo) ? null : false);
     };
     window.addEventListener("keydown", aoPressionar);
     return () => window.removeEventListener("keydown", aoPressionar);
@@ -87,8 +99,8 @@ const DialogoGlobal = () => {
 
   if (!dialogo) return null;
 
-  const cancelar = () => concluir(dialogo.tipo === "entrada" ? null : false);
-  const confirmar = () => concluir(dialogo.tipo === "entrada" ? valor : true);
+  const cancelar = () => concluir(["entrada", "selecao"].includes(dialogo.tipo) ? null : false);
+  const confirmar = () => concluir(["entrada", "selecao"].includes(dialogo.tipo) ? valor : true);
 
   return (
     <div className="dialogo-global" role="presentation" onMouseDown={(evento) => {
@@ -118,11 +130,16 @@ const DialogoGlobal = () => {
               if (evento.key === "Enter" && valor.trim()) confirmar();
             }} />
           )}
+          {dialogo.tipo === "selecao" && (
+            <select ref={campoRef} value={valor} onChange={(evento) => setValor(evento.target.value)}>
+              {dialogo.opcoes.map((opcao) => <option key={opcao.valor} value={opcao.valor}>{opcao.rotulo}</option>)}
+            </select>
+          )}
         </div>
 
         <footer className="dialogo-global__acoes">
           {dialogo.tipo !== "aviso" && <button type="button" className="dialogo-global__botao dialogo-global__botao--secundario" onClick={cancelar}>{dialogo.cancelarTexto}</button>}
-          <button ref={confirmarRef} type="button" className={`dialogo-global__botao ${dialogo.perigo ? "dialogo-global__botao--perigo" : "dialogo-global__botao--principal"}`} onClick={confirmar} disabled={dialogo.tipo === "entrada" && !valor.trim()}>{dialogo.confirmarTexto}</button>
+          <button ref={confirmarRef} type="button" className={`dialogo-global__botao ${dialogo.perigo ? "dialogo-global__botao--perigo" : "dialogo-global__botao--principal"}`} onClick={confirmar} disabled={["entrada", "selecao"].includes(dialogo.tipo) && !valor.trim()}>{dialogo.confirmarTexto}</button>
         </footer>
       </section>
     </div>

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../CSS/FichaPersonagem.css";
 import "../CSS/CondicoesProfile.css";
-import { alertarDialogo, confirmarDialogo } from "../components/DialogoGlobal";
+import { alertarDialogo, confirmarDialogo, selecionarDialogo } from "../components/DialogoGlobal";
 
 import { condicoes } from "../components/data/condicoes";
 import { receitasCriacao } from "../components/data/receitasCriacao";
@@ -57,6 +57,7 @@ import {
   mdiMapOutline,
   mdiClose,
   mdiMenu,
+  mdiSwapHorizontal,
 } from "@mdi/js";
 import { obterIconeItem } from "../utils/itemIcons";
 import { marcarPassivosAtualizados, mesclarPassivosPorRevisao } from "../utils/personagemMerge";
@@ -71,6 +72,7 @@ import {
 } from "../data/Classes/arvoresHabilidades";
 import { CATALOGO_DEFESAS } from "../data/Catalogo/defesas";
 import { CATALOGO_COMBATE } from "../data/Catalogo/combate";
+import { convertDarknessToEspiral } from "../utils/darknessToEspiral";
 
 // Chave para o localStorage
 const STORAGE_KEY = "fichaRPG_personagem";
@@ -1377,6 +1379,40 @@ const cancelarEdicaoHabilidade = () => {
 
   const abrirUpgradeNivel = () => {
     window.location.href = montarUrlFicha(personagem, fichaId, "?upgrade=1");
+  };
+
+  const adaptarParaEspiral = async () => {
+    // A ficha ESPIRAL usa o mesmo código da ficha Darkness. Assim, abrir
+    // ?ficha=121212 sempre abre a adaptação de 121212, e não um arquivo vazio.
+    const destino = normalizarFichaId(fichaId);
+    const chaveDestino = `espiral:sheet:v1:${destino}`;
+    const jaExiste = Boolean(lerLocalSeguro(chaveDestino));
+    const fontePulso = await selecionarDialogo(
+      "Escolha qual atributo antigo define o Pulso desta ficha ESPIRAL.",
+      { titulo: "Definir Pulso", valorInicial: "forca", opcoes: [
+        { valor: "forca", rotulo: `Força (${personagem.atributos?.forca || 0})` },
+        { valor: "fonitude", rotulo: `Fortitude (${personagem.atributos?.fonitude || 0})` },
+      ] },
+    );
+    if (!fontePulso) return;
+    const confirmado = await confirmarDialogo(
+      jaExiste
+        ? "Já existe uma adaptação ESPIRAL desta ficha neste dispositivo. Continuar substituirá somente essa cópia ESPIRAL; a ficha Darkness não será alterada."
+        : "Uma nova ficha ESPIRAL será calculada a partir desta ficha. A ficha Darkness permanecerá intacta. Você poderá revisar os valores narrativos na nova ficha.",
+      { titulo: "Adaptar ficha para ESPIRAL", confirmarTexto: "Criar adaptação" },
+    );
+    if (!confirmado) return;
+
+    try {
+      localStorage.setItem(chaveDestino, JSON.stringify(convertDarknessToEspiral({ ...personagem, fichaId }, { pulseSource: fontePulso })));
+      setMenuFichaAberto(false);
+      window.location.href = `/?ficha=${encodeURIComponent(destino)}`;
+    } catch (error) {
+      await alertarDialogo(
+        error?.message || "Não foi possível salvar a ficha ESPIRAL neste dispositivo.",
+        { titulo: "Falha na adaptação" },
+      );
+    }
   };
 
   const abrirTabletop = async () => {
@@ -6840,6 +6876,10 @@ const cancelarEdicaoHabilidade = () => {
             <button type="button" onClick={abrirLoja}>
               <Icon path={mdiStorefrontOutline} size={1} />
               <span>Loja</span>
+            </button>
+            <button type="button" onClick={adaptarParaEspiral}>
+              <Icon path={mdiSwapHorizontal} size={1} />
+              <span>Adaptar para ESPIRAL</span>
             </button>
             <button
               type="button"

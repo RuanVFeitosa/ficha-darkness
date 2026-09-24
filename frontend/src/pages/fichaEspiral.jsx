@@ -12,6 +12,9 @@ import {
 } from "../data/espiral";
 import "../CSS/FichaEspiral.css";
 import { compressProfileImage } from "../services/imageCompression";
+import { buscarPersonagem } from "../services/personagemApi";
+import { convertDarknessToEspiral } from "../utils/darknessToEspiral";
+import { selecionarDialogo } from "../components/DialogoGlobal";
 
 const clamp = (value, max) => Math.max(0, Math.min(max, Number(value) || 0));
 const randomDie = (sides) => {
@@ -24,8 +27,26 @@ const randomDie = (sides) => {
   } while (a[0] >= limit);
   return (a[0] % sides) + 1;
 };
+const DieGlyph = ({ sides, label = true }) => (
+  <i className={`es-die-glyph die-d${sides}`} data-sides={sides} aria-label={label ? `d${sides}` : undefined} title={label ? `d${sides}` : undefined} />
+);
 const uniqueId = () =>
   window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+const storedEspiralSheet = (id) => {
+  try {
+    const current = JSON.parse(localStorage.getItem(`espiral:sheet:v1:${id}`));
+    if (current?.version === 1) return { ...freshSheet(), ...current };
+    const previous = JSON.parse(localStorage.getItem(`espiral:sheet:v1:darkness-${id}`));
+    if (previous?.version === 1) return { ...freshSheet(), ...previous };
+  } catch {}
+  return null;
+};
+const isUnlinkedBlankSheet = (sheet) =>
+  !sheet?.migratedFrom && !sheet?.name && !sheet?.profileImage &&
+  !sheet?.occupation && !sheet?.player && !sheet?.inventory && !sheet?.abilities &&
+  !(sheet?.injuries || []).length &&
+  Object.values(sheet?.resources || {}).every((grade) => Number(grade) === 0);
+const legacyImportsInProgress = new Set();
 function Spiral({ small = false }) {
   const points = Array.from({ length: 500 }, (_, i) => {
     const t = (i / 499) * Math.PI * 9;
@@ -70,7 +91,7 @@ function Counter({ label, value, max, onChange }) {
         −
       </button>
       <input
-        aria-label={label}
+        aria-label={typeof label === "string" ? label : "Bônus / penalidade"}
         type="number"
         min="0"
         max={max}
@@ -231,16 +252,11 @@ function BodyMap({ injuries, selectedRegion, onSelect }) {
 }
 
 export default function FichaEspiral() {
-  const id =
-    new URLSearchParams(window.location.search).get("ficha") || "principal";
+  const idFromUrl = new URLSearchParams(window.location.search).get("ficha");
+  const id = idFromUrl || "principal";
   const storageKey = `espiral:sheet:v1:${id}`;
-  const [sheet, setSheet] = useState(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem(storageKey));
-      if (stored?.version === 1) return { ...freshSheet(), ...stored };
-    } catch {}
-    return freshSheet();
-  });
+  const initialStoredSheet = useRef(storedEspiralSheet(id));
+  const [sheet, setSheet] = useState(() => initialStoredSheet.current || freshSheet());
   const [saveState, setSaveState] = useState("Salvando…");
   const [tab, setTab] = useState("Visão geral");
   const [editing, setEditing] = useState(false);
@@ -264,12 +280,64 @@ export default function FichaEspiral() {
   const profileInput = useRef(null);
   const [notice, setNotice] = useState("");
   const maximum = integrityMax(sheet.attributes.pulso, sheet.integrityTable);
+  const fichaDarkness = sheet.migratedFrom === "darkness"
+    ? sheet.migratedFromId || (id.startsWith("darkness-") ? id.slice("darkness-".length) : "")
+    : "";
   const budget = creationWarnings(sheet);
   const defense = sheet.attributes.sentido + 2;
   const weapons = Array.isArray(sheet.weapons) ? sheet.weapons : [];
   const protections = Array.isArray(sheet.protections) ? sheet.protections : [];
+  const abilityProgress = Array.isArray(sheet.abilityProgress) && sheet.abilityProgress.length === 2
+    ? sheet.abilityProgress
+    : [{ name: "", detail: "", level: 1 }, { name: "", detail: "", level: 1 }];
   const update = (key, value) =>
     setSheet((previous) => ({ ...previous, [key]: value }));
+  const abrirSistemaAnterior = () => {
+    window.location.href = fichaDarkness
+      ? `/?sistema=darkness&ficha=${encodeURIComponent(fichaDarkness)}&senha=${encodeURIComponent(fichaDarkness)}`
+      : "/?sistema=darkness";
+  };
+  useEffect(() => {
+    const shouldImport = idFromUrl &&
+      (!initialStoredSheet.current || isUnlinkedBlankSheet(initialStoredSheet.current));
+    if (!shouldImport || legacyImportsInProgress.has(id)) return undefined;
+    legacyImportsInProgress.add(id);
+    const importarDarkness = async () => {
+      let legacyCharacter = null;
+      try {
+        legacyCharacter = await buscarPersonagem(id);
+      } catch {
+        try {
+          legacyCharacter = JSON.parse(localStorage.getItem(`fichaRPG_personagem_${id}`));
+        } catch {}
+      }
+      if (!legacyCharacter) {
+        legacyImportsInProgress.delete(id);
+        return;
+      }
+      const hasLegacyData = legacyCharacter.nome ||
+        Object.values(legacyCharacter.atributos || {}).some((value) => Number(value) > 0) ||
+        (legacyCharacter.inventario || []).length > 0;
+      if (!hasLegacyData) {
+        legacyImportsInProgress.delete(id);
+        return;
+      }
+      const pulseSource = await selecionarDialogo(
+        "Escolha qual atributo antigo define o Pulso desta ficha ESPIRAL.",
+        { titulo: "Definir Pulso", valorInicial: "forca", opcoes: [
+          { valor: "forca", rotulo: `Força (${legacyCharacter.atributos?.forca || 0})` },
+          { valor: "fonitude", rotulo: `Fortitude (${legacyCharacter.atributos?.fonitude || 0})` },
+        ] },
+      );
+      if (!pulseSource) {
+        legacyImportsInProgress.delete(id);
+        return;
+      }
+      setSheet(convertDarknessToEspiral({ ...legacyCharacter, fichaId: id }, { pulseSource }));
+      setNotice("Ficha Darkness vinculada e adaptada automaticamente.");
+    };
+    importarDarkness();
+  }, [id, idFromUrl]);
   useEffect(() => {
     try {
       localStorage.setItem(storageKey, JSON.stringify(sheet));
@@ -403,6 +471,7 @@ export default function FichaEspiral() {
           type: "formula",
           label: parsed.formula,
           dice,
+          sides: parsed.sides,
           pressure: [],
           total: dice.reduce((sum, die) => sum + die, parsed.modifier),
           modifier: parsed.modifier,
@@ -411,6 +480,20 @@ export default function FichaEspiral() {
         ...previous,
       ].slice(0, 12),
     );
+    window.setTimeout(() => setRolling(false), 650);
+  }
+  function rollWeaponDamage(weapon) {
+    if (rolling) return;
+    const parsed = parseDiceFormula(weapon.damage);
+    if (!parsed) {
+      setNotice(`Dano inválido para ${weapon.name || "a arma"}. Use uma fórmula como 1d8 ou 2d6+2.`);
+      return;
+    }
+    setNotice("");
+    const dice = Array.from({ length: parsed.amount }, () => randomDie(parsed.sides));
+    setRolling(true);
+    setHistory((previous) => [{ type: "formula", label: `${weapon.name || "Dano"} · ${parsed.formula}`, dice, sides: parsed.sides, pressure: [], total: dice.reduce((sum, die) => sum + die, parsed.modifier), modifier: parsed.modifier, at: Date.now() }, ...previous].slice(0, 12));
+    setRollModalOpen(true);
     window.setTimeout(() => setRolling(false), 650);
   }
   function exportSheet() {
@@ -499,7 +582,11 @@ export default function FichaEspiral() {
         <a href="/" className="es-brand">
           <Spiral small />
           <span>ESPIRAL</span>
-          <span className="es-brand-caption">NOME DO PERSONAGEM</span>
+          <span className="es-brand-caption">
+            {[sheet.pronoun || sheet.player, sheet.name, sheet.vertente]
+              .filter(Boolean)
+              .join(" · ") || "NOME DO PERSONAGEM"}
+          </span>
         </a>
         <span className="es-save" role="status">
           <i />
@@ -540,7 +627,7 @@ export default function FichaEspiral() {
                     >
                       {attr.stages.map((stage, i) => (
                         <option key={stage} value={i + 1}>
-                          {stage} · d{i * 2 + 4}
+                          {stage} · {i * 2 + 4}
                         </option>
                       ))}
                     </select>
@@ -548,16 +635,11 @@ export default function FichaEspiral() {
                       className={`es-rail-value die-d${stage * 2 + 2}`}
                       aria-hidden="true"
                     >
-                      {stage}
+                      {stage * 2 + 2}
                     </b>
                     <small className="es-rail-stage">ESTÁGIO {stage}</small>
                     <em className="es-rail-detail">
-                      {attr.stages[stage - 1]} ·{" "}
-                      <i
-                        className={`es-die-icon die-d${stage * 2 + 2}`}
-                        aria-hidden="true"
-                      />{" "}
-                      d{stage * 2 + 2}
+                      {attr.stages[stage - 1]}
                     </em>
                   </label>
                 );
@@ -566,33 +648,38 @@ export default function FichaEspiral() {
           </aside>
           <div className="es-hero-art">
             <Spiral />
-            <button
-              className="es-profile-photo"
-              type="button"
-              onClick={() => profileInput.current?.click()}
-              aria-label="Escolher foto de perfil"
-              title="Escolher foto de perfil"
-            >
-              {sheet.profileImage ? (
-                <img
-                  src={sheet.profileImage}
-                  alt={`Retrato de ${sheet.name || "personagem"}`}
-                />
-              ) : (
-                <span>
-                  {(sheet.name || "?").trim().slice(0, 1).toUpperCase()}
-                </span>
-              )}
-            </button>
-            <input
-              ref={profileInput}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={importProfileImage}
-            />
-            {sheet.name && <h1>{sheet.name}</h1>}
-            <span>O QUE RESTA DE VOCÊ?</span>
+            <div className="es-profile-photo-shell">
+              <button
+                className="es-profile-photo"
+                type="button"
+                onClick={() => profileInput.current?.click()}
+                aria-label="Escolher foto de perfil"
+                title="Escolher foto de perfil"
+              >
+                {sheet.profileImage ? (
+                  <img
+                    src={sheet.profileImage}
+                    alt={`Retrato de ${sheet.name || "personagem"}`}
+                  />
+                ) : (
+                  <span>
+                    {(sheet.name || "?").trim().slice(0, 1).toUpperCase()}
+                  </span>
+                )}
+              </button>
+              <span className="es-profile-upload" aria-hidden="true">
+                Trocar foto
+              </span>
+              <input
+                ref={profileInput}
+                id="espiral-profile-photo"
+                className="es-profile-input"
+                type="file"
+                accept="image/*"
+                aria-label="Trocar foto"
+                onChange={importProfileImage}
+              />
+            </div>
           </div>
           <div className="es-hero-vitals">
             <div className="hero-vital hero-integrity">
@@ -666,6 +753,12 @@ export default function FichaEspiral() {
               label="Jogador"
               value={sheet.player}
               onChange={(v) => update("player", v)}
+            />
+            <Field
+              label="Pronome"
+              value={sheet.pronoun || ""}
+              onChange={(v) => update("pronoun", v)}
+              placeholder="Ex.: ela/dela"
             />
             <Field
               label="Idade"
@@ -802,25 +895,8 @@ export default function FichaEspiral() {
                 </div>
                 <section
                   className="es-combat-kit"
-                  aria-label="Defesa, armas e proteções"
+                  aria-label="Armas e proteções"
                 >
-                  <div className="es-defense-card">
-                    <span className="es-eyebrow">DEFESA</span>
-                    <strong>{defense}</strong>
-                    <div>
-                      <b>
-                        {
-                          ATTRIBUTES.sentido.stages[
-                            sheet.attributes.sentido - 1
-                          ]
-                        }
-                      </b>
-                      <small>
-                        Sentido d{sheet.attributes.sentido * 2 + 2} · Defesa
-                        base
-                      </small>
-                    </div>
-                  </div>
                   <div className="es-equipment-column">
                     <header>
                       <div>
@@ -885,6 +961,15 @@ export default function FichaEspiral() {
                             }
                             placeholder="Munição"
                           />
+                          <button
+                            type="button"
+                            className="es-damage-roll"
+                            aria-label={`Rolar dano de ${weapon.name || "arma"}`}
+                            onClick={() => rollWeaponDamage(weapon)}
+                            disabled={rolling}
+                          >
+                            Rolar
+                          </button>
                           <button
                             type="button"
                             aria-label="Remover arma"
@@ -1136,7 +1221,37 @@ export default function FichaEspiral() {
                     de Esperança. Habilidades de legado podem ser adaptadas com
                     o mestre.
                   </p>
+                  <div className="es-ability-list">
+                    {abilityProgress.map((ability, index) => (
+                      <article className="es-ability-card" key={index}>
+                        <input
+                          aria-label={`Nome da habilidade ${index + 1}`}
+                          placeholder={`${String(index + 1).padStart(2, "0")} / Nome da habilidade`}
+                          value={ability.name}
+                          onChange={(event) => update("abilityProgress", abilityProgress.map((item, i) => i === index ? { ...item, name: event.target.value } : item))}
+                        />
+                        <div className="es-ability-heading">
+                          <span className="es-ability-dots" aria-hidden="true">
+                            {[1, 2, 3].map((level) => <i key={level} className={level <= ability.level ? "filled" : ""} />)}
+                          </span>
+                          <strong>Nível {String(ability.level).toUpperCase()}</strong>
+                          <div className="es-ability-levels" aria-label={`Nível da habilidade ${index + 1}`}>
+                            {[1, 2, 3].map((level) => (
+                              <button type="button" key={level} className={ability.level === level ? "active" : ""} onClick={() => update("abilityProgress", abilityProgress.map((item, i) => i === index ? { ...item, level } : item))}>{level}</button>
+                            ))}
+                          </div>
+                        </div>
+                        <textarea
+                          aria-label={`Descrição da habilidade ${index + 1}`}
+                          placeholder="Ação, custo e efeito da habilidade."
+                          value={ability.detail}
+                          onChange={(event) => update("abilityProgress", abilityProgress.map((item, i) => i === index ? { ...item, detail: event.target.value } : item))}
+                        />
+                      </article>
+                    ))}
+                  </div>
                   <textarea
+                    aria-label="Habilidades legadas"
                     value={sheet.abilities}
                     onChange={(e) => update("abilities", e.target.value)}
                     placeholder="01 / Nome da habilidade — Nível I\nAção: …\nEfeito: …\nCusto: …\n\n02 / Nome da habilidade — Nível I"
@@ -1199,6 +1314,16 @@ export default function FichaEspiral() {
             )}
           </div>
           <aside className="es-sidebar">
+            <section className="es-defense-card" aria-label="Defesa">
+              <span className="es-eyebrow">DEFESA</span>
+              <strong>{defense}</strong>
+              <div>
+                <b>{ATTRIBUTES.sentido.stages[sheet.attributes.sentido - 1]}</b>
+                <small>
+                        Sentido <DieGlyph sides={sheet.attributes.sentido * 2 + 2} /> · Defesa base
+                </small>
+              </div>
+            </section>
             <section className="es-roll-panel">
               <div className="es-eyebrow">
                 DIANTE DO INCERTO <span>↗</span>
@@ -1216,7 +1341,7 @@ export default function FichaEspiral() {
                   onChange={(v) => setDifficulty(Math.max(2, clamp(v, 30)))}
                 />
                 <Field
-                  label="Bônus / penalidade"
+                  label={<>Bônus / penalidade <DieGlyph sides={6} /></>}
                   type="number"
                   min="-10"
                   max="10"
@@ -1229,7 +1354,7 @@ export default function FichaEspiral() {
               <div className="es-pressure">
                 <div>
                   <span>Pressão</span>
-                  <small>Dados d6 adicionais</small>
+                    <small>Dados adicionais <DieGlyph sides={6} /></small>
                 </div>
                 <Counter
                   label="Dados de Pressão"
@@ -1260,7 +1385,7 @@ export default function FichaEspiral() {
                   >
                     {[4, 6, 8, 10, 12].map((sides) => (
                       <option key={sides} value={sides}>
-                        d{sides}
+                        {sides}
                       </option>
                     ))}
                   </select>
@@ -1392,11 +1517,8 @@ export default function FichaEspiral() {
                 }));
               }}
             >
-              <option value="later">
-                12 / 15 / 18 / 21 / 24 — progressão, p. 163
-              </option>
               <option value="creation">
-                30 / 35 / 40 / 45 / 50 — criação, p. 40
+                30 / 35 / 40 / 45 / 50
               </option>
             </select>
           </label>
@@ -1417,7 +1539,9 @@ export default function FichaEspiral() {
               hidden
               onChange={importSheet}
             />
-            <a href="?sistema=darkness">Abrir sistema anterior ↗</a>
+            <button type="button" onClick={abrirSistemaAnterior}>
+              {fichaDarkness ? "Abrir ficha Darkness ↗" : "Ir para tela inicial ↗"}
+            </button>
           </div>
           <p role="status">{notice}</p>
         </details>
@@ -1445,14 +1569,14 @@ export default function FichaEspiral() {
           >
             <span className="es-eyebrow">ROLAGEM DE RECURSO</span>
             <h2 id="es-roll-modal-title">{history[0].label}</h2>
-            <p>Teste de {ATTRIBUTES[history[0].attribute].name}</p>
+            <p>{history[0].attribute ? `Teste de ${ATTRIBUTES[history[0].attribute].name}` : "Rolagem de dano"}</p>
             <code>
-              {history[0].dice.length}d{history[0].sides}
+              {history[0].dice.length} × <DieGlyph sides={history[0].sides} />
               {history[0].pressure.length
-                ? ` + ${history[0].pressure.length}d6`
+                ? <> + {history[0].pressure.length} × <DieGlyph sides={6} /></>
                 : ""}
               {history[0].extra?.length
-                ? ` + ${history[0].extra.length}d${history[0].extraSides}`
+                ? <> + {history[0].extra.length} × <DieGlyph sides={history[0].extraSides} /></>
                 : ""}
             </code>
             <div className="es-roll-modal-dice" aria-label="Dados rolados">
@@ -1484,13 +1608,19 @@ export default function FichaEspiral() {
             {!rolling && (
               <>
                 <span className="es-eyebrow">RESULTADO</span>
-                <strong>{history[0].best}</strong>
-                <h3>{history[0].outcome}</h3>
-                <p>
-                  Margem {history[0].margin > 0 ? "+" : ""}
-                  {history[0].margin}
-                  {history[0].mastery ? " · Domínio" : ""}
-                </p>
+                {history[0].type === "formula" ? (
+                  <>
+                    <strong>{history[0].total}</strong>
+                    <h3>Dano total</h3>
+                    {history[0].modifier ? <p>Modificador {history[0].modifier > 0 ? "+" : ""}{history[0].modifier}</p> : null}
+                  </>
+                ) : (
+                  <>
+                    <strong>{history[0].best}</strong>
+                    <h3>{history[0].outcome}</h3>
+                    <p>Margem {history[0].margin > 0 ? "+" : ""}{history[0].margin}{history[0].mastery ? " · Domínio" : ""}</p>
+                  </>
+                )}
               </>
             )}
             <button

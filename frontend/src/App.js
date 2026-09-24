@@ -79,7 +79,7 @@ function App() {
     sessionStorage.getItem(MESTRE_AUTH_KEY) === "true";
 
   if (!sistemaAnterior && !estaNaMesa && !estaNoDashboardMestre && !estaNaLoja && !estaNaArvoreHabilidades && !estaNoUpgrade) {
-    return <Suspense fallback={<div style={{ color: '#aaa', padding: 40 }}>Abrindo arquivo ESPIRAL…</div>}><FichaEspiral key={params.get('ficha') || 'principal'} /></Suspense>;
+    return <><DialogoGlobal /><Suspense fallback={<div style={{ color: '#aaa', padding: 40 }}>Abrindo arquivo ESPIRAL…</div>}><FichaEspiral key={params.get('ficha') || 'principal'} /></Suspense></>;
   }
 
   return (
