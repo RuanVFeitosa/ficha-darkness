@@ -879,7 +879,9 @@ const handleRequest = async (req, res) => {
 
     if ((legacyPersonagemRoute || personagemMatch) && req.method === "GET") {
       const personagem = await readPersonagem(fichaId);
-      const cacheControl = "public, s-maxage=30, stale-while-revalidate=120";
+      // Uma ficha é atualizada em tempo real durante a sessão. Nunca devolva
+      // uma cópia em cache que possa sobrescrever recursos recém-alterados.
+      const cacheControl = "no-store";
       const etag = computeEtag({ fichaId, personagem });
       return sendJson({
         req,

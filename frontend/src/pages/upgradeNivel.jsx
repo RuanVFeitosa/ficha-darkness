@@ -11,7 +11,13 @@ import {
   obterCustosNivel,
 } from "../data/evolucaoPersonagem";
 import { obterMarcosProgressao } from "../data/progressaoAvancada";
-import { marcarPassivosAtualizados, mesclarPassivosPorRevisao } from "../utils/personagemMerge";
+import {
+  marcarPassivosAtualizados,
+  mesclarPassivosPorRevisao,
+  normalizarPassivosParaNovaEscala,
+  PASSIVOS_INCREMENTO,
+  PASSIVOS_MAXIMO,
+} from "../utils/personagemMerge";
 import {
   ehHabilidadeProgressaoAvancada,
   listarHabilidadesCriadasJogador,
@@ -85,7 +91,7 @@ const UpgradeNivel = () => {
   const habilidadesCriadasJogador = listarHabilidadesCriadasJogador(personagem);
 
   const limitesUpgrade = {
-    passivos: passouDoNivel5 ? 20 : 10,
+    passivos: PASSIVOS_MAXIMO,
     atributos: passouDoNivel5 ? 100 : 50,
   };
 
@@ -210,7 +216,7 @@ const UpgradeNivel = () => {
         if (!parsed.pontosIntegridade) {
           parsed.pontosIntegridade = { gastos: 0 };
         }
-        setPersonagem(parsed);
+        setPersonagem(normalizarPassivosParaNovaEscala(parsed));
       } catch (error) {
         console.warn("Nao foi possivel carregar a ficha local.", error);
       }
@@ -222,7 +228,7 @@ const UpgradeNivel = () => {
           if (!personagemApi.pontosIntegridade) {
             personagemApi.pontosIntegridade = { gastos: 0 };
           }
-          setPersonagem((atual) => mesclarPassivosPorRevisao(personagemApi, atual));
+          setPersonagem((atual) => mesclarPassivosPorRevisao(normalizarPassivosParaNovaEscala(personagemApi), atual));
         }
       })
       .catch(() => {
@@ -272,7 +278,10 @@ const UpgradeNivel = () => {
   };
 
   const atualizarDistribuicao = (chave, valor) => {
-    const numero = Math.max(0, parseInt(valor, 10) || 0);
+    const numeroInformado = Math.max(0, parseInt(valor, 10) || 0);
+    const numero = trilha === "passivos"
+      ? Math.floor(numeroInformado / PASSIVOS_INCREMENTO) * PASSIVOS_INCREMENTO
+      : numeroInformado;
 
     if (chave.startsWith("membro-")) {
       const membroChave = chave.replace("membro-", "");
@@ -318,7 +327,10 @@ const UpgradeNivel = () => {
 
     const maximoPorPontos = Math.max(0, pontosEvolucaoDisponiveis - outrosPontos);
 
-    const valorPermitido = Math.min(numero, maximoPorLimite, maximoPorPontos);
+    const valorPermitidoBruto = Math.min(numero, maximoPorLimite, maximoPorPontos);
+    const valorPermitido = trilha === "passivos"
+      ? Math.floor(valorPermitidoBruto / PASSIVOS_INCREMENTO) * PASSIVOS_INCREMENTO
+      : valorPermitidoBruto;
 
     if (numero > valorPermitido) {
       setMensagem(
@@ -490,11 +502,11 @@ const UpgradeNivel = () => {
     abrirModalQuantidade(
       `Remover pontos de ${chavePassivo}`,
       `Valor atual: ${valorAtual}`,
-      1,
+      PASSIVOS_INCREMENTO,
       maximoRemover,
       (pontosRemover) => {
-        if (pontosRemover <= 0 || pontosRemover > maximoRemover) {
-          mostrarNotificacao(`Valor inválido. Máximo permitido: ${maximoRemover}`, "erro");
+        if (pontosRemover <= 0 || pontosRemover > maximoRemover || pontosRemover % PASSIVOS_INCREMENTO !== 0) {
+          mostrarNotificacao(`Informe um múltiplo de ${PASSIVOS_INCREMENTO}. Máximo permitido: ${maximoRemover}`, "erro");
           return;
         }
         abrirModalConfirmacao(
@@ -927,7 +939,7 @@ const UpgradeNivel = () => {
                             const novoValor = Math.max(0, (distribuicao[atributo.chave] || 0) - 1);
                             atualizarDistribuicao(atributo.chave, novoValor);
                           }}
-                          disabled={pontosAlocados <= 0}
+                          disabled={pontosAlocados < PASSIVOS_INCREMENTO}
                         >
                           -
                         </button>
@@ -974,20 +986,22 @@ const UpgradeNivel = () => {
                           type="button"
                           className="upgrade-input-btn"
                           onClick={() => {
-                            if (pontosRestantes > 0) {
-                              const novoValor = (distribuicao[passiva.chave] || 0) + 1;
+                            if (pontosRestantes >= PASSIVOS_INCREMENTO && valorAtual + pontosAlocados < PASSIVOS_MAXIMO) {
+                              const novoValor = (distribuicao[passiva.chave] || 0) + PASSIVOS_INCREMENTO;
                               atualizarDistribuicao(passiva.chave, novoValor);
                             } else {
                               mostrarNotificacao("Sem pontos restantes para distribuir.", "info");
                             }
                           }}
-                          disabled={pontosRestantes <= 0}
+                          disabled={pontosRestantes < PASSIVOS_INCREMENTO || valorAtual + pontosAlocados >= PASSIVOS_MAXIMO}
                         >
                           +
                         </button>
                         <input
                           type="number"
                           min="0"
+                          max={Math.max(0, PASSIVOS_MAXIMO - valorAtual)}
+                          step={PASSIVOS_INCREMENTO}
                           value={pontosAlocados}
                           onChange={(event) =>
                             atualizarDistribuicao(passiva.chave, event.target.value)
@@ -997,10 +1011,10 @@ const UpgradeNivel = () => {
                           type="button"
                           className="upgrade-input-btn"
                           onClick={() => {
-                            const novoValor = Math.max(0, (distribuicao[passiva.chave] || 0) - 1);
+                            const novoValor = Math.max(0, (distribuicao[passiva.chave] || 0) - PASSIVOS_INCREMENTO);
                             atualizarDistribuicao(passiva.chave, novoValor);
                           }}
-                          disabled={pontosAlocados <= 0}
+                          disabled={pontosAlocados < PASSIVOS_INCREMENTO}
                         >
                           -
                         </button>
@@ -1180,7 +1194,7 @@ const UpgradeNivel = () => {
                             const novoValor = Math.max(0, (distribuicao[key] || 0) - 1);
                             atualizarDistribuicao(key, novoValor);
                           }}
-                          disabled={pontosAlocados <= 0}
+                          disabled={pontosAlocados < PASSIVOS_INCREMENTO}
                         >
                           -
                         </button>

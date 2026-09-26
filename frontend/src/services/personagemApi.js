@@ -25,6 +25,9 @@ const API_URL = getApiUrl();
 const request = async (path, options = {}) => {
   const url = `${API_URL}${path}`;
   const response = await fetch(url, {
+    // Fichas mudam durante a sessão; respostas em cache podiam restaurar
+    // Integridade, Sanidade e Esperança com valores anteriores.
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       ...(options.headers || {}),

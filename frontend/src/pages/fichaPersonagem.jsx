@@ -60,7 +60,11 @@ import {
   mdiSwapHorizontal,
 } from "@mdi/js";
 import { obterIconeItem } from "../utils/itemIcons";
-import { marcarPassivosAtualizados, mesclarPassivosPorRevisao } from "../utils/personagemMerge";
+import {
+  marcarPassivosAtualizados,
+  mesclarPassivosPorRevisao,
+  normalizarPassivosParaNovaEscala,
+} from "../utils/personagemMerge";
 import {
   listarHabilidadesCriadasJogador,
   listarHabilidadesProgressaoAvancada,
@@ -877,7 +881,7 @@ const FichaPersonagem = () => {
           try {
             const personagemSalvo = JSON.parse(dadosSalvos);
 
-            setPersonagem(personagemSalvo);
+            setPersonagem(normalizarPassivosParaNovaEscala(personagemSalvo));
             console.log("LOCAL STORAGE:", personagemSalvo);
 
             console.log("⚠️ Dados carregados do localStorage");
@@ -1099,6 +1103,28 @@ const FichaPersonagem = () => {
         ),
       },
     }));
+  };
+
+  const ajustarSanidade = (variacao) => {
+    setPersonagem((prev) => {
+      const atual = Number(prev.sanidade?.atual) || 0;
+      const maximo = Math.max(0, Number(prev.sanidade?.max) || 0);
+      return {
+        ...prev,
+        sanidade: { ...prev.sanidade, atual: Math.max(0, Math.min(maximo, atual + variacao)) },
+      };
+    });
+  };
+
+  const ajustarEsperanca = (variacao) => {
+    setPersonagem((prev) => {
+      const atual = Number(prev.esperanca?.atual) || 0;
+      const maximo = Math.max(0, Number(prev.esperanca?.max) || 0);
+      return {
+        ...prev,
+        esperanca: { ...prev.esperanca, atual: Math.max(0, Math.min(maximo, atual + variacao)) },
+      };
+    });
   };
 
   const salvarNovoNomeItem = () => {
@@ -6925,9 +6951,14 @@ const cancelarEdicaoHabilidade = () => {
               <Icon path={mdiStorefrontOutline} size={1} />
               <span>Loja</span>
             </button>
-            <button type="button" onClick={adaptarParaEspiral}>
+            <button
+              type="button"
+              className="menu-ficha-item-em-breve"
+              disabled
+              title="Em breve"
+            >
               <Icon path={mdiSwapHorizontal} size={1} />
-              <span>Adaptar para ESPIRAL</span>
+              <span>Em breve</span>
             </button>
             <button
               type="button"
@@ -7117,10 +7148,9 @@ const cancelarEdicaoHabilidade = () => {
                       <div className="barra-rpg-header">
                         <span className="barra-rpg-label">Sanidade</span>
                         <button
+                          type="button"
                           className="barra-btn barra-btn-menos"
-                          onClick={() =>
-                            atualizarSanidade(personagem.sanidade.atual - 1)
-                          }
+                          onClick={() => ajustarSanidade(-1)}
                         >
                           −
                         </button>
@@ -7151,10 +7181,9 @@ const cancelarEdicaoHabilidade = () => {
                           />
                         </span>
                         <button
+                          type="button"
                           className="barra-btn barra-btn-mais"
-                          onClick={() =>
-                            atualizarSanidade(personagem.sanidade.atual + 1)
-                          }
+                          onClick={() => ajustarSanidade(1)}
                         >
                           +
                         </button>
@@ -7175,10 +7204,9 @@ const cancelarEdicaoHabilidade = () => {
                           Esperança
                         </span>
                         <button
+                          type="button"
                           className="barra-btn barra-btn-menos esperanca-btn"
-                          onClick={() =>
-                            atualizarEsperanca(personagem.esperanca.atual - 1)
-                          }
+                          onClick={() => ajustarEsperanca(-1)}
                         >
                           −
                         </button>
@@ -7210,10 +7238,9 @@ const cancelarEdicaoHabilidade = () => {
                           />
                         </span>
                         <button
+                          type="button"
                           className="barra-btn barra-btn-mais esperanca-btn"
-                          onClick={() =>
-                            atualizarEsperanca(personagem.esperanca.atual + 1)
-                          }
+                          onClick={() => ajustarEsperanca(1)}
                         >
                           +
                         </button>
@@ -7843,7 +7870,8 @@ const MembroControle = ({
 
       <div className="membro-botoes">
         <button
-          onClick={() => onDamage(10)}
+          type="button"
+          onClick={() => onChange(Math.max(0, (Number(membro.atual) || 0) - 10))}
           title="Dano 10"
           className="btn-rapido btn-menos10"
         >
@@ -7851,18 +7879,20 @@ const MembroControle = ({
         </button>
 
         <button
-          onClick={() => onDamage(5)}
+          type="button"
+          onClick={() => onChange(Math.max(0, (Number(membro.atual) || 0) - 5))}
           title="Dano 5"
           className="btn-rapido btn-menos5"
         >
           -5
         </button>
 
-        <button onClick={() => onDamage(1)} title="Dano 1">
+        <button type="button" onClick={() => onChange(Math.max(0, (Number(membro.atual) || 0) - 1))} title="Reduzir 1">
           -
         </button>
 
         <button
+          type="button"
           onClick={() => onChange(Math.min(membro.max, membro.atual + 1))}
           title="+1"
         >
@@ -7870,6 +7900,7 @@ const MembroControle = ({
         </button>
 
         <button
+          type="button"
           onClick={() => onChange(Math.min(membro.max, membro.atual + 5))}
           title="+5"
           className="btn-rapido btn-mais5"
@@ -7878,6 +7909,7 @@ const MembroControle = ({
         </button>
 
         <button
+          type="button"
           onClick={() => onChange(Math.min(membro.max, membro.atual + 10))}
           title="+10"
           className="btn-rapido btn-mais10"
