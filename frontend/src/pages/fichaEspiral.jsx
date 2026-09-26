@@ -5,6 +5,7 @@ import {
   RESOURCES,
   GRADES,
   VERTENTES,
+  VERTENTE_HABILIDADES,
   TEMA_PADRAO_ESPIRAL,
   freshSheet,
   integrityMax,
@@ -360,6 +361,10 @@ export default function FichaEspiral() {
   const acquiredAbilities = Array.isArray(sheet.evolution?.abilities)
     ? sheet.evolution.abilities
     : [];
+  const vertenteAbility = VERTENTE_HABILIDADES[sheet.vertente] || VERTENTE_HABILIDADES.Metódica;
+  const vertenteLevel = sheet.evolution?.vertente?.nome === sheet.vertente
+    ? Math.max(1, Math.min(3, Number(sheet.evolution?.vertente?.nivel) || 1))
+    : 1;
   const update = (key, value) =>
     setSheet((previous) => ({ ...previous, [key]: value }));
   const atualizarTemaFicha = (campo, valor) =>
@@ -424,7 +429,7 @@ export default function FichaEspiral() {
     }
   }, [sheet, storageKey]);
   useEffect(() => {
-    document.title = `${sheet.name || "Ficha de personagem"} · ESPIRAL`;
+    document.title = sheet.name || "Ficha de personagem";
   }, [sheet.name]);
   function changeAttribute(key, stage) {
     setSheet((previous) => {
@@ -1391,9 +1396,9 @@ export default function FichaEspiral() {
                   aside="VERTENTE & HABILIDADES"
                 />
                 <div className="es-rule-card">
-                  <span className="es-eyebrow">{sheet.vertente} · NÍVEL I</span>
-                  <h3>{VERTENTES[sheet.vertente][0]}</h3>
-                  <p>{VERTENTES[sheet.vertente][1]}</p>
+                  <span className="es-eyebrow">{sheet.vertente} · NÍVEL {["I", "II", "III"][vertenteLevel - 1]}</span>
+                  <h3>{vertenteAbility.nome}</h3>
+                  <p>{vertenteAbility.niveis[vertenteLevel - 1]}</p>
                 </div>
                 {acquiredAbilities.length > 0 && (
                   <section className="es-acquired-abilities">

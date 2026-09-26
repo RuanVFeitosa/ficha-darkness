@@ -6,7 +6,7 @@ import {
   mdiStarFourPoints,
 } from "@mdi/js";
 import Icon from "@mdi/react";
-import { ATTRIBUTES, GRADES, RESOURCES, freshSheet } from "../data/espiral";
+import { ATTRIBUTES, GRADES, RESOURCES, VERTENTE_HABILIDADES, VERTENTES, freshSheet } from "../data/espiral";
 import {
   APRIMORAMENTOS_HABILIDADES_ESPIRAL,
   CUSTOS_ESPERANCA_HABILIDADES,
@@ -34,8 +34,17 @@ export default function TransformacaoEspiral() {
   const [activeSection, setActiveSection] = useState("recursos");
   const [abilityCategory, setAbilityCategory] = useState("Ofensiva");
   const [selectedAbility, setSelectedAbility] = useState(null);
+  const [selectedVertente, setSelectedVertente] = useState(sheet.vertente);
   const [notice, setNotice] = useState("");
   const points = Math.max(0, Number(sheet.evolution?.points) || 0);
+  const vertenteAbility = VERTENTE_HABILIDADES[sheet.vertente] || VERTENTE_HABILIDADES.Metódica;
+  const savedVertente = sheet.evolution?.vertente?.nome;
+  const vertenteLevel = savedVertente === sheet.vertente
+    ? Math.max(1, Math.min(3, Number(sheet.evolution?.vertente?.nivel) || 1))
+    : 1;
+  useEffect(() => {
+    setSelectedVertente(sheet.vertente);
+  }, [sheet.vertente]);
   const characterName = sheet.name || "ARQUIVO SEM IDENTIDADE";
   const save = (next, message) => {
     setSheet(next);
@@ -107,13 +116,44 @@ export default function TransformacaoEspiral() {
       `${ability.name} avançou para o Nível ${ability.level + 1}.`,
     );
   };
+  const upgradeVertente = () => {
+    if (vertenteLevel >= 3 || points < 3) return;
+    const nextLevel = vertenteLevel + 1;
+    save(
+      {
+        ...sheet,
+        evolution: {
+          ...(sheet.evolution || {}),
+          points: points - 3,
+          vertente: { nome: sheet.vertente, nivel: nextLevel },
+        },
+      },
+      `${vertenteAbility.nome} avançou para o Nível ${nextLevel}.`,
+    );
+  };
+  const trocarVertente = () => {
+    if (!VERTENTES[selectedVertente] || selectedVertente === sheet.vertente) return;
+    save(
+      {
+        ...sheet,
+        vertente: selectedVertente,
+        evolution: {
+          ...(sheet.evolution || {}),
+          vertente: { nome: selectedVertente, nivel: 1 },
+        },
+      },
+      `Vertente alterada para ${selectedVertente}. A habilidade começa no Nível 1.`,
+    );
+  };
   const currentLabel = useMemo(
     () =>
       activeSection === "recursos"
         ? "Evoluindo recursos"
         : activeSection === "atributos"
           ? "Evoluindo atributos"
-          : "Novas habilidades",
+          : activeSection === "habilidades"
+            ? "Novas habilidades"
+            : "Vertente",
     [activeSection],
   );
   return (
@@ -171,6 +211,13 @@ export default function TransformacaoEspiral() {
             >
               03 Habilidades
             </button>
+            <button
+              type="button"
+              className={activeSection === "vertente" ? "active" : ""}
+              onClick={() => setActiveSection("vertente")}
+            >
+              04 Vertente
+            </button>
           </nav>
           <div className="transformacao-heading">
             <span>{currentLabel.toUpperCase()}</span>
@@ -179,7 +226,9 @@ export default function TransformacaoEspiral() {
                 ? "Recursos representam treino, conhecimento e experiência prática."
                 : activeSection === "atributos"
                   ? "Atributos são capacidades amplas e evoluem mais lentamente."
-                  : "Novas habilidades poderão ser escolhidas por 3 Pontos de Evolução."}
+                  : activeSection === "habilidades"
+                    ? "Novas habilidades poderão ser escolhidas por 3 Pontos de Evolução."
+                    : "A Habilidade de Vertente pode ser aprimorada. A troca de Vertente é narrativa e não consome pontos."}
             </p>
           </div>
           {notice && (
@@ -452,6 +501,43 @@ export default function TransformacaoEspiral() {
                   ))}
                 </section>
               )}
+            </section>
+          )}
+          {activeSection === "vertente" && (
+            <section className="transformacao-vertente-area">
+              <article className="transformacao-vertente-card">
+                <span>VERTENTE ATUAL · NÍVEL {vertenteLevel}</span>
+                <h2>{sheet.vertente}</h2>
+                <h3>{vertenteAbility.nome}</h3>
+                <div className="transformacao-vertente-levels">
+                  {vertenteAbility.niveis.map((detail, index) => {
+                    const level = index + 1;
+                    return (
+                      <div className={level === vertenteLevel ? "current" : level === vertenteLevel + 1 ? "next" : ""} key={detail}>
+                        <b>NÍVEL {roman[level]}</b>
+                        <p>{detail}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="transformacao-upgrade-action">
+                  <strong>{vertenteLevel >= 3 ? "HABILIDADE NO NÍVEL MÁXIMO" : "PRÓXIMO NÍVEL · 3 PONTOS DE EVOLUÇÃO"}</strong>
+                  <button type="button" disabled={vertenteLevel >= 3 || points < 3} onClick={upgradeVertente}>
+                    {vertenteLevel >= 3 ? <Icon path={mdiLockOutline} size={0.75} /> : <Icon path={mdiPlus} size={0.75} />}{" "}
+                    {vertenteLevel >= 3 ? "Nível máximo" : `Aprimorar para o Nível ${vertenteLevel + 1} · 3 pontos`}
+                  </button>
+                </div>
+              </article>
+              <article className="transformacao-vertente-change">
+                <span>TROCAR VERTENTE</span>
+                <h2>Uma mudança de caminho</h2>
+                <p>A troca não custa Pontos de Evolução, mas deve acontecer após um marco narrativo importante e com aprovação do Mestre. A nova Habilidade de Vertente começa no Nível I.</p>
+                <label htmlFor="transformacao-vertente-select">NOVA VERTENTE</label>
+                <select id="transformacao-vertente-select" value={selectedVertente} onChange={(event) => setSelectedVertente(event.target.value)}>
+                  {Object.keys(VERTENTES).map((vertente) => <option value={vertente} key={vertente}>{vertente}</option>)}
+                </select>
+                <button type="button" disabled={selectedVertente === sheet.vertente} onClick={trocarVertente}>Trocar Vertente · sem custo</button>
+              </article>
             </section>
           )}
         </section>

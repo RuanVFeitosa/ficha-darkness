@@ -783,7 +783,7 @@ const DashboardMestre = () => {
   const [categoriaLojaAtiva, setCategoriaLojaAtiva] = useState("armas-fogo");
   const [abaFicha, setAbaFicha] = useState("perfil");
   const [aba, setAba] = useState("fichas");
-  const [subAbaFichas, setSubAbaFichas] = useState("espiral");
+  const [subAbaFichas, setSubAbaFichas] = useState("darkness");
   const [mensagem, setMensagem] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [abaLojaEditor, setAbaLojaEditor] = useState("armas-fogo");
@@ -3829,7 +3829,7 @@ const DashboardMestre = () => {
           <span className="mestre-sigilo" aria-hidden="true">◉</span>
           <div>
             <span>Arquivo de operação // mestre</span>
-            <h1>ESPIRAL</h1>
+            <h1>DARKNESS</h1>
           </div>
         </div>
         <button
@@ -3936,16 +3936,7 @@ const DashboardMestre = () => {
           {aba === "fichas" && (
             <section className="mestre-dashboard-full">
               <div className="mestre-subtabs-fichas" role="tablist" aria-label="Sistemas de fichas">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={subAbaFichas === "espiral"}
-                  className={subAbaFichas === "espiral" ? "ativa" : ""}
-                  onClick={() => setSubAbaFichas("espiral")}
-                >
-                  ESPIRAL <small>{fichasJogadores.filter((ficha) => isFichaEspiral(ficha.personagem || ficha)).length}</small>
-                </button>
-                <button
+<button
                   type="button"
                   role="tab"
                   aria-selected={subAbaFichas === "darkness"}

@@ -84,8 +84,40 @@ function App() {
   const mestreAutorizado =
     sessionStorage.getItem(MESTRE_AUTH_KEY) === "true";
 
+  useEffect(() => {
+    if (temFicha) return undefined;
+    const pageTitle = estaNaMesa
+      ? "Tabletop"
+      : estaNoDashboardMestre
+        ? "Painel do Mestre"
+        : estaNaArvoreHabilidades
+          ? "Árvore de Habilidades"
+          : estaNoUpgrade
+            ? "Upgrade"
+            : estaNaLoja || estaNaLojaEspiral
+              ? "Loja"
+              : estaNaTransformacaoEspiral
+                ? "Transformação"
+                : temFicha
+                  ? "Ficha de personagem"
+                  : estaCriando
+                    ? "Criar personagem"
+                    : "Darkness";
+    document.title = pageTitle;
+  }, [
+    estaCriando,
+    estaNaArvoreHabilidades,
+    estaNaLoja,
+    estaNaLojaEspiral,
+    estaNaMesa,
+    estaNaTransformacaoEspiral,
+    estaNoDashboardMestre,
+    estaNoUpgrade,
+    temFicha,
+  ]);
+
   if (sistemaEspiral && !estaNaMesa && !estaNoDashboardMestre && !estaNaLoja && !estaNaLojaEspiral && !estaNaTransformacaoEspiral && !estaNaArvoreHabilidades && !estaNoUpgrade) {
-    return <><DialogoGlobal /><Suspense fallback={<div style={{ color: '#aaa', padding: 40 }}>Abrindo arquivo ESPIRAL…</div>}><FichaEspiral key={params.get('ficha') || 'principal'} /></Suspense></>;
+    return <><DialogoGlobal /><Suspense fallback={<div style={{ color: '#aaa', padding: 40 }}>Abrindo ficha…</div>}><FichaEspiral key={params.get('ficha') || 'principal'} /></Suspense></>;
   }
 
   return (

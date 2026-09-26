@@ -568,7 +568,9 @@ const FichaPersonagem = () => {
   const [carregandoCampanhas, setCarregandoCampanhas] = useState(false);
   const [erroCampanhas, setErroCampanhas] = useState("");
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
-  const [receitasCriacaoAtuais, setReceitasCriacaoAtuais] = useState(() => {
+  useEffect(() => {
+    document.title = personagem.nome || personagem.nomePersonagem || "Ficha de personagem";
+  }, [personagem.nome, personagem.nomePersonagem]);  const [receitasCriacaoAtuais, setReceitasCriacaoAtuais] = useState(() => {
     try {
       const raw = localStorage.getItem(RECEITAS_STORAGE_KEY);
       const parsed = raw ? JSON.parse(raw) : null;

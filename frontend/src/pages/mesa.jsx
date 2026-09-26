@@ -19,6 +19,7 @@ import {
   mdiDeleteOutline,
   mdiDiceMultiple,
   mdiFileDocumentMultipleOutline,
+  mdiFolderOutline,
   mdiFitToScreenOutline,
   mdiFlashlight,
   mdiFlashlightOff,
@@ -435,6 +436,9 @@ const Mesa = () => {
   const [inimigoAberto, setInimigoAberto] = useState(null);
   const [subAbaNpcs, setSubAbaNpcs] = useState("inimigos");
   const [pastasNpcsFechadas, setPastasNpcsFechadas] = useState({});
+  const [pastasCenasFechadas, setPastasCenasFechadas] = useState({});
+  const [rolagensPopup, setRolagensPopup] = useState([]);
+  const rolagensConhecidasRef = useRef(null);
   const [corCena, setCorCena] = useState("");
   const [salvandoCombate, setSalvandoCombate] = useState(false);
   const [salvandoInvestigacao, setSalvandoInvestigacao] = useState(false);
@@ -844,6 +848,21 @@ const Mesa = () => {
     return () => window.removeEventListener("message", receberRolagem);
   }, [campanha?.id, mestre]);
 
+  useEffect(() => {
+    const rolagens = campanha?.rolagens || [];
+    if (!rolagensConhecidasRef.current) {
+      rolagensConhecidasRef.current = new Set(rolagens.map((rolagem) => rolagem.id));
+      return;
+    }
+    const novas = rolagens.filter((rolagem) => !rolagensConhecidasRef.current.has(rolagem.id));
+    if (!novas.length) return;
+    novas.forEach((rolagem) => rolagensConhecidasRef.current.add(rolagem.id));
+    setRolagensPopup((atuais) => [...novas.slice(0, 3), ...atuais].slice(0, 3));
+    const timer = window.setTimeout(() => {
+      setRolagensPopup((atuais) => atuais.filter((rolagem) => !novas.some((nova) => nova.id === rolagem.id)));
+    }, 7000);
+    return () => window.clearTimeout(timer);
+  }, [campanha?.rolagens]);
   const adicionarFicha = async () => {
     const registro = fichasDisponiveis.find(
       (item) => item.fichaId === fichaParaVincular,
@@ -2253,6 +2272,22 @@ const Mesa = () => {
     });
   };
 
+  const gruposCenas = (() => {
+    const grupos = new Map();
+    (campanha?.cenas || []).forEach((item) => {
+      const pasta = String(item.pasta || "Sem pasta").trim() || "Sem pasta";
+      if (!grupos.has(pasta)) grupos.set(pasta, []);
+      grupos.get(pasta).push(item);
+    });
+    return [...grupos.entries()].sort(([a], [b]) => {
+      if (a === "Sem pasta") return 1;
+      if (b === "Sem pasta") return -1;
+      return a.localeCompare(b, "pt-BR");
+    });
+  })();
+  const nomesPastasCenas = gruposCenas.map(([pasta]) => pasta).filter((pasta) => pasta !== "Sem pasta");
+  const alternarPastaCena = (pasta) =>
+    setPastasCenasFechadas((atual) => ({ ...atual, [pasta]: !atual[pasta] }));
   const catalogoAtualNpc = catalogoInimigos.filter((item) =>
     subAbaNpcs === "npcs" ? item.tipo === "npc" : item.tipo !== "npc",
   );
@@ -2617,8 +2652,21 @@ const Mesa = () => {
               <small>Nenhuma ficha cadastrada foi encontrada.</small>
             )}
           </div>
-          <div className="biblioteca-lista">
-            {campanha.cenas.map(renderizarCenaBiblioteca)}
+          <div className="biblioteca-lista biblioteca-cenas-organizadas">
+            {gruposCenas.map(([pasta, cenas]) => {
+              const fechada = Boolean(pastasCenasFechadas[pasta]);
+              return (
+                <section className="biblioteca-pasta-cenas" key={pasta}>
+                  <button type="button" className="biblioteca-pasta-cabecalho" onClick={() => alternarPastaCena(pasta)} aria-expanded={!fechada}>
+                    <Icon path={fechada ? mdiChevronRight : mdiChevronDown} size={0.68} />
+                    <Icon path={mdiFolderOutline} size={0.74} />
+                    <strong>{pasta}</strong>
+                    <span>{cenas.length}</span>
+                  </button>
+                  {!fechada && cenas.map(renderizarCenaBiblioteca)}
+                </section>
+              );
+            })}
           </div>
         </aside>
       )}
@@ -4421,33 +4469,23 @@ const Mesa = () => {
           />
         </section>
       )}
-      <footer className="mesa-rodape">
-        <div className="mesa-rolagens-titulo">
-          <Icon path={mdiDiceMultiple} size={0.85} />
-          <span>Rolagens</span>
-        </div>
-        <div className="mesa-rolagens">
-          {campanha.rolagens.length ? (
-            campanha.rolagens.map((rolagem) => {
-              const faces = facesDaRolagem(rolagem);
-              return (
-                <div key={rolagem.id}>
-                  <span>{rolagem.autor_nome}</span>
-                  <b
-                    className={`mesa-resultado-dado d${faces}`}
-                    title={`Resultado ${rolagem.resultado} em d${faces}`}
-                  >
-                    <i>{rolagem.resultado}</i>
-                  </b>
+{rolagensPopup.length > 0 && (
+        <aside className="mesa-rolagens-popup" aria-live="polite" aria-label="Rolagens recentes">
+          {rolagensPopup.map((rolagem) => {
+            const faces = facesDaRolagem(rolagem);
+            return (
+              <article key={rolagem.id}>
+                <div>
+                  <span>{rolagem.autor_nome || "Rolagem"}</span>
                   <small>{rolagem.expressao}</small>
                 </div>
-              );
-            })
-          ) : (
-            <p>As rolagens da sessao aparecerao aqui.</p>
-          )}
-        </div>
-      </footer>
+                <b className={`mesa-resultado-dado d${faces}`}><i>{rolagem.resultado}</i></b>
+                <button type="button" onClick={() => setRolagensPopup((atuais) => atuais.filter((item) => item.id !== rolagem.id))} aria-label="Fechar rolagem">×</button>
+              </article>
+            );
+          })}
+        </aside>
+      )}
 
       {editorAberto && (
         <div
@@ -4480,10 +4518,14 @@ const Mesa = () => {
                 <input
                   value={editando.pasta || "Sem pasta"}
                   onChange={(e) => setEditando({ ...editando, pasta: e.target.value })}
+                  list="pastas-cenas-existentes"
                   placeholder="Ex.: Ato II"
                 />
               </label>
             </div>
+            <datalist id="pastas-cenas-existentes">
+              {nomesPastasCenas.map((pasta) => <option value={pasta} key={pasta} />)}
+            </datalist>
             <label>
               Descricao
               <textarea

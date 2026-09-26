@@ -727,3 +727,77 @@
     monospace;
   letter-spacing: 0.4px;
 }
+
+.transformacao-vertente-area {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.8fr);
+  gap: 14px;
+}
+.transformacao-vertente-card,
+.transformacao-vertente-change {
+  padding: 22px;
+  border: 1px solid var(--line);
+  background: #0a0a0a;
+}
+.transformacao-vertente-card > span,
+.transformacao-vertente-change > span,
+.transformacao-vertente-change label {
+  color: #888;
+  font: 9px "Courier New", monospace;
+  letter-spacing: 0.9px;
+}
+.transformacao-vertente-card h2,
+.transformacao-vertente-change h2 {
+  margin: 8px 0 3px;
+  font: 400 29px Georgia, serif;
+}
+.transformacao-vertente-card h3 {
+  margin: 0 0 18px;
+  color: #ddd;
+  font: 700 11px "Courier New", monospace;
+  letter-spacing: 0.7px;
+}
+.transformacao-vertente-levels {
+  display: grid;
+  gap: 1px;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+.transformacao-vertente-levels > div {
+  padding: 12px;
+  background: #090909;
+  opacity: 0.5;
+}
+.transformacao-vertente-levels > div.current,
+.transformacao-vertente-levels > div.next { opacity: 1; }
+.transformacao-vertente-levels > div.current { border-left: 2px solid #eee; }
+.transformacao-vertente-levels > div.next { border-left: 2px solid #777; }
+.transformacao-vertente-levels b {
+  color: #eee;
+  font: 700 10px "Courier New", monospace;
+}
+.transformacao-vertente-levels p,
+.transformacao-vertente-change p {
+  margin: 7px 0 0;
+  color: #aaa;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.transformacao-vertente-change {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.transformacao-vertente-change label { margin-top: auto; padding-top: 22px; }
+.transformacao-vertente-change select {
+  margin: 7px 0 9px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  background: #050505;
+  color: #eee;
+  font: 700 11px "Courier New", monospace;
+}
+.transformacao-vertente-change button { color: #eee; }
+@media (max-width: 760px) {
+  .transformacao-vertente-area { grid-template-columns: 1fr; }
+}
