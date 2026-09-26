@@ -5,6 +5,7 @@ import "./CSS/Responsive.css";
 import { MESTRE_AUTH_KEY } from "./constants/masterAccess";
 import DialogoGlobal from "./components/DialogoGlobal";
 import LojaEspiral from "./pages/lojaEspiral";
+import TransformacaoEspiral from "./pages/transformacaoEspiral";
 
 const ArvoreHabilidades = lazy(() => import("./pages/arvoreHabilidades"));
 const CriarPersonagem = lazy(() => import("./pages/criarPersonagem"));
@@ -74,6 +75,7 @@ function App() {
   const estaCriando = params.get("criar") === "1";
   const estaNaLoja = params.get("loja") === "1";
   const estaNaLojaEspiral = params.get("lojaEspiral") === "1";
+  const estaNaTransformacaoEspiral = params.get("transformacao") === "1";
   const estaNaArvoreHabilidades = params.get("habilidades") === "1";
   const estaNoUpgrade = params.get("upgrade") === "1";
   const estaNoDashboardMestre = params.get("mestre") === "1";
@@ -81,7 +83,7 @@ function App() {
   const mestreAutorizado =
     sessionStorage.getItem(MESTRE_AUTH_KEY) === "true";
 
-  if (!sistemaAnterior && !estaNaMesa && !estaNoDashboardMestre && !estaNaLoja && !estaNaLojaEspiral && !estaNaArvoreHabilidades && !estaNoUpgrade) {
+  if (!sistemaAnterior && !estaNaMesa && !estaNoDashboardMestre && !estaNaLoja && !estaNaLojaEspiral && !estaNaTransformacaoEspiral && !estaNaArvoreHabilidades && !estaNoUpgrade) {
     return <><DialogoGlobal /><Suspense fallback={<div style={{ color: '#aaa', padding: 40 }}>Abrindo arquivo ESPIRAL…</div>}><FichaEspiral key={params.get('ficha') || 'principal'} /></Suspense></>;
   }
 
@@ -99,6 +101,8 @@ function App() {
           <ArvoreHabilidades />
         ) : estaNoUpgrade ? (
           <UpgradeNivel />
+        ) : estaNaTransformacaoEspiral ? (
+          <TransformacaoEspiral />
         ) : estaNaLojaEspiral ? (
           <LojaEspiral />
         ) : estaNaLoja ? (

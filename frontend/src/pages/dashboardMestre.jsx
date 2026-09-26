@@ -647,12 +647,20 @@ const ModalFichaEspiral = ({ ficha, onClose, onSalvar }) => {
   const sheet = ficha?.personagem || ficha;
   const [novoItem, setNovoItem] = useState("");
   const [novaHabilidade, setNovaHabilidade] = useState("");
+  const [evolucaoDelta, setEvolucaoDelta] = useState(1);
   const maxIntegrity = integrityMax(sheet.attributes?.pulso, sheet.integrityTable);
   const atributos = Object.entries(sheet.attributes || {});
   const recursos = Object.entries(sheet.resources || {}).filter(([, grau]) => Number(grau) > 0);
   const inventario = String(sheet.inventory || "").split("\n").map((item) => item.trim()).filter(Boolean);
   const habilidades = String(sheet.abilities || "").split("\n").map((item) => item.trim()).filter(Boolean);
   const alterarLista = (campo, lista) => onSalvar({ [campo]: lista.join("\n") });
+  const alterarPontosEvolucao = () => {
+    const delta = parseInt(evolucaoDelta, 10) || 0;
+    const atuais = Math.max(0, Number(sheet.evolution?.points) || 0);
+    const proximo = Math.max(0, atuais + delta);
+    if (!delta || proximo === atuais) return;
+    onSalvar({ evolution: { ...(sheet.evolution || {}), points: proximo } });
+  };
 
   return (
     <div className="mestre-modal-overlay espiral-leitura-overlay" onClick={onClose}>
@@ -687,6 +695,7 @@ const ModalFichaEspiral = ({ ficha, onClose, onSalvar }) => {
         </div>
         <section className="espiral-leitura-recursos"><span>RECURSOS</span>{recursos.length ? recursos.map(([nome, grau]) => <div key={nome}><b>{nome}</b><small>GRAU {Number(grau) + 1}</small></div>) : <p>Nenhum recurso treinado.</p>}</section>
         <section className="espiral-leitura-edicao">
+          <div className="espiral-edicao-bloco espiral-evolucao-mestre"><span>PONTOS DE EVOLUÇÃO <em>{Math.max(0, Number(sheet.evolution?.points) || 0)}</em></span><p>Concedidos pelo Mestre para a Transformação.</p><div className="espiral-evolucao-controles"><input type="number" value={evolucaoDelta} onChange={(event) => setEvolucaoDelta(event.target.value)} step="1" aria-label="Quantidade de pontos de evolução" /><button type="button" onClick={alterarPontosEvolucao}>{Number(evolucaoDelta) >= 0 ? "Conceder" : "Remover"}</button></div></div>
           <div className="espiral-edicao-bloco"><span>INVENTÁRIO <em>{inventario.length}</em></span><div className="espiral-edicao-lista">{inventario.length ? inventario.map((item, index) => <div key={`${item}-${index}`}><b>{item}</b><button type="button" aria-label={`Remover ${item}`} onClick={() => alterarLista("inventory", inventario.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>) : <small>Nenhum item no inventário.</small>}</div><form onSubmit={(event) => { event.preventDefault(); if (novoItem.trim()) { alterarLista("inventory", [...inventario, novoItem.trim()]); setNovoItem(""); } }}><input value={novoItem} onChange={(event) => setNovoItem(event.target.value)} placeholder="Adicionar item" /><button type="submit">Dar item</button></form></div>
           <div className="espiral-edicao-bloco"><span>HABILIDADES <em>{habilidades.length}</em></span><div className="espiral-edicao-lista">{habilidades.length ? habilidades.map((item, index) => <div key={`${item}-${index}`}><b>{item}</b><button type="button" aria-label={`Remover ${item}`} onClick={() => alterarLista("abilities", habilidades.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>) : <small>Nenhuma habilidade registrada.</small>}</div><form onSubmit={(event) => { event.preventDefault(); if (novaHabilidade.trim()) { alterarLista("abilities", [...habilidades, novaHabilidade.trim()]); setNovaHabilidade(""); } }}><input value={novaHabilidade} onChange={(event) => setNovaHabilidade(event.target.value)} placeholder="Adicionar habilidade" /><button type="submit">Dar habilidade</button></form></div>
         </section>

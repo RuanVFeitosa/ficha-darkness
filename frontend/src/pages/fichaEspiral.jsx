@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import Icon from "@mdi/react";
 import {
   ATTRIBUTES,
   RESOURCES,
@@ -14,8 +15,10 @@ import "../CSS/FichaEspiral.css";
 import "../CSS/InventarioEspiral.css";
 import { compressProfileImage } from "../services/imageCompression";
 import { buscarPersonagem } from "../services/personagemApi";
+import { obterIconeItem } from "../utils/itemIcons";
 import { convertDarknessToEspiral } from "../utils/darknessToEspiral";
 import { selecionarDialogo } from "../components/DialogoGlobal";
+import { APRIMORAMENTOS_HABILIDADES_ESPIRAL, CUSTOS_ESPERANCA_HABILIDADES, HABILIDADES_ESPIRAL } from "../data/habilidadesEspiral";
 
 const clamp = (value, max) => Math.max(0, Math.min(max, Number(value) || 0));
 const randomDie = (sides) => {
@@ -135,7 +138,7 @@ const injuryLevel = {
   Crítica: 3,
   "Catastrófica / Fatal": 4,
 };
-function BodyMap({ injuries, selectedRegion, onSelect }) {
+function BodyMap({ injuries, protections, selectedRegion, onSelect }) {
   const levelFor = (region) =>
     Math.max(
       0,
@@ -143,6 +146,41 @@ function BodyMap({ injuries, selectedRegion, onSelect }) {
         .filter((injury) => injury.region === region)
         .map((injury) => injuryLevel[injury.severity] || 0),
     );
+  const normalizeRegion = (value) =>
+    String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  const protectionsFor = (region) => {
+    const target = normalizeRegion(region);
+    return protections.filter((protection) => {
+      const protectedRegions = normalizeRegion(protection.region);
+      if (target.includes("cabeca")) return protectedRegions.includes("cabeca");
+      if (target.includes("torso")) return protectedRegions.includes("torso");
+      if (target.includes("braco")) return protectedRegions.includes("braco");
+      if (target.includes("perna")) return protectedRegions.includes("perna");
+      return false;
+    });
+  };
+  const protectionMarks = (region, x, y, textAnchor = "middle") => {
+    const equipped = protectionsFor(region);
+    if (!equipped.length) return null;
+    return (
+      <g className="es-body-protection-marks" aria-label={`Proteções de ${region}`}>
+        {equipped.map((protection, index) => (
+          <text
+            key={protection.id || `${region}-${protection.name}-${index}`}
+            x={x}
+            y={y + index * 19}
+            textAnchor={textAnchor}
+          >
+            <title>{protection.name || "Proteção"}</title>
+            PROT {protection.value || "0"}
+          </text>
+        ))}
+      </g>
+    );
+  };
   const part = (region, shape, labelX, labelY) => (
     <g
       key={region}
@@ -168,7 +206,7 @@ function BodyMap({ injuries, selectedRegion, onSelect }) {
         <small>Clique em uma região para registrar uma lesão</small>
       </div>
       <svg
-        viewBox="0 0 330 550"
+        viewBox="-95 -22 520 594"
         role="img"
         aria-label="Mapa corporal interativo com regiões de lesão"
       >
@@ -229,6 +267,25 @@ function BodyMap({ injuries, selectedRegion, onSelect }) {
           242,
           428,
         )}
+        {protectionMarks("Cabeça", 165, 2)}
+        {protectionMarks("Torso", 165, 252)}
+        {protectionMarks("Braço esquerdo", 65, 176, "end")}
+        {protectionMarks("Braço direito", 265, 176, "start")}
+        {protectionMarks("Perna esquerda", 115, 420, "end")}
+        {protectionMarks("Perna direita", 215, 420, "start")}
+      <div className="es-body-protection-summary" aria-label="Proteções equipadas">
+        <span>PROTEÇÕES EQUIPADAS</span>
+        {protections.length ? (
+          protections.map((protection, index) => (
+            <div key={protection.id || `${protection.name}-${index}`}>
+              <strong>{protection.name || "Proteção"}</strong>
+              <small>{protection.region || "Região não informada"} · PROT {protection.value || "0"}</small>
+            </div>
+          ))
+        ) : (
+          <small>Nenhuma proteção equipada.</small>
+        )}
+      </div>
       </svg>
       <div className="es-body-legend">
         <span>
@@ -291,6 +348,9 @@ export default function FichaEspiral() {
   const abilityProgress = Array.isArray(sheet.abilityProgress) && sheet.abilityProgress.length === 2
     ? sheet.abilityProgress
     : [{ name: "", detail: "", level: 1 }, { name: "", detail: "", level: 1 }];
+  const acquiredAbilities = Array.isArray(sheet.evolution?.abilities)
+    ? sheet.evolution.abilities
+    : [];
   const update = (key, value) =>
     setSheet((previous) => ({ ...previous, [key]: value }));
   const abrirSistemaAnterior = () => {
@@ -599,6 +659,7 @@ export default function FichaEspiral() {
           {saveState}
         </span>
         <a className="es-store-link" href={`?lojaEspiral=1&ficha=${encodeURIComponent(id)}`}>Loja da Helena</a>
+        <a className="es-store-link" href={`?transformacao=1&ficha=${encodeURIComponent(id)}`}>Transformação</a>
         <button
           className="es-icon-button"
           onClick={exportSheet}
@@ -908,14 +969,14 @@ export default function FichaEspiral() {
                     <header>
                       <div>
                         <span className="es-eyebrow">ARMAS</span>
-                        <small>Armas, dano e munição</small>
+                        <small>Armas e dano</small>
                       </div>
                       <button
                         type="button"
                         onClick={() =>
                           update("weapons", [
                             ...weapons,
-                            { id: uniqueId(), name: "", damage: "", ammo: "" },
+                            { id: uniqueId(), name: "", damage: "" },
                           ])
                         }
                       >
@@ -929,6 +990,12 @@ export default function FichaEspiral() {
                     ) : (
                       weapons.map((weapon) => (
                         <div className="es-equipment-row" key={weapon.id}>
+                          {(() => {
+                            const iconName = { Carabina: "Fuzil", Rifle: "Fuzil" }[weapon.name] || weapon.name;
+                            const icon = obterIconeItem({ nome: iconName, categoria: "armas-fogo" });
+                            const isImage = typeof icon === "string" && (icon.includes(".svg") || icon.startsWith("data:image"));
+                            return <span className="es-weapon-icon" title={weapon.name || "Arma"}>{isImage ? <img src={icon} alt="" /> : <Icon path={icon} size={0.85} />}</span>;
+                          })()}
                           <input
                             aria-label="Nome da arma"
                             value={weapon.name}
@@ -954,19 +1021,6 @@ export default function FichaEspiral() {
                               )
                             }
                             placeholder="Dano"
-                          />
-                          <input
-                            aria-label="Munição da arma"
-                            value={weapon.ammo}
-                            onChange={(event) =>
-                              updateEquipment(
-                                "weapons",
-                                weapon.id,
-                                "ammo",
-                                event.target.value,
-                              )
-                            }
-                            placeholder="Munição"
                           />
                           <button
                             type="button"
@@ -1104,6 +1158,7 @@ export default function FichaEspiral() {
                 <div className="es-injury-workspace">
                   <BodyMap
                     injuries={sheet.injuries}
+                    protections={protections}
                     selectedRegion={region}
                     onSelect={setRegion}
                   />
@@ -1221,6 +1276,45 @@ export default function FichaEspiral() {
                   <h3>{VERTENTES[sheet.vertente][0]}</h3>
                   <p>{VERTENTES[sheet.vertente][1]}</p>
                 </div>
+                {acquiredAbilities.length > 0 && (
+                  <section className="es-acquired-abilities">
+                    <div className="es-acquired-heading">
+                      <span>TRANSFORMAÇÃO</span>
+                      <strong>{acquiredAbilities.length} {acquiredAbilities.length === 1 ? "HABILIDADE ADQUIRIDA" : "HABILIDADES ADQUIRIDAS"}</strong>
+                    </div>
+                    <div className="es-acquired-grid">
+                      {acquiredAbilities.map((ability) => {
+                        const source = HABILIDADES_ESPIRAL[ability.category]?.find((item) => item[0] === ability.name);
+                        const level = Math.max(1, Math.min(3, Number(ability.level) || 1));
+                        const details = APRIMORAMENTOS_HABILIDADES_ESPIRAL[ability.name] || [source?.[2] || "", "", ""];
+                        const cost = CUSTOS_ESPERANCA_HABILIDADES[ability.name] || [0, 0];
+                        const dots = (amount) => amount ? "૦".repeat(amount) : "—";
+                        return (
+                          <article className="es-acquired-card" key={ability.id}>
+                            <header><span>{ability.category} · AÇÃO {(source?.[1] || "Livre").toUpperCase()}</span><strong>NÍVEL {["I", "II", "III"][level - 1]}</strong></header>
+                            <h3>{ability.name}</h3>
+                            <div className="es-ability-dots" aria-label={`Nível ${level}`}>{[1, 2, 3].map((itemLevel) => <i className={itemLevel <= level ? "filled" : ""} key={itemLevel} />)}</div>
+                            <div className="es-acquired-levels">
+                              {details.map((detail, index) => {
+                                const detailLevel = index + 1;
+                                return (
+                                  <section
+                                    className={`${detailLevel <= level ? "unlocked" : "locked"} ${detailLevel === level ? "current" : ""}`}
+                                    key={`${ability.id}-level-${detailLevel}`}
+                                  >
+                                    <strong>NÍVEL {["I", "II", "III"][index]}</strong>
+                                    <p>{detail}</p>
+                                  </section>
+                                );
+                              })}
+                            </div>
+                            <footer><span>CUSTO DE ESPERANÇA</span><b>{cost[0] ? `${dots(cost[0])} FRACASSO / ${dots(cost[1])} CONSEQUÊNCIA` : "— SEM CUSTO"}</b></footer>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
+                )}
                 <label className="es-writing">
                   <span>Habilidades escolhidas</span>
                   <p>

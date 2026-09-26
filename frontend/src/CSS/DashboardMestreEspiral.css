@@ -1,3 +1,4 @@
+.espiral-evolucao-mestre{grid-column:1/-1!important}.espiral-evolucao-mestre p{margin:0 0 14px;color:var(--es-muted);font:10px/1.45 "Courier New",monospace}.espiral-evolucao-controles{display:flex;gap:6px}.espiral-evolucao-controles input{width:74px!important;flex:none!important;text-align:center}.espiral-evolucao-controles button{min-height:32px;padding:0 11px;border:1px solid var(--es-paper);background:var(--es-paper);color:#070707;font:700 9px "Courier New",monospace;text-transform:uppercase;cursor:pointer}.espiral-evolucao-controles button:hover{background:#070707;color:var(--es-paper)}
 /* Camada final do arquivo do mestre. Mantém os fluxos existentes e substitui
    a aparência de Darkness pela mesma linguagem editorial da ficha ESPIRAL. */
 .mestre-page {
