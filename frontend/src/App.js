@@ -70,6 +70,7 @@ function App() {
 
   const params = new URLSearchParams(search);
   const sistemaAnterior = params.get("sistema") === "darkness";
+  const sistemaEspiral = params.get("sistema") === "espiral";
 
   const temFicha = Boolean(params.get("ficha"));
   const estaCriando = params.get("criar") === "1";
@@ -83,7 +84,7 @@ function App() {
   const mestreAutorizado =
     sessionStorage.getItem(MESTRE_AUTH_KEY) === "true";
 
-  if (!sistemaAnterior && !estaNaMesa && !estaNoDashboardMestre && !estaNaLoja && !estaNaLojaEspiral && !estaNaTransformacaoEspiral && !estaNaArvoreHabilidades && !estaNoUpgrade) {
+  if (sistemaEspiral && !estaNaMesa && !estaNoDashboardMestre && !estaNaLoja && !estaNaLojaEspiral && !estaNaTransformacaoEspiral && !estaNaArvoreHabilidades && !estaNoUpgrade) {
     return <><DialogoGlobal /><Suspense fallback={<div style={{ color: '#aaa', padding: 40 }}>Abrindo arquivo ESPIRAL…</div>}><FichaEspiral key={params.get('ficha') || 'principal'} /></Suspense></>;
   }
 

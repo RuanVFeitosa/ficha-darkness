@@ -739,8 +739,8 @@ export default function FichaEspiral() {
           <i />
           {saveState}
         </span>
-        <a className="es-store-link" href={`?lojaEspiral=1&ficha=${encodeURIComponent(id)}`}>Loja da Helena</a>
-        <a className="es-store-link" href={`?transformacao=1&ficha=${encodeURIComponent(id)}`}>Transformação</a>
+        <a className="es-store-link" href={`?sistema=espiral&lojaEspiral=1&ficha=${encodeURIComponent(id)}`}>Loja da Helena</a>
+        <a className="es-store-link" href={`?sistema=espiral&transformacao=1&ficha=${encodeURIComponent(id)}`}>Transformação</a>
         <button
           className="es-icon-button"
           onClick={exportSheet}

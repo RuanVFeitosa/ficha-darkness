@@ -672,7 +672,7 @@ const ModalFichaEspiral = ({ ficha, onClose, onSalvar }) => {
             <p>{[sheet.pronoun, sheet.occupation, sheet.vertente].filter(Boolean).join(" · ") || "Sem identificação"}</p>
           </div>
           <div className="espiral-leitura-acoes">
-            <button type="button" className="espiral-abrir-ficha" onClick={() => { window.location.href = `/?ficha=${encodeURIComponent(ficha.espiralId || "principal")}`; }}>Abrir ficha completa</button>
+            <button type="button" className="espiral-abrir-ficha" onClick={() => { window.location.href = `/?sistema=espiral&ficha=${encodeURIComponent(ficha.espiralId || "principal")}`; }}>Abrir ficha completa</button>
             <button type="button" className="mestre-modal-fechar" onClick={onClose} aria-label="Fechar ficha">×</button>
           </div>
         </header>

@@ -121,7 +121,7 @@ export default function TransformacaoEspiral() {
       <header className="transformacao-hero">
         <a
           className="transformacao-back"
-          href={`?ficha=${encodeURIComponent(id)}`}
+          href={`?sistema=espiral&ficha=${encodeURIComponent(id)}`}
         >
           <Icon path={mdiArrowLeft} size={0.8} /> Voltar à ficha
         </a>
