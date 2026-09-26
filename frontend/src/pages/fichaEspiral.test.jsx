@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import FichaEspiral from './fichaEspiral';
 import { buscarPersonagem } from '../services/personagemApi';
 import DialogoGlobal from '../components/DialogoGlobal';
@@ -84,4 +84,28 @@ test('vincula automaticamente uma ficha Darkness ao abrir pelo código', async (
   fireEvent.click(screen.getByRole('button', { name: 'Continuar' }));
   await waitFor(() => expect(screen.getByRole('heading', { name: 'L' })).toBeInTheDocument());
   expect(screen.getByRole('button', { name: /Abrir ficha Darkness/ })).toBeInTheDocument();
+});
+
+test('graus temporários acumulam no recurso e expiram após as rolagens', async () => {
+  render(<><DialogoGlobal /><FichaEspiral /></>);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Adicionar grau temporário a Armas' }));
+  await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+  fireEvent.change(within(screen.getByRole('dialog')).getByRole('textbox'), { target: { value: '1' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Aplicar grau' }));
+
+  await waitFor(() => expect(screen.getByText(/\+1 TEMP\. · 1 teste/)).toBeInTheDocument());
+  fireEvent.click(screen.getByRole('button', { name: 'Rolar Armas' }));
+  fireEvent.click(screen.getByRole('button', { name: /Rolar Sentido \+ Armas/ }));
+
+  await waitFor(() => expect(screen.queryByText(/\+1 TEMP\./)).not.toBeInTheDocument());
+});
+
+test('personaliza e preserva as cores da ficha', () => {
+  const view = render(<FichaEspiral />);
+  fireEvent.click(screen.getByRole('button', { name: '06 Personalização' }));
+  fireEvent.change(screen.getByLabelText('Cor primária'), { target: { value: '#ff0000' } });
+
+  expect(view.container.querySelector('.espiral-app')).toHaveStyle({ '--es-accent': '#ff0000' });
+  expect(JSON.parse(localStorage.getItem('espiral:sheet:v1:principal')).temaFicha.primaria).toBe('#ff0000');
 });

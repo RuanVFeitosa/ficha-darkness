@@ -13270,3 +13270,23 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Origem dos bônus que agora chegam das passivas vinculadas aos Ativos. */
+.ativo-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+.ativo-origem {
+  flex-basis: 100%;
+  margin-top: 2px;
+  color: var(--cor-texto-secundario);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.35px;
+  line-height: 1.35;
+}
+.ativo-item:has(.ativo-origem:not(:empty)) {
+  min-height: 66px;
+}

@@ -5,6 +5,7 @@ import {
   RESOURCES,
   GRADES,
   VERTENTES,
+  TEMA_PADRAO_ESPIRAL,
   freshSheet,
   integrityMax,
   creationWarnings,
@@ -17,7 +18,7 @@ import { compressProfileImage } from "../services/imageCompression";
 import { buscarPersonagem } from "../services/personagemApi";
 import { obterIconeItem } from "../utils/itemIcons";
 import { convertDarknessToEspiral } from "../utils/darknessToEspiral";
-import { selecionarDialogo } from "../components/DialogoGlobal";
+import { selecionarDialogo, solicitarDialogo } from "../components/DialogoGlobal";
 import { APRIMORAMENTOS_HABILIDADES_ESPIRAL, CUSTOS_ESPERANCA_HABILIDADES, HABILIDADES_ESPIRAL } from "../data/habilidadesEspiral";
 
 const clamp = (value, max) => Math.max(0, Math.min(max, Number(value) || 0));
@@ -345,6 +346,14 @@ export default function FichaEspiral() {
   const defense = sheet.attributes.sentido + 2;
   const weapons = Array.isArray(sheet.weapons) ? sheet.weapons : [];
   const protections = Array.isArray(sheet.protections) ? sheet.protections : [];
+  const temporaryBonusesFor = (resourceName, source = sheet) =>
+    Array.isArray(source.temporaryResources?.[resourceName])
+      ? source.temporaryResources[resourceName].filter(
+          (bonus) => Number.isInteger(bonus?.rollsRemaining) && bonus.rollsRemaining > 0,
+        )
+      : [];
+  const temporaryGradeFor = (resourceName, source = sheet) =>
+    temporaryBonusesFor(resourceName, source).length;
   const abilityProgress = Array.isArray(sheet.abilityProgress) && sheet.abilityProgress.length === 2
     ? sheet.abilityProgress
     : [{ name: "", detail: "", level: 1 }, { name: "", detail: "", level: 1 }];
@@ -353,6 +362,13 @@ export default function FichaEspiral() {
     : [];
   const update = (key, value) =>
     setSheet((previous) => ({ ...previous, [key]: value }));
+  const atualizarTemaFicha = (campo, valor) =>
+    setSheet((previous) => ({
+      ...previous,
+      temaFicha: { ...TEMA_PADRAO_ESPIRAL, ...(previous.temaFicha || {}), [campo]: valor },
+    }));
+  const restaurarTemaPadrao = () => update("temaFicha", { ...TEMA_PADRAO_ESPIRAL });
+  const restaurarCorPadrao = (campo) => atualizarTemaFicha(campo, TEMA_PADRAO_ESPIRAL[campo]);
   const abrirSistemaAnterior = () => {
     window.location.href = fichaDarkness
       ? `/?sistema=darkness&ficha=${encodeURIComponent(fichaDarkness)}&senha=${encodeURIComponent(fichaDarkness)}`
@@ -441,6 +457,33 @@ export default function FichaEspiral() {
         (item) => item.id !== id,
       ),
     );
+  async function addTemporaryResourceGrade(resourceName) {
+    const answer = await solicitarDialogo(
+      `Por quantas rolagens de teste o grau temporário de ${resourceName} ficará ativo?`,
+      {
+        titulo: `Grau temporário · ${resourceName}`,
+        placeholder: "Ex.: 3",
+        confirmarTexto: "Aplicar grau",
+      },
+    );
+    if (answer === null) return;
+    const rollsRemaining = Number(answer);
+    if (!Number.isInteger(rollsRemaining) || rollsRemaining < 1 || rollsRemaining > 99) {
+      setNotice("Informe um número inteiro entre 1 e 99 rolagens.");
+      return;
+    }
+    setSheet((previous) => ({
+      ...previous,
+      temporaryResources: {
+        ...(previous.temporaryResources || {}),
+        [resourceName]: [
+          ...temporaryBonusesFor(resourceName, previous),
+          { id: uniqueId(), rollsRemaining },
+        ],
+      },
+    }));
+    setNotice(`+1 grau temporário em ${resourceName} por ${rollsRemaining} rolagem(ns).`);
+  }
   async function importProfileImage(event) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -462,7 +505,11 @@ export default function FichaEspiral() {
     setResource(resourceOverride);
     setAttribute(attributeOverride);
     const sides = sheet.attributes[attributeOverride] * 2 + 2;
-    const count = Math.max(1, 1 + sheet.resources[resourceOverride] + modifier);
+    const temporaryGrade = temporaryGradeFor(resourceOverride);
+    const count = Math.max(
+      1,
+      1 + sheet.resources[resourceOverride] + temporaryGrade + modifier,
+    );
     const pressureCount =
       sheet.pressure +
       (resourceOverride === "Controle Mental" && sheet.sanity === 0 ? 1 : 0);
@@ -509,6 +556,17 @@ export default function FichaEspiral() {
       ].slice(0, 12),
     );
     setRollModalOpen(true);
+    if (temporaryGrade) {
+      setSheet((previous) => {
+        const nextBonuses = temporaryBonusesFor(resourceOverride, previous)
+          .map((bonus) => ({ ...bonus, rollsRemaining: bonus.rollsRemaining - 1 }))
+          .filter((bonus) => bonus.rollsRemaining > 0);
+        const temporaryResources = { ...(previous.temporaryResources || {}) };
+        if (nextBonuses.length) temporaryResources[resourceOverride] = nextBonuses;
+        else delete temporaryResources[resourceOverride];
+        return { ...previous, temporaryResources };
+      });
+    }
     update("pressure", 0);
     window.setTimeout(() => setRolling(false), 650);
   }
@@ -586,6 +644,20 @@ export default function FichaEspiral() {
             data.resources[k] >= 0 &&
             data.resources[k] <= 4,
         ) ||
+        (data.temporaryResources !== undefined &&
+          (typeof data.temporaryResources !== "object" ||
+            data.temporaryResources === null ||
+            !Object.entries(data.temporaryResources).every(
+              ([resourceName, bonuses]) =>
+                RESOURCES.includes(resourceName) &&
+                Array.isArray(bonuses) &&
+                bonuses.every(
+                  (bonus) =>
+                    Number.isInteger(bonus?.rollsRemaining) &&
+                    bonus.rollsRemaining > 0 &&
+                    bonus.rollsRemaining <= 99,
+                ),
+            ))) ||
         !Object.keys(VERTENTES).includes(data.vertente) ||
         !["later", "creation"].includes(data.integrityTable) ||
         ![
@@ -643,7 +715,16 @@ export default function FichaEspiral() {
     ...String(sheet.inventory || "").split("\n").map((item) => item.trim()).filter(Boolean).map((name) => ({ icon: "◆", name, detail: "Equipamento" })),
   ];
   return (
-    <div className="espiral-app">
+    <div
+      className="espiral-app"
+      style={{
+        "--es-accent": sheet.temaFicha?.primaria,
+        "--es-surface": sheet.temaFicha?.secundaria,
+        "--es-text": sheet.temaFicha?.texto,
+        "--es-bg": sheet.temaFicha?.fundo,
+        "--es-line": sheet.temaFicha?.borda,
+      }}
+    >
       <header className="es-topbar">
         <a href="/" className="es-brand">
           <Spiral small />
@@ -872,6 +953,7 @@ export default function FichaEspiral() {
             "Habilidades",
             "Inventário",
             "Anotações",
+            "Personalização",
           ].map((name, i) => (
             <button
               key={name}
@@ -932,32 +1014,47 @@ export default function FichaEspiral() {
                         {name}
                         {i >= 12 && <small>RESISTÊNCIA</small>}
                       </button>
-                      <select
-                        aria-label={`Grau de ${name}`}
-                        value={sheet.resources[name]}
-                        onChange={(e) =>
-                          update("resources", {
-                            ...sheet.resources,
-                            [name]: Number(e.target.value),
-                          })
-                        }
-                      >
-                        {GRADES.map((g, grade) => (
-                          <option value={grade} key={g}>
-                            {["0", "I", "II", "III", "IV"][grade]} · {g}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="es-resource-dots" aria-hidden="true">
-                        {[1, 2, 3, 4].map((n) => (
-                          <i
-                            key={n}
-                            className={
-                              n <= sheet.resources[name] ? "filled" : ""
-                            }
-                          />
-                        ))}
-                      </span>
+                      {(() => {
+                        const permanentGrade = sheet.resources[name];
+                        const temporaryGrade = temporaryGradeFor(name);
+                        const temporaryRolls = temporaryBonusesFor(name)
+                          .map((bonus) => bonus.rollsRemaining)
+                          .join(", ");
+                        return (
+                          <>
+                            <button
+                              type="button"
+                              className="es-resource-grade"
+                              aria-label={`Adicionar grau temporário a ${name}`}
+                              title="Adicionar +1 grau temporário"
+                              onClick={() => addTemporaryResourceGrade(name)}
+                            >
+                              <span>
+                                {["0", "I", "II", "III", "IV"][permanentGrade]} · {GRADES[permanentGrade]}
+                              </span>
+                              {temporaryGrade > 0 && (
+                                <small>
+                                  +{temporaryGrade} TEMP. · {temporaryRolls} teste(s)
+                                </small>
+                              )}
+                            </button>
+                            <span className="es-resource-dots" aria-hidden="true">
+                              {[1, 2, 3, 4].map((n) => (
+                                <i
+                                  key={n}
+                                  className={
+                                    n <= permanentGrade
+                                      ? "filled"
+                                      : n <= permanentGrade + temporaryGrade
+                                        ? "temporary"
+                                        : ""
+                                  }
+                                />
+                              ))}
+                            </span>
+                          </>
+                        );
+                      })()}
                     </div>
                   ))}
                 </div>
@@ -1068,7 +1165,29 @@ export default function FichaEspiral() {
                       </p>
                     ) : (
                       protections.map((protection) => (
-                        <div className="es-equipment-row" key={protection.id}>
+                        <div className="es-equipment-row es-protection-row" key={protection.id}>
+                          {(() => {
+                            const icon = obterIconeItem({
+                              nome: protection.name,
+                              categoria: "protecao",
+                            });
+                            const isImage =
+                              typeof icon === "string" &&
+                              (icon.includes(".svg") || icon.startsWith("data:image"));
+
+                            return (
+                              <span
+                                className="es-weapon-icon es-protection-icon"
+                                title={protection.name || "Proteção"}
+                              >
+                                {isImage ? (
+                                  <img src={icon} alt="" />
+                                ) : (
+                                  <Icon path={icon} size={0.85} />
+                                )}
+                              </span>
+                            );
+                          })()}
                           <input
                             aria-label="Nome da proteção"
                             value={protection.name}
@@ -1095,6 +1214,15 @@ export default function FichaEspiral() {
                             }
                             placeholder="Valor"
                           />
+                          <button
+                            type="button"
+                            aria-label="Remover proteção"
+                            onClick={() =>
+                              removeEquipment("protections", protection.id)
+                            }
+                          >
+                            ×
+                          </button>
                           <input
                             aria-label="Região protegida"
                             value={protection.region}
@@ -1108,15 +1236,6 @@ export default function FichaEspiral() {
                             }
                             placeholder="Região"
                           />
-                          <button
-                            type="button"
-                            aria-label="Remover proteção"
-                            onClick={() =>
-                              removeEquipment("protections", protection.id)
-                            }
-                          >
-                            ×
-                          </button>
                         </div>
                       ))
                     )}
@@ -1414,6 +1533,48 @@ export default function FichaEspiral() {
                     placeholder="Vínculos, pistas, perdas. As coisas que permanecem."
                   />
                 </label>
+              </>
+            )}
+            {tab === "Personalização" && (
+              <>
+                <SectionTitle
+                  number="06"
+                  title="Personalização"
+                  aside="CORES DA FICHA"
+                />
+                <section className="es-theme-panel" aria-label="Personalização das cores da ficha">
+                  <div>
+                    <span className="es-eyebrow">TEMA VISUAL</span>
+                    <h3>As cores que acompanham a sua história.</h3>
+                    <p>Escolha as cores da ficha. As alterações são salvas somente nesta personagem.</p>
+                  </div>
+                  <div className="es-theme-grid">
+                    {[
+                      ["primaria", "Cor primária"],
+                      ["secundaria", "Cor secundária"],
+                      ["texto", "Cor do texto"],
+                      ["fundo", "Cor do fundo"],
+                      ["borda", "Cor da borda"],
+                    ].map(([campo, rotulo]) => (
+                      <label className="es-theme-color" key={campo}>
+                        <span>{rotulo}</span>
+                        <input
+                          type="color"
+                          aria-label={rotulo}
+                          value={sheet.temaFicha?.[campo] || TEMA_PADRAO_ESPIRAL[campo]}
+                          onInput={(event) => atualizarTemaFicha(campo, event.currentTarget.value)}
+                          onChange={(event) => atualizarTemaFicha(campo, event.currentTarget.value)}
+                        />
+                        <button type="button" onClick={() => restaurarCorPadrao(campo)}>
+                          Restaurar
+                        </button>
+                      </label>
+                    ))}
+                  </div>
+                  <button type="button" className="es-theme-reset" onClick={restaurarTemaPadrao}>
+                    Restaurar tema padrão
+                  </button>
+                </section>
               </>
             )}
           </div>
