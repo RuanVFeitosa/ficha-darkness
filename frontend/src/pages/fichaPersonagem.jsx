@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../CSS/FichaPersonagem.css";
 import "../CSS/CondicoesProfile.css";
-import { alertarDialogo, confirmarDialogo } from "../components/DialogoGlobal";
+import { alertarDialogo, confirmarDialogo, selecionarDialogo } from "../components/DialogoGlobal";
 
 import { condicoes } from "../components/data/condicoes";
 import { receitasCriacao } from "../components/data/receitasCriacao";
@@ -57,6 +57,7 @@ import {
   mdiMapOutline,
   mdiClose,
   mdiMenu,
+  mdiSwapHorizontal,
 } from "@mdi/js";
 import { obterIconeItem } from "../utils/itemIcons";
 import { marcarPassivosAtualizados, mesclarPassivosPorRevisao } from "../utils/personagemMerge";
@@ -71,6 +72,7 @@ import {
 } from "../data/Classes/arvoresHabilidades";
 import { CATALOGO_DEFESAS } from "../data/Catalogo/defesas";
 import { CATALOGO_COMBATE } from "../data/Catalogo/combate";
+import { convertDarknessToEspiral } from "../utils/darknessToEspiral";
 
 // Chave para o localStorage
 const STORAGE_KEY = "fichaRPG_personagem";
@@ -100,6 +102,7 @@ const montarUrlFicha = (personagem, fichaId, destino = "") => {
   const params = new URLSearchParams({
     ficha: nomeUrl,
     senha: fichaId,
+    sistema: "darkness",
   });
 
   return destino ? `${destino}&${params.toString()}` : `?${params.toString()}`;
@@ -549,6 +552,9 @@ const FichaPersonagem = () => {
   const [fichaId] = useState(() => obterFichaIdDaUrl());
   const [personagem, setPersonagem] = useState(estadoInicial);
   const [abaAtiva, setAbaAtiva] = useState("combate");
+  useEffect(() => {
+    if (abaAtiva === "passivas") setAbaAtiva("combate");
+  }, [abaAtiva]);
   const [tipoDanoRecebido, setTipoDanoRecebido] = useState("geral");
   const [ultimoSave, setUltimoSave] = useState(null);
   const [carregado, setCarregado] = useState(false);
@@ -978,25 +984,26 @@ const FichaPersonagem = () => {
   }, [fichaId, storageKey]);
 
   useEffect(() => {
-    if (!itemVisualizado) return;
+    setItemVisualizado((itemAtual) => {
+      if (!itemAtual) return itemAtual;
 
-    const itemAtualizado = (personagem.inventario || []).find(
-      (item) =>
-        (itemVisualizado.idLoja && item.idLoja === itemVisualizado.idLoja) ||
-        (itemVisualizado.id && item.id === itemVisualizado.id) ||
-        item.nome === itemVisualizado.nome,
-    );
+      const inventario = personagem.inventario || [];
+      const indiceSelecionado = Number.isInteger(itemAtual.index)
+        ? itemAtual.index
+        : -1;
+      const itemAtualizado =
+        indiceSelecionado >= 0 ? inventario[indiceSelecionado] : null;
 
-    if (itemAtualizado && itemAtualizado !== itemVisualizado) {
-      setItemVisualizado({
+      // O índice é a identidade do card aberto. Assim, itens com o mesmo nome
+      // não fazem o visualizador voltar para o primeiro item da lista.
+      if (!itemAtualizado) return itemAtual;
+
+      return {
         ...itemAtualizado,
-        index: itemVisualizado.index,
-      });
-    }
-  }, [
-    personagem.inventario,
-    itemVisualizado,
-  ]);
+        index: indiceSelecionado,
+      };
+    });
+  }, [personagem.inventario]);
 
   // Corrige dados gerados por uma versao anterior que podia aplicar status de
   // arma na Maleta de Campo ao editar um item exibido em uma lista filtrada.
@@ -1377,6 +1384,40 @@ const cancelarEdicaoHabilidade = () => {
 
   const abrirUpgradeNivel = () => {
     window.location.href = montarUrlFicha(personagem, fichaId, "?upgrade=1");
+  };
+
+  const adaptarParaEspiral = async () => {
+    // A ficha ESPIRAL usa o mesmo código da ficha Darkness. Assim, abrir
+    // ?ficha=121212 sempre abre a adaptação de 121212, e não um arquivo vazio.
+    const destino = normalizarFichaId(fichaId);
+    const chaveDestino = `espiral:sheet:v1:${destino}`;
+    const jaExiste = Boolean(lerLocalSeguro(chaveDestino));
+    const fontePulso = await selecionarDialogo(
+      "Escolha qual atributo antigo define o Pulso desta ficha ESPIRAL.",
+      { titulo: "Definir Pulso", valorInicial: "forca", opcoes: [
+        { valor: "forca", rotulo: `Força (${personagem.atributos?.forca || 0})` },
+        { valor: "fonitude", rotulo: `Fortitude (${personagem.atributos?.fonitude || 0})` },
+      ] },
+    );
+    if (!fontePulso) return;
+    const confirmado = await confirmarDialogo(
+      jaExiste
+        ? "Já existe uma adaptação ESPIRAL desta ficha neste dispositivo. Continuar substituirá somente essa cópia ESPIRAL; a ficha Darkness não será alterada."
+        : "Uma nova ficha ESPIRAL será calculada a partir desta ficha. A ficha Darkness permanecerá intacta. Você poderá revisar os valores narrativos na nova ficha.",
+      { titulo: "Adaptar ficha para ESPIRAL", confirmarTexto: "Criar adaptação" },
+    );
+    if (!confirmado) return;
+
+    try {
+      localStorage.setItem(chaveDestino, JSON.stringify(convertDarknessToEspiral({ ...personagem, fichaId }, { pulseSource: fontePulso })));
+      setMenuFichaAberto(false);
+      window.location.href = `/?sistema=darkness&ficha=${encodeURIComponent(destino)}`;
+    } catch (error) {
+      await alertarDialogo(
+        error?.message || "Não foi possível salvar a ficha ESPIRAL neste dispositivo.",
+        { titulo: "Falha na adaptação" },
+      );
+    }
   };
 
   const abrirTabletop = async () => {
@@ -1861,12 +1902,15 @@ const cancelarEdicaoHabilidade = () => {
     ativo,
     passiva = 0,
     modificadorDados = 0,
+    quantidadeDadosBase = null,
   }) => {
     const valorAtributo = parseInt(atributo, 10) || 0;
     const bonusAtivo = parseInt(ativo, 10) || 0;
     const bonusPassiva = parseInt(passiva, 10) || 0;
 
-    const quantidadeBase = obterModificadorAtributo(valorAtributo);
+    const quantidadeBase = quantidadeDadosBase !== null && Number.isInteger(Number(quantidadeDadosBase))
+      ? Math.max(1, Number(quantidadeDadosBase))
+      : obterModificadorAtributo(valorAtributo);
     const quantidadeDados = Math.max(1, quantidadeBase + modificadorDados);
     const faces = obterDadoAtributo(valorAtributo);
 
@@ -3145,14 +3189,21 @@ const cancelarEdicaoHabilidade = () => {
 
   const Ativo = ({ nome, chave, atributoBase }) => {
     const atributoValor = personagem.atributos[atributoBase];
-    const bonusAtributo = calcularModificadorAtivo(atributoValor);
-
+    const modificadorAtributo = calcularModificadorAtivo(atributoValor);
+    const valorAtivo = personagem.habilidadesCombate?.[chave] || 0;
     const valorTemporario = personagem.habilidadesTemporarias?.[chave] || 0;
-
-    const bonusAtivo =
-      (personagem.habilidadesCombate?.[chave] || 0) +
-      bonusAtributo +
-      valorTemporario;
+    const dadosDoAtivo = Math.max(
+      1,
+      modificadorAtributo + valorAtivo + valorTemporario,
+    );
+    const passivasVinculadas = Object.entries(ativosParaPassiva)
+      .filter(([, ativoVinculado]) => ativoVinculado === chave)
+      .map(([chavePassiva]) => ({
+        chave: chavePassiva,
+        nome: nomesPassivas[chavePassiva] || chavePassiva,
+        valor: obterBonusPassiva(chavePassiva),
+      }))
+      .filter((passiva) => passiva.valor !== 0);
 
     const nomesAtributos = {
       inteligencia: "Inteligência",
@@ -3162,12 +3213,36 @@ const cancelarEdicaoHabilidade = () => {
       fonitude: "Fortitude",
     };
 
-    const rolarAtivo = () => {
+    const rolarAtivo = async () => {
+      let passivaSelecionada = null;
+      if (passivasVinculadas.length) {
+        const chavePassiva = await selecionarDialogo(
+          `Escolha o bônus de passiva para aplicar em ${nome}.`,
+          {
+            titulo: `Bônus de passiva · ${nome}`,
+            confirmarTexto: "Rolar teste",
+            valorInicial: "nenhuma",
+            opcoes: [
+              { valor: "nenhuma", rotulo: "Sem bônus de passiva" },
+              ...passivasVinculadas.map((passiva) => ({
+                valor: passiva.chave,
+                rotulo: `${passiva.nome} ${passiva.valor > 0 ? "+" : ""}${passiva.valor}`,
+              })),
+            ],
+          },
+        );
+        if (chavePassiva === null) return;
+        passivaSelecionada = passivasVinculadas.find(
+          (passiva) => passiva.chave === chavePassiva,
+        ) || null;
+      }
+
       const resultado = rolarTeste({
         atributo: atributoValor,
-        ativo: bonusAtivo,
-        passiva: 0,
+        ativo: 0,
+        passiva: passivaSelecionada?.valor || 0,
         modificadorDados: modificadorDadosRolagem,
+        quantidadeDadosBase: dadosDoAtivo,
       });
 
       setRolandoDados(true);
@@ -3176,7 +3251,7 @@ const cancelarEdicaoHabilidade = () => {
         tipo: "teste",
         titulo: `${nomesAtributos[atributoBase]} | ${nome}`,
         modo: "Teste de Ativo",
-        formula: `${resultado.quantidadeDados}d${resultado.faces} + ${resultado.bonusAtivo}`,
+        formula: `${resultado.quantidadeDados}d${resultado.faces}${resultado.bonusPassiva ? ` + ${resultado.bonusPassiva} (${passivaSelecionada.nome})` : ""}`,
         dados: resultado.rolagens,
         faces: resultado.faces,
         maiorResultado: resultado.maiorResultado,
@@ -3186,7 +3261,7 @@ const cancelarEdicaoHabilidade = () => {
         bonusFinais: resultado.bonusFinais,
         modificadorDados: resultado.modificadorDados,
         bonusAtivo: resultado.bonusAtivo,
-        bonusPassiva: 0,
+        bonusPassiva: resultado.bonusPassiva,
         total: resultado.total,
         dano: null,
         dadosDetalhados: null,
@@ -3206,7 +3281,7 @@ const cancelarEdicaoHabilidade = () => {
           type="button"
           className="ativo-rolar-btn"
           onClick={rolarAtivo}
-          title="Rolar teste"
+          title="Escolher passiva e rolar teste"
         >
           <Icon path={mdiDiceD20} size={0.9} />
         </button>
@@ -3223,12 +3298,17 @@ const cancelarEdicaoHabilidade = () => {
           <span className="ativo-atributo">{nomesAtributos[atributoBase]}</span>
           <span className="ativo-separador">|</span>
           <span className="ativo-nome">{nome}</span>
+          <small className="ativo-origem" title="Passivas que podem ser escolhidas como bônus">
+            {passivasVinculadas.length
+              ? `Bônus disponível: ${passivasVinculadas.map((passiva) => `${passiva.nome} ${passiva.valor > 0 ? "+" : ""}${passiva.valor}`).join(" · ")}`
+              : "Sem bônus de passiva disponível"}
+          </small>
         </div>
 
         <div className="ativo-acoes">
-          <span className="ativo-valor">
-            {bonusAtivo > 0 ? `+${bonusAtivo}` : "0"}
-          </span>{" "}
+          <span className="ativo-valor" title="Quantidade de dados do Ativo">
+            {dadosDoAtivo}D
+          </span>
         </div>
       </div>
     );
@@ -3326,6 +3406,10 @@ const cancelarEdicaoHabilidade = () => {
         </div>
       </div>
     );
+  };
+
+  const nomesPassivas = {
+    enganacao: "Enganação", raciocinioLogico: "Raciocínio Lógico", investigacao: "Investigação", instinto: "Instinto", sensibilidade: "Sensibilidade", instintoSobrevivencia: "Instinto de Sobrevivência", coragem: "Coragem", diplomacia: "Diplomacia", disciplina: "Disciplina", autocontrole: "Autocontrole", intimidacaoPassiva: "Intimidação Passiva", presenca: "Presença", memoria: "Memória", empatia: "Empatia", lealdade: "Lealdade", fe: "Fé", vitalidade: "Vitalidade", folego: "Fôlego", equilibrio: "Equilíbrio", velocidade: "Velocidade", precisao: "Precisão", lutar: "Lutar", resistenciaFisica: "Resistência Física", primeirosSocorros: "Primeiros Socorros", furtividade: "Furtividade", conhecimentoMedico: "Conhecimento Médico", conhecimentoTecnico: "Conhecimento Técnico", conhecimentoHistorico: "Conhecimento Histórico", conhecimentoOculto: "Conhecimento Oculto", tecnologia: "Tecnologia", tatica: "Tática", percepcaoAuditiva: "Percepção Auditiva", percepcaoVisual: "Percepção Visual", percepcaoOlfativa: "Percepção Olfativa", crime: "Crime", manipulacao: "Manipulação", intimidacao: "Intimidação", seducao: "Sedução", resistenciaMental: "Resistência Mental",
   };
 
   const ativosParaPassiva = {
@@ -6841,6 +6925,10 @@ const cancelarEdicaoHabilidade = () => {
               <Icon path={mdiStorefrontOutline} size={1} />
               <span>Loja</span>
             </button>
+            <button type="button" onClick={adaptarParaEspiral}>
+              <Icon path={mdiSwapHorizontal} size={1} />
+              <span>Adaptar para ESPIRAL</span>
+            </button>
             <button
               type="button"
               onClick={() => { setMenuFichaAberto(false); abrirTabletop(); }}
@@ -7189,13 +7277,7 @@ const cancelarEdicaoHabilidade = () => {
               className={`aba-btn ${abaAtiva === "combate" ? "ativa" : ""}`}
               onClick={() => setAbaAtiva("combate")}
             >
-              Ativas
-            </button>
-            <button
-              className={`aba-btn ${abaAtiva === "passivas" ? "ativa" : ""}`}
-              onClick={() => setAbaAtiva("passivas")}
-            >
-              PASSIVA
+              Combate
             </button>
             <button
               className={`aba-btn ${abaAtiva === "habilidades" ? "ativa" : ""}`}

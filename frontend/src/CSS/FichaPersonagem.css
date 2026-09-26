@@ -1308,6 +1308,24 @@ body {
   animation: marcaConexaoEntrada 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* ESPIRAL: a ficha conserva o núcleo Darkness, mas troca a leitura dos valores. */
+.integridade-barra { --barra-cor: #3ec6f2; }
+.integridade-barra .barra-rpg-label { color: #5fcaf0; }
+.integridade-fill { background: linear-gradient(90deg, #166887, #42d0fa) !important; box-shadow: 0 0 8px rgba(45, 192, 239, .45); }
+.status-bolinhas { width: 100%; padding: 7px 2px 4px; }
+.status-bolinhas-titulo { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; text-transform: uppercase; letter-spacing: .08em; font-size: .68rem; }
+.status-bolinhas-titulo b { font-size: .66rem; opacity: .8; }
+.status-bolinhas-lista { display: flex; gap: 5px; flex-wrap: nowrap; }
+.status-ponto { width: 13px; height: 13px; min-width: 13px; padding: 0; border-radius: 50%; border: 1px solid currentColor; background: transparent; cursor: pointer; transition: transform .15s ease, background .15s ease, box-shadow .15s ease; }
+.status-ponto:hover { transform: scale(1.15); }
+.status-sanidade { color: #6e9ff1; }
+.status-sanidade .status-ponto.ativo { background: #6e9ff1; box-shadow: 0 0 7px rgba(110, 159, 241, .75); }
+.status-esperanca { color: #d1a65b; }
+.status-esperanca .status-ponto.ativo { background: #d1a65b; box-shadow: 0 0 7px rgba(209, 166, 91, .75); }
+.profile-section .atributos-linha { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.profile-section .atributos-linha .atributo-card:nth-child(n+5) { display: none; }
+.profile-section .atributo-nome { letter-spacing: .09em; }
+
 .marca-conexao-fundo {
   position: fixed;
   inset: 0;
@@ -13251,4 +13269,24 @@ body {
   .ficha-embutida-mesa .atributos-linha {
     grid-template-columns: 1fr;
   }
+}
+
+/* Origem dos bônus que agora chegam das passivas vinculadas aos Ativos. */
+.ativo-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+.ativo-origem {
+  flex-basis: 100%;
+  margin-top: 2px;
+  color: var(--cor-texto-secundario);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.35px;
+  line-height: 1.35;
+}
+.ativo-item:has(.ativo-origem:not(:empty)) {
+  min-height: 66px;
 }

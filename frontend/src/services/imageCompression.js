@@ -57,20 +57,26 @@ export const compressProfileImage = async (file) => {
   const width = Math.max(1, Math.round(image.naturalWidth * ratio));
   const height = Math.max(1, Math.round(image.naturalHeight * ratio));
   const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d", { alpha: false });
+  const preservesTransparency = !["image/jpeg", "image/jpg"].includes(
+    String(file.type || "").toLowerCase(),
+  );
+  const outputType = preservesTransparency ? "image/webp" : "image/jpeg";
+  const context = canvas.getContext("2d", { alpha: preservesTransparency });
 
   canvas.width = width;
   canvas.height = height;
-  context.fillStyle = "#111";
-  context.fillRect(0, 0, width, height);
+  if (!preservesTransparency) {
+    context.fillStyle = "#111";
+    context.fillRect(0, 0, width, height);
+  }
   context.drawImage(image, 0, 0, width, height);
 
   let quality = PROFILE_IMAGE_QUALITY;
-  let dataUrl = await canvasToDataUrl(canvas, "image/jpeg", quality);
+  let dataUrl = await canvasToDataUrl(canvas, outputType, quality);
 
   while (getDataUrlBytes(dataUrl) > MAX_PROFILE_IMAGE_BYTES && quality > 0.42) {
     quality -= 0.08;
-    dataUrl = await canvasToDataUrl(canvas, "image/jpeg", quality);
+    dataUrl = await canvasToDataUrl(canvas, outputType, quality);
   }
 
   return dataUrl;

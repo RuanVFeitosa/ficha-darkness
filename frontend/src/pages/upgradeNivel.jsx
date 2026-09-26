@@ -42,6 +42,7 @@ const montarUrlFicha = (personagem, fichaId, destino = "") => {
   const params = new URLSearchParams({
     ficha: nomeUrl,
     senha: fichaId,
+    sistema: "darkness",
   });
   return destino ? `${destino}&${params.toString()}` : `?${params.toString()}`;
 };

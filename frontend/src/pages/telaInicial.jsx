@@ -67,7 +67,7 @@ const TelaInicial = () => {
       }
 
       localStorage.setItem(ULTIMA_FICHA_KEY, fichaId);
-      window.location.href = `/?ficha=${encodeURIComponent(fichaId)}`;
+      window.location.href = `/?sistema=darkness&ficha=${encodeURIComponent(fichaId)}`;
     } catch (error) {
       setErro("Nao foi possivel entrar. Verifique se o backend esta rodando.");
       setEntrando(false);

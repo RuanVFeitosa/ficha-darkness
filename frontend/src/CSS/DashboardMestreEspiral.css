@@ -1,0 +1,1186 @@
+.espiral-evolucao-mestre{grid-column:1/-1!important}.espiral-evolucao-mestre p{margin:0 0 14px;color:var(--es-muted);font:10px/1.45 "Courier New",monospace}.espiral-evolucao-controles{display:flex;gap:6px}.espiral-evolucao-controles input{width:74px!important;flex:none!important;text-align:center}.espiral-evolucao-controles button{min-height:32px;padding:0 11px;border:1px solid var(--es-paper);background:var(--es-paper);color:#070707;font:700 9px "Courier New",monospace;text-transform:uppercase;cursor:pointer}.espiral-evolucao-controles button:hover{background:#070707;color:var(--es-paper)}
+/* Camada final do arquivo do mestre. Mantém os fluxos existentes e substitui
+   a aparência de Darkness pela mesma linguagem editorial da ficha ESPIRAL. */
+.mestre-page {
+  --es-paper: #f1f1ed;
+  --es-line: #343434;
+  --es-muted: #a8a8a2;
+  --es-red: #ed3037;
+  min-height: 100vh !important;
+  padding: 0 clamp(16px, 3vw, 56px) 48px !important;
+  background: #050505 !important;
+  color: var(--es-paper) !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+.mestre-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.025) 0 1px,
+    transparent 1px 5px
+  );
+}
+.mestre-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+.mestre-header {
+  width: min(1320px, 100%) !important;
+  min-height: 116px;
+  margin: 0 auto !important;
+  padding: 28px 0 23px !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  border-bottom: 1px solid var(--es-line) !important;
+  background: transparent !important;
+}
+.mestre-voltar,
+.mestre-hamburguer {
+  width: max-content !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--es-muted) !important;
+  font:
+    700 10px/1 "Courier New",
+    monospace !important;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.mestre-voltar {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 0 !important;
+}
+.mestre-voltar:hover {
+  color: var(--es-paper) !important;
+}
+.mestre-hamburguer {
+  justify-self: end;
+  width: 38px !important;
+  height: 32px !important;
+  padding: 7px 0 7px 15px !important;
+}
+.hamburguer-linha {
+  height: 1px !important;
+  background: var(--es-paper) !important;
+}
+.mestre-identidade-espiral {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+.mestre-sigilo {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border: 1px solid var(--es-paper);
+  border-radius: 50%;
+  font-size: 16px;
+  color: var(--es-paper);
+}
+.mestre-identidade-espiral > div > span {
+  display: block;
+  color: var(--es-muted);
+  font:
+    700 9px/1.3 "Courier New",
+    monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.mestre-identidade-espiral h1 {
+  margin: 4px 0 0;
+  color: var(--es-paper);
+  font:
+    700 26px/0.9 Georgia,
+    serif;
+  letter-spacing: 0.14em;
+}
+
+.mestre-tabs {
+  width: min(1320px, 100%) !important;
+  margin: 22px auto 30px !important;
+  padding: 0 0 14px !important;
+  display: flex !important;
+  gap: 0 !important;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--es-line) !important;
+  background: transparent !important;
+}
+.mestre-tabs button {
+  min-height: 35px;
+  padding: 0 15px !important;
+  border: 0 !important;
+  border-left: 1px solid #252525 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #858580 !important;
+  font:
+    700 10px/1 "Courier New",
+    monospace !important;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.mestre-tabs button:first-child {
+  border-left: 0 !important;
+}
+.mestre-tabs button.ativa,
+.mestre-tabs button:hover {
+  background: var(--es-paper) !important;
+  color: #070707 !important;
+  box-shadow: none !important;
+}
+
+.mestre-layout-com-rolagens {
+  width: min(1320px, 100%) !important;
+  margin: 0 auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 285px !important;
+  gap: 22px !important;
+  align-items: start;
+}
+.mestre-conteudo-principal {
+  min-width: 0;
+}
+.mestre-rolagens-lateral,
+.mestre-rolagens-lateral .painel-rolagens-mestre {
+  position: sticky;
+  top: 18px;
+  border: 1px solid var(--es-line) !important;
+  border-radius: 0 !important;
+  background: #090909 !important;
+  box-shadow: none !important;
+}
+.painel-rolagens-topo {
+  padding: 16px !important;
+  border-bottom: 1px solid var(--es-line) !important;
+}
+.painel-rolagens-topo span,
+.rolagem-mestre-card header strong {
+  color: var(--es-muted) !important;
+  font:
+    700 9px/1.4 "Courier New",
+    monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.painel-rolagens-topo h3 {
+  margin: 5px 0 0 !important;
+  color: var(--es-paper) !important;
+  font:
+    700 20px/1.05 Georgia,
+    serif !important;
+}
+.painel-rolagens-acoes button {
+  border: 1px solid #494949 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--es-paper) !important;
+  font:
+    700 9px "Courier New",
+    monospace !important;
+  text-transform: uppercase;
+}
+.painel-rolagens-acoes button:hover {
+  background: var(--es-paper) !important;
+  color: #070707 !important;
+}
+.lista-rolagens-mestre {
+  padding: 10px !important;
+}
+.rolagem-mestre-card {
+  margin: 0 0 9px !important;
+  padding: 13px !important;
+  border: 1px solid #2c2c2c !important;
+  border-left: 2px solid var(--es-red) !important;
+  border-radius: 0 !important;
+  background: #080808 !important;
+}
+.rolagem-mestre-card h4 {
+  margin: 7px 0 2px !important;
+  font:
+    700 15px Georgia,
+    serif !important;
+}
+.rolagem-mestre-card p,
+.rolagem-mestre-card small {
+  color: var(--es-muted) !important;
+}
+.rolagem-mestre-card footer strong {
+  color: var(--es-red) !important;
+}
+
+.mestre-dashboard-cards {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+  gap: 1px !important;
+  border: 1px solid var(--es-line) !important;
+  background: var(--es-line) !important;
+}
+.mestre-card-personagem {
+  min-height: 350px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background-color: #111 !important;
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+.mestre-card-personagem:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.12);
+}
+.mestre-card-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(5, 5, 5, 0.96) 72%
+  ) !important;
+}
+.mestre-card-conteudo {
+  min-height: 350px !important;
+  padding: 19px !important;
+}
+.mestre-card-info h3 {
+  margin: 7px 0 !important;
+  color: var(--es-paper) !important;
+  font:
+    700 25px/1 Georgia,
+    serif !important;
+}
+.mestre-card-info small,
+.mestre-card-info span,
+.mestre-card-jogador,
+.mestre-card-atributos span,
+.mestre-card-barras label {
+  color: var(--es-muted) !important;
+  font-family: "Courier New", monospace !important;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.mestre-card-atributos,
+.mestre-card-barras {
+  border-color: #414141 !important;
+}
+.mestre-card-atributos div {
+  border-color: #333 !important;
+  background: rgba(0, 0, 0, 0.55) !important;
+}
+.mestre-card-atributos strong {
+  color: var(--es-paper) !important;
+}
+
+.mestre-page input,
+.mestre-page textarea,
+.mestre-page select {
+  border: 1px solid #414141 !important;
+  border-radius: 0 !important;
+  background: #101010 !important;
+  color: var(--es-paper) !important;
+  box-shadow: none !important;
+}
+.mestre-page input:focus,
+.mestre-page textarea:focus,
+.mestre-page select:focus {
+  border-color: var(--es-paper) !important;
+  outline: 0;
+}
+.mestre-page .mestre-modal-ficha,
+.mestre-page .mestre-popup,
+.mestre-page .mestre-loja,
+.mestre-page .mestre-analises,
+.mestre-page .inimigo-ficha-bloco {
+  border-color: var(--es-line) !important;
+  border-radius: 0 !important;
+  background: #090909 !important;
+  box-shadow: none !important;
+}
+.mestre-page .mestre-modal-header,
+.mestre-page .mestre-modal-bloco,
+.mestre-page .inimigo-ficha-header {
+  border-color: var(--es-line) !important;
+}
+.mestre-page .mestre-modal-identidade h2,
+.mestre-page .inimigo-identidade h2,
+.mestre-page .mestre-loja h2,
+.mestre-page .mestre-analises h2 {
+  font-family: Georgia, serif !important;
+}
+.mestre-mensagem {
+  width: min(1320px, 100%) !important;
+  margin: 12px auto !important;
+  border: 1px solid #555 !important;
+  border-left: 3px solid var(--es-red) !important;
+  border-radius: 0 !important;
+  background: #111 !important;
+  color: var(--es-paper) !important;
+  font:
+    700 11px "Courier New",
+    monospace !important;
+}
+.mestre-hamburguer-menu {
+  top: 88px !important;
+  right: clamp(16px, 3vw, 56px) !important;
+  border-color: #4a4a4a !important;
+  border-radius: 0 !important;
+  background: #090909 !important;
+}
+@media (max-width: 900px) {
+  .mestre-layout-com-rolagens {
+    grid-template-columns: 1fr !important;
+  }
+  .mestre-rolagens-lateral,
+  .mestre-rolagens-lateral .painel-rolagens-mestre {
+    position: static;
+  }
+  .mestre-header {
+    grid-template-columns: 1fr auto !important;
+  }
+  .mestre-identidade-espiral {
+    grid-column: 1/-1;
+    grid-row: 1;
+    margin-bottom: 18px;
+  }
+  .mestre-voltar {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .mestre-hamburguer {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
+@media (max-width: 560px) {
+  .mestre-page {
+    padding-inline: 12px !important;
+  }
+  .mestre-header {
+    min-height: 105px;
+    padding-top: 20px !important;
+  }
+  .mestre-dashboard-cards {
+    grid-template-columns: 1fr !important;
+  }
+  .mestre-tabs {
+    margin-top: 15px !important;
+    margin-bottom: 20px !important;
+  }
+  .mestre-tabs button {
+    padding-inline: 12px !important;
+  }
+}
+
+/* Cartão-resumo: uma leitura compacta da ficha ESPIRAL. */
+.mestre-dashboard-cards {
+  grid-template-columns: 1fr !important;
+  gap: 14px !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+.mestre-subtabs-fichas {
+  display: flex;
+  gap: 1px;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 0 16px;
+  border: 1px solid var(--es-line);
+  background: var(--es-line);
+}
+.mestre-subtabs-fichas button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 0;
+  background: #0a0a0a;
+  color: var(--es-muted);
+  font:
+    700 10px "Courier New",
+    monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.mestre-subtabs-fichas button small {
+  display: inline-grid;
+  min-width: 17px;
+  height: 17px;
+  place-items: center;
+  margin-left: 5px;
+  background: #242424;
+  color: var(--es-paper);
+  font:
+    700 8px "Courier New",
+    monospace;
+}
+.mestre-subtabs-fichas button.ativa {
+  background: var(--es-paper);
+  color: #050505;
+}
+.mestre-subtabs-fichas button.ativa small {
+  background: #050505;
+  color: var(--es-paper);
+}
+.mestre-card-personagem {
+  min-height: 0 !important;
+  overflow: visible !important;
+  border: 1px solid var(--es-line) !important;
+  background: #050505 !important;
+  filter: none !important;
+}
+.mestre-card-personagem:hover {
+  transform: translateY(-2px);
+  filter: none !important;
+  border-color: #767676 !important;
+}
+.mestre-card-overlay {
+  display: none !important;
+}
+.mestre-card-conteudo {
+  min-height: 230px !important;
+  padding: 18px 20px !important;
+  display: grid !important;
+  grid-template-columns: 160px 160px minmax(280px, 1fr) !important;
+  gap: 22px !important;
+  align-items: center !important;
+}
+.mestre-card-atributos {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+  align-self: stretch;
+  border: 0 !important;
+  background: transparent !important;
+}
+.mestre-card-atributos div {
+  min-height: 48px;
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  grid-template-rows: auto auto;
+  align-items: center !important;
+  padding: 6px 0 6px 9px !important;
+  border: 0 !important;
+  border-top: 1px solid #333 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+.mestre-card-atributos div:last-child {
+  border-bottom: 1px solid #333 !important;
+}
+.mestre-card-atributos span {
+  font:
+    700 13px/1 Georgia,
+    serif !important;
+  color: var(--es-paper) !important;
+  letter-spacing: 0.04em !important;
+}
+.mestre-card-atributos small {
+  grid-column: 1;
+  color: var(--es-muted);
+  font:
+    700 7px/1.1 "Courier New",
+    monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.mestre-card-atributos strong {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: var(--es-paper);
+  color: #090909 !important;
+  font:
+    700 14px/1 Arial,
+    sans-serif !important;
+}
+.mestre-card-retrato {
+  align-self: center;
+  text-align: center;
+  min-width: 0;
+}
+.mestre-card-retrato > img {
+  display: block;
+  width: 142px;
+  height: 142px;
+  margin: 0 auto;
+  object-fit: cover;
+  border: 1px solid #777;
+  border-radius: 50%;
+  outline: 1px solid #2e2e2e;
+  outline-offset: 7px;
+  background: #121212;
+}
+.mestre-card-info {
+  display: grid !important;
+  justify-items: center;
+  gap: 3px;
+  margin: 17px 0 0 !important;
+}
+.mestre-card-info h3 {
+  max-width: 180px;
+  margin: 2px 0 0 !important;
+  overflow: hidden;
+  color: var(--es-paper) !important;
+  font:
+    700 16px/1.05 Georgia,
+    serif !important;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mestre-card-info small,
+.mestre-card-jogador,
+.mestre-card-info span {
+  font:
+    700 8px/1.1 "Courier New",
+    monospace !important;
+  color: var(--es-muted) !important;
+  letter-spacing: 0.11em !important;
+}
+.mestre-card-jogador {
+  font-style: normal;
+}
+.mestre-card-info span {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mestre-card-barras {
+  display: grid !important;
+  gap: 13px !important;
+  align-self: center;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+.mestre-card-barras > div {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+.mestre-card-barras > div:first-child {
+  grid-template-columns: 1fr;
+  gap: 5px;
+}
+.mestre-card-membros {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+.mestre-card-membros > label {
+  grid-column: 1;
+  grid-row: 1;
+}
+.mestre-card-membro-mini {
+  grid-column: 2 / -1;
+  grid-row: 1;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 8px !important;
+}
+.mestre-card-membro-mini > span {
+  display: none;
+}
+.mestre-card-barras label {
+  display: block;
+  margin: 0 !important;
+  color: var(--es-paper) !important;
+  font:
+    700 9px/1 "Courier New",
+    monospace !important;
+  letter-spacing: 0.15em !important;
+}
+.mestre-card-barras small,
+.mestre-card-membro-mini small {
+  color: var(--es-paper) !important;
+  font:
+    700 10px/1 "Courier New",
+    monospace !important;
+  white-space: nowrap;
+}
+.barra {
+  height: 6px !important;
+  border-radius: 0 !important;
+  background: #272727 !important;
+}
+.barra.vermelho span {
+  background: var(--es-red) !important;
+}
+.barra.roxo,
+.barra.dourado {
+  height: 15px !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+.barra.roxo span,
+.barra.dourado span {
+  height: 15px !important;
+  border-radius: 0 !important;
+  background-size: 18px 15px !important;
+  background-repeat: repeat-x !important;
+}
+.barra.roxo span {
+  background-image: radial-gradient(
+    circle at 7px 7px,
+    #65a8ff 0 5px,
+    transparent 6px
+  ) !important;
+}
+.barra.dourado span {
+  background-image: radial-gradient(
+    circle at 7px 7px,
+    #efb637 0 5px,
+    transparent 6px
+  ) !important;
+}
+.mestre-card-membros.espiral-integrity {
+  display: grid !important;
+  grid-template-columns: 92px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+.mestre-card-membros.espiral-integrity > label {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+}
+.mestre-card-membros.espiral-integrity .mestre-card-membro-mini {
+  display: contents !important;
+}
+.mestre-card-membros.espiral-integrity .barra {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  min-width: 0;
+}
+.mestre-card-membros.espiral-integrity small {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+}
+.barra.roxo span,
+.barra.dourado span {
+  background-color: transparent !important;
+}
+.mestre-resource-dots {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  min-height: 15px;
+}
+.mestre-resource-dots i {
+  display: block;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #303030;
+}
+.mestre-resource-dots.sanidade i.ativo {
+  background: #65a8ff;
+  box-shadow: 0 0 7px rgba(101, 168, 255, 0.38);
+}
+.mestre-resource-dots.esperanca i.ativo {
+  background: #efb637;
+  box-shadow: 0 0 7px rgba(239, 182, 55, 0.28);
+}
+
+/* O Darkness mantém a integridade regional: os seis membros não são somados
+   nem convertidos para a barra única da ESPIRAL. */
+.mestre-card-personagem.darkness-card .mestre-card-conteudo {
+  grid-template-columns: 160px 160px minmax(330px, 1fr) !important;
+}
+.mestre-card-barras.darkness-status {
+  gap: 10px !important;
+}
+.mestre-card-barras.darkness-status > div {
+  grid-template-columns: 92px minmax(0, 1fr) auto !important;
+}
+.mestre-card-barras.darkness-status > .mestre-card-membros {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 5px 11px !important;
+}
+.mestre-card-barras.darkness-status .mestre-card-membros > label {
+  grid-column: 1 / -1 !important;
+  grid-row: auto !important;
+  margin-bottom: 2px !important;
+}
+.mestre-card-barras.darkness-status .mestre-card-membro-mini {
+  grid-column: auto !important;
+  grid-row: auto !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 5px !important;
+  min-width: 0;
+  padding-top: 4px;
+  border-top: 1px solid #2e2e2e;
+}
+.mestre-card-barras.darkness-status .mestre-card-membro-mini > span {
+  display: block !important;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--es-muted) !important;
+  font:
+    700 8px "Courier New",
+    monospace !important;
+  letter-spacing: 0.05em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.mestre-card-barras.darkness-status .mestre-card-membro-mini small {
+  font-size: 8px !important;
+}
+.mestre-card-barras.darkness-status .mestre-card-membro-mini .barra {
+  display: none;
+}
+.mestre-card-barras.darkness-status > div:not(:first-child) {
+  min-height: 18px;
+}
+.mestre-card-barras.darkness-status > div:not(:first-child) .barra {
+  height: 13px !important;
+}
+.mestre-card-barras.darkness-status > div:not(:first-child) small {
+  font-size: 9px !important;
+}
+.mestre-card-barras.darkness-status .barra.roxo {
+  background: #262b34 !important;
+}
+.mestre-card-barras.darkness-status .barra.roxo span {
+  background: #65a8ff !important;
+}
+.mestre-card-barras.darkness-status .barra.dourado {
+  background: #302918 !important;
+}
+.mestre-card-barras.darkness-status .barra.dourado span {
+  background: #efb637 !important;
+}
+@media (max-width: 760px) {
+  .mestre-card-personagem.darkness-card .mestre-card-conteudo {
+    grid-template-columns: 118px 125px minmax(180px, 1fr) !important;
+  }
+  .mestre-card-barras.darkness-status > .mestre-card-membros {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 590px) {
+  .mestre-card-personagem.darkness-card .mestre-card-conteudo {
+    grid-template-columns: 105px 1fr !important;
+  }
+  .mestre-card-barras.darkness-status {
+    grid-column: 1 / -1;
+  }
+  .mestre-card-barras.darkness-status > .mestre-card-membros {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 760px) {
+  .mestre-card-conteudo {
+    grid-template-columns: 118px 125px minmax(180px, 1fr) !important;
+    gap: 15px !important;
+    padding: 16px !important;
+  }
+  .mestre-card-retrato > img {
+    width: 108px;
+    height: 108px;
+  }
+  .mestre-card-atributos strong {
+    width: 30px;
+    height: 30px;
+  }
+}
+@media (max-width: 590px) {
+  .mestre-card-conteudo {
+    grid-template-columns: 105px 1fr !important;
+  }
+  .mestre-card-barras {
+    grid-column: 1 / -1;
+    border-top: 1px solid #333 !important;
+    padding-top: 14px !important;
+  }
+  .mestre-card-retrato > img {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+/* Leitura rápida de uma ficha ESPIRAL diretamente no arquivo do mestre. */
+.espiral-leitura-overlay {
+  z-index: 1000 !important;
+  display: grid !important;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.84) !important;
+}
+.mestre-modal-ficha.espiral-leitura {
+  width: min(900px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+  padding: 0 !important;
+  overflow: auto;
+  border: 1px solid #666 !important;
+  background: none !important;
+}
+.espiral-leitura-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 24px;
+  border-bottom: 1px solid var(--es-line);
+}
+.espiral-leitura-cabecalho span,
+.espiral-leitura-atributos > span,
+.espiral-leitura-status > span,
+.espiral-leitura-recursos > span {
+  color: var(--es-muted);
+  font:
+    700 9px "Courier New",
+    monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.espiral-leitura-cabecalho h2 {
+  margin: 7px 0 4px;
+  color: var(--es-paper);
+  font:
+    700 31px/1 Georgia,
+    serif;
+}
+.espiral-leitura-cabecalho p {
+  margin: 0;
+  color: var(--es-muted);
+  font:
+    11px "Courier New",
+    monospace;
+    background: none;
+}
+.espiral-leitura-corpo {
+  display: grid;
+  grid-template-columns: 155px 190px minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+  padding: 28px 24px;
+  border-bottom: 1px solid var(--es-line);
+}
+.espiral-leitura-retrato {
+  width: 132px;
+  height: 132px;
+  object-fit: cover;
+  border: 1px solid #aaa;
+  border-radius: 50%;
+  outline: 1px solid #333;
+  outline-offset: 8px;
+}
+.espiral-leitura-atributos {
+  display: grid;
+  gap: 0;
+}
+.espiral-leitura-atributos > span,
+.espiral-leitura-status > span {
+  margin-bottom: 9px;
+}
+.espiral-leitura-atributos div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  min-height: 42px;
+  padding: 5px 0;
+  border-top: 1px solid #333;
+}
+.espiral-leitura-atributos b {
+  color: var(--es-paper);
+  font:
+    700 14px Georgia,
+    serif;
+}
+.espiral-leitura-atributos small {
+  color: var(--es-muted);
+  font:
+    700 7px "Courier New",
+    monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.espiral-leitura-atributos strong {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: center;
+  color: var(--es-paper);
+  font:
+    700 12px "Courier New",
+    monospace;
+}
+.espiral-leitura-status {
+  display: grid;
+  gap: 13px;
+}
+.espiral-leitura-status > div {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+.espiral-leitura-status label {
+  color: var(--es-paper);
+  font:
+    700 9px "Courier New",
+    monospace;
+  letter-spacing: 0.12em;
+}
+.espiral-leitura-status b {
+  color: var(--es-paper);
+  font:
+    700 10px "Courier New",
+    monospace;
+  white-space: nowrap;
+}
+.espiral-leitura-status > div > i {
+  display: block;
+  min-width: 0;
+  height: 7px;
+  background: #282828;
+}
+.espiral-leitura-status .integrity > i {
+  display: block;
+  height: 100%;
+  background: var(--es-red);
+}
+.espiral-leitura-status .points {
+  height: 15px;
+  background: transparent;
+}
+.espiral-leitura-status .points::before {
+  content: "";
+  display: block;
+  width: calc(var(--points) * 18px);
+  max-width: 100%;
+  height: 15px;
+  background-size: 18px 15px;
+  background-repeat: repeat-x;
+}
+.espiral-leitura-status .sanity::before {
+  background-image: radial-gradient(
+    circle at 7px 7px,
+    #65a8ff 0 5px,
+    transparent 6px
+  );
+}
+.espiral-leitura-status .hope::before {
+  background-image: radial-gradient(
+    circle at 7px 7px,
+    #efb637 0 5px,
+    transparent 6px
+  );
+}
+.espiral-leitura-recursos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  padding: 24px;
+  background: none;
+}
+.espiral-leitura-recursos > span {
+  grid-column: 1 / -1;
+  padding: 0 0 8px;
+  background: #070707;
+}
+.espiral-leitura-recursos > div,
+.espiral-leitura-recursos > p {
+  margin: 0;
+  padding: 12px;
+  background: #0c0c0c;
+}
+.espiral-leitura-recursos b {
+  display: block;
+  color: var(--es-paper);
+  font:
+    700 12px Georgia,
+    serif;
+}
+.espiral-leitura-recursos small {
+  color: var(--es-muted);
+  font:
+    700 8px "Courier New",
+    monospace;
+  letter-spacing: 0.1em;
+}
+.espiral-leitura-rodape {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  border-top: 1px solid var(--es-line);
+}
+.espiral-leitura-rodape button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--es-paper);
+  border-radius: 0;
+  background: var(--es-paper);
+  color: #070707;
+  font:
+    700 10px "Courier New",
+    monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.espiral-leitura-rodape button:hover {
+  background: #070707;
+  color: var(--es-paper);
+}
+@media (max-width: 700px) {
+  .espiral-leitura-corpo {
+    grid-template-columns: 120px 1fr;
+  }
+  .espiral-leitura-status {
+    grid-column: 1 / -1;
+    border-top: 1px solid #333;
+    padding-top: 18px;
+  }
+  .espiral-leitura-retrato {
+    width: 105px;
+    height: 105px;
+  }
+  .espiral-leitura-recursos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 460px) {
+  .espiral-leitura-overlay {
+    padding: 8px;
+  }
+  .espiral-leitura-cabecalho,
+  .espiral-leitura-corpo,
+  .espiral-leitura-recursos,
+  .espiral-leitura-rodape {
+    padding: 16px;
+  }
+  .espiral-leitura-cabecalho h2 {
+    font-size: 24px;
+  }
+  .espiral-leitura-corpo {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+  .espiral-leitura-status {
+    grid-column: auto;
+    width: 100%;
+  }
+  .espiral-leitura-recursos {
+    grid-template-columns: 1fr;
+  }
+}
+.espiral-leitura-edicao {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  padding: 24px;
+  background: none;
+}
+.espiral-edicao-bloco {
+  padding: 15px;
+  background: none;
+}
+.espiral-edicao-bloco > span {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--es-muted);
+  font:
+    700 9px "Courier New",
+    monospace;
+  letter-spacing: 0.16em;
+}
+.espiral-edicao-lista {
+  display: grid;
+  gap: 5px;
+  min-height: 30px;
+  margin-bottom: 10px;
+}
+.espiral-edicao-lista > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 1px solid #303030;
+  background: none;
+}
+.espiral-edicao-lista b {
+  overflow: hidden;
+  color: var(--es-paper);
+  font:
+    11px "Courier New",
+    monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.espiral-edicao-lista small {
+  color: var(--es-muted);
+  font:
+    10px "Courier New",
+    monospace;
+}
+.espiral-edicao-lista button {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #555;
+  background: transparent;
+  color: #ed3037;
+  font-size: 16px;
+  line-height: 1;
+}
+.espiral-edicao-bloco form {
+  display: flex;
+  gap: 5px;
+}
+.espiral-edicao-bloco input {
+  min-width: 0;
+  flex: 1;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #414141;
+  border-radius: 0;
+  background: #090909;
+  color: var(--es-paper);
+  font:
+    10px "Courier New",
+    monospace;
+}
+.espiral-edicao-bloco form button {
+  padding: 0 9px;
+  border: 1px solid var(--es-paper);
+  background: var(--es-paper);
+  color: #070707;
+  font:
+    700 9px "Courier New",
+    monospace;
+  white-space: nowrap;
+}
+@media (max-width: 700px) {
+  .espiral-leitura-edicao {
+    grid-template-columns: 1fr;
+  }
+}
+.espiral-edicao-bloco { min-width: 0; padding: 16px; background: #0b0b0b; }
+.espiral-edicao-bloco > span { display: flex; justify-content: space-between; align-items: center; }
+.espiral-edicao-bloco > span em { display: grid; min-width: 20px; height: 20px; place-items: center; border: 1px solid #4d4d4d; color: var(--es-paper); font: 700 9px "Courier New", monospace; font-style: normal; letter-spacing: 0; }
+.espiral-edicao-lista { align-content: start; height: 220px; overflow-y: auto; padding-right: 4px; scrollbar-color: #555 #101010; scrollbar-width: thin; }
+.espiral-edicao-lista > div { min-height: 35px; background: #111; }
+.espiral-edicao-lista > div:nth-child(even) { background: #0e0e0e; }
+.espiral-edicao-lista button { flex: 0 0 24px; }
+.espiral-edicao-lista button:hover { border-color: #ed3037; background: rgba(237, 48, 55, 0.12); }
+.espiral-leitura-acoes { display: flex; align-items: flex-start; gap: 10px; }.espiral-abrir-ficha { min-height: 32px; padding: 0 12px; border: 1px solid var(--es-paper); border-radius: 0; background: var(--es-paper); color: #070707; font: 700 9px "Courier New", monospace; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }.espiral-abrir-ficha:hover { background: #070707; color: var(--es-paper); }.espiral-leitura-acoes .mestre-modal-fechar { flex: 0 0 auto; }
+@media (max-width: 560px) { .espiral-leitura-acoes { flex-direction: column-reverse; align-items: flex-end; gap: 6px; }.espiral-abrir-ficha { font-size: 8px; padding-inline: 8px; } }

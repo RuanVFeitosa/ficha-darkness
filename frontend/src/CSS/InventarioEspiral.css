@@ -1,0 +1,9 @@
+.es-inventory-items { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:1px; margin:16px 0; border:1px solid var(--es-line); background:var(--es-line); }
+.es-inventory-item { display:flex; align-items:center; gap:11px; min-height:68px; padding:12px; background:#101010; transition:background .18s ease; }
+.es-inventory-item:hover { background:#171717; }
+.es-inventory-icon { display:grid; width:36px; height:36px; flex:0 0 36px; place-items:center; border:1px solid #6e6e6e; color:#eee; font:700 18px/1 Georgia,serif; }
+.es-inventory-item b { display:block; overflow:hidden; color:var(--es-paper); font:700 12px/1.2 Georgia,serif; text-overflow:ellipsis; white-space:nowrap; }
+.es-inventory-item small { display:block; margin-top:5px; color:var(--es-muted); font:8px "Courier New",monospace; letter-spacing:.08em; text-transform:uppercase; }
+.es-inventory-empty { grid-column:1/-1; margin:0; padding:22px; color:var(--es-muted); font:11px "Courier New",monospace; }
+.es-writing > textarea { margin-top:10px; }
+@media (max-width:600px) { .es-inventory-items { grid-template-columns:1fr; } }

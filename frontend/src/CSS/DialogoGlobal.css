@@ -32,8 +32,8 @@
 .dialogo-global__fechar:hover { color: white; border-color: var(--dialogo-destaque); }
 .dialogo-global__conteudo { padding: 24px; }
 .dialogo-global__conteudo p { margin: 0; color: #c9c7bd; font: 13px/1.65 monospace; white-space: pre-wrap; }
-.dialogo-global__conteudo input { box-sizing: border-box; width: 100%; margin-top: 18px; padding: 13px 14px; color: #f2f0e7; outline: none; border: 1px solid rgba(183,184,77,.4); background: #090a09; font: 13px monospace; }
-.dialogo-global__conteudo input:focus { border-color: var(--dialogo-destaque); box-shadow: 0 0 0 2px color-mix(in srgb, var(--dialogo-destaque) 12%, transparent); }
+.dialogo-global__conteudo input, .dialogo-global__conteudo select { box-sizing: border-box; width: 100%; margin-top: 18px; padding: 13px 14px; color: #f2f0e7; outline: none; border: 1px solid rgba(183,184,77,.4); background: #090a09; font: 13px monospace; }
+.dialogo-global__conteudo input:focus, .dialogo-global__conteudo select:focus { border-color: var(--dialogo-destaque); box-shadow: 0 0 0 2px color-mix(in srgb, var(--dialogo-destaque) 12%, transparent); }
 .dialogo-global__acoes { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px 22px; border-top: 1px solid rgba(255,255,255,.07); }
 .dialogo-global__botao { min-width: 110px; padding: 12px 17px; border: 1px solid transparent; font: 600 10px monospace; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; }
 .dialogo-global__botao--secundario { color: #bdbbb2; border-color: rgba(255,255,255,.15); background: transparent; }
