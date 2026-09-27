@@ -51,6 +51,7 @@ import {
   atualizarModoCampanha,
   atualizarModoCombate,
   atualizarModoInvestigacao,
+  atualizarRevelacaoDocumentoInvestigacao,
   atualizarVisibilidadeDocumentoInvestigacao,
   buscarCampanhaPorCodigo,
   definirIniciativa,
@@ -97,6 +98,10 @@ import "../CSS/Mesa.css";
 import { estiloBordaToken } from "../utils/tokenAppearance";
 import { limitarMovimentoToken } from "../utils/tokenCollision";
 import { cenaVisivelParaJogador } from "../utils/sceneVisibility";
+import {
+  SENHA_MESTRE,
+  TABLETOP_3D_AUTH_KEY,
+} from "../constants/masterAccess";
 
 const cenaVazia = {
   nome: "",
@@ -393,6 +398,9 @@ const Mesa = () => {
   const [musicaAberta, setMusicaAberta] = useState(false);
   const [soundpadAberto, setSoundpadAberto] = useState(false);
   const [aplicativoMesaAberto, setAplicativoMesaAberto] = useState(null);
+  const [senha3DAberta, setSenha3DAberta] = useState(false);
+  const [senha3D, setSenha3D] = useState("");
+  const [erroSenha3D, setErroSenha3D] = useState("");
   const [editorAberto, setEditorAberto] = useState(false);
   const [editando, setEditando] = useState(cenaVazia);
   const [arquivos, setArquivos] = useState({ cena: [], mapa: [], especial: [], audio: [] });
@@ -448,6 +456,7 @@ const Mesa = () => {
   const [visibilidadeDocumentoEditando, setVisibilidadeDocumentoEditando] = useState(null);
   const [salvandoVisibilidadeDocumento, setSalvandoVisibilidadeDocumento] = useState(false);
   const [enviandoDocumento, setEnviandoDocumento] = useState(false);
+  const [enviandoDocumentoPreparadoId, setEnviandoDocumentoPreparadoId] = useState("");
   const [estadoEnvioDocumento, setEstadoEnvioDocumento] = useState("");
   const [novoDocumento, setNovoDocumento] = useState({
     nome: "",
@@ -511,7 +520,7 @@ const Mesa = () => {
     [fichaJogadorId],
   );
   const documentosVisiveisJogador = documentosDisponiveis.filter((documento) =>
-    documentoVisivelParaFicha(documento),
+    documento.revelada !== false && documentoVisivelParaFicha(documento),
   );
   // Documentos compartilhados pertencem a campanha, nao ao estado temporario
   // da investigacao. A aba deve continuar acessivel antes e depois desse modo.
@@ -1098,6 +1107,8 @@ const Mesa = () => {
 
   const enviarDocumentoParaInvestigacao = async (event) => {
     event.preventDefault();
+    const prepararSomente =
+      event.nativeEvent?.submitter?.value === "preparar";
     const evidenciaInterativa = novoDocumento.categoria === "interativa";
     if (
       !mestre ||
@@ -1107,7 +1118,9 @@ const Mesa = () => {
     )
       return;
     setEnviandoDocumento(true);
-    setEstadoEnvioDocumento("Enviando arquivo...");
+    setEstadoEnvioDocumento(
+      prepararSomente ? "Preparando evidencia..." : "Enviando arquivo...",
+    );
     setErro("");
     try {
       if (!evidenciaInterativa) validarArquivoInvestigacao(novoDocumento.arquivo);
@@ -1126,6 +1139,7 @@ const Mesa = () => {
           descricao: novoDocumento.descricao,
           categoria: novoDocumento.categoria,
           modeloInterativo: novoDocumento.modeloInterativo || "msdos",
+          revelada: !prepararSomente,
           visualizarTodos: novoDocumento.visualizarTodos,
           jogadoresVisiveis: novoDocumento.visualizarTodos
             ? []
@@ -1155,13 +1169,55 @@ const Mesa = () => {
         jogadoresVisiveis: [],
       });
       if (arquivoDocumentoRef.current) arquivoDocumentoRef.current.value = "";
-      setEstadoEnvioDocumento("Documento compartilhado com sucesso.");
+      setEstadoEnvioDocumento(
+        prepararSomente
+          ? "Evidencia preparada e oculta dos jogadores. Abra-a na lista para revisar ou configurar o conteudo."
+          : "Documento compartilhado com sucesso.",
+      );
     } catch (error) {
       const mensagem = error.message || "Nao foi possivel compartilhar o documento.";
       setErro(mensagem);
       setEstadoEnvioDocumento(`Erro: ${mensagem}`);
     } finally {
       setEnviandoDocumento(false);
+    }
+  };
+
+  const enviarEvidenciaPreparada = async (documento) => {
+    if (
+      !mestre ||
+      !campanha?.id ||
+      !documento?.id ||
+      documento.revelada !== false ||
+      enviandoDocumentoPreparadoId
+    ) return;
+
+    setEnviandoDocumentoPreparadoId(documento.id);
+    setErro("");
+    try {
+      const atualizado = await atualizarRevelacaoDocumentoInvestigacao(
+        campanha.id,
+        documento.id,
+        true,
+      );
+      setCampanha((atual) => ({
+        ...atual,
+        documentosInvestigacao: (atual.documentosInvestigacao || []).map((item) =>
+          item.id === documento.id ? { ...item, ...atualizado, revelada: true } : item,
+        ),
+      }));
+      setDocumentoAberto((atual) =>
+        atual?.id === documento.id ? { ...atual, ...atualizado, revelada: true } : atual,
+      );
+      setEstadoEnvioDocumento(
+        `Evidencia "${nomeDocumentoExibicao(documento)}" enviada aos jogadores.`,
+      );
+    } catch (error) {
+      const mensagem = error.message || "Nao foi possivel enviar a evidencia preparada.";
+      setErro(mensagem);
+      setEstadoEnvioDocumento(`Erro: ${mensagem}`);
+    } finally {
+      setEnviandoDocumentoPreparadoId("");
     }
   };
 
@@ -2598,11 +2654,79 @@ const Mesa = () => {
             </button>
           </div>
         )}
-        <a className="mesa-atualizar" href={`?${new URLSearchParams({ ...Object.fromEntries(new URLSearchParams(window.location.search)), tabletop3d: "1" })}`}>3D · Experimental</a>
+        <button
+          type="button"
+          className="mesa-cenas-botao mesa-3d-botao"
+          onClick={() => {
+            setSenha3D("");
+            setErroSenha3D("");
+            setSenha3DAberta(true);
+          }}
+          title="Abrir mapa 3D experimental"
+        >
+          Experimental
+        </button>
         <button className="mesa-atualizar" onClick={carregar} title="Atualizar">
           <Icon path={mdiRefresh} size={0.82} />
         </button>
       </header>
+      {senha3DAberta && (
+        <div
+          className="mesa-3d-senha-overlay"
+          onClick={() => setSenha3DAberta(false)}
+        >
+          <form
+            className="mesa-3d-senha-painel"
+            aria-label="Senha do mapa 3D experimental"
+            onClick={(evento) => evento.stopPropagation()}
+            onSubmit={(evento) => {
+              evento.preventDefault();
+              if (senha3D !== SENHA_MESTRE) {
+                setErroSenha3D("Senha incorreta.");
+                setSenha3D("");
+                return;
+              }
+              sessionStorage.setItem(TABLETOP_3D_AUTH_KEY, "true");
+              const destino = new URLSearchParams(window.location.search);
+              destino.set("tabletop3d", "1");
+              window.location.href = `?${destino.toString()}`;
+            }}
+          >
+            <header>
+              <Icon path={mdiMapOutline} size={1} />
+              <div>
+                <span>Acesso restrito</span>
+                <h2>Mapa 3D Experimental</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSenha3DAberta(false)}
+                title="Fechar"
+              >
+                <Icon path={mdiClose} size={0.8} />
+              </button>
+            </header>
+            <label htmlFor="senha-tabletop-3d">Senha do mestre</label>
+            <input
+              id="senha-tabletop-3d"
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              autoFocus
+              maxLength={SENHA_MESTRE.length}
+              value={senha3D}
+              onChange={(evento) => {
+                setSenha3D(evento.target.value.replace(/\D/g, ""));
+                setErroSenha3D("");
+              }}
+            />
+            {erroSenha3D && <p role="alert">{erroSenha3D}</p>}
+            <button type="submit" className="mesa-3d-senha-confirmar">
+              Desbloquear 3D
+            </button>
+          </form>
+        </div>
+      )}
       {mestre && bibliotecaAberta && (
         <aside className="mesa-biblioteca">
           <div className="biblioteca-cabecalho">
@@ -3517,22 +3641,40 @@ const Mesa = () => {
                 />
               </label>
               )}
-              <button
-                type="submit"
-                disabled={
-                  (novoDocumento.categoria !== "interativa" && !novoDocumento.arquivo) ||
-                  enviandoDocumento ||
-                  (!novoDocumento.visualizarTodos &&
-                    !(novoDocumento.jogadoresVisiveis || []).length)
-                }
-              >
-                <Icon path={mdiUploadOutline} size={0.68} />
-                {enviandoDocumento
-                  ? "Enviando..."
-                  : novoDocumento.categoria === "interativa"
-                    ? novoDocumento.modeloInterativo === "cassete" ? "Compartilhar fita cassete" : "Disponibilizar sistema"
-                    : "Enviar aos jogadores"}
-              </button>
+              <div className="documentos-envio-botoes">
+                <button
+                  type="submit"
+                  name="acaoDocumento"
+                  value="preparar"
+                  className="secundario"
+                  disabled={
+                    (novoDocumento.categoria !== "interativa" && !novoDocumento.arquivo) ||
+                    enviandoDocumento ||
+                    (!novoDocumento.visualizarTodos &&
+                      !(novoDocumento.jogadoresVisiveis || []).length)
+                  }
+                >
+                  Preparar evidencia
+                </button>
+                <button
+                  type="submit"
+                  name="acaoDocumento"
+                  value="enviar"
+                  disabled={
+                    (novoDocumento.categoria !== "interativa" && !novoDocumento.arquivo) ||
+                    enviandoDocumento ||
+                    (!novoDocumento.visualizarTodos &&
+                      !(novoDocumento.jogadoresVisiveis || []).length)
+                  }
+                >
+                  <Icon path={mdiUploadOutline} size={0.68} />
+                  {enviandoDocumento
+                    ? "Salvando..."
+                    : novoDocumento.categoria === "interativa"
+                      ? novoDocumento.modeloInterativo === "cassete" ? "Compartilhar fita cassete" : "Disponibilizar sistema"
+                      : "Enviar aos jogadores"}
+                </button>
+              </div>
             </div>
             {estadoEnvioDocumento && (
               <p
@@ -3586,6 +3728,21 @@ const Mesa = () => {
                         </em>
                       </div>
                     </button>
+                    {documento.revelada === false && (
+                      <div className="documento-card-preparado-acoes">
+                        <span>Preparada · invisivel aos jogadores</span>
+                        <button
+                          type="button"
+                          onClick={() => enviarEvidenciaPreparada(documento)}
+                          disabled={Boolean(enviandoDocumentoPreparadoId)}
+                        >
+                          <Icon path={mdiUploadOutline} size={0.62} />
+                          {enviandoDocumentoPreparadoId === documento.id
+                            ? "Enviando..."
+                            : "Enviar evidencia preparada"}
+                        </button>
+                      </div>
+                    )}
                     <button
                       type="button"
                       className={`documento-card-editar ${editandoVisibilidade ? "ativo" : ""}`}

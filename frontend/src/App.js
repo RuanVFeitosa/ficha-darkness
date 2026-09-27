@@ -2,7 +2,10 @@ import React, { lazy, Suspense, useEffect, useState } from "react";
 import PageTransition from "./pages/pageTransition";
 import "./App.css";
 import "./CSS/Responsive.css";
-import { MESTRE_AUTH_KEY } from "./constants/masterAccess";
+import {
+  MESTRE_AUTH_KEY,
+  TABLETOP_3D_AUTH_KEY,
+} from "./constants/masterAccess";
 import DialogoGlobal from "./components/DialogoGlobal";
 import LojaEspiral from "./pages/lojaEspiral";
 import TransformacaoEspiral from "./pages/transformacaoEspiral";
@@ -84,6 +87,8 @@ function App() {
   const estaNaMesa = Boolean(params.get("campanha"));
   const mestreAutorizado =
     sessionStorage.getItem(MESTRE_AUTH_KEY) === "true";
+  const tabletop3DAutorizado =
+    sessionStorage.getItem(TABLETOP_3D_AUTH_KEY) === "true";
 
   useEffect(() => {
     if (temFicha) return undefined;
@@ -128,7 +133,7 @@ function App() {
       <DialogoGlobal />
 
       <Suspense fallback={<div style={{ color: "#eee", padding: 40 }}>Abrindo a loja…</div>}>
-        {params.get("tabletop3d") === "1" ? (
+        {params.get("tabletop3d") === "1" && tabletop3DAutorizado ? (
           <Tabletop3D />
         ) : estaNaMesa ? (
           <Mesa />

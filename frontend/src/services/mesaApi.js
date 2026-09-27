@@ -173,6 +173,7 @@ const normalizarCampanha = (campanha, cenas = [], membros = [], tokens = [], rol
     arquivoNome: item.arquivo_nome || item.arquivoNome || "",
     storagePath: item.storage_path || item.storagePath || "",
     criadoEm: item.criado_em || item.criadoEm || null,
+    revelada: item.revelada ?? true,
     visualizarTodos:
       item.visualizar_todos ?? item.visualizarTodos ?? true,
     jogadoresVisiveis: Array.isArray(item.jogadores_visiveis)
@@ -626,6 +627,7 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
   const nomeBase = String(metadados.nome || arquivo?.name || "Documento").trim() || "Documento";
   const descricao = String(metadados.descricao || "").trim();
   const mimeType = arquivo?.type || "application/octet-stream";
+  const revelada = metadados.revelada !== false;
   const visualizarTodos = metadados.visualizarTodos !== false;
   const jogadoresVisiveis = visualizarTodos
     ? []
@@ -657,6 +659,7 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
       arquivoNome: arquivo?.name || "",
       url,
       urlPersistida: url,
+      revelada,
       visualizar_todos: visualizarTodos,
       visualizarTodos,
       jogadores_visiveis: jogadoresVisiveis,
@@ -697,6 +700,7 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
       arquivo_nome: arquivo.name,
       url,
       storage_path: storagePath,
+      revelada,
       visualizar_todos: visualizarTodos,
       jogadores_visiveis: jogadoresVisiveis,
     })
@@ -735,6 +739,7 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
     arquivoNome: data.arquivo_nome,
     storagePath: data.storage_path,
     criadoEm: data.criado_em,
+    revelada: data.revelada ?? true,
     visualizarTodos: data.visualizar_todos ?? true,
     jogadoresVisiveis: Array.isArray(data.jogadores_visiveis)
       ? data.jogadores_visiveis.map(String)
@@ -769,6 +774,7 @@ export const salvarEvidenciaInterativa = async (campanhaId, metadados = {}) => {
   const nome = String(metadados.nome || nomePadrao).trim() || nomePadrao;
   const descricao = String(metadados.descricao || (modelo === "cassete" ? "Gravação encontrada durante a investigação." : "Computador encontrado durante a investigacao.")).trim();
   const visualizarTodos = metadados.visualizarTodos !== false;
+  const revelada = metadados.revelada !== false;
   const jogadoresVisiveis = visualizarTodos
     ? []
     : [...new Set((metadados.jogadoresVisiveis || []).map((id) => String(id || "").trim()).filter(Boolean))];
@@ -781,6 +787,7 @@ export const salvarEvidenciaInterativa = async (campanhaId, metadados = {}) => {
     arquivo_nome: modelo === "cassete" ? "Fita cassete" : modelo === "modern-pc" ? "Computador moderno" : "MS-DOS 6.13",
     url: modelo === "cassete" ? metadados.audioUrl : modelo === "modern-pc" ? "/interactive/modern-pc/index.html" : "/interactive/ms-dos/index.html",
     storage_path: modelo === "cassete" ? "interactive:cassete" : modelo === "modern-pc" ? "interactive:modern-pc" : "interactive:msdos",
+    revelada,
     visualizar_todos: visualizarTodos,
     jogadores_visiveis: jogadoresVisiveis,
   };
@@ -811,6 +818,7 @@ export const salvarEvidenciaInterativa = async (campanhaId, metadados = {}) => {
     arquivoNome: data.arquivo_nome,
     storagePath: data.storage_path,
     criadoEm: data.criado_em,
+    revelada: data.revelada ?? true,
     visualizarTodos: data.visualizar_todos ?? true,
     jogadoresVisiveis: Array.isArray(data.jogadores_visiveis)
       ? data.jogadores_visiveis.map(String)
@@ -877,6 +885,52 @@ export const atualizarVisibilidadeDocumentoInvestigacao = async (
     arquivoNome: data.arquivo_nome,
     storagePath: data.storage_path,
     criadoEm: data.criado_em,
+    visualizarTodos: data.visualizar_todos ?? true,
+    jogadoresVisiveis: Array.isArray(data.jogadores_visiveis)
+      ? data.jogadores_visiveis.map(String)
+      : [],
+  };
+};
+
+export const atualizarRevelacaoDocumentoInvestigacao = async (
+  campanhaId,
+  documentoId,
+  revelada = true,
+) => {
+  if (!campanhaId || !documentoId) {
+    throw new Error("Documento invalido para atualizar a revelacao.");
+  }
+
+  const valor = revelada !== false;
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    let atualizado = null;
+    const documentos = (demo.documentosInvestigacao || []).map((item) => {
+      if (String(item.id) !== String(documentoId)) return item;
+      atualizado = { ...item, revelada: valor };
+      return atualizado;
+    });
+    if (!atualizado) throw new Error("Documento nao encontrado.");
+    salvarDemo({ ...demo, documentosInvestigacao: documentos }, campanhaId);
+    return atualizado;
+  }
+
+  const { data, error } = await supabase
+    .from("documentos_investigacao")
+    .update({ revelada: valor })
+    .eq("id", documentoId)
+    .eq("campanha_id", campanhaId)
+    .select()
+    .single();
+  if (error) throw error;
+
+  return {
+    ...data,
+    mimeType: data.mime_type,
+    arquivoNome: data.arquivo_nome,
+    storagePath: data.storage_path,
+    criadoEm: data.criado_em,
+    revelada: data.revelada ?? true,
     visualizarTodos: data.visualizar_todos ?? true,
     jogadoresVisiveis: Array.isArray(data.jogadores_visiveis)
       ? data.jogadores_visiveis.map(String)

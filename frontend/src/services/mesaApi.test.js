@@ -1,4 +1,4 @@
-import { ativarCena, atualizarEstadoMusica, buscarCampanhaPorCodigo, criarCampanhaMesa, desvincularFicha, excluirCena, listarCampanhas, listarCampanhasDaFicha, moverToken, salvarCena, salvarMusicasCampanha, validarArquivoImagem, vincularFicha } from "./mesaApi";
+import { ativarCena, atualizarEstadoMusica, atualizarRevelacaoDocumentoInvestigacao, buscarCampanhaPorCodigo, criarCampanhaMesa, desvincularFicha, excluirCena, listarCampanhas, listarCampanhasDaFicha, moverToken, salvarCena, salvarEvidenciaInterativa, salvarMusicasCampanha, validarArquivoImagem, vincularFicha } from "./mesaApi";
 
 describe("biblioteca local da mesa", () => {
   test("limita o tamanho das cenas e mapas antes do upload", () => {
@@ -7,6 +7,21 @@ describe("biblioteca local da mesa", () => {
     expect(() => validarArquivoImagem(new File(["svg"], "cena.svg", { type: "image/svg+xml" }), "cena")).toThrow("Formato nao permitido");
   });
   beforeEach(() => localStorage.clear());
+
+  test("mantem evidencia preparada oculta ate o mestre envia-la", async () => {
+    const preparada = await salvarEvidenciaInterativa("demo", {
+      nome: "Computador do arquivo",
+      modeloInterativo: "modern-pc",
+      revelada: false,
+    });
+
+    expect(preparada.revelada).toBe(false);
+    await atualizarRevelacaoDocumentoInvestigacao("demo", preparada.id, true);
+
+    const campanha = await buscarCampanhaPorCodigo("DARK26");
+    expect(campanha.documentosInvestigacao.find((item) => item.id === preparada.id))
+      .toEqual(expect.objectContaining({ revelada: true }));
+  });
 
   test("salva uma cena e a reabre como mapa ativo", async () => {
     const novaCena = await salvarCena("demo", {
