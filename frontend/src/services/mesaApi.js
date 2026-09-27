@@ -230,7 +230,7 @@ export const buscarCampanhaPorCodigo = async (codigo) => {
     supabase.from("rolagens").select("*").eq("campanha_id", campanha.id).order("criado_em", { ascending: false }).limit(30),
     supabase.from("inimigos_campanha").select("*").eq("campanha_id", campanha.id).order("criado_em"),
     supabase.from("iniciativas_campanha").select("*").eq("campanha_id", campanha.id),
-    supabase.from("documentos_investigacao").select("*").eq("campanha_id", campanha.id).order("criado_em", { ascending: false }),
+    supabase.from("documentos_investigacao").select("id,campanha_id,nome,descricao,categoria,mime_type,arquivo_nome,url,storage_path,visualizar_todos,jogadores_visiveis,criado_em,revelada").eq("campanha_id", campanha.id).order("criado_em", { ascending: false }),
   ]);
   [cenas, membros, tokens, rolagens, inimigos, iniciativas, documentosInvestigacao].forEach(({ error: erro }) => {
     if (erro) throw erro;
@@ -767,6 +767,50 @@ export const salvarConteudoComputador = async (campanhaId, documentoId, content)
   if (error) throw new Error(error.message);
 };
 
+export const ouvirConteudoComputador = (campanhaId, documentoId, aoMudar) => {
+  if (!campanhaId || !documentoId || typeof aoMudar !== "function") return () => {};
+  if (!supabaseConfigurado || String(campanhaId).startsWith("demo")) {
+    const atualizar = () => {
+      lerConteudoComputador(campanhaId, documentoId)
+        .then(aoMudar)
+        .catch(() => {});
+    };
+    const chave = chaveDemo(campanhaId);
+    const aoAlterarStorage = (event) => {
+      if (event.key === chave) atualizar();
+    };
+    const aoAlterarLocal = (event) => {
+      if (event.detail?.campanhaId === campanhaId) atualizar();
+    };
+    window.addEventListener("storage", aoAlterarStorage);
+    window.addEventListener("darkness:campanha-demo", aoAlterarLocal);
+    return () => {
+      window.removeEventListener("storage", aoAlterarStorage);
+      window.removeEventListener("darkness:campanha-demo", aoAlterarLocal);
+    };
+  }
+
+  const canal = supabase
+    .channel(`computador:${campanhaId}:${documentoId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "documentos_investigacao",
+        filter: `id=eq.${documentoId}`,
+      },
+      (evento) => {
+        if (String(evento.new?.campanha_id) !== String(campanhaId)) return;
+        aoMudar(evento.new?.conteudo_interativo ?? null);
+      },
+    )
+    .subscribe();
+  return () => {
+    supabase.removeChannel(canal);
+  };
+};
+
 export const salvarEvidenciaInterativa = async (campanhaId, metadados = {}) => {
   const modelo = ["modern-pc", "cassete"].includes(metadados.modeloInterativo) ? metadados.modeloInterativo : "msdos";
   if (modelo === "cassete" && !metadados.audioUrl) throw new Error("Selecione um áudio para a fita cassete.");
@@ -1291,34 +1335,6 @@ export const ouvirCampanha = (campanhaId, aoMudar) => {
       window.removeEventListener("darkness:campanha-demo", aoAlterarLocal);
     };
   }
-  let intervaloFallback = null;
-  let consultaTokensEmAndamento = false;
-  const sincronizarTokens = async () => {
-    if (consultaTokensEmAndamento || document.visibilityState !== "visible") return;
-    consultaTokensEmAndamento = true;
-    try {
-      const { data, error } = await supabase
-        .from("tokens_mapa")
-        .select("*")
-        .eq("campanha_id", campanhaId);
-      if (error) throw error;
-      aoMudar({ tipo: "tokens_sincronizados", tokens: consolidarTokens(data || []) });
-    } catch (error) {
-      console.warn("Nao foi possivel sincronizar os tokens da mesa.", error);
-    } finally {
-      consultaTokensEmAndamento = false;
-    }
-  };
-  const iniciarFallback = () => {
-    if (intervaloFallback) return;
-    sincronizarTokens();
-    intervaloFallback = window.setInterval(sincronizarTokens, 3000);
-  };
-  const pararFallback = () => {
-    if (!intervaloFallback) return;
-    window.clearInterval(intervaloFallback);
-    intervaloFallback = null;
-  };
   const canal = supabase
     .channel(`mesa:${campanhaId}`)
     .on("postgres_changes", { event: "*", schema: "public", table: "campanhas", filter: `id=eq.${campanhaId}` }, aoMudar)
@@ -1330,9 +1346,7 @@ export const ouvirCampanha = (campanhaId, aoMudar) => {
     .on("postgres_changes", { event: "*", schema: "public", table: "documentos_investigacao", filter: `campanha_id=eq.${campanhaId}` }, aoMudar)
     .on("postgres_changes", { event: "INSERT", schema: "public", table: "rolagens", filter: `campanha_id=eq.${campanhaId}` }, aoMudar)
     .subscribe();
-  iniciarFallback();
   return () => {
-    pararFallback();
     supabase.removeChannel(canal);
   };
 };
