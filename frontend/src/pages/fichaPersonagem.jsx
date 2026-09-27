@@ -665,6 +665,8 @@ const FichaPersonagem = () => {
   const [ativoPassivaSelecionado, setAtivoPassivaSelecionado] =
     useState("razao");
   const ignorarProximoSalvamentoRef = useRef(false);
+  // Impede que uma resposta solicitada antes de uma alteração restaure recursos antigos.
+  const revisaoRecursosRef = useRef(0);
   const [editandoHabilidadeId, setEditandoHabilidadeId] = useState(null);
   const [habilidadeEditavel, setHabilidadeEditavel] = useState({
     nome: "",
@@ -924,9 +926,10 @@ const FichaPersonagem = () => {
         return;
       }
 
+      const revisaoAoIniciarBusca = revisaoRecursosRef.current;
       try {
         const personagemApi = await buscarPersonagem(fichaId);
-        if (!cancelado && personagemApi) {
+        if (!cancelado && personagemApi && revisaoAoIniciarBusca === revisaoRecursosRef.current) {
           ignorarProximoSalvamentoRef.current = true;
           setPersonagem((atual) => mesclarPassivosPorRevisao(personagemApi, atual));
         }
@@ -1082,6 +1085,7 @@ const FichaPersonagem = () => {
   };
 
   const atualizarSanidade = (novaSanidade) => {
+    revisaoRecursosRef.current += 1;
     setPersonagem((prev) => ({
       ...prev,
       sanidade: {
@@ -1095,6 +1099,7 @@ const FichaPersonagem = () => {
   };
 
   const atualizarEsperanca = (novaEsperanca) => {
+    revisaoRecursosRef.current += 1;
     setPersonagem((prev) => ({
       ...prev,
       esperanca: {
@@ -1108,6 +1113,7 @@ const FichaPersonagem = () => {
   };
 
   const ajustarSanidade = (variacao) => {
+    revisaoRecursosRef.current += 1;
     setPersonagem((prev) => {
       const atual = Number(prev.sanidade?.atual) || 0;
       const maximo = Math.max(0, Number(prev.sanidade?.max) || 0);
@@ -1119,6 +1125,7 @@ const FichaPersonagem = () => {
   };
 
   const ajustarEsperanca = (variacao) => {
+    revisaoRecursosRef.current += 1;
     setPersonagem((prev) => {
       const atual = Number(prev.esperanca?.atual) || 0;
       const maximo = Math.max(0, Number(prev.esperanca?.max) || 0);
@@ -1235,6 +1242,7 @@ const FichaPersonagem = () => {
   ]);
 
   const atualizarVidaMembro = (membro, novoValor) => {
+    revisaoRecursosRef.current += 1;
     setPersonagem((prev) => {
       const max = prev.membros[membro].max;
       const atual = Math.max(0, Math.min(max, parseInt(novoValor) || 0));
@@ -1256,6 +1264,7 @@ const FichaPersonagem = () => {
   };
 
   const atualizarMaxMembro = (membro, novoValor) => {
+    revisaoRecursosRef.current += 1;
     setPersonagem((prev) => {
       const max = Math.max(1, parseInt(novoValor) || 1);
       const atual = Math.min(prev.membros[membro].atual, max);
@@ -1278,6 +1287,7 @@ const FichaPersonagem = () => {
   };
 
   const aplicarDanoMembro = (membro, dano) => {
+    revisaoRecursosRef.current += 1;
     setPersonagem((prev) => {
       const dadosMembro = prev.membros[membro];
 

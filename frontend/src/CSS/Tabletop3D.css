@@ -1,0 +1,22 @@
+.tt3 { background:#151d20; color:#eee6d8; min-height:100dvh; display:flex; flex-direction:column; font-family:system-ui,sans-serif; }
+.tt3-header { min-height:90px; padding:16px 30px; display:flex; align-items:center; justify-content:space-between; gap:24px; border-bottom:1px solid #ffffff16; }
+.tt3-header a { color:#c7b69c; text-decoration:none; font-size:13px; }
+.tt3-header h1 { margin:5px 0 0; font-family:Georgia,serif; font-size:25px; font-weight:400; }
+.tt3-header span,.tt3-caption>span { font-size:10px; letter-spacing:2px; color:#c1a477; }
+.tt3-badge { border:1px solid #b49a6e55; border-radius:20px; padding:8px 13px; }
+.tt3-stage { position:relative; height:calc(100dvh - 205px); min-height:400px; }
+.tt3-stage canvas { touch-action:none; }
+.tt3-caption { position:absolute; top:28px; left:30px; pointer-events:none; }
+.tt3-caption h2 { font:400 30px Georgia,serif; margin:8px 0; }
+.tt3-caption p { font-size:12px; color:#aaa99f; }
+.tt3-tools { position:absolute; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:4px; padding:5px; background:#11191eeb; border:1px solid #c7ad7955; border-radius:9px; }
+.tt3 button { font:inherit; cursor:pointer; color:#c7c4b9; border:1px solid transparent; border-radius:5px; background:transparent; padding:10px 14px; font-size:12px; }
+.tt3 button:hover { background:#ffffff10; }
+.tt3 button[aria-pressed=true] { background:#b99a6030; color:#f1d49a; border-color:#c5a36b60; }
+.tt3 button:focus-visible,.tt3 a:focus-visible { outline:2px solid #efd395; outline-offset:3px; }
+.tt3-footer { min-height:115px; padding:18px 26px; display:flex; gap:22px; align-items:center; border-top:1px solid #ffffff16; }
+.tt3-cast { display:flex; gap:6px; }.tt3-cast button { display:flex; align-items:center; gap:10px; text-align:left; }
+.tt3-cast i { width:9px; height:30px; border-radius:4px; }.tt3-cast strong,.tt3-cast small { display:block; }
+.tt3-cast small { margin-top:5px; font-size:10px; color:#aaa99f; }.tt3-help { flex:1; font-size:12px; }.tt3-help small { color:#959f9e; font-size:11px; }
+.tt3-fallback { padding:60px; color:#e1cda8; }
+@media(max-width:800px) { .tt3-header { padding:15px; gap:12px; }.tt3-header h1 {font-size:19px}.tt3-badge {display:none}.tt3-footer {flex-wrap:wrap;padding:12px;gap:10px}.tt3-help {flex-basis:100%;order:3}.tt3-stage {height:62dvh;min-height:350px}.tt3-caption {left:16px;top:16px}.tt3-caption h2 {font-size:23px}.tt3-cast button {padding:8px}.tt3-tools button {padding:9px}.tt3-tools {white-space:nowrap} }

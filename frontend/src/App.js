@@ -13,6 +13,7 @@ const DashboardMestre = lazy(() => import("./pages/dashboardMestre"));
 const FichaPersonagem = lazy(() => import("./pages/fichaPersonagem"));
 const LojaHelena = lazy(() => import("./pages/lojaHelena"));
 const Mesa = lazy(() => import("./pages/mesa"));
+const Tabletop3D = lazy(() => import("./pages/Tabletop3D"));
 const TelaInicial = lazy(() => import("./pages/telaInicial"));
 const UpgradeNivel = lazy(() => import("./pages/upgradeNivel"));
 const FichaEspiral = lazy(() => import("./pages/fichaEspiral"));
@@ -86,7 +87,7 @@ function App() {
 
   useEffect(() => {
     if (temFicha) return undefined;
-    const pageTitle = estaNaMesa
+    const pageTitle = new URLSearchParams(search).get("tabletop3d") === "1" ? "Tabletop 3D" : estaNaMesa
       ? "Tabletop"
       : estaNoDashboardMestre
         ? "Painel do Mestre"
@@ -105,6 +106,7 @@ function App() {
                     : "Darkness";
     document.title = pageTitle;
   }, [
+    search,
     estaCriando,
     estaNaArvoreHabilidades,
     estaNaLoja,
@@ -116,7 +118,7 @@ function App() {
     temFicha,
   ]);
 
-  if (sistemaEspiral && !estaNaMesa && !estaNoDashboardMestre && !estaNaLoja && !estaNaLojaEspiral && !estaNaTransformacaoEspiral && !estaNaArvoreHabilidades && !estaNoUpgrade) {
+  if (params.get("tabletop3d") !== "1" && sistemaEspiral && !estaNaMesa && !estaNoDashboardMestre && !estaNaLoja && !estaNaLojaEspiral && !estaNaTransformacaoEspiral && !estaNaArvoreHabilidades && !estaNoUpgrade) {
     return <><DialogoGlobal /><Suspense fallback={<div style={{ color: '#aaa', padding: 40 }}>Abrindo ficha…</div>}><FichaEspiral key={params.get('ficha') || 'principal'} /></Suspense></>;
   }
 
@@ -126,7 +128,9 @@ function App() {
       <DialogoGlobal />
 
       <Suspense fallback={<div style={{ color: "#eee", padding: 40 }}>Abrindo a loja…</div>}>
-        {estaNaMesa ? (
+        {params.get("tabletop3d") === "1" ? (
+          <Tabletop3D />
+        ) : estaNaMesa ? (
           <Mesa />
         ) : estaNoDashboardMestre && mestreAutorizado ? (
           <DashboardMestre />

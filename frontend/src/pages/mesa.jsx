@@ -2598,6 +2598,7 @@ const Mesa = () => {
             </button>
           </div>
         )}
+        <a className="mesa-atualizar" href={`?${new URLSearchParams({ ...Object.fromEntries(new URLSearchParams(window.location.search)), tabletop3d: "1" })}`}>3D · Experimental</a>
         <button className="mesa-atualizar" onClick={carregar} title="Atualizar">
           <Icon path={mdiRefresh} size={0.82} />
         </button>
