@@ -5,7 +5,7 @@ if (shared) {
     if (event.origin !== location.origin || event.source !== parent || event.data?.type !== 'darkness:pc-load') return;
     const content = event.data.content;
     if (content !== null && (!content || !['pages', 'messages', 'files', 'emails'].every(key => Array.isArray(content[key])))) return;
-    const next = content || structuredClone(initial);
+    const next = normalize(content || structuredClone(initial));
     if (!sharedReady || JSON.stringify(data) !== JSON.stringify(next)) {
       data = next;
       render();
@@ -21,7 +21,7 @@ if (shared) {
         try {
           const legacy = JSON.parse(localStorage.getItem('darkness-modern-pc') || 'null');
           if (!legacy) return alert('Nenhum conteúdo antigo encontrado neste navegador.');
-          data = Object.assign(structuredClone(initial), legacy);
+          data = normalize(Object.assign(structuredClone(initial), legacy));
           save(); render(); button.remove();
         } catch { alert('Não foi possível importar o conteúdo antigo.'); }
       };
