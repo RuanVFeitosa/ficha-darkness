@@ -1468,8 +1468,9 @@ const DashboardMestre = () => {
         });
       }
 
+      console.warn("Sincronizacao online indisponivel; usando dados locais.", error);
       setMensagem(
-        `Backend indisponivel: ${error?.message || "erro desconhecido"}. Mostrando dados locais deste navegador.`,
+        "Modo local temporario: suas alteracoes ficam somente neste navegador ate a conexao online voltar.",
       );
     } finally {
       setCarregando(false);

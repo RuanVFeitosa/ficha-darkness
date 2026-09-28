@@ -11,12 +11,25 @@ export default function ComputadorModerno({ campanhaId, documento, admin }) {
     let carregado = false;
     let ultimoConteudo = null;
     const enviar = (type, content) => frame.current?.contentWindow?.postMessage({ type, content }, window.location.origin);
+    const possuiImagensIncorporadas = content =>
+      [...(content?.files || []), ...(content?.emails || [])]
+        .some(item => /^data:image\//i.test(item?.image || ''));
     const carregar = async () => {
       if (carregamento) return carregamento;
       carregamento = (async () => {
       try {
-        const content = await lerConteudoComputador(campanhaId, documento.id);
+        let content = await lerConteudoComputador(campanhaId, documento.id);
         if (!ativo) return;
+        if (admin && possuiImagensIncorporadas(content)) {
+          setStatus('Otimizando imagens para reduzir o consumo de dados…');
+          content = await salvarConteudoComputador(
+            campanhaId,
+            documento.id,
+            content,
+            content,
+          );
+          if (!ativo) return;
+        }
         ultimoConteudo = content;
         carregado = true;
         enviar('darkness:pc-load', content);
@@ -41,8 +54,18 @@ export default function ComputadorModerno({ campanhaId, documento, admin }) {
       }
       if (event.data?.type === 'darkness:pc-save' && admin) {
         setStatus('Salvando conteúdo para os jogadores…');
-        fila = fila.then(() => salvarConteudoComputador(campanhaId, documento.id, event.data.content))
-          .then(() => { if (ativo) setStatus('Conteúdo salvo para os jogadores.'); })
+        fila = fila.then(() => salvarConteudoComputador(
+          campanhaId,
+          documento.id,
+          event.data.content,
+          ultimoConteudo,
+        ))
+          .then((content) => {
+            ultimoConteudo = content;
+            carregado = true;
+            enviar('darkness:pc-load', content);
+            if (ativo) setStatus('Conteúdo salvo para os jogadores.');
+          })
           .catch(error => { if (ativo) setStatus(`Falha ao compartilhar: ${error.message}`); });
       }
     };

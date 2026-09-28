@@ -747,24 +747,153 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
   };
 };
 
-export const lerConteudoComputador = async (campanhaId, documentoId) => {
-  if (!supabaseConfigurado || String(campanhaId).startsWith('demo')) {
-    return carregarDemo(campanhaId).documentosInvestigacao?.find(d => String(d.id) === String(documentoId))?.conteudo_interativo ?? null;
+const tabelaConteudoComputadorAusente = (error) =>
+  /conteudos_computador.*(?:schema cache|could not find|does not exist|relation)/i.test(
+    error?.message || "",
+  );
+const imagemComputadorEmDataUrl = (valor) =>
+  typeof valor === "string" && /^data:image\/(?:webp|jpeg|png|avif);base64,/i.test(valor);
+const extensaoImagemComputador = (mimeType) => ({
+  "image/webp": "webp",
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/avif": "avif",
+}[mimeType] || "bin");
+const caminhosImagensComputador = (content) =>
+  [...(content?.files || []), ...(content?.emails || [])]
+    .map((item) => item?.imageStoragePath)
+    .filter((path) => typeof path === "string" && path.includes("/computadores/"));
+
+const enviarImagemComputador = async (campanhaId, documentoId, dataUrl) => {
+  const resposta = await fetch(dataUrl);
+  const arquivo = await resposta.blob();
+  if (!["image/webp", "image/jpeg", "image/png", "image/avif"].includes(arquivo.type)) {
+    throw new Error("Formato de imagem do computador nao permitido.");
   }
-  const { data, error } = await supabase.from('documentos_investigacao').select('conteudo_interativo').eq('campanha_id', campanhaId).eq('id', documentoId).single();
-  if (error) throw new Error(`Não foi possível carregar o PC: ${error.message}`);
-  return data.conteudo_interativo;
+  if (arquivo.size > LIMITE_DOCUMENTO_INVESTIGACAO.bytes) {
+    throw new Error(`A imagem do computador deve ter no maximo ${LIMITE_DOCUMENTO_INVESTIGACAO.rotulo}.`);
+  }
+  const sufixo = typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  const storagePath = `${campanhaId}/computadores/${documentoId}/imagem-${sufixo}.${extensaoImagemComputador(arquivo.type)}`;
+  const { error } = await supabase.storage.from("evidencias").upload(storagePath, arquivo, {
+    upsert: false,
+    contentType: arquivo.type,
+    cacheControl: "31536000",
+  });
+  if (error) throw new Error(`Nao foi possivel armazenar a imagem do computador: ${error.message}`);
+  const image = supabase.storage.from("evidencias").getPublicUrl(storagePath).data.publicUrl;
+  return { image, imageStoragePath: storagePath };
 };
 
-export const salvarConteudoComputador = async (campanhaId, documentoId, content) => {
-  if (!content || !['pages', 'messages', 'files', 'emails'].every(k => Array.isArray(content[k]))) throw new Error('Conteúdo do PC inválido.');
-  if (!supabaseConfigurado || String(campanhaId).startsWith('demo')) {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({ ...demo, documentosInvestigacao: (demo.documentosInvestigacao || []).map(d => String(d.id) === String(documentoId) ? { ...d, conteudo_interativo: content } : d) }, campanhaId);
-    return;
+const prepararImagensConteudoComputador = async (campanhaId, documentoId, content) => {
+  const novosCaminhos = [];
+  const prepararItem = async (item) => {
+    if (!imagemComputadorEmDataUrl(item?.image)) return item;
+    const imagem = await enviarImagemComputador(campanhaId, documentoId, item.image);
+    novosCaminhos.push(imagem.imageStoragePath);
+    return { ...item, ...imagem };
+  };
+  try {
+    const [files, emails] = await Promise.all([
+      Promise.all(content.files.map(prepararItem)),
+      Promise.all(content.emails.map(prepararItem)),
+    ]);
+    return { content: { ...content, files, emails }, novosCaminhos };
+  } catch (error) {
+    if (novosCaminhos.length) {
+      await supabase.storage.from("evidencias").remove(novosCaminhos).catch(() => {});
+    }
+    throw error;
   }
-  const { error } = await supabase.from('documentos_investigacao').update({ conteudo_interativo: content }).eq('campanha_id', campanhaId).eq('id', documentoId).select('id').single();
-  if (error) throw new Error(error.message);
+};
+
+export const lerConteudoComputador = async (campanhaId, documentoId) => {
+  if (!supabaseConfigurado || String(campanhaId).startsWith("demo")) {
+    return carregarDemo(campanhaId).documentosInvestigacao?.find(
+      (d) => String(d.id) === String(documentoId),
+    )?.conteudo_interativo ?? null;
+  }
+  const { data, error } = await supabase
+    .from("conteudos_computador")
+    .select("conteudo")
+    .eq("campanha_id", campanhaId)
+    .eq("documento_id", documentoId)
+    .maybeSingle();
+  if (!error) return data?.conteudo ?? null;
+  if (!tabelaConteudoComputadorAusente(error)) {
+    throw new Error(`Não foi possível carregar o PC: ${error.message}`);
+  }
+  const { data: legado, error: erroLegado } = await supabase
+    .from("documentos_investigacao")
+    .select("conteudo_interativo")
+    .eq("campanha_id", campanhaId)
+    .eq("id", documentoId)
+    .single();
+  if (erroLegado) throw new Error(`Não foi possível carregar o PC: ${erroLegado.message}`);
+  return legado.conteudo_interativo;
+};
+
+export const salvarConteudoComputador = async (
+  campanhaId,
+  documentoId,
+  content,
+  conteudoAnterior = null,
+) => {
+  if (!content || !["pages", "messages", "files", "emails"].every((k) => Array.isArray(content[k]))) {
+    throw new Error("Conteúdo do PC inválido.");
+  }
+  if (!supabaseConfigurado || String(campanhaId).startsWith("demo")) {
+    const demo = carregarDemo(campanhaId);
+    salvarDemo({
+      ...demo,
+      documentosInvestigacao: (demo.documentosInvestigacao || []).map((d) =>
+        String(d.id) === String(documentoId) ? { ...d, conteudo_interativo: content } : d,
+      ),
+    }, campanhaId);
+    return content;
+  }
+
+  const preparado = await prepararImagensConteudoComputador(campanhaId, documentoId, content);
+  let erroGravacao = null;
+  const { error } = await supabase
+    .from("conteudos_computador")
+    .upsert({
+      documento_id: documentoId,
+      campanha_id: campanhaId,
+      conteudo: preparado.content,
+      atualizado_em: new Date().toISOString(),
+    }, { onConflict: "documento_id" })
+    .select("documento_id")
+    .single();
+  if (error && tabelaConteudoComputadorAusente(error)) {
+    const { error: erroLegado } = await supabase
+      .from("documentos_investigacao")
+      .update({ conteudo_interativo: preparado.content })
+      .eq("campanha_id", campanhaId)
+      .eq("id", documentoId)
+      .select("id")
+      .single();
+    erroGravacao = erroLegado;
+  } else {
+    erroGravacao = error;
+  }
+  if (erroGravacao) {
+    if (preparado.novosCaminhos.length) {
+      await supabase.storage.from("evidencias").remove(preparado.novosCaminhos).catch(() => {});
+    }
+    throw new Error(erroGravacao.message);
+  }
+
+  const caminhosAtuais = new Set(caminhosImagensComputador(preparado.content));
+  const caminhosObsoletos = caminhosImagensComputador(conteudoAnterior)
+    .filter((path) => !caminhosAtuais.has(path));
+  if (caminhosObsoletos.length) {
+    const { error: erroLimpeza } = await supabase.storage.from("evidencias").remove(caminhosObsoletos);
+    if (erroLimpeza) console.warn("Conteudo salvo, mas imagens antigas nao puderam ser removidas.", erroLimpeza);
+  }
+  return preparado.content;
 };
 
 export const ouvirConteudoComputador = (campanhaId, documentoId, aoMudar) => {
@@ -795,6 +924,19 @@ export const ouvirConteudoComputador = (campanhaId, documentoId, aoMudar) => {
     .on(
       "postgres_changes",
       {
+        event: "*",
+        schema: "public",
+        table: "conteudos_computador",
+        filter: `documento_id=eq.${documentoId}`,
+      },
+      (evento) => {
+        if (String(evento.new?.campanha_id) !== String(campanhaId)) return;
+        aoMudar(evento.new?.conteudo ?? null);
+      },
+    )
+    .on(
+      "postgres_changes",
+      {
         event: "UPDATE",
         schema: "public",
         table: "documentos_investigacao",
@@ -802,7 +944,9 @@ export const ouvirConteudoComputador = (campanhaId, documentoId, aoMudar) => {
       },
       (evento) => {
         if (String(evento.new?.campanha_id) !== String(campanhaId)) return;
-        aoMudar(evento.new?.conteudo_interativo ?? null);
+        if (evento.new?.conteudo_interativo !== undefined) {
+          aoMudar(evento.new.conteudo_interativo ?? null);
+        }
       },
     )
     .subscribe();
@@ -997,14 +1141,28 @@ export const excluirDocumentoInvestigacao = async (campanhaId, documento) => {
 
   const registro = typeof documento === "object" ? documento : null;
   const storagePath = registro?.storagePath || registro?.storage_path;
+  let imagensComputador = [];
+  if (String(registro?.mimeType || registro?.mime_type || "").includes("modern-pc")) {
+    try {
+      imagensComputador = caminhosImagensComputador(
+        await lerConteudoComputador(campanhaId, id),
+      );
+    } catch (error) {
+      console.warn("Nao foi possivel listar as imagens do computador removido.", error);
+    }
+  }
   const { error } = await supabase
     .from("documentos_investigacao")
     .delete()
     .eq("id", id)
     .eq("campanha_id", campanhaId);
   if (error) throw error;
-  if (storagePath) {
-    const { error: erroStorage } = await supabase.storage.from("evidencias").remove([storagePath]);
+  const caminhosStorage = [
+    ...imagensComputador,
+    ...(storagePath && !String(storagePath).startsWith("interactive:") ? [storagePath] : []),
+  ];
+  if (caminhosStorage.length) {
+    const { error: erroStorage } = await supabase.storage.from("evidencias").remove(caminhosStorage);
     if (erroStorage) console.warn("Documento removido da mesa, mas o arquivo nao pode ser apagado do Storage.", erroStorage);
   }
 };
