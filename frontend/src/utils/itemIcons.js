@@ -1,40 +1,9 @@
-import {
-  mdiAmmunition,
-  mdiAxe,
-  mdiBagPersonalOutline,
-  mdiBarrel,
-  mdiBaseballBat,
-  mdiBattery,
-  mdiBowArrow,
-  mdiBoxCutter,
-  mdiBriefcaseVariantOutline,
-  mdiCreationOutline,
-  mdiFlashlight,
-  mdiHammer,
-  mdiHardHat,
-  mdiKnife,
-  mdiKnifeMilitary,
-  mdiLightningBolt,
-  mdiLink,
-  mdiMagazineRifle,
-  mdiMapMarkerPath,
-  mdiMedicalBag,
-  mdiPackageVariantClosed,
-  mdiPistol,
-  mdiRadar,
-  mdiSawBlade,
-  mdiShield,
-  mdiShieldAccountOutline,
-  mdiShieldHalfFull,
-  mdiSword,
-  mdiTargetVariant,
-  mdiTools,
-} from "@mdi/js";
+import { mdiAmmunition, mdiAxe, mdiBagPersonalOutline, mdiBaseballBat, mdiBattery, mdiBowArrow, mdiBoxCutter, mdiBriefcaseVariantOutline, mdiCreationOutline, mdiFlashlight, mdiHammer, mdiHardHat, mdiKnife, mdiKnifeMilitary, mdiLightningBolt, mdiLink, mdiMapMarkerPath, mdiMedicalBag, mdiPackageVariantClosed, mdiRadar, mdiSawBlade, mdiShield, mdiShieldAccountOutline, mdiShieldHalfFull, mdiSword, mdiTools } from "@mdi/js";
 
-import ak47Icon from "../assets/icons/fireWeapons/ak47.svg";
+import "../assets/icons/fireWeapons/ak47.svg";
 import ak47uIcon from "../assets/icons/fireWeapons/ak47u.svg";
 import bayonetIcon from "../assets/icons/fireWeapons/bayonet.svg";
-import c96Icon from "../assets/icons/fireWeapons/c96.svg";
+import "../assets/icons/fireWeapons/c96.svg";
 import coltM1911Icon from "../assets/icons/fireWeapons/colt-m1911.svg";
 import desertEagleIcon from "../assets/icons/fireWeapons/desert-eagle.svg";
 import famasIcon from "../assets/icons/fireWeapons/famas.svg";

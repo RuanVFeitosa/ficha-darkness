@@ -30,7 +30,8 @@ import {
   validarArquivoImagem,
   vincularFicha,
 } from "../services/mesaApi";
-import { listarPersonagens } from "../services/personagemApi";
+import { listarFichasParaCampanha } from "../services/fichasCampanha";
+import { TABLETOP_3D_AUTH_KEY } from "../constants/masterAccess";
 import AnotacoesCampanha from "./AnotacoesCampanha";
 import { confirmarDialogo } from "./DialogoGlobal";
 import "../CSS/CampanhaDashboard.css";
@@ -44,6 +45,19 @@ const cenaVazia = {
   visualizarTodos: true,
   jogadoresVisiveis: [],
 };
+const tipoTabletopCampanha = (campanha) => campanha?.tabletop_tipo === "3d" ? "3d" : "2d";
+const urlTabletopCampanha = (campanha, papel = "mestre") => {
+  const params = new URLSearchParams({ campanha: campanha.codigo, papel });
+  if (tipoTabletopCampanha(campanha) === "3d") params.set("tabletop3d", "1");
+  return `/?${params.toString()}`;
+};
+const autorizarTabletopCampanha = (campanha) => {
+  if (tipoTabletopCampanha(campanha) === "3d") sessionStorage.setItem(TABLETOP_3D_AUTH_KEY, "true");
+};
+const urlCriadorMapa3D = (campanha) => `/?${new URLSearchParams({
+  criarMapa3d: "1",
+  campanha: campanha.codigo,
+}).toString()}`;
 const urlCena = (cena, tipo) =>
   tipo === "mapa"
     ? cena?.mapa_url || cena?.mapaUrl
@@ -60,6 +74,7 @@ const CampanhaDashboard = () => {
   const [pastasFechadas, setPastasFechadas] = useState({});
   const [criandoCampanha, setCriandoCampanha] = useState(false);
   const [nomeNovaCampanha, setNomeNovaCampanha] = useState("");
+  const [tabletopNovaCampanha, setTabletopNovaCampanha] = useState("2d");
   const [fichasDisponiveis, setFichasDisponiveis] = useState([]);
   const [fichasNovaCampanha, setFichasNovaCampanha] = useState([]);
   const [carregandoFichas, setCarregandoFichas] = useState(false);
@@ -95,11 +110,12 @@ const CampanhaDashboard = () => {
   const abrirCriacaoCampanha = async () => {
     setCriandoCampanha(true);
     setNomeNovaCampanha("");
+    setTabletopNovaCampanha("2d");
     setFichasNovaCampanha([]);
     setCarregandoFichas(true);
     setErro("");
     try {
-      setFichasDisponiveis(await listarPersonagens());
+      setFichasDisponiveis(await listarFichasParaCampanha());
     } catch (error) {
       setErro(error.message || "Nao foi possivel carregar as fichas.");
     } finally {
@@ -125,7 +141,7 @@ const CampanhaDashboard = () => {
         .filter(Boolean),
     );
     try {
-      setFichasDisponiveis(await listarPersonagens());
+      setFichasDisponiveis(await listarFichasParaCampanha());
     } catch (error) {
       setErro(error.message || "Nao foi possivel carregar as fichas.");
     } finally {
@@ -191,7 +207,7 @@ const CampanhaDashboard = () => {
     setSalvando(true);
     setErro("");
     try {
-      const nova = await criarCampanhaMesa(nomeNovaCampanha);
+      const nova = await criarCampanhaMesa(nomeNovaCampanha, tabletopNovaCampanha);
       await Promise.all(
         fichasNovaCampanha.map((fichaId) => {
           const ficha = fichasDisponiveis.find(
@@ -203,6 +219,7 @@ const CampanhaDashboard = () => {
       await carregarCampanhas();
       setCriandoCampanha(false);
       setNomeNovaCampanha("");
+      setTabletopNovaCampanha("2d");
       setFichasNovaCampanha([]);
       await abrirCampanha(nova.codigo);
     } catch (error) {
@@ -300,6 +317,18 @@ const CampanhaDashboard = () => {
       ...atual,
       [chave]: atual[chave].filter((midia) => midia.id !== id),
     }));
+  };
+  const alternarMapa3DNaCena = (mapa) => {
+    setEditando((atual) => {
+      const mapas=atual.mapasBatalha || [];
+      const vinculado=mapas.some((item) => item.mapa3dId === mapa.id);
+      return {
+        ...atual,
+        mapasBatalha: vinculado
+          ? mapas.filter((item) => item.mapa3dId !== mapa.id)
+          : [...mapas, { id:`mapa3d-cena-${mapa.id}`, nome:mapa.nome, url:"", origem:"tabletop3d", mapa3dId:mapa.id, larguraGrade:12, alturaGrade:8, exibirGrade:false }],
+      };
+    });
   };
   const selecionarArquivoMidia = (chave, id, tipo, arquivo, input) => {
     try {
@@ -569,10 +598,13 @@ const CampanhaDashboard = () => {
                 <span>Campanha</span>
                 <h3>{item.nome}</h3>
                 <p>Código {item.codigo}</p>
+                <small className={`campanha-tabletop-tipo tipo-${tipoTabletopCampanha(item)}`}>Tabletop {tipoTabletopCampanha(item).toUpperCase()}</small>
               </button>
               <div>
+                {tipoTabletopCampanha(item) === "3d" && <a href={urlCriadorMapa3D(item)}>Criar mapa</a>}
                 <a
-                  href={`/?campanha=${encodeURIComponent(item.codigo)}&papel=mestre`}
+                  href={urlTabletopCampanha(item)}
+                  onClick={() => autorizarTabletopCampanha(item)}
                 >
                   Abrir tabletop
                 </a>
@@ -622,6 +654,20 @@ const CampanhaDashboard = () => {
                   placeholder="Ex.: Prisao Blackgate"
                 />
               </label>
+              <fieldset className="campanha-tabletop-seletor">
+                <legend>Tipo de tabletop</legend>
+                <p>Esta será a experiência aberta por padrão para mestre e jogadores.</p>
+                <div>
+                  <label className={tabletopNovaCampanha === "2d" ? "selecionado" : ""}>
+                    <input type="radio" name="tabletop" value="2d" checked={tabletopNovaCampanha === "2d"} onChange={() => setTabletopNovaCampanha("2d")}/>
+                    <span><strong>Tabletop 2D</strong><small>Mapa tático completo e todas as ferramentas atuais.</small></span>
+                  </label>
+                  <label className={tabletopNovaCampanha === "3d" ? "selecionado" : ""}>
+                    <input type="radio" name="tabletop" value="3d" checked={tabletopNovaCampanha === "3d"} onChange={() => setTabletopNovaCampanha("3d")}/>
+                    <span><strong>Tabletop 3D</strong><small>Cena cinematográfica com interface reduzida.</small></span>
+                  </label>
+                </div>
+              </fieldset>
               <section className="campanha-fichas-vinculo">
                 <header>
                   <div>
@@ -661,7 +707,7 @@ const CampanhaDashboard = () => {
                             {ficha.personagem?.nome || ficha.fichaId}
                           </strong>
                           <small>
-                            Nivel {ficha.personagem?.nivel || 1} ·{" "}
+                            {ficha.sistema === "espiral" ? "ESPIRAL" : `DARKNESS · Nível ${ficha.personagem?.nivel || 1}`} ·{" "}
                             {ficha.personagem?.classe || "Sem classe"}
                           </small>
                         </span>
@@ -706,12 +752,17 @@ const CampanhaDashboard = () => {
           <h2>{campanha.nome}</h2>
           <p>
             {campanha.cenas.length} cenas · {campanha.membros?.length || 0}{" "}
-            fichas
+            fichas · Tabletop {tipoTabletopCampanha(campanha).toUpperCase()}
           </p>
         </div>
         <div>
+          {tipoTabletopCampanha(campanha) === "3d" && <a href={urlCriadorMapa3D(campanha)}>
+            <Icon path={mdiMapOutline} size={0.78} />
+            Criar mapa
+          </a>}
           <a
-            href={`/?campanha=${encodeURIComponent(campanha.codigo)}&papel=mestre`}
+            href={urlTabletopCampanha(campanha)}
+            onClick={() => autorizarTabletopCampanha(campanha)}
           >
             Abrir tabletop
           </a>
@@ -1221,7 +1272,7 @@ const CampanhaDashboard = () => {
                           {ficha.personagem?.nome || ficha.fichaId}
                         </strong>
                         <small>
-                          Nivel {ficha.personagem?.nivel || 1} ·{" "}
+                          {ficha.sistema === "espiral" ? "ESPIRAL" : `DARKNESS · Nível ${ficha.personagem?.nivel || 1}`} ·{" "}
                           {ficha.personagem?.classe || "Sem classe"}
                         </small>
                       </span>
@@ -1413,8 +1464,15 @@ const CampanhaDashboard = () => {
                   Adicionar
                 </button>
               </header>
+              {tipoTabletopCampanha(campanha) === "3d" && <div className="campanha-mapas3d-biblioteca">
+                <div><strong>Mapas criados no Tabletop 3D</strong><small>Selecione quais mapas pertencem a esta cena.</small></div>
+                {(campanha.mapas3D || []).length ? <div>{campanha.mapas3D.map((mapa) => {
+                  const selecionado=(editando.mapasBatalha || []).some((item) => item.mapa3dId === mapa.id);
+                  return <button type="button" key={mapa.id} className={selecionado ? "selecionado" : ""} onClick={() => alternarMapa3DNaCena(mapa)}><span>{selecionado ? "✓" : "+"}</span><div><strong>{mapa.nome}</strong><small>{mapa.assets?.length || 0} assets</small></div></button>;
+                })}</div> : <p>Nenhum mapa 3D salvo. Use “Criar mapa” no painel da campanha.</p>}
+              </div>}
               {editando.mapasBatalha?.map((item) => (
-                <div className="campanha-midia-linha mapa" key={item.id}>
+                <div className={`campanha-midia-linha mapa ${item.origem === "tabletop3d" ? "mapa-3d" : ""}`} key={item.id}>
                   <input
                     aria-label="Nome do mapa"
                     value={item.nome}
@@ -1424,6 +1482,7 @@ const CampanhaDashboard = () => {
                       })
                     }
                   />
+                  {item.origem === "tabletop3d" && <span className="campanha-mapa3d-vinculado">Mapa 3D vinculado</span>}
                   <label>
                     <input
                       type="file"

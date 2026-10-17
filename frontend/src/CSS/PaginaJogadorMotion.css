@@ -1,0 +1,29 @@
+@keyframes pj-revelar{from{opacity:0}to{opacity:1}}
+@keyframes pj-subir{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pj-janela{from{opacity:0;transform:translateY(18px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
+.pj-dashboard{--pj-ease:cubic-bezier(.22,1,.36,1)}
+.pj .pj-abas button{transition:color .2s,border-color .25s,background-color .2s}
+.pj .pj-profile-trigger,.pj .pj-retrato-seta,.pj .bc-tabs button,.pj .pj-evidence-pagination button,.pj .pj-profile-actions button{transition:background-color .2s,color .2s,border-color .2s,box-shadow .2s,transform .2s var(--pj-ease)}
+.pj .pj-area-personagens,.pj .pj-investigation-layout,.pj .pj-area-builds,.pj .pj-livros{animation:pj-revelar .32s ease-out both}
+.pj .pj-dossie,.pj .pj-evidencia,.pj .pj-livros article,.pj .bc-card{animation:pj-subir .38s var(--pj-ease) backwards;transition:border-color .2s,box-shadow .25s,background-color .25s,transform .25s var(--pj-ease)}
+.pj :is(.pj-dossie,.pj-evidencia,.bc-card):nth-child(2){animation-delay:35ms}
+.pj :is(.pj-dossie,.pj-evidencia,.bc-card):nth-child(3){animation-delay:70ms}
+.pj :is(.pj-dossie,.pj-evidencia,.bc-card):nth-child(n+4){animation-delay:100ms}
+.pj .pj-resumo{transition:opacity .26s ease,transform .32s var(--pj-ease),visibility .26s;transform:translateX(-10px)}
+.pj .pj-dossie:hover .pj-resumo,.pj .pj-dossie:focus-within .pj-resumo{transform:translateX(0)}
+.pj .pj-retrato>img{transition:transform .5s var(--pj-ease)}
+.pj .pj-documento{animation:pj-revelar .3s ease-out both}
+.pj .pj-profile-backdrop,.pj .dossier-modal-backdrop{animation:pj-revelar .22s ease-out both}
+.pj .pj-profile-dialog,.pj .dossier-modal{animation:pj-janela .32s var(--pj-ease) both}
+.pj .pj-paletas[open] .pj-paletas-form,.pj .pj-gerenciar[open] .pj-vincular,.pj .pj-filtros[open]>:not(summary){animation:pj-subir .25s var(--pj-ease) both}
+.pj :is(input,select,textarea){transition:border-color .2s,box-shadow .2s}
+.pj :is(input,select,textarea):focus{box-shadow:0 0 0 2px color-mix(in srgb,var(--pj-accent) 15%,transparent)}
+.pj .pj-recurso-trilho>span,.pj .dm-track>i{transition:width .45s var(--pj-ease)}
+.pj button:active:not(:disabled){transform:scale(.98)}
+@media(hover:hover) and (pointer:fine){.pj .pj-evidencia:hover,.pj .pj-livros article:hover{transform:translateY(-3px)}.pj .pj-profile-trigger:hover .pj-profile-avatar,.pj .pj-profile-trigger:hover>img{border-color:var(--pj-accent)}}
+@supports(interpolate-size:allow-keywords){
+ .pj details{interpolate-size:allow-keywords}
+ .pj details::details-content{block-size:0;opacity:0;overflow:clip;transition:block-size .26s var(--pj-ease),opacity .2s,content-visibility .26s;transition-behavior:allow-discrete}
+ .pj details[open]::details-content{block-size:auto;opacity:1;overflow:visible}
+}
+@media(prefers-reduced-motion:reduce){.pj *,.pj *::before,.pj *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}

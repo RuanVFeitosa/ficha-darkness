@@ -1,5 +1,10 @@
+import { mediaStorage, externalizarImagens } from "./mediaStorage";
 import { supabase, supabaseConfigurado, supabaseObrigatorioAusente } from "./supabase";
 import { tipoAudioUpload } from "../utils/audioUpload";
+
+const colunaAusente = (error, column) => Boolean(error &&
+  ["42703", "PGRST204"].includes(error.code) &&
+  (String(error.message || "") + " " + String(error.details || "")).includes(column));
 
 const CENAS_DEMO_PADRAO = [
   { id: "sala-marcos", nome: "A sala de Marcos", descricao: "A chuva bate contra os vidros. Algo se move no corredor.", imagemUrl: "/SalaMarcos.webp", mapaUrl: "/SalaMarcos.webp", larguraGrade: 12, alturaGrade: 8, ordem: 0 },
@@ -25,7 +30,7 @@ const carregarDemo = (campanhaId = "demo") => {
   if (campanhaId === "demo") {
     return { cenas: CENAS_DEMO_PADRAO, cenaAtivaId: CENAS_DEMO_PADRAO[0].id, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: MEMBROS_DEMO, tokens: TOKENS_DEMO };
   }
-  return { cenas: [], cenaAtivaId: null, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: [], tokens: [] };
+  return { cenas: [], cenaAtivaId: null, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: [], tokens: [], mapas3D: [] };
 };
 const salvarDemo = (estado, campanhaId = "demo") => {
   localStorage.setItem(chaveDemo(campanhaId), JSON.stringify(estado));
@@ -48,7 +53,7 @@ const listarCampanhasDemo = () => {
     const campanhas = JSON.parse(localStorage.getItem(DEMO_CAMPAIGNS_KEY));
     if (Array.isArray(campanhas)) return campanhas;
   } catch {}
-  const iniciais = [{ id: "demo", codigo: "DARK26", nome: CAMPANHA_DEMO.nome, modo: "cena", criado_em: new Date().toISOString() }];
+  const iniciais = [{ id: "demo", codigo: "DARK26", nome: CAMPANHA_DEMO.nome, modo: "cena", tabletop_tipo: "2d", criado_em: new Date().toISOString() }];
   localStorage.setItem(DEMO_CAMPAIGNS_KEY, JSON.stringify(iniciais));
   return iniciais;
 };
@@ -90,6 +95,26 @@ const resolverImagemLocal = async (url) => {
   urlsImagensLocais.set(chave, resolvida);
   return resolvida;
 };
+const resolverMapas3DLocais = async (mapas = []) => Promise.all((mapas || []).map(async (mapa) => ({
+  ...mapa,
+  assets: await Promise.all((mapa.assets || []).map(async (item) => {
+    if (!item.asset) return item;
+    const fileUrlPersistida = item.asset.fileUrlPersistida || item.asset.fileUrl;
+    const dependenciesPersistidas = item.asset.dependenciesPersistidas || item.asset.dependencies || {};
+    const dependencies = Object.fromEntries(await Promise.all(Object.entries(dependenciesPersistidas)
+      .map(async ([nome, url]) => [nome, await resolverImagemLocal(url)])));
+    return {
+      ...item,
+      asset: {
+        ...item.asset,
+        fileUrlPersistida,
+        fileUrl: await resolverImagemLocal(fileUrlPersistida),
+        dependenciesPersistidas,
+        dependencies,
+      },
+    };
+  })),
+})));
 
 const normalizarMidiasCena = (cena = {}) => {
   // Durante a edição existem, ao mesmo tempo, os campos vindos do Supabase
@@ -112,6 +137,7 @@ const normalizarMidiasCena = (cena = {}) => {
       : Array.isArray(cena.jogadoresVisiveis)
         ? cena.jogadoresVisiveis.map(String)
         : [],
+    dificuldades: cena.dificuldades || {ambiente:4,combateAmbiente:4,conflitos:4},
     lojaDisponivel: Boolean(cena.loja_disponivel ?? cena.lojaDisponivel),
     cenaEspecial: cena.cena_especial || cena.cenaEspecial || null,
     imagensCena: imagens.length ? imagens : imagemAntiga ? [{ id: `cena-${cena.id || "nova"}-1`, nome: "Cena principal", url: imagemAntiga }] : [],
@@ -191,6 +217,8 @@ const normalizarCampanha = (campanha, cenas = [], membros = [], tokens = [], rol
   musicaEstado: campanha.musica_estado || null,
   soundpad: Array.isArray(campanha.soundpad) ? campanha.soundpad : [],
   soundpadEstado: campanha.soundpad_estado || { ativos: {} },
+  mapas3D: Array.isArray(campanha.mapas_3d) ? campanha.mapas_3d : [],
+  clima3D: campanha.clima_3d || null,
 });
 
 export const buscarCampanhaPorCodigo = async (codigo) => {
@@ -212,7 +240,8 @@ export const buscarCampanhaPorCodigo = async (codigo) => {
       urlPersistida: som.urlPersistida || som.url,
       url: await resolverImagemLocal(som.urlPersistida || som.url),
     })));
-    return { ...CAMPANHA_DEMO, ...campanha, modo: demo.modo, combateAtivo: Boolean(demo.combateAtivo), investigacaoAtiva: Boolean(demo.investigacaoAtiva), iniciativas: demo.iniciativas || {}, documentosInvestigacao, midiaAtivaId: demo.midiaAtivaId || null, cenas, membros: demo.membros || MEMBROS_DEMO, tokens, rolagens: demo.rolagens || CAMPANHA_DEMO.rolagens, inimigos: demo.inimigos || [], musicas: demo.musicas || [], musicaEstado: demo.musicaEstado || null, soundpad, soundpadEstado: demo.soundpadEstado || { ativos: {} }, cenaAtiva: cenas.find((cena) => cena.id === demo.cenaAtivaId) || cenas[0] };
+    const mapas3D = await resolverMapas3DLocais(demo.mapas3D || campanha.mapas_3d || []);
+    return { ...CAMPANHA_DEMO, ...campanha, modo: demo.modo, combateAtivo: Boolean(demo.combateAtivo), investigacaoAtiva: Boolean(demo.investigacaoAtiva), iniciativas: demo.iniciativas || {}, documentosInvestigacao, midiaAtivaId: demo.midiaAtivaId || null, cenas, membros: demo.membros || MEMBROS_DEMO, tokens, rolagens: demo.rolagens || CAMPANHA_DEMO.rolagens, inimigos: demo.inimigos || [], musicas: demo.musicas || [], musicaEstado: demo.musicaEstado || null, soundpad, soundpadEstado: demo.soundpadEstado || { ativos: {} }, mapas3D, clima3D: demo.clima3D || null, cenaAtiva: cenas.find((cena) => cena.id === demo.cenaAtivaId) || cenas[0] };
   }
 
   const { data: campanha, error } = await supabase
@@ -275,17 +304,24 @@ export const listarCampanhasDaFicha = async (fichaId) => {
   return Promise.all((campanhas || []).map((campanha) => buscarCampanhaPorCodigo(campanha.codigo)));
 };
 
-export const criarCampanhaMesa = async (nome) => {
+export const criarCampanhaMesa = async (nome, tabletopTipo = "2d") => {
+  const tabletop_tipo = tabletopTipo === "3d" ? "3d" : "2d";
   const codigo = `${String(nome || "CAMP").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 4).toUpperCase().padEnd(4, "X")}${Math.floor(10 + Math.random() * 90)}`;
   if (!supabaseConfigurado) {
     const campanhas = listarCampanhasDemo();
-    const campanha = { id: `demo-${Date.now()}`, codigo, nome: String(nome).trim(), modo: "cena", criado_em: new Date().toISOString() };
+    const campanha = { id: `demo-${Date.now()}`, codigo, nome: String(nome).trim(), modo: "cena", tabletop_tipo, criado_em: new Date().toISOString() };
     salvarCampanhasDemo([campanha, ...campanhas]);
-    salvarDemo({ cenas: [], cenaAtivaId: null, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: [], tokens: [] }, campanha.id);
+    salvarDemo({ cenas: [], cenaAtivaId: null, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: [], tokens: [], mapas3D: [] }, campanha.id);
     return campanha;
   }
   const { data: { user } } = await supabase.auth.getUser();
-  const { data, error } = await supabase.from("campanhas").insert({ nome: String(nome).trim(), codigo, mestre_id: user?.id || null }).select().single();
+  const payload = { nome: String(nome).trim(), codigo, mestre_id: user?.id || null, tabletop_tipo };
+  let { data, error } = await supabase.from("campanhas").insert(payload).select().single();
+  if (colunaAusente(error, "tabletop_tipo")) {
+    if (tabletop_tipo === "3d") throw new Error("Aplique a migração 034 no Supabase antes de criar campanhas 3D.");
+    delete payload.tabletop_tipo;
+    ({ data, error } = await supabase.from("campanhas").insert(payload).select().single());
+  }
   if (error) throw error;
   return data;
 };
@@ -460,6 +496,94 @@ export const salvarSoundpadCampanha = async (campanhaId, sons) => {
   return soundpad;
 };
 
+export const salvarMapas3DCampanha = async (campanhaId, mapas) => {
+  const mapas3D = (Array.isArray(mapas) ? mapas : []).map((mapa) => ({
+    ...mapa,
+    assets: (mapa.assets || []).map((item) => ({
+      ...item,
+      asset: item.asset ? {
+        ...item.asset,
+        fileUrl: item.asset.fileUrlPersistida || item.asset.fileUrl,
+        dependencies: item.asset.dependenciesPersistidas || item.asset.dependencies,
+      } : item.asset,
+    })),
+  }));
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    salvarDemo({ ...demo, mapas3D }, campanhaId);
+    return mapas3D;
+  }
+  const { error } = await supabase.from("campanhas").update({ mapas_3d: mapas3D }).eq("id", campanhaId);
+  if (error) throw error;
+  return mapas3D;
+};
+
+export const salvarClima3DCampanha = async (campanhaId, clima) => {
+  const clima3D = { ...(clima || {}), atualizadoEm: new Date().toISOString() };
+  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+    const demo = carregarDemo(campanhaId);
+    salvarDemo({ ...demo, clima3D }, campanhaId);
+    return clima3D;
+  }
+  const { error } = await supabase.from("campanhas").update({ clima_3d: clima3D }).eq("id", campanhaId);
+  if (error) throw error;
+  return clima3D;
+};
+
+const EXTENSOES_MODELO_3D = new Set(["glb", "gltf", "bin", "png", "jpg", "jpeg", "webp", "ktx2", "basis"]);
+const LIMITE_ARQUIVO_MODELO_3D = 50 * 1024 * 1024;
+const nomeArquivoSeguro = (nome = "arquivo") => String(nome)
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .replace(/[^a-zA-Z0-9._-]+/g, "-")
+  .replace(/^-+|-+$/g, "") || "arquivo";
+
+export const enviarModelo3DMapa = async (campanhaId, arquivos) => {
+  const lista = Array.from(arquivos || []);
+  const principais = lista.filter((arquivo) => /\.(glb|gltf)$/i.test(arquivo.name));
+  if (principais.length !== 1) throw new Error("Selecione um arquivo .glb ou .gltf principal. Para GLTF, inclua também .bin e texturas.");
+  if (lista.some((arquivo) => !EXTENSOES_MODELO_3D.has(arquivo.name.split(".").pop()?.toLowerCase()))) {
+    throw new Error("Pacote 3D inválido. Use GLB/GLTF com BIN, PNG, JPG, WebP, KTX2 ou Basis.");
+  }
+  if (lista.some((arquivo) => arquivo.size > LIMITE_ARQUIVO_MODELO_3D)) {
+    throw new Error("Cada arquivo do modelo 3D deve ter no máximo 50 MB.");
+  }
+
+  const principal = principais[0];
+  const pasta = `modelos3d/${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const registros = [];
+  for (const arquivo of lista) {
+    const nome = nomeArquivoSeguro(arquivo.webkitRelativePath || arquivo.name).replaceAll("/", "-");
+    if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
+      const persistida = await guardarImagemLocal(arquivo, `${campanhaId}-${pasta}-${nome}`);
+      registros.push({ arquivo, nome, persistida, url: await resolverImagemLocal(persistida) });
+      continue;
+    }
+    const caminho = `${campanhaId}/${pasta}/${nome}`;
+    const { error } = await mediaStorage.from("mapas").upload(caminho, arquivo, {
+      upsert: false,
+      contentType: arquivo.type || (/\.glb$/i.test(arquivo.name) ? "model/gltf-binary" : "application/octet-stream"),
+    });
+    if (error) throw error;
+    const url = mediaStorage.from("mapas").getPublicUrl(caminho).data.publicUrl;
+    registros.push({ arquivo, nome, persistida: url, url });
+  }
+
+  const registroPrincipal = registros.find((item) => item.arquivo === principal);
+  const dependencias = Object.fromEntries(registros
+    .filter((item) => item !== registroPrincipal)
+    .map((item) => [item.arquivo.webkitRelativePath || item.arquivo.name, item.url]));
+  const dependenciasPersistidas = Object.fromEntries(registros
+    .filter((item) => item !== registroPrincipal)
+    .map((item) => [item.arquivo.webkitRelativePath || item.arquivo.name, item.persistida]));
+  return {
+    fileUrl: registroPrincipal.url,
+    fileUrlPersistida: registroPrincipal.persistida,
+    dependencies: dependencias,
+    dependenciesPersistidas: dependenciasPersistidas,
+    fileName: principal.name,
+  };
+};
 export const atualizarEstadoSoundpad = async (campanhaId, estado) => {
   const soundpadEstado = { ...(estado || {}), atualizadoEm: new Date().toISOString() };
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
@@ -508,6 +632,7 @@ export const salvarCena = async (campanhaId, cena) => {
     pasta: String(cena.pasta || "Sem pasta").trim() || "Sem pasta",
     imagens_cena: imagensPersistidas,
     mapas_batalha: mapasPersistidos,
+    dificuldades: normalizada.dificuldades,
     loja_disponivel: Boolean(cena.lojaDisponivel ?? cena.loja_disponivel),
     visualizar_todos: cena.visualizarTodos ?? cena.visualizar_todos ?? true,
     jogadores_visiveis: (cena.visualizarTodos ?? cena.visualizar_todos ?? true)
@@ -521,24 +646,18 @@ export const salvarCena = async (campanhaId, cena) => {
   };
   let { data, error } = await supabase.from("cenas").upsert(payload).select().single();
 
-  // Compatibilidade com bancos que ainda não executaram a migração 027.
-  // A cena continua sendo salva; somente a disponibilidade da Loja aguarda a
-  // coluna correspondente no Supabase.
-  if (error && /loja_disponivel/i.test(`${error.message || ""} ${error.details || ""}`)) {
-    const payloadCompativel = { ...payload };
-    delete payloadCompativel.loja_disponivel;
-    const tentativaCompativel = await supabase
-      .from("cenas")
-      .upsert(payloadCompativel)
-      .select()
-      .single();
-    data = tentativaCompativel.data;
-    error = tentativaCompativel.error;
-    if (!error) {
-      console.warn(
-        "A coluna cenas.loja_disponivel ainda não existe. A cena foi salva sem essa opção.",
-      );
-    }
+  // Retry only missing optional columns; other database errors must remain visible.
+  const payloadCompativel = { ...payload };
+  for (let attempt = 0; error && attempt < 2; attempt += 1) {
+    if (colunaAusente(error, "dificuldades") && "dificuldades" in payloadCompativel) {
+      if (Object.values(normalizada.dificuldades).some(value => Number(value) !== 4)) {
+        throw new Error("Aplique a migração 038 no Supabase antes de salvar dificuldades personalizadas.");
+      }
+      delete payloadCompativel.dificuldades;
+    } else if (colunaAusente(error, "loja_disponivel") && "loja_disponivel" in payloadCompativel) {
+      delete payloadCompativel.loja_disponivel;
+    } else break;
+    ({ data, error } = await supabase.from("cenas").upsert(payloadCompativel).select().single());
   }
 
   if (error) throw error;
@@ -593,12 +712,12 @@ export const enviarImagemCena = async (campanhaId, arquivo, tipo) => {
   const extensao = arquivo.name.split(".").pop()?.toLowerCase() || "webp";
   const sufixo = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2, 10);
   const caminho = `${campanhaId}/${tipo}-${Date.now()}-${sufixo}.${extensao}`;
-  const { error } = await supabase.storage.from("mapas").upload(caminho, arquivo, {
+  const { error } = await mediaStorage.from("mapas").upload(caminho, arquivo, {
     upsert: false,
     ...(tipo === "audio" ? { contentType: tipoAudioUpload(arquivo) } : {}),
   });
   if (error) throw error;
-  return supabase.storage.from("mapas").getPublicUrl(caminho).data.publicUrl;
+  return mediaStorage.from("mapas").getPublicUrl(caminho).data.publicUrl;
 };
 
 export const LIMITE_DOCUMENTO_INVESTIGACAO = { bytes: 12 * 1024 * 1024, rotulo: "12 MB" };
@@ -678,8 +797,8 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
   const sufixo = typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2, 10);
-  const storagePath = `${campanhaId}/investigacao/documento-${Date.now()}-${sufixo}.${extensao}`;
-  const { error: erroUpload } = await supabase.storage
+  let storagePath = `${campanhaId}/investigacao/documento-${Date.now()}-${sufixo}.${extensao}`;
+  const { data: uploadData, error: erroUpload } = await mediaStorage
     .from("evidencias")
     .upload(storagePath, arquivo, { upsert: false, contentType: mimeType });
   if (erroUpload) {
@@ -688,7 +807,8 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
     );
   }
 
-  const url = supabase.storage.from("evidencias").getPublicUrl(storagePath).data.publicUrl;
+  storagePath = uploadData?.path || storagePath;
+  const url = mediaStorage.from("evidencias").getPublicUrl(storagePath).data.publicUrl;
   let { data, error } = await supabase
     .from("documentos_investigacao")
     .insert({
@@ -728,7 +848,7 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
       .single());
   }
   if (error) {
-    await supabase.storage.from("evidencias").remove([storagePath]).catch(() => {});
+    await mediaStorage.from("evidencias").remove([storagePath]).catch(() => {});
     throw new Error(
       `Arquivo enviado, mas o registro do documento falhou: ${error.message || "gravacao recusada"}`,
     );
@@ -776,14 +896,15 @@ const enviarImagemComputador = async (campanhaId, documentoId, dataUrl) => {
   const sufixo = typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-  const storagePath = `${campanhaId}/computadores/${documentoId}/imagem-${sufixo}.${extensaoImagemComputador(arquivo.type)}`;
-  const { error } = await supabase.storage.from("evidencias").upload(storagePath, arquivo, {
+  let storagePath = `${campanhaId}/computadores/${documentoId}/imagem-${sufixo}.${extensaoImagemComputador(arquivo.type)}`;
+  const { data: uploadData, error } = await mediaStorage.from("evidencias").upload(storagePath, arquivo, {
     upsert: false,
     contentType: arquivo.type,
     cacheControl: "31536000",
   });
   if (error) throw new Error(`Nao foi possivel armazenar a imagem do computador: ${error.message}`);
-  const image = supabase.storage.from("evidencias").getPublicUrl(storagePath).data.publicUrl;
+  storagePath = uploadData?.path || storagePath;
+  const image = mediaStorage.from("evidencias").getPublicUrl(storagePath).data.publicUrl;
   return { image, imageStoragePath: storagePath };
 };
 
@@ -803,7 +924,7 @@ const prepararImagensConteudoComputador = async (campanhaId, documentoId, conten
     return { content: { ...content, files, emails }, novosCaminhos };
   } catch (error) {
     if (novosCaminhos.length) {
-      await supabase.storage.from("evidencias").remove(novosCaminhos).catch(() => {});
+      await mediaStorage.from("evidencias").remove(novosCaminhos).catch(() => {});
     }
     throw error;
   }
@@ -881,7 +1002,7 @@ export const salvarConteudoComputador = async (
   }
   if (erroGravacao) {
     if (preparado.novosCaminhos.length) {
-      await supabase.storage.from("evidencias").remove(preparado.novosCaminhos).catch(() => {});
+      await mediaStorage.from("evidencias").remove(preparado.novosCaminhos).catch(() => {});
     }
     throw new Error(erroGravacao.message);
   }
@@ -890,7 +1011,7 @@ export const salvarConteudoComputador = async (
   const caminhosObsoletos = caminhosImagensComputador(conteudoAnterior)
     .filter((path) => !caminhosAtuais.has(path));
   if (caminhosObsoletos.length) {
-    const { error: erroLimpeza } = await supabase.storage.from("evidencias").remove(caminhosObsoletos);
+    const { error: erroLimpeza } = await mediaStorage.from("evidencias").remove(caminhosObsoletos);
     if (erroLimpeza) console.warn("Conteudo salvo, mas imagens antigas nao puderam ser removidas.", erroLimpeza);
   }
   return preparado.content;
@@ -1162,7 +1283,7 @@ export const excluirDocumentoInvestigacao = async (campanhaId, documento) => {
     ...(storagePath && !String(storagePath).startsWith("interactive:") ? [storagePath] : []),
   ];
   if (caminhosStorage.length) {
-    const { error: erroStorage } = await supabase.storage.from("evidencias").remove(caminhosStorage);
+    const { error: erroStorage } = await mediaStorage.from("evidencias").remove(caminhosStorage);
     if (erroStorage) console.warn("Documento removido da mesa, mas o arquivo nao pode ser apagado do Storage.", erroStorage);
   }
 };
@@ -1213,6 +1334,7 @@ export const moverToken = async (tokenId, x, y, mapaChave = "mapa-principal") =>
 };
 
 const atualizarEstadoTokenMapa = async (tokenId, mapaChave, mudanca) => {
+  if (supabaseConfigurado && !String(tokenId).startsWith("demo")) mudanca = await externalizarImagens(mudanca);
   const chaveEstado = chaveEstadoTokenMapa(mapaChave);
 
   if (!supabaseConfigurado || String(tokenId).startsWith("demo")) {
@@ -1245,6 +1367,7 @@ const atualizarEstadoTokenMapa = async (tokenId, mapaChave, mudanca) => {
   if (erroConsulta) throw erroConsulta;
 
   const estadoAtual = tokenAtual.posicoes?.[chaveEstado] || {};
+  mudanca = await externalizarImagens({ ...estadoAtual, ...mudanca });
   const { data, error } = await supabase
     .from("tokens_mapa")
     .update({
@@ -1293,8 +1416,8 @@ export const registrarRolagem = async (campanhaId, autorNome, rolagem) => {
     id: `rolagem-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     campanha_id: campanhaId,
     autor_nome: autorNome || "Jogador",
-    expressao: rolagem.formula || rolagem.nome || rolagem.tipo || "Teste",
-    resultado: Number(rolagem.total ?? rolagem.resultado ?? rolagem.maiorResultado) || 0,
+    expressao: rolagem.formula || rolagem.label || rolagem.nome || rolagem.tipo || "Teste",
+    resultado: Number(rolagem.total ?? rolagem.resultado ?? rolagem.maiorResultado ?? rolagem.best) || 0,
     detalhes: rolagem,
     criado_em: new Date().toISOString(),
   };
@@ -1507,4 +1630,44 @@ export const ouvirCampanha = (campanhaId, aoMudar) => {
   return () => {
     supabase.removeChannel(canal);
   };
+};
+
+const token3DQueues = new Map();
+export const obterEstadoToken3D = (token, mapaId) => token?.posicoes?.[chaveEstadoTokenMapa(`tabletop3d:${mapaId || 'default'}`)] || null;
+export const salvarEstadoToken3D = (tokenId, mapaId, patch) => {
+  const key=tokenId+":"+(mapaId || "default");
+  let queue=token3DQueues.get(key);
+  if(!queue) {queue={pending:null,waiters:[],running:false};token3DQueues.set(key,queue);}
+  queue.pending={...(queue.pending || {}),...patch};
+  const result=new Promise((resolve,reject) => queue.waiters.push({resolve,reject}));
+  if(!queue.running) {
+    queue.running=true;
+    (async () => {
+      while(queue.pending) {
+        const latest=queue.pending;
+        const waiters=queue.waiters.splice(0);
+        queue.pending=null;
+        try {
+          const saved=await atualizarEstadoTokenMapa(tokenId,"tabletop3d:"+(mapaId || "default"),latest);
+          waiters.forEach(waiter => waiter.resolve(saved));
+        } catch(error) {waiters.forEach(waiter => waiter.reject(error));}
+      }
+      token3DQueues.delete(key);
+    })();
+  }
+  return result;
+};
+export const salvarTokenCustom3D = async (campanhaId, mapaId, token, origin) => {
+  const fichaId=`custom3d:${token.id}`;
+  const member=await vincularFicha(campanhaId,fichaId,{nome:token.name});
+  let shared;
+  if(!supabaseConfigurado || String(campanhaId).startsWith('demo')) {
+    shared=(carregarDemo(campanhaId).tokens || []).find(item => item.ficha_id===fichaId);
+  } else {
+    const {data,error}=await supabase.from('tokens_mapa').select('*').eq('campanha_id',campanhaId).eq('ficha_id',member.ficha_id).single();
+    if(error) throw error;
+    shared=data;
+  }
+  if(!shared) throw new Error('Não foi possível sincronizar o token importado.');
+  return salvarEstadoToken3D(shared.id,mapaId,{...token,origin,revision:Date.now()});
 };

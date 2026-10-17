@@ -1,252 +1,103 @@
-import React, { useState } from "react";
-import Icon from "@mdi/react";
-import {
-  mdiAccountSearch,
-  mdiAccountPlus,
-  mdiBackspaceOutline,
-  mdiClose,
-  mdiShieldCrownOutline,
-} from "@mdi/js";
-import { buscarPersonagem } from "../services/personagemApi";
-import { ULTIMA_FICHA_KEY } from "../constants/session";
-import { MESTRE_AUTH_KEY, SENHA_MESTRE } from "../constants/masterAccess";
-import "../CSS/TelaInicial.css";
+import SiteBoot from '../components/SiteBoot';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { entrarJogador } from '../services/jogadorApi';
+import { MESTRE_AUTH_KEY, SENHA_MESTRE } from '../constants/masterAccess';
+import { PRONOMES_JOGADOR, saudacaoJogador } from '../utils/saudacaoJogador';
+import useLoginSound from '../utils/useLoginSound';
+import '../CSS/TelaInicial.css';
 
-const normalizarFichaId = (valor) =>
-  String(valor || "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+export const LOGIN_WELCOME_DURATION = 2600;
+const navegar = destino => window.location.assign(destino);
+const PERFIL_MESTRE_KEY = 'darkness:mestre:perfil';
+function lerMestre() {
+  try { return JSON.parse(localStorage.getItem(PERFIL_MESTRE_KEY)) || {}; } catch { return {}; }
+}
+export default function TelaInicial({ onNavigate = navegar, inicializar = true }) {
+  const [iniciando,setIniciando]=useState(inicializar);
+  const [loginRevelado,setLoginRevelado]=useState(!inicializar);
+  const revelarLogin=useCallback(()=>setLoginRevelado(true),[]);
+  const finalizarBoot=useCallback(()=>{setLoginRevelado(true);setIniciando(false);input.current?.focus();},[]);
+  const [modo, setModo] = useState('jogador');
+  const [senha, setSenha] = useState('');
+  const [etapa, setEtapa] = useState('senha');
+  const [erro, setErro] = useState('');
+  const [boasVindas, setBoasVindas] = useState('');
 
-const TelaInicial = () => {
-  const [codigo, setCodigo] = useState("");
-  const [erro, setErro] = useState("");
-  const [entrando, setEntrando] = useState(false);
-  const [painelMestreAberto, setPainelMestreAberto] = useState(false);
-  const [senhaMestre, setSenhaMestre] = useState("");
-  const [erroMestre, setErroMestre] = useState("");
-
-  const adicionarDigitoFicha = (digito) => {
-    setErro("");
-    setCodigo((codigoAtual) => {
-      if (codigoAtual.length >= 8) {
-        return codigoAtual;
-      }
-
-      return `${codigoAtual}${digito}`;
-    });
-  };
-
-  const apagarDigitoFicha = () => {
-    setErro("");
-    setCodigo((codigoAtual) => codigoAtual.slice(0, -1));
-  };
-
-  const entrar = async (event) => {
+  const [teclado, setTeclado] = useState(false);
+  const [mestreNome, setMestreNome] = useState(() => lerMestre().nome || '');
+  const [mestrePronome, setMestrePronome] = useState(() => lerMestre().pronome || 'Elu');
+  const input = useRef(null), timer = useRef(null), ocupado = useRef(false), montado = useRef(true);
+  const { tocar, ativo: somAtivo, alternar: alternarSom } = useLoginSound();
+  const mestre = modo === 'mestre';
+  const tema = mestre ? 'claro' : 'escuro';
+  const entrando = etapa !== 'senha';
+  useEffect(() => { montado.current = true; return () => { montado.current = false; clearTimeout(timer.current); }; }, []);
+  function atualizarSenha(valor) {
+    if (ocupado.current) return;
+    const proxima = valor.replace(/\D/g, '').slice(0, mestre ? SENHA_MESTRE.length : 8);
+    if (proxima !== senha) tocar(proxima.length < senha.length);
+    setSenha(proxima); setErro('');
+  }
+  function trocarModo() {
+    if (ocupado.current) return;
+    setModo(mestre ? 'jogador' : 'mestre'); setSenha(''); setErro(''); setTeclado(false);
+    input.current?.focus();
+  }
+  function receber(nome, pronome, destino) {
+    setBoasVindas(saudacaoJogador(pronome, nome));
+    setTeclado(false); setSenha(''); setEtapa('boas-vindas');
+    timer.current = setTimeout(() => onNavigate(destino), LOGIN_WELCOME_DURATION);
+  }
+  async function entrar(event) {
     event.preventDefault();
-    setErro("");
-
-    const fichaId = normalizarFichaId(codigo);
-
-    if (!fichaId) {
-      setErro("Informe o codigo da ficha.");
-      return;
-    }
-
-    setEntrando(true);
-
+    if (ocupado.current) return;
+    if (!senha) { setErro('Insira sua senha.'); input.current?.focus(); return; }
+    ocupado.current = true; setEtapa('validando'); setErro('');
     try {
-      const personagem = await buscarPersonagem(fichaId);
-
-      if (!personagem) {
-        setErro("Nao encontrei uma ficha com esse codigo.");
-        setEntrando(false);
-        return;
+      if (mestre) {
+        if (senha !== SENHA_MESTRE) throw new Error('Senha incorreta. Tente novamente.');
+        const nome = mestreNome.trim() || 'Mestre';
+        localStorage.setItem(PERFIL_MESTRE_KEY, JSON.stringify({ nome, pronome: mestrePronome }));
+        sessionStorage.setItem(MESTRE_AUTH_KEY, 'true');
+        receber(nome, mestrePronome, '/?mestre=1');
+      } else {
+        const perfil = await entrarJogador(senha);
+        if (!montado.current) return;
+        receber(perfil.nome?.trim().toLowerCase() === 'jogador' ? '' : (perfil.nome || ''), perfil.perfilConfigurado ? perfil.pronome : undefined, `/?jogador=${encodeURIComponent(senha)}`);
       }
-
-      localStorage.setItem(ULTIMA_FICHA_KEY, fichaId);
-      window.location.href = `/?sistema=darkness&ficha=${encodeURIComponent(fichaId)}`;
     } catch (error) {
-      setErro("Nao foi possivel entrar. Verifique se o backend esta rodando.");
-      setEntrando(false);
+      if (!montado.current) return;
+      ocupado.current = false; setEtapa('senha');
+      setErro(error.message || 'Não foi possível entrar. Tente novamente.');
     }
-  };
+  }
 
-  const abrirPainelMestre = () => {
-    setSenhaMestre("");
-    setErroMestre("");
-    setPainelMestreAberto(true);
-  };
-
-  const fecharPainelMestre = () => {
-    setPainelMestreAberto(false);
-    setSenhaMestre("");
-    setErroMestre("");
-  };
-
-  const adicionarDigitoMestre = (digito) => {
-    setErroMestre("");
-    setSenhaMestre((senhaAtual) => {
-      if (senhaAtual.length >= SENHA_MESTRE.length) {
-        return senhaAtual;
-      }
-
-      return `${senhaAtual}${digito}`;
-    });
-  };
-
-  const apagarDigitoMestre = () => {
-    setErroMestre("");
-    setSenhaMestre((senhaAtual) => senhaAtual.slice(0, -1));
-  };
-
-  const confirmarSenhaMestre = () => {
-    if (senhaMestre !== SENHA_MESTRE) {
-      setErroMestre("Senha incorreta.");
-      setSenhaMestre("");
-      return;
-    }
-
-    sessionStorage.setItem(MESTRE_AUTH_KEY, "true");
-    window.location.href = "/?mestre=1";
-  };
-
-  return (
-    <main className="inicio-container">
-      <section className="inicio-painel">
-        <div className="inicio-dialogo">
-          <p>Darkness</p>
-          <h1>Identifique-se.</h1>
+  return <><main aria-hidden={iniciando ? true : undefined} inert={iniciando ? "" : undefined} className={`login-screen login-boot-stage ${loginRevelado ? "" : "login-boot-hidden"} login-${tema} ${mestre ? 'login-is-master' : ''} ${etapa === 'boas-vindas' ? 'login-welcome' : ''}`}>
+    <div className="login-preferencias" aria-label="Preferências da tela de login">
+      <span className="login-papel">{mestre ? 'MESTRE' : 'JOGADOR'}</span>
+      <button type="button" onClick={alternarSom} aria-pressed={somAtivo} aria-label={somAtivo ? 'Desativar sons de teclado' : 'Ativar sons de teclado'}>SOM {somAtivo ? 'ON' : 'OFF'}</button>
+    </div>
+    <img className="login-simbolo" src="/simbolo-darkness.png" alt="Símbolo Darkness" draggable="false"/>
+    {etapa === 'boas-vindas' && <h1 className="login-boas-vindas" role="status">{boasVindas}</h1>}
+    <form className="login-form" onSubmit={entrar} aria-label={mestre ? 'Entrada do mestre' : 'Entrada do jogador'} aria-hidden={etapa === 'boas-vindas' ? true : undefined}>
+      <fieldset disabled={entrando}>
+        <h1 className="login-prompt"><label htmlFor="login-senha">{mestre ? "ÁREA DO MESTRE" : "ÁREA DO JOGADOR"}</label></h1>
+        
+        <div className="login-password" onClick={() => input.current?.focus()}>
+          <div className="login-slots" aria-hidden="true">{Array.from({ length: mestre ? SENHA_MESTRE.length : Math.max(6, senha.length) }, (_, i) => <span key={i} className={i < senha.length ? 'preenchido' : ''}>{i < senha.length ? '●' : ''}</span>)}</div>
+          <input id="login-senha" ref={input} type="password" inputMode="numeric" autoComplete="current-password" maxLength={mestre ? SENHA_MESTRE.length : 8} value={senha} onChange={e => atualizarSenha(e.target.value)} aria-invalid={!!erro} aria-describedby={erro ? 'login-erro' : 'login-ajuda'} aria-label={mestre ? 'Senha do mestre' : 'Senha do jogador'}/>
         </div>
-
-        <form className="inicio-form" onSubmit={entrar}>
-          <div className="inicio-codigo-area">
-            <span>Codigo da ficha</span>
-
-            <div className="inicio-codigo-display" aria-live="polite">
-              {codigo || "Digite no painel"}
-            </div>
-
-            <div className="inicio-teclado" aria-label="Painel numerico da ficha">
-              {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map(
-                (digito) => (
-                  <button
-                    key={digito}
-                    type="button"
-                    onClick={() => adicionarDigitoFicha(digito)}
-                  >
-                    {digito}
-                  </button>
-                ),
-              )}
-
-              <button type="button" onClick={apagarDigitoFicha}>
-                <Icon path={mdiBackspaceOutline} size={0.9} />
-              </button>
-              <button type="button" onClick={() => adicionarDigitoFicha("0")}>
-                0
-              </button>
-              <button type="submit" className="inicio-teclado-confirmar">
-                OK
-              </button>
-            </div>
-          </div>
-
-          {erro && <p className="inicio-erro">{erro}</p>}
-
-          <div className="inicio-acoes">
-            <button className="inicio-entrar" type="submit" disabled={entrando}>
-              <Icon path={mdiAccountSearch} size={0.9} />
-              {entrando ? "Entrando..." : "Entrar"}
-            </button>
-
-            <button
-              className="inicio-cadastrar"
-              type="button"
-              onClick={() => {
-                window.location.href = "/?criar=1";
-              }}
-            >
-              <Icon path={mdiAccountPlus} size={0.9} />
-              Cadastrar
-            </button>
-
-            <button
-              className="inicio-mestre"
-              type="button"
-              onClick={abrirPainelMestre}
-            >
-              <Icon path={mdiShieldCrownOutline} size={0.9} />
-              Mestre
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {painelMestreAberto && (
-        <div className="mestre-senha-overlay" onClick={fecharPainelMestre}>
-          <section
-            className="mestre-senha-painel"
-            aria-label="Senha da area do mestre"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="mestre-senha-topo">
-              <div>
-                <span>Acesso restrito</span>
-                <hr width="150%" />
-                <h2>Area do Mestre</h2>
-              </div>
-
-              <button type="button" onClick={fecharPainelMestre}>
-                <Icon path={mdiClose} size={0.85} />
-              </button>
-            </div>
-
-            <div className="mestre-senha-display" aria-live="polite">
-              {Array.from({ length: SENHA_MESTRE.length }).map((_, index) => (
-                <span
-                  key={index}
-                  className={index < senhaMestre.length ? "preenchido" : ""}
-                />
-              ))}
-            </div>
-
-            {erroMestre && <p className="mestre-senha-erro">{erroMestre}</p>}
-
-            <div className="mestre-teclado">
-              {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map(
-                (digito) => (
-                  <button
-                    key={digito}
-                    type="button"
-                    onClick={() => adicionarDigitoMestre(digito)}
-                  >
-                    {digito}
-                  </button>
-                ),
-              )}
-
-              <button type="button" onClick={apagarDigitoMestre}>
-                <Icon path={mdiBackspaceOutline} size={0.9} />
-              </button>
-              <button type="button" onClick={() => adicionarDigitoMestre("0")}>
-                0
-              </button>
-              <button
-                type="button"
-                className="mestre-teclado-confirmar"
-                onClick={confirmarSenhaMestre}
-              >
-                OK
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-    </main>
-  );
-};
-
-export default TelaInicial;
+        <p className="login-sr-only" id="login-ajuda">Digite a senha numérica e pressione Enter ou selecione Entrar.</p>
+        {mestre && <details className="login-master-identity"><summary>Identificação do mestre</summary><div><label>Seu nome<input maxLength={80} value={mestreNome} onChange={e=>setMestreNome(e.target.value)} autoComplete="nickname" placeholder="Mestre"/></label><label>Pronome<select value={mestrePronome} onChange={e=>setMestrePronome(e.target.value)}>{PRONOMES_JOGADOR.map(p=><option key={p}>{p}</option>)}</select></label></div></details>}
+        <div className="login-feedback" aria-live="polite">{erro && <p id="login-erro" role="alert">{erro}</p>}{etapa === 'validando' && <p>Verificando…</p>}</div>
+        <nav className="login-acoes" aria-label="Acesso ao universo Darkness">
+          <a href="?jogador=novo" aria-disabled={entrando} onClick={e=>{if(entrando)e.preventDefault();}}>CADASTRAR</a>
+          <button type="submit">ENTRAR</button>
+          <button type="button" onClick={trocarModo}>{mestre ? 'JOGADOR' : 'MESTRE'}</button>
+        </nav>
+        <button className="login-abrir-teclado" type="button" aria-expanded={teclado} onClick={()=>{setTeclado(!teclado);input.current?.focus();}}>Teclado numérico</button>
+        {teclado && <div className="login-teclado" aria-label="Teclado numérico">{['1','2','3','4','5','6','7','8','9'].map(n=><button type="button" key={n} onClick={()=>atualizarSenha(senha+n)}>{n}</button>)}<button type="button" aria-label="Apagar dígito" onClick={()=>atualizarSenha(senha.slice(0,-1))}>⌫</button><button type="button" onClick={()=>atualizarSenha(senha+'0')}>0</button><button type="submit">OK</button></div>}
+      </fieldset>
+    </form>
+  </main>{iniciando && <SiteBoot onFinish={finalizarBoot} onReveal={revelarLogin}/>}</>;
+}

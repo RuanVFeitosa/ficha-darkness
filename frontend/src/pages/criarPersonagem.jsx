@@ -1,3 +1,4 @@
+import { vincularAoJogadorAtivo, verificarVagaPersonagem } from "../services/jogadorApi";
 import React, { useEffect, useMemo, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiAccountPlus, mdiChevronLeft, mdiChevronRight } from "@mdi/js";
@@ -566,9 +567,8 @@ const calcularRecursosClasse = (classe, atributosForm) => {
   };
 };
 
-// Escreva aqui o dialogo inicial antes das perguntas.
-const dialogoInicial =
-  "Antes de comecarmos, escute com atencao. Ainda ha espaco para mais palavras aqui.";
+// Perguntas do fluxo de criação de personagem.
+
 
 const perguntasExistente = [
   "Como posso te chamar?",
@@ -1164,6 +1164,7 @@ const CriarPersonagem = () => {
         return;
       }
 
+      await verificarVagaPersonagem(codigoFicha,"darkness");
       const resposta = codigoFicha
         ? {
             fichaId: codigoFicha,
@@ -1183,6 +1184,7 @@ const CriarPersonagem = () => {
         `${STORAGE_KEY}_${fichaId}`,
         JSON.stringify(personagemCriado),
       );
+      await vincularAoJogadorAtivo(fichaId, "darkness");
       const personagemUrl = criarSlugPersonagem(personagemCriado.nome || form.nome);
       window.location.href = `/?sistema=darkness&ficha=${encodeURIComponent(personagemUrl)}&senha=${encodeURIComponent(fichaId)}`;
     } catch (error) {

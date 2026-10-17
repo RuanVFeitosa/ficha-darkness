@@ -106,6 +106,28 @@
     serif;
   letter-spacing: 0.14em;
 }
+.mestre-sistema-switch {
+  display: flex;
+  gap: 1px;
+  padding: 3px;
+  border: 1px solid var(--es-line);
+  background: rgba(255,255,255,.04);
+}
+.mestre-sistema-switch button {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--es-muted);
+  font: 700 9px "Courier New", monospace;
+  letter-spacing: .12em;
+}
+.mestre-sistema-switch button.ativo,
+.mestre-sistema-switch button:hover {
+  background: var(--es-paper);
+  color: #050505;
+}
 
 .mestre-tabs {
   width: min(1320px, 100%) !important;
@@ -396,6 +418,21 @@
   margin: 0 0 16px;
   border: 1px solid var(--es-line);
   background: var(--es-line);
+}
+.mestre-subtabs-fichas[role="status"] {
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  min-height: 36px;
+  color: var(--es-paper);
+  font: 700 10px "Courier New", monospace;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.mestre-subtabs-fichas[role="status"] small {
+  color: var(--es-muted);
+  font-size: 8px;
+  letter-spacing: .04em;
 }
 .mestre-subtabs-fichas button {
   min-height: 36px;

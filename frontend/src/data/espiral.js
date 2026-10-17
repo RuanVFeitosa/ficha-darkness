@@ -1,3 +1,4 @@
+import { normalizeEspiralDice } from '../utils/espiralDice';
 export const ATTRIBUTES = {
   pulso: {
     name: "Pulso",
@@ -119,6 +120,7 @@ export const freshSheet = () => ({
   version: 1,
   name: "",
   profileImage: "",
+  tabletopTokenImage: "",
   occupation: "",
   player: "",
   pronoun: "",
@@ -128,6 +130,9 @@ export const freshSheet = () => ({
   resources: Object.fromEntries(RESOURCES.map((r) => [r, 0])),
   temporaryResources: {},
   temaFicha: { ...TEMA_PADRAO_ESPIRAL },
+  backgroundDescription: "",
+  backgroundHistory: "",
+  backgroundConnections: "",
   integrityTable: "creation",
   integrity: 35,
   sanity: 10,
@@ -137,6 +142,7 @@ export const freshSheet = () => ({
   purpose: "",
   notes: "",
   inventory: "",
+  inventoryItems: [],
   abilities: "",
   abilityProgress: [
     { name: "", detail: "", level: 1 },
@@ -166,7 +172,7 @@ export function creationWarnings(sheet) {
       stages.filter((s) => s === 1).length > 1 &&
         "Apenas um atributo pode estar em d4.",
       stages.filter((s) => s === 5).length > 1 &&
-        "Apenas um atributo pode estar em d12.",
+        "Apenas um atributo pode estar em ⬢12.",
       resourceSpent !== 10 &&
         `Recursos convencionais: distribua 10 pontos (saldo: ${10 - resourceSpent}).`,
       RESOURCES.some((r) => sheet.resources[r] > 3) &&
@@ -205,7 +211,7 @@ export function resolveRoll(dice, pressure, sides, difficulty) {
 // Rolagens livres são úteis para dano, tabelas e efeitos que não usam a
 // reserva padrão. O limite impede que uma fórmula acidental trave a ficha.
 export function parseDiceFormula(value) {
-  const formula = String(value || "")
+  const formula = normalizeEspiralDice(value)
     .replace(/\s+/g, "")
     .toLowerCase();
   const match = formula.match(/^(\d*)d(4|6|8|10|12|20|100)([+-]\d+)?$/);

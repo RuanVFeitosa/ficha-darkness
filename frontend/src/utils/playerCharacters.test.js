@@ -1,0 +1,3 @@
+import {characterTemplates,validateCharacterLimit,PLAYER_CHARACTER_PAGE_SIZE} from './playerCharacters';
+test('cria dez templates independentes dos dois sistemas',()=>{const items=characterTemplates();expect(items).toHaveLength(10);expect(new Set(items.map(f=>f.id)).size).toBe(10);expect(items.filter(f=>f.sistema==='espiral')).toHaveLength(5);expect(items.every(f=>f.demo && f.foto.startsWith('data:image/svg+xml'))).toBe(true);expect(PLAYER_CHARACTER_PAGE_SIZE).toBe(4);});
+test('aceita dez e bloqueia o décimo primeiro sem apagar fichas',()=>{const refs=characterTemplates();expect(validateCharacterLimit(refs)).toBe(refs);expect(()=>validateCharacterLimit([...refs,{id:'extra'}])).toThrow('10 personagens');expect(refs).toHaveLength(10);});

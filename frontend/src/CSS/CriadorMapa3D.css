@@ -1,0 +1,21 @@
+.mapa3d-criador .tt3-stage { background: #11191b; }
+.mapa3d-criador-header { position: absolute; z-index: 5; top: 18px; left: 18px; max-width:calc(100vw - 490px); display: flex; align-items: center; gap: 12px; padding: 9px 13px 9px 9px; border: 1px solid #ffffff18; border-radius: 12px; background: rgba(8, 14, 16, .78); box-shadow: 0 14px 40px #0007; backdrop-filter: blur(14px); }
+.mapa3d-criador-header > a { width: 35px; height: 35px; display: grid; place-items: center; border: 1px solid #ffffff1d; border-radius: 50%; color: #ead9b8; font-size: 18px; text-decoration: none; }
+.mapa3d-criador-header span { display: block; color: #bda36d; font-size: 8px; letter-spacing: 1.6px; }
+.mapa3d-criador-header h1 { margin: 3px 0 0; color: #eee2ca; font: 400 18px/1.1 Georgia, serif; }
+.mapa3d-criador-ajuda { position: absolute; z-index: 4; bottom: 18px; left: 18px; max-width: calc(100vw - 520px); display: grid; gap: 3px; padding: 9px 12px; border:1px solid #ffffff10; border-radius: 8px; background: rgba(8, 14, 16, .76); color: #ddd6c9; font-size: 10px; backdrop-filter: blur(10px); }
+.mapa3d-criador-ajuda small { color: #8d9693; font-size: 8px; }
+.mapa3d-criador-shortcuts { position:absolute; z-index:4; right:460px; bottom:18px; display:flex; gap:6px; padding:6px; border:1px solid #ffffff10; border-radius:9px; background:rgba(8,14,16,.7); backdrop-filter:blur(10px); }
+.mapa3d-criador-shortcuts span { display:flex; align-items:center; gap:4px; padding:3px 5px; color:#82908c; font-size:8px; }
+.mapa3d-criador-shortcuts kbd { min-width:18px; height:18px; display:grid; place-items:center; border:1px solid #ffffff1b; border-radius:4px; background:#ffffff08; color:#c9d1cd; font:8px inherit; }
+.mapa3d-spawn-tools { position:absolute; z-index:5; top:82px; left:18px; width:190px; display:grid; gap:6px; padding:10px; border:1px solid #ffffff16; border-radius:10px; background:rgba(8,14,16,.82); box-shadow:0 14px 40px #0006; backdrop-filter:blur(12px); }
+.mapa3d-spawn-tools>span { color:#8ca5c9; font-size:8px; letter-spacing:1.4px; }
+.mapa3d-spawn-tools button { padding:8px 9px; border:1px solid #ffffff1c; border-radius:6px; background:#ffffff08; color:#aeb8b5; font-size:9px; text-align:left; cursor:pointer; }
+.mapa3d-spawn-tools button.defined { border-color:#70e0bd55; color:#a7ead5; }
+.mapa3d-spawn-tools button.active { border-color:#d4b56f88; background:#d4b56f18; color:#f0d69d; }
+@media (max-width: 800px) {
+  .mapa3d-criador-header { top: 10px; left: 10px; }
+  .mapa3d-criador-header h1 { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mapa3d-criador-ajuda,.mapa3d-criador-shortcuts { display: none; }
+  .mapa3d-spawn-tools { top:68px; left:10px; width:170px; }
+}

@@ -1,0 +1,2 @@
+-- Scene difficulties for ESPIRAL checks; enemy difficulty uses its existing defesa.
+alter table public.cenas add column if not exists dificuldades jsonb not null default '{"ambiente":4,"combateAmbiente":4,"conflitos":4}'::jsonb;

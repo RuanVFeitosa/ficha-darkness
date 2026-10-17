@@ -70,9 +70,9 @@ body {
 }
 
 .page-transition img {
-  width: 50%;
-  height: 100%;
-  object-fit: cover;
+  width: min(72vw, 72vh);
+  height: min(72vw, 72vh);
+  object-fit: contain;
   object-position: center;
   display: block;
 }
@@ -111,8 +111,8 @@ body {
   }
 
   .page-transition img {
-    width: 100%;
-    height: 100svh;
+    width: min(88vw, 72svh);
+    height: min(88vw, 72svh);
     object-position: center;
   }
 }
@@ -121,4 +121,24 @@ body {
   .page-transition.active {
     animation-duration: 0.2s;
   }
+}
+
+.page-transition-espiral { background: radial-gradient(ellipse at center, #191919 0%, #050505 65%); color: #eeeae1; }
+.page-transition-symbol { width: min(72vw, 72vh); height: min(72vw, 72vh); overflow: visible; }
+.page-transition-espiral.active { animation: spiralTransitionFade 1s ease-in-out forwards; }
+.page-transition-espiral.active .page-transition-symbol { animation: spiralTransitionTurn 1s cubic-bezier(.2,.65,.3,1) both; }
+@keyframes spiralTransitionFade {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes spiralTransitionTurn {
+  0% { transform: rotate(-120deg) scale(.35); opacity: 0; }
+  20% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: rotate(120deg) scale(1.7); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition-espiral.active { animation: none; opacity: 1; }
+  .page-transition-espiral.active .page-transition-symbol { animation: none; }
 }

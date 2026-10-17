@@ -1,0 +1,67 @@
+/* Evolução do Absoluto: mesma composição editorial da ficha. */
+.upgrade-page.upgrade-dossier{--gold:#bfa66b;--gold-dark:#9e8753;--gold-light:#d4c18b;--bg-dark:#080808;--bg-card:#111;--text-light:#eee;--text-muted:#a5a5a5;--border-gold:#393939;--shadow-gold:transparent;min-height:100dvh;background:#080808;color:#eee;padding:28px clamp(18px,4vw,72px) 64px;font-family:'Courier New',monospace;text-align:left;isolation:isolate}
+.upgrade-dossier *{box-sizing:border-box}
+.upgrade-dossier :is(section,article,div,form){min-width:0}
+.upgrade-dossier :is(h1,h2,h3,p,strong,span){overflow-wrap:anywhere}
+.upgrade-page.upgrade-dossier .upgrade-hero{position:relative;display:block;width:min(1600px,100%);max-width:1600px;min-height:0;padding:66px 110px 26px 0;margin:0 auto 24px;background:transparent;border:0;border-bottom:1px solid #393939;border-radius:0;box-shadow:none;overflow:visible;text-align:left}
+.upgrade-dossier .upgrade-hero::before,.upgrade-dossier .upgrade-hero::after{display:none}
+.upgrade-dossier .upgrade-system-symbol{position:absolute;right:0;top:62px;width:82px;height:100px;object-fit:contain;opacity:.6}
+.upgrade-page.upgrade-dossier .upgrade-voltar{position:absolute;left:0;top:0;display:flex;align-items:center;gap:9px;padding:9px 0;border:0;border-radius:0;background:transparent;box-shadow:none;font:10px 'Courier New',monospace;letter-spacing:.08em;color:#aaa}
+.upgrade-dossier .upgrade-hero>span{font:9px 'Courier New',monospace;letter-spacing:.18em;color:var(--gold)}
+.upgrade-page.upgrade-dossier .upgrade-hero h1{font:clamp(34px,4.5vw,62px)/1.1 Georgia,serif;letter-spacing:-.035em;text-transform:none;color:#eee;margin:14px 0;text-shadow:none}
+.upgrade-dossier .upgrade-character-identity{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 16px;margin-bottom:16px;font:11px 'Courier New',monospace}
+.upgrade-dossier .upgrade-character-identity strong{color:var(--gold);font-weight:normal}
+.upgrade-dossier .upgrade-character-identity span{color:#888}
+.upgrade-page.upgrade-dossier .upgrade-hero p{font:12px/1.8 'Courier New',monospace;max-width:85ch;margin:0;color:#aaa}
+.upgrade-page.upgrade-dossier .upgrade-status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;width:min(1600px,100%);margin:0 auto;padding:0;background:transparent;border:1px solid #393939;border-radius:3px}
+.upgrade-page.upgrade-dossier .upgrade-status>div{background:transparent;border:0;border-right:1px solid #393939;border-radius:0;box-shadow:none;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:12px;padding:20px 24px}
+.upgrade-dossier .upgrade-status>div:last-child{border-right:0}
+.upgrade-dossier .upgrade-status span{font:9px 'Courier New',monospace;letter-spacing:.12em;color:#aaa}
+.upgrade-dossier .upgrade-status strong{font:32px Georgia,serif;color:var(--gold)}
+.upgrade-page.upgrade-dossier .upgrade-layout{width:min(1600px,100%);max-width:1600px;grid-template-columns:240px minmax(0,1fr);gap:32px;margin:30px auto 0;align-items:start}
+.upgrade-page.upgrade-dossier .upgrade-tabela{padding:18px;background:#101010;border:1px solid #333;border-radius:3px;box-shadow:none}
+.upgrade-dossier .upgrade-tabela h2{font:20px Georgia,serif;color:#eee;text-align:left;margin:0 0 18px}
+.upgrade-dossier .upgrade-tabela-grid{grid-template-columns:1fr 1fr;gap:0}
+.upgrade-dossier .upgrade-tabela-grid>*{padding:8px 6px;border:0;border-bottom:1px solid #292929;background:transparent;text-align:left;font:11px 'Courier New',monospace}
+.upgrade-dossier .upgrade-tabela-grid>strong{color:var(--gold);font-size:9px;text-transform:uppercase;letter-spacing:.06em}
+.upgrade-dossier .upgrade-tabela-grid>span:nth-child(2n){text-align:right;color:#eee}
+.upgrade-page.upgrade-dossier .upgrade-shell{padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible}
+.upgrade-page.upgrade-dossier .upgrade-trilhas{display:flex;flex-wrap:wrap;gap:0 22px;padding:0;margin:0 0 22px;background:transparent;border:0;border-bottom:1px solid #393939;border-radius:0;counter-reset:upgrade-tabs}
+.upgrade-page.upgrade-dossier .upgrade-trilhas button{counter-increment:upgrade-tabs;display:flex;align-items:center;gap:7px;flex:0 1 auto;min-height:48px;padding:14px 0;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;box-shadow:none;font:11px 'Courier New',monospace;letter-spacing:0;color:#999;text-transform:none;transform:none}
+.upgrade-dossier .upgrade-trilhas button::before{content:counter(upgrade-tabs,decimal-leading-zero);font-size:8px;color:#777}
+.upgrade-page.upgrade-dossier .upgrade-trilhas button.ativa{border-bottom-color:var(--gold);background:transparent;color:#eee;box-shadow:none}
+.upgrade-dossier .upgrade-trilhas button:hover{color:var(--gold)}
+.upgrade-page.upgrade-dossier .upgrade-pontos{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:16px 18px;background:#111;border:1px solid #393939;border-left:2px solid var(--gold);border-radius:3px;margin-bottom:20px;box-shadow:none}
+.upgrade-dossier .upgrade-pontos span{font:10px 'Courier New',monospace;letter-spacing:.05em;color:#aaa}
+.upgrade-dossier .upgrade-pontos strong{font:14px 'Courier New',monospace;color:var(--gold)}
+.upgrade-page.upgrade-dossier .upgrade-lista{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.upgrade-page.upgrade-dossier .upgrade-item{padding:18px;background:#111;border:1px solid #393939;border-radius:3px;box-shadow:none;transition:border-color .2s}
+.upgrade-dossier .upgrade-item:hover{border-color:#777;transform:none;box-shadow:none}
+.upgrade-dossier .upgrade-item-header{gap:10px;align-items:flex-start;flex-wrap:wrap}
+.upgrade-dossier .upgrade-item-nome{font:18px Georgia,serif;letter-spacing:0;text-transform:none;color:#eee}
+.upgrade-dossier .upgrade-item-atual{font:10px 'Courier New',monospace;color:#999}
+.upgrade-dossier .upgrade-item-alocado{color:var(--gold)}
+.upgrade-dossier .upgrade-item-controles{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+.upgrade-page.upgrade-dossier .upgrade-input-group{display:flex;align-items:center;border:1px solid #444;border-radius:2px;background:#080808;overflow:hidden;min-width:0}
+.upgrade-page.upgrade-dossier .upgrade-input-btn{min-width:38px;min-height:38px;background:transparent;color:#ddd;border:0;border-radius:0;box-shadow:none;font:18px Georgia,serif}
+.upgrade-dossier .upgrade-input-group input{max-width:80px;min-width:0;color:var(--gold);background:transparent;border:0;box-shadow:none;font:16px 'Courier New',monospace;text-align:center;padding:8px}
+.upgrade-page.upgrade-dossier .upgrade-remover{background:transparent;border:1px solid #444;border-radius:2px;color:#aaa;box-shadow:none;min-height:38px;font-size:10px;padding:8px 10px}
+.upgrade-page.upgrade-dossier .upgrade-confirmar{margin-top:22px;min-height:44px;padding:12px 22px;background:var(--gold);border:1px solid var(--gold);border-radius:3px;box-shadow:none;color:#080808;font:600 11px 'Courier New',monospace;letter-spacing:.06em;transform:none}
+.upgrade-dossier .upgrade-confirmar:disabled{opacity:.35;cursor:not-allowed}
+.upgrade-page.upgrade-dossier .upgrade-habilidades-info{padding:22px;background:#101010;border:1px solid #393939;border-radius:3px;box-shadow:none;text-align:left}
+.upgrade-dossier .upgrade-habilidades-topo h2{font:25px Georgia,serif;letter-spacing:0;text-transform:none;color:#eee}
+.upgrade-dossier .upgrade-habilidades-topo p{font:12px/1.8 'Courier New',monospace;color:#aaa}
+.upgrade-dossier .upgrade-habilidades-topo button{border:1px solid #555;background:transparent;border-radius:2px;color:var(--gold);font-size:10px;box-shadow:none;padding:10px 12px}
+.upgrade-dossier .recursos-habilidade-resumo>div{border-color:#393939;border-radius:3px;background:#111}
+.upgrade-dossier .recursos-habilidade-resumo span{font-size:9px;color:#999}
+.upgrade-dossier .recursos-habilidade-resumo strong{color:#eee}
+.upgrade-dossier .criador-habilidade-form label{font-size:10px;letter-spacing:.08em;color:#aaa}
+.upgrade-dossier .criador-habilidade-form :is(input,select,textarea){background:#080808;border-color:#444;border-radius:2px;color:#eee}
+.upgrade-dossier .habilidade-enviada{background:#111;border:1px solid #393939;border-left:2px solid var(--gold);border-radius:3px;box-shadow:none}
+.upgrade-dossier .habilidades-enviadas h3{font:22px Georgia,serif;color:#eee;letter-spacing:0;text-transform:none}
+.upgrade-page.upgrade-dossier.ability-studio-page .upgrade-layout{grid-template-columns:minmax(0,1fr)}
+.upgrade-dossier :is(button,a,input,textarea,select):focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+@media(max-width:1100px){.upgrade-page.upgrade-dossier .upgrade-layout{grid-template-columns:200px minmax(0,1fr);gap:22px}.upgrade-page.upgrade-dossier .upgrade-lista{grid-template-columns:1fr}}
+@media(max-width:800px){.upgrade-page.upgrade-dossier{padding:20px 18px 44px}.upgrade-page.upgrade-dossier .upgrade-layout{grid-template-columns:1fr}.upgrade-dossier .upgrade-tabela{order:2}.upgrade-dossier .upgrade-shell{order:1}.upgrade-dossier .upgrade-tabela-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.upgrade-dossier .upgrade-trilhas{gap:0 18px}.upgrade-page.upgrade-dossier .upgrade-hero{padding-right:70px}.upgrade-dossier .upgrade-system-symbol{width:55px;height:70px}.upgrade-page.upgrade-dossier .upgrade-status>div{padding:16px}.upgrade-dossier .upgrade-status strong{font-size:28px}}
+@media(max-width:520px){.upgrade-page.upgrade-dossier .upgrade-hero{padding-top:58px;padding-right:0}.upgrade-dossier .upgrade-system-symbol{top:0;right:0;width:36px;height:44px}.upgrade-dossier .upgrade-hero>span{font-size:8px;letter-spacing:.1em}.upgrade-page.upgrade-dossier .upgrade-hero h1{font-size:36px}.upgrade-page.upgrade-dossier .upgrade-status>div{padding:14px 10px;gap:10px}.upgrade-dossier .upgrade-status span{font-size:8px;letter-spacing:0;line-height:1.5}.upgrade-dossier .upgrade-status strong{font-size:25px}.upgrade-page.upgrade-dossier .upgrade-trilhas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}.upgrade-page.upgrade-dossier .upgrade-trilhas button{font-size:11px}.upgrade-page.upgrade-dossier .upgrade-habilidades-info{padding:16px}.upgrade-dossier .upgrade-habilidades-topo{align-items:flex-start;gap:14px}.upgrade-dossier .upgrade-item{padding:16px}.upgrade-dossier input,.upgrade-dossier select,.upgrade-dossier textarea{font-size:16px}.upgrade-dossier .upgrade-item-controles{gap:8px}}
+@media(prefers-reduced-motion:no-preference){.upgrade-dossier .upgrade-lista,.upgrade-dossier .upgrade-habilidades-info{animation:upgrade-dossier-enter .28s ease-out}@keyframes upgrade-dossier-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}}

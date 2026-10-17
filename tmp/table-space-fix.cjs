@@ -1,0 +1,1 @@
+const fs=require('fs'),p='frontend/src/utils/abilityTables.js';let s=fs.readFileSync(p,'utf8');s=s.replace(".map(s=>s.trim().replace(/\\\\\\|/g,'|'))", ".map(s=>s.replace(/^ /,'').replace(/ $/,'').replace(/\\\\\\|/g,'|'))");fs.writeFileSync(p,s);

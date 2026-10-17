@@ -1,0 +1,6 @@
+import React from 'react';
+import {difficultyOptions} from '../utils/sceneDifficulty';
+export default function SceneDifficultyPanel({scene,enemies,onSave}) {
+ const options=difficultyOptions(scene,enemies);
+ return <section className="tt3-scene-difficulty-panel" aria-label="Dificuldades da cena"><header><span>CENA ATUAL</span><h3>Dificuldades</h3><p>Defina as dificuldades desta cena.</p></header>{['Ambiente','Combate','Conflitos'].map(category=><div className="tt3-difficulty-group" key={category}><h4>{category}</h4>{options.filter(option=>option.category===category).map(option=><article key={option.id} className="tt3-difficulty-card"><div className="tt3-difficulty-choice"><span>{option.label}</span></div>{option.id.startsWith('inimigo:') ? <div className="tt3-difficulty-defense"><span>Defesa</span><b>{option.value}</b><small>Automática</small></div> : <label className="tt3-difficulty-value">Dificuldade<input aria-label={`Dificuldade de ${option.label}`} key={`${option.id}:${option.value}`} type="number" min="0" max="30" defaultValue={option.value} onBlur={event=>{const value=Math.max(0,Math.min(30,Number(event.target.value)||0));if(value!==option.value)onSave({[option.id]:value});}} onKeyDown={event=>{if(event.key==='Enter')event.currentTarget.blur();}}/></label>}</article>)}</div>)}</section>;
+}

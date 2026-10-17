@@ -1,4 +1,4 @@
-import { ativarCena, atualizarEstadoMusica, atualizarRevelacaoDocumentoInvestigacao, buscarCampanhaPorCodigo, criarCampanhaMesa, desvincularFicha, excluirCena, listarCampanhas, listarCampanhasDaFicha, moverToken, salvarCena, salvarEvidenciaInterativa, salvarMusicasCampanha, validarArquivoImagem, vincularFicha } from "./mesaApi";
+import { registrarRolagem, salvarTokenCustom3D, salvarEstadoToken3D, obterEstadoToken3D, ativarCena, atualizarEstadoMusica, atualizarRevelacaoDocumentoInvestigacao, buscarCampanhaPorCodigo, criarCampanhaMesa, desvincularFicha, excluirCena, listarCampanhas, listarCampanhasDaFicha, moverToken, salvarCena, salvarClima3DCampanha, salvarEvidenciaInterativa, salvarMusicasCampanha, salvarMapas3DCampanha, validarArquivoImagem, vincularFicha } from "./mesaApi";
 
 describe("biblioteca local da mesa", () => {
   test("limita o tamanho das cenas e mapas antes do upload", () => {
@@ -110,12 +110,15 @@ describe("biblioteca local da mesa", () => {
   });
 
   test("cria campanhas com bibliotecas independentes", async () => {
-    const campanha = await criarCampanhaMesa("Arquivo Vermelho");
+    const campanha = await criarCampanhaMesa("Arquivo Vermelho", "3d");
     await salvarCena(campanha.id, { nome: "Laboratorio", pasta: "Ato 1" });
+    await salvarMapas3DCampanha(campanha.id, [{ id: "mapa3d-1", nome: "Laboratório 3D", assets: [{ instanceId: "mesa-1" }] }]);
     const aberta = await buscarCampanhaPorCodigo(campanha.codigo);
     const todas = await listarCampanhas();
 
     expect(todas).toContainEqual(expect.objectContaining({ id: campanha.id }));
+    expect(aberta.tabletop_tipo).toBe("3d");
+    expect(aberta.mapas3D).toEqual([expect.objectContaining({ id: "mapa3d-1", nome: "Laboratório 3D" })]);
     expect(aberta.cenas).toHaveLength(1);
     expect(aberta.cenas[0].nome).toBe("Laboratorio");
     expect((await buscarCampanhaPorCodigo("DARK26")).cenas.some((cena) => cena.nome === "Laboratorio")).toBe(false);
@@ -131,13 +134,15 @@ describe("biblioteca local da mesa", () => {
       mapasBatalha: [
         { id: "mapa-1", nome: "Piso superior", url: "/piso.webp", larguraGrade: 14, alturaGrade: 9 },
         { id: "mapa-2", nome: "Subsolo", url: "/subsolo.webp", larguraGrade: 18, alturaGrade: 12 },
+        { id: "mapa3d-cena-mapa3d-1", nome: "Laboratório 3D", url: "", origem: "tabletop3d", mapa3dId: "mapa3d-1", exibirGrade: false },
       ],
     });
     await ativarCena("demo", cena.id, "mapa", "mapa-2");
     const campanha = await buscarCampanhaPorCodigo("DARK26");
 
     expect(campanha.cenaAtiva.imagensCena).toHaveLength(2);
-    expect(campanha.cenaAtiva.mapasBatalha).toHaveLength(2);
+    expect(campanha.cenaAtiva.mapasBatalha).toHaveLength(3);
+    expect(campanha.cenaAtiva.mapasBatalha).toContainEqual(expect.objectContaining({ origem: "tabletop3d", mapa3dId: "mapa3d-1" }));
     expect(campanha.midiaAtivaId).toBe("mapa-2");
   });
 
@@ -170,4 +175,89 @@ describe("biblioteca local da mesa", () => {
       atualizadoEm: expect.any(String),
     }));
   });
+
+  test("sincroniza o clima do tabletop 3D", async () => {
+    await salvarClima3DCampanha("demo", {
+      preset: "ato3",
+      skyColor: "#53070a",
+      rain: 0.2,
+      snow: 0,
+    });
+
+    expect((await buscarCampanhaPorCodigo("DARK26")).clima3D).toEqual(expect.objectContaining({
+      preset: "ato3",
+      skyColor: "#53070a",
+      rain: 0.2,
+      atualizadoEm: expect.any(String),
+    }));
+  });
+});
+
+test('sincroniza a posição 3D da ficha entre leitores sem alterar a posição 2D', async () => {
+ localStorage.clear();
+ await vincularFicha('demo','espiral:ana',{nome:'Ana'});
+ const before=await buscarCampanhaPorCodigo('DARK26');
+ const token=before.tokens.find(t => t.ficha_id==='espiral:ana');
+ await salvarEstadoToken3D(token.id,'mapa-a',{x:2,z:3,elevation:4,scale:0.5,image:'body',origin:'jogador'});
+ const after=await buscarCampanhaPorCodigo('DARK26');
+ const shared=after.tokens.find(t => t.id===token.id);
+ expect(obterEstadoToken3D(shared,'mapa-a')).toMatchObject({x:2,z:3,elevation:4,scale:0.5,origin:'jogador'});
+ expect(shared.x).toBe(token.x);
+ expect(shared.y).toBe(token.y);
+ await salvarEstadoToken3D(token.id,'mapa-a',{x:8,z:9,origin:'mestre'});
+ const updated=await buscarCampanhaPorCodigo('DARK26');
+ expect(obterEstadoToken3D(updated.tokens.find(t => t.id===token.id),'mapa-a')).toMatchObject({x:8,z:9,elevation:4,image:'body',origin:'mestre'});
+ expect(obterEstadoToken3D(shared,'outro-mapa')).toBeNull();
+});
+test('token importado pelo mestre publica imagem e posição para outros leitores', async () => {
+ localStorage.clear();
+ await salvarTokenCustom3D('demo','mapa-a',{id:'token-importado',name:'NPC',image:'body',x:4,z:5,scale:0.8},'mestre');
+ const campaign=await buscarCampanhaPorCodigo('DARK26');
+ const shared=campaign.tokens.find(token => token.ficha_id==='custom3d:token-importado');
+ expect(obterEstadoToken3D(shared,'mapa-a')).toMatchObject({id:'token-importado',image:'body',x:4,z:5,scale:0.8});
+});
+ test('registra o maior dado dos testes ESPIRAL sem converter em zero',async()=>{
+  localStorage.clear();
+  const roll=await registrarRolagem('demo','Victoria',{type:'test',label:'Pulso + Atletismo',best:12,dice:[4,12],pressure:[],margin:3});
+  expect(roll.resultado).toBe(12);
+  expect(roll.expressao).toBe('Pulso + Atletismo');
+  expect(roll.detalhes.margin).toBe(3);
+ });
+ test('preserva totais e resultados zero ao registrar fórmulas',async()=>{
+  const roll=await registrarRolagem('demo','Victoria',{total:0,best:12,formula:'1d6-6'});
+  expect(roll.resultado).toBe(0);
+ });
+
+test('persiste as dificuldades das três categorias na cena',async()=>{
+ localStorage.clear();
+ const scene=await salvarCena('demo',{nome:'Perseguição',dificuldades:{ambiente:6,combateAmbiente:9,conflitos:12}});
+ const campanha=await buscarCampanhaPorCodigo('DARK26');
+ expect(campanha.cenas.find(item=>item.id===scene.id).dificuldades).toEqual({ambiente:6,combateAmbiente:9,conflitos:12});
+});
+test("sincroniza a lanterna do token 3D e preserva a posição", async () => {
+  localStorage.clear();
+  await vincularFicha("demo", "lanterna-test", { nome: "Personagem" });
+  const initial = await buscarCampanhaPorCodigo("DARK26");
+  const token = initial.tokens.find(item => item.ficha_id === "lanterna-test");
+  await salvarEstadoToken3D(token.id, "mapa-lanterna", { x: 2, z: 3 });
+  const lanterna = { ativa: true, alcance: 18, direcao: 90, abertura: 50, cor: "#ffffff" };
+  await salvarEstadoToken3D(token.id, "mapa-lanterna", { lanterna });
+  const refreshed = await buscarCampanhaPorCodigo("DARK26");
+  const state = obterEstadoToken3D(refreshed.tokens.find(item => item.id === token.id), "mapa-lanterna");
+  expect(state).toEqual(expect.objectContaining({ x: 2, z: 3, lanterna }));
+});
+
+test("agrupa posições pendentes sem perder ajustes do token", async () => {
+ localStorage.clear();
+ await vincularFicha("demo", "movimento-fluido", {nome:"Movimento"});
+ const campaign=await buscarCampanhaPorCodigo("DARK26");
+ const token=campaign.tokens.find(item => item.ficha_id==="movimento-fluido");
+ await Promise.all([
+   salvarEstadoToken3D(token.id,"fluido",{x:1,z:1}),
+   salvarEstadoToken3D(token.id,"fluido",{scale:0.5,x:2,z:2}),
+   salvarEstadoToken3D(token.id,"fluido",{x:3,z:3}),
+   salvarEstadoToken3D(token.id,"fluido",{x:4,z:4}),
+ ]);
+ const refreshed=await buscarCampanhaPorCodigo("DARK26");
+ expect(obterEstadoToken3D(refreshed.tokens.find(item => item.id===token.id),"fluido")).toEqual(expect.objectContaining({x:4,z:4,scale:0.5}));
 });

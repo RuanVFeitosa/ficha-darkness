@@ -229,6 +229,24 @@
   border: 1px solid var(--es-line);
   margin-bottom: 25px;
 }
+.es-tabletop-token-field {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 12px 18px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--es-line);
+  background: rgba(255,255,255,.025);
+}
+.es-tabletop-token-field > div:first-child { align-self: start; }
+.es-tabletop-token-field > div:first-child span { display: block; margin-bottom: 6px; color: var(--es-text); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+.es-tabletop-token-field > div:first-child small { display: block; color: var(--es-muted); font-size: 9px; line-height: 1.5; }
+.es-tabletop-token-preview { grid-row: span 2; grid-column: 2; width: 92px; height: 116px; display: grid; place-items: center; overflow: hidden; padding: 0!important; border: 1px dashed var(--es-line)!important; background: #080808!important; }
+.es-tabletop-token-preview img { width: 100%; height: 100%; object-fit: contain; }
+.es-tabletop-token-preview span { padding: 8px; color: var(--es-muted); font-size: 8px; line-height: 1.4; text-align: center; text-transform: uppercase; }
+.es-tabletop-token-actions { display: flex; flex-wrap: wrap; gap: 7px; align-self: end; }
+.es-tabletop-token-actions button { padding: 8px 10px; font-size: 8px!important; }
 .es-tabs {
   display: flex;
   gap: 32px;
@@ -1267,6 +1285,8 @@
     grid-template-columns: 1fr;
     padding: 18px;
   }
+  .es-tabletop-token-field { grid-column: auto; grid-template-columns: minmax(0,1fr) 78px; }
+  .es-tabletop-token-preview { width: 78px; height: 104px; }
   .es-rules summary > span {
     float: none;
     display: block;
@@ -2581,4 +2601,222 @@
 .espiral-app .es-theme-panel p,
 .espiral-app .es-theme-color > span {
   color: var(--es-muted);
+}
+
+/* Background do personagem */
+.es-layout-background {
+  grid-template-columns: minmax(0, 1fr);
+}
+.es-background-page {
+  min-height: 690px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(310px, .72fr);
+  overflow: hidden;
+  border: 1px solid var(--es-line);
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.025), transparent 48%),
+    #070707;
+}
+.es-background-copy {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 24px;
+  padding: clamp(28px, 4vw, 58px);
+  border-right: 1px solid var(--es-line);
+}
+.es-background-copy header {
+  max-width: 720px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--es-line);
+}
+.es-background-copy h2 {
+  margin: 8px 0 12px;
+  color: var(--es-text);
+  font: 400 clamp(28px, 3vw, 45px)/1.08 Georgia, serif;
+  letter-spacing: -.025em;
+}
+.es-background-copy header p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--es-muted);
+  font-size: 11px;
+  line-height: 1.75;
+}
+.es-background-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--es-line);
+}
+.es-background-facts > div {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  padding: 13px 14px;
+  border-right: 1px solid var(--es-line);
+}
+.es-background-facts > div:last-child { border-right: 0; }
+.es-background-facts span,
+.es-background-field > span {
+  color: var(--es-muted);
+  font: 8px "Courier New", monospace;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.es-background-facts strong {
+  overflow: hidden;
+  color: var(--es-text);
+  font-size: 11px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.es-background-field { display: grid; gap: 9px; }
+.espiral-app .es-background-field textarea {
+  width: 100%;
+  min-height: 92px;
+  padding: 0 0 14px;
+  border: 0;
+  border-bottom: 1px solid var(--es-line);
+  border-radius: 0;
+  outline: 0;
+  resize: vertical;
+  background: transparent;
+  color: var(--es-text);
+  font: 15px/1.75 Georgia, serif;
+}
+.espiral-app .es-background-field-long textarea { min-height: 170px; }
+.espiral-app .es-background-field textarea:focus { border-bottom-color: var(--es-accent); }
+.es-background-portrait {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(430px, 1fr) auto auto;
+  gap: 14px;
+  padding: 26px 26px 20px;
+  background:
+    radial-gradient(circle at 50% 36%, color-mix(in srgb, var(--es-accent) 10%, transparent), transparent 48%),
+    linear-gradient(180deg, #111 0%, #050505 78%);
+}
+.es-background-portrait-heading { display: grid; gap: 5px; }
+.es-background-portrait-heading strong { color: var(--es-text); font: 400 21px Georgia, serif; }
+.es-background-portrait-frame {
+  position: relative;
+  width: 100%;
+  min-height: 430px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 0;
+  border: 1px dashed color-mix(in srgb, var(--es-line) 85%, white);
+  background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(0,0,0,.3));
+  cursor: pointer;
+}
+.es-background-portrait-frame.has-image { border-style: solid; border-color: transparent; }
+.es-background-portrait-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 24px 24px rgba(0,0,0,.65));
+}
+.es-background-portrait-frame > span { display: grid; gap: 8px; padding: 24px; color: var(--es-text); text-align: center; }
+.es-background-portrait-frame > span b { font: 400 18px Georgia, serif; }
+.es-background-portrait-frame > span small { max-width: 210px; color: var(--es-muted); font-size: 9px; line-height: 1.6; }
+.es-background-portrait-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.es-background-portrait-actions button {
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid var(--es-line);
+  background: transparent;
+  color: var(--es-text);
+  font: 8px "Courier New", monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.es-background-portrait-actions button:first-child { border-color: var(--es-accent); background: var(--es-accent); color: var(--es-bg); }
+.es-background-portrait > p { margin: 0; color: var(--es-muted); font-size: 8px; line-height: 1.55; }
+@media (max-width: 950px) {
+  .es-background-page { grid-template-columns: 1fr; }
+  .es-background-copy { border-right: 0; border-bottom: 1px solid var(--es-line); }
+  .es-background-portrait { grid-template-rows: auto minmax(520px, 70vh) auto auto; }
+}
+@media (max-width: 620px) {
+  .es-background-copy { padding: 24px 18px; }
+  .es-background-facts { grid-template-columns: 1fr 1fr; }
+  .es-background-facts > div:nth-child(2) { border-right: 0; }
+  .es-background-facts > div:nth-child(-n+2) { border-bottom: 1px solid var(--es-line); }
+  .es-background-portrait { padding: 20px 14px 16px; grid-template-rows: auto minmax(420px, 65vh) auto auto; }
+}
+
+
+
+.es-attribute-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.es-attribute-actions button{padding:5px 7px;border:1px solid var(--es-line,#555);background:transparent;color:var(--es-text,#eee);font:10px "Courier New",monospace;cursor:pointer}.es-attribute-actions button:hover:not(:disabled){background:#ffffff18}.es-attribute-actions button:disabled{opacity:.35;cursor:default}.es-attribute-temp{grid-column:1/-1;color:var(--es-text,#ddd);font:9px "Courier New",monospace;margin-top:5px}.es-attribute-actions button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+
+.es-attribute-dice-controls{grid-column:2;grid-row:1/4;display:flex;align-items:center;gap:5px;position:relative}.es-attribute-dice-controls .es-rail-value{grid-column:auto;grid-row:auto;cursor:pointer;border:0;padding:0;transition:filter .18s,transform .18s}.es-attribute-dice-controls .es-rail-value:hover:not(:disabled){filter:brightness(1.15);transform:translateY(-2px)}.es-attribute-dice-controls .es-rail-value:focus-visible{outline:0;filter:drop-shadow(0 0 3px #fff)}.es-attribute-add{background:transparent;border:1px solid var(--es-line,#555);color:var(--es-text,#eee);width:22px;height:24px;padding:0;font:18px/1 monospace;cursor:pointer;border-radius:3px}.es-attribute-add:hover:not(:disabled){background:#ffffff18}.es-attribute-add:disabled{opacity:.35;cursor:default}.es-attribute-quantity{position:absolute;top:100%;left:0;background:transparent;border:0;color:var(--es-text,#eee);padding:2px;font:10px monospace;cursor:pointer}.es-attribute-dice-controls button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+
+.espiral-app .es-attribute-dice-controls .es-attribute-roll{display:grid;place-items:center;flex-shrink:0;min-width:38px;min-height:38px;padding:0;border:0;border-radius:0;background:transparent;color:#111;cursor:pointer}.espiral-app .es-attribute-roll .espiral-die{font-size:17px;width:34px;height:34px;min-width:34px;margin:0;transition:transform .18s,filter .18s}.espiral-app .es-attribute-roll:hover:not(:disabled) .espiral-die{transform:translateY(-2px);filter:brightness(1.1)}.espiral-app .es-attribute-roll:disabled{opacity:.6}.espiral-app .es-attribute-roll:focus-visible{outline:2px solid var(--es-text,#fff);outline-offset:2px}
+
+.espiral-app .es-attribute-dice-controls .es-attribute-quantity{position:absolute;top:-8px;left:21px;z-index:2;display:grid;place-items:center;min-width:25px;height:20px;box-sizing:border-box;padding:2px 5px;border:1px solid #888;border-radius:5px;background:#202020;color:#fff;font:700 11px/1 "Courier New",monospace;letter-spacing:-.5px;box-shadow:0 2px 5px #0009;transform:rotate(12deg);transform-origin:center;cursor:pointer;transition:transform .18s,background .18s,border-color .18s}.espiral-app .es-attribute-dice-controls .es-attribute-quantity:hover{background:#383838;border-color:#eee;transform:rotate(5deg) translateY(-1px)}.espiral-app .es-attribute-dice-controls .es-attribute-quantity:focus-visible{outline:2px solid #fff;outline-offset:3px}@media(prefers-reduced-motion:reduce){.espiral-app .es-attribute-dice-controls .es-attribute-quantity{transition:none}}
+
+.es-damage-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+.es-damage > label { display: block; margin: 12px 0; }
+.es-damage p { line-height: 1.5; }
+
+/* Arsenal: readable equipment cards with persistent field labels. */
+.es-combat-kit .es-equipment-row[hidden] { display: none; }
+.es-kit-reveal { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 240ms ease, opacity 180ms ease; }
+.es-kit-reveal.is-open { grid-template-rows: 1fr; opacity: 1; }
+.es-kit-reveal-clip { min-height: 0; overflow: hidden; }
+.es-kit-reveal .es-equipment-row { transform: translateY(-6px); transition: transform 240ms ease; }
+.es-kit-reveal.is-open .es-equipment-row { transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .es-kit-reveal, .es-kit-reveal .es-equipment-row { transition: none; }
+}
+.es-kit-icons { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; }
+.es-kit-icons button { display: grid; place-items: center; width: 58px; height: 54px; padding: 8px; border: 1px solid transparent; background: transparent; color: var(--es-text, #eee); cursor: pointer; }
+.es-kit-icons button:hover, .es-kit-icons button[aria-pressed="true"] { border-color: var(--es-line, #666); background: #ffffff0b; }
+.es-kit-icons button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.es-kit-icons button svg { width: 38px !important; height: 38px !important; }
+.es-kit-icons button img { width: 38px; height: 38px; object-fit: contain; filter: brightness(0) invert(1); }
+.es-combat-kit { align-items: start; }
+.es-combat-kit > datalist { display: none; }
+.es-equipment-column { padding-bottom: 6px; }
+.es-equipment-column header { padding: 10px 12px; margin-bottom: 4px; }
+.es-equipment-column header small { font-size: 10px; line-height: 1.4; }
+.es-equipment-column header button { min-height: 28px; padding: 5px 8px; font-size: 10px; }
+.es-kit-count { display: inline-block; margin-left: 6px; padding: 3px 7px; border: 1px solid var(--es-line, #444); font: 11px monospace; letter-spacing: 0; }
+.es-combat-kit .es-equipment-row {
+  grid-template-columns: 26px minmax(0, 1fr) 76px 56px 22px;
+  grid-template-rows: auto;
+  align-items: center;
+  gap: 6px;
+  margin: 5px 8px;
+  padding: 7px;
+  border: 1px solid var(--es-line, #333);
+  background: var(--es-bg, #111);
+}
+.es-combat-kit .es-equipment-row:last-child { border-bottom: 1px solid var(--es-line, #333); }
+.es-equipment-row > .es-weapon-icon { grid-column: 1; grid-row: 1; align-self: center; width: 26px; height: 28px; background: #ffffff08; }
+.es-equipment-row > input[aria-label="Nome da arma"],
+.es-equipment-row > input[aria-label="Nome da proteção"] { grid-column: 2; grid-row: 1; font-size: 11px; font-weight: 600; }
+.es-equipment-row > button[aria-label^="Remover"] { grid-column: 5; grid-row: 1; min-height: 28px; border-color: transparent; color: #999; }
+.es-equipment-row > button[aria-label^="Remover"]:hover { color: #ffb5ad; border-color: #9a514a; background: #9a514a18; }
+.es-equipment-row label { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.es-equipment-row label > span:first-child { font: 9px/1.4 monospace; letter-spacing: 1.2px; color: #aaa; }
+.es-equipment-row .es-kit-damage { grid-column: 3; grid-row: 1; }
+.es-equipment-row .es-kit-damage > span:first-child { display: none; }
+.es-equipment-row .es-kit-protection { grid-column: 4; grid-row: 1 / 3; align-self: center; }
+.es-equipment-row .es-kit-region { grid-column: 2 / 4; grid-row: 2; }
+.es-equipment-row .es-kit-region > span:first-child { display: none; }
+.es-equipment-row.es-protection-row > input[aria-label="Nome da proteção"] { grid-column: 2 / 4; }
+.es-combat-kit .es-equipment-row input { min-height: 28px; padding: 5px 6px; font-size: 11px; width: 100%; box-sizing: border-box; }
+.es-combat-kit .es-equipment-row .es-damage-roll { grid-column: 4; grid-row: 1; align-self: center; min-height: 28px; padding: 5px; font-size: 10px; background: #ffffff0b; }
+.es-equipment-row .espiral-dice-input-preview { font-size: 13px; }
+.es-equipment-row .espiral-dice-input-preview .espiral-die { font-size: 10px; }
+@media (max-width: 800px) {
+  .es-combat-kit { grid-template-columns: 1fr; }
+}
+@media (max-width: 400px) {
+  .es-combat-kit .es-equipment-row { margin: 5px; padding: 6px; grid-template-columns: 22px minmax(0, 1fr) 65px 46px 20px; gap: 4px; }
 }

@@ -195,6 +195,8 @@ const MusicaTabletop = ({
       ...mudancas,
     });
   };
+  const playerConfigRef = useRef(null);
+  playerConfigRef.current = { controlavel, musicasCampanha, publicarEstado, volume };
   useEffect(() => {
     if (controlavel || !playerPronto || !estadoRemoto || !playerRef.current)
       return;
@@ -218,7 +220,7 @@ const MusicaTabletop = ({
   }, [controlavel, estadoRemoto, playerPronto]);
 
   useEffect(() => {
-    const modoCampanha = Array.isArray(musicasCampanha);
+    const modoCampanha = Array.isArray(playerConfigRef.current.musicasCampanha);
     if ((!playlistId && !modoCampanha) || !elementoRef.current)
       return undefined;
     const hospedeiro = elementoRef.current;
@@ -233,7 +235,7 @@ const MusicaTabletop = ({
       carregarApiYoutube(),
       (modoCampanha
         ? Promise.resolve(
-            musicasCampanha
+            playerConfigRef.current.musicasCampanha
               .map((musica, indice) => {
                 const videoId = extrairVideoId(musica.url);
                 return videoId
@@ -263,7 +265,7 @@ const MusicaTabletop = ({
           listaCarregada = true;
           setFaixas(faixasApi);
           setErro("");
-        } else if (modoCampanha && musicasCampanha.length) {
+        } else if (modoCampanha && playerConfigRef.current.musicasCampanha.length) {
           setErro(
             "Nenhuma URL de video valida foi encontrada na playlist da campanha.",
           );
@@ -327,7 +329,7 @@ const MusicaTabletop = ({
                   "referrerpolicy",
                   "strict-origin-when-cross-origin",
                 );
-              event.target.setVolume(volume);
+              event.target.setVolume(playerConfigRef.current.volume);
               if (idsApi.length) event.target.cuePlaylist(idsApi, 0, 0);
               else {
                 event.target.cuePlaylist({
@@ -370,14 +372,14 @@ const MusicaTabletop = ({
                 indiceRepeticaoRef.current = indice;
               }
               if (
-                controlavel &&
+                playerConfigRef.current.controlavel &&
                 [
                   YT.PlayerState.PLAYING,
                   YT.PlayerState.PAUSED,
                   YT.PlayerState.ENDED,
                 ].includes(event.data)
               )
-                publicarEstado({
+                playerConfigRef.current.publicarEstado({
                   indice: indiceEfetivo,
                   tocando: event.data === YT.PlayerState.PLAYING || reiniciando,
                   tempo:

@@ -1,3 +1,15 @@
+import AbilityEditDiff from '../components/AbilityEditDiff';
+import {decidirEdicaoHabilidade} from '../utils/abilityEdits';
+import { espiralDie } from '../utils/espiralDice';
+import AbsolutoAgentCard from '../components/AbsolutoAgentCard';
+
+import AbilityDocument from '../components/AbilityDocument';
+import TokenAnimationStudio from '../components/TokenAnimationStudio';
+import EspiralEncounters from '../components/EspiralEncounters';
+import EspiralDashboardCatalog from '../components/EspiralDashboardCatalog';
+import { grantEspiralCatalogEntry } from '../utils/espiralCatalogGrant';
+import { EspiralAgentCard, EspiralDashboardHeader } from "../components/EspiralDashboard";
+import "../CSS/EspiralDashboard.css";
 import React, {
   memo,
   useCallback,
@@ -9,48 +21,17 @@ import React, {
 import { createPortal } from "react-dom";
 import { confirmarDialogo, solicitarDialogo } from "../components/DialogoGlobal";
 import Icon from "@mdi/react";
-import {
-  mdiAccountPlus,
-  mdiArrowLeft,
-  mdiCashPlus,
-  mdiDeleteOutline,
-  mdiTrendingUp,
-  mdiOpenInNew,
-  mdiPackageVariantClosedPlus,
-  mdiRefresh,
-  mdiStoreCogOutline,
-  mdiPencil,
-  mdiContentCopy,
-  mdiPistol,
-  mdiSword,
-  mdiKnifeMilitary,
-  mdiAxe,
-  mdiBowArrow,
-  mdiHammer,
-  mdiBaseballBat,
-  mdiTargetVariant,
-} from "@mdi/js";
+import { mdiArrowLeft, mdiDeleteOutline, mdiRefresh, mdiStoreCogOutline, mdiPencil, mdiPistol, mdiSword, mdiKnifeMilitary, mdiAxe, mdiBowArrow, mdiHammer, mdiBaseballBat, mdiTargetVariant } from "@mdi/js";
 import "../CSS/DashboardMestre.css";
 import "../CSS/DashboardMestreEspiral.css";
-import {
-  buscarDestinos,
-  salvarDestinos,
-  apagarPersonagem,
-  buscarArvoresHabilidades,
-  buscarCatalogoLoja,
-  criarPersonagem,
-  listarPersonagens,
-  salvarArvoresHabilidades,
-  salvarCatalogoLoja,
-  buscarPersonagem,
-  salvarPersonagem,
-} from "../services/personagemApi";
+import '../CSS/AbsolutoDashboard.css';
+import { buscarDestinos, salvarDestinos, apagarPersonagem, buscarArvoresHabilidades, buscarCatalogoLoja, listarPersonagens, salvarArvoresHabilidades, salvarCatalogoLoja, buscarPersonagem, salvarPersonagem } from "../services/personagemApi";
 import { atualizarDestinoNaFicha } from "../utils/destinos";
 import {
   compressBackgroundImage,
   compressProfileImage,
 } from "../services/imageCompression";
-import { obterIconeItem } from "../utils/itemIcons";
+import "../utils/itemIcons";
 import {
   notificarArvoresAtualizadas,
   notificarPersonagemAtualizado,
@@ -321,69 +302,6 @@ const itemLojaVazio = {
   },
 };
 
-const abasFicha = [
-  { id: "perfil", nome: "Perfil" },
-  { id: "ativos", nome: "Ativos" },
-  { id: "passivos", nome: "Passivos" },
-  { id: "ritos", nome: "Ritos" },
-  { id: "inventario", nome: "Inventario" },
-  { id: "corpo", nome: "Corpo" },
-  { id: "descricao", nome: "Descricao" },
-];
-
-const ativosFicha = [
-  { chave: "razao", nome: "Razao" },
-  { chave: "firmeza", nome: "Firmeza" },
-  { chave: "intuicao", nome: "Intuicao" },
-  { chave: "violencia", nome: "Violencia" },
-  { chave: "percepcao", nome: "Percepcao" },
-  { chave: "carisma", nome: "Carisma" },
-  { chave: "persistencia", nome: "Persistencia" },
-  { chave: "resistencia", nome: "Resistencia" },
-];
-
-const passivosFicha = [
-  { chave: "enganacao", nome: "Enganacao" },
-  { chave: "raciocinioLogico", nome: "Raciocinio Logico" },
-  { chave: "investigacao", nome: "Investigacao" },
-  { chave: "instinto", nome: "Instinto" },
-  { chave: "sensibilidade", nome: "Sensibilidade" },
-  { chave: "instintoSobrevivencia", nome: "Instinto de Sobrevivencia" },
-  { chave: "coragem", nome: "Coragem" },
-  { chave: "diplomacia", nome: "Diplomacia" },
-  { chave: "disciplina", nome: "Disciplina" },
-  { chave: "autocontrole", nome: "Autocontrole" },
-  { chave: "intimidacaoPassiva", nome: "Intimidacao Passiva" },
-  { chave: "presenca", nome: "Presenca" },
-  { chave: "memoria", nome: "Memoria" },
-  { chave: "empatia", nome: "Empatia" },
-  { chave: "lealdade", nome: "Lealdade" },
-  { chave: "fe", nome: "Fe" },
-  { chave: "vitalidade", nome: "Vitalidade" },
-  { chave: "folego", nome: "Folego" },
-  { chave: "equilibrio", nome: "Equilibrio" },
-  { chave: "velocidade", nome: "Velocidade" },
-  { chave: "precisao", nome: "Precisao" },
-  { chave: "lutar", nome: "Lutar" },
-  { chave: "resistenciaFisica", nome: "Resistencia Fisica" },
-  { chave: "primeirosSocorros", nome: "Primeiros Socorros" },
-  { chave: "furtividade", nome: "Furtividade" },
-  { chave: "conhecimentoMedico", nome: "Conhecimento Medico" },
-  { chave: "conhecimentoTecnico", nome: "Conhecimento Tecnico" },
-  { chave: "conhecimentoHistorico", nome: "Conhecimento Historico" },
-  { chave: "conhecimentoOculto", nome: "Conhecimento Oculto" },
-  { chave: "tecnologia", nome: "Tecnologia" },
-  { chave: "tatica", nome: "Tatica" },
-  { chave: "percepcaoAuditiva", nome: "Percepcao Auditiva" },
-  { chave: "percepcaoVisual", nome: "Percepcao Visual" },
-  { chave: "percepcaoOlfativa", nome: "Percepcao Olfativa" },
-  { chave: "crime", nome: "Crime" },
-  { chave: "manipulacao", nome: "Manipulacao" },
-  { chave: "intimidacao", nome: "Intimidacao" },
-  { chave: "seducao", nome: "Seducao" },
-  { chave: "resistenciaMental", nome: "Resistencia Mental" },
-];
-
 const membrosFicha = [
   { chave: "cabeca", nome: "Cabeca" },
   { chave: "torso", nome: "Torso" },
@@ -398,7 +316,7 @@ const gerarIdReceita = (nome, categoria) =>
     .trim()
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[--]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9_-]/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "") || `${Date.now()}`;
@@ -526,121 +444,9 @@ const DashboardFichaCard = memo(({ ficha, tipo = "jogador", onAbrir }) => {
     : Number(personagemCard.esperanca?.atual || 0);
   const esperancaMaxima = fichaEspiral ? 10 : Number(personagemCard.esperanca?.max || 0);
 
-  return (
-    <article
-      className={`mestre-card-personagem ${fichaEspiral ? "espiral-card" : "darkness-card"}`}
-      onClick={() => onAbrir(ficha, tipo)}
-    >
-      <div className="mestre-card-overlay" />
+  if (fichaEspiral) return <EspiralAgentCard ficha={ficha} attributes={atributosResumo} integrityMaximum={integridadeMaxima} onOpen={onAbrir} />;
 
-      <div className="mestre-card-conteudo">
-        <div className="mestre-card-atributos">
-          {atributosResumo
-            .slice(0, fichaEspiral ? 4 : atributosResumo.length)
-            .map(([atributo, valor, estagio]) => (
-              <div key={atributo}>
-                <span>{atributo}</span>
-                {estagio && <small>{estagio}</small>}
-                <strong>{valor}</strong>
-              </div>
-            ))}
-        </div>
-
-        <div className="mestre-card-retrato">
-          <img src={imagem} alt={`Retrato de ${personagemCard.name || personagemCard.nome || "personagem"}`} />
-          <div className="mestre-card-info">
-            <small>
-              NV{" "}
-              {fichaEspiral
-                ? "ARQUIVO ESPIRAL"
-                : tipo === "inimigo"
-                ? numeroRomanoDashboard(personagemCard.nivel)
-                : personagemCard.nivel || 1}
-            </small>{" "}
-            {(personagemCard.player || personagemCard.nomeJogador) && (
-              <em className="mestre-card-jogador">
-                {personagemCard.player || personagemCard.nomeJogador}
-              </em>
-            )}
-            <h3>{personagemCard.name || personagemCard.nome || "Sem nome"}</h3>
-            <span>{personagemCard.occupation || personagemCard.classe || "Sem ocupação"}</span>
-          </div>
-        </div>
-
-        <div className={`mestre-card-barras ${fichaEspiral ? "espiral-status" : "darkness-status"}`}>
-          <div className={`mestre-card-membros ${fichaEspiral ? "espiral-integrity" : ""}`}>
-            <label>INTEGRIDADE</label>
-
-            {fichaEspiral ? (
-              <div className="mestre-card-membro-mini">
-                <div className="barra vermelho">
-                  <span
-                    style={{
-                      width: porcentagemRecurso(
-                        personagemCard.integrity,
-                        integridadeMaxima,
-                      ),
-                    }}
-                  />
-                </div>
-                <small>{personagemCard.integrity || 0} / {integridadeMaxima}</small>
-              </div>
-            ) : membrosFicha.map(({ chave, nome }) => {
-              const dados = membros[chave] || { atual: 0, max: 0 };
-
-              return (
-                <div key={chave} className="mestre-card-membro-mini">
-                  <span>{nome}</span>
-
-                  <div className="barra vermelho">
-                    <span
-                      style={{
-                        width: porcentagemRecurso(dados.atual, dados.max),
-                      }}
-                    />
-                  </div>
-
-                  <small>
-                    {dados.atual || 0} / {dados.max || 0}
-                  </small>
-                </div>
-              );
-            })}
-          </div>
-
-          <div>
-            <label>SANIDADE</label>
-            {fichaEspiral ? (
-              <ResourceDots atual={sanidadeAtual} max={sanidadeMaxima} tipo="sanidade" />
-            ) : (
-              <div className="barra roxo">
-                <span style={{ width: porcentagemRecurso(sanidadeAtual, sanidadeMaxima) }} />
-              </div>
-            )}
-            <small>
-              {sanidadeAtual} / {sanidadeMaxima}
-            </small>
-          </div>
-
-          {tipo === "jogador" && (
-            <div>
-              <label>ESPERANCA</label>
-              {fichaEspiral ? (
-                <ResourceDots atual={esperancaAtual} max={esperancaMaxima} tipo="esperanca" />
-              ) : (
-                <div className="barra dourado">
-                  <span style={{ width: porcentagemRecurso(esperancaAtual, esperancaMaxima) }} />
-                </div>
-              )}
-              <small>
-                {esperancaAtual} / {esperancaMaxima}
-              </small>
-            </div>
-          )}
-        </div>
-      </div>
-    </article>
-  );
+  return <AbsolutoAgentCard ficha={ficha} tipo={tipo} onAbrir={onAbrir}/>;
 });
 
 const ModalFichaEspiral = ({ ficha, onClose, onSalvar }) => {
@@ -672,7 +478,7 @@ const ModalFichaEspiral = ({ ficha, onClose, onSalvar }) => {
             <p>{[sheet.pronoun, sheet.occupation, sheet.vertente].filter(Boolean).join(" · ") || "Sem identificação"}</p>
           </div>
           <div className="espiral-leitura-acoes">
-            <button type="button" className="espiral-abrir-ficha" onClick={() => { window.location.href = `/?sistema=espiral&ficha=${encodeURIComponent(ficha.espiralId || "principal")}`; }}>Abrir ficha completa</button>
+            <button type="button" className="espiral-abrir-ficha" onClick={() => { window.open(`/?sistema=espiral&ficha=${encodeURIComponent(ficha.espiralId || "principal")}`, "_blank", "noopener,noreferrer"); }}>Abrir ficha completa</button>
             <button type="button" className="mestre-modal-fechar" onClick={onClose} aria-label="Fechar ficha">×</button>
           </div>
         </header>
@@ -683,7 +489,7 @@ const ModalFichaEspiral = ({ ficha, onClose, onSalvar }) => {
             <span>ATRIBUTOS</span>
             {atributos.map(([id, nivel]) => {
               const estagio = Math.max(1, Math.min(5, Number(nivel || 1)));
-              return <div key={id}><b>{ATTRIBUTES[id]?.name || id}</b><small>{ATTRIBUTES[id]?.stages?.[estagio - 1]}</small><strong>d{[4, 6, 8, 10, 12][estagio - 1]}</strong></div>;
+              return <div key={id}><b>{ATTRIBUTES[id]?.name || id}</b><small>{ATTRIBUTES[id]?.stages?.[estagio - 1]}</small><strong>{espiralDie([4, 6, 8, 10, 12][estagio - 1])}</strong></div>;
             })}
           </section>
           <section className="espiral-leitura-status">
@@ -703,14 +509,6 @@ const ModalFichaEspiral = ({ ficha, onClose, onSalvar }) => {
     </div>
   );
 };
-
-const normalizarFichaId = (valor) =>
-  String(valor || "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
 
 const listarFichasLocais = () =>
   Object.keys(localStorage)
@@ -755,9 +553,9 @@ const DashboardMestre = () => {
   const [fichas, setFichas] = useState([]);
   const [fichaSelecionada, setFichaSelecionada] = useState("");
   const [personagem, setPersonagem] = useState(null);
-  const [novaFicha, setNovaFicha] = useState(fichaVazia);
-  const [itemInventario, setItemInventario] = useState(itemInventarioVazio);
-  const [novoRito, setNovoRito] = useState(ritoVazio);
+  useState(fichaVazia);
+  useState(itemInventarioVazio);
+  useState(ritoVazio);
   const [creditosDelta, setCreditosDelta] = useState(100);
   const [ritosCreditosDelta, setRitosCreditosDelta] = useState(100);
   const [catalogo, setCatalogo] = useState(DEFAULT_CATALOGO_LOJA);
@@ -765,7 +563,7 @@ const DashboardMestre = () => {
   const [menuHamburguerAberto, setMenuHamburguerAberto] = useState(false);
   const [receitasCriacaoDashboard, setReceitasCriacaoDashboard] =
     useState(RECEITAS_PADRAO);
-  const [receitaEditor, setReceitaEditor] = useState({
+  const [receitaEditor] = useState({
     id: "",
     categoria: "Armas Aprimoráveis",
     nome: "",
@@ -777,13 +575,17 @@ const DashboardMestre = () => {
     ingredientesTexto: "",
   });
 
-  const [cardExpandidoId, setCardExpandidoId] = useState(null);
-  const [receitaEditandoId, setReceitaEditandoId] = useState(null);
+  const [, setCardExpandidoId] = useState(null);
+  useState(null);
   const [novoItemLoja, setNovoItemLoja] = useState(itemLojaVazio);
   const [categoriaLojaAtiva, setCategoriaLojaAtiva] = useState("armas-fogo");
-  const [abaFicha, setAbaFicha] = useState("perfil");
-  const [aba, setAba] = useState("fichas");
-  const [subAbaFichas, setSubAbaFichas] = useState("darkness");
+  useState("perfil");
+  const [aba, setAba] = useState(() => new URLSearchParams(window.location.search).get("aba")==="animacoes" ? "animacoes" : "fichas");
+  const [sistemaAtivo, setSistemaAtivo] = useState(() => {
+    try { return localStorage.getItem("darkness_dashboard_sistema") === "espiral" ? "espiral" : "darkness"; }
+    catch { return "darkness"; }
+  });
+  const [buscaEspiral, setBuscaEspiral] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [abaLojaEditor, setAbaLojaEditor] = useState("armas-fogo");
@@ -792,7 +594,7 @@ const DashboardMestre = () => {
   const [mostrarFormNovoItem, setMostrarFormNovoItem] = useState(false);
   const [nivelRitoDashboard, setNivelRitoDashboard] = useState("iniciante");
   const [tipoMunicaoEditor, setTipoMunicaoEditor] = useState("pistola");
-  const [editandoDashboard, setEditandoDashboard] = useState(false);
+  const [editandoDashboard] = useState(false);
   const [modalFichaAberto, setModalFichaAberto] = useState(false);
   const [fichaEspiralAberta, setFichaEspiralAberta] = useState(null);
   const [salvandoNivel, setSalvandoNivel] = useState(false);
@@ -842,7 +644,6 @@ const DashboardMestre = () => {
   const [npcEditando, setNpcEditando] = useState(null);
   const [pastasNpcs, setPastasNpcs] = useState([]);
   const [pastaNpcsAtiva, setPastaNpcsAtiva] = useState("todas");
-  
 
   const [rolagensMestre, setRolagensMestre] = useState([]);
   const [painelRolagensAberto, setPainelRolagensAberto] = useState(true);
@@ -855,14 +656,28 @@ const DashboardMestre = () => {
       fichas.flatMap((ficha) =>
         (ficha.personagem?.habilidadesCriadas || [])
           .filter(
-            (habilidade) => (habilidade.status || "pendente") === "pendente",
+            (habilidade) => (habilidade.status || "pendente") === "pendente" || Boolean(habilidade.edicaoPendente),
           )
           .map((habilidade) => ({ ficha, habilidade })),
       ),
     [fichas],
   );
 
-  const analisarHabilidadeCriada = async (ficha, habilidadeId, aprovar) => {
+  const analisarHabilidadeCriada = async (ficha, habilidadeId, aprovar,edicaoId) => {
+    if(edicaoId){
+      try{
+        const base=await buscarPersonagem(ficha.fichaId);
+        if(!base)throw new Error('Ficha indisponível.');
+        const next=decidirEdicaoHabilidade(base,habilidadeId,aprovar,edicaoId);
+        const salvo=await salvarPersonagem(ficha.fichaId,next)||next;
+        salvarFichaLocal(ficha.fichaId,salvo);
+        notificarPersonagemAtualizado(ficha.fichaId,salvo);
+        setFichas(atuais=>atuais.map(item=>item.fichaId===ficha.fichaId?{...item,personagem:salvo}:item));
+        if(fichaSelecionada===ficha.fichaId)setPersonagem(salvo);
+        setMensagem(aprovar?'Edição aprovada. A nova versão está ativa.':'Edição recusada. A versão anterior e os recursos foram mantidos.');
+      }catch(error){setMensagem(error.message||'Não foi possível analisar a edição. Tente novamente.');}
+      return;
+    }
     let personagemBase = ficha.personagem || {};
     try {
       personagemBase =
@@ -878,6 +693,10 @@ const DashboardMestre = () => {
       return;
     }
 
+    if(habilidade.edicaoPendente || (habilidade.status || 'pendente')!=='pendente'){
+      setMensagem('Esta solicitação mudou ou já foi analisada. Atualize o painel antes de continuar.');
+      return;
+    }
     const personagemAtualizado = structuredClone(personagemBase);
     personagemAtualizado.habilidadesCriadas = aprovar
       ? (personagemAtualizado.habilidadesCriadas || []).map((item) =>
@@ -899,6 +718,7 @@ const DashboardMestre = () => {
           id: habilidade.id,
           nome: habilidade.nome,
           descricao: habilidade.descricao,
+          ...(habilidade.paginas ? {paginas:habilidade.paginas} : {}),
           custo: `${habilidade.custo} SAN`,
           nivelRito: "Personalizado",
           criadoPeloJogador: true,
@@ -912,6 +732,7 @@ const DashboardMestre = () => {
           id: habilidade.id,
           nome: habilidade.nome,
           descricao: habilidade.descricao,
+          ...(habilidade.paginas ? {paginas:habilidade.paginas} : {}),
           custo: `${habilidade.custo} SAN`,
           icone: "✦",
           criadoPeloJogador: true,
@@ -987,13 +808,26 @@ const DashboardMestre = () => {
   const fichasDaSubAba = useMemo(
     () => fichasJogadores.filter((ficha) => {
       const personagemFicha = ficha.personagem || ficha;
-      return subAbaFichas === "espiral"
+      return sistemaAtivo === "espiral"
         ? isFichaEspiral(personagemFicha)
         : !isFichaEspiral(personagemFicha);
     }),
-    [fichasJogadores, subAbaFichas],
+    [fichasJogadores, sistemaAtivo],
   );
 
+  const fichasExibidas = useMemo(() => {
+    if (sistemaAtivo !== "espiral" || !buscaEspiral.trim()) return fichasDaSubAba;
+    const query = buscaEspiral.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    return fichasDaSubAba.filter(({ personagem: sheet }) => [sheet?.name, sheet?.player, sheet?.vertente, sheet?.occupation]
+      .some(value => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(query)));
+  }, [fichasDaSubAba, sistemaAtivo, buscaEspiral]);
+
+  const alternarSistema = (proximoSistema) => {
+    setSistemaAtivo(proximoSistema);
+    try { localStorage.setItem("darkness_dashboard_sistema", proximoSistema); } catch {}
+    if (proximoSistema === "espiral" && aba === "marcas") setAba("fichas");
+    setMensagem(`Sistema ${proximoSistema === "espiral" ? "ESPIRAL" : "Darkness"} selecionado.`);
+  };
 
   const abrirPopup = ({
     tipo = "info",
@@ -1072,7 +906,7 @@ const DashboardMestre = () => {
     return ordem.map((id) => ({ id, nome: mapa[id] }));
   }, []);
 
-  const categoriasReceitas = useMemo(
+  useMemo(
     () => receitasCriacaoDashboard.map((grupo) => grupo.categoria),
     [receitasCriacaoDashboard],
   );
@@ -1086,7 +920,7 @@ const DashboardMestre = () => {
     [receitasCriacaoDashboard],
   );
 
-  const receitasFiltradas = useMemo(
+  useMemo(
     () => receitasPorCategoria[receitaEditor.categoria] || [],
     [receitasPorCategoria, receitaEditor.categoria],
   );
@@ -1098,14 +932,6 @@ const DashboardMestre = () => {
 
     return catalogo.filter((item) => item.categoria === categoriaLojaAtiva);
   }, [catalogo, categoriaLojaAtiva]);
-
-  const persistirReceitasCriacao = (receitas) => {
-    try {
-      localStorage.setItem(RECEITAS_STORAGE_KEY, JSON.stringify(receitas));
-    } catch {
-      // ignore localStorage errors
-    }
-  };
 
   const STORAGE_MARCAS = "darkness_marcas";
 
@@ -1144,135 +970,6 @@ const DashboardMestre = () => {
     finally { marcasGravandoRef.current = false; }
   };
 
-  const limparReceitaEditor = () => {
-    setReceitaEditor({
-      id: "",
-      categoria: categoriasReceitas[0] || "Armas Aprimoráveis",
-      nome: "",
-      icone: "",
-      tipo: "",
-      durabilidade: "",
-      dano: "",
-      efeito: "",
-      ingredientesTexto: "",
-    });
-    setReceitaEditandoId(null);
-  };
-
-  const editarReceitaEditor = (receita) => {
-    // receita já tem categoria e id
-    setReceitaEditandoId(receita.id);
-    const ingredientesTexto = (receita.ingredientes || [])
-      .map((ingrediente) => {
-        if (typeof ingrediente === "string") return ingrediente;
-        return `${ingrediente.icone || ""} ${ingrediente.nome || ""}`.trim();
-      })
-      .filter(Boolean)
-      .join(", ");
-
-    setReceitaEditor({
-      id: receita.id,
-      categoria: receita.categoria || "Munições Fabricadas",
-      nome: receita.nome || "",
-      icone: receita.icone || "",
-      tipo: receita.tipo || "",
-      durabilidade: receita.durabilidade || "",
-      dano: receita.dano || "",
-      efeito: receita.efeito || "",
-      ingredientesTexto,
-    });
-  };
-
-  const excluirReceitaEditor = (id, categoria) => {
-    const receitasAtualizadas = receitasCriacaoDashboard.map((grupo) => {
-      if (grupo.categoria !== categoria) return grupo;
-      return {
-        ...grupo,
-        itens: grupo.itens.filter((item) => item.id !== id),
-      };
-    });
-
-    setReceitasCriacaoDashboard(receitasAtualizadas);
-    persistirReceitasCriacao(receitasAtualizadas);
-    setMensagem("Receita removida.");
-
-    if (receitaEditandoId === id) {
-      limparReceitaEditor();
-    }
-  };
-
-  const salvarReceitaEditor = (event) => {
-    event.preventDefault();
-
-    if (!receitaEditor.nome.trim()) {
-      setMensagem("Informe um nome para a receita.");
-      return;
-    }
-
-    const categoria = receitaEditor.categoria || "Munições Fabricadas";
-    const idFinal =
-      receitaEditandoId || gerarIdReceita(receitaEditor.nome.trim(), categoria);
-
-    // 🔥 EXTRAI SOMENTE DO CAMPO ingredientesTexto
-    const ingredientes = receitaEditor.ingredientesTexto
-      .split(",")
-      .map((ingrediente) => ingrediente.trim())
-      .filter(Boolean)
-      .map((ingrediente) => {
-        const match = ingrediente.match(/^(.+?)\s*[-:]\s*(.+)$/);
-        if (match) {
-          return { icone: match[1].trim(), nome: match[2].trim() };
-        }
-        return { nome: ingrediente, icone: "" };
-      });
-
-    const novaReceita = {
-      id: idFinal,
-      nome: receitaEditor.nome.trim(),
-      icone: receitaEditor.icone.trim(),
-      tipo: receitaEditor.tipo.trim(),
-      durabilidade: receitaEditor.durabilidade.trim(),
-      dano: receitaEditor.dano.trim(), // ✅ ISOLADO, NÃO INTERFERE
-      efeito: receitaEditor.efeito.trim(),
-      ingredientes, // agora sempre array, nunca string
-      categoria,
-    };
-
-    // Atualiza o array de receitas
-    let receitasAtualizadas = [...receitasCriacaoDashboard];
-    const categoriaIndex = receitasAtualizadas.findIndex(
-      (g) => g.categoria === categoria,
-    );
-
-    if (categoriaIndex === -1) {
-      // cria nova categoria
-      receitasAtualizadas.push({ categoria, itens: [novaReceita] });
-    } else {
-      const grupo = receitasAtualizadas[categoriaIndex];
-      if (receitaEditandoId) {
-        // edita item existente
-        const itemIndex = grupo.itens.findIndex(
-          (item) => item.id === receitaEditandoId,
-        );
-        if (itemIndex !== -1) {
-          grupo.itens[itemIndex] = novaReceita;
-        } else {
-          // fallback: se não encontrar, adiciona (não deve ocorrer)
-          grupo.itens.push(novaReceita);
-        }
-      } else {
-        // adiciona novo
-        grupo.itens.push(novaReceita);
-      }
-      receitasAtualizadas[categoriaIndex] = grupo;
-    }
-
-    setReceitasCriacaoDashboard(receitasAtualizadas);
-    persistirReceitasCriacao(receitasAtualizadas);
-    setMensagem(receitaEditandoId ? "Receita atualizada." : "Receita criada.");
-    limparReceitaEditor();
-  };
-
   const receitasPadraoNormalizadas = useMemo(
     () => normalizarReceitasPadrao(RECEITAS_PADRAO),
     [],
@@ -1303,17 +1000,6 @@ const DashboardMestre = () => {
         buscarCatalogoLoja(),
         buscarArvoresHabilidades(),
       ]);
-
-      const novo = {
-        ...estadoInicial,
-        id: crypto.randomUUID(),
-        nome: "Novo Inimigo",
-        classe: "Inimigo",
-        nivel: 1,
-        defesa: 10,
-        ataques: [],
-        habilidades: [],
-      };
 
       const fichasNormalizadas = fichasApi.map((ficha) => ({
         ...ficha,
@@ -1592,7 +1278,6 @@ const DashboardMestre = () => {
     });
   };
 
-
   useEffect(() => {
     if (!fichaSelecionada || fichaSelecionada.startsWith("espiral:")) return;
 
@@ -1772,51 +1457,6 @@ const DashboardMestre = () => {
     }
   }, [fichaAtual]);
 
-  const atualizarPersonagem = (campo, valor) => {
-    setPersonagem((atual) => ({
-      ...atual,
-      [campo]: valor,
-    }));
-  };
-
-  const atualizarGrupoFicha = (grupo, chave, valor) => {
-    setPersonagem((atual) => ({
-      ...atual,
-      [grupo]: {
-        ...(atual?.[grupo] || {}),
-        [chave]: parseInt(valor, 10) || 0,
-      },
-    }));
-  };
-
-  const atualizarMembro = (membro, campo, valor) => {
-    setPersonagem((atual) => {
-      const membroAtual = atual?.membros?.[membro] || {
-        atual: 0,
-        max: 0,
-        ferido: false,
-        grave: false,
-      };
-      const atualizado = {
-        ...membroAtual,
-        [campo]: Math.max(0, parseInt(valor, 10) || 0),
-      };
-      const proporcao =
-        atualizado.max > 0 ? atualizado.atual / atualizado.max : 0;
-
-      return {
-        ...atual,
-        membros: {
-          ...(atual?.membros || {}),
-          [membro]: {
-            ...atualizado,
-            ferido: atualizado.atual < atualizado.max && proporcao < 0.5,
-            grave: proporcao <= 0.1,
-          },
-        },
-      };
-    });
-  };
   const criarMarca = (e) => {
     e.preventDefault();
     return executarOperacaoMarca(async () => {
@@ -2044,24 +1684,6 @@ const DashboardMestre = () => {
     setPersonagemSelecionado(ficha?.personagem || null);
   };
 
-  const atualizarItemInventario = (index, campo, valor) => {
-    setPersonagem((atual) => ({
-      ...atual,
-      inventario: (atual.inventario || []).map((item, itemIndex) =>
-        itemIndex === index ? { ...item, [campo]: valor } : item,
-      ),
-    }));
-  };
-
-  const atualizarRito = (index, campo, valor) => {
-    setPersonagem((atual) => ({
-      ...atual,
-      rituais: (atual.rituais || []).map((rito, ritoIndex) =>
-        ritoIndex === index ? { ...rito, [campo]: valor } : rito,
-      ),
-    }));
-  };
-
   const gerarIdHabilidade = (nome) =>
     String(nome || "")
       .trim()
@@ -2152,16 +1774,6 @@ const DashboardMestre = () => {
     salvarArvoresEditor(novasArvores);
     limparFormHabilidade();
     setMostrarFormHabilidade(false);
-  };
-
-  const editarHabilidadeEditor = (habilidade) => {
-    setHabilidadeEditando(habilidade.id);
-    setFormHabilidade({
-      id: habilidade.id,
-      nome: habilidade.nome || "",
-      custo: habilidade.custo || "",
-      descricao: habilidade.descricao || "",
-    });
   };
 
   const iniciarEdicaoHabilidadeCard = (habilidade) => {
@@ -2269,35 +1881,6 @@ const DashboardMestre = () => {
       },
     });
 
-    return;
-
-    const arvoreAtual = arvoresEditor[classeArvoreAtiva];
-    const novasArvores = { ...arvoresEditor };
-
-    if (tipoHabilidadeEditor === "especialidade") {
-      novasArvores[classeArvoreAtiva] = {
-        ...arvoreAtual,
-        especialidades: (arvoreAtual.especialidades || []).map((esp) =>
-          esp.id === especialidadeEditorId
-            ? {
-                ...esp,
-                habilidades: (esp.habilidades || []).filter(
-                  (hab) => hab.id !== habilidadeId,
-                ),
-              }
-            : esp,
-        ),
-      };
-    } else {
-      novasArvores[classeArvoreAtiva] = {
-        ...arvoreAtual,
-        [tipoHabilidadeEditor]: (
-          arvoreAtual[tipoHabilidadeEditor] || []
-        ).filter((hab) => hab.id !== habilidadeId),
-      };
-    }
-
-    salvarArvoresEditor(novasArvores);
   };
 
   useEffect(() => {
@@ -2587,48 +2170,6 @@ const DashboardMestre = () => {
       return personagemAtualizado;
     } finally {
       fichasEmGravacaoRef.current.delete(idParaSalvar);
-    }
-  };
-
-  const criarNovaFicha = async (event) => {
-    event.preventDefault();
-
-    if (!novaFicha.nome.trim()) {
-      setMensagem("Informe um nome para criar a ficha.");
-      return;
-    }
-
-    const personagemCriado = {
-      ...estadoInicial,
-      ...novaFicha,
-      nome: novaFicha.nome.trim(),
-      classe: novaFicha.classe.trim(),
-      especialidade: novaFicha.especialidade.trim(),
-      lojaCreditos: 0,
-      rituais: [],
-      inventario: [],
-    };
-
-    try {
-      const { fichaId, personagem: salvo } =
-        await criarPersonagem(personagemCriado);
-      salvarFichaLocal(fichaId, salvo);
-      await carregarTudo();
-      setFichaSelecionada(fichaId);
-      setPersonagem(salvo);
-      setNovaFicha(fichaVazia);
-      setMensagem(`Ficha ${fichaId} criada.`);
-    } catch (error) {
-      const fichaId = normalizarFichaId(novaFicha.nome);
-      salvarFichaLocal(fichaId, personagemCriado);
-      setFichas((atuais) => [
-        ...atuais,
-        { fichaId, personagem: personagemCriado },
-      ]);
-      setFichaSelecionada(fichaId);
-      setPersonagem(personagemCriado);
-      setNovaFicha(fichaVazia);
-      setMensagem("Ficha criada localmente. Backend indisponivel.");
     }
   };
 
@@ -3022,30 +2563,6 @@ const DashboardMestre = () => {
     }
   };
 
-  const adicionarItemInventario = (event) => {
-    event.preventDefault();
-
-    if (!itemInventario.nome.trim()) {
-      setMensagem("Informe o nome do item.");
-      return;
-    }
-
-    const atualizado = {
-      ...personagem,
-      inventario: [
-        ...(personagem.inventario || []),
-        {
-          nome: itemInventario.nome.trim(),
-          detalhes: itemInventario.detalhes.trim(),
-        },
-      ],
-    };
-
-    setPersonagem(atualizado);
-    setItemInventario(itemInventarioVazio);
-    salvarFichaSelecionada(atualizado);
-  };
-
   const removerItemInventario = (index) => {
     const itemRemovido = (personagem.inventario || [])[index];
     if (!itemRemovido) return;
@@ -3129,42 +2646,6 @@ const DashboardMestre = () => {
       atualizado,
       `${itemRemovido.nome || "Item"} foi removido da ficha.`,
     );
-  };
-
-  const adicionarRito = (event) => {
-    event.preventDefault();
-
-    if (!novoRito.nome.trim()) {
-      setMensagem("Informe o nome do Rito.");
-      return;
-    }
-
-    const atualizado = {
-      ...personagem,
-      rituais: [
-        ...(personagem.rituais || []),
-        {
-          nome: novoRito.nome.trim(),
-          custo: novoRito.custo.trim(),
-        },
-      ],
-    };
-
-    setPersonagem(atualizado);
-    setNovoRito(ritoVazio);
-    salvarFichaSelecionada(atualizado);
-  };
-
-  const removerRito = (index) => {
-    const atualizado = {
-      ...personagem,
-      rituais: (personagem.rituais || []).filter(
-        (_, ritoIndex) => ritoIndex !== index,
-      ),
-    };
-
-    setPersonagem(atualizado);
-    salvarFichaSelecionada(atualizado);
   };
 
   const salvarCatalogo = async (catalogoAtualizado) => {
@@ -3264,21 +2745,6 @@ const DashboardMestre = () => {
     if (fichaAtualizada) setPersonagem(fichaAtualizada.personagem);
 
     return resultados.filter(({ alterada }) => alterada).length;
-  };
-
-  const adicionarItemLoja = (event) => {
-    event.preventDefault();
-
-    if (!novoItemLoja.nome.trim()) {
-      setMensagem("Informe o nome do item da loja.");
-      return;
-    }
-
-    salvarCatalogo([
-      ...catalogo,
-      normalizarItemLoja(novoItemLoja, catalogo.length),
-    ]);
-    setNovoItemLoja(itemLojaVazio);
   };
 
   const removerItemLoja = (id) => {
@@ -3406,35 +2872,6 @@ const DashboardMestre = () => {
           modificacoesArma,
         ),
       };
-    });
-  };
-
-  const editarItemLoja = (item) => {
-    console.log("🛠 Editando item:", item);
-
-    setItemEditandoId(item.id);
-    setAbaLojaEditor(item.categoria);
-
-    if (item.categoria === "ritos") {
-      setNivelRitoDashboard(item.nivelRito || "iniciante");
-    }
-
-    const armaStatus = item.armaStatus || itemLojaVazio.armaStatus;
-
-    setNovoItemLoja({
-      ...itemLojaVazio,
-      ...item,
-      id: item.id, // 🔥 GARANTA QUE O ID SEJA PRESERVADO
-      armaStatus: {
-        ...itemLojaVazio.armaStatus,
-        ...armaStatus,
-      },
-      preco: item.preco ?? 0,
-      dano: item.dano ?? "",
-      bonusDano: item.bonusDano ?? "",
-      detalhe: item.detalhe ?? "",
-      entrega: item.entrega ?? "",
-      nivelRito: item.nivelRito ?? "iniciante",
     });
   };
 
@@ -3676,6 +3113,38 @@ const DashboardMestre = () => {
     }
   }, []);
 
+  const salvarAnimacaoTokenDaFicha = async (ficha,patch) => {
+    if(isFichaEspiral(ficha.personagem)) {
+      const chave=`espiral:sheet:v1:${ficha.espiralId}`;
+      const atual=JSON.parse(localStorage.getItem(chave) || 'null');
+      if(!atual) throw new Error('A ficha ESPIRAL não está disponível neste navegador.');
+      const personagemAtualizado={...atual,...patch};
+      localStorage.setItem(chave,JSON.stringify(personagemAtualizado));
+      const proxima={...ficha,personagem:personagemAtualizado};
+      setFichas(atuais => atuais.map(item => item.fichaId===ficha.fichaId ? proxima : item));
+      setFichaEspiralAberta(aberta => aberta?.fichaId===ficha.fichaId ? proxima : aberta);
+    } else {
+      await salvarFichaSelecionada(patch,'Animação de token salva na ficha.',ficha.fichaId,true);
+    }
+    window.dispatchEvent(new CustomEvent('darkness:token-animation-updated',{detail:{fichaId:ficha.fichaId,patch}}));
+  };
+  const concederEntradaEspiral = (ficha, entrada) => {
+    try {
+      const chave = 'espiral:sheet:v1:' + ficha.espiralId;
+      const atual = JSON.parse(localStorage.getItem(chave) || 'null');
+      if (!atual || atual.version !== 1) return false;
+      const alteracoes = grantEspiralCatalogEntry(atual, entrada, entrada.id + '-' + Date.now() + '-' + Math.random());
+      const atualizada = { ...atual, ...alteracoes };
+      localStorage.setItem(chave, JSON.stringify(atualizada));
+      const proxima = { ...ficha, personagem: atualizada };
+      setFichas(atuais => atuais.map(item => item.fichaId === ficha.fichaId ? proxima : item));
+      setFichaEspiralAberta(aberta => aberta?.fichaId === ficha.fichaId ? proxima : aberta);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   // Mantido temporariamente para comparar o card antigo durante a migração de performance.
   // eslint-disable-next-line no-unused-vars
   const renderCardFicha = (ficha, tipo = "jogador") => {
@@ -3708,7 +3177,7 @@ const DashboardMestre = () => {
         <div className="mestre-card-overlay" />
 
         <div className="mestre-card-conteudo">
-          <div className="mestre-card-info">
+          <div className="mestre-card-info"><img className="abs-dashboard-portrait" src={imagem} alt="" loading="lazy"/>
             <small>
               NV{" "}
               {tipo === "inimigo"
@@ -3813,10 +3282,9 @@ const DashboardMestre = () => {
     );
   };
 
-  const deveMostrarPartyLateral = !["loja", "habilidades"].includes(aba);
   return (
-    <main className="mestre-page">
-      <header className="mestre-header">
+    <main className={`mestre-page ${sistemaAtivo === "espiral" ? "espiral-dashboard" : "absoluto-dashboard"}`}>
+      {sistemaAtivo === "espiral" ? <EspiralDashboardHeader agents={fichasDaSubAba.length} pending={habilidadesPendentes.length} loading={carregando} onRefresh={carregarTudo} onSystemChange={alternarSistema} onHome={() => { window.location.href = "/"; }} /> : <header className="mestre-header">
         <button
           className="mestre-voltar"
           onClick={() => {
@@ -3827,10 +3295,14 @@ const DashboardMestre = () => {
           Inicio
         </button>
         <div className="mestre-identidade-espiral">
-          <span className="mestre-sigilo" aria-hidden="true">◉</span>
+          <img className="abs-dashboard-symbol" src="/simbolo-absoluto.png" alt="Símbolo do Sistema Absoluto"/>
           <div>
             <span>Arquivo de operação // mestre</span>
-            <h1>DARKNESS</h1>
+            <h1>{sistemaAtivo === "espiral" ? "ESPIRAL" : "Absoluto"}</h1>
+            <div className="mestre-sistema-switch" role="tablist" aria-label="Sistema do dashboard">
+              <button type="button" role="tab" aria-selected={sistemaAtivo === "darkness"} className={sistemaAtivo === "darkness" ? "ativo" : ""} onClick={() => alternarSistema("darkness")}>ABSOLUTO</button>
+              <button type="button" role="tab" aria-selected={sistemaAtivo === "espiral"} className={sistemaAtivo === "espiral" ? "ativo" : ""} onClick={() => alternarSistema("espiral")}>ESPIRAL</button>
+            </div>
           </div>
         </div>
         <button
@@ -3842,7 +3314,7 @@ const DashboardMestre = () => {
           <span className="hamburguer-linha"></span>
           <span className="hamburguer-linha"></span>
         </button>
-      </header>
+      </header>}
 
       {menuHamburguerAberto && (
         <div className="mestre-hamburguer-menu">
@@ -3882,75 +3354,70 @@ const DashboardMestre = () => {
 
       {mensagem && <p className="mestre-mensagem">{mensagem}</p>}
 
-      <nav className="mestre-tabs" aria-label="Áreas do arquivo do mestre">
+      <nav className="mestre-tabs" aria-label="Áreas do arquivo do mestre"><button className={aba === "animacoes" ? "ativa" : ""} onClick={() => setAba("animacoes")}>Estúdio de Tokens</button>
         <button
           className={aba === "campanha" ? "ativa" : ""}
           onClick={() => setAba("campanha")}
         >
-          Operação
+          {sistemaAtivo === "espiral" ? "Campanhas" : "Operação"}
         </button>
         <button
           className={aba === "fichas" ? "ativa" : ""}
           onClick={() => setAba("fichas")}
         >
-          Agentes
+          {sistemaAtivo === "espiral" ? "Personagens" : "Agentes"}
         </button>
         <button
           className={aba === "inimigos" ? "ativa" : ""}
           onClick={() => setAba("inimigos")}
         >
-          Presenças
+          {sistemaAtivo === "espiral" ? "Encontros" : "Presenças"}
         </button>
         <button
           className={aba === "loja" ? "ativa" : ""}
           onClick={() => setAba("loja")}
         >
-          Acervo
+          {sistemaAtivo === "espiral" ? "Acervo" : "Acervo"}
         </button>
         <button
           className={aba === "habilidades" ? "ativa" : ""}
           onClick={() => setAba("habilidades")}
         >
-          Protocolos
+          {sistemaAtivo === "espiral" ? "Habilidades" : "Protocolos"}
         </button>
         <button
           className={aba === "analises" ? "ativa" : ""}
           onClick={() => setAba("analises")}
         >
-          Triagem{" "}
+          {sistemaAtivo === "espiral" ? "Solicitações" : "Triagem"}{" "}
           {habilidadesPendentes.length
             ? `(${habilidadesPendentes.length})`
             : ""}
         </button>
-        <button
+        {sistemaAtivo === "darkness" && <button
           className={aba === "marcas" ? "ativa" : ""}
           onClick={() => setAba("marcas")}
         >
           Marcas
-        </button>
+        </button>}
       </nav>
 
       {false && <section className="mestre-dashboard-full"></section>}
       <div className="mestre-layout-com-rolagens">
         <div className="mestre-conteudo-principal">
-          {aba === "campanha" && <CampanhaDashboard />}
+          {aba === "campanha" && <CampanhaDashboard />}{aba === "animacoes" && <TokenAnimationStudio fichas={fichasJogadores} onSaveSheetAnimation={salvarAnimacaoTokenDaFicha} />}
           {aba === "fichas" && (
             <section className="mestre-dashboard-full">
-              <div className="mestre-subtabs-fichas" role="tablist" aria-label="Sistemas de fichas">
-<button
-                  type="button"
-                  role="tab"
-                  aria-selected={subAbaFichas === "darkness"}
-                  className={subAbaFichas === "darkness" ? "ativa" : ""}
-                  onClick={() => setSubAbaFichas("darkness")}
-                >
-                  DARKNESS <small>{fichasJogadores.filter((ficha) => !isFichaEspiral(ficha.personagem || ficha)).length}</small>
-                </button>
+              {sistemaAtivo === "espiral" && <div className="ed-section-heading"><div><span className="ed-eyebrow">01 / ARQUIVO DE PERSONAGENS</span><h2>Quem faz parte da história.</h2><p>Abra um dossiê para consultar recursos, conceder evolução e acompanhar as marcas.</p></div><a href="/?criar=1&sistema=espiral">Novo personagem <span>↗</span></a></div>}
+              {sistemaAtivo === "espiral" && <div className="ed-agents-toolbar"><span>{fichasExibidas.length} {fichasExibidas.length === 1 ? "personagem" : "personagens"}<small> / {fichasDaSubAba.length} no arquivo</small></span><label><span className="ed-search-symbol" aria-hidden="true">⌕</span><input type="search" aria-label="Buscar personagens ESPIRAL" placeholder="Buscar nome, jogador ou vertente" value={buscaEspiral} onChange={event => setBuscaEspiral(event.target.value)} /></label></div>}
+              <div className="mestre-subtabs-fichas" role="status">
+                {sistemaAtivo === "espiral" ? "Fichas ESPIRAL" : "Arquivo Absoluto"}
+                <small>{fichasDaSubAba.length} ficha(s)</small>
               </div>
 
               <div className="mestre-dashboard-cards">
-                  {fichasDaSubAba.length > 0 ? (
-                    fichasDaSubAba.map((ficha) => (
+                  {fichasExibidas.length > 0 ? (
+                    fichasExibidas.map((ficha) => (
                       <DashboardFichaCard
                         key={ficha.fichaId || ficha.id}
                         ficha={ficha}
@@ -3960,7 +3427,7 @@ const DashboardMestre = () => {
                     ))
                   ) : (
                     <div className="mestre-vazio">
-                      Nenhuma ficha {subAbaFichas === "espiral" ? "ESPIRAL" : "Darkness"} encontrada.
+                      {sistemaAtivo === "espiral" ? <><strong>{buscaEspiral ? "Nenhum personagem encontrado." : "O próximo personagem começa aqui."}</strong><p>{buscaEspiral ? "Tente outro nome, jogador ou vertente." : "Crie uma ficha ESPIRAL para começar a preencher seu arquivo."}</p>{buscaEspiral ? <button type="button" onClick={() => setBuscaEspiral("")}>Limpar busca</button> : <a href="/?criar=1&sistema=espiral">Criar personagem ↗</a>}</> : "Nenhuma ficha Absoluto encontrada."}
                     </div>
                   )}
                 </div>
@@ -4498,7 +3965,8 @@ const DashboardMestre = () => {
             </section>
           )}
 
-          {aba === "inimigos" && (
+          {aba === "inimigos" && sistemaAtivo === "espiral" && <EspiralEncounters />}
+          {aba === "inimigos" && sistemaAtivo !== "espiral" && (
             <section className="mestre-dashboard-full">
               <div className="mestre-modal-linha-topo">
                 <h2>
@@ -4559,7 +4027,7 @@ const DashboardMestre = () => {
                   NPCs do mestre
                 </button>
               </div>
-              
+
               {subAbaNpcs === "inimigos" && (
                 <>
                 <div className="mestre-pastas-catalogo">
@@ -4608,7 +4076,7 @@ const DashboardMestre = () => {
                     Sem pasta
                   </button>
                 </div>
-  
+
                 <div className="mestre-fichas-com-party">
                   <div className="mestre-dashboard-cards">
                     {inimigos
@@ -4641,15 +4109,15 @@ const DashboardMestre = () => {
                           const inimigo = inimigos.find(
                             (i) => i.id === inimigoEditando,
                           );
-  
+
                           if (!inimigo) return null;
-  
+
                           const atualizarCampoInimigo = (campo, valor) => {
                             atualizarInimigo(inimigo.id, {
                               [campo]: valor,
                             });
                           };
-  
+
                           const atualizarGrupoInimigo = (grupo, chave, valor) => {
                             atualizarInimigo(inimigo.id, {
                               [grupo]: {
@@ -4658,7 +4126,7 @@ const DashboardMestre = () => {
                               },
                             });
                           };
-  
+
                           return (
                             <>
                               <header className="inimigo-ficha-header">
@@ -4670,16 +4138,16 @@ const DashboardMestre = () => {
                                     }
                                     alt={inimigo.nome}
                                   />
-  
+
                                   <span>Editar imagem</span>
-  
+
                                   <input
                                     type="file"
                                     accept="image/*"
                                     onChange={async (event) => {
                                       const arquivo = event.target.files?.[0];
                                       if (!arquivo) return;
-  
+
                                       try {
                                         const fotoComprimida =
                                           await compressProfileImage(arquivo);
@@ -4693,12 +4161,12 @@ const DashboardMestre = () => {
                                             "Nao foi possivel carregar a imagem.",
                                         );
                                       }
-  
+
                                       event.target.value = "";
                                     }}
                                   />
                                 </label>
-  
+
                                 <div className="inimigo-identidade">
                                   <label>
                                     NV
@@ -4713,7 +4181,7 @@ const DashboardMestre = () => {
                                       }
                                     />
                                   </label>
-  
+
                                   <input
                                     className="inimigo-nome-input"
                                     value={inimigo.nome || ""}
@@ -4743,7 +4211,7 @@ const DashboardMestre = () => {
                                     ))}
                                   </select>
                                 </div>
-  
+
                                 <div className="mestre-modal-header-acoes">
                                   <button
                                     className="duplicarButton"
@@ -4751,7 +4219,7 @@ const DashboardMestre = () => {
                                   >
                                     Duplicar
                                   </button>
-  
+
                                   <button
                                     className="mestre-btn-apagar"
                                     onClick={(e) => {
@@ -4762,7 +4230,7 @@ const DashboardMestre = () => {
                                   >
                                     Apagar
                                   </button>
-  
+
                                   <button
                                     className="mestre-modal-fechar"
                                     onClick={() => setInimigoEditando(null)}
@@ -4771,16 +4239,16 @@ const DashboardMestre = () => {
                                   </button>
                                 </div>
                               </header>
-  
+
                               <section className="mestre-modal-bloco full">
                                 <span>Atributos</span>
-  
+
                                 <div className="mestre-modal-atributos linha">
                                   {Object.entries(inimigo.atributos || {}).map(
                                     ([atributo, valor]) => (
                                       <label key={atributo}>
                                         {atributo}
-  
+
                                         <input
                                           type="number"
                                           value={valor}
@@ -4800,7 +4268,7 @@ const DashboardMestre = () => {
                               {/* SANIDADE */}
                               <section className="inimigo-ficha-bloco">
                                 <h3>Sanidade</h3>
-  
+
                                 <div className="mestre-form-grid">
                                   <label>
                                     Atual
@@ -4816,7 +4284,7 @@ const DashboardMestre = () => {
                                       }
                                     />
                                   </label>
-  
+
                                   <label>
                                     Máxima
                                     <input
@@ -4832,11 +4300,11 @@ const DashboardMestre = () => {
                                   </label>
                                 </div>
                               </section>
-  
+
                               {/* DEFESA */}
                               <section className="inimigo-ficha-bloco">
                                 <h3>Defesa</h3>
-  
+
                                 <input
                                   type="number"
                                   value={inimigo.defesa || 0}
@@ -4848,11 +4316,11 @@ const DashboardMestre = () => {
                                   }
                                 />
                               </section>
-  
+
                               {/* MEMBROS */}
                               <section className="inimigo-ficha-bloco">
                                 <h3>Membros</h3>
-  
+
                                 <div className="mestre-corpo-grid">
                                   {membrosFicha.map(({ chave, nome }) => {
                                     const dados = inimigo.membros?.[chave] || {
@@ -4860,7 +4328,7 @@ const DashboardMestre = () => {
                                       max: 0,
                                       defesa: 0,
                                     };
-  
+
                                     const atualizarMembroInimigo = (
                                       campo,
                                       valor,
@@ -4876,14 +4344,14 @@ const DashboardMestre = () => {
                                         },
                                       });
                                     };
-  
+
                                     return (
                                       <div
                                         key={chave}
                                         className="mestre-corpo-item"
                                       >
                                         <strong>{nome}</strong>
-  
+
                                         <label>
                                           Atual
                                           <input
@@ -4897,7 +4365,7 @@ const DashboardMestre = () => {
                                             }
                                           />
                                         </label>
-  
+
                                         <label>
                                           Máx
                                           <input
@@ -4911,7 +4379,7 @@ const DashboardMestre = () => {
                                             }
                                           />
                                         </label>
-  
+
                                         <label>
                                           DEF
                                           <input
@@ -4930,12 +4398,12 @@ const DashboardMestre = () => {
                                   })}
                                 </div>
                               </section>
-  
+
                               {/* ATAQUES */}
                               <section className="inimigo-ficha-bloco">
                                 <div className="inimigo-bloco-topo">
                                   <h3>Ataques</h3>
-  
+
                                   <button
                                     className="ataqueButton"
                                     type="button"
@@ -4954,7 +4422,7 @@ const DashboardMestre = () => {
                                     + Ataque
                                   </button>
                                 </div>
-  
+
                                 {(inimigo.ataques || []).map((ataque, index) => (
                                   <div
                                     key={index}
@@ -4974,7 +4442,7 @@ const DashboardMestre = () => {
                                         atualizarCampoInimigo("ataques", ataques);
                                       }}
                                     />
-  
+
                                     <input
                                       value={ataque.alcance || ""}
                                       placeholder="Alcance"
@@ -4989,7 +4457,7 @@ const DashboardMestre = () => {
                                         atualizarCampoInimigo("ataques", ataques);
                                       }}
                                     />
-  
+
                                     <input
                                       value={ataque.dano || ""}
                                       placeholder="Dano: 2d6 + 3"
@@ -5004,7 +4472,7 @@ const DashboardMestre = () => {
                                         atualizarCampoInimigo("ataques", ataques);
                                       }}
                                     />
-  
+
                                     <textarea
                                       value={ataque.efeito || ""}
                                       placeholder="Efeito do ataque"
@@ -5019,7 +4487,7 @@ const DashboardMestre = () => {
                                         atualizarCampoInimigo("ataques", ataques);
                                       }}
                                     />
-  
+
                                     <button
                                       type="button"
                                       className="mestre-btn-apagar"
@@ -5037,12 +4505,12 @@ const DashboardMestre = () => {
                                   </div>
                                 ))}
                               </section>
-  
+
                               {/* HABILIDADES */}
                               <section className="inimigo-ficha-bloco">
                                 <div className="inimigo-bloco-topo">
                                   <h3>Habilidades</h3>
-  
+
                                   <button
                                     className="habilidadeButton"
                                     type="button"
@@ -5059,7 +4527,7 @@ const DashboardMestre = () => {
                                     + Habilidade
                                   </button>
                                 </div>
-  
+
                                 {(inimigo.habilidades || []).map(
                                   (habilidade, index) => (
                                     <div
@@ -5083,7 +4551,7 @@ const DashboardMestre = () => {
                                           );
                                         }}
                                       />
-  
+
                                       <textarea
                                         value={habilidade.descricao || ""}
                                         placeholder="Descrição da habilidade"
@@ -5101,7 +4569,7 @@ const DashboardMestre = () => {
                                           );
                                         }}
                                       />
-  
+
                                       <button
                                         type="button"
                                         className="mestre-btn-apagar"
@@ -5208,15 +4676,15 @@ const DashboardMestre = () => {
                     >
                       {(() => {
                         const npc = npcs.find((item) => item.id === npcEditando);
-  
+
                         if (!npc) return null;
-  
+
                         const atualizarCampoNpc = (campo, valor) => {
                           atualizarNpc(npc.id, {
                             [campo]: valor,
                           });
                         };
-  
+
                         const atualizarGrupoNpc = (grupo, chave, valor) => {
                           atualizarNpc(npc.id, {
                             [grupo]: {
@@ -5225,7 +4693,7 @@ const DashboardMestre = () => {
                             },
                           });
                         };
-  
+
                         const atualizarMembroNpc = (membro, campo, valor) => {
                           atualizarNpc(npc.id, {
                             membros: {
@@ -5237,7 +4705,7 @@ const DashboardMestre = () => {
                             },
                           });
                         };
-  
+
                         const adicionarAtaqueNpc = () => {
                           atualizarNpc(npc.id, {
                             ataques: [
@@ -5251,7 +4719,7 @@ const DashboardMestre = () => {
                             ],
                           });
                         };
-  
+
                         const atualizarAtaqueNpc = (ataqueId, campo, valor) => {
                           atualizarNpc(npc.id, {
                             ataques: (npc.ataques || []).map((ataque) =>
@@ -5264,7 +4732,7 @@ const DashboardMestre = () => {
                             ),
                           });
                         };
-  
+
                         const removerAtaqueNpc = (ataqueId) => {
                           atualizarNpc(npc.id, {
                             ataques: (npc.ataques || []).filter(
@@ -5272,7 +4740,7 @@ const DashboardMestre = () => {
                             ),
                           });
                         };
-  
+
                         const adicionarHabilidadeNpc = () => {
                           atualizarNpc(npc.id, {
                             habilidades: [
@@ -5285,7 +4753,7 @@ const DashboardMestre = () => {
                             ],
                           });
                         };
-  
+
                         const atualizarHabilidadeNpc = (
                           habilidadeId,
                           campo,
@@ -5303,7 +4771,7 @@ const DashboardMestre = () => {
                             ),
                           });
                         };
-  
+
                         const removerHabilidadeNpc = (habilidadeId) => {
                           atualizarNpc(npc.id, {
                             habilidades: (npc.habilidades || []).filter(
@@ -5311,7 +4779,7 @@ const DashboardMestre = () => {
                             ),
                           });
                         };
-  
+
                         return (
                           <>
                             <header className="inimigo-ficha-header">
@@ -5323,17 +4791,17 @@ const DashboardMestre = () => {
                                   }
                                   alt={npc.nome}
                                 />
-  
+
                                 <span>Editar imagem</span>
-  
+
                                 <input
                                   type="file"
                                   accept="image/*"
                                   onChange={async (event) => {
                                     const arquivo = event.target.files?.[0];
-  
+
                                     if (!arquivo) return;
-  
+
                                     try {
                                       const fotoComprimida =
                                         await compressProfileImage(arquivo);
@@ -5347,12 +4815,12 @@ const DashboardMestre = () => {
                                           "Nao foi possivel carregar a imagem.",
                                       );
                                     }
-  
+
                                     event.target.value = "";
                                   }}
                                 />
                               </label>
-  
+
                               <div className="inimigo-identidade">
                                 <label>
                                   NV
@@ -5367,7 +4835,7 @@ const DashboardMestre = () => {
                                     }
                                   />
                                 </label>
-  
+
                                 <input
                                   className="inimigo-nome-input"
                                   value={npc.nome || ""}
@@ -5391,7 +4859,7 @@ const DashboardMestre = () => {
                                   ))}
                                 </select>
                               </div>
-  
+
                               <div className="mestre-modal-header-acoes">
                                 <button
                                   className="duplicarButton"
@@ -5399,14 +4867,14 @@ const DashboardMestre = () => {
                                 >
                                   Duplicar
                                 </button>
-  
+
                                 <button
                                   className="mestre-btn-apagar"
                                   onClick={() => excluirNpc(npc.id)}
                                 >
                                   Apagar
                                 </button>
-  
+
                                 <button
                                   className="mestre-modal-fechar"
                                   onClick={() => setNpcEditando(null)}
@@ -5415,10 +4883,10 @@ const DashboardMestre = () => {
                                 </button>
                               </div>
                             </header>
-  
+
                             <section className="mestre-modal-bloco full">
                               <span>Atributos</span>
-  
+
                               <div className="mestre-modal-atributos linha">
                                 {Object.entries(npc.atributos || {}).map(
                                   ([atributo, valor]) => (
@@ -5440,10 +4908,10 @@ const DashboardMestre = () => {
                                 )}
                               </div>
                             </section>
-  
+
                             <section className="mestre-modal-bloco full">
                               <span>Sanidade</span>
-  
+
                               <div className="mestre-duplo">
                                 <label>
                                   Atual
@@ -5458,7 +4926,7 @@ const DashboardMestre = () => {
                                     }
                                   />
                                 </label>
-  
+
                                 <label>
                                   Máxima
                                   <input
@@ -5474,10 +4942,10 @@ const DashboardMestre = () => {
                                 </label>
                               </div>
                             </section>
-  
+
                             <section className="mestre-modal-bloco full">
                               <span>Defesa</span>
-  
+
                               <input
                                 type="number"
                                 value={npc.defesa || 0}
@@ -5489,10 +4957,10 @@ const DashboardMestre = () => {
                                 }
                               />
                             </section>
-  
+
                             <section className="mestre-modal-bloco full">
                               <span>Membros</span>
-  
+
                               <div className="mestre-corpo-grid">
                                 {membrosFicha.map((membro) => {
                                   const dados = npc.membros?.[membro.chave] || {
@@ -5500,14 +4968,14 @@ const DashboardMestre = () => {
                                     max: 0,
                                     defesa: 0,
                                   };
-  
+
                                   return (
                                     <div
                                       key={membro.chave}
                                       className="mestre-membro"
                                     >
                                       <strong>{membro.nome}</strong>
-  
+
                                       <label>
                                         Atual
                                         <input
@@ -5522,7 +4990,7 @@ const DashboardMestre = () => {
                                           }
                                         />
                                       </label>
-  
+
                                       <label>
                                         Máx
                                         <input
@@ -5537,7 +5005,7 @@ const DashboardMestre = () => {
                                           }
                                         />
                                       </label>
-  
+
                                       <label>
                                         Def
                                         <input
@@ -5557,11 +5025,11 @@ const DashboardMestre = () => {
                                 })}
                               </div>
                             </section>
-  
+
                             <section className="mestre-modal-bloco full">
                               <div className="mestre-modal-linha-topo">
                                 <span>Ataques</span>
-  
+
                                 <button
                                   type="button"
                                   onClick={adicionarAtaqueNpc}
@@ -5569,7 +5037,7 @@ const DashboardMestre = () => {
                                   + Ataque
                                 </button>
                               </div>
-  
+
                               <div className="mestre-edit-lista">
                                 {(npc.ataques || []).map((ataque) => (
                                   <div key={ataque.id}>
@@ -5583,7 +5051,7 @@ const DashboardMestre = () => {
                                         )
                                       }
                                     />
-  
+
                                     <input
                                       value={ataque.dano || ""}
                                       onChange={(e) =>
@@ -5594,7 +5062,7 @@ const DashboardMestre = () => {
                                         )
                                       }
                                     />
-  
+
                                     <button
                                       onClick={() => removerAtaqueNpc(ataque.id)}
                                     >
@@ -5604,11 +5072,11 @@ const DashboardMestre = () => {
                                 ))}
                               </div>
                             </section>
-  
+
                             <section className="mestre-modal-bloco full">
                               <div className="mestre-modal-linha-topo">
                                 <span>Habilidades</span>
-  
+
                                 <button
                                   type="button"
                                   onClick={adicionarHabilidadeNpc}
@@ -5616,7 +5084,7 @@ const DashboardMestre = () => {
                                   + Habilidade
                                 </button>
                               </div>
-  
+
                               <div className="mestre-edit-lista">
                                 {(npc.habilidades || []).map((habilidade) => (
                                   <div key={habilidade.id}>
@@ -5630,7 +5098,7 @@ const DashboardMestre = () => {
                                         )
                                       }
                                     />
-  
+
                                     <input
                                       value={habilidade.descricao || ""}
                                       onChange={(e) =>
@@ -5641,7 +5109,7 @@ const DashboardMestre = () => {
                                         )
                                       }
                                     />
-  
+
                                     <button
                                       onClick={() =>
                                         removerHabilidadeNpc(habilidade.id)
@@ -5664,7 +5132,8 @@ const DashboardMestre = () => {
             </section>
           )}
 
-          {aba === "loja" && (
+          {aba === "loja" && sistemaAtivo === "espiral" && <EspiralDashboardCatalog key="espiral-items" kind="items" fichas={fichasDaSubAba} onGrant={concederEntradaEspiral} />}
+          {aba === "loja" && sistemaAtivo !== "espiral" && (
             <section className="mestre-loja">
               <div className="mestre-loja-editor-topo">
                 <div>
@@ -7833,7 +7302,8 @@ const DashboardMestre = () => {
             </section>
           )}
 
-          {aba === "habilidades" && (
+          {aba === "habilidades" && sistemaAtivo === "espiral" && <EspiralDashboardCatalog key="espiral-abilities" kind="abilities" fichas={fichasDaSubAba} onGrant={concederEntradaEspiral} />}
+          {aba === "habilidades" && sistemaAtivo !== "espiral" && (
             <section className="mestre-loja">
               <div className="mestre-loja-editor-topo">
                 <div>
@@ -8203,7 +7673,7 @@ const DashboardMestre = () => {
                 <div className="mestre-analises-lista">
                   {habilidadesPendentes.map(({ ficha, habilidade }) => (
                     <article
-                      key={habilidade.id}
+                      key={`${ficha.fichaId}:${habilidade.id}`} 
                       className="mestre-analise-card"
                     >
                       <div className="mestre-analise-meta">
@@ -8215,14 +7685,14 @@ const DashboardMestre = () => {
                             : habilidade.recurso}
                         </b>
                       </div>
-                      <h3>{habilidade.nome}</h3>
-                      <p>{habilidade.descricao}</p>
+                      <h3>{habilidade.edicaoPendente ? 'Solicitação de edição: '+habilidade.edicaoPendente.nome : habilidade.nome}</h3>
+                      {habilidade.edicaoPendente ? <AbilityEditDiff current={habilidade} proposal={habilidade.edicaoPendente}/> : <AbilityDocument habilidade={habilidade}/>}
                       <div className="mestre-analise-acoes">
                         <button
                           type="button"
                           className="aprovar"
                           onClick={() =>
-                            analisarHabilidadeCriada(ficha, habilidade.id, true)
+                            analisarHabilidadeCriada(ficha, habilidade.id, true,habilidade.edicaoPendente?.id)
                           }
                         >
                           Aprovar
@@ -8235,10 +7705,11 @@ const DashboardMestre = () => {
                               ficha,
                               habilidade.id,
                               false,
+                              habilidade.edicaoPendente?.id,
                             )
                           }
                         >
-                          Recusar e devolver custo
+                          {habilidade.edicaoPendente ? "Recusar edição" : "Recusar e devolver custo"}
                         </button>
                       </div>
                     </article>
@@ -8251,7 +7722,7 @@ const DashboardMestre = () => {
               )}
             </section>
           )}
-          {aba === "marcas" && (
+          {sistemaAtivo === "darkness" && aba === "marcas" && (
             <section className="marcas-wrapper">
               {/* LAYOUT PRINCIPAL: FORM + LISTA */}
               <div className="marcas-layout">
@@ -8663,7 +8134,7 @@ const DashboardMestre = () => {
                           }))
                         ).map((dado, index) => (
                           <span key={index}>
-                            d{dado.faces}: {dado.valor}
+                            {sistemaAtivo === "espiral" ? espiralDie(dado.faces) : `d${dado.faces}`}: {dado.valor}
                           </span>
                         ))}
                       </div>
@@ -8733,3 +8204,7 @@ const DashboardMestre = () => {
 };
 
 export default DashboardMestre;
+
+
+
+

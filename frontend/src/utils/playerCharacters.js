@@ -1,0 +1,9 @@
+export const PLAYER_CHARACTER_LIMIT=10;
+export const PLAYER_CHARACTER_PAGE_SIZE=4;
+export function validateCharacterLimit(refs){if(refs.length>PLAYER_CHARACTER_LIMIT)throw new Error('O perfil permite no máximo 10 personagens.');return refs;}
+export function characterTemplates(){
+ const names=['Helena Vale','Caio Moura','Lia Torres','Dante Reis','Iris Nunes','Noah Vilar','Maya Costa','Raul Dias','Cecília Luz','Theo Prado'];
+ return names.map((nome,i)=>{const sistema=i%2?'espiral':'darkness';const initials=nome.split(' ').map(s=>s[0]).join('');const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="360" viewBox="0 0 300 360"><rect width="300" height="360" fill="#17191a"/><path d="M0 70H300M0 290H300M60 0V360M240 0V360" stroke="#353839"/><circle cx="150" cy="125" r="55" fill="#44494b"/><path d="M42 340v-60a108 108 0 0 1 216 0v60" fill="#303537"/><circle cx="150" cy="125" r="72" fill="none" stroke="#85898a" stroke-width="1"/><text x="150" y="315" text-anchor="middle" fill="#dadcdd" font-size="28" font-family="monospace">${initials}</text></svg>`;
+ const dados=sistema==='espiral'?{name:nome,player:'Demonstração',pronoun:i%3?'Ela':'Ele',occupation:['Investigação','Medicina','Exploração'][i%3],vertente:['Metódica','Vigilante','Resiliente'][i%3],attributes:{pulso:3,razao:4,sentido:3,voz:2},integrity:40,sanity:8,hope:7,pressure:i%3}:{nome,nomeJogador:'Demonstração',pronome:i%3?'Ela':'Ele',classe:['Médico de Campo','Renegado','Atirador de Elite'][i%3],nivel:3+i,atributos:{forca:10+i,fonitude:15,inteligencia:20,reflexos:10,vontade:15},vida:{atual:350,max:400},sanidade:{atual:35,max:40},esperanca:{atual:28,max:30}};
+ return {id:'template-'+(i+1),sistema,nome,demo:true,foto:'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg),detalhe:dados.classe||dados.vertente,dados};});
+}

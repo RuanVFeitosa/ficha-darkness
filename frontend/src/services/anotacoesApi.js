@@ -1,3 +1,4 @@
+import { mediaStorage } from "./mediaStorage";
 import { supabase, supabaseConfigurado } from "./supabase";
 
 const chaveLocal = (campanhaId) => `darkness_anotacoes_${campanhaId}`;
@@ -144,9 +145,9 @@ export const enviarDocumentoAnotacao = async (campanhaId, arquivo) => {
 
   const nomeSeguro = arquivo.name.replace(/[^a-zA-Z0-9._-]/g, "-");
   const caminho = `${campanhaId}/${Date.now()}-${nomeSeguro}`;
-  const { error } = await supabase.storage.from("documentos-campanha").upload(caminho, arquivo, { upsert: false, contentType: arquivo.type });
+  const { error } = await mediaStorage.from("documentos-campanha").upload(caminho, arquivo, { upsert: false, contentType: arquivo.type });
   if (error) throw error;
-  const url = supabase.storage.from("documentos-campanha").getPublicUrl(caminho).data.publicUrl;
+  const url = mediaStorage.from("documentos-campanha").getPublicUrl(caminho).data.publicUrl;
   return { url, nome: arquivo.name, tipo: arquivo.type };
 };
 

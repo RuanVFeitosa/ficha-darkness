@@ -114,7 +114,7 @@ const LojaHelena = () => {
   const [subAbaMunicoes, setSubAbaMunicoes] = useState("pistola");
   const [nivelRitoAtivo, setNivelRitoAtivo] = useState("iniciante");
   const [subAbaMaleta, setSubAbaMaleta] = useState("medicinal");
-  const [filtroModificadores, setFiltroModificadores] = useState("todos");
+  useState("todos");
   const [carrinho, setCarrinho] = useState([]);
   const [mensagem, setMensagem] = useState("");
 
@@ -294,7 +294,7 @@ const LojaHelena = () => {
     (item) => item.nome === "Maleta de Campo",
   );
 
-  const itemMaletaDeCampo = {
+  const itemMaletaDeCampo = useMemo(() => ({
     id: "maleta-de-campo",
     nome: "Maleta de Campo",
     categoria: "itens",
@@ -307,7 +307,7 @@ const LojaHelena = () => {
     descricao:
       "A Maleta de Campo representa preparo, sobrevivência e adaptação diante do desconhecido.",
     maletaCampo: true,
-  };
+  }), [ehMedicoDeCampo]);
 
   const aprimoramentosMaletaLoja = useMemo(() => {
     const mapear = (lista, tipoMaleta) =>
@@ -391,6 +391,7 @@ const LojaHelena = () => {
     subAbaMunicoes,
     temMaletaDeCampo,
     ehMedicoDeCampo,
+    itemMaletaDeCampo,
   ]);
 
   const totalCarrinho = carrinho.reduce((acc, item) => acc + item.preco, 0);
@@ -547,13 +548,13 @@ const LojaHelena = () => {
       return texto.replace(/(\d+)\s*alvos?/i, `${quantidade} alvos`);
     }
     if (texto.includes("|")) {
-      const [prefixo, sufixo] = texto.split("|").map((parte) => parte.trim());
+      const [prefixo] = texto.split("|").map((parte) => parte.trim());
       return `${prefixo} | 3 alvos`;
     }
     return `${texto || "Firmeza"} | 3 alvos`;
   };
 
-  const tiposUpgradeFogo = [
+  const tiposUpgradeFogo = useMemo(() => ([
     {
       chave: "dano",
       nome: "Dano",
@@ -598,9 +599,9 @@ const LojaHelena = () => {
         "Estende o alcance efetivo da arma e reforça ataques de precisão",
       max: 3,
     },
-  ];
+  ]), []);
 
-  const tiposUpgradeCorpo = [
+  const tiposUpgradeCorpo = useMemo(() => ([
     {
       chave: "dadoDano",
       nome: "Dados de Dano",
@@ -629,7 +630,7 @@ const LojaHelena = () => {
       descricao: "Aumenta o dano máximo na cabeça em +10",
       max: 3,
     },
-  ];
+  ]), []);
 
   const armasAprimoraveis = useMemo(() => {
     return (personagem.inventario || [])
@@ -655,7 +656,7 @@ const LojaHelena = () => {
     if (!armaUpgradeAtiva) return tiposUpgradeFogo;
     const isCorpo = armaUpgradeAtiva.item.armaStatus?.tipo === "Corpo a Corpo";
     return isCorpo ? tiposUpgradeCorpo : tiposUpgradeFogo;
-  }, [armaUpgradeAtiva]);
+  }, [armaUpgradeAtiva, tiposUpgradeCorpo, tiposUpgradeFogo]);
 
   // =====================
   // Função: aplicar Modificações na arma selecionada
@@ -1064,14 +1065,14 @@ const LojaHelena = () => {
       (item) => item.categoria === "modificacoes",
     );
 
-    const subCategorias = Array.from(
+    Array.from(
       new Set(
         listaModificacoes
           .map((m) => String(m.subcategoria || "geral").trim())
           .filter(Boolean),
       ),
     );
-    const subCategoriasFinal = ["todas", ...subCategorias];
+
 
     const listaModificacoesFallback = DEFAULT_CATALOGO_LOJA.filter(
       (item) => item.categoria === "modificacoes",
@@ -1628,9 +1629,7 @@ const LojaHelena = () => {
     );
   };
 
-  const renderizarCarrinhoResumo = () => {
-    return null;
-  };
+
 
   return (
     <main className="loja-page">
@@ -1902,7 +1901,7 @@ const LojaHelena = () => {
                               className="arma-status-modos"
                               style={{ display: "block" }}
                             >
-                             
+
                             </div>
                           ) : (
                             // Armas de fogo: exibe os 4 modos

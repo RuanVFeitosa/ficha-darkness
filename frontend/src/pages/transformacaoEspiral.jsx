@@ -1,3 +1,5 @@
+import EspiralDice from '../components/EspiralDice';
+import { espiralDie } from '../utils/espiralDice';
 import React, { useEffect, useMemo, useState } from "react";
 import {
   mdiArrowLeft,
@@ -299,7 +301,7 @@ export default function TransformacaoEspiral() {
                       <p>
                         {attribute.hint} · Estágio atual:{" "}
                         <b>
-                          {current} · d{current * 2 + 2}
+                          {current} · {<EspiralDice value={espiralDie(current * 2 + 2)}/>}
                         </b>
                       </p>
                     </div>
@@ -307,7 +309,7 @@ export default function TransformacaoEspiral() {
                       <small>
                         {maxed
                           ? "ESTÁGIO MÁXIMO"
-                          : `ESTÁGIO ${next} · d${next * 2 + 2}`}
+                          : <>ESTÁGIO {next} · <EspiralDice value={espiralDie(next * 2 + 2)}/></>}
                       </small>
                       <strong>{maxed ? "—" : `${cost} PONTOS`}</strong>
                       <button

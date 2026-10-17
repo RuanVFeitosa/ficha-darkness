@@ -1,0 +1,11 @@
+name = "darkness-media"
+main = "worker.mjs"
+compatibility_date = "2026-10-11"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "darkness-media"
+
+[vars]
+ALLOWED_ORIGINS = "http://localhost:3000"
+SUPABASE_URL = "https://fiaglyhkapudhhdsgchx.supabase.co"

@@ -1,0 +1,20 @@
+const fs=require('fs');
+const root='frontend/src/';
+fs.writeFileSync(root+'utils/espiralDice.js',`export const ESPIRAL_DICE = Object.freeze({4:'△',6:'⬡',8:'◇',10:'⬟',12:'⬢'});
+export function espiralDie(sides) { return (ESPIRAL_DICE[Number(sides)] || 'd') + sides; }
+export function espiralDiceText(value) { return String(value ?? '').replace(/d(100|20|12|10|8|6|4)\\b/gi, (_, sides) => espiralDie(sides)); }
+export function normalizeEspiralDice(value) { return String(value ?? '').replace(/[△⬡◇⬟⬢](?=\\d)/gu, 'd'); }
+`);
+function edit(file,fn){let s=fs.readFileSync(root+file,'utf8');let n=fn(s);if(n!==s)fs.writeFileSync(root+file,n);}
+function imports(s){return `import { espiralDie, espiralDiceText } from '../utils/espiralDice';\n`+s;}
+for(const f of ['pages/cadastroPersonagem.jsx','pages/transformacaoEspiral.jsx','pages/dashboardMestre.jsx','components/EspiralEncounters.jsx','components/EspiralDashboard.jsx','components/CharacterDossier.jsx','pages/fichaEspiral.jsx','pages/lojaEspiral.jsx','components/EspiralDashboardCatalog.jsx','components/BuildCatalog.jsx'])edit(f,s=>imports(s));
+edit('components/EspiralDashboard.jsx',s=>s.replace('<small>d</small>{die}','{espiralDie(die)}'));
+edit('components/CharacterDossier.jsx',s=>s.replace('`d${[4,6,8,10,12][Number(v)-1]}`','espiralDie([4,6,8,10,12][Number(v)-1])'));
+edit('pages/dashboardMestre.jsx',s=>s.replace('d{[4, 6, 8, 10, 12][estagio - 1]}','{espiralDie([4, 6, 8, 10, 12][estagio - 1])}').replace('d{dado.faces}: {dado.valor}','{sistemaAtivo === "espiral" ? espiralDie(dado.faces) : `d${dado.faces}`}: {dado.valor}'));
+edit('pages/cadastroPersonagem.jsx',s=>s.replace('d4 −1 · d6 0 · d8 1 · d10 3 · d12 6. Apenas um atributo em d4 e um em d12.','△4 −1 · ⬡6 0 · ◇8 1 · ⬟10 3 · ⬢12 6. Apenas um atributo em △4 e um em ⬢12.').replace('d{[4,6,8,10,12][i]}','{espiralDie([4,6,8,10,12][i])}').replace('d{[4,6,8,10,12][sheet.attributes[key]-1]}','{espiralDie([4,6,8,10,12][sheet.attributes[key]-1])}'));
+edit('pages/transformacaoEspiral.jsx',s=>s.replace('{current} · d{current * 2 + 2}','{current} · {espiralDie(current * 2 + 2)}').replace('`ESTÁGIO ${next} · d${next * 2 + 2}`','`ESTÁGIO ${next} · ${espiralDie(next * 2 + 2)}`'));
+edit('components/EspiralEncounters.jsx',s=>s.replace('d{(index + 1) * 2 + 2}','{espiralDie((index + 1) * 2 + 2)}').replace('d{record.attributes[key] * 2 + 2}','{espiralDie(record.attributes[key] * 2 + 2)}'));
+for(const [f,expr] of [['pages/lojaEspiral.jsx','item.damage'],['components/EspiralDashboardCatalog.jsx','entry.damage'],['components/BuildCatalog.jsx','e.damage']])edit(f,s=>s.replaceAll('{'+expr+'}','{espiralDiceText('+expr+')}'));
+edit('pages/fichaEspiral.jsx',s=>s.replace('<i className={`es-die-glyph die-d${sides}`} data-sides={sides} aria-label={label ? `d${sides}` : undefined} title={label ? `d${sides}` : undefined} />','<span className="es-dice-symbol" aria-label={label ? `Dado de ${sides} faces` : undefined}>{espiralDie(sides)}</span>').replace('{stage} · {i * 2 + 4}','{stage} · {espiralDie(i * 2 + 4)}').replace('className={`es-rail-value die-d${stage * 2 + 2}`}','className="es-rail-value es-symbol-value"').replace('{stage * 2 + 2}','{espiralDie(stage * 2 + 2)}').replace('{history[0].label}','{espiralDiceText(history[0].label)}').replace('? history[0].label','? espiralDiceText(history[0].label)').replace('{entry.label}','{espiralDiceText(entry.label)}').replace('{property.value}','{espiralDiceText(property.value)}').replaceAll('2d6+3','2⬡6+3').replaceAll('1d8 ou 2d6+2','1◇8 ou 2⬡6+2').replaceAll('+1d6 de Pressão','+1⬡6 de Pressão'));
+edit('data/espiral.js',s=>`import { normalizeEspiralDice } from '../utils/espiralDice';\n`+s.replace('String(value || "")','normalizeEspiralDice(value)').replace('Apenas um atributo pode estar em d12.','Apenas um atributo pode estar em ⬢12.'));
+fs.appendFileSync(root+'CSS/FichaEspiral.css','\n.es-symbol-value.es-rail-value{clip-path:none;background:transparent;color:inherit;width:auto;min-width:52px;white-space:nowrap}.es-dice-symbol{display:inline-block;white-space:nowrap;font-style:normal;font-family:Arial,"Segoe UI Symbol",sans-serif}\n');

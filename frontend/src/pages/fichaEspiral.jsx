@@ -1,5 +1,15 @@
+import EspiralDice, { EspiralDie, EspiralDiceInput } from '../components/EspiralDice';
+import PlayerPageLink from '../components/PlayerPageLink';
+import EspiralDamage from '../components/EspiralDamage';
+import EspiralDamageResult from '../components/EspiralDamageResult';
+import { INJURY_EFFECTS } from '../utils/espiralInjuries';
+
+import AnimatedTokenImage from '../components/AnimatedTokenImage';
+import { externalizarImagens } from "../services/mediaStorage";
+import SceneDifficultySelector from "../components/SceneDifficultySelector";
 import React, { useEffect, useRef, useState } from "react";
 import Icon from "@mdi/react";
+import { mdiAccountCircleOutline, mdiDiceMultipleOutline, mdiStoreOutline, mdiAutoFix, mdiDownload, mdiHeartPulse } from '@mdi/js';
 import {
   ATTRIBUTES,
   RESOURCES,
@@ -15,13 +25,18 @@ import {
 } from "../data/espiral";
 import "../CSS/FichaEspiral.css";
 import "../CSS/InventarioEspiral.css";
-import { compressProfileImage } from "../services/imageCompression";
+import "../CSS/FichaEspiralResponsive.css";
+import { compressProfileImage, prepareTokenImage } from "../services/imageCompression";
 import { buscarPersonagem } from "../services/personagemApi";
 import { obterIconeItem } from "../utils/itemIcons";
 import { convertDarknessToEspiral } from "../utils/darknessToEspiral";
 import { selecionarDialogo, solicitarDialogo } from "../components/DialogoGlobal";
 import { APRIMORAMENTOS_HABILIDADES_ESPIRAL, CUSTOS_ESPERANCA_HABILIDADES, HABILIDADES_ESPIRAL } from "../data/habilidadesEspiral";
+import { CATALOGO_ESPIRAL } from "../data/catalogoEspiral";
 
+import { listarCampanhasDaFicha } from "../services/mesaApi";
+import { TABLETOP_3D_AUTH_KEY } from "../constants/masterAccess";
+import { hasEspiralToken, MISSING_ESPIRAL_TOKEN, espiralTabletopUrl } from "../utils/espiralTabletop";
 const clamp = (value, max) => Math.max(0, Math.min(max, Number(value) || 0));
 const randomDie = (sides) => {
   if (!window.crypto?.getRandomValues)
@@ -34,10 +49,38 @@ const randomDie = (sides) => {
   return (a[0] % sides) + 1;
 };
 const DieGlyph = ({ sides, label = true }) => (
-  <i className={`es-die-glyph die-d${sides}`} data-sides={sides} aria-label={label ? `d${sides}` : undefined} title={label ? `d${sides}` : undefined} />
+  <i className={`es-die-glyph die-d${sides}`} data-sides={sides} aria-label={label ? `Dado de ${sides} faces` : undefined} title={label ? `Dado de ${sides} faces` : undefined} />
 );
 const uniqueId = () =>
   window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+const INVENTORY_CATEGORY_NAMES = {
+  armas: "Arma",
+  protecoes: "Proteção",
+  medicina: "Medicina",
+  investigacao: "Investigação",
+  tecnica: "Técnica",
+  sobrevivencia: "Sobrevivência",
+  tecnologia: "Tecnologia",
+  infiltracao: "Infiltração",
+  comunicacao: "Comunicação",
+  visao: "Visão",
+  ambiental: "Proteção ambiental",
+};
+const inventoryCategoryName = (category, fallback = "Equipamento") =>
+  INVENTORY_CATEGORY_NAMES[category] || fallback;
+const catalogInventoryItem = (name) => CATALOGO_ESPIRAL.find((item) => item.name === name) || {};
+function InventoryIcon({ item, size = 1.45 }) {
+  const icon = obterIconeItem({
+    nome: item.name,
+    categoria: item.category || item.kind,
+    tipo: item.kind,
+    detalhes: item.description,
+  });
+  const isImage = typeof icon === "string" && (icon.includes(".svg") || icon.startsWith("data:image"));
+  return isImage
+    ? <img src={icon} alt="" aria-hidden="true" />
+    : <Icon path={icon} size={size} aria-hidden="true" />;
+}
 const storedEspiralSheet = (id) => {
   try {
     const current = JSON.parse(localStorage.getItem(`espiral:sheet:v1:${id}`));
@@ -48,12 +91,13 @@ const storedEspiralSheet = (id) => {
   return null;
 };
 const isUnlinkedBlankSheet = (sheet) =>
-  !sheet?.migratedFrom && !sheet?.name && !sheet?.profileImage &&
-  !sheet?.occupation && !sheet?.player && !sheet?.inventory && !sheet?.abilities &&
+  !sheet?.migratedFrom && !sheet?.name && !sheet?.profileImage && !sheet?.tabletopTokenImage &&
+  !sheet?.occupation && !sheet?.player && !sheet?.inventory && !(sheet?.inventoryItems || []).length && !sheet?.abilities &&
+  !sheet?.backgroundDescription && !sheet?.backgroundHistory && !sheet?.backgroundConnections &&
   !(sheet?.injuries || []).length &&
   Object.values(sheet?.resources || {}).every((grade) => Number(grade) === 0);
 const legacyImportsInProgress = new Set();
-function Spiral({ small = false }) {
+function Spiral({ small = false, className = "" }) {
   const points = Array.from({ length: 500 }, (_, i) => {
     const t = (i / 499) * Math.PI * 9;
     const r = 3 + (i / 499) * 84;
@@ -61,7 +105,7 @@ function Spiral({ small = false }) {
   }).join(" ");
   return (
     <svg
-      className={small ? "es-mark" : "es-spiral"}
+      className={`${small ? "es-mark" : "es-spiral"} ${className}`.trim()}
       viewBox="0 0 200 200"
       aria-hidden="true"
     >
@@ -139,6 +183,8 @@ const injuryLevel = {
   Grave: 3,
   Crítica: 3,
   "Catastrófica / Fatal": 4,
+  Catastrófica: 4,
+  Fatal: 4,
 };
 function BodyMap({ injuries, protections, selectedRegion, onSelect }) {
   const levelFor = (region) =>
@@ -275,6 +321,7 @@ function BodyMap({ injuries, protections, selectedRegion, onSelect }) {
         {protectionMarks("Braço direito", 265, 176, "start")}
         {protectionMarks("Perna esquerda", 115, 420, "end")}
         {protectionMarks("Perna direita", 215, 420, "start")}
+      </svg>
       <div className="es-body-protection-summary" aria-label="Proteções equipadas">
         <span>PROTEÇÕES EQUIPADAS</span>
         {protections.length ? (
@@ -288,7 +335,6 @@ function BodyMap({ injuries, protections, selectedRegion, onSelect }) {
           <small>Nenhuma proteção equipada.</small>
         )}
       </div>
-      </svg>
       <div className="es-body-legend">
         <span>
           <i className="healthy" />
@@ -311,34 +357,53 @@ function BodyMap({ injuries, protections, selectedRegion, onSelect }) {
   );
 }
 
-export default function FichaEspiral() {
-  const idFromUrl = new URLSearchParams(window.location.search).get("ficha");
+export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedded=false,scene=null,sceneEnemies=[],rollContext=null,difficultyLocked=false,onRollContextChange,onSheetChange,onRoll}) {
+  const idFromUrl = sheetId || new URLSearchParams(window.location.search).get("ficha");
   const id = idFromUrl || "principal";
   const storageKey = `espiral:sheet:v1:${id}`;
   const initialStoredSheet = useRef(storedEspiralSheet(id));
   const [sheet, setSheet] = useState(() => initialStoredSheet.current || freshSheet());
   const [saveState, setSaveState] = useState("Salvando…");
   const [tab, setTab] = useState("Visão geral");
+  const [selectedInventoryKey, setSelectedInventoryKey] = useState(null);
   const [editing, setEditing] = useState(false);
   const [attribute, setAttribute] = useState("sentido");
+  const [temporaryAttributeDice, setTemporaryAttributeDice] = useState({});
   const [resource, setResource] = useState("Investigação");
   const [difficulty, setDifficulty] = useState(4);
+  const contextDifficulty=rollContext?.value;
+  const contextId=rollContext?.id;
+  useEffect(()=>{if(contextDifficulty != null)setDifficulty(contextDifficulty);},[contextId,contextDifficulty]);
   const [modifier, setModifier] = useState(0);
   const [extraDiceCount, setExtraDiceCount] = useState(0);
   const [extraDiceSides, setExtraDiceSides] = useState(6);
   const [history, setHistory] = useState([]);
   const [rolling, setRolling] = useState(false);
+  const lastSharedRoll=useRef(null);
+  useEffect(() => {
+    const latest=history[0];
+    if(!latest || lastSharedRoll.current===latest) return;
+    lastSharedRoll.current=latest;
+    onRoll?.(latest,sheet.name || "Jogador");
+  },[history,onRoll,sheet.name]);
   const [rollModalOpen, setRollModalOpen] = useState(false);
   const [resourceToRoll, setResourceToRoll] = useState(null);
   const [attributeToRoll, setAttributeToRoll] = useState("sentido");
   const [customFormula, setCustomFormula] = useState("1d20");
   const [formulaError, setFormulaError] = useState("");
   const [region, setRegion] = useState("Torso");
+  const [selectedWeapon, setSelectedWeapon] = useState(null);
+  const [selectedProtection, setSelectedProtection] = useState(null);
   const [severity, setSeverity] = useState("Moderada");
   const [injuryNote, setInjuryNote] = useState("");
   const fileInput = useRef(null);
   const profileInput = useRef(null);
+  const tabletopTokenInput = useRef(null);
   const [notice, setNotice] = useState("");
+  const [tabletopOpen,setTabletopOpen]=useState(false);
+  const [tabletopCampaigns,setTabletopCampaigns]=useState([]);
+  const [tabletopLoading,setTabletopLoading]=useState(false);
+  const [tabletopError,setTabletopError]=useState(tabletopAccessError);
   const maximum = integrityMax(sheet.attributes.pulso, sheet.integrityTable);
   const fichaDarkness = sheet.migratedFrom === "darkness"
     ? sheet.migratedFromId || (id.startsWith("darkness-") ? id.slice("darkness-".length) : "")
@@ -424,30 +489,28 @@ export default function FichaEspiral() {
     try {
       localStorage.setItem(storageKey, JSON.stringify(sheet));
       setSaveState("Salvo neste dispositivo");
+      onSheetChange?.(id,sheet);
     } catch {
       setSaveState("Não foi possível salvar. Exporte uma cópia.");
     }
-  }, [sheet, storageKey]);
+  }, [sheet, storageKey, id, onSheetChange]);
   useEffect(() => {
-    document.title = sheet.name || "Ficha de personagem";
-  }, [sheet.name]);
-  function changeAttribute(key, stage) {
-    setSheet((previous) => {
-      const oldMax = integrityMax(
-        previous.attributes.pulso,
-        previous.integrityTable,
-      );
-      const nextMax = integrityMax(
-        key === "pulso" ? stage : previous.attributes.pulso,
-        previous.integrityTable,
-      );
-      return {
-        ...previous,
-        attributes: { ...previous.attributes, [key]: stage },
-        integrity: clamp(previous.integrity + nextMax - oldMax, nextMax),
-      };
-    });
-  }
+    const updateAnimation=event => {
+      if(event.type==='storage' && event.key!==storageKey) return;
+      if(event.type!=='storage' && event.detail?.fichaId!==`espiral:${id}`) return;
+      try {const latest=event.type==='storage' ? JSON.parse(event.newValue || 'null') : event.detail?.patch;
+        if(latest) setSheet(previous => {
+ const profileTokenAnimation=latest.profileTokenAnimation ?? previous.profileTokenAnimation,tabletopTokenAnimation=latest.tabletopTokenAnimation ?? previous.tabletopTokenAnimation;
+ if(JSON.stringify([profileTokenAnimation,tabletopTokenAnimation])===JSON.stringify([previous.profileTokenAnimation,previous.tabletopTokenAnimation])) return previous;
+ return {...previous,profileTokenAnimation,tabletopTokenAnimation};
+});
+      } catch {}
+    };
+    window.addEventListener('storage',updateAnimation);window.addEventListener('darkness:token-animation-updated',updateAnimation);
+    return () => {window.removeEventListener('storage',updateAnimation);window.removeEventListener('darkness:token-animation-updated',updateAnimation);};
+  },[storageKey,id]);  useEffect(() => {
+    if(!embedded) document.title = sheet.name || "Ficha de personagem";
+  }, [sheet.name,embedded]);
   const updateEquipment = (key, id, field, value) =>
     update(
       key,
@@ -505,15 +568,66 @@ export default function FichaEspiral() {
       setNotice(error?.message || "Não foi possível preparar esta imagem.");
     }
   }
+  async function openTabletop() {
+    setTabletopOpen(true);
+    setTabletopError("");
+    if(!hasEspiralToken(sheet)) {
+      setTabletopError(MISSING_ESPIRAL_TOKEN);
+      return;
+    }
+    setTabletopLoading(true);
+    try {
+      const ids=[...new Set([`espiral:${id}`,id,fichaDarkness].filter(Boolean))];
+      const lists=await Promise.all(ids.map(fichaId => listarCampanhasDaFicha(fichaId)));
+      const campaigns=[...new Map(lists.flat().filter(c => c?.tabletop_tipo==="3d").map(c => [c.id || c.codigo,c])).values()];
+      setTabletopCampaigns(campaigns);
+    } catch(error) {
+      setTabletopError(error.message || "Não foi possível carregar suas campanhas.");
+    } finally { setTabletopLoading(false); }
+  }
+  function enterTabletop(campaign) {
+    if(!hasEspiralToken(sheet)) {setTabletopError(MISSING_ESPIRAL_TOKEN);return;}
+    try {
+      localStorage.setItem(storageKey,JSON.stringify(sheet));
+      sessionStorage.setItem(TABLETOP_3D_AUTH_KEY,"true");
+      window.location.href=espiralTabletopUrl(id,campaign);
+    } catch {setTabletopError("Não foi possível salvar a imagem do personagem. Libere espaço neste dispositivo e tente novamente.");}
+  }
+  async function importTabletopToken(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      setNotice("Preparando imagem do personagem…");
+      const prepared = await prepareTokenImage(file);
+      let image = prepared;
+      let localOnly = false;
+      try {
+        image = await externalizarImagens(prepared);
+      } catch {
+        localOnly = true;
+      }
+      const nextSheet = { ...sheet, tabletopTokenImage: image };
+      // Confirme a gravação antes de mostrar que a imagem foi atualizada.
+      localStorage.setItem(storageKey, JSON.stringify(nextSheet));
+      setSheet(nextSheet);
+      setNotice(localOnly
+        ? "Imagem salva neste dispositivo. O envio ao armazenamento remoto não foi concluído."
+        : "Imagem do personagem atualizada.");
+    } catch (error) {
+      setNotice(error?.message || "Não foi possível preparar a imagem.");
+    }
+  }
   function roll(resourceOverride = resource, attributeOverride = attribute) {
     if (rolling) return;
     setResource(resourceOverride);
     setAttribute(attributeOverride);
     const sides = sheet.attributes[attributeOverride] * 2 + 2;
+    setTemporaryAttributeDice(previous => ({...previous,[attributeOverride]:0}));
     const temporaryGrade = temporaryGradeFor(resourceOverride);
     const count = Math.max(
       1,
-      1 + sheet.resources[resourceOverride] + temporaryGrade + modifier,
+      1 + sheet.resources[resourceOverride] + temporaryGrade + modifier + (temporaryAttributeDice[attributeOverride] || 0),
     );
     const pressureCount =
       sheet.pressure +
@@ -546,11 +660,19 @@ export default function FichaEspiral() {
                 ? "Sucesso"
                 : "Sucesso excepcional",
     };
+    const survival = resourceOverride === 'Propósito' && attributeOverride === 'pulso' && Number(sheet.integrity) === 0;
+    if (survival) {
+      setSheet(previous => ({ ...previous, failures: Math.max(0, Math.min(3, (Number(previous.failures) || 0) + (margin < 0 ? 1 : -1))) }));
+    }
     setRolling(true);
     setHistory((previous) =>
       [
         {
           ...result,
+          survival,
+          difficulty,
+          context:rollContext?.label,
+          category:rollContext?.category,
           label: `${ATTRIBUTES[attributeOverride].name} + ${resourceOverride}`,
           attribute: attributeOverride,
           sides,
@@ -575,12 +697,24 @@ export default function FichaEspiral() {
     update("pressure", 0);
     window.setTimeout(() => setRolling(false), 650);
   }
+  function rollAttribute(key) {
+    if (rolling) return;
+    const stage = sheet.attributes[key];
+    const sides = stage * 2 + 2;
+    const dice = Array.from({length:1+(temporaryAttributeDice[key] || 0)},()=>randomDie(sides));
+    setAttribute(key);
+    setTemporaryAttributeDice(previous => ({...previous,[key]:0}));
+    setRolling(true);
+    setHistory(previous => [{type:'formula',attributeOnly:true,label:ATTRIBUTES[key].name+' · somente atributo',dice,sides,pressure:[],modifier:0,total:Math.max(...dice),at:Date.now()},...previous].slice(0,12));
+    setRollModalOpen(true);
+    window.setTimeout(() => setRolling(false),650);
+  }
   function rollFormula() {
     if (rolling) return;
     const parsed = parseDiceFormula(customFormula);
     if (!parsed) {
       setFormulaError(
-        "Use 1d4 a 50d100, com modificador opcional (ex.: 2d6+3).",
+        "Use 1d4 a 50d100, com modificador opcional (ex.: 2⬡6+3).",
       );
       return;
     }
@@ -610,7 +744,7 @@ export default function FichaEspiral() {
     if (rolling) return;
     const parsed = parseDiceFormula(weapon.damage);
     if (!parsed) {
-      setNotice(`Dano inválido para ${weapon.name || "a arma"}. Use uma fórmula como 1d8 ou 2d6+2.`);
+      setNotice(`Dano inválido para ${weapon.name || "a arma"}. Use uma fórmula como 1◇8 ou 2⬡6+2.`);
       return;
     }
     setNotice("");
@@ -677,6 +811,8 @@ export default function FichaEspiral() {
         ].every((k) => typeof data[k] === "string") ||
         (data.profileImage !== undefined &&
           typeof data.profileImage !== "string") ||
+        (data.tabletopTokenImage !== undefined &&
+          typeof data.tabletopTokenImage !== "string") ||
         !["integrity", "sanity", "hope", "pressure", "failures"].every(
           (k) => Number.isInteger(data[k]) && data[k] >= 0,
         ) ||
@@ -706,22 +842,82 @@ export default function FichaEspiral() {
     }
     event.target.value = "";
   }
-  const status =
-    sheet.failures >= 3
-      ? "Morte registrada"
-      : sheet.integrity === 0
-        ? "Estado crítico"
-        : sheet.sanity === 0
-          ? "Colapso psicológico"
-          : "Em jogo";
+
+  // Unifica itens estruturados e entradas antigas no inventário exibido.
+  const structuredInventory = Array.isArray(sheet.inventoryItems) ? sheet.inventoryItems : [];
+  const structuredNames = new Set(structuredInventory.map((item) => String(item.name || "").trim().toLocaleLowerCase("pt-BR")));
   const inventarioVisual = [
-    ...(sheet.weapons || []).map((item) => ({ icon: "▰", name: item.name, detail: item.damage || "Arma" })),
-    ...(sheet.protections || []).map((item) => ({ icon: "⬡", name: item.name, detail: item.value ? `Proteção ${item.value}` : "Proteção" })),
-    ...String(sheet.inventory || "").split("\n").map((item) => item.trim()).filter(Boolean).map((name) => ({ icon: "◆", name, detail: "Equipamento" })),
+    ...weapons.map((item, index) => {
+      const catalogItem = catalogInventoryItem(item.name);
+      const weaponGroup = item.weaponGroup || catalogItem.weaponGroup;
+      return {
+        key: `weapon-${item.id || index}`,
+        name: item.name || "Arma sem nome",
+        kind: "Arma",
+        category: item.category || catalogItem.category || "armas",
+        summary: item.damage ? `Dano ${item.damage}` : "Arma",
+        description: item.detail || catalogItem.detail || "Arma registrada no equipamento do personagem.",
+        properties: [
+          { label: "Dano", value: item.damage || catalogItem.damage || "Não informado" },
+          { label: "Munição", value: item.ammo || "Não registrada" },
+          { label: "Grupo", value: weaponGroup === "fogo" ? "Arma de fogo" : weaponGroup === "brancas" ? "Arma branca" : "Não informado" },
+        ],
+      };
+    }),
+    ...protections.map((item, index) => {
+      const catalogItem = catalogInventoryItem(item.name);
+      return {
+        key: `protection-${item.id || index}`,
+        name: item.name || "Proteção sem nome",
+        kind: "Proteção",
+        category: item.category || catalogItem.category || "protecoes",
+        summary: item.value ? `Proteção ${item.value}` : "Proteção",
+        description: item.detail || catalogItem.detail || "Proteção registrada no equipamento do personagem.",
+        properties: [
+          { label: "Proteção", value: item.value || catalogItem.value || "Não informada" },
+          { label: "Região", value: item.region || catalogItem.region || "Não informada" },
+        ],
+      };
+    }),
+    ...structuredInventory.map((item, index) => {
+      const catalogItem = catalogInventoryItem(item.name);
+      const category = item.category || catalogItem.category;
+      return {
+        key: `item-${item.id || index}`,
+        name: item.name || "Item sem nome",
+        kind: "Equipamento",
+        category,
+        summary: inventoryCategoryName(category),
+        description: item.detail || catalogItem.detail || "Equipamento registrado no inventário do personagem.",
+        quantity: Number(item.quantity) || 1,
+        properties: [
+          { label: "Categoria", value: inventoryCategoryName(category) },
+          { label: "Quantidade", value: Number(item.quantity) || 1 },
+        ],
+      };
+    }),
+    ...String(sheet.inventory || "").split("\n").map((item) => item.trim()).filter(Boolean)
+      .filter((name) => !structuredNames.has(name.toLocaleLowerCase("pt-BR")))
+      .map((name, index) => {
+        const catalogItem = catalogInventoryItem(name);
+        return {
+          key: `legacy-${index}-${name}`,
+          name,
+          kind: "Equipamento",
+          category: catalogItem.category || "",
+          summary: inventoryCategoryName(catalogItem.category),
+          description: catalogItem.detail || "Item pessoal registrado no inventário do personagem.",
+          properties: catalogItem.category
+            ? [{ label: "Categoria", value: inventoryCategoryName(catalogItem.category) }]
+            : [{ label: "Tipo", value: "Item pessoal" }],
+        };
+      }),
   ];
+  const selectedInventoryItem = inventarioVisual.find((item) => item.key === selectedInventoryKey) || inventarioVisual[0] || null;
+  const inventorySlotCount = Math.max(20, Math.ceil(inventarioVisual.length / 5) * 5);
   return (
     <div
-      className="espiral-app"
+      className={`espiral-app ${embedded ? "es-embedded" : ""}`}
       style={{
         "--es-accent": sheet.temaFicha?.primaria,
         "--es-surface": sheet.temaFicha?.secundaria,
@@ -731,7 +927,7 @@ export default function FichaEspiral() {
       }}
     >
       <header className="es-topbar">
-        <a href="/" className="es-brand">
+        <a href="/" className="es-brand" onClick={event => {if(embedded) event.preventDefault();}}>
           <Spiral small />
           <span>ESPIRAL</span>
           <span className="es-brand-caption">
@@ -744,17 +940,22 @@ export default function FichaEspiral() {
           <i />
           {saveState}
         </span>
-        <a className="es-store-link" href={`?sistema=espiral&lojaEspiral=1&ficha=${encodeURIComponent(id)}`}>Loja da Helena</a>
-        <a className="es-store-link" href={`?sistema=espiral&transformacao=1&ficha=${encodeURIComponent(id)}`}>Transformação</a>
+        <nav className="es-top-actions" aria-label="Ações da ficha">
+        {!embedded && <PlayerPageLink className="es-icon-button" id={id} sistema="espiral" aria-label="Página do Jogador" title="Página do Jogador"><Icon path={mdiAccountCircleOutline} size={0.9} aria-hidden="true" /></PlayerPageLink>}
+        {!embedded && <button type="button" className="es-icon-button" aria-label="Entrar no tabletop" title="Entrar no tabletop" onClick={openTabletop}><Icon path={mdiDiceMultipleOutline} size={0.9} aria-hidden="true" /></button>}
+        <a className="es-icon-button" aria-label="Loja da Helena" title="Loja da Helena" href={`?sistema=espiral&lojaEspiral=1&ficha=${encodeURIComponent(id)}`}><Icon path={mdiStoreOutline} size={0.9} aria-hidden="true" /></a>
+        <a className="es-icon-button" aria-label="Transformação" title="Transformação" href={`?sistema=espiral&transformacao=1&ficha=${encodeURIComponent(id)}`}><Icon path={mdiAutoFix} size={0.9} aria-hidden="true" /></a>
         <button
           className="es-icon-button"
           onClick={exportSheet}
           title="Exportar ficha JSON"
           aria-label="Exportar ficha JSON"
         >
-          ↗
+          <Icon path={mdiDownload} size={0.9} aria-hidden="true" />
         </button>
+        </nav>
       </header>
+      {tabletopAccessError && !hasEspiralToken(sheet) && <p role="alert">{MISSING_ESPIRAL_TOKEN}</p>}
       <main className="es-main">
         <div className="es-breadcrumb">
           ARQUIVO PESSOAL <span>/</span> {id === "principal" ? "001" : id}{" "}
@@ -766,43 +967,32 @@ export default function FichaEspiral() {
               {Object.entries(ATTRIBUTES).map(([key, attr]) => {
                 const stage = sheet.attributes[key];
                 return (
-                  <label
+                  <div
                     className={`es-rail-attribute ${attribute === key ? "selected" : ""}`}
                     key={key}
                   >
                     <span className="es-rail-name">{attr.name}</span>
-                    <select
-                      aria-label={`Estágio de ${attr.name}`}
-                      value={stage}
-                      onChange={(e) =>
-                        changeAttribute(key, Number(e.target.value))
-                      }
-                      onFocus={() => setAttribute(key)}
-                    >
-                      {attr.stages.map((stage, i) => (
-                        <option key={stage} value={i + 1}>
-                          {stage} · {i * 2 + 4}
-                        </option>
-                      ))}
-                    </select>
-                    <b
-                      className={`es-rail-value die-d${stage * 2 + 2}`}
-                      aria-hidden="true"
-                    >
-                      {stage * 2 + 2}
-                    </b>
+                    <div className="es-attribute-dice-controls">
+                      <button type="button" className="es-attribute-roll" disabled={rolling} onClick={() => rollAttribute(key)} aria-label={'Rolar somente '+attr.name} title={'Rolar '+(1+(temporaryAttributeDice[key] || 0))+' dado(s) de '+attr.name}><EspiralDie sides={stage * 2 + 2}/></button>
+                      <button type="button" className="es-attribute-add" disabled={rolling || (temporaryAttributeDice[key] || 0)>=49} onClick={() => setTemporaryAttributeDice(previous => ({...previous,[key]:(previous[key] || 0)+1}))} aria-label={'Adicionar dado temporário de '+attr.name} title="Adicionar um dado à próxima rolagem">+</button>
+                      {temporaryAttributeDice[key] > 0 && <button type="button" className="es-attribute-quantity" onClick={() => setTemporaryAttributeDice(previous => ({...previous,[key]:0}))} aria-label={'Restaurar um dado de '+attr.name} title="Restaurar 1 dado">×{1+temporaryAttributeDice[key]}</button>}
+                    </div>
                     <small className="es-rail-stage">ESTÁGIO {stage}</small>
                     <em className="es-rail-detail">
                       {attr.stages[stage - 1]}
                     </em>
-                  </label>
+                  </div>
                 );
               })}
             </div>
           </aside>
-          <div className="es-hero-art">
+          <div className="es-hero-art" data-sanity-active={Number(sheet.sanity) <= 5} data-hope-active={Number(sheet.hope) <= 5}
+            style={{ '--es-sanity-turn': `${Number(sheet.sanity) === 0 ? 2 : Number(sheet.sanity) < 5 ? 6 : 12}s`, '--es-hope-turn': `${Number(sheet.hope) === 0 ? 2 : Number(sheet.hope) < 5 ? 6 : 12}s` }}>
             <Spiral />
-            <div className="es-profile-photo-shell">
+            {Number(sheet.hope) <= 5 && <Spiral className="es-hope-spiral" />}
+            <div className="es-profile-photo-shell"
+              data-sanity={sheet.sanity === 0 ? 'empty' : sheet.sanity < 5 ? 'low' : sheet.sanity === 5 ? 'half' : 'stable'}
+              data-hope={sheet.hope === 0 ? 'empty' : sheet.hope < 5 ? 'low' : sheet.hope === 5 ? 'half' : 'stable'}>
               <button
                 className="es-profile-photo"
                 type="button"
@@ -811,8 +1001,8 @@ export default function FichaEspiral() {
                 title="Escolher foto de perfil"
               >
                 {sheet.profileImage ? (
-                  <img
-                    src={sheet.profileImage}
+                  <AnimatedTokenImage
+                    animation={sheet.profileTokenAnimation} src={sheet.profileImage}
                     alt={`Retrato de ${sheet.name || "personagem"}`}
                   />
                 ) : (
@@ -836,6 +1026,7 @@ export default function FichaEspiral() {
             </div>
           </div>
           <div className="es-hero-vitals">
+            <div className={`es-integrity-status ${Number(sheet.integrity) === 0 ? 'is-critical' : ''}`}>
             <div className="hero-vital hero-integrity">
               <div className="hero-integrity-heading">
                 <span>INTEGRIDADE</span>
@@ -853,7 +1044,14 @@ export default function FichaEspiral() {
                 <i style={{ width: `${(sheet.integrity / maximum) * 100}%` }} />
               </div>
             </div>
-            <div className="hero-vital hero-sanity">
+            {Number(sheet.integrity) === 0 && <div className="es-survival-failures" aria-label="Falhas de sobrevivência">
+              <span>Falhas de sobrevivência</span>
+              <Counter label="Falhas de sobrevivência" value={sheet.failures} max={3} onChange={v => update('failures', v)} />
+              <button type="button" className="es-survival-roll" aria-label="Rolar sobrevivência: Pulso + Propósito" title="Tentar continuar vivo · Pulso + Propósito" disabled={rolling || Number(sheet.failures) >= 3} onClick={() => roll('Propósito', 'pulso')}><Icon path={mdiHeartPulse} size={0.85} aria-hidden="true" /></button>
+              <small>{Number(sheet.failures) >= 3 ? '3 falhas: o personagem morre.' : `${sheet.failures}/3 · Estado crítico`}</small>
+            </div>}
+            </div>
+            <div className="hero-vital hero-sanity" data-state={sheet.sanity === 0 ? 'empty' : sheet.sanity < 5 ? 'low' : sheet.sanity === 5 ? 'half' : 'stable'}>
               <div className="hero-dots">
                 <span>SANIDADE</span>
                 {Array.from({ length: 10 }, (_, i) => (
@@ -870,7 +1068,7 @@ export default function FichaEspiral() {
                 ))}
               </div>
             </div>
-            <div className="hero-vital hero-hope">
+            <div className="hero-vital hero-hope" data-state={sheet.hope === 0 ? 'empty' : sheet.hope < 5 ? 'low' : sheet.hope === 5 ? 'half' : 'stable'}>
               <div className="hero-dots">
                 <span>ESPERANÇA</span>
                 {Array.from({ length: 10 }, (_, i) => (
@@ -890,6 +1088,7 @@ export default function FichaEspiral() {
             {editing ? "Fechar edição" : "Editar identidade"} <span>↗</span>
           </button>
         </section>
+        <input ref={tabletopTokenInput} type="file" aria-label="Enviar imagem de corpo inteiro" accept="image/png,image/jpeg,image/webp,image/gif" onChange={importTabletopToken} hidden />
         {editing && (
           <section className="es-editor">
             <Field
@@ -939,6 +1138,20 @@ export default function FichaEspiral() {
                 ? "Trocar foto de perfil"
                 : "Adicionar foto de perfil"}
             </button>
+            <div className="es-tabletop-token-field">
+              <div>
+                <span>Imagem de corpo inteiro</span>
+                <small>Retrato vertical do personagem. Prefira PNG com fundo transparente.</small>
+              </div>
+              <button type="button" className="es-tabletop-token-preview" onClick={() => tabletopTokenInput.current?.click()}>
+                {sheet.tabletopTokenImage ? <img src={sheet.tabletopTokenImage} alt="Personagem de corpo inteiro"/> : <span>Adicionar imagem</span>}
+              </button>
+              <div className="es-tabletop-token-actions">
+                <button type="button" onClick={() => tabletopTokenInput.current?.click()}>{sheet.tabletopTokenImage ? "Trocar imagem" : "Escolher imagem"}</button>
+                {sheet.tabletopTokenImage && <button type="button" onClick={() => update("tabletopTokenImage","")}>Remover</button>}
+              </div>
+
+            </div>
             <label className="es-field">
               <span>Momento da ficha</span>
               <select
@@ -958,6 +1171,7 @@ export default function FichaEspiral() {
             "Habilidades",
             "Inventário",
             "Anotações",
+            "Background",
             "Personalização",
           ].map((name, i) => (
             <button
@@ -970,7 +1184,7 @@ export default function FichaEspiral() {
             </button>
           ))}
         </nav>
-        <div className="es-layout">
+        <div className={`es-layout ${tab === "Background" ? "es-layout-background" : ""}`}>
           <div className="es-content">
             {tab === "Visão geral" && (
               <>
@@ -981,7 +1195,7 @@ export default function FichaEspiral() {
                     {sheet.integrity === 0 &&
                       "Estado crítico: teste Pulso + Propósito ao fim da rodada. "}
                     {sheet.sanity === 0 &&
-                      "Sanidade zero: Ruptura imediata; Controle Mental recebe +1d6 de Pressão. "}
+                      "Sanidade zero: Ruptura imediata; Controle Mental recebe +1⬡6 de Pressão. "}
                     {sheet.hope === 0 &&
                       "Esperança esgotada: consulte as consequências com o mestre."}
                   </p>
@@ -1070,28 +1284,26 @@ export default function FichaEspiral() {
                   <div className="es-equipment-column">
                     <header>
                       <div>
-                        <span className="es-eyebrow">ARMAS</span>
-                        <small>Armas e dano</small>
+                        <span className="es-eyebrow">ARMAS <span className="es-kit-count">{weapons.length}</span></span>
+                        <small>Seu arsenal · dano por ataque</small>
                       </div>
                       <button
                         type="button"
-                        onClick={() =>
-                          update("weapons", [
-                            ...weapons,
-                            { id: uniqueId(), name: "", damage: "" },
-                          ])
-                        }
+                        onClick={() => { const item = { id: uniqueId(), name: "", damage: "" }; update("weapons", [...weapons, item]); setSelectedWeapon(item.id); }}
                       >
                         + Arma
                       </button>
                     </header>
+                    <div className="es-kit-icons" aria-label="Armas equipadas">
+                      {weapons.map((weapon, index) => <button type="button" key={weapon.id} aria-label={`Ver arma ${weapon.name || 'sem nome'} ${index + 1}`} title={weapon.name || 'Arma sem nome'} aria-pressed={selectedWeapon === weapon.id} onClick={() => setSelectedWeapon(selectedWeapon === weapon.id ? null : weapon.id)}><InventoryIcon item={{ ...weapon, category: 'armas-fogo' }} /></button>)}
+                    </div>
                     {weapons.length === 0 ? (
                       <p className="es-equipment-empty">
                         Nenhuma arma equipada.
                       </p>
                     ) : (
                       weapons.map((weapon) => (
-                        <div className="es-equipment-row" key={weapon.id}>
+                        <div className={`es-kit-reveal ${selectedWeapon === weapon.id ? "is-open" : ""}`} key={weapon.id} aria-hidden={selectedWeapon !== weapon.id} inert={selectedWeapon !== weapon.id}><div className="es-kit-reveal-clip"><div className="es-equipment-row">
                           {(() => {
                             const iconName = { Carabina: "Fuzil", Rifle: "Fuzil" }[weapon.name] || weapon.name;
                             const icon = obterIconeItem({ nome: iconName, categoria: "armas-fogo" });
@@ -1111,7 +1323,7 @@ export default function FichaEspiral() {
                             }
                             placeholder="Nome da arma"
                           />
-                          <input
+                          <label className="es-kit-damage"><span>DANO</span><EspiralDiceInput
                             aria-label="Dano da arma"
                             value={weapon.damage}
                             onChange={(event) =>
@@ -1123,7 +1335,7 @@ export default function FichaEspiral() {
                               )
                             }
                             placeholder="Dano"
-                          />
+                          /></label>
                           <button
                             type="button"
                             className="es-damage-roll"
@@ -1131,7 +1343,7 @@ export default function FichaEspiral() {
                             onClick={() => rollWeaponDamage(weapon)}
                             disabled={rolling}
                           >
-                            Rolar
+                            Rolar dano
                           </button>
                           <button
                             type="button"
@@ -1142,35 +1354,33 @@ export default function FichaEspiral() {
                           >
                             ×
                           </button>
-                        </div>
+                        </div></div></div>
                       ))
                     )}
                   </div>
                   <div className="es-equipment-column">
                     <header>
                       <div>
-                        <span className="es-eyebrow">PROTEÇÕES</span>
-                        <small>Armaduras e equipamentos defensivos</small>
+                        <span className="es-eyebrow">PROTEÇÕES <span className="es-kit-count">{protections.length}</span></span>
+                        <small>Defesa equipada · cobertura por região</small>
                       </div>
                       <button
                         type="button"
-                        onClick={() =>
-                          update("protections", [
-                            ...protections,
-                            { id: uniqueId(), name: "", value: "", region: "" },
-                          ])
-                        }
+                        onClick={() => { const item = { id: uniqueId(), name: "", value: "", region: "" }; update("protections", [...protections, item]); setSelectedProtection(item.id); }}
                       >
                         + Proteção
                       </button>
                     </header>
+                    <div className="es-kit-icons" aria-label="Proteções equipadas na ficha">
+                      {protections.map((protection, index) => <button type="button" key={protection.id} aria-label={`Ver proteção ${protection.name || 'sem nome'} ${index + 1}`} title={protection.name || 'Proteção sem nome'} aria-pressed={selectedProtection === protection.id} onClick={() => setSelectedProtection(selectedProtection === protection.id ? null : protection.id)}><InventoryIcon item={{ ...protection, category: 'protecao' }} /></button>)}
+                    </div>
                     {protections.length === 0 ? (
                       <p className="es-equipment-empty">
                         Nenhuma proteção equipada.
                       </p>
                     ) : (
                       protections.map((protection) => (
-                        <div className="es-equipment-row es-protection-row" key={protection.id}>
+                        <div className={`es-kit-reveal ${selectedProtection === protection.id ? "is-open" : ""}`} key={protection.id} aria-hidden={selectedProtection !== protection.id} inert={selectedProtection !== protection.id}><div className="es-kit-reveal-clip"><div className="es-equipment-row es-protection-row">
                           {(() => {
                             const icon = obterIconeItem({
                               nome: protection.name,
@@ -1206,7 +1416,7 @@ export default function FichaEspiral() {
                             }
                             placeholder="Proteção"
                           />
-                          <input
+                          <label className="es-kit-protection"><span>PROTEÇÃO</span><input
                             aria-label="Valor da proteção"
                             value={protection.value}
                             onChange={(event) =>
@@ -1218,7 +1428,7 @@ export default function FichaEspiral() {
                               )
                             }
                             placeholder="Valor"
-                          />
+                          /></label>
                           <button
                             type="button"
                             aria-label="Remover proteção"
@@ -1228,7 +1438,7 @@ export default function FichaEspiral() {
                           >
                             ×
                           </button>
-                          <input
+                          <datalist id={"es-regions-" + protection.id}>{[...BODY_REGIONS, "Braços", "Pernas", "Corpo inteiro"].map(name => <option key={name} value={name} />)}</datalist><label className="es-kit-region"><span>REGIÃO PROTEGIDA</span><input
                             aria-label="Região protegida"
                             value={protection.region}
                             onChange={(event) =>
@@ -1239,9 +1449,9 @@ export default function FichaEspiral() {
                                 event.target.value,
                               )
                             }
-                            placeholder="Região"
-                          />
-                        </div>
+                            placeholder="Ex.: Torso, cabeça, pernas" list={"es-regions-" + protection.id}
+                          /></label>
+                        </div></div></div>
                       ))
                     )}
                   </div>
@@ -1287,6 +1497,17 @@ export default function FichaEspiral() {
                     onSelect={setRegion}
                   />
                   <div className="es-injury-form">
+                    <EspiralDamage key={region} region={region} onApply={(injury) => {
+                      if (!injury.impact) return;
+                      setSheet(previous => ({
+                        ...previous,
+                        integrity: Math.max(0, (Number(previous.integrity) || 0) - injury.impact),
+                        injuries: [...previous.injuries, { ...injury, id: uniqueId() }],
+                      }));
+                    }} />
+                    <details className="es-manual-injury">
+                    <summary>Registro manual de lesão</summary>
+                    <div className="es-manual-injury-fields">
                     <label className="es-field">
                       <span>Região</span>
                       <select
@@ -1309,7 +1530,8 @@ export default function FichaEspiral() {
                           "Moderada",
                           "Grave",
                           "Crítica",
-                          "Catastrófica / Fatal",
+                          "Catastrófica",
+                          "Fatal",
                         ].map((r) => (
                           <option key={r}>{r}</option>
                         ))}
@@ -1327,7 +1549,7 @@ export default function FichaEspiral() {
                         update("injuries", [
                           ...sheet.injuries,
                           {
-                            id: window.crypto.randomUUID(),
+                            id: uniqueId(),
                             region,
                             severity,
                             note: injuryNote,
@@ -1338,12 +1560,16 @@ export default function FichaEspiral() {
                     >
                       Registrar lesão +
                     </button>
+                    </div>
+                    </details>
                   </div>
                 </div>
                 <p className="es-help">
                   Impacto: 1–3 superficial · 4–6 moderada · 7–9 grave · 10–12
                   crítica · 13+ catastrófica / fatal. Ajuste a Integridade pelo
-                  impacto recebido.
+                  impacto recebido apenas no registro manual. Ao aplicar dano,
+                  o desconto é automático. O Impacto combina potência, localização,
+                  penetração e circunstâncias.
                 </p>
                 {sheet.injuries.length === 0 ? (
                   <div className="es-empty">
@@ -1358,6 +1584,10 @@ export default function FichaEspiral() {
                           {injury.region} / {injury.severity}
                         </span>
                         <p>{injury.note || "Sem descrição."}</p>
+                        {injury.impact != null && <p>Impacto {injury.impact} · Dano {injury.damage} − Proteção {injury.protection} − Outros efeitos {injury.reduction}</p>}
+                        <p>{INJURY_EFFECTS[injury.severity]}</p>
+                        {injury.bleeding && <strong>Sangramento</strong>}
+                        <small>Remover o registro não recupera Integridade.</small>
                       </div>
                       <button
                         aria-label={`Remover lesão em ${injury.region}`}
@@ -1373,19 +1603,6 @@ export default function FichaEspiral() {
                     </div>
                   ))
                 )}
-                <div className="es-rule-card">
-                  <h3>Falhas de sobrevivência</h3>
-                  <Counter
-                    label="Falhas de sobrevivência"
-                    value={sheet.failures}
-                    max={3}
-                    onChange={(v) => update("failures", v)}
-                  />
-                  <p>
-                    Ao acumular 3 falhas, o personagem morre. Um sucesso comum
-                    não remove o estado crítico.
-                  </p>
-                </div>
               </>
             )}
             {tab === "Habilidades" && (
@@ -1497,27 +1714,120 @@ export default function FichaEspiral() {
                   title="O que você carrega"
                   aside="EQUIPAMENTO & PERTENCES"
                 />
-                <label className="es-writing">
-                  <span>Inventário pessoal</span>
-                  <p>
-                    Registre armas, dano, munição, proteção, ferramentas e
-                    objetos importantes.
-                  </p>
-                  <div className="es-inventory-items" aria-label="Itens do inventário">
-                    {inventarioVisual.length ? inventarioVisual.map((item, index) => (
-                      <div className="es-inventory-item" key={`${item.name}-${index}`}>
-                        <span className="es-inventory-icon" aria-hidden="true">{item.icon}</span>
-                        <div><b>{item.name}</b><small>{item.detail}</small></div>
-                      </div>
-                    )) : <p className="es-inventory-empty">Nenhum item registrado.</p>}
+                <section className="es-inventory" aria-label="Inventário pessoal">
+                  <header className="es-inventory-heading">
+                    <div><span>Inventário pessoal</span><p>Selecione um item para consultar todos os dados disponíveis.</p></div>
+                    <strong>{inventarioVisual.length} / {inventorySlotCount}</strong>
+                  </header>
+                  <div className="es-inventory-grid" aria-label="Itens do inventário">
+                    {Array.from({ length: inventorySlotCount }, (_, index) => {
+                      const item = inventarioVisual[index];
+                      if (!item) return <span className="es-inventory-slot es-inventory-slot-empty" aria-hidden="true" key={`empty-${index}`}><i /></span>;
+                      const selected = selectedInventoryItem?.key === item.key;
+                      return (
+                        <button
+                          type="button"
+                          className={`es-inventory-slot ${selected ? "is-selected" : ""}`}
+                          aria-label={`${item.name}, ${item.summary}`}
+                          aria-pressed={selected}
+                          onClick={() => setSelectedInventoryKey(item.key)}
+                          key={item.key}
+                        >
+                          <span className="es-inventory-slot-icon"><InventoryIcon item={item} /></span>
+                          <span className="es-inventory-slot-name">{item.name}</span>
+                          {item.quantity > 1 && <small>{item.quantity}</small>}
+                        </button>
+                      );
+                    })}
                   </div>
-                </label>
+                  <article className="es-inventory-detail" aria-live="polite">
+                    {selectedInventoryItem ? <>
+                      <header>
+                        <span className="es-inventory-detail-icon"><InventoryIcon item={selectedInventoryItem} size={1.75} /></span>
+                        <div><small>{inventoryCategoryName(selectedInventoryItem.category, selectedInventoryItem.kind)}</small><h3>{selectedInventoryItem.name}</h3></div>
+                      </header>
+                      <p>{selectedInventoryItem.description}</p>
+                      {selectedInventoryItem.properties.length > 0 && <dl>
+                        {selectedInventoryItem.properties.map((property) => <div key={property.label}><dt>{property.label}</dt><dd>{<EspiralDice value={property.value} />}</dd></div>)}
+                      </dl>}
+                    </> : <div className="es-inventory-detail-empty"><span>Nenhum item carregado</span><p>Itens adicionados pela Loja da Helena aparecerão aqui com seus detalhes.</p></div>}
+                  </article>
+                </section>
               </>
+            )}
+            {tab === "Background" && (
+              <section className="es-background-page" aria-label="Background do personagem">
+                <div className="es-background-copy">
+                  <header>
+                    <span className="es-eyebrow">ARQUIVO PESSOAL · BACKGROUND</span>
+                    <h2>{sheet.name || "Quem era você antes de tudo mudar?"}</h2>
+                    <p>Registre a pessoa por trás da ficha: sua história, suas marcas e aquilo que ainda a conecta ao mundo.</p>
+                  </header>
+                  <div className="es-background-facts" aria-label="Informações do personagem">
+                    <div><span>Ocupação</span><strong>{sheet.occupation || "Não definida"}</strong></div>
+                    <div><span>Vertente</span><strong>{sheet.vertente || "Não definida"}</strong></div>
+                    <div><span>Idade</span><strong>{sheet.age || "Não definida"}</strong></div>
+                    <div><span>Pronomes</span><strong>{sheet.pronoun || "Não definidos"}</strong></div>
+                  </div>
+                  <label className="es-background-field">
+                    <span>Quem é esta pessoa?</span>
+                    <textarea
+                      value={sheet.backgroundDescription || ""}
+                      onChange={(event) => update("backgroundDescription", event.target.value)}
+                      placeholder="Aparência, personalidade, hábitos, medos e a impressão que deixa nos outros."
+                    />
+                  </label>
+                  <label className="es-background-field es-background-field-long">
+                    <span>O que aconteceu antes?</span>
+                    <textarea
+                      value={sheet.backgroundHistory || ""}
+                      onChange={(event) => update("backgroundHistory", event.target.value)}
+                      placeholder="Conte os acontecimentos, perdas e escolhas que trouxeram o personagem até aqui."
+                    />
+                  </label>
+                  <label className="es-background-field">
+                    <span>Vínculos importantes</span>
+                    <textarea
+                      value={sheet.backgroundConnections || ""}
+                      onChange={(event) => update("backgroundConnections", event.target.value)}
+                      placeholder="Pessoas, lugares, promessas e dívidas que ainda importam."
+                    />
+                  </label>
+                </div>
+                <aside className="es-background-portrait">
+                  <div className="es-background-portrait-heading">
+                    <span className="es-eyebrow">IMAGEM DO PERSONAGEM</span>
+                    <strong>Corpo inteiro</strong>
+                  </div>
+                  <button
+                    type="button"
+                    className={`es-background-portrait-frame ${sheet.tabletopTokenImage ? "has-image" : ""}`}
+                    onClick={() => tabletopTokenInput.current?.click()}
+                    aria-label={sheet.tabletopTokenImage ? "Trocar imagem de corpo inteiro" : "Adicionar imagem de corpo inteiro"}
+                  >
+                    {sheet.tabletopTokenImage ? (
+                      <img src={sheet.tabletopTokenImage} alt={`Corpo inteiro de ${sheet.name || "personagem"}`} />
+                    ) : (
+                      <span><b>Adicionar imagem</b><small>PNG com fundo transparente funciona melhor</small></span>
+                    )}
+                  </button>
+                  <div className="es-background-portrait-actions">
+                    <button type="button" onClick={() => tabletopTokenInput.current?.click()}>
+                      {sheet.tabletopTokenImage ? "Trocar imagem" : "Escolher imagem"}
+                    </button>
+                    {sheet.tabletopTokenImage && (
+                      <button type="button" onClick={() => update("tabletopTokenImage", "")}>Remover</button>
+                    )}
+                  </div>
+
+                  <p>Use uma composição vertical, de preferência mostrando o personagem dos pés à cabeça.</p>
+                </aside>
+              </section>
             )}
             {tab === "Anotações" && (
               <>
                 <SectionTitle
-                  number="04"
+                  number="06"
                   title="Para não esquecer"
                   aside="MEMÓRIA & IDENTIDADE"
                 />
@@ -1543,7 +1853,7 @@ export default function FichaEspiral() {
             {tab === "Personalização" && (
               <>
                 <SectionTitle
-                  number="06"
+                  number="07"
                   title="Personalização"
                   aside="CORES DA FICHA"
                 />
@@ -1583,7 +1893,7 @@ export default function FichaEspiral() {
               </>
             )}
           </div>
-          <aside className="es-sidebar">
+          {tab !== "Background" && <aside className="es-sidebar">
             <section className="es-defense-card" aria-label="Defesa">
               <span className="es-eyebrow">DEFESA</span>
               <strong>{defense}</strong>
@@ -1601,7 +1911,9 @@ export default function FichaEspiral() {
               <h2>Faça sua escolha.</h2>
               <p>A intenção vem antes dos dados.</p>
 
+              {!difficultyLocked && scene && rollContext && <SceneDifficultySelector scene={scene} enemies={sceneEnemies} selected={rollContext.id} readOnly={difficultyLocked} onChange={onRollContextChange}/>}
               <div className="es-roll-numbers">
+                {!difficultyLocked && !rollContext && <>
                 <Field
                   label="Dificuldade"
                   type="number"
@@ -1610,6 +1922,7 @@ export default function FichaEspiral() {
                   value={difficulty}
                   onChange={(v) => setDifficulty(Math.max(2, clamp(v, 30)))}
                 />
+                </>}
                 <Field
                   label={<>Bônus / penalidade <DieGlyph sides={6} /></>}
                   type="number"
@@ -1671,7 +1984,7 @@ export default function FichaEspiral() {
                     onKeyDown={(event) =>
                       event.key === "Enter" && rollFormula()
                     }
-                    placeholder="Ex.: 2d6+3"
+                    placeholder="Ex.: 2⬡6+3"
                   />
                 </label>
                 <button type="button" onClick={rollFormula} disabled={rolling}>
@@ -1684,7 +1997,7 @@ export default function FichaEspiral() {
                   <span className="es-eyebrow">ÚLTIMA ROLAGEM</span>
                   <h3>
                     {history[0].type === "formula"
-                      ? history[0].label
+                      ? <EspiralDice value={history[0].label} />
                       : history[0].outcome}
                   </h3>
                   <div className="es-result-dice">
@@ -1714,9 +2027,7 @@ export default function FichaEspiral() {
                   ) : (
                     <>
                       <p>
-                        Maior: {history[0].best} · Margem:{" "}
-                        {history[0].margin > 0 ? "+" : ""}
-                        {history[0].margin}
+                        Maior: {history[0].best}{!difficultyLocked && <> · Margem: {history[0].margin > 0 ? "+" : ""}{history[0].margin}</>}
                       </p>
                       <p>
                         {history[0].stress}
@@ -1738,7 +2049,7 @@ export default function FichaEspiral() {
                   <summary>Histórico de rolagens ({history.length})</summary>
                   {history.slice(1).map((entry) => (
                     <p key={entry.at}>
-                      <b>{entry.label}</b> ·{" "}
+                      <b>{<EspiralDice value={entry.label} />}</b> ·{" "}
                       {entry.type === "formula"
                         ? `Total ${entry.total}`
                         : `${entry.outcome} (${entry.best})`}
@@ -1760,7 +2071,7 @@ export default function FichaEspiral() {
                 ↗
               </button>
             </section>
-          </aside>
+          </aside>}
         </div>
         <details className="es-rules es-settings">
           <summary>
@@ -1809,9 +2120,9 @@ export default function FichaEspiral() {
               hidden
               onChange={importSheet}
             />
-            <button type="button" onClick={abrirSistemaAnterior}>
+            {!embedded && <button type="button" onClick={abrirSistemaAnterior}>
               {fichaDarkness ? "Abrir ficha Darkness ↗" : "Ir para tela inicial ↗"}
-            </button>
+            </button>}
           </div>
           <p role="status">{notice}</p>
         </details>
@@ -1822,6 +2133,17 @@ export default function FichaEspiral() {
           <span>VOCÊ AINDA ESTÁ AQUI.</span>
         </footer>
       </main>
+      {tabletopOpen && <div className="es-roll-modal-backdrop" onMouseDown={event => {if(event.target===event.currentTarget) setTabletopOpen(false);}}>
+        <section className="es-roll-modal" role="dialog" aria-modal="true" aria-label="Entrar no tabletop">
+          <button type="button" onClick={() => setTabletopOpen(false)} aria-label="Fechar seleção de campanha">×</button>
+          <h2>Entrar no tabletop</h2>
+          {tabletopError && <p role="alert">{tabletopError}</p>}
+          {!hasEspiralToken(sheet) ? <button type="button" onClick={() => {setTabletopOpen(false);setEditing(false);setTab("Background");}}>Adicionar imagem de corpo inteiro</button> : <>
+            <p>A imagem de corpo inteiro da sua ficha será usada como token.</p>
+            {tabletopLoading ? <p role="status">Carregando campanhas…</p> : tabletopCampaigns.length ? tabletopCampaigns.map(campaign => <button type="button" key={campaign.id || campaign.codigo} onClick={() => enterTabletop(campaign)}>{campaign.nome}</button>) : !tabletopError && <p>Esta ficha ainda não está vinculada a uma campanha com tabletop 3D. Peça ao mestre para adicioná-la.</p>}
+          </>}
+        </section>
+      </div>}
       {rollModalOpen && history[0] && (
         <div
           className="es-roll-modal-backdrop"
@@ -1832,14 +2154,14 @@ export default function FichaEspiral() {
           }}
         >
           <section
-            className="es-roll-modal"
+            className={`es-roll-modal ${!rolling && history[0].survival ? history[0].margin < 0 ? `es-survival-failed ${history[0].outcome === 'Falha grave' ? 'es-survival-rupture' : ''}` : 'es-survival-success' : ''}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="es-roll-modal-title"
           >
-            <span className="es-eyebrow">ROLAGEM DE RECURSO</span>
-            <h2 id="es-roll-modal-title">{history[0].label}</h2>
-            <p>{history[0].attribute ? `Teste de ${ATTRIBUTES[history[0].attribute].name}` : "Rolagem de dano"}</p>
+            <span className="es-eyebrow">{history[0].attributeOnly ? "ROLAGEM DE ATRIBUTO" : "ROLAGEM DE RECURSO"}</span>
+            <h2 id="es-roll-modal-title">{<EspiralDice value={history[0].label} />}</h2>
+            <p>{history[0].attribute ? `Teste de ${ATTRIBUTES[history[0].attribute].name}` : history[0].attributeOnly ? "Rolagem somente do atributo" : "Rolagem de dano"}</p>
             <code>
               {history[0].dice.length} × <DieGlyph sides={history[0].sides} />
               {history[0].pressure.length
@@ -1881,14 +2203,17 @@ export default function FichaEspiral() {
                 {history[0].type === "formula" ? (
                   <>
                     <strong>{history[0].total}</strong>
-                    <h3>Dano total</h3>
+                    <h3>{history[0].attributeOnly ? "Maior dado" : "Dano total"}</h3>
+                    {!history[0].attributeOnly && <EspiralDamageResult damage={history[0].total} />}
                     {history[0].modifier ? <p>Modificador {history[0].modifier > 0 ? "+" : ""}{history[0].modifier}</p> : null}
                   </>
                 ) : (
                   <>
                     <strong>{history[0].best}</strong>
                     <h3>{history[0].outcome}</h3>
-                    <p>Margem {history[0].margin > 0 ? "+" : ""}{history[0].margin}{history[0].mastery ? " · Domínio" : ""}</p>
+                    {history[0].survival && history[0].margin < 0 && <p>+1 falha de sobrevivência · {sheet.failures}/3</p>}
+                    {history[0].survival && history[0].margin >= 0 && <p>Uma falha de sobrevivência removida, se houver · {sheet.failures}/3</p>}
+                    {!difficultyLocked && <p>Margem {history[0].margin > 0 ? "+" : ""}{history[0].margin}{history[0].mastery ? " · Domínio" : ""}</p>}
                   </>
                 )}
               </>
@@ -1959,3 +2284,9 @@ export default function FichaEspiral() {
     </div>
   );
 }
+
+
+
+
+
+

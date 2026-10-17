@@ -1,3 +1,4 @@
+import EspiralDice from '../components/EspiralDice';
 import React, { useMemo, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiArrowLeft, mdiCart, mdiCheck, mdiClose, mdiMedicalBag, mdiPistol, mdiRadio, mdiShield, mdiSword, mdiToolbox, mdiAxe, mdiKnifeMilitary } from "@mdi/js";
@@ -49,9 +50,38 @@ export default function LojaEspiral() {
     let sheet;
     try { sheet = JSON.parse(localStorage.getItem(sheetKey(id)) || "{}"); } catch { sheet = {}; }
     cart.forEach((item) => {
-      if (item.type === "weapon") sheet.weapons = [...(sheet.weapons || []), { id: `${item.id}-${Date.now()}-${Math.random()}`, name: item.name, damage: item.damage, ammo: "" }];
-      else if (item.type === "protection") sheet.protections = [...(sheet.protections || []), { id: `${item.id}-${Date.now()}-${Math.random()}`, name: item.name, value: String(item.value), region: item.region }];
-      else sheet.inventory = [...new Set([...(sheet.inventory || "").split("\n").filter(Boolean), item.name])].join("\n");
+      const itemId = `${item.id}-${Date.now()}-${Math.random()}`;
+      if (item.type === "weapon") sheet.weapons = [...(sheet.weapons || []), {
+        id: itemId,
+        sourceId: item.id,
+        name: item.name,
+        damage: item.damage,
+        ammo: "",
+        detail: item.detail,
+        category: item.category,
+        weaponGroup: item.weaponGroup,
+      }];
+      else if (item.type === "protection") sheet.protections = [...(sheet.protections || []), {
+        id: itemId,
+        sourceId: item.id,
+        name: item.name,
+        value: String(item.value),
+        region: item.region,
+        detail: item.detail,
+        category: item.category,
+      }];
+      else {
+        sheet.inventoryItems = [...(Array.isArray(sheet.inventoryItems) ? sheet.inventoryItems : []), {
+          id: itemId,
+          sourceId: item.id,
+          name: item.name,
+          type: item.type,
+          category: item.category,
+          detail: item.detail,
+          quantity: 1,
+        }];
+        sheet.inventory = [...new Set([...(sheet.inventory || "").split("\n").filter(Boolean), item.name])].join("\n");
+      }
     });
     localStorage.setItem(sheetKey(id), JSON.stringify(sheet));
     setNotice(`${cart.length} ${cart.length === 1 ? "item incorporado" : "itens incorporados"} ao arquivo ESPIRAL.`);
@@ -65,7 +95,7 @@ export default function LojaEspiral() {
       {area === "armas" && <div className="ritos-subabas espiral-store-subtabs" aria-label="Categorias de armas"><button type="button" className={weaponGroup === "brancas" ? "ativa" : ""} onClick={() => setWeaponGroup("brancas")}>Armas brancas</button><button type="button" className={weaponGroup === "fogo" ? "ativa" : ""} onClick={() => setWeaponGroup("fogo")}>Armas de fogo</button></div>}
       {area === "equipamentos" && <div className="ritos-subabas espiral-store-subtabs" aria-label="Categorias de equipamentos">{equipmentCategories.map((entry) => <button type="button" className={category === entry.id ? "ativa" : ""} onClick={() => setCategory(entry.id)} key={entry.id}>{entry.nome}</button>)}</div>}
       <div className="espiral-store-ledger"><span>CATÁLOGO ATIVO</span><b>{catalogTitle}</b><small>{items.length} REGISTROS DISPONÍVEIS</small></div>{notice && <p className="loja-mensagem espiral-store-notice" role="status">{notice}</p>}
-      <div className="loja-layout"><section className="loja-catalogo" aria-label="Catálogo">{items.map((item, index) => <article className="loja-item espiral-store-item" key={item.id}><div><div className="loja-item-topo"><div className="loja-item-icone">{renderItemIcon(item)}</div><span className="loja-item-tipo">{itemType(item)}</span><span className="espiral-store-index">{String(index + 1).padStart(2, "0")}</span></div><h2>{item.name}</h2>{item.damage && <div className="loja-item-beneficios"><span>DANO // {item.damage}</span></div>}{item.value !== undefined && <div className="loja-defesa-beneficios"><span>PROTEÇÃO // {item.value}</span></div>}<p>{item.detail}</p>{item.region && <p className="espiral-store-region">REGIÃO // {item.region}</p>}</div><div className="loja-item-footer"><button type="button" onClick={() => addToCart(item)}>Separar <Icon path={mdiCart} size={0.75} /></button></div></article>)}</section>
+      <div className="loja-layout"><section className="loja-catalogo" aria-label="Catálogo">{items.map((item, index) => <article className="loja-item espiral-store-item" key={item.id}><div><div className="loja-item-topo"><div className="loja-item-icone">{renderItemIcon(item)}</div><span className="loja-item-tipo">{itemType(item)}</span><span className="espiral-store-index">{String(index + 1).padStart(2, "0")}</span></div><h2>{item.name}</h2>{item.damage && <div className="loja-item-beneficios"><span>DANO // {<EspiralDice value={item.damage}/>}</span></div>}{item.value !== undefined && <div className="loja-defesa-beneficios"><span>PROTEÇÃO // {item.value}</span></div>}<p>{item.detail}</p>{item.region && <p className="espiral-store-region">REGIÃO // {item.region}</p>}</div><div className="loja-item-footer"><button type="button" onClick={() => addToCart(item)}>Separar <Icon path={mdiCart} size={0.75} /></button></div></article>)}</section>
         <aside className="loja-carrinho espiral-store-cart" aria-label="Itens separados"><div className="loja-carrinho-topo"><div><Icon path={mdiCart} size={0.9} /><span>INCORPORAÇÃO</span></div><strong>{cart.length} {cart.length === 1 ? "item" : "itens"}</strong></div><div className="loja-carrinho-lista">{cart.length === 0 ? <p className="loja-carrinho-vazio">Nenhum item separado.</p> : cart.map((item) => <div className="loja-carrinho-item" key={item.cartId}><span className="loja-carrinho-icone">{renderItemIcon(item, 0.75)}</span><div><strong>{item.name}</strong><small>{itemType(item)}</small></div><button type="button" onClick={() => removeFromCart(item.cartId)} aria-label={`Remover ${item.name}`}><Icon path={mdiClose} size={0.7} /></button></div>)}</div><div className="loja-total"><span>ARQUIVO ATIVO</span><strong>{id === "principal" ? "PRINCIPAL" : id}</strong></div><button className="loja-finalizar" type="button" disabled={!cart.length} onClick={finalize}><Icon path={mdiCheck} size={0.8} /> Incorporar à ficha</button></aside>
       </div>
     </section>

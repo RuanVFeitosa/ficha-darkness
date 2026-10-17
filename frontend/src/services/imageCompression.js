@@ -82,6 +82,42 @@ export const compressProfileImage = async (file) => {
   return dataUrl;
 };
 
+const getVisibleBounds = (context, width, height) => {
+  const { data } = context.getImageData(0, 0, width, height);
+  let left = width, right = -1, top = height, bottom = -1;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (data[(y * width + x) * 4 + 3] < 8) continue;
+      left = Math.min(left, x); right = Math.max(right, x);
+      top = Math.min(top, y); bottom = Math.max(bottom, y);
+    }
+  }
+  return right >= left && bottom >= top
+    ? { x: left, y: top, width: right - left + 1, height: bottom - top + 1 }
+    : { x: 0, y: 0, width, height };
+};
+
+export const prepareTokenImage = async (file) => {
+  if (!file?.type?.startsWith("image/")) throw new Error("Escolha um arquivo PNG, JPG ou WebP válido.");
+  const source = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error("Não foi possível ler a imagem do token."));
+    reader.readAsDataURL(file);
+  });
+  const image = await loadImage(source);
+  const sourceCanvas = document.createElement("canvas");
+  sourceCanvas.width = image.naturalWidth; sourceCanvas.height = image.naturalHeight;
+  const sourceContext = sourceCanvas.getContext("2d", { alpha: true, willReadFrequently: true });
+  sourceContext.drawImage(image, 0, 0);
+  const bounds = getVisibleBounds(sourceContext, sourceCanvas.width, sourceCanvas.height);
+  const ratio = Math.min(1, 768 / Math.max(bounds.width, bounds.height));
+  const output = document.createElement("canvas");
+  output.width = Math.max(1, Math.round(bounds.width * ratio));
+  output.height = Math.max(1, Math.round(bounds.height * ratio));
+  output.getContext("2d", { alpha: true }).drawImage(sourceCanvas, bounds.x, bounds.y, bounds.width, bounds.height, 0, 0, output.width, output.height);
+  return canvasToDataUrl(output, "image/webp", 0.82);
+};
 export const compressBackgroundImage = async (file) => {
   if (!file?.type?.startsWith("image/")) {
     throw new Error("Escolha um arquivo de imagem valido.");

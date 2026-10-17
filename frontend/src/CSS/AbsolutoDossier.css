@@ -1,0 +1,178 @@
+/* Absoluto: arquivo editorial, identidade à esquerda e mesa de operações à direita. */
+.ficha-container.absoluto-dossier{--abs-gold:color-mix(in srgb,#b69a54 80%,var(--cor-primaria,#d4af37));--abs-ink:var(--cor-texto,#eee);--abs-line:var(--cor-borda,#333);--abs-panel:color-mix(in srgb,var(--cor-fundo,#080808) 94%,white);--cor-secundaria:#737373;--cor-texto-secundario:#aaa;--cor-fundo-card:#111;--fundo-card:#111;--radius-lg:4px;--radius-md:3px;background:var(--cor-fundo,#080808)!important;color:var(--abs-ink);padding:28px clamp(18px,4vw,72px) 64px!important;max-width:none;min-height:100dvh;font-family:'Courier New',monospace;isolation:isolate}
+.absoluto-dossier *{box-sizing:border-box}
+.absoluto-dossier .abs-masthead{width:100%;max-width:1600px;margin:0 auto 30px;text-align:left;position:relative;border-bottom:1px solid var(--abs-line)}
+.absoluto-dossier .abs-return{display:inline-block;color:#aaa;font-size:10px;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;padding:10px 0}
+.absoluto-dossier .abs-heading{display:flex;align-items:center;gap:24px;padding:22px 0 26px}
+.absoluto-dossier .abs-heading>img{width:82px;height:96px;object-fit:contain;opacity:.8}
+.absoluto-dossier .abs-heading>div:nth-child(2){flex:1;min-width:0}
+.absoluto-dossier .abs-eyebrow{font-size:9px;letter-spacing:.2em;color:var(--abs-gold)}
+.absoluto-dossier .abs-heading h1{font:clamp(32px,4.5vw,64px)/1.08 Georgia,serif;margin:12px 0 10px;color:var(--abs-ink);overflow-wrap:anywhere;text-transform:none;letter-spacing:-.035em}
+.absoluto-dossier .abs-heading p{font:11px/1.6 'Courier New',monospace;color:#aaa;margin:0}
+.absoluto-dossier .abs-level{display:flex;flex-direction:column;align-items:center;border-left:1px solid var(--abs-line);padding:0 28px;flex:none}
+.absoluto-dossier .abs-level span{font-size:9px;letter-spacing:.2em;color:#aaa}
+.absoluto-dossier .abs-level strong{font:46px Georgia,serif;color:var(--abs-gold);margin-top:5px}
+.absoluto-dossier .abs-masthead-bottom{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--abs-line);padding:12px 0;gap:14px;font-size:10px;color:#777}
+.absoluto-dossier .abs-masthead-bottom>div{display:flex;gap:12px}
+.absoluto-dossier .abs-masthead-bottom button{background:transparent;color:var(--abs-gold);border:0;padding:8px 12px;font:11px 'Courier New',monospace;cursor:pointer}
+.ficha-container.absoluto-dossier .main-content{display:grid!important;grid-template-columns:320px minmax(0,1fr)!important;align-items:start;gap:32px;width:100%;max-width:1600px;margin:0 auto;padding:0;background:transparent;border:0}
+.absoluto-dossier .profile-section{position:sticky;top:24px;width:100%;min-width:0;margin:0;padding:0;background:transparent;border:0;box-shadow:none}
+.absoluto-dossier .profile-container{display:flex;flex-direction:column;width:100%;padding:0;gap:22px;background:transparent;border:0;box-shadow:none}
+.absoluto-dossier .sanidade-section,.absoluto-dossier .sanidade-container{width:100%;padding:0;margin:0;background:transparent;border:0;box-shadow:none}
+.absoluto-dossier .sanidade-inputs{display:flex!important;flex-direction:column;align-items:stretch;gap:20px;width:100%;padding:0}
+.absoluto-dossier .identidade-personagem{order:1;width:100%;margin:0;text-align:left;padding:0 0 18px;border-bottom:1px solid var(--abs-line)}
+.absoluto-dossier .nome-personagem{width:100%;font:28px Georgia,serif!important;background:transparent!important;border:0!important;border-bottom:1px solid var(--abs-line)!important;text-align:left!important;color:var(--abs-ink);padding:10px 0!important;margin:0 0 8px!important}
+.absoluto-dossier .dados-personagem{display:grid;grid-template-columns:1fr;gap:6px;width:100%}
+.absoluto-dossier .dado-personagem{width:100%;max-width:100%;text-align:left!important;background:transparent!important;border:0!important;color:#aaa!important;font:10px/1.5 'Courier New',monospace!important;padding:4px 0!important;margin:0}
+.absoluto-dossier .profile-wrapper{order:0;width:100%!important;height:auto!important;aspect-ratio:4/3;max-width:none!important;margin:0!important;border-radius:2px!important;border:1px solid var(--abs-line);box-shadow:none}
+.absoluto-dossier .profile-upload-label{width:100%;height:100%;display:block;overflow:hidden}
+.absoluto-dossier .profile{width:100%!important;height:100%!important;object-fit:cover;border-radius:0!important}
+.absoluto-dossier .profile-upload-hint{font:9px 'Courier New',monospace;letter-spacing:.12em;text-transform:uppercase}
+.absoluto-dossier .sanidade-completa{order:2;display:grid;gap:16px;width:100%!important;max-width:none;margin:0;padding:18px;background:var(--abs-panel);border:1px solid var(--abs-line);border-radius:2px;box-shadow:none}
+.absoluto-dossier .nivel-acima-sanidade{display:none}
+.absoluto-dossier .barra-recurso-rpg{margin:0;background:transparent;border:0;box-shadow:none;padding:0}
+.absoluto-dossier .barra-rpg-label{font-size:10px;letter-spacing:.1em;color:#bbb}
+.absoluto-dossier .barra-rpg-track,.absoluto-dossier .barra-rpg-track-esperanca-track{height:5px;border:0;background:#292929;border-radius:0}
+.absoluto-dossier .sanidade-fill{background:#ccc!important;box-shadow:none}
+.absoluto-dossier .esperanca-fill{background:var(--abs-gold)!important;box-shadow:none}
+.absoluto-dossier .barra-btn{background:transparent;border:1px solid var(--abs-line);border-radius:0;color:var(--abs-ink);min-width:25px;box-shadow:none}
+.absoluto-dossier .profile-container>.atributoCompleto{width:100%;display:block;padding:0;margin:0;background:transparent;border:0}
+.absoluto-dossier .atributos-coluna{width:100%;margin:0;padding:0}
+.absoluto-dossier .atributos-linha{display:grid!important;grid-template-columns:1fr!important;gap:0;width:100%;margin:0}
+.absoluto-dossier .atributos-linha>.atributoCompleto{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:10px;padding:10px 0;margin:0;border:0;border-bottom:1px solid var(--abs-line);background:transparent;box-shadow:none;border-radius:0;min-width:0}
+.absoluto-dossier .atributo-dado{width:30px;min-width:0;color:var(--abs-gold)}
+.absoluto-dossier .atributo-dado svg{width:25px!important;height:25px!important}
+.absoluto-dossier .atributo-item{display:grid;grid-template-columns:minmax(0,1fr) 58px;align-items:center;padding:0;background:transparent;border:0;gap:8px}
+.absoluto-dossier .atributo-nome{font:10px 'Courier New',monospace;letter-spacing:.08em;white-space:normal;color:#bbb}
+.absoluto-dossier .atributo-controles,.absoluto-dossier .atributo-valor{width:58px;min-width:0}
+.absoluto-dossier .atributo-valor{font:22px Georgia,serif;color:var(--abs-ink);border:0!important;background:transparent!important;text-align:right}
+.absoluto-dossier .sidebar-container{width:100%;min-width:0;max-width:none;padding:0;margin:0;background:transparent;border:0;box-shadow:none;border-radius:0;height:auto;max-height:none}
+.absoluto-dossier .sidebar-abas{display:flex;flex-wrap:wrap;gap:0 20px;padding:0;margin:0 0 26px;border:0;border-bottom:1px solid var(--abs-line);background:transparent;border-radius:0;counter-reset:abs-tabs}
+.absoluto-dossier .sidebar-abas>.aba-btn{counter-increment:abs-tabs;display:flex;align-items:center;gap:8px;flex:0 1 auto;padding:16px 0;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;box-shadow:none;font:11px 'Courier New',monospace;letter-spacing:.04em;color:#888;min-width:0;transition:color .2s,border-color .2s}
+.absoluto-dossier .sidebar-abas>.aba-btn::before{content:counter(abs-tabs,decimal-leading-zero);font-size:8px;color:#777}
+.absoluto-dossier .sidebar-abas>.aba-btn.ativa{color:var(--abs-ink);border-bottom-color:var(--abs-gold);background:transparent;box-shadow:none}
+.absoluto-dossier .sidebar-abas>.aba-btn:hover{color:var(--abs-gold);background:transparent}
+.absoluto-dossier .sidebar-conteudo{padding:0!important;max-height:none;overflow:visible;background:transparent;border:0}
+.absoluto-dossier .conteudo-aba{padding:0;min-width:0;background:transparent}
+.absoluto-dossier .conteudo-aba>h3,.absoluto-dossier .conteudo-aba>h4{font:24px Georgia,serif;color:var(--abs-ink);text-transform:none;letter-spacing:0}
+.absoluto-dossier :is(.categoria-passiva,.grupo-habilidades-ficha,.membro-controle){border-color:var(--abs-line);background:var(--abs-panel);border-radius:3px;box-shadow:none}
+.absoluto-dossier .controles-membros-sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:100%}
+.absoluto-dossier .membro-controle{padding:16px;min-width:0}
+.absoluto-dossier .membro-nome{color:var(--abs-gold);font:10px 'Courier New',monospace;letter-spacing:.12em}
+.absoluto-dossier .menu-ficha-flutuante{z-index:100;right:20px;bottom:20px}
+.absoluto-dossier .menu-ficha-gatilho{background:#111;border:1px solid var(--abs-gold);color:var(--abs-gold);box-shadow:0 4px 20px #0006}
+.absoluto-dossier .ficha-identificacao-secreta{display:none}
+.absoluto-dossier :is(button,a,input,select,textarea):focus-visible{outline:2px solid var(--abs-gold);outline-offset:3px}
+@media(max-width:1100px){.ficha-container.absoluto-dossier .main-content{grid-template-columns:270px minmax(0,1fr)!important;gap:24px}.absoluto-dossier .sidebar-abas{gap:0 16px}.absoluto-dossier .controles-membros-sidebar{grid-template-columns:1fr}}
+@media(max-width:800px){.ficha-container.absoluto-dossier{padding:18px 18px 72px!important}.ficha-container.absoluto-dossier .main-content{grid-template-columns:minmax(0,1fr)!important}.absoluto-dossier .profile-section{position:static}.absoluto-dossier .sanidade-inputs{display:grid!important;grid-template-columns:180px minmax(0,1fr);gap:20px;align-items:start}.absoluto-dossier .profile-wrapper{grid-column:1;grid-row:1/3}.absoluto-dossier .identidade-personagem{grid-column:2;grid-row:1}.absoluto-dossier .sanidade-completa{grid-column:2;grid-row:2}.absoluto-dossier .atributos-linha{grid-template-columns:repeat(2,minmax(0,1fr))!important;column-gap:22px}.absoluto-dossier .abs-heading>img{width:55px;height:72px}.absoluto-dossier .abs-heading{gap:14px}.absoluto-dossier .abs-level{padding:0 12px}.absoluto-dossier .abs-level strong{font-size:34px}.absoluto-dossier .sidebar-abas>.aba-btn{min-height:48px}.absoluto-dossier .controles-membros-sidebar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.absoluto-dossier .abs-eyebrow{font-size:8px;letter-spacing:.1em}.absoluto-dossier .abs-heading{flex-wrap:wrap;padding:16px 0}.absoluto-dossier .abs-heading>img{width:44px;height:64px}.absoluto-dossier .abs-level{padding-left:10px}.absoluto-dossier .abs-level strong{font-size:28px}.absoluto-dossier .abs-heading h1{font-size:32px}.absoluto-dossier .abs-heading p{font-size:10px}.absoluto-dossier .abs-masthead-bottom>span{display:none}.absoluto-dossier .abs-masthead-bottom{justify-content:flex-end}.absoluto-dossier .sanidade-inputs{grid-template-columns:minmax(0,1fr)}.absoluto-dossier .profile-wrapper{grid-column:auto;grid-row:auto;width:min(100%,320px)!important;justify-self:center}.absoluto-dossier .identidade-personagem,.absoluto-dossier .sanidade-completa{grid-column:auto;grid-row:auto}.absoluto-dossier .sidebar-abas{gap:0 18px}.absoluto-dossier .controles-membros-sidebar{grid-template-columns:1fr}.absoluto-dossier input,.absoluto-dossier select,.absoluto-dossier textarea{max-width:100%;font-size:16px}.absoluto-dossier .atributo-nome{font-size:9px}}
+.absoluto-dossier.ficha-embutida-mesa .abs-masthead{display:none}
+.ficha-container.absoluto-dossier .profile-wrapper{border:1px solid var(--abs-line)!important;box-shadow:none!important}
+.ficha-container.absoluto-dossier .nome-personagem{letter-spacing:0!important;text-transform:none!important;text-shadow:none!important;max-width:100%;min-width:0}
+.absoluto-dossier .sidebar-conteudo :is(.ativos-container,.combate-layout,.combate-grid){min-width:0;max-width:100%}
+.absoluto-dossier .sidebar-conteudo button{transition:border-color .2s,background .2s,color .2s}
+@media(prefers-reduced-motion:no-preference){.absoluto-dossier .sidebar-conteudo{animation:abs-content-in .35s ease-out}.absoluto-dossier .profile{transition:transform .5s}.absoluto-dossier .profile-upload-label:hover .profile{transform:scale(1.025)}}
+@keyframes abs-content-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.ficha-container.absoluto-dossier .menu-ficha-flutuante{top:auto!important;left:auto!important;right:20px!important;bottom:20px!important}
+.ficha-container.absoluto-dossier .barra-rpg-input{color:var(--abs-ink)!important;text-shadow:none;background:transparent}
+.ficha-container.absoluto-dossier .esperanca-input{color:var(--abs-gold)!important}
+.ficha-container.absoluto-dossier .barra-rpg-label{color:#bbb!important}.ficha-container.absoluto-dossier .sistema-membros-sidebar,.ficha-container.absoluto-dossier .corpo-container-sidebar{display:block;width:100%;min-width:0;padding:0;margin:0}
+.ficha-container.absoluto-dossier .membro-controle{display:flex;flex-direction:column;align-items:stretch;gap:12px;position:relative;width:100%;min-width:0;max-width:none;padding:18px;margin:0;transform:none;border:1px solid var(--abs-line)}
+.ficha-container.absoluto-dossier .membro-controle>.membro-defesa-equipada,.ficha-container.absoluto-dossier .membro-controle>.membro-defesa-vazia{position:static;transform:none;width:100%;max-width:100%;height:auto;min-width:0;margin:0;order:4;white-space:normal;overflow-wrap:anywhere;font-size:10px;background:transparent;border:1px solid var(--abs-line);color:#aaa;padding:8px}
+.ficha-container.absoluto-dossier .membro-nome{position:static;transform:none;display:block;width:auto;text-align:left;margin:0}
+.ficha-container.absoluto-dossier .membro-barra-container{position:static;transform:none;display:flex;flex-direction:column;gap:12px;width:100%;min-width:0;margin:0}
+.ficha-container.absoluto-dossier .membro-barra-vida{position:relative;height:6px;width:100%;background:#292929;border-radius:0;overflow:visible}
+.ficha-container.absoluto-dossier .membro-barra-preenchimento{height:100%;border-radius:0;background:var(--abs-gold)}
+.ficha-container.absoluto-dossier .membro-vida-inputs{position:static;transform:none;display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;margin:0}
+.ficha-container.absoluto-dossier .membro-vida-input{width:65px;max-width:40%;padding:6px;border:1px solid var(--abs-line);background:#080808;color:var(--abs-ink);font:14px 'Courier New',monospace;text-align:center}
+.ficha-container.absoluto-dossier .membro-defesa{position:static;transform:none;display:flex;align-items:center;justify-content:flex-start;gap:12px;width:auto;order:2}
+.ficha-container.absoluto-dossier .membro-defesa-input{position:static;width:60px;min-width:0;background:#080808;border:1px solid var(--abs-line);color:var(--abs-ink)}
+.ficha-container.absoluto-dossier .membro-botoes{position:static;transform:none;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;width:100%;order:3}
+.ficha-container.absoluto-dossier .membro-botoes button{flex:1;min-width:38px;padding:7px 4px;border:1px solid var(--abs-line);border-radius:2px;background:transparent;color:#ccc;font-size:10px}.ficha-container.absoluto-dossier .membro-botoes .btn-rapido{background:#111!important;color:#ddd!important;border-color:var(--abs-line)!important;box-shadow:none!important}
+.ficha-container.absoluto-dossier .membro-botoes .btn-rapido:hover{background:#252219!important;color:var(--abs-gold)!important;border-color:var(--abs-gold)!important}
+.ficha-container.absoluto-dossier .membro-barra-preenchimento{background:var(--abs-gold)!important;box-shadow:none!important;filter:none!important}
+.ficha-container.absoluto-dossier .membro-defesa-label{color:#aaa!important}
+/* Identidade única no cabeçalho; retrato preserva o upload e os efeitos da ficha. */
+.absoluto-dossier .abs-heading .abs-heading-identity{flex:1;min-width:0}
+.ficha-container.absoluto-dossier .abs-heading .profile-wrapper{flex:0 0 120px;width:120px!important;height:144px!important;aspect-ratio:5/6;order:0;align-self:center;justify-self:auto}
+.absoluto-dossier .abs-eyebrow{display:flex;align-items:center;gap:8px;line-height:1.5}
+.absoluto-dossier .abs-system-sigil{width:25px;height:28px;object-fit:contain;flex:none;opacity:.75}
+.absoluto-dossier .abs-character-pronoun{display:block;font:10px 'Courier New',monospace;color:#aaa;margin-top:12px;letter-spacing:.08em}
+.ficha-container.absoluto-dossier .abs-character-name{display:block;width:100%;min-width:0;max-width:100%;font:inherit;letter-spacing:inherit;color:inherit;background:transparent;border:0;border-radius:0;padding:0;margin:0;text-align:left;text-transform:none;box-shadow:none;height:auto}
+.absoluto-dossier .abs-character-name::placeholder{color:#777;font-size:.6em}
+.absoluto-dossier .profile-section .sanidade-completa{order:0}
+.absoluto-dossier.ficha-embutida-mesa .abs-masthead{display:block}
+@media(max-width:800px){.absoluto-dossier .profile-section .sanidade-inputs{display:block!important}.absoluto-dossier .profile-section .sanidade-completa{width:100%!important}}
+@media(max-width:520px){.ficha-container.absoluto-dossier .abs-heading .profile-wrapper{flex-basis:76px;width:76px!important;height:96px!important}.absoluto-dossier .abs-heading{gap:12px}.absoluto-dossier .abs-heading .abs-level{flex-direction:row;gap:10px;border-left:0;border-top:1px solid var(--abs-line);width:100%;padding:10px 0 0;align-items:center}.absoluto-dossier .abs-level strong{margin:0;font-size:23px}.absoluto-dossier .abs-system-sigil{width:18px;height:21px}.absoluto-dossier .abs-eyebrow{font-size:7px}.absoluto-dossier .abs-heading h1{font-size:30px;margin:7px 0}.absoluto-dossier .abs-character-pronoun{font-size:9px;margin-top:8px}}
+/* Integridade em linhas compactas; condições sempre junto dos controles. */
+.ficha-container.absoluto-dossier .sistema-membros-sidebar{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:start}
+.ficha-container.absoluto-dossier .corpo-container-sidebar{grid-column:1;grid-row:1}
+.ficha-container.absoluto-dossier .vida-total-sidebar{grid-column:1;grid-row:2;margin:0;padding:14px 0;border-top:1px solid var(--abs-line)}
+.ficha-container.absoluto-dossier .vida-total-valor{color:var(--abs-gold)}
+.ficha-container.absoluto-dossier .controles-membros-sidebar{display:grid;grid-template-columns:1fr;gap:10px}
+.ficha-container.absoluto-dossier .membro-controle{display:grid;grid-template-columns:110px minmax(0,1fr) 64px;gap:8px 12px;padding:12px 14px;align-items:center;border:1px solid var(--abs-line);border-left:2px solid var(--abs-gold)}
+.ficha-container.absoluto-dossier .membro-nome{grid-column:1;grid-row:1;min-width:0;font-size:9px;letter-spacing:.05em}
+.ficha-container.absoluto-dossier .membro-barra-container{grid-column:2;grid-row:1;display:flex;flex-direction:row;align-items:center;gap:10px}
+.ficha-container.absoluto-dossier .membro-barra-vida{flex:1;min-width:45px;height:12px}
+.ficha-container.absoluto-dossier .membro-slider{height:20px;top:-4px}
+.ficha-container.absoluto-dossier .membro-vida-inputs{width:auto;flex:none;gap:5px}
+.ficha-container.absoluto-dossier .membro-vida-input{width:48px;max-width:none;padding:5px 2px;font-size:12px}
+.ficha-container.absoluto-dossier .membro-defesa{grid-column:3;grid-row:1;gap:5px}
+.ficha-container.absoluto-dossier .membro-defesa-label{font-size:8px}
+.ficha-container.absoluto-dossier .membro-defesa-input{width:38px;padding:5px;font-size:12px}
+.ficha-container.absoluto-dossier .membro-botoes{grid-column:2/-1;grid-row:2;gap:5px}
+.ficha-container.absoluto-dossier .membro-botoes button{padding:5px;min-width:28px}
+.ficha-container.absoluto-dossier .abs-equipped-list{grid-column:1/-1;grid-row:3;display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.ficha-container.absoluto-dossier .abs-equipped-list .membro-defesa-equipada,.ficha-container.absoluto-dossier .abs-equipped-list .membro-defesa-vazia{position:static;transform:none;width:auto;max-width:100%;min-width:0;margin:0;padding:5px 8px;font-size:9px;line-height:1.4;white-space:normal;overflow-wrap:anywhere;background:transparent;color:#aaa;border:1px solid var(--abs-line);border-radius:2px;height:auto;box-shadow:none}
+.ficha-container.absoluto-dossier .abs-equipped-list strong{font-size:inherit;white-space:normal}
+.ficha-container.absoluto-dossier .condicoes-container{grid-column:2;grid-row:1/3;position:sticky;top:24px;min-width:0;margin:0;padding:16px;border:1px solid var(--abs-line);background:var(--abs-panel);border-radius:3px}
+.ficha-container.absoluto-dossier .condicoes-titulo{margin:0 0 14px;text-align:left;font:11px 'Courier New',monospace;letter-spacing:.14em;color:var(--abs-gold)}
+.ficha-container.absoluto-dossier .condicoes-wrapper{display:block;max-height:none;height:auto;overflow:visible;padding:0}
+.ficha-container.absoluto-dossier .lista-condicoes{display:flex;flex-wrap:wrap;gap:6px;max-height:none;height:auto;overflow:visible;padding:0}
+.ficha-container.absoluto-dossier .condicao-chip{flex:0 1 auto;font:9px/1.4 'Courier New',monospace;padding:7px 8px;min-height:30px;white-space:normal;background:transparent;color:#bbb;border:1px solid var(--abs-line);border-radius:2px;box-shadow:none}
+.ficha-container.absoluto-dossier .condicao-chip.ativa{background:var(--abs-gold);color:#080808;border-color:var(--abs-gold)}
+.ficha-container.absoluto-dossier .condicoes-ativas-descricao{max-height:none;overflow:visible;margin-top:14px}
+.ficha-container.absoluto-dossier .condicao-descricao-card{padding:10px;background:transparent;border:0;border-top:1px solid var(--abs-line);font-size:11px}
+@media(max-width:1450px){.ficha-container.absoluto-dossier .sistema-membros-sidebar{grid-template-columns:1fr}.ficha-container.absoluto-dossier .condicoes-container{grid-column:1;grid-row:1;position:static}.ficha-container.absoluto-dossier .corpo-container-sidebar{grid-row:2}.ficha-container.absoluto-dossier .vida-total-sidebar{grid-row:3}}
+@media(max-width:600px){.ficha-container.absoluto-dossier .membro-controle{grid-template-columns:minmax(0,1fr) 64px;padding:12px}.ficha-container.absoluto-dossier .membro-nome{grid-column:1;grid-row:1}.ficha-container.absoluto-dossier .membro-defesa{grid-column:2;grid-row:1}.ficha-container.absoluto-dossier .membro-barra-container{grid-column:1/-1;grid-row:2}.ficha-container.absoluto-dossier .membro-botoes{grid-column:1/-1;grid-row:3}.ficha-container.absoluto-dossier .abs-equipped-list{grid-row:4}.ficha-container.absoluto-dossier .condicao-chip{min-height:38px;font-size:10px}}
+.ficha-container.absoluto-dossier .sanidade-fill{background:#65a6ff!important}
+.ficha-container.absoluto-dossier .sanidade-barra .barra-rpg-label,.ficha-container.absoluto-dossier .sanidade-barra .barra-rpg-input{color:#65a6ff!important}
+.absoluto-dossier .abs-masthead-bottom{justify-content:flex-end}
+/* Recursos próximos da identidade, com os mesmos controles e cores. */
+.ficha-container.absoluto-dossier .abs-heading .sanidade-completa{order:0;flex:0 0 300px;width:300px!important;align-self:center;gap:18px;margin:0;padding:18px;border:1px solid var(--abs-line)}
+.absoluto-dossier .abs-heading .abs-heading-identity{flex:1 1 220px}
+@media(max-width:1100px){.absoluto-dossier .abs-heading{flex-wrap:wrap}.ficha-container.absoluto-dossier .abs-heading .sanidade-completa{flex-basis:280px;width:280px!important}.absoluto-dossier .abs-heading .abs-level{margin-left:auto;padding-right:0}}
+@media(max-width:700px){.absoluto-dossier .abs-heading{display:grid;grid-template-columns:90px minmax(0,1fr);gap:16px}.ficha-container.absoluto-dossier .abs-heading .profile-wrapper{grid-column:1;grid-row:1;width:90px!important;height:116px!important}.absoluto-dossier .abs-heading .abs-heading-identity{grid-column:2;grid-row:1}.ficha-container.absoluto-dossier .abs-heading .sanidade-completa{grid-column:1/-1;grid-row:2;width:100%!important;min-width:0}.absoluto-dossier .abs-heading .abs-level{grid-column:1/-1;grid-row:3;margin:0;display:flex;flex-direction:row;gap:12px;align-items:center;border:0;padding:0;width:auto}.absoluto-dossier .abs-level strong{font-size:26px;margin:0}}
+
+/* Habilidades: cards editoriais com conteúdo contido e expansão suave. */
+.ficha-container.absoluto-dossier .habilidades-resumo-topo{padding:22px 24px;text-align:left;border:1px solid var(--abs-line);border-left:2px solid var(--abs-gold);background:var(--abs-panel);border-radius:3px;margin-bottom:22px}
+.absoluto-dossier .habilidades-resumo-topo>span{font:9px 'Courier New',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--abs-gold)}
+.absoluto-dossier .habilidades-resumo-topo h4{font:26px Georgia,serif;letter-spacing:0;margin:9px 0 12px;color:var(--abs-ink)}
+.absoluto-dossier .habilidades-resumo-topo p{font:12px/1.8 'Courier New',monospace;text-align:left;max-width:85ch;margin:0;color:#bbb}
+.ficha-container.absoluto-dossier .habilidades-resumo-aba>.grupo-habilidades-ficha{background:transparent;border:0;padding:0}
+.absoluto-dossier .subabas-habilidades-ficha{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px;padding:0;border:0;background:transparent}
+.absoluto-dossier .subabas-habilidades-ficha button{padding:10px 14px;border:1px solid var(--abs-line);border-radius:2px;background:transparent;color:#aaa;font:11px 'Courier New',monospace;min-height:40px}
+.absoluto-dossier .subabas-habilidades-ficha button.ativa{color:#090909;background:var(--abs-gold);border-color:var(--abs-gold)}
+.ficha-container.absoluto-dossier .habilidades-grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;align-items:start;width:100%;padding:0;border:0;background:transparent}
+.ficha-container.absoluto-dossier .habilidade-expandivel{display:block;position:relative;min-width:0;width:100%;height:auto!important;min-height:0;max-height:none!important;overflow:hidden!important;border:1px solid var(--abs-line);border-top:2px solid color-mix(in srgb,var(--abs-gold) 65%,#333);border-radius:4px;background:var(--abs-panel);box-shadow:none;align-self:start;transition:border-color .2s,box-shadow .2s,transform .2s}
+.absoluto-dossier .habilidade-expandivel:hover{border-color:var(--abs-gold);transform:translateY(-2px);box-shadow:0 8px 24px #0003}
+.absoluto-dossier .habilidade-expandivel-cabecalho{display:flex;align-items:center;gap:8px;width:100%;min-width:0;flex-wrap:wrap}
+.ficha-container.absoluto-dossier .habilidade-expandivel-topo{display:flex;flex:1;align-items:flex-start;justify-content:space-between;gap:12px;width:100%;min-height:100px;height:auto;padding:20px;text-align:left;background:transparent;border:0;border-radius:0;box-shadow:none;color:var(--abs-ink)}
+.absoluto-dossier .habilidade-expandivel-topo>div{flex:1;min-width:0}
+.absoluto-dossier .habilidade-expandivel-topo>div>span{font:9px/1.5 'Courier New',monospace;color:var(--abs-gold);letter-spacing:.16em;margin:0 0 10px}
+.ficha-container.absoluto-dossier .habilidade-expandivel-topo h3{font:22px/1.25 Georgia,serif;letter-spacing:0;margin:0;color:var(--abs-ink);text-transform:none;overflow-wrap:anywhere}
+.absoluto-dossier .habilidade-expandivel-topo>strong{font:10px/1.5 'Courier New',monospace;color:var(--abs-gold);padding:5px 8px;border:1px solid var(--abs-line);border-radius:2px;max-width:35%;overflow-wrap:anywhere}
+.ficha-container.absoluto-dossier .abs-skill-chevron{font:20px/1 Arial,sans-serif;color:#888;letter-spacing:0;display:block;margin:0;flex:none;transition:transform .25s}
+.absoluto-dossier .habilidade-expandivel.aberto .abs-skill-chevron{transform:rotate(180deg);color:var(--abs-gold)}
+.ficha-container.absoluto-dossier .habilidade-expandivel .habilidade-expandivel-corpo{position:static;display:grid;grid-template-rows:0fr;min-height:0;height:auto;max-height:none!important;opacity:0;overflow:hidden!important;transform:none;padding:0 20px!important;background:transparent;border:0;transition:grid-template-rows .3s ease,opacity .2s,padding .3s}
+.ficha-container.absoluto-dossier .habilidade-expandivel.aberto .habilidade-expandivel-corpo{grid-template-rows:1fr;opacity:1;padding:0 20px 22px!important;max-height:none!important;overflow:hidden!important}
+.ficha-container.absoluto-dossier .habilidade-expandivel-corpo p{min-height:0;overflow:hidden;margin:0;padding:0;font:12px/1.8 'Courier New',monospace;text-align:left;white-space:pre-line;overflow-wrap:anywhere;color:#c3c3c3;border:0;background:transparent}
+.absoluto-dossier .habilidade-expandivel-acao{width:auto;min-height:34px;margin:0 20px 14px;padding:8px 12px;border:1px solid var(--abs-gold);border-radius:2px;background:transparent;color:var(--abs-gold);font:10px 'Courier New',monospace}
+@media(max-width:600px){.absoluto-dossier .habilidades-resumo-topo{padding:18px}.absoluto-dossier .habilidades-resumo-topo h4{font-size:23px}.absoluto-dossier .subabas-habilidades-ficha button{min-height:44px}.ficha-container.absoluto-dossier .habilidade-expandivel-topo{padding:18px;min-height:90px}.ficha-container.absoluto-dossier .habilidade-expandivel-corpo p{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.absoluto-dossier .habilidade-expandivel,.absoluto-dossier .habilidade-expandivel-corpo,.absoluto-dossier .abs-skill-chevron{transition:none!important}}
+.absoluto-dossier .menu-ficha-opcoes .abs-player-profile-link{display:flex;align-items:center;gap:12px;box-sizing:border-box;width:100%;min-height:48px;padding:13px 14px;border:1px solid #bfa66b66;border-radius:4px;background:linear-gradient(110deg,#bfa66b16,#111);color:#dbc78f;text-decoration:none;font:600 11px/1.5 "Courier New",monospace;letter-spacing:.04em;text-align:left;transition:background .2s,border-color .2s,color .2s}
+.absoluto-dossier .abs-player-profile-link svg{flex-shrink:0}
+.absoluto-dossier .abs-player-profile-link .abs-profile-arrow{margin-left:auto;font-size:17px;font-weight:400}
+.absoluto-dossier .menu-ficha-opcoes .abs-player-profile-link:hover{background:#bfa66b24;border-color:#bfa66b;color:#fff3cc}
+.absoluto-dossier .menu-ficha-opcoes .abs-player-profile-link:focus-visible{outline:2px solid #dbc78f;outline-offset:3px}
+.absoluto-dossier .menu-ficha-opcoes .abs-player-profile-link[aria-disabled=true]{opacity:.6;cursor:progress}
+@media(prefers-reduced-motion:reduce){.absoluto-dossier .menu-ficha-opcoes .abs-player-profile-link{transition:none}}

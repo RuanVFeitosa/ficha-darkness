@@ -21,6 +21,8 @@ const getApiUrl = () => {
 };
 
 const API_URL = getApiUrl();
+export const buscarJogador = async (codigo) => (await request(`/jogadores/${encodeURIComponent(codigo)}`)).jogador;
+export const salvarJogador = async (codigo, jogador) => (await request(`/jogadores/${encodeURIComponent(codigo)}`, { method: 'PUT', body: JSON.stringify({ jogador }) })).jogador;
 
 const request = async (path, options = {}) => {
   const url = `${API_URL}${path}`;

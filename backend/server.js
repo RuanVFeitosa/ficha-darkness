@@ -511,7 +511,7 @@ const listPersonagens = async () => {
     const personagens = rows
       .filter(
         (row) =>
-          row.id !== DESTINOS_RECORD_ID && row.id !== SKILL_TREES_RECORD_ID && row.id !== SHOP_CATALOG_RECORD_ID,
+          !row.id.startsWith("__jogador_") && row.id !== DESTINOS_RECORD_ID && row.id !== SKILL_TREES_RECORD_ID && row.id !== SHOP_CATALOG_RECORD_ID,
       )
       .map((row) => ({
         fichaId: row.id,
@@ -537,7 +537,7 @@ const listPersonagens = async () => {
       files
         .filter(
           (file) =>
-            file.endsWith(".json") &&
+            file.endsWith(".json") && !file.startsWith("__jogador_") &&
             file !== "destinos.json" &&
             file !== "loja-catalogo.json" &&
             file !== "arvores-habilidades.json",
@@ -837,6 +837,22 @@ const handleRequest = async (req, res) => {
     }
 
 
+    const jogadorMatch = url.pathname.match(/^\/api\/jogadores\/(\d{4,8})$/);
+    if (jogadorMatch && ["GET", "PUT"].includes(req.method)) {
+      const recordId = `__jogador_${jogadorMatch[1]}`;
+      if (req.method === "GET") {
+        return sendJson({ req, res, statusCode: 200, payload: { jogador: await readPersonagem(recordId) }, cacheControl: "no-store" });
+      }
+      const body = await readJsonBody(req);
+      const jogador = body.jogador;
+      if(Array.isArray(jogador?.personagens) && jogador.personagens.length>10)return sendJson({req,res,statusCode:400,payload:{error:'O perfil permite no máximo 10 personagens.'}});
+      if (!jogador || (jogador.fotoPerfil !== undefined && (typeof jogador.fotoPerfil !== "string" || jogador.fotoPerfil.length > 600000 || (jogador.fotoPerfil !== "" && !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(jogador.fotoPerfil)))) || (jogador.perfilConfigurado !== undefined && typeof jogador.perfilConfigurado !== "boolean") || (jogador.paletaPagina !== undefined && (!jogador.paletaPagina || !["primaria","secundaria","texto","fundo","borda"].every(campo=>/^#[0-9a-f]{6}$/i.test(jogador.paletaPagina[campo] || "")))) || (jogador.pronome !== undefined && !["Ele", "Ela", "Elu"].includes(jogador.pronome)) || typeof jogador.nome !== "string" || jogador.nome.length > 80 || !["claro", "escuro"].includes(jogador.tema) || !Array.isArray(jogador.personagens) || !Array.isArray(jogador.builds) || jogador.personagens.length > 10 || jogador.builds.length > 100 || jogador.personagens.some(p => !p || !["darkness", "espiral"].includes(p.sistema) || typeof p.id !== "string" || !/^[a-z0-9_-]{1,100}$/.test(p.id) || p.id.startsWith("__")) || jogador.builds.some(b => !b || typeof b.id !== "string" || typeof b.nome !== "string" || b.nome.length > 100 || !Array.isArray(b.habilidades) || b.habilidades.length > 1000 || b.habilidades.some(h => typeof h !== "string") || typeof b.notas !== "string" || b.notas.length > 10000)) {
+        return sendJson({ req, res, statusCode: 400, payload: { error: "Perfil de jogador inválido." } });
+      }
+      const saved = await writePersonagem(recordId, { nome: jogador.nome, ...(jogador.fotoPerfil !== undefined ? { fotoPerfil: jogador.fotoPerfil } : {}), ...(jogador.perfilConfigurado !== undefined ? { perfilConfigurado: jogador.perfilConfigurado } : {}), ...(jogador.pronome ? { pronome: jogador.pronome } : {}), ...(jogador.paletaPagina ? { paletaPagina: Object.fromEntries(["primaria","secundaria","texto","fundo","borda"].map(campo=>[campo,jogador.paletaPagina[campo]])) } : {}), tema: jogador.tema, personagens: jogador.personagens, builds: jogador.builds, codigo: jogadorMatch[1], tipo: "perfil-jogador" });
+      return sendJson({ req, res, statusCode: 200, payload: { jogador: saved } });
+    }
+
     if (url.pathname === "/api/personagens" && req.method === "GET") {
       const personagens = await listPersonagens();
       const cacheControl = "public, s-maxage=30, stale-while-revalidate=120";
@@ -876,6 +892,10 @@ const handleRequest = async (req, res) => {
     const fichaId = personagemMatch
       ? sanitizeFichaId(decodeURIComponent(personagemMatch[1]))
       : DEFAULT_FICHA_ID;
+
+    if (personagemMatch && fichaId.startsWith("__jogador_")) {
+      return sendJson({ req, res, statusCode: 404, payload: { error: "Personagem não encontrado." } });
+    }
 
     if ((legacyPersonagemRoute || personagemMatch) && req.method === "GET") {
       const personagem = await readPersonagem(fichaId);
@@ -1026,3 +1046,5 @@ if (require.main === module) {
 module.exports = {
   handleRequest,
 };
+
+

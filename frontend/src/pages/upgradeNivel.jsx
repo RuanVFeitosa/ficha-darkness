@@ -1,15 +1,16 @@
-import React, { useEffect, useMemo, useState } from "react";
+import {persistirEnvioHabilidade,carregarRascunhoHabilidade,salvarRascunhoHabilidade} from '../services/abilitySubmission';
+import AbilityPageEditor from '../components/AbilityPageEditor';
+import AbilityDocument from '../components/AbilityDocument';
+import {paginasHabilidade,validarPaginas,descricaoDasPaginas} from '../utils/abilityPages';
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import Icon from "@mdi/react";
 import { mdiArrowLeft } from "@mdi/js";
 import "../CSS/UpgradeNivel.css";
+import "../CSS/UpgradeDossier.css";
 import { buscarPersonagem, salvarPersonagem } from "../services/personagemApi";
 import { notificarPersonagemAtualizado } from "../services/syncEvents";
 import { estadoInicial } from "./fichaPersonagem";
-import {
-  ATRIBUTOS_UPGRADE,
-  TABELA_EVOLUCAO,
-  obterCustosNivel,
-} from "../data/evolucaoPersonagem";
+import { ATRIBUTOS_UPGRADE, TABELA_EVOLUCAO } from "../data/evolucaoPersonagem";
 import { obterMarcosProgressao } from "../data/progressaoAvancada";
 import {
   marcarPassivosAtualizados,
@@ -74,16 +75,22 @@ const LIMITE_MEMBROS = {
 const UpgradeNivel = () => {
   const [fichaId] = useState(obterFichaIdDaUrl);
   const [personagem, setPersonagem] = useState(estadoInicial);
-  const [trilha, setTrilha] = useState("atributos");
+  const [trilha, setTrilha] = useState(()=>new URLSearchParams(window.location.search).get("trilha")==="criacao" ? "criacao" : "atributos");
   const [distribuicao, setDistribuicao] = useState({});
-  const [mensagem, setMensagem] = useState("");
-  const [novaHabilidade, setNovaHabilidade] = useState({
+  const [, setMensagem] = useState("");
+  const enviandoRef=useRef(false);
+  const [enviandoHabilidade,setEnviandoHabilidade]=useState(false);
+  const [avisoRascunho,setAvisoRascunho]=useState(false);
+  const [novaHabilidade, setNovaHabilidade] = useState(() => {
+    const salvo=carregarRascunhoHabilidade(`darkness:ability-draft:${obterFichaIdDaUrl()}`);if(salvo)return salvo;
+    return {
     tipo: "habilidade",
     nome: "",
     descricao: "",
     custo: 10,
     recurso: "evolucao",
-  });
+  }; });
+  useEffect(()=>{setAvisoRascunho(!salvarRascunhoHabilidade(`darkness:ability-draft:${fichaId}`,novaHabilidade));},[fichaId,novaHabilidade]);
   const storageKey = `${STORAGE_KEY}_${fichaId}`;
   const nivelAtual = Math.max(1, parseInt(personagem.nivel, 10) || 1);
   const passouDoNivel5 = nivelAtual > 5;
@@ -146,8 +153,12 @@ const UpgradeNivel = () => {
   };
 
   const enviarHabilidadeParaAnalise = async () => {
+    if(enviandoRef.current)return;
     const nome = novaHabilidade.nome.trim();
-    const descricao = novaHabilidade.descricao.trim();
+    const paginas = paginasHabilidade(novaHabilidade);
+    const erroPaginas = validarPaginas(paginas);
+    if(erroPaginas){mostrarNotificacao(erroPaginas,"erro");return;}
+    const descricao = descricaoDasPaginas(paginas);
     const custo = Math.max(10, Math.min(50, parseInt(novaHabilidade.custo, 10) || 10));
     const tipo = novaHabilidade.tipo;
     const recurso = tipo === "habilidade" ? novaHabilidade.recurso : "sanidade";
@@ -167,6 +178,7 @@ const UpgradeNivel = () => {
       tipo,
       nome,
       descricao,
+      paginas,
       custo,
       recurso,
       recursoAtualAntes:
@@ -192,17 +204,17 @@ const UpgradeNivel = () => {
       };
     }
 
-    setPersonagem(atualizado);
-    setNovaHabilidade({ tipo, nome: "", descricao: "", custo: 10, recurso: tipo === "habilidade" ? "evolucao" : "sanidade" });
-    localStorage.setItem(storageKey, JSON.stringify(atualizado));
-    notificarPersonagemAtualizado(fichaId, atualizado);
+    enviandoRef.current=true;setEnviandoHabilidade(true);
     try {
-      const personagemSalvo = await salvarPersonagem(fichaId, atualizado);
-      notificarPersonagemAtualizado(fichaId, personagemSalvo || atualizado);
-    } catch (error) {
-      console.warn("Backend indisponível. Habilidade salva localmente.", error);
-    }
-    mostrarNotificacao(`${tipo === "rito" ? "Rito" : tipo === "poderAbsoluto" ? "Poder absoluto" : "Habilidade"} enviado para análise do mestre.`, "sucesso");
+      const resultado=await persistirEnvioHabilidade(fichaId,atualizado,storageKey);
+      setPersonagem(resultado.personagem);
+      notificarPersonagemAtualizado(fichaId,resultado.personagem);
+      setNovaHabilidade({tipo,nome:'',descricao:'',custo:10,recurso:tipo==='habilidade'?'evolucao':'sanidade'});
+      mostrarNotificacao(resultado.remoto ? 'Habilidade enviada para análise do mestre.'+(resultado.local?'':' Salva no servidor; o cache deste navegador está cheio.') : 'Habilidade salva neste dispositivo. O servidor está indisponível; o envio ao mestre ainda não foi confirmado.',resultado.remoto?'sucesso':'aviso');
+    } catch(error) {
+      mostrarNotificacao(error.message,'erro');
+    } finally {enviandoRef.current=false;setEnviandoHabilidade(false);}
+
   };
 
   // ============================================================
@@ -619,7 +631,7 @@ const UpgradeNivel = () => {
   // APLICAR UPGRADE
   // ============================================================
   const aplicarUpgrade = async () => {
-    if (trilha === "habilidades") {
+    if ((trilha === "habilidades" || trilha === "criacao")) {
       abrirArvore();
       return;
     }
@@ -796,18 +808,18 @@ const UpgradeNivel = () => {
   );
 
   return (
-    <main className="upgrade-page">
+    <main className={`upgrade-page upgrade-dossier ${trilha === "criacao" ? "ability-studio-page" : ""}`}>
       {/* HERO */}
       <section className="upgrade-hero">
         <button className="upgrade-voltar" onClick={voltarParaFicha}>
           <Icon path={mdiArrowLeft} size={1} />
           Ficha
         </button>
-        <span>Evolução de personagem</span>
-        <h1>Upgrade de Nível</h1>
+        <img className="upgrade-system-symbol" src="/simbolo-absoluto.png" alt="Símbolo do Sistema Absoluto"/>
+        <span>{trilha === "criacao" ? "ESTÚDIO DO JOGADOR / SISTEMA ABSOLUTO" : "SISTEMA ABSOLUTO / EVOLUÇÃO"}</span>
+        <h1>{trilha === "criacao" ? "Crie sua próxima habilidade." : "O próximo passo."}</h1><div className="upgrade-character-identity"><strong>{personagem.nome || "Personagem"}</strong><span>{personagem.classe || "Sistema Absoluto"}</span></div>
         <p>
-          Distribua seus pontos de evolução livremente entre Integridade, Atributos e Passivos.
-          Cada ponto gasto aumenta permanentemente o valor escolhido.
+          {trilha === "criacao" ? "Organize efeitos em páginas, monte tabelas e veja o card enquanto escreve. Seu rascunho é salvo neste dispositivo." : "Distribua seus pontos de evolução livremente entre Integridade, Atributos e Passivos. Cada ponto gasto aumenta permanentemente o valor escolhido."}
         </p>
       </section>
 
@@ -852,15 +864,16 @@ const UpgradeNivel = () => {
         {/* SHELL */}
         <section className="upgrade-shell">
           {/* Trilhas */}
-          <div className="upgrade-trilhas">
-            {["passivos", "atributos", "habilidades", "integridade", "marcos"].map((item) => (
+          <div className="upgrade-trilhas" role="group" aria-label="Áreas de evolução">
+            {["passivos", "atributos", "habilidades", "criacao", "integridade", "marcos"].map((item) => (
               <button
                 key={item}
                 type="button"
                 className={trilha === item ? "ativa" : ""}
+                aria-pressed={trilha === item}
                 onClick={() => alterarTrilha(item)}
               >
-                {item === "integridade" ? "Integridade" : item === "marcos" ? "Marcos NV5+" : item.charAt(0).toUpperCase() + item.slice(1)}
+                {item === "criacao" ? "Criar habilidade" : item === "integridade" ? "Integridade" : item === "marcos" ? "Marcos NV5+" : item.charAt(0).toUpperCase() + item.slice(1)}
               </button>
             ))}
           </div>
@@ -870,7 +883,7 @@ const UpgradeNivel = () => {
             <span>
               {trilha === "marcos"
                 ? "Progressão avançada"
-                : trilha === "habilidades"
+                : (trilha === "habilidades" || trilha === "criacao")
                 ? "Saldo para habilidades"
                 : trilha === "integridade"
                 ? `Integridade disponível: ${disponiveisIntegridade}`
@@ -879,7 +892,7 @@ const UpgradeNivel = () => {
             <strong>
               {trilha === "marcos"
                 ? `${Object.entries(marcosProgressao).filter(([nivel, marco]) => marco.opcoes.some((opcao) => opcao.id === personagem.progressaoAvancada?.[nivel]?.id)).length} de 6 marcos escolhidos`
-                : trilha === "habilidades"
+                : (trilha === "habilidades" || trilha === "criacao")
                 ? `${pontosEvolucaoDisponiveis} pontos disponíveis`
                 : trilha === "integridade"
                 ? `${restantesIntegridade} pontos restantes`
@@ -1094,7 +1107,7 @@ const UpgradeNivel = () => {
           )}
 
           {/* HABILIDADES */}
-          {trilha === "habilidades" && (
+          {(trilha === "habilidades" || trilha === "criacao") && (
             <div className="upgrade-habilidades-info">
               <div className="upgrade-habilidades-topo">
                 <div>
@@ -1103,7 +1116,7 @@ const UpgradeNivel = () => {
                 </div>
                 <button type="button" onClick={abrirArvore}>Árvore de habilidades</button>
               </div>
-              <div className="criador-habilidade-form">
+              {trilha === "criacao" ? <div className="criador-habilidade-form">
                 <div className="recursos-habilidade-resumo">
                   <div><span>Pontos de Evolução</span><strong>{pontosEvolucaoDisponiveis}</strong></div>
                   <div><span>Esperança</span><strong>{personagem.esperanca?.atual || 0} <small>/ {personagem.esperanca?.max || 0}</small></strong></div>
@@ -1111,11 +1124,11 @@ const UpgradeNivel = () => {
                 </div>
                 <label>Tipo<select value={novaHabilidade.tipo} onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, tipo: e.target.value, recurso: e.target.value === "habilidade" ? atual.recurso : "sanidade" }))}><option value="habilidade">Habilidade</option><option value="rito">Rito</option><option value="poderAbsoluto">Poder Absoluto</option></select></label>
                 <label>Nome<input value={novaHabilidade.nome} maxLength="80" onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, nome: e.target.value }))} placeholder="Ex.: Manto da Ruína" /></label>
-                <label className="criador-descricao">Descrição<textarea value={novaHabilidade.descricao} maxLength="800" onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, descricao: e.target.value }))} placeholder="Explique o efeito, limites e condições da habilidade." /></label>
+                {avisoRascunho && <p role="status">Não há espaço para salvar o rascunho neste navegador. Mantenha esta aba aberta até concluir o envio.</p>}<AbilityPageEditor value={novaHabilidade} onChange={setNovaHabilidade}/>
                 <label>Custo<select value={novaHabilidade.custo} onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, custo: parseInt(e.target.value, 10) }))}><option value="10">10</option><option value="20">20</option><option value="30">30</option><option value="40">40</option><option value="50">50</option></select></label>
                 {novaHabilidade.tipo === "habilidade" ? <label>Gastar de<select value={novaHabilidade.recurso} onChange={(e) => setNovaHabilidade((atual) => ({ ...atual, recurso: e.target.value }))}><option value="evolucao">Pontos de Evolução ({saldoRecursoHabilidade.evolucao})</option><option value="esperanca">Esperança máxima ({saldoRecursoHabilidade.esperanca})</option><option value="sanidade">Sanidade máxima ({saldoRecursoHabilidade.sanidade})</option></select></label> : <label>Recurso obrigatório<input value={`Sanidade máxima (${saldoRecursoHabilidade.sanidade})`} readOnly /></label>}
-                <button type="button" className="upgrade-confirmar" onClick={enviarHabilidadeParaAnalise}>Enviar para análise ({novaHabilidade.custo})</button>
-              </div>
+                <button type="button" className="upgrade-confirmar" disabled={enviandoHabilidade} onClick={enviarHabilidadeParaAnalise}>{enviandoHabilidade ? "Enviando…" : `Enviar para análise (${novaHabilidade.custo})`}</button>
+              </div> : <button type="button" className="upgrade-confirmar" onClick={()=>alterarTrilha("criacao")}>Abrir estúdio de criação ↗</button>}
               <div className="habilidades-enviadas">
                 <h3>Suas solicitações</h3>
                 {habilidadesCriadasJogador.length ? (
@@ -1126,7 +1139,7 @@ const UpgradeNivel = () => {
                         <span>
                           {habilidade.tipo === "rito" ? "Rito" : habilidade.tipo === "poderAbsoluto" ? "Poder Absoluto" : "Habilidade"} · {habilidade.custo} {habilidade.recurso === "evolucao" ? "Pontos de Evolução" : habilidade.recurso}
                         </span>
-                        <p>{habilidade.descricao}</p>
+                        <AbilityDocument habilidade={habilidade}/>
                       </div>
                       <b>{habilidade.status || "pendente"}</b>
                     </article>
@@ -1216,7 +1229,7 @@ const UpgradeNivel = () => {
           )}
 
           {/* Botão confirmar upgrade */}
-          {trilha !== "habilidades" && trilha !== "marcos" && (
+          {trilha !== "habilidades" && trilha !== "criacao" && trilha !== "marcos" && (
             <button
               type="button"
               className="upgrade-confirmar"

@@ -1,0 +1,1009 @@
+
+> ficha-darkness-frontend@0.1.0 test
+> react-scripts test --watchAll=false --runInBand --testPathPattern=TokenAnimationStudio|TokenPreviewCamera
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+FAIL src/components/TokenAnimationStudio.test.jsx
+  ● saves a configured animation and edits it without duplicating the library
+
+    TestingLibraryElementError: Found multiple elements with the text of: Respiração
+
+    Here are the matching elements:
+
+    Ignored nodes: comments, script, style
+    <output>
+      27%
+    </output>
+
+    Ignored nodes: comments, script, style
+    <input
+      aria-label="Respiração"
+      max="0.03"
+      min="0"
+      step="0.001"
+      style="--tas-progress: 26.666666666666668%;"
+      type="range"
+      value="0.008"
+    />
+
+    (If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+    Ignored nodes: comments, script, style
+    <body>
+      <div>
+        <section
+          aria-label="Estúdio de animação de tokens"
+          class="tas"
+        >
+          <header
+            class="tas-heading"
+          >
+            <div>
+              <span
+                class="tas-eyebrow"
+              >
+                ESTÚDIO DO MESTRE / TABLETOP 3D
+              </span>
+              <h2>
+                Um pouco mais de vida.
+              </h2>
+              <p>
+                Movimentos sutis. Personagens presentes.
+                <br />
+                Crie a animação do seu token e leve para a mesa.
+              </p>
+            </div>
+            <button
+              class="tas-primary"
+              type="button"
+            >
+              Salvar animação 
+              <span
+                aria-hidden="true"
+              >
+                ↗
+              </span>
+            </button>
+          </header>
+          <div
+            class="tas-layout"
+          >
+            <div
+              class="tas-controls"
+            >
+              <section
+                class="tas-card"
+              >
+                <div
+                  class="tas-card-heading"
+                >
+                  <span>
+                    01
+                  </span>
+                  <div>
+                    <h3>
+                      O personagem
+                    </h3>
+                    <p>
+                      A imagem que vai ganhar movimento.
+                    </p>
+                  </div>
+                </div>
+                <label
+                  class="tas-field"
+                >
+                  Nome da animação
+                  <input
+                    value="Victoria suave"
+                  />
+                </label>
+                <label
+                  class="tas-upload"
+                >
+                  <span
+                    aria-hidden="true"
+                    class="tas-upload-icon"
+                  >
+                    ↑
+                  </span>
+                  <span>
+                    <strong>
+                      Importar imagem do token
+                    </strong>
+                    <small>
+                      PNG, JPG ou WebP · até 12 MB
+                    </small>
+                  </span>
+                  <input
+                    accept="image/png,image/jpeg,image/webp"
+                    aria-label="Imagem do token"
+                    type="file"
+                  />
+                </label>
+                <p
+                  class="tas-hint"
+                >
+                  Um fundo transparente deixa o personagem integrado à cena.
+                </p>
+              </section>
+              <section
+                class="tas-card"
+              >
+                <div
+                  class="tas-card-heading"
+                >
+                  <span>
+                    02
+                  </span>
+                  <div>
+                    <h3>
+                      Movimento natural
+                    </h3>
+                    <p>
+                      Encontre o ritmo do personagem.
+                    </p>
+                  </div>
+                </div>
+                <label
+                  class="tas-slider"
+                >
+                  <span>
+                    Respiração
+                    <output>
+                      27%
+                    </output>
+                  </span>
+                  <input
+                    aria-label="Respiração"
+                    max="0.03"
+                    min="0"
+                    step="0.001"
+                    style="--tas-progress: 26.666666666666668%;"
+                    type="range"
+                    value="0.008"
+                  />
+                </label>
+                <label
+                  class="tas-slider"
+                >
+                  <span>
+                    Balanço suave
+                    <output>
+                      20%
+                    </output>
+                  </span>
+                  <input
+                    aria-label="Balanço suave"
+                    max="0.04"
+                    min="0"
+                    step="0.001"
+                    style="--tas-progress: 20%;"
+                    type="range"
+                    value="0.008"
+                  />
+                </label>
+                <label
+                  class="tas-slider"
+                >
+                  <span>
+                    Velocidade dos movimentos
+                    <output>
+                      1.0×
+                    </output>
+                  </span>
+                  <input
+                    aria-label="Velocidade dos movimentos"
+                    max="2"
+                    min="0.3"
+                    step="0.1"
+                    style="--tas-progress: 41.17647058823529%;"
+                    type="range"
+                    value="1"
+                  />
+                </label>
+                <div
+                  aria-label="Intensidade da animação"
+                  class="tas-presets"
+                >
+                  <button
+                    type="button"
+                  >
+                    Discreto
+                  </button>
+                  <button
+                    type="button"
+                  >
+                    Natural
+                  </button>
+                  <button
+                    type="button"
+                  >
+                    Expressivo
+                  </button>
+                </div>
+              </section>
+              <section
+                class="tas-card"
+              >
+                <div
+                  class="tas-card-heading"
+                >
+                  <span>
+                    03
+                  </span>
+                  <div>
+                    <h3>
+                      Piscadas
+                    </h3>
+                    <p>
+                      Um detalhe que faz diferença.
+                    </p>
+                  </div>
+                  <span
+                    class="tas-pill is-active"
+                  >
+                    ATIVAS
+                  </span>
+                </div>
+                <label
+                  class="tas-upload tas-upload-compact"
+                >
+                  <span
+                    aria-hidden="true"
+                    class="tas-upload-icon"
+                  >
+                    ＋
+                  </span>
+                  <span>
+                    <strong>
+                      Importar versão com olhos fechados
+                    </strong>
+                    <small>
+                      Mesma pose e enquadramento do token.
+                    </small>
+                  </span>
+                  <input
+                    accept="image/png,image/jpeg,image/webp"
+                    aria-label="Imagem de olhos fechados"
+                    type="file"
+                  />
+                </label>
+                <label
+                  class="tas-slider"
+                >
+                  <span>
+                    Intervalo das piscadas (segundos)
+                    <output>
+                      5.00 s
+                    </output>
+                  </span>
+                  <input
+                    aria-label="Intervalo das piscadas (segundos)"
+                    max="12"
+                    min="2"
+                    step="0.5"
+                    style="--tas-progress: 30%;"
+                    type="range"
+                    value="5"
+                  />
+                </label>
+                <label
+                  class="tas-slider"
+                >
+                  <span>
+                    Duração da piscada (segundos)
+                    <output>
+                      0.18 s
+                    </output>
+                  </span>
+                  <input
+                    aria-label="Duração da piscada (segundos)"
+                    max="0.5"
+                    min="0.08"
+                    step="0.01"
+                    style="--tas-progress: 23.809523809523807%;"
+                    type="range"
+                    value="0.18"
+                  />
+                </label>
+                <div
+                  class="tas-eye-actions"
+                >
+                  <button
+                    type="button"
+                  >
+                    Delimitar região dos olhos
+                  </button>
+                  <button
+                    class="tas-text-button"
+                    type="button"
+                  >
+                    Remover piscadas
+                  </button>
+                </div>
+              </section>
+            </div>
+            <div
+              class="tas-preview-column"
+            >
+              <div
+                class="tas-preview"
+              >
+                <div
+                  class="tas-preview-header"
+                >
+                  <div>
+                    <span
+                      class="tas-eyebrow"
+                    >
+                      PALCO DE ANIMAÇÃO
+                    </span>
+                    <strong>
+                      Victoria suave
+                    </strong>
+                  </div>
+                  <button
+                    class="tas-play"
+                    type="button"
+                  >
+                    <span
+                      aria-hidden="true"
+                    >
+                      Ⅱ
+                    </span>
+                    Pausar
+                  </button>
+                </div>
+                <div
+                  class="tas-stage"
+                >
+                  <div
+                    aria-hidden="true"
+                    class="tas-stage-orbit"
+                  />
+                  <div
+                    data-testid="preview-stage"
+                  />
+                  <span
+                    class="tas-stage-label"
+                  >
+                    PRÉVIA AO VIVO
+                  </span>
+                </div>
+                <footer
+                  class="tas-preview-footer"
+                >
+                  <span>
+                    <i
+                      class="is-playing"
+                    />
+                    Em movimento
+                  </span>
+                  <span>
+                    TABLETOP / 3D
+                  </span>
+                </footer>
+              </div>
+              <p
+                class="tas-preview-note"
+              >
+                O corpo inteiro permanece no quadro.
+                <br />
+                Os movimentos respeitam a preferência de movimento reduzido do dispositivo.
+              </p>
+              <div
+                class="tas-portability"
+              >
+                <button
+                  type="button"
+                >
+                  Exportar animação ↗
+                </button>
+                <label>
+                  Importar animação ↓
+                  <input
+                    accept="application/json,.json"
+                    aria-label="Importar animação"
+                    type="file"
+                  />
+                </label>
+              </div>
+              <p
+                class="tas-status-empty"
+                role="status"
+              />
+            </div>
+          </div>
+          <section
+            class="tas-library"
+          >
+            <div
+              class="tas-library-heading"
+            >
+              <div>
+                <span
+                  class="tas-eyebrow"
+                >
+                  PRONTAS PARA A MESA
+                </span>
+                <h3>
+                  Sua biblioteca
+                </h3>
+                <p>
+                  Salva neste navegador. Exporte para usar em outro dispositivo.
+                </p>
+              </div>
+              <button
+                type="button"
+              >
+                ＋ Nova animação
+              </button>
+            </div>
+            <div
+              class="tas-library-grid"
+            >
+              <button
+                class="tas-library-card"
+                type="button"
+              >
+                <div
+                  class="tas-library-thumbnail"
+                >
+                  <img
+                    alt=""
+                    src="/tabletop/victoria.png"
+                  />
+                </div>
+                <span>
+                  <strong>
+                    Victoria
+                  </strong>
+                  <small>
+                    EXEMPLO · RESPIRAÇÃO E PISCADAS
+                  </small>
+                </span>
+                <b
+                  aria-hidden="true"
+                >
+                  ↗
+                </b>
+              </button>
+            </div>
+          </section>
+        </section>
+      </div>
+    </body>
+
+       7 | jest.mock('./AnimatedTokenArt',() => () => <div data-testid="preview"/>);
+       8 | beforeEach(() => localStorage.clear());
+    >  9 | test('saves a configured animation and edits it without duplicating the library',() => {render(<TokenAnimationStudio/>);fireEvent.change(screen.getByLabelText('Nome da animação'),{target:{value:'Victoria suave'}});fireEvent.change(screen.getByLabelText('Respiração'),{target:{value:'0.012'}});fireEvent.click(screen.getByRole('button',{name:/Salvar animação/}));expect(readTokenAnimations()[0].name).toBe('Victoria suave');expect(readTokenAnimations()[0].animation.breathing).toBe(.012);fireEvent.click(screen.getByRole('button',{name:/Salvar animação/}));expect(readTokenAnimations()).toHaveLength(1);expect(screen.getByRole('status')).toHaveTextContent('Animação salva');});
+         |                                                                                                                                                                                                                                               ^
+      10 | test('can remove blinking while keeping the other motions and toggle the preview',() => {render(<TokenAnimationStudio/>);fireEvent.click(screen.getByText('Remover piscadas'));fireEvent.click(screen.getByRole('button',{name:/Salvar animação/}));expect(readTokenAnimations()[0].animation.closedImage).toBe('');expect(readTokenAnimations()[0].animation.breathing).toBeGreaterThan(0);fireEvent.click(screen.getByRole('button',{name:/Pausar/}));expect(screen.getByRole('button',{name:/Reproduzir/})).toBeInTheDocument();});
+      11 | test('requires a name before saving',() => {render(<TokenAnimationStudio/>);fireEvent.change(screen.getByLabelText('Nome da animação'),{target:{value:'   '}});fireEvent.click(screen.getByRole('button',{name:/Salvar animação/}));expect(readTokenAnimations()).toHaveLength(0);expect(screen.getByRole('status')).toHaveTextContent('Dê um nome');});
+      12 |
+
+      at Object.getElementError (../node_modules/@testing-library/dom/dist/config.js:37:19)
+      at getElementError (../node_modules/@testing-library/dom/dist/query-helpers.js:20:35)
+      at getMultipleElementsFoundError (../node_modules/@testing-library/dom/dist/query-helpers.js:23:10)
+      at ../node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+      at getByLabelText (../node_modules/@testing-library/dom/dist/query-helpers.js:95:19)
+      at Object.<anonymous> (src/components/TokenAnimationStudio.test.jsx:9:239)
+
+  ● requires a name before saving
+
+    TestingLibraryElementError: Found multiple elements with the role "status"
+
+    Here are the matching elements:
+
+    Ignored nodes: comments, script, style
+    <output>
+      27%
+    </output>
+
+    Ignored nodes: comments, script, style
+    <output>
+      20%
+    </output>
+
+    Ignored nodes: comments, script, style
+    <output>
+      1.0×
+    </output>
+
+    Ignored nodes: comments, script, style
+    <output>
+      5.00 s
+    </output>
+
+    Ignored nodes: comments, script, style
+    <output>
+      0.18 s
+    </output>
+
+    Ignored nodes: comments, script, style
+    <p
+      class="tas-status"
+      role="status"
+    >
+      Dê um nome à animação.
+    </p>
+
+    (If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+    Ignored nodes: comments, script, style
+    <body>
+      <div>
+        <section
+          aria-label="Estúdio de animação de tokens"
+          class="tas"
+        >
+          <header
+            class="tas-heading"
+          >
+            <div>
+              <span
+                class="tas-eyebrow"
+              >
+                ESTÚDIO DO MESTRE / TABLETOP 3D
+              </span>
+              <h2>
+                Um pouco mais de vida.
+              </h2>
+              <p>
+                Movimentos sutis. Personagens presentes.
+                <br />
+                Crie a animação do seu token e leve para a mesa.
+              </p>
+            </div>
+            <button
+              class="tas-primary"
+              type="button"
+            >
+              Salvar animação 
+              <span
+                aria-hidden="true"
+              >
+                ↗
+              </span>
+            </button>
+          </header>
+          <div
+            class="tas-layout"
+          >
+            <div
+              class="tas-controls"
+            >
+              <section
+                class="tas-card"
+              >
+                <div
+                  class="tas-card-heading"
+                >
+                  <span>
+                    01
+                  </span>
+                  <div>
+                    <h3>
+                      O personagem
+                    </h3>
+                    <p>
+                      A imagem que vai ganhar movimento.
+                    </p>
+                  </div>
+                </div>
+                <label
+                  class="tas-field"
+                >
+                  Nome da animação
+                  <input
+                    value="   "
+                  />
+                </label>
+                <label
+                  class="tas-upload"
+                >
+                  <span
+                    aria-hidden="true"
+                    class="tas-upload-icon"
+                  >
+                    ↑
+                  </span>
+                  <span>
+                    <strong>
+                      Importar imagem do token
+                    </strong>
+                    <small>
+                      PNG, JPG ou WebP · até 12 MB
+                    </small>
+                  </span>
+                  <input
+                    accept="image/png,image/jpeg,image/webp"
+                    aria-label="Imagem do token"
+                    type="file"
+                  />
+                </label>
+                <p
+                  class="tas-hint"
+                >
+                  Um fundo transparente deixa o personagem integrado à cena.
+                </p>
+              </section>
+              <section
+                class="tas-card"
+              >
+                <div
+                  class="tas-card-heading"
+                >
+                  <span>
+                    02
+                  </span>
+                  <div>
+                    <h3>
+                      Movimento natural
+                    </h3>
+                    <p>
+                      Encontre o ritmo do personagem.
+                    </p>
+                  </div>
+                </div>
+                <label
+                  class="tas-slider"
+                >
+                  <span>
+                    Respiração
+                    <output>
+                      27%
+                    </output>
+                  </span>
+                  <input
+                    aria-label="Respiração"
+                    max="0.03"
+                    min="0"
+                    step="0.001"
+                    style="--tas-progress: 26.666666666666668%;"
+                    type="range"
+                    value="0.008"
+                  />
+                </label>
+                <label
+                  class="tas-slider"
+                >
+                  <span>
+                    Balanço suave
+                    <output>
+                      20%
+                    </output>
+                  </span>
+                  <input
+                    aria-label="Balanço suave"
+                    max="0.04"
+                    min="0"
+                    step="0.001"
+                    style="--tas-progress: 20%;"
+                    type="range"
+                    value="0.008"
+                  />
+                </label>
+                <label
+                  class="tas-slider"
+                >
+                  <span>
+                    Velocidade dos movimentos
+                    <output>
+                      1.0×
+                    </output>
+                  </span>
+                  <input
+                    aria-label="Velocidade dos movimentos"
+                    max="2"
+                    min="0.3"
+                    step="0.1"
+                    style="--tas-progress: 41.17647058823529%;"
+                    type="range"
+                    value="1"
+                  />
+                </label>
+                <div
+                  aria-label="Intensidade da animação"
+                  class="tas-presets"
+                >
+                  <button
+                    type="button"
+                  >
+                    Discreto
+                  </button>
+                  <button
+                    type="button"
+                  >
+                    Natural
+                  </button>
+                  <button
+                    type="button"
+                  >
+                    Expressivo
+                  </button>
+                </div>
+              </section>
+              <section
+                class="tas-card"
+              >
+                <div
+                  class="tas-card-heading"
+                >
+                  <span>
+                    03
+                  </span>
+                  <div>
+                    <h3>
+                      Piscadas
+                    </h3>
+                    <p>
+                      Um detalhe que faz diferença.
+                    </p>
+                  </div>
+                  <span
+                    class="tas-pill is-active"
+                  >
+                    ATIVAS
+                  </span>
+                </div>
+                <label
+                  class="tas-upload tas-upload-compact"
+                >
+                  <span
+                    aria-hidden="true"
+                    class="tas-upload-icon"
+                  >
+                    ＋
+                  </span>
+                  <span>
+                    <strong>
+                      Importar versão com olhos fechados
+                    </strong>
+                    <small>
+                      Mesma pose e enquadramento do token.
+                    </small>
+                  </span>
+                  <input
+                    accept="image/png,image/jpeg,image/webp"
+                    aria-label="Imagem de olhos fechados"
+                    type="file"
+                  />
+                </label>
+                <label
+                  class="tas-slider"
+                >
+                  <span>
+                    Intervalo das piscadas (segundos)
+                    <output>
+                      5.00 s
+                    </output>
+                  </span>
+                  <input
+                    aria-label="Intervalo das piscadas (segundos)"
+                    max="12"
+                    min="2"
+                    step="0.5"
+                    style="--tas-progress: 30%;"
+                    type="range"
+                    value="5"
+                  />
+                </label>
+                <label
+                  class="tas-slider"
+                >
+                  <span>
+                    Duração da piscada (segundos)
+                    <output>
+                      0.18 s
+                    </output>
+                  </span>
+                  <input
+                    aria-label="Duração da piscada (segundos)"
+                    max="0.5"
+                    min="0.08"
+                    step="0.01"
+                    style="--tas-progress: 23.809523809523807%;"
+                    type="range"
+                    value="0.18"
+                  />
+                </label>
+                <div
+                  class="tas-eye-actions"
+                >
+                  <button
+                    type="button"
+                  >
+                    Delimitar região dos olhos
+                  </button>
+                  <button
+                    class="tas-text-button"
+                    type="button"
+                  >
+                    Remover piscadas
+                  </button>
+                </div>
+              </section>
+            </div>
+            <div
+              class="tas-preview-column"
+            >
+              <div
+                class="tas-preview"
+              >
+                <div
+                  class="tas-preview-header"
+                >
+                  <div>
+                    <span
+                      class="tas-eyebrow"
+                    >
+                      PALCO DE ANIMAÇÃO
+                    </span>
+                    <strong>
+                         
+                    </strong>
+                  </div>
+                  <button
+                    class="tas-play"
+                    type="button"
+                  >
+                    <span
+                      aria-hidden="true"
+                    >
+                      Ⅱ
+                    </span>
+                    Pausar
+                  </button>
+                </div>
+                <div
+                  class="tas-stage"
+                >
+                  <div
+                    aria-hidden="true"
+                    class="tas-stage-orbit"
+                  />
+                  <div
+                    data-testid="preview-stage"
+                  />
+                  <span
+                    class="tas-stage-label"
+                  >
+                    PRÉVIA AO VIVO
+                  </span>
+                </div>
+                <footer
+                  class="tas-preview-footer"
+                >
+                  <span>
+                    <i
+                      class="is-playing"
+                    />
+                    Em movimento
+                  </span>
+                  <span>
+                    TABLETOP / 3D
+                  </span>
+                </footer>
+              </div>
+              <p
+                class="tas-preview-note"
+              >
+                O corpo inteiro permanece no quadro.
+                <br />
+                Os movimentos respeitam a preferência de movimento reduzido do dispositivo.
+              </p>
+              <div
+                class="tas-portability"
+              >
+                <button
+                  type="button"
+                >
+                  Exportar animação ↗
+                </button>
+                <label>
+                  Importar animação ↓
+                  <input
+                    accept="application/json,.json"
+                    aria-label="Importar animação"
+                    type="file"
+                  />
+                </label>
+              </div>
+              <p
+                class="tas-status"
+                role="status"
+              >
+                Dê um nome à animação.
+              </p>
+            </div>
+          </div>
+          <section
+            class="tas-library"
+          >
+            <div
+              class="tas-library-heading"
+            >
+              <div>
+                <span
+                  class="tas-eyebrow"
+                >
+                  PRONTAS PARA A MESA
+                </span>
+                <h3>
+                  Sua biblioteca
+                </h3>
+                <p>
+                  Salva neste navegador. Exporte para usar em outro dispositivo.
+                </p>
+              </div>
+              <button
+                type="button"
+              >
+                ＋ Nova animação
+              </button>
+            </div>
+            <div
+              class="tas-library-grid"
+            >
+              <button
+                class="tas-library-card"
+                type="button"
+              >
+                <div
+                  class="tas-library-thumbnail"
+                >
+                  <img
+                    alt=""
+                    src="/tabletop/victoria.png"
+                  />
+                </div>
+                <span>
+                  <strong>
+                    Victoria
+                  </strong>
+                  <small>
+                    EXEMPLO · RESPIRAÇÃO E PISCADAS
+                  </small>
+                </span>
+                <b
+                  aria-hidden="true"
+                >
+                  ↗
+                </b>
+              </button>
+            </div>
+          </section>
+        </section>
+      </div>
+    </body>
+
+       9 | test('saves a configured animation and edits it without duplicating the library',() => {render(<TokenAnimationStudio/>);fireEvent.change(screen.getByLabelText('Nome da animação'),{target:{value:'Victoria suave'}});fireEvent.change(screen.getByLabelText('Respiração'),{target:{value:'0.012'}});fireEvent.click(screen.getByRole('button',{name:/Salvar animação/}));expect(readTokenAnimations()[0].name).toBe('Victoria suave');expect(readTokenAnimations()[0].animation.breathing).toBe(.012);fireEvent.click(screen.getByRole('button',{name:/Salvar animação/}));expect(readTokenAnimations()).toHaveLength(1);expect(screen.getByRole('status')).toHaveTextContent('Animação salva');});
+      10 | test('can remove blinking while keeping the other motions and toggle the preview',() => {render(<TokenAnimationStudio/>);fireEvent.click(screen.getByText('Remover piscadas'));fireEvent.click(screen.getByRole('button',{name:/Salvar animação/}));expect(readTokenAnimations()[0].animation.closedImage).toBe('');expect(readTokenAnimations()[0].animation.breathing).toBeGreaterThan(0);fireEvent.click(screen.getByRole('button',{name:/Pausar/}));expect(screen.getByRole('button',{name:/Reproduzir/})).toBeInTheDocument();});
+    > 11 | test('requires a name before saving',() => {render(<TokenAnimationStudio/>);fireEvent.change(screen.getByLabelText('Nome da animação'),{target:{value:'   '}});fireEvent.click(screen.getByRole('button',{name:/Salvar animação/}));expect(readTokenAnimations()).toHaveLength(0);expect(screen.getByRole('status')).toHaveTextContent('Dê um nome');});
+         |                                                                                                                                                                                                                                                                                                 ^
+      12 |
+      13 |
+      14 |
+
+      at Object.getElementError (../node_modules/@testing-library/dom/dist/config.js:37:19)
+      at getElementError (../node_modules/@testing-library/dom/dist/query-helpers.js:20:35)
+      at getMultipleElementsFoundError (../node_modules/@testing-library/dom/dist/query-helpers.js:23:10)
+      at ../node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+      at getByRole (../node_modules/@testing-library/dom/dist/query-helpers.js:95:19)
+      at Object.<anonymous> (src/components/TokenAnimationStudio.test.jsx:11:289)
+
+PASS src/components/TokenPreviewCamera.test.jsx
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       2 failed, 2 passed, 4 total
+Snapshots:   0 total
+Time:        5.959 s, estimated 24 s
+Ran all test suites matching /TokenAnimationStudio|TokenPreviewCamera/i.
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path D:\Projetos\ficha-darkness\frontend
+npm error workspace ficha-darkness-frontend@0.1.0
+npm error location D:\Projetos\ficha-darkness\frontend
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c react-scripts test --watchAll=false --runInBand --testPathPattern=TokenAnimationStudio^^^|TokenPreviewCamera

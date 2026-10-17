@@ -18,7 +18,7 @@ const runNpmStart = () => {
 };
 
 const processes = [
-  run(process.execPath, ["backend/server.js"]),
+  run(process.execPath, ["--watch", "backend/server.js"]),
   runNpmStart(),
 ];
 

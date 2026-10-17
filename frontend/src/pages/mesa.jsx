@@ -1,3 +1,5 @@
+import AnimatedTokenImage from '../components/AnimatedTokenImage';
+import EvidenceImageViewer from "../components/EvidenceImageViewer";
 import { ACEITAR_AUDIO } from "../utils/audioUpload";
 import React, {
   useCallback,
@@ -10,82 +12,14 @@ import Icon from "@mdi/react";
 import ReprodutorCassete from "../components/ReprodutorCassete";
 import ComputadorModerno from "../components/ComputadorModerno";
 import { confirmarDialogo } from "../components/DialogoGlobal";
+import { mdiAccountPlusOutline, mdiArrowLeft, mdiChevronDown, mdiChevronRight, mdiClose, mdiDeleteOutline, mdiFileDocumentMultipleOutline, mdiFolderOutline, mdiFitToScreenOutline, mdiFlashlight, mdiFlashlightOff, mdiImageOutline, mdiLightbulbOnOutline, mdiMagnify, mdiMagnifyMinusOutline, mdiMagnifyPlusOutline, mdiMapOutline, mdiMusicBoxMultipleOutline, mdiNotebookEditOutline, mdiPencilOutline, mdiPlay, mdiPlus, mdiRefresh, mdiRotateRight, mdiShieldCrownOutline, mdiSwordCross, mdiStoreOutline, mdiViewDashboardOutline, mdiUploadOutline } from "@mdi/js";
+import { ativarCena, atualizarEstadoMusica, atualizarEstadoSoundpad, atualizarInimigoCampanha, atualizarModoCampanha, atualizarModoCombate, atualizarModoInvestigacao, atualizarRevelacaoDocumentoInvestigacao, atualizarVisibilidadeDocumentoInvestigacao, buscarCampanhaPorCodigo, definirIniciativa, definirRotacaoToken, definirTamanhoToken, chavePosicaoMapa, configurarLanternaToken, definirVisibilidadeToken, desvincularInimigo, enviarImagemCena, excluirCena, excluirDocumentoInvestigacao, moverToken, ouvirCampanha, posicionarFichaNoMapa, posicionarInimigoNoMapa, registrarRolagem, removerIniciativa, removerTokenDoMapa, salvarCena, salvarDocumentoInvestigacao, salvarEvidenciaInterativa, validarArquivoImagem, validarArquivoInvestigacao, vincularFicha, vincularInimigo } from "../services/mesaApi";
 import {
-  mdiAccountPlusOutline,
-  mdiArrowLeft,
-  mdiChevronDown,
-  mdiChevronRight,
-  mdiClose,
-  mdiDeleteOutline,
-  mdiDiceMultiple,
-  mdiFileDocumentMultipleOutline,
-  mdiFolderOutline,
-  mdiFitToScreenOutline,
-  mdiFlashlight,
-  mdiFlashlightOff,
-  mdiImageOutline,
-  mdiLightbulbOnOutline,
-  mdiMagnify,
-  mdiMagnifyMinusOutline,
-  mdiMagnifyPlusOutline,
-  mdiMapOutline,
-  mdiMusicBoxMultipleOutline,
-  mdiNotebookEditOutline,
-  mdiOpenInNew,
-  mdiPencilOutline,
-  mdiPlay,
-  mdiPlus,
-  mdiRefresh,
-  mdiRotateRight,
-  mdiShieldCrownOutline,
-  mdiSwordCross,
-  mdiStoreOutline,
-  mdiViewDashboardOutline,
-  mdiUploadOutline,
-} from "@mdi/js";
-import {
-  ativarCena,
-  atualizarEstadoMusica,
-  atualizarEstadoSoundpad,
-  atualizarInimigoCampanha,
-  atualizarModoCampanha,
-  atualizarModoCombate,
-  atualizarModoInvestigacao,
-  atualizarRevelacaoDocumentoInvestigacao,
-  atualizarVisibilidadeDocumentoInvestigacao,
-  buscarCampanhaPorCodigo,
-  definirIniciativa,
-  definirRotacaoToken,
-  definirTamanhoToken,
-  chavePosicaoMapa,
-  configurarLanternaToken,
-  definirVisibilidadeToken,
-  desvincularFicha,
-  desvincularInimigo,
-  enviarImagemCena,
-  excluirCena,
-  excluirDocumentoInvestigacao,
-  moverToken,
-  ouvirCampanha,
-  posicionarFichaNoMapa,
-  posicionarInimigoNoMapa,
-  registrarRolagem,
-  removerIniciativa,
-  removerTokenDoMapa,
-  salvarCena,
-  salvarDocumentoInvestigacao,
-  salvarEvidenciaInterativa,
-  validarArquivoImagem,
-  validarArquivoInvestigacao,
-  vincularFicha,
-  vincularInimigo,
-} from "../services/mesaApi";
-import {
-  listarPersonagens,
   ouvirPersonagens,
 } from "../services/personagemApi";
+import { listarFichasParaCampanha } from "../services/fichasCampanha";
 import { supabaseConfigurado } from "../services/supabase";
-import { listarHabilidadesSelecionadas } from "../data/Classes/arvoresHabilidades";
+import "../data/Classes/arvoresHabilidades";
 import { condicoes } from "../components/data/condicoes";
 import AnotacoesCampanha from "../components/AnotacoesCampanha";
 import MusicaTabletop from "../components/MusicaTabletop";
@@ -95,6 +29,7 @@ import MapLightingLayer, {
   pontoVisivelPorObservadores,
 } from "../components/MapLightingLayer";
 import "../CSS/Mesa.css";
+import "../CSS/Mesa2D.css";
 import { estiloBordaToken } from "../utils/tokenAppearance";
 import { limitarMovimentoToken } from "../utils/tokenCollision";
 import { cenaVisivelParaJogador } from "../utils/sceneVisibility";
@@ -371,7 +306,7 @@ const corInterfaceDaImagem = (url) =>
     imagem.src = url;
   });
 
-const Mesa = () => {
+const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const codigo = (params.get("campanha") || "DARK26").toUpperCase();
   const mestre = params.get("papel") === "mestre";
@@ -391,7 +326,7 @@ const Mesa = () => {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [bibliotecaAberta, setBibliotecaAberta] = useState(
-    mestre && !telaMobileInicial,
+    embedded && mestre && !telaMobileInicial,
   );
   const [midiasRecolhidas, setMidiasRecolhidas] = useState(true);
   const [anotacoesAbertas, setAnotacoesAbertas] = useState(false);
@@ -412,7 +347,7 @@ const Mesa = () => {
   const [erroFichas, setErroFichas] = useState("");
   const [fichaParaVincular, setFichaParaVincular] = useState("");
   const [personagens, setPersonagens] = useState({});
-  const [fichaAberta, setFichaAberta] = useState(null);
+  const [, setFichaAberta] = useState(null);
   const [tokenArrastando, setTokenArrastando] = useState(null);
   const movimentoTokenRef = useRef(null);
   const [tokenGirando, setTokenGirando] = useState(null);
@@ -434,11 +369,23 @@ const Mesa = () => {
   const ponteirosMapaRef = useRef(new Map());
   const inicioPincaMapaRef = useRef(null);
   const [abaLateralMestre, setAbaLateralMestre] = useState(
-    telaMobileInicial ? "" : "participantes",
+    embedded && !telaMobileInicial ? "participantes" : "",
   );
   const [abaLateralJogador, setAbaLateralJogador] = useState(
-    telaMobileInicial ? "" : "participantes",
+    embedded && !telaMobileInicial ? "participantes" : "",
   );
+  const [focoVisual, setFocoVisual] = useState(!embedded);
+  useEffect(() => {
+    if(!embedded || !requestedTool) return;
+    setBibliotecaAberta(requestedTool==='scenes');
+    setAnotacoesAbertas(requestedTool==='notes');
+    setMusicaAberta(requestedTool==='audio');
+    setSoundpadAberto(requestedTool==='soundpad');
+    const panel=requestedTool==='evidence' ? 'documentos' : requestedTool==='npcs' ? 'inimigos' : ['participants','initiative','combat','investigation'].includes(requestedTool) ? 'participantes' : '';
+    setAplicativoMesaAberto(requestedTool==='dashboard' ? 'dashboard' : requestedTool==='shop' ? 'loja' : null);
+    if(mestre) setAbaLateralMestre(panel);
+    else setAbaLateralJogador(panel);
+  },[embedded,requestedTool,requestVersion,mestre]);
   const [catalogoInimigos, setCatalogoInimigos] = useState([]);
   const [inimigoParaAdicionar, setInimigoParaAdicionar] = useState("");
   const [inimigoAberto, setInimigoAberto] = useState(null);
@@ -470,7 +417,7 @@ const Mesa = () => {
   const arquivoDocumentoRef = useRef(null);
   const [fichaJogadorId, setFichaJogadorId] = useState(
     () =>
-      fichaUrl ||
+      (params.get("sistema")==="espiral" && fichaUrl ? `espiral:${fichaUrl.replace(/^espiral:/,"")}` : fichaUrl) ||
       localStorage.getItem(`darkness_mesa_ficha_${codigo}`) ||
       localStorage.getItem("fichaRPG_ultimaFicha") ||
       "",
@@ -489,7 +436,7 @@ const Mesa = () => {
     ) setAplicativoMesaAberto(null);
   }, [aplicativoMesaAberto, cenaAtivaVisivel?.lojaDisponivel, mestre]);
   const modoIniciativaAtivo = Boolean(
-    campanha?.combateAtivo || campanha?.investigacaoAtiva,
+    campanha?.combateAtivo || campanha?.investigacaoAtiva || (embedded && requestedTool === "initiative"),
   );
   // Forca uma remontagem limpa da lateral quando o tipo de modo muda.
   // Isso evita que a arvore anterior de Participantes permaneça visualmente
@@ -764,8 +711,11 @@ const Mesa = () => {
   }, [cenaAtivaVisivel, campanha?.midiaAtivaId, campanha?.modo]);
   const carregarFichas = useCallback(() => {
     setErroFichas("");
-    listarPersonagens()
-      .then((fichas) => setFichasDisponiveis(fichas))
+    listarFichasParaCampanha()
+      .then((fichas) => {
+        setFichasDisponiveis(fichas);
+        setPersonagens(current => ({...current,...Object.fromEntries(fichas.map(ficha => [ficha.fichaId,ficha.personagem]))}));
+      })
       .catch((error) => {
         setFichasDisponiveis([]);
         setErroFichas(error.message || "Nao foi possivel carregar as fichas.");
@@ -774,6 +724,14 @@ const Mesa = () => {
   useEffect(() => {
     carregarFichas();
   }, [carregarFichas]);
+  useEffect(() => {
+    const refresh=event => {
+      if(event.type==='storage' && !event.key?.startsWith('espiral:sheet:v1:')) return;
+      carregarFichas();
+    };
+    window.addEventListener('storage',refresh);window.addEventListener('darkness:token-animation-updated',refresh);
+    return () => {window.removeEventListener('storage',refresh);window.removeEventListener('darkness:token-animation-updated',refresh);};
+  },[carregarFichas]);
   useEffect(() => {
     if (!mestre) return;
     try {
@@ -791,7 +749,7 @@ const Mesa = () => {
   useEffect(() => {
     const fichasIds = (campanha?.membros || [])
       .map((membro) => membro.ficha_id)
-      .filter(Boolean);
+      .filter(id => id && !String(id).startsWith("espiral:") && !String(id).startsWith("custom3d:"));
     if (!fichasIds.length) return undefined;
     return ouvirPersonagens(fichasIds, (fichaId, personagem) => {
       setPersonagens((atuais) => ({ ...atuais, [fichaId]: personagem }));
@@ -882,13 +840,6 @@ const Mesa = () => {
     await carregar();
   };
 
-  const removerFicha = async (fichaId) => {
-    if (!await confirmarDialogo("Remover esta ficha da mesa e apagar seu token?", { titulo: "Remover ficha", confirmarTexto: "Remover", perigo: true }))
-      return;
-    await desvincularFicha(campanha.id, fichaId);
-    setFichaAberta(null);
-    await carregar();
-  };
   const adicionarInimigo = async () => {
     const inimigo = catalogoInimigos.find(
       (item) => String(item.id || item.fichaId) === inimigoParaAdicionar,
@@ -959,14 +910,14 @@ const Mesa = () => {
     const novoEstado = !campanha.combateAtivo;
     setSalvandoCombate(true);
     try {
-      await atualizarModoCombate(campanha.id, novoEstado, novoEstado);
+      await atualizarModoCombate(campanha.id, novoEstado, novoEstado && !embedded);
       setCampanha((atual) => ({
         ...atual,
         combateAtivo: novoEstado,
         investigacaoAtiva: novoEstado ? false : Boolean(atual.investigacaoAtiva),
-        iniciativas: novoEstado ? {} : atual.iniciativas || {},
+        iniciativas: novoEstado && !embedded ? {} : atual.iniciativas || {},
       }));
-      if (novoEstado) setIniciativasRascunho({});
+      if (novoEstado && !embedded) setIniciativasRascunho({});
       setAbaLateralMestre("participantes");
       setInimigoAberto(null);
     } catch (error) {
@@ -2220,15 +2171,7 @@ const Mesa = () => {
     return [...(configuracaoVisao.luzes || []), ...luzesDosTokens]
       .some((luz) => pontoVisivelPorLuz(luz, token, bloqueadoresVisao));
   };
-  const personagemFichaAberta = fichaAberta?.personagem;
-  const habilidadesFichaAberta = personagemFichaAberta
-    ? listarHabilidadesSelecionadas(personagemFichaAberta)
-    : [];
-  const passivosFichaAberta = personagemFichaAberta
-    ? Object.entries(personagemFichaAberta.habilidadesPassivas || {}).filter(
-        ([, valor]) => Number(valor) > 0,
-      )
-    : [];
+
   const membrosOrdenados = [...(campanha.membros || [])].sort((a, b) => {
     if (!modoIniciativaAtivo) return 0;
     const iniciativaA = campanha.iniciativas?.[a.ficha_id];
@@ -2487,7 +2430,8 @@ const Mesa = () => {
   };
   return (
     <main
-      className={`mesa-shell ${mestre ? "visao-mestre" : "visao-jogador"} ${!mestre && abaLateralJogador === "ficha" ? "jogador-ficha-ativa" : ""} ${!(mestre ? abaLateralMestre : abaLateralJogador) ? "painel-lateral-fechado" : ""} modo-atual-${campanha.modo} ${bibliotecaAberta ? "com-biblioteca" : ""}`}
+      data-document-open={embedded && Boolean(documentoAberto) ? "true" : undefined}
+      className={`mesa-shell ${embedded ? "mesa-embedded" : "mesa-2d"} ${focoVisual ? 'mesa-foco-visual' : ''} ${mestre ? "visao-mestre" : "visao-jogador"} ${!mestre && abaLateralJogador === "ficha" ? "jogador-ficha-ativa" : ""} ${!(mestre ? abaLateralMestre : abaLateralJogador) ? "painel-lateral-fechado" : ""} modo-atual-${campanha.modo} ${bibliotecaAberta ? "com-biblioteca" : ""}`}
       style={{
         "--mesa-acento":
           corCena || personagemJogador?.temaFicha?.primaria || "#d4af37",
@@ -2501,11 +2445,13 @@ const Mesa = () => {
       }}
     >
       <div className={`mesa-transicao ${transicao ? "ativa" : ""}`}>
+        <img className="mesa-transicao-simbolo" src="/simbolo-darkness.png" alt=""/>
         <span>
           {campanha.modo === "especial" ? "Iniciando cena especial" : campanha.modo === "mapa" ? "Preparando o mapa" : "Voltando a cena"}
         </span>
       </div>
-      <header className="mesa-topo">
+      {embedded && mestre && ['initiative','investigation'].includes(requestedTool) && <div className="tt3-session-mode"><p>{requestedTool==='initiative' ? 'Organize os turnos e acompanhe os participantes.' : 'Acompanhe a investigação e a iniciativa.'}</p><button type="button" className="tt3-primary" disabled={salvandoCombate || salvandoInvestigacao} onClick={requestedTool==='initiative' ? alternarModoCombate : alternarModoInvestigacao}>{requestedTool==='initiative' ? (campanha.combateAtivo ? 'Encerrar combate' : 'Iniciar combate') : (campanha.investigacaoAtiva ? 'Encerrar investigação' : 'Iniciar investigação')}</button></div>}
+<header className="mesa-topo">
         <a
           href={urlRetorno}
           title={mestre ? "Voltar ao dashboard" : "Voltar para a ficha"}
@@ -2532,6 +2478,7 @@ const Mesa = () => {
             </button>
             <button
               className={`mesa-cenas-botao ${bibliotecaAberta ? "ativo" : ""}`}
+              title="Cenas e mapas"
               onClick={() => {
                 setBibliotecaAberta((valor) => !valor);
                 setAnotacoesAbertas(false);
@@ -2544,6 +2491,7 @@ const Mesa = () => {
             </button>
             <button
               className={`mesa-cenas-botao ${anotacoesAbertas ? "ativo" : ""}`}
+              title="Anotações da campanha"
               onClick={() => {
                 setAnotacoesAbertas((valor) => !valor);
                 setBibliotecaAberta(false);
@@ -2556,6 +2504,7 @@ const Mesa = () => {
             </button>
             <button
               className={`mesa-cenas-botao ${musicaAberta ? "ativo" : ""}`}
+              title="Música"
               onClick={() => {
                 setMusicaAberta((valor) => !valor);
                 setBibliotecaAberta(false);
@@ -2568,6 +2517,7 @@ const Mesa = () => {
             </button>
             <button
               className={`mesa-cenas-botao ${soundpadAberto ? "ativo" : ""}`}
+              title="Soundpad"
               onClick={() => {
                 setSoundpadAberto((valor) => !valor);
                 setMusicaAberta(false);
@@ -2670,6 +2620,15 @@ const Mesa = () => {
           <Icon path={mdiRefresh} size={0.82} />
         </button>
       </header>
+      {!embedded && <>
+        <div className="mesa-contexto-visual" aria-label="Cena atual">
+          <Icon path={campanha.modo === 'mapa' ? mdiMapOutline : mdiImageOutline} size={0.85} aria-hidden="true" />
+          <div><span>{campanha.modo === 'mapa' ? 'Mapa de batalha' : campanha.modo === 'especial' ? 'Cena especial' : 'Cena narrativa'}</span><strong>{cena?.nome || campanha.nome}</strong></div>
+          {campanha.combateAtivo && <b>Combate</b>}
+        </div>
+        {<button type="button" className="mesa-foco-botao" aria-pressed={focoVisual} aria-label={focoVisual ? 'Mostrar interface' : 'Focar no mapa e cena'} title={focoVisual ? 'Mostrar interface' : 'Focar no mapa e cena'} onClick={() => setFocoVisual(value => !value)}><Icon path={focoVisual ? mdiViewDashboardOutline : mdiFitToScreenOutline} size={0.9} aria-hidden="true" /><span>{focoVisual ? 'Mostrar interface' : 'Foco'}</span></button>}
+        {(mestre ? abaLateralMestre : abaLateralJogador) && <button type="button" className="mesa-fechar-painel" aria-label="Recolher painel lateral" title="Recolher painel lateral" onClick={() => mestre ? setAbaLateralMestre('') : setAbaLateralJogador('')}><Icon path={mdiClose} size={0.8} /></button>}
+      </>}
       {senha3DAberta && (
         <div
           className="mesa-3d-senha-overlay"
@@ -3037,10 +2996,10 @@ const Mesa = () => {
                     >
                       {tokenVisual.imagem_url ||
                       personagens[tokenVisual.ficha_id]?.fotoPerfil ? (
-                        <img
+                        <AnimatedTokenImage animation={personagens[tokenVisual.ficha_id]?.profileTokenAnimation}
                           src={
-                            tokenVisual.imagem_url ||
-                            personagens[tokenVisual.ficha_id]?.fotoPerfil
+                            personagens[tokenVisual.ficha_id]?.fotoPerfil ||
+                            tokenVisual.imagem_url
                           }
                           alt=""
                           draggable="false"
@@ -3912,7 +3871,7 @@ const Mesa = () => {
               <strong>{personagemJogador.nome}</strong>
             </div>
             <button
-              onClick={() => setAbaLateralJogador("participantes")}
+              onClick={() => setAbaLateralJogador(embedded ? "participantes" : "")}
               title="Fechar ficha"
             >
               <Icon path={mdiClose} size={0.9} />
@@ -3920,7 +3879,7 @@ const Mesa = () => {
           </header>
           <iframe
             title={`Ficha de ${personagemJogador.nome}`}
-            src={`/?sistema=darkness&ficha=${encodeURIComponent(personagemJogador.nome || membroJogador.ficha_id)}&senha=${encodeURIComponent(membroJogador.ficha_id)}&embed=mesa`}
+            src={membroJogador.ficha_id.startsWith("espiral:") ? `/?sistema=espiral&ficha=${encodeURIComponent(membroJogador.ficha_id.slice("espiral:".length))}&embed=mesa` : `/?sistema=darkness&ficha=${encodeURIComponent(personagemJogador.nome || membroJogador.ficha_id)}&senha=${encodeURIComponent(membroJogador.ficha_id)}&embed=mesa`}
           />
         </section>
       )}
@@ -4383,6 +4342,7 @@ const Mesa = () => {
                               }}
                               aria-label={`Iniciativa de ${entrada.nome}`}
                             />
+                            {embedded && <button type="button" className="tt3-save-initiative" onClick={() => confirmarIniciativaMestre(entrada.membro)} aria-label={`Salvar iniciativa de ${entrada.nome}`}>Salvar</button>}
                           </div>
                         ) : (
                           <div className="participante-iniciativa-valor">{entrada.valor}</div>
@@ -4484,7 +4444,7 @@ const Mesa = () => {
                               }
                             }}
                           />
-                         
+
                         </div>
                       )}
                       <div>
@@ -4588,7 +4548,7 @@ const Mesa = () => {
                   allow="autoplay"
                 />
               ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "").startsWith("image/") ? (
-                <img src={documentoAberto.url} alt={documentoAberto.nome || "Evidencia"} />
+                <EvidenceImageViewer key={documentoAberto.id} src={documentoAberto.url} alt={documentoAberto.nome || "Evidência"} />
               ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "") === "application/pdf" ? (
                 <iframe
                   title={documentoAberto.nome || "Documento PDF"}
@@ -4694,6 +4654,8 @@ const Mesa = () => {
                 }
               />
             </label>
+              <fieldset className="tt3-scene-difficulties"><legend>Dificuldades da cena · ESPIRAL</legend>{[['ambiente','Ambiente'],['combateAmbiente','Combate — ambiente'],['conflitos','Conflitos — perseguições e outros']].map(([key,label])=><label key={key}>{label}<input type="number" min="0" max="30" value={editando.dificuldades?.[key] ?? 4} onChange={event=>setEditando({...editando,dificuldades:{ambiente:4,combateAmbiente:4,conflitos:4,...editando.dificuldades,[key]:Math.max(0,Math.min(30,Number(event.target.value)||0))}})}/></label>)}<small>No combate, a dificuldade de cada inimigo é sua Defesa.</small></fieldset>
+
             <section className="cena-editor-visibilidade">
               <div className="cena-editor-visibilidade-cabecalho">
                 <div>
@@ -5013,3 +4975,5 @@ const Mesa = () => {
   );
 };
 export default Mesa;
+
+

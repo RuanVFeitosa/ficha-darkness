@@ -59,3 +59,31 @@
 .campanha-cena-jogadores span { overflow:hidden; color:#cfc7b8; text-overflow:ellipsis; text-transform:none; white-space:nowrap }
 
 .campanha-fichas-vinculo { display:grid; gap:9px; padding:12px; border:1px solid rgba(220,213,195,.15); background:#101111 }.campanha-fichas-vinculo>header { padding:0 0 9px }.campanha-fichas-vinculo>header>div { display:grid; gap:3px }.campanha-fichas-vinculo>header strong { font-size:10px }.campanha-fichas-vinculo>header span { color:#817c73; font-size:8px; text-transform:uppercase }.campanha-fichas-vinculo>p { margin:0; padding:15px; color:#817c73; font-size:9px; text-align:center }.campanha-fichas-vinculo>div { max-height:260px; display:grid; gap:6px; overflow-y:auto }.campanha-fichas-vinculo label { min-height:58px; display:grid; grid-template-columns:18px 42px minmax(0,1fr); align-items:center; gap:10px; padding:7px; border:1px solid rgba(220,213,195,.13); background:#0c0d0d; cursor:pointer }.campanha-fichas-vinculo label.selecionada { border-color:#d0bc91; background:rgba(208,188,145,.08) }.campanha-fichas-vinculo input { width:16px; height:16px; accent-color:#d0bc91 }.campanha-fichas-vinculo img,.campanha-ficha-iniciais { width:42px; height:42px; display:grid; place-items:center; object-fit:cover; border:1px solid rgba(208,188,145,.35); background:#171818; color:#d0bc91 }.campanha-fichas-vinculo label>span:last-child { min-width:0; display:grid; gap:4px }.campanha-fichas-vinculo label strong { overflow:hidden; color:#eee9df; font-size:10px; text-overflow:ellipsis; white-space:nowrap }.campanha-fichas-vinculo label small { color:#817c73; font-size:8px; text-transform:uppercase }
+
+.campanha-tabletop-seletor { display:grid; gap:8px; margin:0; padding:12px; border:1px solid rgba(220,213,195,.15); background:#101111 }
+.campanha-tabletop-seletor legend { padding:0 5px; color:#d8d1c3; font-size:10px; font-weight:700 }
+.campanha-tabletop-seletor>p { margin:0; color:#817c73; font-size:8px; line-height:1.5 }
+.campanha-tabletop-seletor>div { display:grid; grid-template-columns:1fr 1fr; gap:7px }
+.campanha-tabletop-seletor label { min-height:74px; display:grid; grid-template-columns:18px minmax(0,1fr); align-items:center; gap:9px; padding:10px; border:1px solid rgba(220,213,195,.13); background:#0b0c0c; cursor:pointer }
+.campanha-tabletop-seletor label:hover,.campanha-tabletop-seletor label.selecionado { border-color:#d0bc91; background:rgba(208,188,145,.08) }
+.campanha-tabletop-seletor input { width:15px; height:15px; margin:0; accent-color:#d0bc91 }
+.campanha-tabletop-seletor label span { display:grid; gap:5px }
+.campanha-tabletop-seletor strong { color:#eee9df; font-size:10px }
+.campanha-tabletop-seletor small { color:#817c73; font-size:8px; line-height:1.45 }
+.campanha-tabletop-tipo { display:inline-flex; width:max-content; margin-top:10px; padding:4px 7px; border:1px solid rgba(208,188,145,.3); color:#a89a7b; font-size:7px; letter-spacing:.7px; text-transform:uppercase }
+.campanha-tabletop-tipo.tipo-3d { border-color:rgba(120,166,173,.42); color:#91b7bc }
+@media(max-width:560px){.campanha-tabletop-seletor>div{grid-template-columns:1fr}}
+.campanha-mapas3d-biblioteca { display:grid; gap:9px; margin:9px 0 12px; padding:11px; border:1px solid rgba(116,165,174,.28); background:rgba(40,76,82,.09) }
+.campanha-mapas3d-biblioteca>div:first-child { display:grid; gap:3px }
+.campanha-mapas3d-biblioteca>div:first-child strong { color:#c7d9d9; font-size:9px }
+.campanha-mapas3d-biblioteca>div:first-child small,.campanha-mapas3d-biblioteca>p { margin:0; color:#738687; font-size:8px }
+.campanha-mapas3d-biblioteca>div:last-child { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px }
+.campanha-mapas3d-biblioteca button { min-height:48px; display:grid; grid-template-columns:24px minmax(0,1fr); align-items:center; gap:7px; padding:7px; border:1px solid rgba(220,213,195,.12); background:#0c0e0e; color:#aaa; text-align:left; cursor:pointer }
+.campanha-mapas3d-biblioteca button.selecionado { border-color:#78a6ad; background:rgba(80,137,146,.13); color:#b9d5d8 }
+.campanha-mapas3d-biblioteca button>span { width:22px; height:22px; display:grid; place-items:center; border:1px solid currentColor; border-radius:50%; font-size:10px }
+.campanha-mapas3d-biblioteca button>div { min-width:0; display:grid; gap:3px }
+.campanha-mapas3d-biblioteca button strong { overflow:hidden; font-size:9px; text-overflow:ellipsis; white-space:nowrap }
+.campanha-mapas3d-biblioteca button small { color:#728083; font-size:7px }
+.campanha-midia-linha.mapa-3d { grid-template-columns:minmax(140px,1fr) minmax(110px,.6fr) 34px }
+.campanha-midia-linha.mapa-3d>label,.campanha-midia-linha.mapa-3d>input:not(:first-child) { display:none }
+.campanha-mapa3d-vinculado { align-self:stretch; display:flex; align-items:center; padding:0 10px; border:1px solid rgba(120,166,173,.28); background:rgba(80,137,146,.08); color:#8fb3b8; font-size:8px; text-transform:uppercase }

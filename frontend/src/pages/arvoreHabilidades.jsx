@@ -88,7 +88,7 @@ const ArvoreHabilidades = () => {
   const [aptidaoAberta, setAptidaoAberta] = useState(null);
   const [habilidadeAberta, setHabilidadeAberta] = useState(null);
   const [arrastando, setArrastando] = useState(false);
-  const [inicioArrasto, setInicioArrasto] = useState({ x: 0, y: 0 });
+  const [inicioArrasto] = useState({ x: 0, y: 0 });
   const [posicaoMapa, setPosicaoMapa] = useState({ x: -300, y: -120 });
 
   const mapaRef = useRef(null);
@@ -123,12 +123,9 @@ const ArvoreHabilidades = () => {
     parseInt(personagem.pontosEvolucao?.disponiveis, 10) || 0,
   );
 
-  const especialidadeSelecionada = (arvore.especialidades || []).find(
+  (arvore.especialidades || []).find(
     (especialidade) => especialidade.id === habilidadesClasse.especialidade,
   );
-
-  const precisaEscolherEspecialidade =
-    (arvore.especialidades || []).length > 0 && !especialidadeSelecionada;
 
   useEffect(() => {
     let cancelado = false;
@@ -335,31 +332,6 @@ const ArvoreHabilidades = () => {
     event.stopPropagation();
   };
 
-  const selecionarEspecialidadeInicial = (especialidade) => {
-    const habilidadesPermitidas = (especialidade.habilidades || []).map(
-      (habilidade) => habilidade.id,
-    );
-
-    const habilidadesFiltradas = Object.fromEntries(
-      Object.entries(habilidadesClasse.habilidadesEspecialidade || {}).filter(
-        ([habilidadeId]) => habilidadesPermitidas.includes(habilidadeId),
-      ),
-    );
-
-    salvarAtualizacao(
-      {
-        especialidade: especialidade.id,
-        especialidadeDefinida: true,
-        habilidadesEspecialidade: habilidadesFiltradas,
-      },
-      {
-        especialidade: especialidade.nome,
-      },
-    );
-
-    setAbaArvore("especialidade");
-  };
-
   const encontrarHabilidadeNaArvore = (habilidadeId) => {
     for (const especialidade of arvore.especialidades || []) {
       const habilidades = especialidade.habilidades || [];
@@ -463,21 +435,6 @@ const ArvoreHabilidades = () => {
     alternarHabilidadeEspecialidade(habilidadeAberta);
   };
 
-  const selecionarHabilidadeAbsoluta = (habilidade) => {
-    salvarAtualizacao(
-      {
-        habilidadeAbsoluta: habilidade.id,
-      },
-      {
-        habilidadeAbsolutaEscolhida: {
-          id: habilidade.id,
-          nome: habilidade.nome,
-          custo: habilidade.custo || "",
-          descricao: habilidade.descricao,
-        },
-      },
-    );
-  };
   const somarCustosComprados = (compradas = {}, itens = [], obterCusto) =>
     Object.entries(compradas).reduce((total, [itemId, comprado]) => {
       if (!comprado) return total;
@@ -554,17 +511,6 @@ const ArvoreHabilidades = () => {
           pontosEvolucaoDisponiveis + totalHabilidades + totalAptidoes,
         ),
         especialidade: "",
-      },
-    );
-  };
-
-  const removerHabilidadeAbsoluta = () => {
-    salvarAtualizacao(
-      {
-        habilidadeAbsoluta: "",
-      },
-      {
-        habilidadeAbsolutaEscolhida: null,
       },
     );
   };

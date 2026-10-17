@@ -1,0 +1,2 @@
+.tas-image-preview{position:absolute;inset:0;overflow:hidden}.tas-image-frame{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}.tas-image-body{width:100%;height:100%;position:relative;transform-origin:50% 100%;will-change:transform}.tas-image-body img{position:absolute;inset:0;width:100%!important;height:100%!important;object-fit:fill!important;border:0!important;pointer-events:none;user-select:none}.tas-image-eyes{will-change:opacity}
+.tas-image-eyes{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;pointer-events:none}

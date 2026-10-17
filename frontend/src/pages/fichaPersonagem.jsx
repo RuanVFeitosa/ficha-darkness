@@ -1,15 +1,22 @@
+import AbilityEditDialog from '../components/AbilityEditDialog';
+import {solicitarEdicaoHabilidade} from '../utils/abilityEdits';
+import AbilityReadingLayout from '../components/AbilityReadingLayout';
+import PlayerPageLink from '../components/PlayerPageLink';
+import CardHabilidadeRecolhivel from '../components/CardHabilidadeRecolhivel';
+import AnimatedTokenImage from '../components/AnimatedTokenImage';
 // src/components/FichaPersonagem.jsx
 import React, { useState, useEffect, useRef } from "react";
 import "../CSS/FichaPersonagem.css";
 import "../CSS/CondicoesProfile.css";
+import "../CSS/AbsolutoDossier.css";
 import { alertarDialogo, confirmarDialogo, selecionarDialogo } from "../components/DialogoGlobal";
 
 import { condicoes } from "../components/data/condicoes";
 import { receitasCriacao } from "../components/data/receitasCriacao";
 import profile from "../assets/IMG/OAbsoluto.webp";
-import corpoHumano from "../assets/IMG/corpo_humano.webp";
+import "../assets/IMG/corpo_humano.webp";
 import { descricoesHabilidades } from "../components/descricoesHabilidades";
-import ModalDescricao from "../components/modal/modalDescricao";
+import "../components/modal/modalDescricao";
 import PersonalizacaoToken from "../components/PersonalizacaoToken";
 import {
   buscarArvoresHabilidades,
@@ -28,43 +35,12 @@ import {
 } from "../services/syncEvents";
 import { SYNC_INTERVALS, iniciarPollingVisivel } from "../services/syncPolicy";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
+import { TABLETOP_3D_AUTH_KEY } from "../constants/masterAccess";
 import Icon from "@mdi/react";
-import { mdiAccount } from "@mdi/js";
-import {
-  mdiShieldCrownOutline,
-  mdiStorefrontOutline,
-  mdiDiceD4,
-  mdiDiceD6,
-  mdiDiceD8,
-  mdiDiceD10,
-  mdiDiceD12,
-  mdiDiceD20,
-  mdiShieldOutline,
-  mdiBagPersonalOutline,
-  mdiFlashlight,
-  mdiMedicalBag,
-  mdiTools,
-  mdiShield,
-  mdiMapMarkerPath,
-  mdiClipboardText,
-  mdiHeartPulse,
-  mdiPencilOutline,
-  mdiBomb,
-  mdiFire,
-  mdiFlask,
-  mdiSleep,
-  mdiCircleSmall,
-  mdiMapOutline,
-  mdiClose,
-  mdiMenu,
-  mdiSwapHorizontal,
-} from "@mdi/js";
+import "@mdi/js";
+import { mdiStorefrontOutline, mdiDiceD4, mdiDiceD6, mdiDiceD8, mdiDiceD10, mdiDiceD12, mdiDiceD20, mdiBagPersonalOutline, mdiFlashlight, mdiMedicalBag, mdiTools, mdiShield, mdiMapMarkerPath, mdiClipboardText, mdiHeartPulse, mdiPencilOutline, mdiBomb, mdiFire, mdiFlask, mdiSleep, mdiCircleSmall, mdiMapOutline, mdiClose, mdiMenu, mdiSwapHorizontal } from "@mdi/js";
 import { obterIconeItem } from "../utils/itemIcons";
-import {
-  marcarPassivosAtualizados,
-  mesclarPassivosPorRevisao,
-  normalizarPassivosParaNovaEscala,
-} from "../utils/personagemMerge";
+import { mesclarPassivosPorRevisao, normalizarPassivosParaNovaEscala } from "../utils/personagemMerge";
 import {
   listarHabilidadesCriadasJogador,
   listarHabilidadesProgressaoAvancada,
@@ -76,7 +52,9 @@ import {
 } from "../data/Classes/arvoresHabilidades";
 import { CATALOGO_DEFESAS } from "../data/Catalogo/defesas";
 import { CATALOGO_COMBATE } from "../data/Catalogo/combate";
-import { convertDarknessToEspiral } from "../utils/darknessToEspiral";
+import "../utils/darknessToEspiral";
+
+// Chave para o localStorage
 
 // Chave para o localStorage
 const STORAGE_KEY = "fichaRPG_personagem";
@@ -438,76 +416,6 @@ export const estadoInicial = {
   },
 };
 
-const ItemRecolhivel = ({ item, tipo, acaoExtra }) => {
-  const armaStatus = item.armaStatus;
-
-  return (
-    <details className={`item-recolhivel item-${tipo}`}>
-      <summary>
-        <span>{item.nome}</span>
-        {item.usos && (
-          <p>
-            <strong>Usos:</strong> {item.usos}
-          </p>
-        )}
-        <small>{item.detalhes || item.custo || item.tipo || tipo}</small>
-      </summary>
-
-      <div className="item-recolhivel-conteudo">
-        {item.descricao && <p>{item.descricao}</p>}
-        {item.detalhe && <p>{item.detalhe}</p>}
-        {item.detalhes && <p>{item.detalhes}</p>}
-        {item.absolutismo && (
-          <p>
-            <b>Absolutismo:</b> {item.absolutismo}
-          </p>
-        )}
-        {item.durabilidade && (
-          <p>
-            <b>Durabilidade:</b> {item.durabilidade}
-          </p>
-        )}
-        {item.custo && (
-          <p>
-            <b>Custo:</b> {item.custo}
-          </p>
-        )}
-
-        {armaStatus && (
-          <div className="item-status-grid">
-            <span>
-              <b>DMG:</b> {armaStatus.dmg}
-            </span>
-            <span>
-              <b>ROF:</b> {armaStatus.rof}
-            </span>
-            <span>
-              <b>MAG:</b> {armaStatus.mag}
-            </span>
-            <span>
-              <b>Crítico:</b> {armaStatus.critico}
-            </span>
-            <span>
-              <b>Hipfire:</b> {armaStatus.hipfire}
-            </span>
-            <span>
-              <b>Precision:</b> {armaStatus.precision}
-            </span>
-            <span>
-              <b>Control:</b> {armaStatus.control}
-            </span>
-            <span>
-              <b>Mobility:</b> {armaStatus.mobility}
-            </span>
-          </div>
-        )}
-
-        {acaoExtra}
-      </div>
-    </details>
-  );
-};
-
 const descricoesAtivos = {
   razao:
     "INTELIGÊNCIA | Razão\n\nMede a capacidade analítica da personagem. Uma PJ com Razão elevada é boa em coleta de informações e investigação.",
@@ -555,12 +463,13 @@ const descricoesStatusArma = {
 const FichaPersonagem = () => {
   const [fichaId] = useState(() => obterFichaIdDaUrl());
   const [personagem, setPersonagem] = useState(estadoInicial);
+  const [habilidadeEditando,setHabilidadeEditando]=useState(null);
   const [abaAtiva, setAbaAtiva] = useState("combate");
   useEffect(() => {
     if (abaAtiva === "passivas") setAbaAtiva("combate");
   }, [abaAtiva]);
   const [tipoDanoRecebido, setTipoDanoRecebido] = useState("geral");
-  const [ultimoSave, setUltimoSave] = useState(null);
+  const [, setUltimoSave] = useState(null);
   const [carregado, setCarregado] = useState(false);
   const [seletorMesaAberto, setSeletorMesaAberto] = useState(false);
   const [menuFichaAberto, setMenuFichaAberto] = useState(false);
@@ -609,11 +518,11 @@ const FichaPersonagem = () => {
 
   const [subAbaInventario, setSubAbaInventario] = useState("mochila");
   const [abaCriacao, setAbaCriacao] = useState("armas");
-  const [receitaSelecionada, setReceitaSelecionada] = useState(null);
+  useState(null);
   const [armaUpgradeIndex, setArmaUpgradeIndex] = useState(null);
   const [mensagemCraft, setMensagemCraft] = useState("");
   const [popupCraft, setPopupCraft] = useState(null);
-  const [municaoSelecionadaIndex, setMunicaoSelecionadaIndex] = useState(null);
+  const [, setMunicaoSelecionadaIndex] = useState(null);
   const [rolandoDados, setRolandoDados] = useState(false);
   const [itemVisualizado, setItemVisualizado] = useState(null);
   const [visualizadorAberto, setVisualizadorAberto] = useState(false);
@@ -625,9 +534,9 @@ const FichaPersonagem = () => {
   const [esperancaSaindo, setEsperancaSaindo] = useState(false);
   const [ultimoEstadoSanidade, setUltimoEstadoSanidade] = useState("");
   const [ultimoEstadoEsperanca, setUltimoEstadoEsperanca] = useState("");
-  const [ritoAtivo, setRitoAtivo] = useState(false);
-  const [customizacaoAberta, setCustomizacaoAberta] = useState(false);
-  const [subAbaMaleta, setSubAbaMaleta] = useState("medicinal");
+  useState(false);
+  useState(false);
+  useState("medicinal");
   const [subAbaRituais, setSubAbaRituais] = useState("rituais");
   const [presetsRolagem, setPresetsRolagem] = useState([]);
   const [presetEditando, setPresetEditando] = useState(null);
@@ -647,14 +556,14 @@ const FichaPersonagem = () => {
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalRolagem, setModalRolagem] = useState(null);
-  const [ataqueModalAberto, setAtaqueModalAberto] = useState(false);
-  const [ataqueModoSelecionado, setAtaqueModoSelecionado] = useState("normal");
+  useState(false);
+  useState("normal");
   const [modoAtaque, setModoAtaque] = useState("normal");
   const [criticoAtivo, setCriticoAtivo] = useState(false);
-  const [ataqueCritico, setAtaqueCritico] = useState(false);
+  useState(false);
   const [criticoCorpoACorpo, setCriticoCorpoACorpo] = useState(false);
   const [gruposAtaqueCorpo, setGruposAtaqueCorpo] = useState(1);
-  const [ataqueItemRef, setAtaqueItemRef] = useState(null);
+  useState(null);
   // Dentro do componente FichaPersonagem, adicione estes estados:
 
   const [subAbaPersonalizacao, setSubAbaPersonalizacao] =
@@ -662,13 +571,12 @@ const FichaPersonagem = () => {
   const [formulaDadoPersonalizado, setFormulaDadoPersonalizado] = useState("");
   const [erroRolagemPersonalizada, setErroRolagemPersonalizada] = useState("");
   const [modificadorDadosRolagem, setModificadorDadosRolagem] = useState(0);
-  const [ativoPassivaSelecionado, setAtivoPassivaSelecionado] =
-    useState("razao");
+  useState("razao");
   const ignorarProximoSalvamentoRef = useRef(false);
   // Impede que uma resposta solicitada antes de uma alteração restaure recursos antigos.
   const revisaoRecursosRef = useRef(0);
-  const [editandoHabilidadeId, setEditandoHabilidadeId] = useState(null);
-  const [habilidadeEditavel, setHabilidadeEditavel] = useState({
+  useState(null);
+  useState({
     nome: "",
     descricao: "",
   });
@@ -794,24 +702,6 @@ const FichaPersonagem = () => {
       descricoesStatusArma[chave] || "Descrição não disponível.",
     );
     setModalAberto(true);
-  };
-
-  const abrirModalAtaque = (item) => {
-    setAtaqueItemRef(item);
-    setAtaqueModoSelecionado("normal");
-    setAtaqueCritico(false);
-    setAtaqueModalAberto(true);
-  };
-
-  const fecharModalAtaque = () => {
-    setAtaqueModalAberto(false);
-    setAtaqueItemRef(null);
-  };
-
-  const executarAtaque = () => {
-    if (!ataqueItemRef) return;
-    rolarAtaqueArma(ataqueItemRef, ataqueModoSelecionado, ataqueCritico);
-    fecharModalAtaque();
   };
 
   const classeAtual = personagem.classeId || personagem.classe || "";
@@ -1355,58 +1245,6 @@ const FichaPersonagem = () => {
     }));
   };
 
-  const atualizarHabilidadeCombate = (habilidade, valor) => {
-    setPersonagem((prev) => ({
-      ...prev,
-      habilidadesCombate: {
-        ...prev.habilidadesCombate,
-        [habilidade]: parseInt(valor) || 0,
-      },
-    }));
-  };
-
-  const atualizarHabilidadePassiva = (habilidade, valor) => {
-    setPersonagem((prev) => marcarPassivosAtualizados({
-        ...prev,
-        habilidadesPassivas: {
-          ...prev.habilidadesPassivas,
-          [habilidade]: Math.max(0, Math.min(100, parseInt(valor) || 0)),
-        },
-      }));
-  };
-
-  const iniciarEdicaoHabilidade = (habilidade) => {
-  setEditandoHabilidadeId(habilidade.id);
-  setHabilidadeEditavel({
-    nome: habilidade.nome,
-    descricao: habilidade.descricao || "",
-  });
-};
-
-const salvarEdicaoHabilidade = (habilidadeId) => {
-  if (!habilidadeEditavel.nome.trim()) return;
-  setPersonagem((prev) => {
-    const novasHabilidades = (prev.habilidadesCriadas || []).map((h) =>
-      h.id === habilidadeId
-        ? { ...h, nome: habilidadeEditavel.nome.trim(), descricao: habilidadeEditavel.descricao.trim() }
-        : h
-    );
-    return { ...prev, habilidadesCriadas: novasHabilidades };
-  });
-  setEditandoHabilidadeId(null);
-};
-
-const cancelarEdicaoHabilidade = () => {
-  setEditandoHabilidadeId(null);
-};
-
-  const atualizarDescricao = (novaDescricao) => {
-    setPersonagem((prev) => ({
-      ...prev,
-      descricao: novaDescricao,
-    }));
-  };
-
   // Calcular vida total baseada nos membros
   const vidaTotal = {
     atual: Object.values(personagem.membros).reduce(
@@ -1422,40 +1260,6 @@ const cancelarEdicaoHabilidade = () => {
 
   const abrirUpgradeNivel = () => {
     window.location.href = montarUrlFicha(personagem, fichaId, "?upgrade=1");
-  };
-
-  const adaptarParaEspiral = async () => {
-    // A ficha ESPIRAL usa o mesmo código da ficha Darkness. Assim, abrir
-    // ?ficha=121212 sempre abre a adaptação de 121212, e não um arquivo vazio.
-    const destino = normalizarFichaId(fichaId);
-    const chaveDestino = `espiral:sheet:v1:${destino}`;
-    const jaExiste = Boolean(lerLocalSeguro(chaveDestino));
-    const fontePulso = await selecionarDialogo(
-      "Escolha qual atributo antigo define o Pulso desta ficha ESPIRAL.",
-      { titulo: "Definir Pulso", valorInicial: "forca", opcoes: [
-        { valor: "forca", rotulo: `Força (${personagem.atributos?.forca || 0})` },
-        { valor: "fonitude", rotulo: `Fortitude (${personagem.atributos?.fonitude || 0})` },
-      ] },
-    );
-    if (!fontePulso) return;
-    const confirmado = await confirmarDialogo(
-      jaExiste
-        ? "Já existe uma adaptação ESPIRAL desta ficha neste dispositivo. Continuar substituirá somente essa cópia ESPIRAL; a ficha Darkness não será alterada."
-        : "Uma nova ficha ESPIRAL será calculada a partir desta ficha. A ficha Darkness permanecerá intacta. Você poderá revisar os valores narrativos na nova ficha.",
-      { titulo: "Adaptar ficha para ESPIRAL", confirmarTexto: "Criar adaptação" },
-    );
-    if (!confirmado) return;
-
-    try {
-      localStorage.setItem(chaveDestino, JSON.stringify(convertDarknessToEspiral({ ...personagem, fichaId }, { pulseSource: fontePulso })));
-      setMenuFichaAberto(false);
-      window.location.href = `/?sistema=darkness&ficha=${encodeURIComponent(destino)}`;
-    } catch (error) {
-      await alertarDialogo(
-        error?.message || "Não foi possível salvar a ficha ESPIRAL neste dispositivo.",
-        { titulo: "Falha na adaptação" },
-      );
-    }
   };
 
   const abrirTabletop = async () => {
@@ -1476,28 +1280,14 @@ const cancelarEdicaoHabilidade = () => {
   const entrarNoTabletop = (campanha) => {
     localStorage.setItem(ULTIMA_FICHA_KEY, fichaId);
     const nomeUrl = normalizarFichaId(personagem?.nome || fichaId);
-    window.location.href = `/?campanha=${encodeURIComponent(campanha.codigo)}&ficha=${encodeURIComponent(nomeUrl)}&senha=${encodeURIComponent(fichaId)}`;
+    const destino = new URLSearchParams({ campanha: campanha.codigo, ficha: nomeUrl, senha: fichaId });
+    if (campanha.tabletop_tipo === "3d") {
+      destino.set("tabletop3d", "1");
+      sessionStorage.setItem(TABLETOP_3D_AUTH_KEY, "true");
+    }
+    window.location.href = `/?${destino.toString()}`;
   };
 
-  const abrirArvoreHabilidades = () => {
-    window.location.href = montarUrlFicha(
-      personagem,
-      fichaId,
-      "?habilidades=1",
-    );
-  };
-
-  const abrirDashboardMestre = () => {
-    window.location.href = "?mestre=1";
-  };
-
-  const venderItem = (index) => {
-    setPersonagem((prev) => ({
-      ...prev,
-      inventario: prev.inventario.filter((_, i) => i !== index),
-      lojaCreditos: prev.lojaCreditos + 50,
-    }));
-  };
   const normalizarIngrediente = (nome) => {
     return String(nome)
       .toLowerCase()
@@ -2863,7 +2653,7 @@ const cancelarEdicaoHabilidade = () => {
     setTimeout(() => setMensagemCraft(""), 3000);
   };
 
-  const gruposCriacaoFiltrados = receitasCriacaoAtuais.filter((grupo) => {
+  receitasCriacaoAtuais.filter((grupo) => {
     if (abaCriacao === "armas") {
       return grupo.categoria === "Armas AprimorÃ¡veis";
     }
@@ -2879,11 +2669,9 @@ const cancelarEdicaoHabilidade = () => {
     return false;
   });
 
-  const receitasDaBancada = (
+  (
     abaCriacao === "melhorias" ? [] : receitasCriacaoAtuais
   ).flatMap((grupo) => grupo.itens);
-
-  const receitaAtiva = receitaSelecionada || receitasDaBancada[0] || null;
 
   const armasAprimoraveis = (personagem.inventario || [])
     .map((item, index) => ({ item, index }))
@@ -2970,27 +2758,6 @@ const cancelarEdicaoHabilidade = () => {
     );
   };
 
-  const reduzirCritico = (criticoTexto) => {
-    const texto = String(criticoTexto || "").trim();
-
-    // Se for apenas um número (ex: "20")
-    if (/^\d+$/.test(texto)) {
-      const num = Math.max(1, parseInt(texto, 10) - 1);
-      return String(num);
-    }
-
-    // Se for "NxM" (ex: "3x6")
-    const match = texto.match(/(\d+)x(\d+)/i);
-    if (match) {
-      let quantidade = Math.max(1, parseInt(match[1], 10) - 1);
-      const faces = match[2];
-      return `${quantidade}x${faces}`;
-    }
-
-    // Se não reconhecer, retorna o texto original
-    return texto;
-  };
-
   const incrementarPrecisao = (precisionTexto) => {
     const texto = String(precisionTexto || "").trim();
     const bonusMatch = texto.match(/([+-]\d+)/);
@@ -3009,34 +2776,6 @@ const cancelarEdicaoHabilidade = () => {
     }
 
     return `Percepção | +1`;
-  };
-
-  const aumentarAlcance = (precisionTexto) => {
-    const texto = String(precisionTexto || "").trim();
-    const niveis = ["curta", "média", "distante", "longa"];
-    const match = texto.match(/distância\s*(curta|média|distante|longa)/i);
-
-    if (match) {
-      const atual = match[1].toLowerCase();
-      const indice = niveis.indexOf(atual);
-      if (indice >= 0 && indice < niveis.length - 1) {
-        return texto.replace(
-          new RegExp(`distância\\s*${atual}`, "i"),
-          `distância ${niveis[indice + 1]}`,
-        );
-      }
-      if (texto.includes("|")) {
-        return `${texto} +1`;
-      }
-      return `${texto} | +1`;
-    }
-
-    if (texto.includes("|")) {
-      const [prefixo, sufixo] = texto.split("|").map((parte) => parte.trim());
-      return `${prefixo} | +1 ${sufixo}`;
-    }
-
-    return `${texto || "Percepção"} | +1`;
   };
 
   const incrementarControle = (controlTexto) => {
@@ -3068,7 +2807,7 @@ const cancelarEdicaoHabilidade = () => {
       prefixo = texto.split("|")[0].trim() || "Firmeza";
     } else if (texto) {
       // remove a parte numérica pra ficar só o rótulo textual
-      prefixo = texto.replace(/\d+[\s\w\-]*/g, "").trim() || "Firmeza";
+      prefixo = texto.replace(/\d+[\s\w-]*/g, "").trim() || "Firmeza";
     }
 
     return `${prefixo} | ${proximoNumero} alvos`;
@@ -3152,6 +2891,8 @@ const cancelarEdicaoHabilidade = () => {
             armaStatus.precision = String(armaStatus.precision || "");
             break;
           }
+
+          default: break;
         }
       }
 
@@ -3540,19 +3281,6 @@ const cancelarEdicaoHabilidade = () => {
     },
   };
 
-  const obterValorAtivoSelecionado = () => {
-    const ativo = ativosParaPassiva[ativoPassivaSelecionado];
-
-    if (!ativo) return 0;
-
-    const valorAtributo = personagem.atributos?.[ativo.atributo] || 0;
-    const bonusAtributo = calcularModificadorAtivo(valorAtributo);
-    const bonusAtivo =
-      personagem.habilidadesCombate?.[ativoPassivaSelecionado] || 0;
-
-    return bonusAtributo + bonusAtivo;
-  };
-
   const rolarPassiva = (nome, chave) => {
     const valorPassiva = obterBonusPassiva(chave);
 
@@ -3669,7 +3397,7 @@ const cancelarEdicaoHabilidade = () => {
 
   // “Poderes Absolutos” devem ser exibidos dentro da aba RITUAIS.
   // Mapeia as habilidades absolutas para uma estrutura semelhante à dos ritos.
-  const poderesAbsolutos = habilidadesAbsolutas.map((habilidade, index) => ({
+  habilidadesAbsolutas.map((habilidade, index) => ({
     id: habilidade.id || `${habilidade.nome}-${index}`,
     nome: habilidade.nome,
     custo: habilidade.custo,
@@ -3700,6 +3428,15 @@ const cancelarEdicaoHabilidade = () => {
   ];
   const habilidadesCriadasJogador = listarHabilidadesCriadasJogador(personagem);
 
+  async function enviarEdicaoHabilidade(draft){
+    const base=await buscarPersonagem(fichaId);
+    if(!base)throw new Error('Não foi possível consultar a ficha no servidor. Seu rascunho foi mantido.');
+    const next=solicitarEdicaoHabilidade(base,habilidadeEditando.id,draft,crypto.randomUUID());
+    const salvo=await salvarPersonagem(fichaId,next)||next;
+    salvarLocalSeguro(storageKey,JSON.stringify(salvo));
+    setPersonagem(salvo);
+    notificarPersonagemAtualizado(fichaId,salvo);
+  }
   const calcularValorAtivo = (atributo, ativo) => {
     const modAtributo = calcularModificadorAtivo(
       personagem.atributos?.[atributo] || 0,
@@ -3847,57 +3584,6 @@ const cancelarEdicaoHabilidade = () => {
     defesaBase +
     calcularValorAtivo("reflexos", "firmeza") +
     valorPassiva("velocidade");
-
-  const CardHabilidadeRecolhivel = ({
-    habilidade,
-    tipo = "APTIDÃO",
-    classeExtra = "",
-    selo,
-    acao,
-  }) => {
-    const [aberto, setAberto] = useState(false);
-
-    const descricao =
-      habilidade.descricao ||
-      habilidade.habilidadePrincipal ||
-      habilidade.detalhes ||
-      "Descrição não disponível.";
-
-    return (
-      <article
-        className={`habilidade-expandivel ${classeExtra} ${aberto ? "aberto" : ""}`}
-      >
-        <div className="habilidade-expandivel-cabecalho">
-          <button
-            type="button"
-            className="habilidade-expandivel-topo"
-            onClick={() => setAberto((prev) => !prev)}
-            aria-expanded={aberto}
-          >
-            <div>
-              <span>{tipo}</span>
-              <h3>{habilidade.nome}</h3>
-            </div>
-
-            {(selo || habilidade.custo) && <strong>{selo || habilidade.custo}</strong>}
-          </button>
-          {acao && (
-            <button
-              type="button"
-              className="habilidade-expandivel-acao"
-              onClick={acao.onClick}
-            >
-              {acao.rotulo}
-            </button>
-          )}
-        </div>
-
-        <div className="habilidade-expandivel-corpo">
-          <p>{descricao}</p>
-        </div>
-      </article>
-    );
-  };
 
   const rolarFormulaPersonalizada = () => {
     const formula = formulaDadoPersonalizado.replace(/\s/g, "");
@@ -4514,6 +4200,7 @@ const cancelarEdicaoHabilidade = () => {
                           tipo={`${tipoCriada} · ${status}`}
                           selo={`${habilidade.custo || 0} ${recurso}`.trim()}
                           classeExtra={`criada ${status}`}
+                          onEditar={()=>setHabilidadeEditando(habilidade)}
                           acao={{
                             rotulo: "Vender",
                             onClick: () => venderHabilidadeCriada(habilidade),
@@ -5075,7 +4762,7 @@ const cancelarEdicaoHabilidade = () => {
                           >
                             ✕
                           </button>
-                          
+
                         </div>
                       ) : (
                         <div className="visualizer-nome-acoes">
@@ -5095,14 +4782,14 @@ const cancelarEdicaoHabilidade = () => {
                         </div>
                       )}
                     </div>
-                   
+
                     <button
                       className="item-visualizer-fechar"
                       onClick={fecharVisualizador}
                     >
                       ×
                     </button>
-                    
+
                   </div>
 
                   {/* INFORMAÇÕES GERAIS */}
@@ -6048,7 +5735,7 @@ const cancelarEdicaoHabilidade = () => {
                                 const valorAtual =
                                   parseInt(melhoriaAtual[tipo.chave], 10) || 0;
                                 const noMaximo = valorAtual >= tipo.max;
-                                const podePagar = verificarMateriaisUpgrade(
+                                verificarMateriaisUpgrade(
                                   tipo.chave,
                                 );
                                 const selecionado =
@@ -6884,7 +6571,7 @@ const cancelarEdicaoHabilidade = () => {
     }
 
     setUltimoEstadoSanidade(estadoSanidadePerfil);
-  }, [estadoSanidadePerfil]);
+  }, [estadoSanidadePerfil, ultimoEstadoSanidade]);
 
   useEffect(() => {
     if (!ultimoEstadoEsperanca) {
@@ -6905,7 +6592,7 @@ const cancelarEdicaoHabilidade = () => {
     }
 
     setUltimoEstadoEsperanca(estadoEsperancaPerfil);
-  }, [estadoEsperancaPerfil]);
+  }, [estadoEsperancaPerfil, ultimoEstadoEsperanca]);
 
   const atualizarFotoPerfil = async (event) => {
     const arquivo = event.target.files?.[0];
@@ -6934,8 +6621,8 @@ const cancelarEdicaoHabilidade = () => {
   };
 
   return (
-    <div
-      className={new URLSearchParams(window.location.search).get("embed") === "mesa" ? "ficha-container ficha-embutida-mesa" : "ficha-container"}
+    <AbilityReadingLayout>{habilidadeEditando && <AbilityEditDialog key={habilidadeEditando.id} habilidade={habilidadeEditando} fichaId={fichaId} onSubmit={enviarEdicaoHabilidade} onClose={()=>setHabilidadeEditando(null)}/>}<div
+      className={new URLSearchParams(window.location.search).get("embed") === "mesa" ? "ficha-container absoluto-dossier ficha-embutida-mesa" : "ficha-container absoluto-dossier"}
       style={{
         "--cor-primaria": personagem.temaFicha?.primaria,
         "--cor-secundaria": personagem.temaFicha?.secundaria,
@@ -6944,9 +6631,44 @@ const cancelarEdicaoHabilidade = () => {
         "--cor-borda": personagem.temaFicha?.borda,
       }}
     >
+      <header className="abs-masthead">
+        <PlayerPageLink className="abs-return" id={fichaId} sistema="darkness">← Página do Jogador</PlayerPageLink>
+        <div className="abs-heading"><div
+                    className={`profile-wrapper profile-editavel ${primeiraCondicaoAtiva} ${estadoSanidadePerfil} ${estadoEsperancaPerfil} ${
+                      temRitoAtivo ? "rito-ativo-perfil" : ""
+                    } ${ritoDesativando ? "rito-desativando" : ""} ${
+                      sanidadeSaindo ? "sanidade-saindo" : ""
+                    } ${esperancaSaindo ? "esperanca-saindo" : ""}`}
+                    title="Clique para trocar a foto de perfil"
+                  >
+                    <label
+                      className="profile-upload-label"
+                      htmlFor="foto-perfil-input"
+                    >
+                      <AnimatedTokenImage
+                        animation={personagem.profileTokenAnimation} src={personagem.fotoPerfil || profile}
+                        alt="Perfil"
+                        className="profile"
+                      />
+                      <span className="profile-upload-hint">Trocar foto</span>
+                    </label>
+
+                    <input
+                      id="foto-perfil-input"
+                      type="file"
+                      accept="image/*"
+                      className="profile-upload-input"
+                      onChange={atualizarFotoPerfil}
+                    />
+
+                    <div className="profile-overlay"></div>
+                  </div><div className="abs-heading-identity"><span className="abs-eyebrow"><img className="abs-system-sigil" src="/simbolo-absoluto.png" alt="Símbolo do Sistema Absoluto"/>SISTEMA ABSOLUTO / ARQUIVO DE PERSONAGEM</span><span className="abs-character-pronoun">{personagem.pronome || 'Pronome não informado'}</span><h1 aria-label={personagem.nome || 'Identidade desconhecida'}><input className="abs-character-name" aria-label="Nome do personagem" value={personagem.nome || ''} placeholder="Nome do personagem" maxLength={30} onChange={e=>setPersonagem(prev=>({...prev,nome:e.target.value}))}/></h1><p>{personagem.classe || 'Classe não informada'}{arquetipoNome ? ` / ${arquetipoNome}` : ''}</p></div><div className="abs-level"><span>NÍVEL</span><strong>{personagem.nivel || 1}</strong></div></div>
+        <div className="abs-masthead-bottom"><div><button type="button" onClick={abrirUpgradeNivel}>Evolução ↗</button><button type="button" onClick={abrirLoja}>Arsenal ↗</button><button type="button" onClick={()=>{window.location.href=montarUrlFicha(personagem,fichaId,"?upgrade=1&trilha=criacao");}}>Criar habilidade ↗</button></div></div>
+      </header>
       <nav className="menu-ficha-flutuante" aria-label="Atalhos da ficha">
         {menuFichaAberto && (
           <div className="menu-ficha-opcoes">
+            <PlayerPageLink className="abs-player-profile-link" id={fichaId} sistema="darkness"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></svg><span>Perfil do Jogador</span><span className="abs-profile-arrow" aria-hidden="true">↗</span></PlayerPageLink>
             <div className="menu-ficha-identidade">
               {personagem.fotoPerfil && <img src={personagem.fotoPerfil} alt="" />}
               <div>
@@ -7071,84 +6793,7 @@ const cancelarEdicaoHabilidade = () => {
             <div className="sanidade-section">
               <div className="sanidade-container">
                 <div className="sanidade-inputs">
-                  <div className="identidade-personagem">
-                    <input
-                      type="text"
-                      placeholder="PRONOME"
-                      value={personagem.pronome || ""}
-                      readOnly
-                      title="Informação bloqueada para jogadores"
-                      className="dado-personagem perfil-info-bloqueada"
-                      maxLength={10}
-                    />
-                    <input
-                      type="text"
-                      placeholder="NOME DO PERSONAGEM"
-                      value={personagem.nome}
-                      onChange={(e) =>
-                        setPersonagem((prev) => ({
-                          ...prev,
-                          nome: e.target.value,
-                        }))
-                      }
-                      maxLength={30}
-                      className="nome-personagem"
-                    />
-                    <div className="dados-personagem">
-                      <input
-                        type="text"
-                        placeholder="CLASSE"
-                        value={personagem.classe || ""}
-                        readOnly
-                        title="Informação bloqueada para jogadores"
-                        className="dado-personagem perfil-info-bloqueada"
-                        maxLength={30}
-                      />
-                      <input
-                        type="text"
-                        placeholder="ARQUÉTIPO"
-                        value={arquetipoNome}
-                        readOnly
-                        title="Informação bloqueada para jogadores"
-                        className="dado-personagem perfil-info-bloqueada"
-                        maxLength={40}
-                      />
-                    </div>
-                  </div>
-
-                  <div
-                    className={`profile-wrapper profile-editavel ${primeiraCondicaoAtiva} ${estadoSanidadePerfil} ${estadoEsperancaPerfil} ${
-                      temRitoAtivo ? "rito-ativo-perfil" : ""
-                    } ${ritoDesativando ? "rito-desativando" : ""} ${
-                      sanidadeSaindo ? "sanidade-saindo" : ""
-                    } ${esperancaSaindo ? "esperanca-saindo" : ""}`}
-                    title="Clique para trocar a foto de perfil"
-                  >
-                    <label
-                      className="profile-upload-label"
-                      htmlFor="foto-perfil-input"
-                    >
-                      <img
-                        src={personagem.fotoPerfil || profile}
-                        alt="Perfil"
-                        className="profile"
-                      />
-                      <span className="profile-upload-hint">Trocar foto</span>
-                    </label>
-
-                    <input
-                      id="foto-perfil-input"
-                      type="file"
-                      accept="image/*"
-                      className="profile-upload-input"
-                      onChange={atualizarFotoPerfil}
-                    />
-
-                    <div className="profile-overlay"></div>
-                  </div>
-
-                  {/* Sanidade + Esperança empilhadas */}
-                  <div className="sanidade-completa">
+<div className="sanidade-completa">
                     <div className="nivel-acima-sanidade">
                       <span className="nivel-label">NÍVEL</span>
                       <span className="nivel-valor">
@@ -7267,8 +6912,8 @@ const cancelarEdicaoHabilidade = () => {
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                  </div></div>{/* Recursos movidos para o cabeçalho */}
+                  
             </div>
 
             {/* Coluna do Centro: Atributos em Linha */}
@@ -7311,7 +6956,7 @@ const cancelarEdicaoHabilidade = () => {
 
         {/* Coluna da Direita: Sidebar com Abas */}
         <div className="sidebar-container">
-          <div className="sidebar-abas">
+          <div className="sidebar-abas" role="group" aria-label="Seções da ficha Absoluto">
             <button
               className={`aba-btn ${abaAtiva === "combate" ? "ativa" : ""}`}
               onClick={() => setAbaAtiva("combate")}
@@ -7505,10 +7150,6 @@ const cancelarEdicaoHabilidade = () => {
                 {modalRolagem.alvos?.length > 0 ? (
                   <div className="cards-alvos-dano">
                     {modalRolagem.alvos.map((alvo, index) => {
-                      const dadosAlvo = [
-                        ...alvo.resultado.rolagens,
-                        ...(alvo.resultado.rolagensBonus || []),
-                      ];
 
                       return (
                         <div className="card-alvo-dano" key={index}>
@@ -7680,7 +7321,7 @@ const cancelarEdicaoHabilidade = () => {
                     <strong>+{defesaVisualizada.defesaBonus}</strong>
                   </div>
                 )}
-               
+
                 {defesaVisualizada.resistencia && (
                   <div>
                     <span>Resistência</span>
@@ -7705,7 +7346,7 @@ const cancelarEdicaoHabilidade = () => {
           </div>
         )}
       </div>
-    </div>
+    </div></AbilityReadingLayout>
   );
 };
 
@@ -7760,28 +7401,6 @@ const Atributo = ({ nome, valor, especial = false, onRoll }) => {
 };
 
 // Componente de Barra de Recurso
-const BarraRecurso = ({ nome, atual, max, onChange, cor }) => {
-  return (
-    <div className="barra-recurso">
-      <span className="recurso-nome">{nome}</span>
-      <div className="recurso-controles">
-        <input
-          type="number"
-          value={atual}
-          onChange={(e) => onChange?.(parseInt(e.target.value), max)}
-          className="recurso-atual"
-        />
-        <span>/</span>
-        <input
-          type="number"
-          value={max}
-          onChange={(e) => onChange?.(atual, parseInt(e.target.value))}
-          className="recurso-max"
-        />
-      </div>
-    </div>
-  );
-};
 
 // COMPONENTE MembroControle
 const MembroControle = ({
@@ -7808,6 +7427,7 @@ const MembroControle = ({
 
   return (
     <div className={`membro-controle ${estadoVida}`}>
+      <div className="abs-equipped-list">
       {defesas.length > 0 ? (
         defesas.map((defesa, index) => (
           <button
@@ -7824,6 +7444,7 @@ const MembroControle = ({
       ) : (
         <span className="membro-defesa-vazia">Não protegido</span>
       )}
+      </div>
       <span className="membro-nome">{nome}</span>
 
       <div className="membro-barra-container">
@@ -7934,3 +7555,9 @@ const MembroControle = ({
 };
 
 export default FichaPersonagem;
+
+
+
+
+
+

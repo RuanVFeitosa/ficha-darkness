@@ -1,0 +1,96 @@
+/* Dashboard Absoluto: linguagem da ficha, com escopo isolado das regras legadas. */
+.mestre-page.absoluto-dashboard{--ad-bg:#080808;--ad-panel:#111;--ad-line:#393939;--ad-ink:#eee;--ad-muted:#aaa;--ad-gold:#bfa66b;--gold:#bfa66b;--es-paper:#eee;--es-muted:#aaa;--es-line:#393939;background:var(--ad-bg)!important;color:var(--ad-ink)!important;padding:28px clamp(18px,4vw,72px) 48px!important;min-height:100dvh!important;font-family:'Courier New',monospace!important;text-align:left}
+.absoluto-dashboard::before,.absoluto-dashboard::after{display:none!important}
+.absoluto-dashboard *{box-sizing:border-box}
+.absoluto-dashboard :is(section,article,header,nav,aside,form,div){min-width:0}
+.absoluto-dashboard :is(h1,h2,h3,h4,p,strong,span){overflow-wrap:anywhere}
+.mestre-page.absoluto-dashboard .mestre-header{display:flex!important;align-items:center;justify-content:space-between;gap:24px;width:100%!important;max-width:1600px!important;margin:0 auto 24px!important;padding:8px 0 26px!important;border:0;border-bottom:1px solid var(--ad-line)!important;background:transparent!important;box-shadow:none}
+.absoluto-dashboard .mestre-identidade-espiral{display:flex;align-items:center;justify-content:flex-start;gap:22px;flex:1;margin-left:30px}
+.absoluto-dashboard .abs-dashboard-symbol{width:68px;height:88px;object-fit:contain;opacity:.75}
+.absoluto-dashboard .mestre-identidade-espiral>div>span{font:10px 'Courier New',monospace!important;letter-spacing:.12em!important;color:var(--ad-gold)!important}
+.mestre-page.absoluto-dashboard .mestre-header h1{font:clamp(36px,4vw,58px)/1.1 Georgia,serif!important;text-transform:none!important;letter-spacing:-.035em!important;color:#eee!important;margin:10px 0 14px!important}
+.absoluto-dashboard .mestre-voltar,.absoluto-dashboard .mestre-hamburguer{position:static!important;color:#bbb!important;background:transparent!important;border:0!important;box-shadow:none;font:11px 'Courier New',monospace!important}
+.absoluto-dashboard .mestre-hamburguer{margin-left:auto}
+.absoluto-dashboard .mestre-sistema-switch{display:flex;border:0!important;background:transparent!important;padding:0!important;gap:6px}
+.absoluto-dashboard .mestre-sistema-switch button{border:1px solid #555!important;padding:8px 14px!important;background:transparent!important;color:#aaa!important;border-radius:2px!important;font:10px 'Courier New',monospace!important}
+.absoluto-dashboard .mestre-sistema-switch button.ativo{background:var(--ad-gold)!important;color:#080808!important;border-color:var(--ad-gold)!important}
+.mestre-page.absoluto-dashboard>.mestre-tabs{display:flex!important;flex-wrap:wrap!important;gap:0 22px!important;width:100%!important;max-width:1600px!important;margin:0 auto 26px!important;padding:0!important;border:0!important;border-bottom:1px solid var(--ad-line)!important;background:transparent!important;counter-reset:ad-nav}
+.mestre-page.absoluto-dashboard .mestre-tabs>button{counter-increment:ad-nav;display:flex!important;align-items:center;gap:8px;padding:15px 0!important;min-height:48px;border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;background:transparent!important;color:#aaa!important;font:11px 'Courier New',monospace!important;box-shadow:none!important}
+.absoluto-dashboard .mestre-tabs>button::before{content:counter(ad-nav,decimal-leading-zero);font:9px 'Courier New',monospace;color:#777}
+.mestre-page.absoluto-dashboard .mestre-tabs>button.ativa{border-bottom-color:var(--ad-gold)!important;color:#eee!important}
+.mestre-page.absoluto-dashboard .mestre-layout-com-rolagens{display:grid!important;grid-template-columns:minmax(0,1fr) 300px!important;gap:24px!important;width:100%!important;max-width:1600px!important;margin:0 auto!important}
+.absoluto-dashboard .mestre-dashboard-full,.absoluto-dashboard .mestre-loja,.absoluto-dashboard .mestre-analises,.absoluto-dashboard .marcas-wrapper{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+.absoluto-dashboard .mestre-subtabs-fichas{display:flex!important;justify-content:space-between;align-items:center;gap:16px;width:100%!important;background:transparent!important;border:0!important;border-bottom:1px solid #393939!important;padding:0 0 16px!important;margin:0 0 20px!important;color:var(--ad-gold)!important;font:11px 'Courier New',monospace!important}
+.absoluto-dashboard .mestre-subtabs-fichas small{font-size:10px!important;color:#aaa!important;background:transparent!important}
+.absoluto-dashboard .mestre-dashboard-cards{display:grid!important;grid-template-columns:1fr!important;gap:18px!important}
+/* Cards novos não compartilham seletores com os cards antigos ou da Espiral. */
+.absoluto-dashboard .ad-agent{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px 24px;padding:22px;background:#101010;border:1px solid #393939;border-radius:4px;cursor:pointer;outline-offset:4px;transition:border-color .2s,transform .2s;min-width:0}
+.absoluto-dashboard .ad-agent:hover{border-color:var(--ad-gold);transform:translateY(-2px)}
+.absoluto-dashboard .ad-agent-identity{grid-column:1;grid-row:1;display:flex;align-items:flex-start;gap:14px;position:relative;background:none;border:0;padding:0;margin:0}
+.absoluto-dashboard .ad-agent-identity>img,.absoluto-dashboard .ad-agent-placeholder{width:78px;height:104px;object-fit:cover;flex:none;border:1px solid #444;border-radius:2px}
+.absoluto-dashboard .ad-agent-placeholder{display:grid;place-items:center;color:var(--ad-gold);font:32px Georgia,serif}
+.absoluto-dashboard .ad-eyebrow{font:9px/1.5 'Courier New',monospace;color:var(--ad-gold);letter-spacing:.05em}
+.absoluto-dashboard .ad-agent-identity h3{font:29px/1.1 Georgia,serif!important;text-transform:none;letter-spacing:0;color:#eee;margin:9px 0}
+.absoluto-dashboard .ad-agent-identity p{font:11px/1.5 'Courier New',monospace;color:#bbb;margin:0 0 8px}
+.absoluto-dashboard .ad-agent-identity small{font:10px/1.6 'Courier New',monospace;color:#999}
+.absoluto-dashboard .ad-agent-open{position:absolute;top:-8px;right:-6px;color:var(--ad-gold);font-size:16px}
+.absoluto-dashboard .ad-agent-attributes{grid-column:1;grid-row:2;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:12px}
+.absoluto-dashboard .ad-agent-attributes>div{border-top:1px solid #333;padding-top:9px}
+.absoluto-dashboard .ad-agent-attributes dt{font:9px/1.4 'Courier New',monospace;color:#aaa;text-transform:uppercase}
+.absoluto-dashboard .ad-agent-attributes dd{font:25px Georgia,serif;color:#eee;margin:5px 0 0}
+.absoluto-dashboard .ad-agent-vitals{grid-column:2;grid-row:1/3;border-left:1px solid #333;padding-left:24px}
+.absoluto-dashboard .ad-agent-vitals h4{font:10px 'Courier New',monospace;letter-spacing:.1em;color:#aaa;text-transform:uppercase;margin:0 0 16px}
+.absoluto-dashboard .ad-agent-limbs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}
+.absoluto-dashboard .ad-meter>div:first-child{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:7px;font:11px/1.5 'Courier New',monospace}
+.absoluto-dashboard .ad-meter b{font-weight:normal;color:#eee;white-space:nowrap}.absoluto-dashboard .ad-meter small{font:inherit;color:#888}.absoluto-dashboard .ad-meter>div>span{color:#bbb}
+.absoluto-dashboard .ad-meter-track{height:6px;background:#292929;overflow:hidden}
+.absoluto-dashboard .ad-meter-track>i{height:100%;display:block}
+.absoluto-dashboard .ad-integridade .ad-meter-track>i{background:#ed3037}
+.absoluto-dashboard .ad-sanidade .ad-meter-track>i{background:#65a8ff}
+.absoluto-dashboard .ad-esperanca .ad-meter-track>i{background:#efb637}
+.absoluto-dashboard .ad-agent-mental{display:grid;gap:18px;margin-top:22px;padding-top:18px;border-top:1px solid #333}.absoluto-dashboard .ad-agent-mental .ad-meter-track{height:10px}
+.absoluto-dashboard .ad-agent>footer{grid-column:1/-1;display:flex;justify-content:space-between;padding-top:14px;border-top:1px solid #333;color:var(--ad-gold);font:10px 'Courier New',monospace;letter-spacing:.04em}
+/* Painéis de todas as áreas: campanhas, catálogo, protocolos, triagem e marcas. */
+.absoluto-dashboard :is(.campanha-dashboard-topo,.mestre-loja-editor-topo,.mestre-analises-topo,.mestre-modal-linha-topo,.marcas-lista-header){padding:0 0 20px!important;margin:0 0 22px!important;border-bottom:1px solid #393939!important;background:transparent!important;gap:18px}
+.absoluto-dashboard :is(.campanha-dashboard-topo,.mestre-loja-editor-topo,.mestre-analises-topo,.mestre-modal-linha-topo,.marcas-lista-header) h2{font:30px/1.2 Georgia,serif!important;letter-spacing:0!important;color:#eee!important;text-transform:none!important}
+.absoluto-dashboard :is(.mestre-ficha-tabs,.mestre-habilidades-subabas,.mestre-pastas-catalogo){display:flex!important;flex-wrap:wrap;gap:8px!important;padding:0!important;margin:0 0 20px!important;background:transparent!important;border:0!important}
+.absoluto-dashboard :is(.mestre-ficha-tabs,.mestre-pastas-catalogo)>button{min-height:38px;padding:9px 13px!important;background:#111!important;color:#bbb!important;border:1px solid #444!important;border-radius:2px!important;font:11px 'Courier New',monospace!important}
+.absoluto-dashboard :is(.mestre-ficha-tabs,.mestre-pastas-catalogo)>button.ativa{background:var(--ad-gold)!important;color:#080808!important;border-color:var(--ad-gold)!important}
+.absoluto-dashboard :is(.mestre-loja-form,.mestre-edit-form,.marcas-form,.mestre-analise-card,.mestre-habilidade-card,.loja-item-card,.campanha-cartao-abrir,.marcas-card,.mestre-arma-status-editor){background:#111!important;color:#eee!important;border:1px solid #393939!important;border-radius:4px!important;box-shadow:none!important;padding:20px!important}
+.absoluto-dashboard :is(.mestre-loja-form,.marcas-form) h2{font:26px Georgia,serif!important;color:#eee!important;letter-spacing:0!important;text-transform:none!important}
+.absoluto-dashboard :is(input:not([type=range]):not([type=color]):not([type=checkbox]):not([type=radio]),select,textarea){min-width:0;max-width:100%;background:#080808!important;color:#eee!important;border:1px solid #444!important;border-radius:2px!important;font:12px/1.5 'Courier New',monospace!important;box-shadow:none!important}
+.absoluto-dashboard :is(.mestre-loja-form,.marcas-form,.mestre-edit-form) label{font:10px/1.5 'Courier New',monospace!important;color:#aaa!important;letter-spacing:.05em}
+.absoluto-dashboard :is(.mestre-btn-novo-item-loja,.criarInimigo-button,.mestre-btn-salvar,.marcas-form-acoes button[type=submit]){min-height:40px;padding:10px 16px!important;border:1px solid var(--ad-gold)!important;border-radius:2px!important;background:var(--ad-gold)!important;color:#080808!important;font:11px 'Courier New',monospace!important;box-shadow:none!important}
+.absoluto-dashboard .mestre-catalogo{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr))!important;gap:16px!important}.absoluto-dashboard .mestre-catalogo-area{min-width:0}
+.absoluto-dashboard .marcas-layout{grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr);gap:24px}
+.absoluto-dashboard .mestre-analises-lista{display:grid;gap:16px}.absoluto-dashboard .mestre-analise-card{font-size:12px}
+.absoluto-dashboard .mestre-analise-meta{font:10px/1.5 'Courier New',monospace;color:#aaa}.absoluto-dashboard .mestre-analise-card h3{font:24px Georgia,serif;color:#eee}
+.absoluto-dashboard .mestre-rolagens-lateral{position:sticky;top:22px}
+.absoluto-dashboard .painel-rolagens-mestre{background:#101010!important;border:1px solid #393939!important;border-radius:4px!important;padding:18px!important;box-shadow:none!important}
+.absoluto-dashboard .painel-rolagens-topo{display:flex!important;flex-wrap:wrap;align-items:center!important;gap:12px!important;border-bottom:1px solid #333!important;padding-bottom:16px!important}
+.absoluto-dashboard .painel-rolagens-topo h3{font:26px/1.1 Georgia,serif!important;text-transform:none!important;color:#eee!important;letter-spacing:0!important}
+.absoluto-dashboard .painel-rolagens-acoes button{background:transparent!important;border:1px solid #555!important;color:#bbb!important;border-radius:2px!important;min-height:32px;font-size:10px!important}
+.absoluto-dashboard .rolagem-mestre-card{background:#080808!important;border:1px solid #333!important;border-left:2px solid var(--ad-gold)!important;border-radius:2px!important;padding:16px!important;box-shadow:none!important}
+.absoluto-dashboard .rolagem-mestre-card h4{font:20px/1.2 Georgia,serif!important;color:#eee!important}.absoluto-dashboard .rolagem-mestre-formula{color:var(--ad-gold)!important;font-size:12px!important}
+.absoluto-dashboard .mestre-modal-ficha,.absoluto-dashboard .mestre-popup,.absoluto-dashboard .mestre-hamburguer-menu{background:#101010!important;color:#eee!important;border:1px solid #444!important;border-radius:4px!important;box-shadow:0 16px 70px #0008!important}
+.absoluto-dashboard .mestre-modal-identidade h2{font:32px Georgia,serif!important;color:#eee!important;letter-spacing:0!important}
+.absoluto-dashboard .mestre-modal-bloco{background:#111!important;border-color:#393939!important;border-radius:3px!important}
+/* Estúdio de tokens também segue a paleta escura, preservando a arte do personagem. */
+.absoluto-dashboard .tas{--tas-ink:#eee;--tas-muted:#aaa;--tas-line:#393939;--tas-accent:#bfa66b;--tas-bg:#080808;background:transparent!important;color:#eee!important}
+.absoluto-dashboard .tas :is(.tas-card,.tas-library-card,.tas-status){background:#111!important;color:#eee!important;border-color:#393939!important;border-radius:4px!important;box-shadow:none!important}
+.absoluto-dashboard .tas-heading h2,.absoluto-dashboard .tas-card-heading h3{color:#eee!important;font-family:Georgia,serif!important}
+.absoluto-dashboard .tas :is(.tas-primary,.tas-presets button.ativo){background:var(--ad-gold)!important;color:#080808!important;border-color:var(--ad-gold)!important}
+.absoluto-dashboard .tas :is(p,small,label){color:#aaa!important}.absoluto-dashboard .tas output{background:#222!important;color:var(--ad-gold)!important}
+.absoluto-dashboard :is(button,a,input,select,textarea,.ad-agent):focus-visible{outline:2px solid var(--ad-gold);outline-offset:4px}
+@media(max-width:1250px){.mestre-page.absoluto-dashboard .mestre-layout-com-rolagens{grid-template-columns:minmax(0,1fr)!important}.absoluto-dashboard .mestre-rolagens-lateral{position:static}.absoluto-dashboard .mestre-rolagens-lateral .painel-rolagens-mestre,.absoluto-dashboard .mestre-rolagens-lateral .lista-rolagens-mestre{max-height:none!important}.absoluto-dashboard .lista-rolagens-mestre{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))!important;gap:14px!important}.absoluto-dashboard .marcas-layout{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:700px){.mestre-page.absoluto-dashboard{padding:18px 16px 40px!important}.mestre-page.absoluto-dashboard .mestre-header{flex-wrap:wrap!important;gap:18px!important}.absoluto-dashboard .mestre-identidade-espiral{order:3;flex-basis:100%;margin:0;gap:16px}.absoluto-dashboard .abs-dashboard-symbol{width:48px;height:65px}.mestre-page.absoluto-dashboard>.mestre-tabs{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px!important}.absoluto-dashboard .mestre-tabs>button{font-size:10px!important}.absoluto-dashboard .ad-agent{grid-template-columns:1fr;gap:18px;padding:18px}.absoluto-dashboard .ad-agent-identity{grid-column:1;grid-row:1}.absoluto-dashboard .ad-agent-attributes{grid-column:1;grid-row:2;grid-template-columns:repeat(3,minmax(0,1fr))}.absoluto-dashboard .ad-agent-vitals{grid-column:1;grid-row:3;padding:18px 0 0;border-left:0;border-top:1px solid #333}.absoluto-dashboard .ad-agent-limbs{gap:14px 12px}.absoluto-dashboard .ad-meter>div:first-child{font-size:10px}.absoluto-dashboard :is(.mestre-loja-editor-topo,.mestre-analises-topo,.mestre-modal-linha-topo){flex-wrap:wrap}.absoluto-dashboard .mestre-form-grid{grid-template-columns:1fr!important}.absoluto-dashboard :is(input,select,textarea){font-size:16px!important}}
+@media(prefers-reduced-motion:reduce){.absoluto-dashboard .ad-agent{transition:none}}
+.absoluto-dashboard .loja-item{background:#111!important;border:1px solid #393939!important;border-left:2px solid var(--ad-gold)!important;border-radius:3px!important;padding:18px!important;box-shadow:none!important}
+.absoluto-dashboard :is(.loja-item,.mestre-habilidade-card,.marcas-card) h3{font:23px/1.3 Georgia,serif!important;letter-spacing:0!important;color:#eee!important;text-transform:none!important}
+.absoluto-dashboard :is(.loja-item,.mestre-habilidade-card,.marcas-card) p{font:12px/1.8 'Courier New',monospace!important;color:#bbb!important}
+.absoluto-dashboard .campanhas-catalogo,.absoluto-dashboard .campanha-dashboard{background:transparent!important;border:0!important;color:#eee!important}
+.absoluto-dashboard .campanha-cartao-abrir{display:flex;flex-direction:column;text-align:left!important;padding:0!important;overflow:hidden}
+.absoluto-dashboard .campanha-cartao-abrir :is(strong,h3){font:24px Georgia,serif!important;color:#eee!important;margin:14px 18px!important}
+.absoluto-dashboard .campanha-cartao-abrir small{color:var(--ad-gold)!important;margin:0 18px 16px!important}
+.absoluto-dashboard .mestre-btn-apagar,.absoluto-dashboard .mestre-botao-editar{border-radius:2px!important;min-height:34px}
+.absoluto-dashboard .mestre-modal-ficha{max-width:min(1280px,calc(100vw - 32px))!important}
