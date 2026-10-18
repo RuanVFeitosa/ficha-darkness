@@ -1,0 +1,5290 @@
+/* Remove setinhas do input number */
+
+/* REMOVE SETINHAS — INIMIGOS */
+.inimigo-ficha-bloco input[type="number"],
+.inimigo-identidade input[type="number"],
+.mestre-corpo-item input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.inimigo-ficha-bloco input[type="number"]::-webkit-outer-spin-button,
+.inimigo-ficha-bloco input[type="number"]::-webkit-inner-spin-button,
+.inimigo-identidade input[type="number"]::-webkit-outer-spin-button,
+.inimigo-identidade input[type="number"]::-webkit-inner-spin-button,
+.mestre-corpo-item input[type="number"]::-webkit-outer-spin-button,
+.mestre-corpo-item input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* REMOVE SETINHAS — LOJA */
+.mestre-loja-form input[type="number"],
+.mestre-arma-status-editor input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.mestre-loja-form input[type="number"]::-webkit-outer-spin-button,
+.mestre-loja-form input[type="number"]::-webkit-inner-spin-button,
+.mestre-arma-status-editor input[type="number"]::-webkit-outer-spin-button,
+.mestre-arma-status-editor input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.mestre-header-admin-grupo input::-webkit-outer-spin-button,
+.mestre-header-admin-grupo input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.mestre-header-admin-grupo input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Menu hambúrguer */
+.mestre-hamburguer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 30px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.hamburguer-linha {
+  width: 100%;
+  height: 2px;
+  background-color: #fff;
+  transition: all 0.3s ease;
+}
+
+.mestre-hamburguer-menu {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  background: #1a1a1a;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.8);
+  padding: 8px 0;
+  z-index: 100;
+  min-width: 220px;
+}
+
+.mestre-hamburguer-item {
+  display: block;
+  width: 100%;
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+  background: #050505;
+  color: #fff;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.mestre-hamburguer-item:hover {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .mestre-hamburguer-menu {
+    right: 10px;
+    top: 55px;
+    min-width: 180px;
+  }
+}
+
+/* =========================================================
+   DASHBOARD MESTRE — MINIMALISTA PRETO & BRANCO
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+.mestre-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: #000;
+  color: #fff;
+  text-align: left;
+  overflow-x: hidden;
+}
+
+/* Fila de aprovação das habilidades criadas no Upgrade */
+.mestre-analises {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+}
+.mestre-analises-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.mestre-analises-topo span {
+  color: #d4af37;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.mestre-analises-topo h2 {
+  margin: 5px 0 0;
+  font-size: 1.35rem;
+  text-transform: uppercase;
+}
+.mestre-analises-topo > strong {
+  color: #d4af37;
+}
+.mestre-analises-lista {
+  display: grid;
+  gap: 12px;
+}
+.mestre-analise-card {
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 3px solid #d4af37;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+}
+.mestre-analise-meta,
+.mestre-analise-acoes {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mestre-analise-meta span {
+  color: #d4af37;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.mestre-analise-meta b {
+  color: #ddd;
+  font-size: 0.78rem;
+}
+.mestre-analise-card h3 {
+  margin: 12px 0 6px;
+  color: #fff;
+}
+.mestre-analise-card p {
+  margin: 0 0 16px;
+  color: #bbb;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.mestre-analise-acoes button {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.mestre-analise-acoes .aprovar {
+  border: 1px solid rgba(76, 197, 107, 0.7);
+  background: rgba(36, 117, 55, 0.25);
+  color: #a4f4b5;
+}
+.mestre-analise-acoes .recusar {
+  border: 1px solid rgba(221, 84, 84, 0.7);
+  background: rgba(130, 36, 36, 0.22);
+  color: #ffb1b1;
+}
+.mestre-analises-vazia {
+  padding: 36px 0;
+  color: #aaa;
+  text-align: center;
+}
+@media (max-width: 560px) {
+  .mestre-analises {
+    padding: 16px;
+  }
+  .mestre-analises-topo {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* Evita overflow em telas pequenas */
+.mestre-page *,
+.mestre-page *::before,
+.mestre-page *::after {
+  max-width: 100%;
+}
+
+/* =========================================================
+   HEADER ADMIN — ESPAÇOSO E COM CORES DISTINTAS
+========================================================= */
+.mestre-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  max-width: 1600px;
+  margin: 0 auto 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.mestre-header-admin {
+  margin: 12px 0 8px;
+  padding: 18px 20px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.mestre-admin-grid {
+  display: flex;
+  gap: 18px 30px;
+  align-items: end;
+}
+
+.mestre-admin-grupo {
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 3px solid transparent;
+  transition: background 0.2s;
+}
+
+.mestre-admin-grupo.creditos {
+  border-left-color: #f1c40f;
+}
+.mestre-admin-grupo.mementos {
+  border-left-color: #9b59b6;
+}
+.mestre-admin-grupo.pe {
+  border-left-color: #2ecc71;
+}
+.mestre-admin-grupo.nivel {
+  border-left-color: #e67e22;
+}
+
+.mestre-admin-grupo label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ccc;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.mestre-admin-controles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mestre-admin-controles input[type="number"] {
+  flex: 1;
+  min-width: 70px;
+  max-width: 120px;
+  min-height: 40px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.mestre-admin-controles button {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: #0a0a0a;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mestre-admin-controles button:hover {
+  background: #fff;
+  color: #000;
+}
+
+.mestre-admin-grupo.nivel .mestre-admin-controles {
+  justify-content: center;
+  gap: 8px;
+}
+
+.mestre-nivel-atual {
+  min-width: 44px;
+  text-align: center;
+  color: #d4af37;
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.mestre-btn-nivel {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  background: #0a0a0a;
+  color: #d4af37;
+  font-size: 1.4rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mestre-btn-nivel:hover {
+  background: #d4af37;
+  color: #000;
+}
+
+.mestre-admin-divisor {
+  margin: 14px 0 0;
+  border: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+}
+
+/* Responsivo header admin */
+@media (max-width: 820px) {
+  .mestre-admin-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .mestre-admin-grupo {
+    padding: 6px 8px;
+  }
+  .mestre-admin-controles input[type="number"] {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+  .mestre-admin-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .mestre-admin-grupo.nivel {
+    order: 4;
+  }
+  .mestre-admin-controles {
+    flex-wrap: wrap;
+  }
+  .mestre-admin-controles input[type="number"] {
+    min-width: 60px;
+    flex: 1 1 100%;
+  }
+  .mestre-admin-controles button {
+    flex: 1;
+  }
+}
+
+/* =========================================================
+   BOTÕES BASE
+========================================================= */
+
+.mestre-voltar,
+.mestre-refresh,
+.mestre-tabs button,
+.mestre-categorias-loja button,
+.mestre-ficha-tabs button,
+.mestre-criar button,
+.mestre-acoes-ficha button,
+.mestre-creditos button,
+.mestre-inventario-form button,
+.mestre-salvar,
+.mestre-loja-form button,
+.mestre-catalogo button,
+.criarInimigo-button,
+.ataqueButton,
+.habilidadeButton,
+.duplicarButton,
+.mestre-abrir-ficha {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.mestre-voltar:hover,
+.mestre-refresh:hover,
+.mestre-tabs button.ativa,
+.mestre-tabs button:hover,
+.mestre-categorias-loja button.ativa,
+.mestre-categorias-loja button:hover,
+.mestre-ficha-tabs button.ativa,
+.mestre-ficha-tabs button:hover,
+.mestre-criar button:hover,
+.mestre-acoes-ficha button:hover,
+.mestre-creditos button:hover,
+.mestre-inventario-form button:hover,
+.mestre-salvar:hover,
+.mestre-loja-form button:hover,
+.mestre-catalogo button:hover,
+.criarInimigo-button:hover,
+.ataqueButton:hover,
+.habilidadeButton:hover,
+.duplicarButton:hover,
+.mestre-abrir-ficha:hover {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+  transform: translateY(-1px);
+}
+
+.mestre-refresh:disabled {
+  opacity: 0.5;
+  cursor: wait;
+  transform: none;
+}
+
+/* =========================================================
+   MENSAGEM
+========================================================= */
+
+.mestre-mensagem {
+  max-width: 1600px;
+  margin: 0 auto 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-left: 3px solid #fff;
+  border-radius: 8px;
+  background: #080808;
+  color: #ddd;
+  font-size: 0.82rem;
+}
+
+/* =========================================================
+   TABS PRINCIPAIS
+========================================================= */
+
+.mestre-tabs {
+  display: flex;
+  gap: 10px;
+  max-width: 1600px;
+  margin: 0 auto 22px;
+}
+
+.mestre-tabs button.ativa {
+  background: #fff;
+  color: #000;
+}
+
+.painel-rolagens-mestre {
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.painel-rolagens-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.painel-rolagens-topo span {
+  color: #d4af37;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.painel-rolagens-topo h3 {
+  margin: 4px 0 0;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.painel-rolagens-acoes {
+  display: flex;
+  gap: 8px;
+}
+
+.painel-rolagens-acoes button {
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  background: rgba(139, 69, 19, 0.35);
+  color: #fff8ea;
+  padding: 8px 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.lista-rolagens-mestre {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.rolagem-mestre-card {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 3px solid #d4af37;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.rolagem-mestre-card header,
+.rolagem-mestre-card footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rolagem-mestre-card h4 {
+  margin: 10px 0 4px;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.rolagem-mestre-card p {
+  margin: 0;
+  color: #cfcfcf;
+  font-size: 0.8rem;
+}
+
+.rolagem-mestre-formula {
+  margin-top: 10px;
+  color: #d4af37;
+  font-weight: 900;
+}
+
+.rolagem-mestre-dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.rolagem-mestre-dados span {
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.rolagem-mestre-card footer strong {
+  color: #d4af37;
+  font-size: 1.6rem;
+}
+
+.rolagem-mestre-vazio {
+  color: #aaa;
+  font-style: italic;
+}
+
+.mestre-layout-com-rolagens {
+  width: min(1600px, calc(100vw - 48px));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 22px;
+  align-items: start;
+}
+
+.mestre-conteudo-principal {
+  min-width: 0;
+}
+
+.mestre-conteudo-principal .mestre-tabs {
+  max-width: none;
+  margin: 0 0 22px;
+}
+
+.mestre-conteudo-principal .mestre-dashboard-full,
+.mestre-conteudo-principal .mestre-loja {
+  max-width: none;
+  margin: 0;
+}
+
+.mestre-rolagens-lateral {
+  position: sticky;
+  top: 24px;
+}
+
+.mestre-rolagens-lateral .painel-rolagens-mestre {
+  margin: 0;
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+}
+
+.mestre-rolagens-lateral .lista-rolagens-mestre {
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 1200px) {
+  .mestre-layout-com-rolagens {
+    grid-template-columns: 1fr;
+  }
+  .mestre-rolagens-lateral {
+    position: static;
+  }
+}
+
+.mestre-criar,
+.mestre-inventario-form,
+.mestre-loja-form {
+  display: grid;
+  gap: 10px;
+}
+
+.mestre-criar h2,
+.mestre-loja-form h2,
+.mestre-inventario-form h3 {
+  margin: 0;
+  color: #d4af37;
+  font-size: 0.95rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.mestre-duplo,
+.mestre-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mestre-page input,
+.mestre-page select,
+.mestre-page textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 10px;
+  border: 1px solid #ffffff;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  font: inherit;
+}
+
+.mestre-page textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.mestre-page label {
+  display: grid;
+  gap: 6px;
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mestre-page input:focus,
+.mestre-page select:focus,
+.mestre-page textarea:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  border-color: #c89b5f;
+}
+
+.mestre-dashboard-full {
+  display: grid;
+  gap: 22px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.mestre-dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  contain: layout paint;
+}
+
+.mestre-card-personagem {
+  position: relative;
+  overflow: hidden;
+  min-height: 500px;
+  padding: 0 !important;
+  border-radius: 18px;
+  background-size: contain;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-color: #030303;
+  contain: layout paint style;
+  content-visibility: auto;
+  contain-intrinsic-size: 560px 360px;
+  transition: none;
+}
+
+.mestre-card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(
+      to top,
+      #000 0%,
+      rgba(0, 0, 0, 0.92) 30%,
+      rgba(0, 0, 0, 0.45) 68%,
+      rgba(0, 0, 0, 0.12) 100%
+    ),
+    radial-gradient(
+      circle at center,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.75) 100%
+    );
+}
+
+.mestre-card-conteudo {
+  position: relative;
+  z-index: 2;
+  min-height: 560px;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.mestre-card-info,
+.mestre-card-atributos,
+.mestre-card-barras {
+  position: relative;
+  z-index: 3;
+}
+
+.mestre-card-info {
+  margin-bottom: 12px;
+}
+
+.mestre-card-atributos,
+.mestre-card-barras {
+  background: rgba(0, 0, 0, 0.38);
+  border-radius: 5px;
+}
+
+.mestre-card-foto,
+.mestre-card-topo {
+  display: none !important;
+}
+
+.mestre-card-membros {
+  display: grid;
+  gap: 8px;
+}
+
+.mestre-card-membro-mini {
+  display: grid;
+  grid-template-columns: 92px 1fr 58px;
+  align-items: center;
+  gap: 8px;
+}
+
+.mestre-card-membro-mini span {
+  color: #aaa;
+  font-size: 0.66rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mestre-card-membro-mini small {
+  color: #ddd;
+  font-size: 0.66rem;
+  text-align: right;
+}
+
+.mestre-personagem-recursos {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.mestre-personagem-recursos span {
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #dcdcdc;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-card-personagem.ativo {
+  border-color: #d4af37;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.16);
+}
+
+.mestre-card-topo {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  text-align: left;
+}
+
+.mestre-card-foto {
+  width: 86px;
+  height: 86px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid rgba(212, 175, 55, 0.2);
+}
+
+.mestre-card-info {
+  display: grid;
+  gap: 4px;
+}
+
+.mestre-card-info h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.8rem;
+}
+
+.mestre-card-jogador {
+  color: #f3d77a;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.mestre-modal-header-acoes,
+.mestre-header-admin,
+.mestre-header-admin-grupo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mestre-header-admin-grupo input {
+  width: 76px;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 900;
+  text-align: center;
+}
+
+.mestre-header-admin button,
+.mestre-btn-apagar,
+.mestre-modal-fechar {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mestre-header-admin button:hover {
+  background: #fff;
+  color: #000;
+}
+
+.mestre-btn-apagar {
+  border-color: rgba(255, 80, 80, 0.35);
+  color: #ffb3b3;
+}
+
+.mestre-btn-apagar:hover {
+  background: #8b0000;
+  color: #fff;
+  border-color: #ff4d4d;
+}
+
+.mestre-modal-fechar {
+  width: 40px;
+  padding: 0;
+  font-size: 1.2rem;
+}
+
+.mestre-modal-fechar:hover {
+  background: #fff;
+  color: #000;
+}
+
+.mestre-modal-fechar-ficha {
+  width: auto;
+  min-width: 76px;
+}
+
+.mestre-card-info span {
+  color: #c89b5f;
+}
+
+.mestre-card-info small {
+  color: #aaa;
+}
+
+.mestre-card-atributos {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.mestre-card-atributos div {
+  display: grid;
+  justify-items: center;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mestre-card-atributos span {
+  font-size: 0.68rem;
+  color: #c89b5f;
+}
+
+.mestre-card-atributos strong {
+  color: white;
+}
+
+.mestre-card-barras {
+  display: grid;
+  gap: 12px;
+}
+
+.barra {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.barra span {
+  display: block;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.barra.vermelho span {
+  background: #c62828;
+}
+.barra.roxo span {
+  background: #8e24aa;
+}
+.barra.dourado span {
+  background: #ff9800;
+}
+
+.mestre-card-barras label {
+  display: block;
+  margin-bottom: 4px;
+  color: #ffffff;
+  font-size: 0.72rem;
+}
+
+.mestre-card-barras small {
+  color: #ddd;
+  font-size: 0.75rem;
+}
+
+.mestre-fichas button {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #4a3326;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #f5efe4;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mestre-fichas button.ativa {
+  border-left-color: #d4af37;
+  background: rgba(139, 69, 19, 0.22);
+}
+
+.mestre-fichas span {
+  color: #a99d8a;
+  font-size: 0.78rem;
+}
+
+.mestre-editor {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+/* MODAL FICHA — VISUAL MINIMALISTA */
+
+.mestre-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mestre-modal-header-esquerda {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mestre-modal-foto {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+.mestre-modal-identidade {
+  display: grid;
+  gap: 4px;
+}
+
+.mestre-modal-identidade span,
+.mestre-modal-bloco > span {
+  color: #ffffffb4;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.mestre-modal-identidade h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.55rem;
+  text-transform: uppercase;
+}
+
+.mestre-modal-identidade small {
+  color: #aaa;
+}
+
+/* =========================================================
+   MARCAS NO MODAL DA FICHA
+========================================================= */
+
+.mestre-modal-marcas {
+  margin: 6px 0 4px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.mestre-modal-marcas-label {
+  color: #d4af37;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.mestre-modal-marcas-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mestre-modal-marca-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.08);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mestre-modal-marca-tag .marca-pendente {
+  color: #f1c40f;
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+
+.marcas-habilidades-container {
+  display: grid;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.marcas-habilidade-input-group {
+  gap: 8px;
+  align-items: start;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.marcas-habilidade-input-group input,
+.marcas-habilidade-input-group textarea {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  background: #050505;
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.marcas-habilidade-input-group textarea {
+  resize: vertical;
+  min-height: 50px;
+}
+
+.marcas-remover-habilidade {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 80, 80, 0.4);
+  border-radius: 6px;
+  background: transparent;
+  color: #ffb3b3;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+.marcas-remover-habilidade:hover {
+  background: rgba(180, 35, 35, 0.3);
+  border-color: #ff4d4d;
+}
+
+.marcas-adicionar-habilidade {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  background: transparent;
+  color: #ccc;
+  font-weight: 900;
+  cursor: pointer;
+  transition: 0.2s;
+  width: fit-content;
+}
+
+.marcas-adicionar-habilidade:hover {
+  border-color: #fff;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* =========================================================
+   Detalhes da Marca – Benefícios e Penalidades lado a lado
+   ========================================================= */
+
+.marca-detalhes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.marca-detalhes-beneficios,
+.marca-detalhes-penalidades {
+  padding: 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid #2ecc71; /* verde para benefícios */
+}
+
+.marca-detalhes-penalidades {
+  border-left-color: #e74c3c; /* vermelho para penalidades */
+}
+
+.marca-detalhes-beneficios h4,
+.marca-detalhes-penalidades h4 {
+  margin: 0 0 6px;
+  color: #d4af37;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marca-detalhes-beneficios p,
+.marca-detalhes-penalidades p {
+  margin: 0;
+  color: #ddd;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* Responsivo: empilha em telas pequenas */
+@media (max-width: 600px) {
+  .marca-detalhes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Seletor de cores */
+.marcas-cor-seletor {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.marcas-cor-seletor label {
+  color: #ccc;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marcas-paleta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.marcas-cor-opcao {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.marcas-cor-opcao:hover {
+  transform: scale(1.12);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.marcas-cor-opcao.selecionada {
+  border-color: #ffffff;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.marcas-cor-personalizada {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.marcas-cor-personalizada label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.marcas-cor-personalizada input[type="color"] {
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.marcas-cor-hex {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ddd;
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+/* Indicador de cor no card */
+.marca-cor-indicador {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-right: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.marcas-card-topo h4 {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mestre-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mestre-modal-bloco {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  contain: layout paint style;
+}
+
+.mestre-modal-bloco.full {
+  grid-column: 1 / -1;
+}
+
+.mestre-modal-atributos,
+.mestre-passivas-grid,
+.mestre-inventario-grid,
+.mestre-corpo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.mestre-modal-atributos div,
+.mestre-passiva-item,
+.mestre-item-card,
+.mestre-corpo-item {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28);
+  contain: layout paint style;
+}
+
+.mestre-modal-atributos small,
+.mestre-passiva-item small,
+.mestre-item-card small,
+.mestre-corpo-item small {
+  color: #9f9588;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
+.mestre-modal-atributos strong,
+.mestre-passiva-item strong,
+.mestre-item-card strong,
+.mestre-corpo-item strong {
+  color: #fff;
+}
+
+.mestre-barra-container {
+  display: grid;
+  gap: 8px;
+}
+
+.mestre-barra {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mestre-barra span {
+  display: block;
+  height: 100%;
+}
+
+.mestre-barra.vermelho span {
+  background: #c62828;
+}
+.mestre-barra.roxo span {
+  background: #8e24aa;
+}
+.mestre-barra.dourado span {
+  background: #ff9800;
+}
+
+.mestre-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(0, 0, 0, 0.82);
+  contain: layout paint style;
+}
+
+.mestre-modal-ficha {
+  width: min(1180px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  display: grid;
+  gap: 20px;
+  padding: 26px;
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 18px;
+  background: black;
+  color: #f5efe4;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75);
+  contain: layout paint style;
+  will-change: transform, opacity;
+  animation: abrirModalFicha 0.22s ease;
+}
+
+@keyframes abrirModalFicha {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.mestre-modal-linha-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mestre-modal-atributos.linha {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.mestre-modal-recursos {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mestre-abrir-ficha {
+  min-height: 34px;
+  padding: 7px 13px;
+  border: 1px solid rgb(255, 255, 255);
+  border-radius: 8px;
+  background: black;
+  color: #f5efe4;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mestre-abrir-ficha:hover {
+  border-color: #000000;
+  background: #ffffff;
+  color: #000;
+}
+
+@media (max-width: 760px) {
+  .mestre-modal-atributos.linha,
+  .mestre-modal-recursos {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mestre-botao-editar {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mestre-botao-editar:hover {
+  border-color: #ffffff;
+  background: rgba(212, 175, 55, 0.12);
+}
+
+.mestre-ritos-niveis-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -4px;
+  padding: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.mestre-ritos-niveis-tabs button {
+  min-height: 34px;
+  padding: 7px 11px;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.055);
+  color: #f5efe4;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mestre-ritos-niveis-tabs button:hover,
+.mestre-ritos-niveis-tabs button.ativa {
+  border-color: #ffffff;
+  background: rgba(0, 0, 0, 0.42);
+  color: #ffffff;
+}
+
+.mestre-niveis-ritos-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.mestre-label-ritos {
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.mestre-ritos-niveis-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mestre-editor-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mestre-editor-topo p {
+  color: #a99d8a;
+}
+
+.mestre-acoes-ficha {
+  display: flex;
+  gap: 10px;
+}
+
+.mestre-ficha-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mestre-ficha-tabs button {
+  min-height: 36px;
+  padding: 8px 11px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.mestre-ficha-secao {
+  display: grid;
+  gap: 16px;
+}
+
+.mestre-ficha-secao h3 {
+  margin: 0;
+  color: #d4af37;
+  font-size: 0.92rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.mestre-valores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.mestre-valores-grid.compacto {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.mestre-edit-lista {
+  display: grid;
+  gap: 10px;
+}
+
+.mestre-edit-lista > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 0.45fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.mestre-edit-lista button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255, 120, 120, 0.25);
+  border-radius: 6px;
+  background: transparent;
+  color: #f5efe4;
+  cursor: pointer;
+}
+
+.mestre-edit-lista button:hover {
+  border-color: #ff8e8e;
+  background: rgba(180, 35, 35, 0.65);
+}
+
+.mestre-lista-vazia {
+  min-height: 130px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  color: #a99d8a;
+}
+
+.mestre-corpo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.mestre-membro {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px;
+  border-left: 3px solid #2ecc71;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.mestre-membro.ferido {
+  border-left-color: #d4af37;
+}
+.mestre-membro.grave {
+  border-left-color: #e74c3c;
+}
+
+.mestre-membro strong {
+  grid-column: 1 / -1;
+  color: #fff8ea;
+  text-transform: uppercase;
+}
+
+.mestre-descricao {
+  min-height: 260px;
+}
+
+.mestre-acoes-ficha .perigo {
+  border-color: rgba(255, 120, 120, 0.35);
+}
+
+.mestre-acoes-ficha .perigo:hover,
+.mestre-catalogo button:hover {
+  border-color: #ff8e8e;
+  background: rgba(180, 35, 35, 0.65);
+}
+
+.mestre-creditos {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 140px auto;
+  gap: 10px;
+  align-items: end;
+  padding: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.mestre-creditos strong {
+  display: block;
+  color: #d4af37;
+  font-size: 1.6rem;
+}
+
+.mestre-inventario-form {
+  grid-template-columns: 1fr 1fr auto;
+  align-items: end;
+}
+
+.mestre-entrega-cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  border: 1px solid rgba(212, 175, 55, 0.24);
+  border-radius: 14px;
+  background:
+    linear-gradient(115deg, rgba(212, 175, 55, 0.12), transparent 48%),
+    rgba(8, 8, 8, 0.86);
+}
+
+.mestre-entrega-cabecalho span,
+.mestre-entrega-info > span {
+  display: block;
+  color: #d4af37;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+}
+
+.mestre-entrega-cabecalho h3 {
+  margin: 4px 0;
+  color: #fff;
+  font-size: 1.12rem;
+}
+
+.mestre-entrega-cabecalho p,
+.mestre-entrega-cabecalho > strong {
+  margin: 0;
+  color: #bbb;
+  font-size: 0.8rem;
+}
+
+.mestre-entrega-cabecalho > strong {
+  padding: 7px 10px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 999px;
+  color: #e9ca4d;
+  white-space: nowrap;
+}
+
+.mestre-entrega-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+
+.mestre-entrega-filtro button {
+  min-height: 36px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+}
+
+.mestre-entrega-filtro button.ativa,
+.mestre-entrega-filtro button:hover {
+  background: #d4af37;
+  border-color: #d4af37;
+  color: #000;
+}
+
+.mestre-entrega-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.mestre-entrega-card {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  min-height: 176px;
+  padding: 15px;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.055),
+    rgba(0, 0, 0, 0.34)
+  );
+  color: #fff;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.mestre-entrega-card:hover,
+.mestre-entrega-card.selecionado {
+  transform: translateY(-2px);
+  border-color: #d4af37;
+  box-shadow: 0 9px 24px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(
+    145deg,
+    rgba(212, 175, 55, 0.2),
+    rgba(28, 22, 4, 0.82)
+  );
+}
+
+.mestre-entrega-card-topo {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.mestre-entrega-card-categoria,
+.mestre-entrega-card-preco,
+.mestre-entrega-card-dados span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.55px;
+  text-transform: uppercase;
+}
+
+.mestre-entrega-card-categoria {
+  max-width: 70%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: #bdbdbd;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mestre-entrega-card-preco {
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #e5c038;
+}
+
+.mestre-entrega-card > strong {
+  font-size: 1rem;
+}
+
+.mestre-entrega-card small {
+  color: #ccc;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.mestre-entrega-card-dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-height: 23px;
+}
+
+.mestre-entrega-card-dados span {
+  background: rgba(255, 255, 255, 0.07);
+  color: #f0f0f0;
+}
+
+.mestre-entrega-card em {
+  margin-top: auto;
+  color: #9f9f9f;
+  font-size: 0.67rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+}
+
+.mestre-entrega-card.selecionado em {
+  color: #e5c038;
+}
+
+.mestre-entrega-loja {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid rgba(212, 175, 55, 0.23);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.mestre-entrega-info {
+  display: grid;
+  gap: 3px;
+}
+
+.mestre-entrega-info strong {
+  color: #fff;
+}
+
+.mestre-entrega-info small {
+  color: #aaa;
+}
+
+.mestre-entrega-loja button {
+  min-height: 42px;
+  padding: 0 24px;
+  border: 1px solid #d4af37;
+  border-radius: 7px;
+  background: #d4af37;
+  color: #111;
+  font-weight: 900;
+}
+
+.mestre-entrega-loja button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 560px) {
+  .mestre-entrega-cabecalho {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .mestre-entrega-cabecalho > strong {
+    align-self: flex-start;
+  }
+  .mestre-entrega-loja {
+    align-items: stretch;
+  }
+  .mestre-entrega-loja button {
+    width: 100%;
+  }
+}
+
+.mestre-inventario-form h3 {
+  grid-column: 1 / -1;
+}
+
+.mestre-inventario-lista,
+.mestre-catalogo {
+  display: grid;
+  gap: 10px;
+}
+
+.mestre-catalogo-area {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+}
+
+.mestre-categorias-loja {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mestre-categorias-loja button {
+  min-height: 38px;
+  padding: 8px 10px;
+}
+
+.mestre-categorias-loja span {
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mestre-categorias-loja strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.14);
+  color: #d4af37;
+  font-size: 0.78rem;
+}
+
+.mestre-inventario-lista div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.mestre-inventario-lista strong {
+  display: block;
+  color: #fff8ea;
+}
+
+.mestre-inventario-lista span {
+  color: #cfc1ad;
+  font-size: 0.88rem;
+}
+
+.mestre-inventario-lista button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 120, 120, 0.25);
+  border-radius: 6px;
+  background: transparent;
+  color: #f5efe4;
+  cursor: pointer;
+}
+
+.mestre-salvar {
+  width: fit-content;
+  background: rgba(139, 69, 19, 0.55);
+}
+
+.mestre-vazio {
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  color: #a99d8a;
+}
+
+.mestre-loja {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+.mestre-loja-editor-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mestre-loja-editor-topo p {
+  margin: 5px 0 0;
+  color: #918b7d;
+  font-size: 0.78rem;
+}
+
+.mestre-btn-novo-item-loja {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 7px;
+  background: #050505;
+  color: #fff;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mestre-btn-novo-item-loja:hover {
+  background: #fff;
+  color: #000;
+}
+
+.mestre-loja-form-novo {
+  padding: 18px;
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.mestre-loja-form {
+  align-content: start;
+}
+
+.mestre-loja-form textarea {
+  min-height: 180px;
+}
+
+.mestre-loja-form textarea[name="descricao"],
+.mestre-loja-form textarea[name="detalhe"] {
+  min-height: 240px;
+}
+
+.mestre-loja-form h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mestre-catalogo {
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
+/* =========================================================
+   GRADE DE CARDS DA LOJA (CORRIGIDA)
+   ========================================================= */
+
+.mestre-loja .mestre-catalogo {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+  align-items: stretch;
+  margin-top: 6px;
+}
+
+/* Editor de habilidades — cards no mesmo padrão visual do catálogo da loja. */
+.mestre-habilidade-card {
+  display: flex;
+  min-height: 350px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.26);
+  border-top: 3px solid #d4af37;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #111 0%, #070707 100%);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+.mestre-habilidade-card.editando {
+  border-color: #fff;
+  border-top-color: #fff;
+}
+
+.mestre-habilidade-card-topo,
+.mestre-habilidade-card-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mestre-habilidade-card-topo > span {
+  color: #d4af37;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.mestre-habilidade-card h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.08rem;
+  line-height: 1.2;
+}
+
+.mestre-habilidade-card p {
+  flex: 1;
+  margin: 0;
+  color: #d2d2d2;
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.mestre-habilidade-custo {
+  align-self: flex-start;
+  padding: 5px 8px;
+  border-radius: 5px;
+  background: rgba(212, 175, 55, 0.12);
+  color: #f2d57c;
+  font-weight: 800;
+}
+
+.mestre-habilidade-card-form {
+  display: grid;
+  gap: 10px;
+}
+
+.mestre-habilidade-card-form label {
+  display: grid;
+  gap: 5px;
+  color: #d4af37;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.mestre-habilidade-card-form input,
+.mestre-habilidade-card-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+  background: #050505;
+  color: #fff;
+  font: inherit;
+  padding: 8px;
+}
+
+.mestre-habilidade-card-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.mestre-habilidades-subabas {
+  margin-top: -10px;
+  padding: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.035);
+}
+
+/* Classe e categoria são definidas pelas abas, não pelos selects do formulário. */
+.mestre-habilidade-contexto {
+  display: none;
+}
+
+.mestre-aprimoramentos-exclusiva {
+  padding: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.36);
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.1),
+    rgba(10, 10, 10, 0.9)
+  );
+}
+
+.mestre-aprimoramentos-exclusiva summary {
+  color: #d4af37;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.mestre-aprimoramentos-exclusiva > p {
+  color: #bbb;
+  font-size: 0.8rem;
+}
+
+.mestre-aprimoramentos-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+.mestre-aprimoramento-opcao {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 78px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: linear-gradient(145deg, #151515, #080808);
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.mestre-aprimoramento-opcao input {
+  position: absolute;
+  opacity: 0;
+}
+
+.mestre-aprimoramento-opcao::before {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  place-items: center;
+  border: 1px solid rgba(212, 175, 55, 0.6);
+  border-radius: 50%;
+  color: #0a0a0a;
+  content: "+";
+  font-weight: 900;
+}
+
+.mestre-aprimoramento-opcao:has(input:checked) {
+  border-color: #d4af37;
+  background: linear-gradient(145deg, rgba(212, 175, 55, 0.22), #120f07);
+  transform: translateY(-2px);
+}
+
+.mestre-aprimoramento-opcao:has(input:checked)::before {
+  background: #d4af37;
+  content: "✓";
+}
+
+.mestre-aprimoramento-opcao span,
+.mestre-aprimoramento-opcao small {
+  display: grid;
+  gap: 3px;
+}
+
+.mestre-aprimoramento-opcao strong {
+  color: #fff;
+  font-size: 0.8rem;
+}
+
+.mestre-aprimoramento-opcao small {
+  color: #bbb;
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.mestre-aprimoramento-customizado {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(138, 95, 255, 0.55);
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    rgba(89, 45, 180, 0.22),
+    rgba(8, 8, 14, 0.98)
+  );
+}
+
+.mestre-aprimoramento-customizado-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mestre-aprimoramento-customizado-topo span {
+  color: #c9b4ff;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.mestre-aprimoramento-customizado-topo h4,
+.mestre-aprimoramento-customizado-topo p {
+  margin: 3px 0 0;
+}
+
+.mestre-aprimoramento-customizado-topo h4 {
+  color: #fff;
+}
+.mestre-aprimoramento-customizado-topo p {
+  color: #c9c4d9;
+  font-size: 0.8rem;
+}
+
+.mestre-aprimoramento-customizado-form {
+  display: grid;
+  gap: 10px;
+}
+
+.mestre-aprimoramento-customizado-form label {
+  display: grid;
+  gap: 6px;
+  color: #d8caff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.mestre-aprimoramento-customizado-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.mestre-icone-arma-exclusiva-opcoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 7px;
+}
+
+.mestre-icone-arma-exclusiva-opcoes button {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid #383838;
+  border-radius: 8px;
+  background: #101010;
+  color: #d8d8d8;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
+}
+
+.mestre-icone-arma-exclusiva-opcoes button:hover,
+.mestre-icone-arma-exclusiva-opcoes button.selecionado {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.12);
+  color: #f5d76e;
+}
+
+.mestre-icone-arma-exclusiva small {
+  color: #aaa;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mestre-loja {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.025);
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+  margin: 0;
+}
+
+.loja-item {
+  padding: 10px;
+  box-sizing: border-box;
+  border: 1px solid rgba(252, 251, 251, 0.08);
+}
+
+.mestre-loja .loja-item.editando {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.08);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.12);
+}
+
+.mestre-loja .loja-item .loja-item-icone {
+  width: 48px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.mestre-loja .loja-item .loja-item-icone input {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #fff;
+  color: #fff;
+  padding: 2px 4px;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.mestre-loja .loja-item .loja-item-tipo {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #918b7d;
+}
+
+.mestre-loja .loja-item h2 {
+  margin: 8px 0 4px;
+  color: #f2eee4;
+  font-size: 0.92rem;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.mestre-loja .loja-item p {
+  color: #aaa294;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: 0 0 8px;
+}
+
+.mestre-loja .loja-item .arma-status-card {
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(225, 218, 199, 0.1);
+  border-radius: 4px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.mestre-loja .loja-item .arma-status-corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.mestre-loja .loja-item .arma-status-corpo div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.mestre-loja .loja-item .arma-status-corpo span {
+  min-width: 110px;
+  color: #8f887b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mestre-loja .loja-item .arma-status-corpo strong {
+  color: #f2eee4;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.mestre-loja .loja-item .arma-status-principais {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.mestre-loja .loja-item .arma-status-principais div {
+  padding: 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.035);
+  text-align: center;
+}
+
+.mestre-loja .loja-item .arma-status-principais span {
+  display: block;
+  color: #8f887b;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+.mestre-loja .loja-item .arma-status-principais strong {
+  color: #e1dac7;
+  font-size: 1rem;
+}
+
+.mestre-loja .loja-item .arma-status-modos {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.mestre-loja .loja-item .arma-status-modos div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.mestre-loja .loja-item .arma-status-modos span {
+  color: #8f887b;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  min-width: 80px;
+}
+
+.mestre-loja .loja-item .arma-status-modos strong {
+  color: #f2eee4;
+  font-size: 0.78rem;
+}
+
+.mestre-loja .loja-item .arma-status-extra {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.mestre-loja .loja-item .arma-status-extra span {
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(139, 69, 19, 0.16);
+  color: #d4af37;
+  font-size: 0.68rem;
+  text-align: center;
+}
+
+.mestre-loja .loja-item .loja-item-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(225, 218, 199, 0.08);
+}
+
+.mestre-loja .loja-item .loja-preco {
+  color: #e1dac7;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.mestre-loja .loja-item .loja-item-footer button {
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.mestre-loja .loja-item .loja-item-footer button:hover {
+  background: #fff;
+  color: #000;
+}
+
+.mestre-loja .loja-item .loja-item-footer button.perigo {
+  border-color: rgba(255, 80, 80, 0.4);
+  color: #ffb3b3;
+}
+
+.mestre-loja .loja-item .loja-item-footer button.perigo:hover {
+  background: #8b0000;
+  color: #fff;
+  border-color: #ff4d4d;
+}
+
+.mestre-loja .loja-item .loja-item-footer button.salvar {
+  background: #2ecc71;
+  border-color: #2ecc71;
+  color: #000;
+}
+
+.mestre-loja .loja-item .loja-item-footer button.salvar:hover {
+  background: #27ae60;
+}
+
+.mestre-loja .loja-item .loja-item-footer button.cancelar {
+  background: #e74c3c;
+  border-color: #e74c3c;
+  color: #fff;
+}
+
+.mestre-loja .loja-item .loja-item-footer button.cancelar:hover {
+  background: #c0392b;
+}
+
+/* Inputs dentro dos cards (modo edição) */
+.mestre-loja .loja-item input,
+.mestre-loja .loja-item textarea {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  color: #fff;
+  padding: 4px 6px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  width: 100%;
+  transition: border-color 0.2s;
+}
+
+.mestre-loja .loja-item input:focus,
+.mestre-loja .loja-item textarea:focus {
+  outline: none;
+  border-color: #d4af37;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+}
+
+.mestre-loja .loja-item input[type="number"] {
+  width: 80px;
+  text-align: center;
+}
+
+.mestre-loja .loja-item .arma-status-corpo input,
+.mestre-loja .loja-item .arma-status-principais input,
+.mestre-loja .loja-item .arma-status-modos input,
+.mestre-loja .loja-item .arma-status-extra input {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  color: #fff;
+  padding: 2px 4px;
+  font-size: 0.8rem;
+  width: auto;
+  min-width: 50px;
+}
+
+/* =========================================================
+   MODAL DO CARD EXPANDIDO DA LOJA
+   ========================================================= */
+.mestre-modal-card-expandido {
+  position: relative;
+  width: min(90vw, 900px);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  background: #0a0a0a;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.9);
+  animation: abrirModalFicha 0.2s ease;
+}
+
+.mestre-modal-card-expandido .loja-item {
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.mestre-modal-card-expandido .loja-item .arma-status-card {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.mestre-modal-card-expandido .mestre-modal-fechar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+.mestre-modal-card-expandido .mestre-modal-fechar:hover {
+  background: #fff;
+  color: #000;
+}
+
+/* =========================================================
+   CORREÇÃO - SELECTS DO DASHBOARD
+========================================================= */
+
+.mestre-page select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  min-height: 44px;
+  padding: 10px 42px 10px 12px;
+  border: 1px solid #ffffff;
+  border-radius: 6px;
+  background:
+    linear-gradient(45deg, transparent 50%, #fff 50%) calc(100% - 18px) 50% /
+      6px 6px no-repeat,
+    linear-gradient(135deg, #fff 50%, transparent 50%) calc(100% - 13px) 50% /
+      6px 6px no-repeat,
+    #050505;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.mestre-page select:focus {
+  outline: none;
+  border-color: #d4af37;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.35);
+}
+
+.mestre-page select option {
+  background: #050505;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 900;
+}
+
+.mestre-page select option:checked,
+.mestre-page select option:hover {
+  background: #d4af37;
+  color: #000;
+}
+
+/* =========================================================
+   POPUPS DO DASHBOARD
+========================================================= */
+
+.mestre-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.82);
+  contain: layout paint style;
+}
+
+.mestre-popup {
+  width: min(460px, 100%);
+  display: grid;
+  gap: 14px;
+  padding: 24px;
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  border-left: 4px solid #d4af37;
+  border-radius: 16px;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(212, 175, 55, 0.12),
+      transparent 42%
+    ),
+    #050505;
+  color: #fff;
+  contain: layout paint style;
+  will-change: transform, opacity;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.8),
+    0 0 28px rgba(212, 175, 55, 0.08);
+  animation: mestrePopupIn 0.18s ease;
+}
+
+@keyframes mestrePopupIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.mestre-popup span {
+  color: #d4af37;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.mestre-popup h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.35rem;
+  text-transform: uppercase;
+}
+
+.mestre-popup p {
+  margin: 0;
+  color: #d8d8d8;
+  line-height: 1.6;
+}
+
+.mestre-popup.perigo {
+  border-color: rgba(255, 90, 90, 0.45);
+  border-left-color: #ff4d4d;
+}
+
+.mestre-popup.perigo span {
+  color: #ff8f8f;
+}
+
+.mestre-popup-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.mestre-popup-acoes button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mestre-popup-acoes button:hover,
+.mestre-popup-acoes .primario {
+  background: #fff;
+  color: #000;
+}
+
+.mestre-popup-acoes .perigo {
+  border-color: #ff4d4d;
+  background: #8b0000;
+  color: #fff;
+}
+
+.mestre-popup-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483647 !important;
+  display: grid !important;
+  place-items: center !important;
+  background: rgba(0, 0, 0, 0.86);
+  contain: layout paint style;
+}
+
+.mestre-popup {
+  width: min(460px, calc(100vw - 32px));
+  display: grid;
+  gap: 14px;
+  padding: 24px;
+  border: 1px solid #fff;
+  border-left: 4px solid #fff;
+  border-radius: 16px;
+  background: #050505;
+  color: #fff;
+  contain: layout paint style;
+}
+
+.mestre-popup.perigo {
+  border-left-color: #ff4d4d;
+}
+
+.mestre-popup-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.mestre-popup-acoes button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid #fff;
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.mestre-popup-acoes .perigo {
+  background: #8b0000;
+  border-color: #ff4d4d;
+}
+
+/* =========================================================
+   DASHBOARD - PARTY
+========================================================= */
+
+.mestre-party-embed {
+  width: 100%;
+  margin-bottom: 22px;
+  padding: 18px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  background: linear-gradient(
+    180deg,
+    rgba(104, 104, 104, 0.322),
+    rgba(4, 4, 4, 0.94)
+  );
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+}
+
+.mestre-party-embed.lateral {
+  position: sticky;
+  top: 18px;
+  max-height: calc(100vh - 30px);
+  margin-bottom: 0;
+  overflow: auto;
+}
+
+.mestre-party-acoes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mestre-party-acoes button,
+.mestre-party-ficha button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.58);
+  color: #f5efe4;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-party-acoes button:hover,
+.mestre-party-ficha button:hover {
+  border-color: #000000;
+  background: rgb(255, 255, 255);
+  color: #000000;
+}
+
+.mestre-party-acoes button.perigo {
+  border-color: rgba(255, 90, 90, 0.55);
+  color: #ffb6b6;
+}
+
+.mestre-party-acoes button.perigo:hover {
+  border-color: #ff6666;
+  background: rgba(120, 0, 0, 0.28);
+  color: #fff;
+}
+
+.mestre-party-ficha button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mestre-party-codigo {
+  width: fit-content;
+  display: grid;
+  gap: 4px;
+  margin: 16px 0;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.58);
+}
+
+.mestre-party-codigo span {
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.mestre-party-codigo strong {
+  color: #fff;
+  font-size: 1.5rem;
+  letter-spacing: 2px;
+}
+
+.mestre-party-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.mestre-party-layout.lateral {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.mestre-party-status-topo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 12px;
+  margin: 14px 0 18px;
+}
+
+.mestre-party-status-topo .mestre-party-codigo {
+  margin: 0;
+}
+
+.mestre-party-mensagem-inline {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-left: 3px solid #fff;
+  border-radius: 10px;
+  background: #050505;
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.mestre-party-lista.cards {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.mestre-party-lista.cards .mestre-party-ficha.ativo {
+  min-height: 150px;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  padding: 16px;
+  border-radius: 16px;
+}
+
+.mestre-party-lista.cards .mestre-party-ficha.ativo img {
+  width: 56px;
+  height: 56px;
+}
+
+.mestre-party-lista.cards .mestre-party-ficha.ativo strong {
+  font-size: 1rem;
+}
+
+.mestre-party-lista.cards .mestre-party-recursos {
+  margin-top: 10px;
+}
+
+@media (max-width: 620px) {
+  .mestre-party-status-topo {
+    grid-template-columns: 1fr;
+  }
+  .mestre-party-lista.cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mestre-party-ficha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgb(255, 255, 255);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.48);
+}
+
+.mestre-party-ficha.ativo {
+  justify-content: flex-start;
+  border-color: rgba(255, 255, 255, 0.34);
+}
+
+.mestre-party-ficha img {
+  width: 46px;
+  height: 46px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+}
+
+.mestre-party-ficha strong {
+  display: block;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.mestre-party-ficha small {
+  color: #d7c8b8;
+}
+
+.mestre-party-recursos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.mestre-party-recursos span {
+  padding: 4px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.493);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f5efe4;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+}
+
+.mestre-party-feed {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.mestre-party-feed article {
+  padding: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.mestre-party-feed strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #d4af37;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-party-feed p,
+.mestre-party-vazio {
+  margin: 0;
+  color: #f5efe4;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.mestre-status-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 14px;
+}
+
+.mestre-status-lateral {
+  display: grid;
+  gap: 14px;
+}
+
+.mestre-corpo-grid.novo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mestre-corpo-grid.novo .mestre-corpo-item {
+  min-height: 90px;
+  align-content: center;
+}
+
+@media (max-width: 900px) {
+  .mestre-status-layout {
+    grid-template-columns: 1fr;
+  }
+  .mestre-corpo-grid.novo {
+    grid-template-columns: 1fr;
+  }
+  .mestre-fichas-com-party {
+    grid-template-columns: 1fr;
+  }
+  .mestre-party-embed.lateral {
+    position: static;
+    max-height: none;
+  }
+  .mestre-party-layout {
+    grid-template-columns: 1fr;
+  }
+  .mestre-party-ficha {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .mestre-party-ficha button {
+    width: 100%;
+  }
+}
+
+.ficha-party-membros {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ficha-party-membro {
+  display: grid;
+  gap: 5px;
+}
+
+.ficha-party-membro div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ficha-party-membro small {
+  color: #d7c8b8;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ficha-party-membro strong {
+  color: #fff;
+  font-size: 0.72rem;
+}
+
+.ficha-party-membro i {
+  display: block;
+  height: 7px;
+  border-radius: 999px;
+  transition:
+    width 0.25s ease,
+    background 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.ficha-party-membro i.normal {
+  background: #2ecc71;
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.25);
+}
+.ficha-party-membro i.ferido {
+  background: #d4af37;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.28);
+}
+.ficha-party-membro i.grave {
+  background: #c0392b;
+  box-shadow: 0 0 14px rgba(192, 57, 43, 0.4);
+  animation: partyMembroGrave 1s infinite alternate;
+}
+
+@keyframes partyMembroGrave {
+  from {
+    opacity: 0.65;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.mestre-subtabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mestre-subtabs button {
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mestre-subtabs button:hover,
+.mestre-subtabs button.ativa {
+  background: #fff;
+  color: #000;
+  border-color: #fff;
+}
+
+.mestre-card-acoes-flutuantes {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 6;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.mestre-card-acoes-flutuantes button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font: inherit;
+  font-size: 0.64rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mestre-card-acoes-flutuantes button:hover {
+  background: #fff;
+  color: #000;
+}
+.mestre-card-acoes-flutuantes button.perigo {
+  border-color: rgba(255, 80, 80, 0.55);
+  color: #ffb3b3;
+}
+.mestre-card-acoes-flutuantes button.perigo:hover {
+  background: #8b0000;
+  color: #fff;
+}
+.mestre-card-acoes-flutuantes button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   MODAL DE EDIÇÃO — NPCS
+========================================================= */
+
+.mestre-modal-ficha.minimalista .inimigo-ficha-header {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.28);
+}
+
+.mestre-modal-ficha.minimalista .inimigo-foto-editavel {
+  width: 104px;
+  height: 104px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-foto-editavel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 1px solid rgba(212, 175, 55, 0.42);
+  border-radius: 12px;
+  background: #111;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-foto-editavel span {
+  inset: auto 8px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.82);
+  color: #d4af37;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-identidade {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: end;
+  gap: 10px;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-identidade label {
+  display: grid;
+  gap: 6px;
+  color: #d4af37;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-identidade label input {
+  width: 74px;
+  min-height: 42px;
+  text-align: center;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-nome-input {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-modal-ficha.minimalista .inimigo-nome-input:focus {
+  border-color: #d4af37;
+  outline: none;
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.2);
+}
+
+/* BLOCOS */
+
+.mestre-modal-ficha.minimalista .mestre-modal-bloco {
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  border-left: 3px solid rgba(255, 255, 255, 0.6);
+  background:
+    linear-gradient(145deg, rgba(0, 0, 0, 0.055), rgba(255, 255, 255, 0.025)),
+    rgba(0, 0, 0, 0.62);
+}
+
+.mestre-modal-ficha.minimalista .mestre-modal-bloco > span,
+.mestre-modal-ficha.minimalista .mestre-modal-linha-topo > span {
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ATRIBUTOS DO NPC */
+
+.mestre-modal-ficha.minimalista .mestre-modal-atributos.linha {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.mestre-modal-ficha.minimalista .mestre-modal-atributos label {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.42);
+  color: #aaa;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-modal-ficha.minimalista .mestre-modal-atributos input,
+.mestre-modal-ficha.minimalista .mestre-duplo input,
+.mestre-modal-ficha.minimalista .mestre-modal-bloco.full > input,
+.mestre-modal-ficha.minimalista .mestre-membro input,
+.mestre-modal-ficha.minimalista .mestre-edit-lista input {
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: #030303;
+  color: #fff;
+  font-weight: 900;
+}
+
+.mestre-modal-ficha.minimalista input:focus,
+.mestre-modal-ficha.minimalista textarea:focus {
+  outline: none;
+  border-color: #ffffff;
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.18);
+}
+
+/* SANIDADE / DEFESA */
+
+.mestre-modal-ficha.minimalista .mestre-duplo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mestre-modal-ficha.minimalista .mestre-duplo label {
+  display: grid;
+  gap: 8px;
+  color: #aaa;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mestre-recurso-editor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.mestre-recurso-editor input {
+  width: 70px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.mestre-recurso-editor span {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 700;
+}
+
+/* MEMBROS */
+
+.mestre-modal-ficha.minimalista .mestre-corpo-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mestre-modal-ficha.minimalista .mestre-membro {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 14px;
+  border-left: 3px solid #979797;
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.045),
+      rgba(255, 255, 255, 0.015)
+    ),
+    rgba(0, 0, 0, 0.55);
+}
+
+.mestre-modal-ficha.minimalista .mestre-membro strong {
+  grid-column: 1 / -1;
+  color: #fff;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.mestre-modal-ficha.minimalista .mestre-membro label {
+  display: grid;
+  gap: 6px;
+  color: #aaa;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ATAQUES / HABILIDADES */
+
+.mestre-modal-ficha.minimalista .mestre-modal-linha-topo button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.64);
+  color: #d4af37;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mestre-modal-ficha.minimalista .mestre-modal-linha-topo button:hover {
+  background: #d4af37;
+  color: #000;
+}
+
+.mestre-modal-ficha.minimalista .mestre-edit-lista {
+  display: grid;
+  gap: 10px;
+}
+
+.mestre-modal-ficha.minimalista .mestre-edit-lista > div {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.55fr) minmax(0, 1fr) 42px;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.mestre-modal-ficha.minimalista .mestre-edit-lista button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 80, 80, 0.48);
+  border-radius: 8px;
+  background: rgba(90, 0, 0, 0.35);
+  color: #ffb3b3;
+  font-size: 1.1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.mestre-modal-ficha.minimalista .mestre-edit-lista button:hover {
+  background: #8b0000;
+  color: #fff;
+}
+
+/* BOTÕES TOPO */
+
+.mestre-modal-ficha.minimalista .mestre-modal-header-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mestre-modal-ficha.minimalista .duplicarButton,
+.mestre-modal-ficha.minimalista .mestre-btn-apagar,
+.mestre-modal-ficha.minimalista .mestre-modal-fechar {
+  min-height: 42px;
+  border-radius: 8px;
+}
+
+.mestre-modal-ficha.minimalista .duplicarButton {
+  border-color: rgba(212, 175, 55, 0.35);
+  color: #ffffff;
+}
+.mestre-modal-ficha.minimalista .duplicarButton:hover {
+  background: #d4af37;
+  color: #000;
+}
+
+.mestre-modal-ficha.minimalista .mestre-btn-apagar {
+  border-color: rgba(255, 80, 80, 0.45);
+  color: #ffb3b3;
+}
+.mestre-modal-ficha.minimalista .mestre-btn-apagar:hover {
+  background: #8b0000;
+  color: #fff;
+}
+
+/* RESPONSIVO NPC */
+
+@media (max-width: 980px) {
+  .mestre-modal-ficha.minimalista .inimigo-ficha-header {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+  .mestre-modal-ficha.minimalista .mestre-modal-header-acoes {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .mestre-modal-ficha.minimalista .mestre-modal-atributos.linha,
+  .mestre-modal-ficha.minimalista .mestre-corpo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .mestre-modal-overlay {
+    padding: 10px;
+  }
+  .mestre-modal-ficha.minimalista {
+    max-height: 92vh;
+    padding: 16px;
+    border-radius: 14px;
+  }
+  .mestre-modal-ficha.minimalista .inimigo-ficha-header {
+    grid-template-columns: 1fr;
+  }
+  .mestre-modal-ficha.minimalista .inimigo-foto-editavel {
+    width: 100%;
+    height: 180px;
+  }
+  .mestre-modal-ficha.minimalista .inimigo-identidade,
+  .mestre-modal-ficha.minimalista .mestre-duplo,
+  .mestre-modal-ficha.minimalista .mestre-modal-atributos.linha,
+  .mestre-modal-ficha.minimalista .mestre-corpo-grid,
+  .mestre-modal-ficha.minimalista .mestre-membro,
+  .mestre-modal-ficha.minimalista .mestre-edit-lista > div {
+    grid-template-columns: 1fr;
+  }
+  .mestre-modal-ficha.minimalista .mestre-modal-header-acoes button {
+    width: 100%;
+  }
+}
+
+.mestre-party-lista.mestre-party-cards {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.mestre-party-lista.mestre-party-cards .mestre-party-ficha.card {
+  min-height: 170px;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  align-content: start;
+  justify-items: start;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+}
+
+.mestre-party-lista.mestre-party-cards .mestre-party-ficha.card img {
+  width: 58px;
+  height: 58px;
+}
+
+@media (max-width: 520px) {
+  .mestre-party-lista.mestre-party-cards {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* =========================================================
+   SEÇÃO MARCAS — CSS EXCLUSIVO
+========================================================= */
+
+.marcas-wrapper {
+  display: grid;
+  gap: 30px;
+  padding: 10px 0;
+}
+
+.marcas-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.8fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .marcas-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- FORMULÁRIO ---- */
+.marcas-form {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.marcas-form h3 {
+  margin: 0 0 4px 0;
+  color: #d4af37;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marcas-form label {
+  display: grid;
+  gap: 6px;
+  color: #ccc;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.marcas-form input,
+.marcas-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.marcas-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.marcas-aparencia-editor {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.035);
+}
+.marcas-aparencia-topo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 0.7fr);
+  gap: 14px;
+  align-items: end;
+}
+.marcas-aparencia-topo > div {
+  display: grid;
+  gap: 4px;
+}
+.marcas-aparencia-topo strong {
+  color: #d4af37;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+.marcas-aparencia-topo small {
+  color: #8d8981;
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+.marcas-cor-linhas > span {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 7px;
+}
+.marcas-cor-linhas input[type="color"] {
+  height: 39px;
+  padding: 3px;
+  cursor: pointer;
+}
+.marcas-imagem-fundo {
+  position: relative;
+  min-height: 44px;
+  place-content: center;
+  padding: 10px;
+  border: 1px dashed rgba(212, 175, 55, 0.4);
+  text-align: center;
+  cursor: pointer;
+}
+.marcas-imagem-fundo input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.marcas-imagem-fundo span {
+  color: #d4af37;
+  font-size: 0.72rem;
+}
+.marcas-imagem-preview {
+  position: relative;
+  overflow: hidden;
+  min-height: 120px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.marcas-imagem-preview img {
+  width: 100%;
+  height: 150px;
+  display: block;
+  object-fit: cover;
+  opacity: 0.62;
+}
+.marcas-imagem-preview button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+@media (max-width: 520px) {
+  .marcas-aparencia-topo { grid-template-columns: 1fr; }
+}
+
+.marcas-form-acoes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.marcas-form-acoes button {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  background: #0a0a0a;
+  color: #fff;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.marcas-form-acoes button:hover {
+  background: #fff;
+  color: #000;
+}
+.marcas-form-acoes button.secundario {
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #aaa;
+}
+.marcas-form-acoes button.secundario:hover {
+  background: #222;
+  color: #fff;
+}
+
+/* ---- LISTA DE MARCAS ---- */
+.marcas-lista {
+  display: grid;
+  gap: 16px;
+}
+
+.marcas-lista-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+
+.marcas-lista-header span {
+  color: #888;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marcas-lista-grid {
+  display: grid;
+  gap: 16px;
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.marcas-card {
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #d4af37;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  transition: border-color 0.2s ease;
+}
+
+.marcas-card:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.marcas-card-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.marcas-card-topo h4 {
+  margin: 0;
+  color: #fff;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+.marcas-card-topo .marcas-tag {
+  color: #d4af37;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.marcas-card-desc {
+  color: #ccc;
+  font-size: 0.85rem;
+  margin: 6px 0 10px;
+  line-height: 1.4;
+}
+
+.marcas-card-detalhes {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.marcas-card-detalhes small {
+  color: #aaa;
+  font-size: 0.78rem;
+}
+.marcas-card-detalhes strong {
+  color: #d4af37;
+}
+
+.marcas-card-personagens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.marcas-personagem-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 0.72rem;
+}
+
+.marcas-personagem-chip img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+.marcas-personagem-chip span {
+  color: #ddd;
+  font-weight: 700;
+}
+
+.marcas-personagem-chip button {
+  min-width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  margin-left: 2px;
+  padding: 0 7px;
+  border: 1px solid rgba(224, 92, 92, 0.38);
+  border-radius: 999px;
+  background: rgba(120, 25, 25, 0.18);
+  color: #ffb5b5;
+  font: inherit;
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.marcas-personagem-chip button:hover {
+  border-color: #ff6b6b;
+  background: #8f2525;
+  color: #fff;
+}
+
+.marcas-card-acoes {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.marcas-card-acoes button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: transparent;
+  color: #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s ease;
+}
+
+.marcas-card-acoes button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #fff;
+  color: #fff;
+}
+.marcas-card-acoes button.perigo:hover {
+  background: rgba(180, 35, 35, 0.4);
+  border-color: #ff4d4d;
+  color: #ffb3b3;
+}
+
+/* ---- ATRIBUIÇÃO ---- */
+.marcas-atribuicao {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.marcas-atribuicao h3 {
+  margin: 0;
+  color: #d4af37;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marcas-atribuicao-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 14px;
+  align-items: end;
+}
+
+@media (max-width: 700px) {
+  .marcas-atribuicao-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.marcas-atribuicao-grid label {
+  display: grid;
+  gap: 6px;
+  color: #ccc;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.marcas-atribuicao-grid select,
+.marcas-atribuicao-grid input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  background: #050505;
+  color: #fff;
+  font: inherit;
+}
+
+.marcas-atribuicao-grid button {
+  min-height: 42px;
+  padding: 0 20px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  background: #0a0a0a;
+  color: #fff;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.marcas-atribuicao-grid button:hover:not(:disabled) {
+  background: #fff;
+  color: #000;
+}
+.marcas-atribuicao-grid button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.marcas-personagem-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.marcas-personagem-preview img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(212, 175, 55, 0.2);
+}
+
+.marcas-personagem-preview div {
+  display: grid;
+  gap: 2px;
+}
+
+.marcas-personagem-preview strong {
+  color: #fff;
+  font-size: 0.95rem;
+}
+.marcas-personagem-preview small {
+  color: #aaa;
+  font-size: 0.72rem;
+}
+
+/* =========================================================
+   AJUSTES FINAIS DE RESPONSIVIDADE DO DASHBOARD
+========================================================= */
+@media (max-width: 900px) {
+  .mestre-page {
+    padding: 16px;
+  }
+  .mestre-header {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+  .mestre-header h1 {
+    font-size: clamp(1.25rem, 5vw, 2rem);
+    overflow-wrap: anywhere;
+  }
+  .mestre-tabs,
+  .mestre-subtabs,
+  .mestre-ficha-tabs,
+  .mestre-categorias-loja {
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mestre-tabs button,
+  .mestre-subtabs button,
+  .mestre-ficha-tabs button,
+  .mestre-categorias-loja button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .mestre-layout-com-rolagens {
+    width: 100%;
+    gap: 16px;
+  }
+  .mestre-rolagens-lateral .painel-rolagens-mestre,
+  .mestre-rolagens-lateral .lista-rolagens-mestre {
+    max-height: none;
+    overflow: visible;
+  }
+  .mestre-dashboard-cards {
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+    gap: 14px;
+  }
+  .mestre-card-personagem,
+  .mestre-card-conteudo {
+    min-height: 460px;
+  }
+  .mestre-loja-editor-topo,
+  .mestre-modal-linha-topo,
+  .mestre-analises-topo,
+  .painel-rolagens-topo {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 620px) {
+  .mestre-page {
+    padding: 12px;
+  }
+  .mestre-header {
+    grid-template-columns: 42px minmax(0, 1fr) 30px;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+  }
+  .mestre-header > div > span {
+    font-size: 0.62rem;
+    letter-spacing: 1px;
+  }
+  .mestre-header h1 {
+    margin: 3px 0 0;
+    font-size: 1.15rem;
+    line-height: 1.08;
+  }
+  .mestre-voltar {
+    width: 42px;
+    min-width: 42px;
+    padding: 0;
+    font-size: 0;
+  }
+  .mestre-voltar svg {
+    width: 20px;
+    height: 20px;
+  }
+  .mestre-hamburguer-menu {
+    position: fixed;
+    top: 62px;
+    right: 12px;
+    left: 12px;
+    min-width: 0;
+  }
+  .mestre-dashboard-full,
+  .mestre-analises,
+  .mestre-loja,
+  .mestre-criar,
+  .mestre-inventario-form {
+    gap: 14px;
+  }
+  .mestre-dashboard-cards {
+    grid-template-columns: 1fr;
+  }
+  .mestre-card-personagem,
+  .mestre-card-conteudo {
+    min-height: 400px;
+  }
+  .mestre-card-conteudo {
+    padding: 16px;
+  }
+  .mestre-card-info h3 {
+    font-size: clamp(1.25rem, 7vw, 1.65rem);
+  }
+  .mestre-card-atributos {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+  }
+  .mestre-card-atributos div {
+    min-width: 0;
+    padding: 6px 2px;
+  }
+  .mestre-card-membro-mini {
+    grid-template-columns: 78px minmax(0, 1fr) 48px;
+    gap: 5px;
+  }
+  .mestre-card-membro-mini span,
+  .mestre-card-membro-mini small {
+    font-size: 0.58rem;
+  }
+  .mestre-duplo,
+  .mestre-form-grid,
+  .mestre-modal-atributos,
+  .mestre-corpo-grid,
+  .mestre-edit-lista > div,
+  .marcas-layout,
+  .marcas-atribuicao-grid {
+    grid-template-columns: 1fr;
+  }
+  .mestre-header-admin,
+  .mestre-admin-grid,
+  .mestre-admin-controles,
+  .mestre-modal-header-acoes,
+  .mestre-loja-form-acoes,
+  .mestre-analise-acoes,
+  .painel-rolagens-acoes {
+    flex-wrap: wrap;
+  }
+  .mestre-admin-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .mestre-admin-controles input[type="number"] {
+    max-width: none;
+  }
+  .mestre-modal-overlay {
+    padding: 8px;
+  }
+  .mestre-modal-ficha,
+  .mestre-modal-ficha.minimalista {
+    width: 100%;
+    max-height: calc(100svh - 16px);
+    padding: 14px;
+    border-radius: 12px;
+  }
+  .mestre-modal-header,
+  .mestre-modal-header-esquerda,
+  .mestre-modal-linha-topo,
+  .inimigo-ficha-header,
+  .mestre-analises-topo,
+  .painel-rolagens-topo {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .mestre-modal-header-esquerda {
+    gap: 10px;
+  }
+  .mestre-modal-foto {
+    width: 58px;
+    height: 58px;
+  }
+  .mestre-modal-header-acoes button,
+  .mestre-loja-form-acoes button,
+  .mestre-analise-acoes button {
+    flex: 1 1 100%;
+  }
+  .mestre-analises {
+    padding: 14px;
+  }
+  .mestre-analise-card {
+    padding: 14px;
+  }
+  .mestre-analise-meta {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 680px) {
+  .mestre-loja-editor-topo {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .mestre-btn-novo-item-loja {
+    width: 100%;
+  }
+  .mestre-loja .mestre-catalogo {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   VISUALIZADOR DE FICHAS — RESPONSIVIDADE
+========================================================= */
+.mestre-dashboard-cards,
+.mestre-card-personagem,
+.mestre-card-conteudo,
+.mestre-modal-ficha,
+.mestre-modal-header-esquerda,
+.mestre-modal-identidade,
+.mestre-modal-bloco,
+.mestre-modal-bloco label {
+  min-width: 0;
+}
+
+.mestre-card-personagem {
+  min-height: 560px;
+}
+
+.mestre-card-info h3,
+.mestre-modal-identidade h2,
+.mestre-modal-bloco strong,
+.mestre-modal-bloco small {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .mestre-dashboard-cards {
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  }
+
+  .mestre-card-personagem,
+  .mestre-card-conteudo {
+    min-height: 520px;
+  }
+
+  .mestre-modal-overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .mestre-modal-ficha {
+    width: min(100%, 760px);
+    max-height: calc(100svh - 28px);
+    margin: 14px auto;
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 620px) {
+  .mestre-card-personagem,
+  .mestre-card-conteudo {
+    min-height: 0;
+  }
+
+  .mestre-card-conteudo {
+    padding: 16px;
+  }
+
+  .mestre-card-atributos {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .mestre-card-atributos div {
+    min-width: 0;
+    padding: 7px 3px;
+  }
+
+  .mestre-card-atributos span,
+  .mestre-card-atributos strong {
+    overflow-wrap: anywhere;
+    font-size: 0.6rem;
+  }
+
+  .mestre-card-membro-mini {
+    grid-template-columns: minmax(64px, 0.85fr) minmax(0, 1fr) 44px;
+  }
+
+  .mestre-modal-ficha {
+    width: 100%;
+    max-height: calc(100svh - 16px);
+    margin: 8px auto;
+    padding: 14px;
+  }
+
+  .mestre-modal-header,
+  .mestre-modal-header-esquerda,
+  .mestre-modal-linha-topo {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  /* As ações ficam antes dos controles administrativos. Isso evita que os
+     botões de apagar e fechar saiam da tela em telas estreitas. */
+  .mestre-modal-header-acoes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .mestre-modal-header-acoes > .mestre-btn-apagar {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+  }
+
+  .mestre-modal-header-acoes > .mestre-modal-fechar {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    min-width: 76px;
+  }
+
+  .mestre-modal-header-acoes > .mestre-header-admin {
+    display: block;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+}
+/* O conteúdo da ficha deve rolar sem comprimir as linhas do grid. */
+.mestre-modal-ficha.mestre-modal-personagem {
+  box-sizing: border-box;
+  grid-auto-rows: max-content;
+  max-height: calc(100dvh - 56px);
+  margin: 0;
+  overflow-x: hidden;
+}
+
+.mestre-modal-personagem .mestre-modal-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.mestre-modal-personagem .mestre-modal-header-acoes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 100%;
+  min-width: 0;
+  gap: 10px;
+}
+
+.mestre-modal-personagem .mestre-modal-header-acoes > .mestre-btn-apagar {
+  grid-area: 1 / 1;
+  justify-self: start;
+}
+
+.mestre-modal-personagem .mestre-modal-header-acoes > .mestre-modal-fechar {
+  grid-area: 1 / 2;
+  min-width: 44px;
+  width: 44px;
+}
+
+.mestre-modal-personagem .mestre-modal-header-acoes > .mestre-header-admin {
+  display: block;
+  grid-area: 2 / 1 / 3 / -1;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 12px;
+}
+
+.mestre-modal-personagem .mestre-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mestre-modal-personagem .mestre-admin-grupo {
+  min-width: 0;
+}
+
+.mestre-modal-personagem .mestre-admin-controles {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.mestre-modal-personagem .mestre-admin-controles input[type="number"] {
+  box-sizing: border-box;
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  max-width: none;
+}
+
+.mestre-modal-personagem .mestre-admin-controles button {
+  flex: 0 0 44px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+}
+
+.mestre-modal-personagem .mestre-nivel-atual {
+  flex: 1;
+  min-width: 0;
+}
+
+.mestre-modal-personagem .mestre-admin-divisor {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mestre-modal-ficha.mestre-modal-personagem {
+    max-height: calc(100dvh - 56px);
+  }
+
+  .mestre-modal-personagem .mestre-admin-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .mestre-modal-ficha.mestre-modal-personagem {
+    max-height: calc(100dvh - 16px);
+    padding: 12px;
+    gap: 14px;
+  }
+
+  .mestre-modal-personagem .mestre-modal-header-esquerda {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .mestre-modal-personagem .mestre-modal-foto {
+    flex-shrink: 0;
+  }
+
+  .mestre-modal-personagem .mestre-modal-identidade h2 {
+    font-size: 1.2rem;
+  }
+
+  .mestre-modal-personagem .mestre-modal-header-acoes > .mestre-header-admin {
+    padding: 8px;
+  }
+
+  .mestre-modal-personagem .mestre-admin-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .mestre-modal-personagem .mestre-admin-grupo label {
+    letter-spacing: 0.3px;
+  }
+}
+
+.mestre-pastas-catalogo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 8px;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+}
+.mestre-pastas-catalogo button {
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #111;
+  color: #999;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mestre-pastas-catalogo button.ativa {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.1);
+  color: #e1c96e;
+}
+.mestre-pastas-catalogo b {
+  font-size: 9px;
+}
+.mestre-modal-linha-topo h2 small {
+  color: #817b70;
+  font-size: 11px;
+  font-weight: 400;
+}
+.criarInimigo-button.secundario {
+  margin-left: 6px;
+  background: transparent !important;
+  color: #d4af37 !important;
+}
+.catalogo-pasta-select {
+  min-width: 130px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #0b0b0b;
+  color: #c9c3b8;
+  font-size: 9px;
+}
+.mestre-npcs-subtabs {
+  margin-top: 10px;
+}
+
+/* =========================================================
+   MODAL EXPANDIDO — NPCs / INIMIGOS
+   Visual editorial compacto para o catálogo do mestre.
+========================================================= */
+
+.mestre-modal-ficha.mestre-catalogo-modal {
+  width: min(1120px, calc(100vw - 56px));
+  max-height: min(880px, calc(100vh - 56px));
+  padding: 0;
+  gap: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  border-radius: 18px;
+  background:
+    radial-gradient(
+      circle at 15% -10%,
+      rgba(212, 175, 55, 0.1),
+      transparent 28%
+    ),
+    linear-gradient(180deg, #090909 0%, #030303 38%, #000 100%);
+  box-shadow:
+    0 34px 100px rgba(0, 0, 0, 0.88),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  scrollbar-color: rgba(212, 175, 55, 0.55) rgba(255, 255, 255, 0.035);
+  scrollbar-width: thin;
+}
+
+.mestre-modal-ficha.mestre-catalogo-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mestre-modal-ficha.mestre-catalogo-modal::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.mestre-modal-ficha.mestre-catalogo-modal::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(212, 175, 55, 0.52);
+}
+
+/* Cabeçalho principal */
+.mestre-catalogo-modal .inimigo-ficha-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  min-height: 136px;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.22);
+  background:
+    linear-gradient(90deg, rgba(212, 175, 55, 0.075), transparent 36%),
+    rgba(4, 4, 4, 0.96);
+  backdrop-filter: blur(18px);
+}
+
+.mestre-catalogo-modal-inimigo .inimigo-ficha-header {
+  border-top: 3px solid #b64a42;
+}
+
+.mestre-catalogo-modal-npc .inimigo-ficha-header {
+  border-top: 3px solid #d4af37;
+}
+
+/* Foto */
+.mestre-catalogo-modal .inimigo-foto-editavel {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  min-width: 88px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  border-radius: 14px;
+  background: #111;
+  cursor: pointer;
+}
+
+.mestre-catalogo-modal .inimigo-foto-editavel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mestre-catalogo-modal .inimigo-foto-editavel > span {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 6px 4px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  text-align: center;
+  text-transform: uppercase;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.mestre-catalogo-modal .inimigo-foto-editavel:hover > span {
+  opacity: 1;
+}
+
+.mestre-catalogo-modal .inimigo-foto-editavel input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Identidade */
+.mestre-catalogo-modal .inimigo-identidade {
+  display: grid;
+  grid-template-columns: 66px minmax(220px, 1fr) minmax(145px, 190px);
+  gap: 10px;
+  align-items: end;
+  min-width: 0;
+}
+
+.mestre-catalogo-modal .inimigo-identidade label {
+  gap: 5px;
+  color: #d4af37;
+  font-size: 0.58rem;
+  letter-spacing: 1.2px;
+}
+
+.mestre-catalogo-modal .inimigo-identidade label input,
+.mestre-catalogo-modal .inimigo-nome-input,
+.mestre-catalogo-modal .catalogo-pasta-select {
+  height: 40px;
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  color: #fff;
+}
+
+.mestre-catalogo-modal .inimigo-identidade label input {
+  width: 66px;
+  text-align: center;
+  font-weight: 900;
+}
+
+.mestre-catalogo-modal .inimigo-nome-input {
+  padding: 0 13px;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.mestre-catalogo-modal .catalogo-pasta-select {
+  min-width: 0;
+  padding: 0 10px;
+  color: #d8d0c1;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+/* Ações */
+.mestre-catalogo-modal .mestre-modal-header-acoes {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.mestre-catalogo-modal .mestre-modal-header-acoes button {
+  min-height: 38px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 0.64rem;
+  letter-spacing: 0.8px;
+}
+
+.mestre-catalogo-modal .mestre-modal-fechar {
+  width: 38px;
+  min-width: 38px;
+  padding: 0;
+}
+
+/* Seções */
+.mestre-catalogo-modal > .mestre-modal-bloco,
+.mestre-catalogo-modal > .inimigo-ficha-bloco {
+  margin: 14px 18px 0;
+}
+
+.mestre-catalogo-modal > .mestre-modal-bloco:last-child,
+.mestre-catalogo-modal > .inimigo-ficha-bloco:last-child {
+  margin-bottom: 18px;
+}
+
+.mestre-catalogo-modal .mestre-modal-bloco,
+.mestre-catalogo-modal .inimigo-ficha-bloco {
+  display: grid;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  border-left: 2px solid rgba(212, 175, 55, 0.56);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  box-shadow: none;
+}
+
+.mestre-catalogo-modal .mestre-modal-bloco > span,
+.mestre-catalogo-modal .inimigo-ficha-bloco > h3,
+.mestre-catalogo-modal .inimigo-bloco-topo h3 {
+  margin: 0;
+  color: #e3c35c;
+  font-size: 0.69rem;
+  font-weight: 900;
+  letter-spacing: 1.7px;
+  text-transform: uppercase;
+}
+
+/* Atributos */
+.mestre-catalogo-modal .mestre-modal-atributos.linha {
+  grid-template-columns: repeat(5, minmax(90px, 1fr));
+  gap: 8px;
+}
+
+.mestre-catalogo-modal .mestre-modal-atributos label {
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.34);
+}
+
+.mestre-catalogo-modal .mestre-modal-atributos label input {
+  min-height: 36px;
+  height: 36px;
+  text-align: center;
+  font-weight: 900;
+}
+
+/* Sanidade + defesa mais compactos */
+.mestre-catalogo-modal .mestre-duplo {
+  gap: 10px;
+}
+
+.mestre-catalogo-modal .mestre-duplo label,
+.mestre-catalogo-modal .inimigo-ficha-bloco label {
+  gap: 5px;
+}
+
+.mestre-catalogo-modal .mestre-duplo input,
+.mestre-catalogo-modal .mestre-modal-bloco.full > input,
+.mestre-catalogo-modal .inimigo-ficha-bloco > input {
+  min-height: 38px;
+  height: 38px;
+}
+
+/* Membros */
+.mestre-catalogo-modal .mestre-corpo-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.mestre-catalogo-modal .mestre-membro,
+.mestre-catalogo-modal .mestre-corpo-item {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-left: 2px solid rgba(255, 255, 255, 0.28);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.34);
+}
+
+.mestre-catalogo-modal .mestre-membro strong,
+.mestre-catalogo-modal .mestre-corpo-item strong {
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
+  color: #fff;
+  font-size: 0.73rem;
+  letter-spacing: 0.4px;
+}
+
+.mestre-catalogo-modal .mestre-membro label,
+.mestre-catalogo-modal .mestre-corpo-item label {
+  min-width: 0;
+  color: #8f8f8f;
+  font-size: 0.56rem;
+  letter-spacing: 0.6px;
+}
+
+.mestre-catalogo-modal .mestre-membro input,
+.mestre-catalogo-modal .mestre-corpo-item input {
+  min-height: 34px;
+  height: 34px;
+  padding: 0 8px;
+}
+
+/* Ataques / habilidades */
+.mestre-catalogo-modal .inimigo-bloco-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.mestre-catalogo-modal .ataqueButton,
+.mestre-catalogo-modal .habilidadeButton {
+  min-height: 34px;
+  padding: 6px 11px;
+  border-color: rgba(212, 175, 55, 0.22);
+  background: rgba(212, 175, 55, 0.06);
+  color: #e7ce79;
+  font-size: 0.6rem;
+}
+
+.mestre-catalogo-modal .inimigo-ataque-card,
+.mestre-catalogo-modal .mestre-edit-lista > div {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.7fr) minmax(240px, 1.5fr) auto;
+  gap: 9px;
+  align-items: start;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.32);
+}
+
+.mestre-catalogo-modal .inimigo-ataque-card textarea,
+.mestre-catalogo-modal .mestre-edit-lista textarea {
+  min-height: 68px;
+  resize: vertical;
+}
+
+.mestre-catalogo-modal .inimigo-ataque-card .mestre-btn-apagar,
+.mestre-catalogo-modal .mestre-edit-lista .mestre-btn-apagar {
+  min-height: 38px;
+  align-self: start;
+}
+
+/* Pequeno tratamento visual por tipo */
+.mestre-catalogo-modal-inimigo .mestre-modal-bloco,
+.mestre-catalogo-modal-inimigo .inimigo-ficha-bloco {
+  border-left-color: rgba(182, 74, 66, 0.72);
+}
+
+.mestre-catalogo-modal-inimigo .mestre-modal-bloco > span,
+.mestre-catalogo-modal-inimigo .inimigo-ficha-bloco > h3,
+.mestre-catalogo-modal-inimigo .inimigo-bloco-topo h3 {
+  color: #d8847d;
+}
+
+.mestre-catalogo-modal-npc .mestre-modal-bloco,
+.mestre-catalogo-modal-npc .inimigo-ficha-bloco {
+  border-left-color: rgba(212, 175, 55, 0.62);
+}
+
+/* Responsivo */
+@media (max-width: 900px) {
+  .mestre-modal-ficha.mestre-catalogo-modal {
+    width: min(760px, calc(100vw - 28px));
+    max-height: calc(100vh - 28px);
+  }
+
+  .mestre-catalogo-modal .inimigo-ficha-header {
+    position: relative;
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .mestre-catalogo-modal .inimigo-foto-editavel {
+    width: 72px;
+    height: 72px;
+    min-width: 72px;
+  }
+
+  .mestre-catalogo-modal .mestre-modal-header-acoes {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .mestre-catalogo-modal .inimigo-identidade {
+    grid-template-columns: 58px minmax(0, 1fr);
+  }
+
+  .mestre-catalogo-modal .catalogo-pasta-select {
+    grid-column: 1 / -1;
+  }
+
+  .mestre-catalogo-modal .mestre-modal-atributos.linha,
+  .mestre-catalogo-modal .mestre-corpo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mestre-catalogo-modal .inimigo-ataque-card,
+  .mestre-catalogo-modal .mestre-edit-lista > div {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .mestre-modal-overlay {
+    padding: 8px;
+  }
+
+  .mestre-modal-ficha.mestre-catalogo-modal {
+    width: 100%;
+    max-height: calc(100vh - 16px);
+    border-radius: 12px;
+  }
+
+  .mestre-catalogo-modal .inimigo-ficha-header {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .mestre-catalogo-modal .inimigo-foto-editavel {
+    width: 70px;
+    height: 70px;
+  }
+
+  .mestre-catalogo-modal .inimigo-identidade,
+  .mestre-catalogo-modal .mestre-modal-atributos.linha,
+  .mestre-catalogo-modal .mestre-corpo-grid,
+  .mestre-catalogo-modal .mestre-membro,
+  .mestre-catalogo-modal .mestre-corpo-item {
+    grid-template-columns: 1fr;
+  }
+
+  .mestre-catalogo-modal .inimigo-identidade label input {
+    width: 100%;
+  }
+
+  .mestre-catalogo-modal .mestre-modal-header-acoes {
+    justify-content: stretch;
+    flex-wrap: wrap;
+  }
+
+  .mestre-catalogo-modal .mestre-modal-header-acoes button {
+    flex: 1;
+  }
+
+  .mestre-catalogo-modal > .mestre-modal-bloco,
+  .mestre-catalogo-modal > .inimigo-ficha-bloco {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+}

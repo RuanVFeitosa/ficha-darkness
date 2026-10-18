@@ -1,6 +1,16 @@
 # Arquivos no Cloudflare R2
 
-Integração preparada, ainda não provisionada na sua conta.
+Worker publicado em `https://darkness-media.vianafeitosaruan.workers.dev`. O frontend precisa ser publicado com `REACT_APP_MEDIA_URL` para usar essa integração.
+
+## Modelos 3D grandes
+
+Modelos 3D online exigem R2: se a configuração estiver ausente, o upload é bloqueado e não usa Supabase Storage. Cada arquivo aceita até 512 MiB e é enviado sequencialmente em partes de 8 MiB autenticadas com a sessão Supabase. O Worker valida proprietário, ordem e tamanho de cada parte antes de concluir o objeto. O banco armazena URLs e a configuração do mapa, nunca os bytes do GLB.
+
+Se não houver uma sessão Supabase, o envio abre a janela de conta de arquivos. Ela permite entrar com e-mail/senha ou criar uma conta via Supabase Auth. Essa conta é independente da senha numérica do personagem/mestre e também não é a conta administrativa do painel Supabase. Se a confirmação de e-mail estiver ativa, o usuário precisa confirmar o endereço antes de entrar. Senhas não são enviadas ao Worker; ele recebe apenas o token da sessão.
+
+Se ocorrer erro, o navegador tenta abortar o envio multipart. Se a aba fechar abruptamente, o R2 remove por padrão uploads multipart incompletos após sete dias; os registros internos `_multipart/` podem receber uma regra de expiração de objetos após alguns dias. Não configure expiração sobre os arquivos finais dos usuários. Sessões temporárias não são acessíveis pela rota pública `/files/`.
+
+Para publicar o Worker sem sobrescrever variáveis configuradas no painel: `npx wrangler deploy --keep-vars`, dentro de `cloudflare/media`. Depois publique o frontend atualizado. A migração 035 deve existir no banco para salvar os mapas. Para validar, envie um GLB pequeno autenticado, confira a URL `/files/` e reabra o mapa salvo antes de enviar arquivos maiores.
 
 ## Ativar
 

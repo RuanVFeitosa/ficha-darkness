@@ -14,33 +14,23 @@ export const stageFromDarknessAttribute = (value) => {
   return 1;
 };
 
-export const gradeFromDarknessSkill = (value) => Math.min(4, number(value));
+export const gradeFromDarknessSkill = (value) => Math.min(4, Math.floor(number(value) / 5));
 
-const valueFor = (character, keys) =>
-  maximum(keys.map((key) => character?.habilidadesPassivas?.[key]));
-
-const combatValueFor = (character, keys) =>
-  maximum(keys.map((key) => character?.habilidadesCombate?.[key]));
-
-const resourceValue = (character, passiveKeys, combatKeys = []) =>
-  Math.max(valueFor(character, passiveKeys), combatValueFor(character, combatKeys));
-
-const resourceMappings = {
-  Armas: [["lutar"], ["violencia"]],
-  Pontaria: [["precisao"], ["percepcao"]],
-  Atletismo: [["folego", "equilibrio", "velocidade", "vitalidade"], ["firmeza", "resistencia"]],
-  "Sobrevivência": [["instintoSobrevivencia"], ["intuicao"]],
-  "Investigação": [["investigacao", "raciocinioLogico", "memoria"], ["razao"]],
-  Medicina: [["primeirosSocorros", "conhecimentoMedico"], []],
-  "Técnica": [["conhecimentoTecnico", "tatica"], []],
-  Tecnologia: [["tecnologia"], []],
-  "Influência": [["diplomacia", "intimidacao", "intimidacaoPassiva", "empatia", "presenca", "seducao"], ["carisma", "violencia"]],
-  "Dissimulação": [["enganacao", "manipulacao"], ["carisma"]],
-  "Subterfúgio": [["furtividade", "crime"], ["firmeza"]],
-  "Condução": [[], []],
-  "Controle Mental": [["disciplina", "autocontrole", "resistenciaMental"], ["persistencia", "resistencia"]],
-  "Propósito": [["coragem", "fe", "lealdade"], ["persistencia"]],
+export const adaptationResourceSources = {
+  Armas: ['lutar', 'combate'], Pontaria: ['precisao', 'armasDeFogo'],
+  Atletismo: ['folego', 'equilibrio', 'velocidade'],
+  'Sobrevivência': ['rastreamento', 'instintoSobrevivencia'],
+  'Investigação': ['investigacao', 'raciocinioLogico', 'memoria'],
+  Medicina: ['primeirosSocorros', 'conhecimentoMedico'], 'Técnica': ['conhecimentoTecnico'],
+  Tecnologia: ['tecnologia', 'hacking'], 'Influência': ['diplomacia', 'intimidacao', 'empatia'],
+  'Dissimulação': ['enganacao', 'manipulacao'], 'Subterfúgio': ['furtividade', 'crime'],
+  'Condução': ['pilotagem', 'direcao'],
+  'Controle Mental': ['resiliencia', 'resistenciaMental', 'disciplina', 'autocontrole'],
+  'Propósito': ['persistencia', 'coragem', 'fe', 'lealdade'],
 };
+const resourceValue = (character, keys) => maximum(keys.flatMap(key => [
+  character.habilidadesPassivas?.[key], character.pericias?.[key], character.habilidadesCombate?.[key],
+]));
 
 const legacyInjuries = (character) =>
   Object.entries(character?.membros || {}).flatMap(([region, member]) => {
@@ -58,19 +48,18 @@ const legacyAbilities = (character) => [
   ...(character?.poderesAbsolutos || []).map((item) => item?.nome || item?.name || String(item || "")).filter(Boolean),
 ].join("\n");
 
-export function convertDarknessToEspiral(character = {}, { pulseSource = "forca" } = {}) {
+export function convertDarknessToEspiral(character = {}, { pulseSource = "maior" } = {}) {
   const attributes = character?.atributos || {};
   const legacyInventory = Array.isArray(character.inventario) ? character.inventario : [];
-  const pulse = stageFromDarknessAttribute(attributes[pulseSource]);
-  const social = Math.max(number(attributes.vontade), combatValueFor(character, ["carisma"]));
+  const pulse = stageFromDarknessAttribute(pulseSource === "maior" ? Math.max(number(attributes.forca), number(attributes.fonitude)) : attributes[pulseSource]);
   const resources = Object.fromEntries(RESOURCES.map((name) => {
-    const [passive, combat] = resourceMappings[name] || [[], []];
-    return [name, gradeFromDarknessSkill(resourceValue(character, passive, combat))];
+    const keys = adaptationResourceSources[name] || [];
+    return [name, gradeFromDarknessSkill(resourceValue(character, keys))];
   }));
   const identity = [character.classe, character.especialidade].filter(Boolean).join(" · ");
   const notes = [
     "ADAPTAÇÃO DARKNESS → ESPIRAL",
-    "Atributos e recursos foram calculados pela tabela de adaptação. Revise Pulso, Sentido e Voz com o mestre: a regra original pede que representem o personagem, não uma média exata.",
+    "Atributos e recursos foram calculados pela tabela de adaptação. Sentido usa Reflexos, Voz usa Vontade e Integridade deriva de Pulso. Revise a adaptação conforme a história do personagem.",
     character.anotacao && `Anotações antigas:\n${character.anotacao}`,
     character.historia && `História antiga:\n${character.historia}`,
   ].filter(Boolean).join("\n\n");
@@ -85,8 +74,8 @@ export function convertDarknessToEspiral(character = {}, { pulseSource = "forca"
     attributes: {
       pulso: pulse,
       razao: stageFromDarknessAttribute(attributes.inteligencia),
-      sentido: stageFromDarknessAttribute(Math.max(number(attributes.reflexos), combatValueFor(character, ["percepcao"]))),
-      voz: stageFromDarknessAttribute(social),
+      sentido: stageFromDarknessAttribute(attributes.reflexos),
+      voz: stageFromDarknessAttribute(attributes.vontade),
     },
     resources,
     integrityTable: "creation",

@@ -2,15 +2,16 @@ import React, { lazy, Suspense, useEffect, useState } from "react";
 import PageTransition from "./pages/pageTransition";
 import { pageTransitionSystem } from "./utils/pageTransitionSystem";
 import "./App.css";
-import "./CSS/Responsive.css";
+import "./styles/Responsive.css";
 import {
   MESTRE_AUTH_KEY,
   TABLETOP_3D_AUTH_KEY,
 } from "./constants/masterAccess";
-import DialogoGlobal from "./components/DialogoGlobal";
+import DialogoGlobal from "./components/ui/DialogoGlobal";
 import { hasEspiralToken, readEspiralTabletopSheet, MISSING_ESPIRAL_TOKEN } from "./utils/espiralTabletop";
 import LojaEspiral from "./pages/lojaEspiral";
 import TransformacaoEspiral from "./pages/transformacaoEspiral";
+import Tabletop3DAccess from './components/tabletop/Tabletop3DAccess';
 
 const PaginaJogador = lazy(() => import("./pages/PaginaJogador"));
 const ArvoreHabilidades = lazy(() => import("./pages/arvoreHabilidades"));
@@ -28,6 +29,7 @@ const FichaEspiral = lazy(() => import("./pages/fichaEspiral"));
 function App() {
   const [transitionFicha,setTransitionFicha]=useState(()=>new URLSearchParams(window.location.search).has('ficha'));
   const [search, setSearch] = useState(window.location.search);
+  const [tabletopUnlocked, setTabletopUnlocked] = useState(false);
   const [transitionActive, setTransitionActive] = useState(() => Boolean(window.location.search));
   const [transitionSystem,setTransitionSystem]=useState(() => pageTransitionSystem(window.location.search));
 
@@ -97,7 +99,7 @@ function App() {
   const mestreAutorizado =
     sessionStorage.getItem(MESTRE_AUTH_KEY) === "true";
   const tabletop3DAutorizado =
-    sessionStorage.getItem(TABLETOP_3D_AUTH_KEY) === "true";
+    tabletopUnlocked || sessionStorage.getItem(TABLETOP_3D_AUTH_KEY) === "true" || (params.get('papel') === 'mestre' && mestreAutorizado);
 
   useEffect(() => {
     if (temFicha) return undefined;
@@ -148,8 +150,8 @@ function App() {
       <Suspense fallback={<div style={{ color: "#eee", padding: 40 }}>Abrindo a loja…</div>}>
         {params.has("jogador") ? (<PaginaJogador codigo={params.get("jogador")} />) : estaNoCriadorMapa3D && mestreAutorizado ? (
           <CriadorMapa3D />
-        ) : params.get("tabletop3d") === "1" && tabletop3DAutorizado ? (
-          <Tabletop3D />
+        ) : params.get("tabletop3d") === "1" ? (
+          tabletop3DAutorizado ? <Tabletop3D /> : <Tabletop3DAccess onAuthorized={() => setTabletopUnlocked(true)} />
         ) : estaNaMesa ? (
           <Mesa />
         ) : estaNoDashboardMestre && mestreAutorizado ? (

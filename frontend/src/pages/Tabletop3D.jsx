@@ -1,36 +1,37 @@
+import AnimatedScene from '../components/tabletop/AnimatedScene';
 import { espiralDie } from '../utils/espiralDice';
-import CombatPostureButton from '../components/CombatPostureButton';
+import CombatPostureButton from '../components/absoluto/CombatPostureButton';
 import {tokenPresentation} from '../utils/tokenAnimation';
-import TabletopResolutionLimit from '../components/TabletopResolutionLimit';
+import TabletopResolutionLimit from '../components/tabletop/TabletopResolutionLimit';
 import {createTabletopRenderer,isWebGLCreationError,tabletop2DUrl} from '../utils/tabletopRenderer';
-import '../CSS/TokenAnimationStudio.css';
-import AnimatedTokenArt from '../components/AnimatedTokenArt';
+import '../styles/TokenAnimationStudio.css';
+import AnimatedTokenArt from '../components/tokens/AnimatedTokenArt';
 import {readTokenAnimations} from '../utils/tokenAnimation';
 import { campaignCharacters, tabletopPlayerId } from "../utils/tabletopCharacters";
-import MobileTabletopControls from "../components/MobileTabletopControls";
+import MobileTabletopControls from "../components/tabletop/MobileTabletopControls";
 import { suavizarPosicaoToken } from "../utils/tokenMotion";
 import { rotacaoToken } from "../utils/tokenOrientation";
-import TokenFlashlight, { FlashlightControls, normalizarLanterna } from "../components/TokenFlashlight";
-import MediaMigrationPanel from "../components/MediaMigrationPanel";
+import TokenFlashlight, { FlashlightControls, normalizarLanterna } from "../components/tokens/TokenFlashlight";
+import MediaMigrationPanel from "../components/midia/MediaMigrationPanel";
 import { externalizarImagens, r2Configurado } from "../services/mediaStorage";
 import { verificarConfiguracaoMidia } from "../services/mediaMigration";
-import SceneDifficultyPanel from "../components/SceneDifficultyPanel";
+import SceneDifficultyPanel from "../components/tabletop/SceneDifficultyPanel";
 import {difficultyOptions,rollOutcome} from "../utils/sceneDifficulty";
-import RollNotifications, {RollHistory} from "../components/RollNotifications";
+import RollNotifications, {RollHistory} from "../components/tabletop/RollNotifications";
 import React, { Component, Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import * as THREE from "three";
-import { PlacedAssets, loadSavedMap } from "../components/MapEditor3D";
-import { RealisticAvatarModel } from "../components/RealisticAvatar3D";
+import { PlacedAssets, loadSavedMap } from "../components/tabletop/MapEditor3D";
+import { RealisticAvatarModel } from "../components/tabletop/RealisticAvatar3D";
 import { compressBackgroundImage, prepareTokenImage } from "../services/imageCompression";
 import { ativarCena, buscarCampanhaPorCodigo, enviarImagemCena, ouvirCampanha, salvarClima3DCampanha, salvarMapas3DCampanha, obterEstadoToken3D, salvarEstadoToken3D, salvarTokenCustom3D, desvincularFicha, registrarRolagem, salvarCena } from "../services/mesaApi";
-import "../CSS/Tabletop3D.css";
-import ContextTransition from "../components/ContextTransition";
+import "../styles/Tabletop3D.css";
+import ContextTransition from "../components/ui/ContextTransition";
 import { activeTabletopScene } from "../utils/tabletopScene";
 
-const TabletopSessionTools = lazy(() => import("../components/TabletopSessionTools"));
-const TacticalTabletop = lazy(() => import("../components/TacticalTabletop"));
+const TabletopSessionTools = lazy(() => import("../components/tabletop/TabletopSessionTools"));
+const TacticalTabletop = lazy(() => import("../components/tabletop/TacticalTabletop"));
 const FichaEspiral = lazy(() => import("./fichaEspiral"));
 const CUSTOM_TOKENS_STORAGE_KEY = "darkness_tabletop_custom_tokens_v1";
 const ESPIRAL_SHEET_PREFIX = "espiral:sheet:v1:";
@@ -1371,6 +1372,7 @@ export class SceneBoundary extends Component {
   return <main className={`tt3 ${mobile ? "tt3-mobile" : ""} ${mobileMenu ? "tt3-mobile-menu-open" : ""} ${view==="cinema" && !tacticalMode ? "tt3-letterboxed" : ""} ${!mestre && hudPanel==="sheet" && !hudHidden && !staticScene && !tacticalMode ? "tt3-player-sheet-open" : ""} ${hudHidden ? "tt3-hud-hidden" : ""}`}>
     <ContextTransition contextKey={campaign ? `${campaign.cenaAtiva?.id}:${campaign.midiaAtivaId}:${campaign.modo}` : "loading"}/>
     <Suspense fallback={null}><TabletopSessionTools open={sessionOpen} tool={sessionTool} requestVersion={sessionRequest} onClose={() => setSessionOpen(false)}/></Suspense>
+
     <section className="tt3-stage" aria-label="Sala de investigação tridimensional">
       <div className="tt3-cinema-bars" aria-hidden="true"/>
       <StaticSceneCinema activeKey={staticCinemaKey} mestre={mestre} onHudChange={setHudHidden}/>
@@ -1411,7 +1413,7 @@ export class SceneBoundary extends Component {
       </SceneBoundary>
 
       {tacticalMode && !staticScene && <SceneBoundary><Suspense fallback={<div className="tt3-fallback">Carregando mapa tático…</div>}><TacticalTabletop assets={mapAssets} mapKey={activeMapId} center={tacticalCenter} locked={draggingToken} mestre={mestre} tokens={tacticalTokens} onFloor={move} onDragStart={() => setDraggingToken(true)} onDragEnd={() => setDraggingToken(false)} onSelect={token => {if(token.personIndex!==undefined) {setSelected(token.personIndex);setTokenMode(false);} else {setSelectedToken(token.id);setTokenMode(true);}}} onMove={(token,position) => {if(!mestre) return;if(token.personIndex!==undefined) {setPositions(current => current.map((p,index) => index===token.personIndex ? position : p));updateSheetToken(token.id,{x:position[0],z:position[1]});} else finishTokenInteraction(token.id,position,true);}}/></Suspense></SceneBoundary>}
-      {staticScene && <div className={`tt3-static-scene ${!mestre ? "tt3-static-scene-player" : ""}`}><img src={staticScene.url} alt={staticScene.nome || campaign?.cenaAtiva?.nome || "Cena estática"}/></div>}
+      {staticScene && <div className={`tt3-static-scene ${!mestre ? "tt3-static-scene-player" : ""}`}>{staticScene.animation?.enabled ? <AnimatedScene media={staticScene} id={`${campaign?.cenaAtiva?.id}:${staticScene.id}`} alt={staticScene.nome || campaign?.cenaAtiva?.nome || "Cena narrativa"}/> : <img src={staticScene.url} alt={staticScene.nome || campaign?.cenaAtiva?.nome || "Cena estática"}/>}</div>}
       <div className="tt3-cinema-shade" aria-hidden="true"/>
       <div className="tt3-film-grain" aria-hidden="true"/>
 

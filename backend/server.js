@@ -1,6 +1,7 @@
 const http = require("http");
 const fs = require("fs/promises");
 const path = require("path");
+const { createInvestigation } = require('./investigacao');
 
 const PORT = Number(process.env.PORT || 4000);
 const HOST = process.env.HOST || "0.0.0.0";
@@ -760,6 +761,18 @@ const createUniqueFichaId = async (nome) => {
   return fichaId;
 };
 
+const investigation = createInvestigation({
+  dataDir: DATA_DIR,
+  masterPassword: process.env.MESTRE_PASSWORD || '13062000',
+  readProfile: code => readPersonagem(`__jogador_${code}`),
+  remote: USE_SUPABASE ? async (resource, options = {}) => {
+    const base = SUPABASE_URL.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
+    const response = await fetch(`${base}/rest/v1/${resource}`, { ...options, headers: {apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json', ...(options.headers || {})} });
+    if (!response.ok) throw new Error('Não foi possível acessar o mural no banco. Confira a migração de murais no servidor.');
+    return response.status === 204 ? null : response.json();
+  } : null,
+});
+
 const handleRequest = async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
   res.corsHeaders = getCorsHeaders(req);
@@ -837,6 +850,15 @@ const handleRequest = async (req, res) => {
     }
 
 
+    const muralMatch = url.pathname.match(/^\/api\/investigacao\/(pessoal|campanha)\/([a-zA-Z0-9_-]{1,100})$/);
+    if (muralMatch && req.method === 'POST') {
+      try {
+        const board = await investigation(muralMatch[1], muralMatch[2], await readJsonBody(req));
+        return sendJson({req,res,statusCode:200,payload:{board},cacheControl:'no-store'});
+      } catch(error) {
+        return sendJson({req,res,statusCode:error.status || 500,payload:{error:error.status ? error.message : 'Não foi possível salvar ou carregar o mural. Confira a conexão e a configuração do servidor.'},cacheControl:'no-store'});
+      }
+    }
     const jogadorMatch = url.pathname.match(/^\/api\/jogadores\/(\d{4,8})$/);
     if (jogadorMatch && ["GET", "PUT"].includes(req.method)) {
       const recordId = `__jogador_${jogadorMatch[1]}`;

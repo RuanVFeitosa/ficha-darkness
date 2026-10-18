@@ -13,7 +13,7 @@ import {
   mdiCreation,
   mdiWrench,
 } from "@mdi/js";
-import "../CSS/LojaHelena.css";
+import "../styles/LojaHelena.css";
 import { obterIconeItem } from "../utils/itemIcons";
 import {
   buscarCatalogoLoja,

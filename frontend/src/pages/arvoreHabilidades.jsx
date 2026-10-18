@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiArrowLeft } from "@mdi/js";
-import "../CSS/ArvoreHabilidades.css";
+import "../styles/ArvoreHabilidades.css";
 import {
   buscarArvoresHabilidades,
   buscarPersonagem,

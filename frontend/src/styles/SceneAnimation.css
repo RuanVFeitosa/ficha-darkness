@@ -1,0 +1,19 @@
+.scene-animated-art{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:inherit}
+.scene-animation-editor{flex:1 0 100%;grid-column:1/-1;width:100%;min-width:0;padding:12px;border:1px solid #454039;background:#101010;color:#ddd;font:12px/1.6 'Courier New',monospace}
+.scene-animation-editor summary{cursor:pointer;color:#ceb881;min-height:28px}
+.scene-animation-editor .sa-body{display:grid;gap:14px;padding-top:14px}
+.scene-animation-editor .sa-preview{position:relative;overflow:hidden;width:100%;max-height:420px;min-height:180px;background:#080808}
+.scene-animation-editor .sa-check{display:flex;align-items:center;gap:10px}
+.scene-animation-editor .sa-check input{width:18px;height:18px}
+.scene-animation-editor .sa-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.scene-animation-editor label{display:grid;gap:6px;font-size:11px;color:#bbb;min-width:0}
+.scene-animation-editor input[type=range]{width:100%;min-height:32px;accent-color:#bfa66b}
+.scene-animation-editor input[type=file]{display:block!important;position:static!important;opacity:1!important;width:100%!important;height:auto!important;min-height:42px;padding:8px;border:1px dashed #555;background:#111;color:#bbb}
+.scene-animation-editor .sa-presets{display:flex;gap:8px;flex-wrap:wrap}
+.scene-animation-editor button{min-height:38px;border:1px solid #555;background:#161616;color:#ddd;padding:8px 12px;cursor:pointer;font:11px 'Courier New',monospace}
+.scene-animation-editor .sa-region{position:absolute;inset:0;cursor:crosshair;touch-action:none}
+.scene-animation-editor .sa-region img{width:100%!important;height:100%!important;object-fit:fill!important;pointer-events:none;user-select:none}
+.scene-animation-editor .sa-region i{position:absolute;border:2px solid #e9c876;background:#e9c87622;pointer-events:none}
+.cena-editor-com-animacao{flex-wrap:wrap}
+.cena-editor-com-animacao>.scene-animation-editor{margin-top:8px}
+@media(max-width:620px){.scene-animation-editor .sa-grid{grid-template-columns:minmax(0,1fr)}}

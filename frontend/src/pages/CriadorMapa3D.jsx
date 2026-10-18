@@ -2,10 +2,10 @@ import React, { Component, useEffect, useRef, useState } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import * as THREE from "three";
-import MapEditor3D, { AssetModel, MAP_STORAGE_KEY, PlacedAssets, loadSavedMap } from "../components/MapEditor3D";
+import MapEditor3D, { AssetModel, MAP_STORAGE_KEY, PlacedAssets, loadSavedMap } from "../components/tabletop/MapEditor3D";
 import { ativarCena, buscarCampanhaPorCodigo, enviarModelo3DMapa, salvarCena, salvarMapas3DCampanha } from "../services/mesaApi";
-import "../CSS/Tabletop3D.css";
-import "../CSS/CriadorMapa3D.css";
+import "../styles/Tabletop3D.css";
+import "../styles/CriadorMapa3D.css";
 
 function CameraEditor({ poseApiRef }) {
   const { camera, gl } = useThree();
@@ -164,7 +164,7 @@ export default function CriadorMapa3D() {
       if (!campaign?.id) throw new Error("A campanha ainda está sendo carregada.");
       setImportingModel(true);
       setNotice("Enviando e preparando o modelo 3D…");
-      const uploaded = await enviarModelo3DMapa(campaign.id, files);
+      const uploaded = await enviarModelo3DMapa(campaign.id, files, (name, sent, total) => setNotice(`Enviando ${name} ao Cloudflare R2 · ${Math.round(sent / total * 100)}%`));
       const baseName = uploaded.fileName.replace(/\.(glb|gltf)$/i, "") || "Mapa importado";
       const asset = {
         id: `imported-map/${Date.now()}`,

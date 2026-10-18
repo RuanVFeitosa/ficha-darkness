@@ -1,11 +1,11 @@
-import EspiralDice from '../components/EspiralDice';
+import EspiralDice from '../components/espiral/EspiralDice';
 import { espiralDie } from '../utils/espiralDice';
 import { vincularAoJogadorAtivo, verificarVagaPersonagem } from "../services/jogadorApi";
 import React, { useState } from 'react';
 import CriarPersonagem from './criarPersonagem';
 import { ATTRIBUTES, RESOURCES, GRADES, freshSheet, creationWarnings, integrityMax } from '../data/espiral';
-import '../CSS/CadastroEspiral.css';
-import EscolhaVertente from '../components/EscolhaVertente';
+import '../styles/CadastroEspiral.css';
+import EscolhaVertente from '../components/espiral/EscolhaVertente';
 import { compressProfileImage } from '../services/imageCompression';
 export function Spiral() {
  const points=Array.from({length:400},(_,i)=>{const t=i/399*Math.PI*9,r=3+i/399*84;return `${100+Math.cos(t)*r},${100+Math.sin(t)*r}`;}).join(' ');

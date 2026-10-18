@@ -1,25 +1,26 @@
 import {characterTemplates,PLAYER_CHARACTER_LIMIT,PLAYER_CHARACTER_PAGE_SIZE,validateCharacterLimit} from '../utils/playerCharacters';
 import {fecharAnimado} from '../utils/pageMotion';
-import PlayerProfile from '../components/PlayerProfile';
-import EvidenceGrid from '../components/EvidenceGrid';
-import PlayerAppearance from "../components/PlayerAppearance";
+import PlayerProfile from '../components/jogador/PlayerProfile';
+import EvidenceGrid from '../components/campanha/EvidenceGrid';
+import MuralInvestigacao from '../components/campanha/MuralInvestigacao';
+import PlayerAppearance from "../components/jogador/PlayerAppearance";
 import { variaveisPaleta } from "../utils/playerAppearance";
-import CharacterDossier from "../components/CharacterDossier";
+import CharacterDossier from "../components/jogador/CharacterDossier";
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { entrarJogador, carregarFicha, fichaKey, fichaHref, documentoVisivel } from '../services/jogadorApi';
 import { salvarJogador } from '../services/personagemApi';
 import { listarCampanhasDaFicha } from '../services/mesaApi';
 import { catalogoBuilds } from '../utils/buildCatalog';
-import BuildCatalog from '../components/BuildCatalog';
+import BuildCatalog from '../components/jogador/BuildCatalog';
 
 
-import ComputadorModerno from '../components/ComputadorModerno';
-import ReprodutorCassete from '../components/ReprodutorCassete';
-import EvidenceImageViewer from '../components/EvidenceImageViewer';
-import '../CSS/PaginaJogador.css';
-import '../CSS/PaginaJogadorResponsive.css';
-import '../CSS/PaginaJogadorMotion.css';
-import '../CSS/PaginaJogadorRefined.css';
+import ComputadorModerno from '../components/ui/ComputadorModerno';
+import ReprodutorCassete from '../components/midia/ReprodutorCassete';
+import EvidenceImageViewer from '../components/campanha/EvidenceImageViewer';
+import '../styles/PaginaJogador.css';
+import '../styles/PaginaJogadorResponsive.css';
+import '../styles/PaginaJogadorMotion.css';
+import '../styles/PaginaJogadorRefined.css';
 export { catalogoBuilds } from '../utils/buildCatalog';
 
 function Simbolo({ sistema }) {
@@ -36,6 +37,7 @@ function Documento({ doc }) {
   return <p>Abra o arquivo para consultar seu conteúdo.</p>;
 }
 export default function PaginaJogador({ codigo }) {
+  const [muralSelecionado,setMuralSelecionado]=useState('pessoal');
   const [perfil, setPerfil] = useState(null), [fichas, setFichas] = useState([]), [campanhas, setCampanhas] = useState([]);
   const [templates,setTemplates]=useState(false),[paginaPersonagens,setPaginaPersonagens]=useState(0);
   const fichasTemplates=useMemo(characterTemplates,[]);
@@ -130,6 +132,7 @@ export default function PaginaJogador({ codigo }) {
 
     </section>}
     {aba === 'investigacao' && <section className={`pj-investigation-layout pj-investigation-unified ${evidenciaInterativa ? 'pj-investigacao-interativa' : ''} ${doc ? 'pj-investigacao-aberta' : ''}`} aria-label="Investigação">
+      <div className="mi-investigation-panel"><div className="mi-scope"><label>Espaço de investigação<select value={muralSelecionado} onChange={e=>setMuralSelecionado(e.target.value)}><option value="pessoal">Meu mural pessoal</option>{campanhas.map(c=><option key={c.id} value={c.id}>Campanha · {c.nome}</option>)}</select></label></div><MuralInvestigacao key={`${codigo}:${muralSelecionado}`} codigo={codigo} scope={muralSelecionado==='pessoal'?'pessoal':'campanha'} id={muralSelecionado==='pessoal'?codigo:muralSelecionado} nome={muralSelecionado==='pessoal'?'Meu mural de investigação':`Mural · ${campanhas.find(c=>c.id===muralSelecionado)?.nome || 'Campanha'}`}/><h2 className="mi-evidence-title">Documentos e evidências compartilhados</h2></div>
       <div className="pj-investigation-list"><details className="pj-filtros"><summary>Filtrar documentos</summary><label>Campanha<select value={campanhaFiltro} onChange={e=>{setCampanhaFiltro(e.target.value);setDoc(null);}}><option value="">Todas as campanhas</option>{campanhas.map(c=><option key={c.id} value={c.id}>{c.nome}</option>)}</select></label><button type="button" onClick={()=>{setDoc(null);setPerfil({...perfil});}}>Atualizar documentos</button></details>
         <EvidenceGrid key={campanhaFiltro} documentos={documentos} selecionado={doc} onSelect={setDoc}/>
         {!documentos.length && <p className="pj-vazio">Nenhum documento compartilhado com seus personagens nesta seleção.</p>}

@@ -1,0 +1,198 @@
+/* Dossiê do personagem: escopo exclusivo do visualizador Absoluto. */
+.absoluto-dashboard .ad-ativos-intro { margin: 0; color: #aaa; font-size: 11px; line-height: 1.7; }
+.absoluto-dashboard .ad-ativos-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; align-items: start; }
+.absoluto-dashboard .ad-ativo-resumo { padding: 10px 12px; border: 1px solid #363636; background: #121212; }
+.absoluto-dashboard .ad-ativo-resumo > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.absoluto-dashboard .ad-ativo-resumo header small { font: 9px 'Courier New',monospace; color: #aaa; text-transform: uppercase; letter-spacing: .08em; }
+.absoluto-dashboard .ad-ativo-resumo h3 { margin: 4px 0 0; color: #eee; font: 19px Georgia,serif; }
+.absoluto-dashboard .ad-ativo-resumo header > strong { color: var(--ad-gold); font: 25px Georgia,serif; white-space: nowrap; }
+.absoluto-dashboard .ad-ativo-resumo header > strong small { color: var(--ad-gold); font-size: 14px; margin-left: 3px; }
+.absoluto-dashboard .ad-ativo-formula { margin: 8px 0; color: #999; font-size: 9px; }
+.absoluto-dashboard .ad-ativo-bonus { border-top: 1px solid #333; }
+.absoluto-dashboard .ad-ativo-bonus > summary { padding: 8px 0 2px; color: #bfa66b; font-size: 10px; cursor: pointer; }
+.absoluto-dashboard .ad-ativo-bonus > summary:focus-visible { outline: 2px solid var(--ad-gold); outline-offset: 2px; }
+.absoluto-dashboard .ad-ativo-bonus ul { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.absoluto-dashboard .ad-ativo-bonus li { display: flex; justify-content: space-between; gap: 12px; color: #bbb; font-size: 11px; }
+.absoluto-dashboard .ad-ativo-bonus b { font-weight: 400; color: #eee; }
+.absoluto-dashboard .ad-ativo-sem-bonus { margin: 0; border-top: 1px solid #333; padding-top: 8px; color: #888; font-size: 9px; }
+@media(max-width:1000px) { .absoluto-dashboard .ad-ativos-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:620px) { .absoluto-dashboard .ad-ativos-grid { grid-template-columns: minmax(0,1fr); } }
+.absoluto-dashboard .mestre-modal-personagem {
+  --dossier-line: #363636;
+  --dossier-muted: #aaa;
+  width: min(1120px, 100%);
+  padding: 0 30px 30px !important;
+  gap: 28px;
+  border-top: 2px solid var(--ad-gold) !important;
+  border-radius: 2px !important;
+  background: #101010 !important;
+  font: 12px/1.6 'Courier New', monospace;
+  scrollbar-color: #666 #111;
+  scrollbar-width: thin;
+  counter-reset: dossier-section;
+}
+.absoluto-dashboard .ad-dossier-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 58px;
+  margin: 0 -30px;
+  padding: 10px 30px;
+  background: #101010;
+  border-bottom: 1px solid var(--dossier-line);
+}
+.absoluto-dashboard .ad-dossier-toolbar > span { font-size: 9px; letter-spacing: .12em; color: var(--ad-gold); }
+.absoluto-dashboard .ad-dossier-toolbar i { font-style: normal; color: #666; margin: 0 8px; }
+.absoluto-dashboard .ad-dossier-toolbar button {
+  display: flex; align-items: center; gap: 16px; min-height: 40px;
+  border: 1px solid #444; background: #101010; color: #ddd;
+  padding: 6px 12px; font: 11px 'Courier New', monospace; cursor: pointer;
+}
+.absoluto-dashboard .ad-dossier-toolbar button span { font-size: 22px; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-header {
+  gap: 24px; border-bottom: 0; padding: 0;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-header-esquerda {
+  flex-direction: row; align-items: center; gap: 24px;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-foto {
+  width: 112px; height: 140px; flex: none; object-fit: cover;
+  border: 1px solid #555; border-radius: 1px;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-identidade { gap: 8px; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-identidade > span {
+  color: var(--ad-gold); font-size: 9px; font-weight: 400; letter-spacing: .12em;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-identidade h2 {
+  font: clamp(32px, 4vw, 50px)/1.08 Georgia, serif !important;
+  text-transform: none; margin: 0; letter-spacing: -.025em !important;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-identidade small { color: #bbb; font-size: 12px; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-personagem-recursos { gap: 16px; flex-wrap: wrap; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-personagem-recursos span {
+  border: 0; border-radius: 0; padding: 0; background: none;
+  color: #bfa66b; font-size: 10px; font-weight: 400; letter-spacing: .04em;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-header-acoes { gap: 12px; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-header-acoes > .mestre-header-admin {
+  grid-row: 1; padding: 16px 0; border: 0; border-top: 1px solid var(--dossier-line);
+  border-bottom: 1px solid var(--dossier-line); border-radius: 0; background: transparent;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-admin-grid { gap: 20px; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-admin-grupo {
+  padding: 0; border: 0; border-radius: 0; background: none;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-admin-grupo label {
+  color: #aaa; font-size: 9px; font-weight: 400; letter-spacing: .1em;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-admin-controles { margin-top: 10px; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-admin-controles :is(button,input) { min-height: 42px; border-radius: 1px; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-admin-controles button { color: var(--ad-gold); border-color: #555; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-nivel-atual { font: 25px Georgia, serif; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-header-acoes > .mestre-btn-apagar {
+  grid-row: 2; justify-self: end; grid-column: 1/-1; min-height: 36px;
+  font-size: 9px; font-weight: 400; letter-spacing: .05em;
+  color: #d68d8d; border: 1px solid #603333; padding: 8px 12px;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-fechar-ficha { display: none; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-bloco {
+  padding: 0 !important; gap: 18px; border: 0 !important; border-radius: 0 !important;
+  background: transparent !important; contain: none;
+}
+.absoluto-dashboard .mestre-modal-personagem :is(.mestre-modal-bloco > span,.mestre-modal-linha-topo > span) {
+  font: 11px/1.6 'Courier New', monospace; color: #ddd;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.absoluto-dashboard .mestre-modal-personagem > .mestre-modal-bloco {
+  border-top: 1px solid var(--dossier-line) !important; padding-top: 24px !important;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-linha-topo {
+  margin: 0 !important; padding: 0 !important; border: 0 !important;
+  flex-direction: row; flex-wrap: wrap; align-items: center;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-abrir-ficha {
+  border: 1px solid #666; border-radius: 1px; min-height: 38px;
+  padding: 8px 14px; color: var(--ad-gold); background: transparent;
+  font: 10px 'Courier New', monospace;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-atributos.linha {
+  grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px;
+}
+.absoluto-dashboard .mestre-modal-personagem :is(.mestre-modal-atributos > div,.mestre-passiva-item) {
+  border-top: 1px solid #444; padding: 14px 0 0;
+  background: transparent; border-radius: 0; gap: 8px;
+}
+.absoluto-dashboard .mestre-modal-personagem :is(.mestre-modal-atributos small,.mestre-passiva-item small,.mestre-corpo-item small) {
+  font: 9px/1.5 'Courier New', monospace; color: #aaa; letter-spacing: .04em;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-modal-atributos strong {
+  font: 32px/1.2 Georgia, serif; color: #eee;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-status-layout {
+  grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); gap: 30px;
+  padding: 24px 0 0; border-top: 1px solid var(--dossier-line);
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-corpo-grid.novo {
+  grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px 24px;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-corpo-item {
+  background: none; border-radius: 0; padding: 0; min-height: 0; gap: 8px;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-corpo-item strong { font: 12px 'Courier New', monospace; font-weight: 400; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-status-lateral {
+  border-left: 1px solid var(--dossier-line); padding-left: 30px; gap: 24px; align-content: start;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-barra { height: 6px; border-radius: 0; background: #292929; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-status-lateral .mestre-barra { height: 10px; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-barra.vermelho span { background: #ed3037; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-barra.roxo span { background: #65a8ff; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-barra.dourado span { background: #efb637; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-recurso-editor { justify-content: flex-end; gap: 10px; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-recurso-editor input { width: 76px; min-height: 40px; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-entrega-cabecalho { gap: 16px; align-items: start; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-entrega-cabecalho h3 { font: 28px Georgia, serif; color: #eee; margin: 8px 0; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-entrega-cabecalho :is(span,p,strong) { font: 10px/1.7 'Courier New', monospace; color: #aaa; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-entrega-filtro { display: flex; flex-wrap: wrap; gap: 6px; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-entrega-filtro button {
+  border: 1px solid #444; border-radius: 1px; background: transparent; color: #bbb;
+  font: 10px 'Courier New', monospace; padding: 9px 12px; min-height: 38px;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-entrega-filtro button.ativa { background: var(--ad-gold); color: #080808; border-color: var(--ad-gold); }
+.absoluto-dashboard .mestre-modal-personagem :is(.mestre-entrega-card,.mestre-item-card) {
+  padding: 16px; border: 1px solid #393939; border-radius: 2px; background: #141414;
+  box-shadow: none; color: #ddd;
+}
+.absoluto-dashboard .mestre-modal-personagem .mestre-entrega-card.selecionado { border-color: var(--ad-gold); background: #1b1913; }
+.absoluto-dashboard .mestre-modal-personagem :is(.mestre-entrega-card,.mestre-item-card) > strong { font: 21px Georgia, serif; color: #eee; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-entrega-card em { color: var(--ad-gold); font: 10px 'Courier New', monospace; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-entrega-loja { padding: 16px; background: #171717; border: 1px solid #393939; border-radius: 2px; gap: 16px; }
+.absoluto-dashboard .mestre-modal-personagem .mestre-entrega-loja button { border-radius: 1px; background: var(--ad-gold); color: #080808; border: 1px solid var(--ad-gold); min-height: 44px; font: 11px 'Courier New', monospace; }
+.absoluto-dashboard .mestre-modal-personagem button:disabled { opacity: .45; cursor: not-allowed; }
+.absoluto-dashboard .mestre-modal-personagem .ad-dossier-empty { grid-column: 1/-1; margin: 0; padding: 16px 0; color: #888; font-size: 11px; }
+.absoluto-dashboard .mestre-modal-personagem button:focus-visible { outline: 2px solid var(--ad-gold); outline-offset: 3px; }
+@media(max-width:800px) {
+  .absoluto-dashboard .mestre-modal-personagem .mestre-status-layout { grid-template-columns: minmax(0,1fr); }
+  .absoluto-dashboard .mestre-modal-personagem .mestre-status-lateral { border-left: 0; padding-left: 0; border-top: 1px solid #363636; padding-top: 24px; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .absoluto-dashboard .mestre-modal-personagem .mestre-admin-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:620px) {
+  .absoluto-dashboard .mestre-modal-personagem { padding: 0 16px 24px !important; gap: 24px; }
+  .absoluto-dashboard .ad-dossier-toolbar { margin: 0 -16px; padding: 8px 16px; }
+  .absoluto-dashboard .ad-dossier-toolbar > span { max-width: 180px; font-size: 8px; }
+  .absoluto-dashboard .mestre-modal-personagem .mestre-modal-header-esquerda { gap: 16px; align-items: flex-start; }
+  .absoluto-dashboard .mestre-modal-personagem .mestre-modal-foto { width: 76px; height: 106px; }
+  .absoluto-dashboard .mestre-modal-personagem .mestre-modal-identidade h2 { font-size: 32px !important; }
+  .absoluto-dashboard .mestre-modal-personagem .mestre-modal-identidade small { font-size: 10px; }
+  .absoluto-dashboard .mestre-modal-personagem .mestre-modal-atributos.linha { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
+  .absoluto-dashboard .mestre-modal-personagem .mestre-status-lateral { grid-template-columns: minmax(0,1fr); }
+  .absoluto-dashboard .mestre-modal-personagem .mestre-admin-grid { gap: 16px 12px; }
+  .absoluto-dashboard .mestre-modal-personagem .mestre-entrega-cards { grid-template-columns: minmax(0,1fr); }
+  .absoluto-dashboard .mestre-modal-personagem :is(.mestre-entrega-cabecalho,.mestre-entrega-loja) { flex-direction: column; align-items: stretch; }
+}
+@media(max-width:360px) {
+  .absoluto-dashboard .mestre-modal-personagem .mestre-admin-grid { grid-template-columns: minmax(0,1fr); }
+}

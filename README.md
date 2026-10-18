@@ -8,6 +8,11 @@ Aplicacao de ficha de RPG com frontend React e backend Node separados por worksp
 - `backend/`: API Node, persistencia local em JSON ou Supabase, e servidor de producao.
 - `api/`: adaptadores serverless legados da Vercel. O deploy atual ignora esta pasta para manter a Vercel apenas como frontend.
 - `scripts/`: utilitarios de desenvolvimento.
+- `docs/`: documentação de arquitetura, sistemas e publicação.
+- `archive/development/`: scripts antigos, capturas e registros preservados para consulta.
+
+O guia de pastas e as convenções estão em [Estrutura do projeto](docs/ESTRUTURA.md).
+Componentes do frontend são agrupados por área em `frontend/src/components/`; estilos ficam em `frontend/src/styles/` e dados de regras em `frontend/src/data/`.
 
 ## Scripts
 
@@ -57,4 +62,6 @@ http://localhost:3000/?ficha=mestre
 
 ## Deploy
 
-Veja [DEPLOY.md](DEPLOY.md) para usar frontend na Vercel e backend sempre ligado em um host Node.
+Veja [Deploy](docs/DEPLOY.md) para usar frontend na Vercel e backend sempre ligado em um host Node.
+
+Outros documentos: [Espiral](docs/ESPIRAL.md), [tarefas de infraestrutura](docs/TODO.md) e [índice da documentação](docs/README.md).

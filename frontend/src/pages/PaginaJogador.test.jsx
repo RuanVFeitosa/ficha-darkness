@@ -7,8 +7,8 @@ import { listarCampanhasDaFicha } from '../services/mesaApi';
 jest.mock('../services/jogadorApi', () => ({ ...jest.requireActual('../services/jogadorApi'), entrarJogador: jest.fn(), carregarFicha: jest.fn() }));
 jest.mock('../services/personagemApi', () => ({ salvarJogador: jest.fn() }));
 jest.mock('../services/mesaApi', () => ({ listarCampanhasDaFicha: jest.fn() }));
-jest.mock('../components/ComputadorModerno',()=>()=> <div>PC interativo</div>);
-jest.mock('../components/ReprodutorCassete',()=>()=> <div>Fita interativa</div>);
+jest.mock('../components/ui/ComputadorModerno',()=>()=> <div>PC interativo</div>);
+jest.mock('../components/midia/ReprodutorCassete',()=>()=> <div>Fita interativa</div>);
 beforeEach(()=>{
   jest.clearAllMocks();
   entrarJogador.mockResolvedValue({nome:'Ruan',tema:'escuro',personagens:[{id:'1234',sistema:'darkness'}],builds:[]});

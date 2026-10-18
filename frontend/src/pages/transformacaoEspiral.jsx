@@ -1,4 +1,4 @@
-import EspiralDice from '../components/EspiralDice';
+import EspiralDice from '../components/espiral/EspiralDice';
 import { espiralDie } from '../utils/espiralDice';
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -14,7 +14,7 @@ import {
   CUSTOS_ESPERANCA_HABILIDADES,
   HABILIDADES_ESPIRAL,
 } from "../data/habilidadesEspiral";
-import "../CSS/TransformacaoEspiral.css";
+import "../styles/TransformacaoEspiral.css";
 
 const storageKey = (id) => `espiral:sheet:v1:${id}`;
 const loadSheet = (id) => {

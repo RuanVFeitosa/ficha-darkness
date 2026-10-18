@@ -1,4 +1,6 @@
 jest.mock("./supabase", () => ({ supabase: { auth: { getSession: jest.fn() }, storage: { from: jest.fn() } } }));
+jest.mock('./supabaseMedia', () => ({ supabaseMedia: require('./supabase').supabase }));
+jest.mock('../components/midia/MediaLogin', () => ({ __esModule: true, default: jest.fn(() => Promise.reject(new Error('Entre na sua conta para enviar arquivos ao R2.'))) }));
 const originalFetch = global.fetch;
 let mediaStorage, supabase;
 beforeEach(() => {
@@ -22,6 +24,33 @@ test("R2 failure does not upload to Supabase silently", async () => {
   global.fetch.mockResolvedValue({ ok: false, json: async () => ({ error: "Upload recusado" }) });
   const result = await mediaStorage.from("mapas").upload("token.png", new Blob());
   expect(result.error.message).toBe("Upload recusado"); expect(supabase.storage.from).not.toHaveBeenCalled();
+});
+
+test('model uploads require R2 even when its environment variable is missing', async () => {
+  jest.resetModules(); delete process.env.REACT_APP_MEDIA_URL;
+  const api = require('./mediaStorage');
+  const result = await api.mediaStorage.from('mapas').upload('model.glb', new Blob(['x']), { requireR2: true, multipart: true });
+  expect(result.error.message).toMatch(/R2 obrigatório/);
+  expect(require('./supabase').supabase.storage.from).not.toHaveBeenCalled();
+  expect(global.fetch).not.toHaveBeenCalled();
+});
+
+test('multipart sends slices, completes and resolves a Cloudflare URL', async () => {
+  const file = { size: 134 * 1024 * 1024, slice: jest.fn(() => new Blob(['part'])) };
+  global.fetch.mockImplementation(async url => ({ ok: true, json: async () => url.endsWith('/create') ? { id: 'session-id', partSize: 8 * 1024 * 1024 } : url.endsWith('/complete') ? { path: 'r2:owner/mapas/map.glb', url: 'https://media.test/files/owner/mapas/map.glb' } : { uploaded: 1 } }));
+  const progress = jest.fn();
+  const result = await mediaStorage.from('mapas').upload('campaign/map.glb', file, { multipart: true, requireR2: true, onProgress: progress });
+  expect(result.error).toBeNull(); expect(file.slice).toHaveBeenCalledTimes(17);
+  expect(progress).toHaveBeenLastCalledWith(file.size, file.size);
+  expect(supabase.storage.from).not.toHaveBeenCalled();
+});
+
+test('failed multipart aborts without falling back to Supabase', async () => {
+  global.fetch.mockImplementation(async url => ({ ok: !url.includes('/part?'), json: async () => url.endsWith('/create') ? { id: 'test', partSize: 8 * 1024 * 1024 } : { error: 'Parte recusada' } }));
+  const result = await mediaStorage.from('mapas').upload('model.glb', { size: 4, slice: () => new Blob(['part']) }, { multipart: true, requireR2: true });
+  expect(result.error.message).toBe('Parte recusada');
+  expect(global.fetch).toHaveBeenCalledWith('https://media.test/multipart/test/abort', expect.objectContaining({ method: 'DELETE' }));
+  expect(supabase.storage.from).not.toHaveBeenCalled();
 });
 test("mixed cleanup dispatches each path to its original provider", async () => {
   const remove = jest.fn().mockResolvedValue({ error: null });

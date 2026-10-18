@@ -1,6 +1,14 @@
 import { registrarRolagem, salvarTokenCustom3D, salvarEstadoToken3D, obterEstadoToken3D, ativarCena, atualizarEstadoMusica, atualizarRevelacaoDocumentoInvestigacao, buscarCampanhaPorCodigo, criarCampanhaMesa, desvincularFicha, excluirCena, listarCampanhas, listarCampanhasDaFicha, moverToken, salvarCena, salvarClima3DCampanha, salvarEvidenciaInterativa, salvarMusicasCampanha, salvarMapas3DCampanha, validarArquivoImagem, vincularFicha } from "./mesaApi";
 
 describe("biblioteca local da mesa", () => {
+  test('salva e reabre a animação individual das imagens narrativas', async()=>{
+    const animation={enabled:true,breathing:.01,sway:.005,closedImage:'data:image/webp;base64,YQ==',region:{x:.2,y:.15,width:.5,height:.2}};
+    const cena=await salvarCena('demo',{nome:'Boss',imagensCena:[{id:'boss',nome:'O guardião',url:'/boss.webp',animation},{id:'local',nome:'Sala',url:'/sala.webp'}],mapasBatalha:[]});
+    await ativarCena('demo',cena.id,'cena','boss');
+    const campanha=await buscarCampanhaPorCodigo('DARK26');
+    expect(campanha.cenaAtiva.imagensCena[0].animation).toEqual(animation);
+    expect(campanha.cenaAtiva.imagensCena[1].animation).toBeUndefined();
+  });
   test("limita o tamanho das cenas e mapas antes do upload", () => {
     expect(() => validarArquivoImagem(new File([new Uint8Array(2 * 1024 * 1024 + 1)], "cena.webp", { type: "image/webp" }), "cena")).toThrow("2 MB");
     expect(() => validarArquivoImagem(new File([new Uint8Array(5 * 1024 * 1024 + 1)], "mapa.webp", { type: "image/webp" }), "mapa")).toThrow("5 MB");

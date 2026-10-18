@@ -1,5 +1,7 @@
-import AnimatedTokenImage from '../components/AnimatedTokenImage';
-import EvidenceImageViewer from "../components/EvidenceImageViewer";
+import AnimatedScene from '../components/tabletop/AnimatedScene';
+import TabletopSceneEditor from '../components/tabletop/TabletopSceneEditor';
+import AnimatedTokenImage from '../components/tokens/AnimatedTokenImage';
+import EvidenceImageViewer from "../components/campanha/EvidenceImageViewer";
 import { ACEITAR_AUDIO } from "../utils/audioUpload";
 import React, {
   useCallback,
@@ -9,9 +11,9 @@ import React, {
   useState,
 } from "react";
 import Icon from "@mdi/react";
-import ReprodutorCassete from "../components/ReprodutorCassete";
-import ComputadorModerno from "../components/ComputadorModerno";
-import { confirmarDialogo } from "../components/DialogoGlobal";
+import ReprodutorCassete from "../components/midia/ReprodutorCassete";
+import ComputadorModerno from "../components/ui/ComputadorModerno";
+import { confirmarDialogo } from "../components/ui/DialogoGlobal";
 import { mdiAccountPlusOutline, mdiArrowLeft, mdiChevronDown, mdiChevronRight, mdiClose, mdiDeleteOutline, mdiFileDocumentMultipleOutline, mdiFolderOutline, mdiFitToScreenOutline, mdiFlashlight, mdiFlashlightOff, mdiImageOutline, mdiLightbulbOnOutline, mdiMagnify, mdiMagnifyMinusOutline, mdiMagnifyPlusOutline, mdiMapOutline, mdiMusicBoxMultipleOutline, mdiNotebookEditOutline, mdiPencilOutline, mdiPlay, mdiPlus, mdiRefresh, mdiRotateRight, mdiShieldCrownOutline, mdiSwordCross, mdiStoreOutline, mdiViewDashboardOutline, mdiUploadOutline } from "@mdi/js";
 import { ativarCena, atualizarEstadoMusica, atualizarEstadoSoundpad, atualizarInimigoCampanha, atualizarModoCampanha, atualizarModoCombate, atualizarModoInvestigacao, atualizarRevelacaoDocumentoInvestigacao, atualizarVisibilidadeDocumentoInvestigacao, buscarCampanhaPorCodigo, definirIniciativa, definirRotacaoToken, definirTamanhoToken, chavePosicaoMapa, configurarLanternaToken, definirVisibilidadeToken, desvincularInimigo, enviarImagemCena, excluirCena, excluirDocumentoInvestigacao, moverToken, ouvirCampanha, posicionarFichaNoMapa, posicionarInimigoNoMapa, registrarRolagem, removerIniciativa, removerTokenDoMapa, salvarCena, salvarDocumentoInvestigacao, salvarEvidenciaInterativa, validarArquivoImagem, validarArquivoInvestigacao, vincularFicha, vincularInimigo } from "../services/mesaApi";
 import {
@@ -20,16 +22,16 @@ import {
 import { listarFichasParaCampanha } from "../services/fichasCampanha";
 import { supabaseConfigurado } from "../services/supabase";
 import "../data/Classes/arvoresHabilidades";
-import { condicoes } from "../components/data/condicoes";
-import AnotacoesCampanha from "../components/AnotacoesCampanha";
-import MusicaTabletop from "../components/MusicaTabletop";
-import SoundpadTabletop from "../components/SoundpadTabletop";
+import { condicoes } from "../data/criacao/condicoes";
+import AnotacoesCampanha from "../components/campanha/AnotacoesCampanha";
+import MusicaTabletop from "../components/tabletop/MusicaTabletop";
+import SoundpadTabletop from "../components/tabletop/SoundpadTabletop";
 import MapLightingLayer, {
   pontoVisivelPorLuz,
   pontoVisivelPorObservadores,
-} from "../components/MapLightingLayer";
-import "../CSS/Mesa.css";
-import "../CSS/Mesa2D.css";
+} from "../components/tabletop/MapLightingLayer";
+import "../styles/Mesa.css";
+import "../styles/Mesa2D.css";
 import { estiloBordaToken } from "../utils/tokenAppearance";
 import { limitarMovimentoToken } from "../utils/tokenCollision";
 import { cenaVisivelParaJogador } from "../utils/sceneVisibility";
@@ -2118,6 +2120,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
     );
 
   const cena = cenaAtivaVisivel;
+  const mediaAnimada = campanha?.modo === "cena" ? (cena?.imagensCena || []).find(m=>m.id===campanha.midiaAtivaId) || cena?.imagensCena?.[0] : null;
   const midiaAtiva =
     midiasDaCena(cena, campanha.modo).find(
       (item) => item.id === campanha.midiaAtivaId,
@@ -2450,6 +2453,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
           {campanha.modo === "especial" ? "Iniciando cena especial" : campanha.modo === "mapa" ? "Preparando o mapa" : "Voltando a cena"}
         </span>
       </div>
+
       {embedded && mestre && ['initiative','investigation'].includes(requestedTool) && <div className="tt3-session-mode"><p>{requestedTool==='initiative' ? 'Organize os turnos e acompanhe os participantes.' : 'Acompanhe a investigação e a iniciativa.'}</p><button type="button" className="tt3-primary" disabled={salvandoCombate || salvandoInvestigacao} onClick={requestedTool==='initiative' ? alternarModoCombate : alternarModoInvestigacao}>{requestedTool==='initiative' ? (campanha.combateAtivo ? 'Encerrar combate' : 'Iniciar combate') : (campanha.investigacaoAtiva ? 'Encerrar investigação' : 'Iniciar investigação')}</button></div>}
 <header className="mesa-topo">
         <a
@@ -2916,6 +2920,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
           }}
           onPointerLeave={(event) => tokenArrastando && soltarToken(event)}
         >
+          {mediaAnimada?.animation?.enabled && <AnimatedScene media={mediaAnimada} id={`${cena.id}:${mediaAnimada.id}`} alt={mediaAnimada.nome || cena.nome}/> }
           {cena && campanha.modo === "mapa" && mapaAtualIluminacao?.exibirGrade !== false && (
             <div
               className="mesa-grade"
@@ -4605,372 +4610,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
         </aside>
       )}
 
-      {editorAberto && (
-        <div
-          className="cena-editor-fundo"
-          onMouseDown={(event) =>
-            event.target === event.currentTarget && setEditorAberto(false)
-          }
-        >
-          <form className="cena-editor" onSubmit={confirmarCena}>
-            <header>
-              <div>
-                <span>Biblioteca</span>
-                <h2>{editando.id ? "Editar cena" : "Nova cena"}</h2>
-              </div>
-              <button type="button" onClick={() => setEditorAberto(false)}>
-                <Icon path={mdiClose} size={0.85} />
-              </button>
-            </header>
-            <div className="cena-editor-linha">
-              <label>
-                Nome
-                <input
-                  required
-                  value={editando.nome || ""}
-                  onChange={(e) => setEditando({ ...editando, nome: e.target.value })}
-                />
-              </label>
-              <label>
-                Pasta
-                <input
-                  value={editando.pasta || "Sem pasta"}
-                  onChange={(e) => setEditando({ ...editando, pasta: e.target.value })}
-                  list="pastas-cenas-existentes"
-                  placeholder="Ex.: Ato II"
-                />
-              </label>
-            </div>
-            <datalist id="pastas-cenas-existentes">
-              {nomesPastasCenas.map((pasta) => <option value={pasta} key={pasta} />)}
-            </datalist>
-            <label>
-              Descricao
-              <textarea
-                rows="3"
-                value={editando.descricao || ""}
-                onChange={(e) =>
-                  setEditando({ ...editando, descricao: e.target.value })
-                }
-              />
-            </label>
-              <fieldset className="tt3-scene-difficulties"><legend>Dificuldades da cena · ESPIRAL</legend>{[['ambiente','Ambiente'],['combateAmbiente','Combate — ambiente'],['conflitos','Conflitos — perseguições e outros']].map(([key,label])=><label key={key}>{label}<input type="number" min="0" max="30" value={editando.dificuldades?.[key] ?? 4} onChange={event=>setEditando({...editando,dificuldades:{ambiente:4,combateAmbiente:4,conflitos:4,...editando.dificuldades,[key]:Math.max(0,Math.min(30,Number(event.target.value)||0))}})}/></label>)}<small>No combate, a dificuldade de cada inimigo é sua Defesa.</small></fieldset>
-
-            <section className="cena-editor-visibilidade">
-              <div className="cena-editor-visibilidade-cabecalho">
-                <div>
-                  <strong>Visibilidade da cena</strong>
-                  <small>
-                    {editando.visualizarTodos !== false
-                      ? "Todos os jogadores verão esta cena quando ela estiver ativa."
-                      : "Apenas as fichas selecionadas verão a cena."}
-                  </small>
-                </div>
-                <button
-                  type="button"
-                  className={editando.visualizarTodos !== false ? "ativo" : ""}
-                  onClick={() => setEditando((atual) => ({
-                    ...atual,
-                    visualizarTodos: atual.visualizarTodos === false,
-                  }))}
-                >
-                  {editando.visualizarTodos !== false ? "Todos" : "Específicos"}
-                </button>
-              </div>
-              {editando.visualizarTodos === false && (
-                <div className="cena-editor-jogadores">
-                  {(campanha.membros || []).map((membro) => {
-                    const fichaId = String(membro.ficha_id || "");
-                    const selecionado = (editando.jogadoresVisiveis || [])
-                      .map(String)
-                      .includes(fichaId);
-                    return (
-                      <label key={membro.id || fichaId} className={selecionado ? "selecionado" : ""}>
-                        <input
-                          type="checkbox"
-                          checked={selecionado}
-                          onChange={() => alternarJogadorCena(fichaId)}
-                        />
-                        <span>
-                          <b>{membro.nome || fichaId}</b>
-                          <small>{fichaId}</small>
-                        </span>
-                      </label>
-                    );
-                  })}
-                  {!campanha.membros?.length && (
-                    <small>Vincule fichas à campanha antes de restringir a cena.</small>
-                  )}
-                </div>
-              )}
-            </section>
-            <div className="cena-editor-midias">
-              <label>
-                Imagens da cena · max. 2 MB cada
-                <input
-                  type="file"
-                  multiple
-                  accept="image/webp,image/jpeg,image/png,image/avif"
-                  onChange={(e) =>
-                    selecionarArquivosCena("cena", e.target.files, e.target)
-                  }
-                />
-                <small>Selecione uma ou varias imagens.</small>
-              </label>
-              <label>
-                Mapas de batalha · max. 5 MB cada
-                <input
-                  type="file"
-                  multiple
-                  accept="image/webp,image/jpeg,image/png,image/avif"
-                  onChange={(e) =>
-                    selecionarArquivosCena("mapa", e.target.files, e.target)
-                  }
-                />
-                <small>Selecione um ou varios mapas.</small>
-              </label>
-            </div>
-            <section className="cena-editor-especial">
-              <label className="cena-editor-loja">
-                <input
-                  type="checkbox"
-                  checked={Boolean(editando.cenaEspecial?.ativo)}
-                  onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...(editando.cenaEspecial || {}), ativo: e.target.checked, transicao: editando.cenaEspecial?.transicao || "cinema", loop: editando.cenaEspecial?.loop !== false, loopAudio: editando.cenaEspecial?.loopAudio !== false, exibirTitulo: editando.cenaEspecial?.exibirTitulo !== false } })}
-                />
-                <span><strong>Cena especial em tela cheia</strong><small>Para aberturas, revelacoes e confrontos importantes.</small></span>
-              </label>
-              {editando.cenaEspecial?.ativo && <div className="cena-editor-especial-campos">
-                <label>GIF, imagem ou video · max. 25 MB<input type="file" accept="image/gif,image/webp,image/jpeg,image/png,image/avif,video/mp4,video/webm" onChange={(e) => selecionarArquivosCena("especial", e.target.files, e.target)} /><small>{arquivos.especial[0]?.arquivo.name || editando.cenaEspecial.midiaUrl || "Nenhuma midia selecionada"}</small></label>
-                <label>Musica de fundo · max. 20 MB<input type="file" accept={ACEITAR_AUDIO} onChange={(e) => selecionarArquivosCena("audio", e.target.files, e.target)} /><small>{arquivos.audio[0]?.arquivo.name || editando.cenaEspecial.audioUrl || "Sem trilha propria"}</small></label>
-                <label>URL da midia<input value={editando.cenaEspecial.midiaUrl || ""} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, midiaUrl: e.target.value } })} placeholder="https://.../abertura.gif" /></label>
-                <label>URL da musica ou YouTube<input value={editando.cenaEspecial.audioUrl || ""} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, audioUrl: e.target.value, audioUrlPersistida: "" } })} placeholder="https://youtube.com/watch?v=..." /><small>Aceita um video do YouTube ou um link direto de audio.</small></label>
-                <label>Transicao<select value={editando.cenaEspecial.transicao || "cinema"} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, transicao: e.target.value } })}><option value="cinema">Cortinas de cinema</option><option value="fade">Fade sombrio</option><option value="impacto">Impacto</option></select></label>
-                <label>Atraso da musica (ms)<input type="number" min="0" max="30000" step="100" value={editando.cenaEspecial.atrasoAudio || 0} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, atrasoAudio: e.target.value } })} /></label>
-                <label className="cena-especial-opcao"><input type="checkbox" checked={editando.cenaEspecial.exibirTitulo !== false} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, exibirTitulo: e.target.checked } })} />Exibir titulo</label>
-                <label className="cena-especial-opcao"><input type="checkbox" checked={editando.cenaEspecial.loop !== false} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, loop: e.target.checked } })} />Repetir video</label>
-              </div>}
-            </section>
-            {(editando.imagensCena?.length > 0 || arquivos.cena.length > 0) && (
-              <div className="cena-editor-lista-midias">
-                <strong>
-                  Imagens estaticas (
-                  {(editando.imagensCena?.length || 0) + arquivos.cena.length})
-                </strong>
-                {(editando.imagensCena || []).map((midia, indice) => (
-                  <div className="cena-editor-midia-item" key={midia.id}>
-                    <span>{midia.nome || `Cena ${indice + 1}`}</span>
-                    <button
-                      type="button"
-                      onClick={() => removerMidiaExistente("cena", midia.id)}
-                      title="Remover imagem"
-                    >
-                      <Icon path={mdiDeleteOutline} size={0.68} />
-                    </button>
-                  </div>
-                ))}
-                {arquivos.cena.map((item) => (
-                  <div className="cena-editor-midia-item" key={item.id}>
-                    <span>
-                      {item.nome} <small>novo</small>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removerArquivoPendente("cena", item.id)}
-                      title="Remover imagem"
-                    >
-                      <Icon path={mdiDeleteOutline} size={0.68} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            {(editando.mapasBatalha?.length > 0 ||
-              arquivos.mapa.length > 0) && (
-              <div className="cena-editor-lista-midias">
-                <strong>
-                  Mapas de batalha (
-                  {(editando.mapasBatalha?.length || 0) + arquivos.mapa.length})
-                </strong>
-                {(editando.mapasBatalha || []).map((midia, indice) => (
-                  <div
-                    className="cena-editor-midia-item cena-editor-mapa-item"
-                    key={midia.id}
-                  >
-                    <span>{midia.nome || `Mapa ${indice + 1}`}</span>
-                    <label>
-                      Colunas
-                      <input
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={midia.larguraGrade || 12}
-                        onChange={(e) =>
-                          atualizarMapaExistente(
-                            midia.id,
-                            "larguraGrade",
-                            e.target.value,
-                          )
-                        }
-                      />
-                    </label>
-                    <label>
-                      Linhas
-                      <input
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={midia.alturaGrade || 8}
-                        onChange={(e) =>
-                          atualizarMapaExistente(
-                            midia.id,
-                            "alturaGrade",
-                            e.target.value,
-                          )
-                        }
-                      />
-                    </label>
-                    <label className="cena-editor-grade-toggle">
-                      <input type="checkbox" checked={midia.exibirGrade !== false} onChange={(e) => atualizarMapaExistente(midia.id, "exibirGrade", e.target.checked)} />
-                      Exibir grade
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => removerMidiaExistente("mapa", midia.id)}
-                      title="Remover mapa"
-                    >
-                      <Icon path={mdiDeleteOutline} size={0.68} />
-                    </button>
-                  </div>
-                ))}
-                {arquivos.mapa.map((item) => (
-                  <div
-                    className="cena-editor-midia-item cena-editor-mapa-item"
-                    key={item.id}
-                  >
-                    <span>
-                      {item.nome} <small>novo</small>
-                    </span>
-                    <label>
-                      Colunas
-                      <input
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={item.larguraGrade}
-                        onChange={(e) =>
-                          atualizarMapaPendente(
-                            item.id,
-                            "larguraGrade",
-                            e.target.value,
-                          )
-                        }
-                      />
-                    </label>
-                    <label>
-                      Linhas
-                      <input
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={item.alturaGrade}
-                        onChange={(e) =>
-                          atualizarMapaPendente(
-                            item.id,
-                            "alturaGrade",
-                            e.target.value,
-                          )
-                        }
-                      />
-                    </label>
-                    <label className="cena-editor-grade-toggle">
-                      <input type="checkbox" checked={item.exibirGrade !== false} onChange={(e) => atualizarMapaPendente(item.id, "exibirGrade", e.target.checked)} />
-                      Exibir grade
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => removerArquivoPendente("mapa", item.id)}
-                      title="Remover mapa"
-                    >
-                      <Icon path={mdiDeleteOutline} size={0.68} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <details>
-              <summary>Usar URLs em vez de arquivos</summary>
-              <label>
-                URL da cena
-                <input
-                  value={editando.imagemUrl || ""}
-                  onChange={(e) =>
-                    setEditando({ ...editando, imagemUrl: e.target.value })
-                  }
-                />
-              </label>
-              <label>
-                URL do mapa
-                <input
-                  value={editando.mapaUrl || ""}
-                  onChange={(e) =>
-                    setEditando({ ...editando, mapaUrl: e.target.value })
-                  }
-                />
-              </label>
-              <small>
-                As URLs sao usadas como midia principal apenas quando nao houver
-                arquivos cadastrados daquele tipo.
-              </small>
-            </details>
-            <div className="cena-editor-grade">
-              <label>
-                Colunas padrao
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={editando.larguraGrade}
-                  onChange={(e) =>
-                    setEditando({ ...editando, larguraGrade: e.target.value })
-                  }
-                />
-              </label>
-              <label>
-                Linhas padrao
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={editando.alturaGrade}
-                  onChange={(e) =>
-                    setEditando({ ...editando, alturaGrade: e.target.value })
-                  }
-                />
-              </label>
-            </div>
-            <label className="cena-editor-loja">
-              <input
-                type="checkbox"
-                checked={Boolean(editando.lojaDisponivel)}
-                onChange={(e) => setEditando({ ...editando, lojaDisponivel: e.target.checked })}
-              />
-              <span>
-                <strong>Loja disponível nesta cena</strong>
-                <small>Jogadores poderão abrir a Loja diretamente no tabletop enquanto esta cena estiver ativa.</small>
-              </span>
-            </label>
-            {erro && <p className="cena-editor-erro">{erro}</p>}
-            <footer>
-              <button type="button" onClick={() => setEditorAberto(false)}>
-                Cancelar
-              </button>
-              <button type="submit" disabled={salvando}>
-                {salvando ? "Salvando..." : "Salvar na biblioteca"}
-              </button>
-            </footer>
-          </form>
-        </div>
-      )}
+      {editorAberto && <TabletopSceneEditor key={editando.id || 'nova'} editando={editando} setEditando={setEditando} arquivos={arquivos} campanha={campanha} nomesPastasCenas={nomesPastasCenas} selecionarArquivosCena={selecionarArquivosCena} alternarJogadorCena={alternarJogadorCena} removerMidiaExistente={removerMidiaExistente} removerArquivoPendente={removerArquivoPendente} atualizarMapaExistente={atualizarMapaExistente} atualizarMapaPendente={atualizarMapaPendente} confirmarCena={confirmarCena} salvando={salvando} erro={erro} onClose={()=>setEditorAberto(false)}/>}
     </main>
   );
 };

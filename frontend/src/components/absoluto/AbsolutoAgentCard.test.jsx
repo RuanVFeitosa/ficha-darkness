@@ -1,0 +1,32 @@
+import React from 'react';
+import {render,screen,fireEvent} from '@testing-library/react';
+import Card from './AbsolutoAgentCard';
+test('ajusta o fundo sem abrir ficha e recupera o enquadramento salvo',()=>{
+ localStorage.clear();
+ const ficha={fichaId:'foto-teste',personagem:{nome:'Lia',fotoPerfil:'/lia.png'}};
+ const onAbrir=jest.fn();
+ const view=render(<Card ficha={ficha} onAbrir={onAbrir}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Ajustar foto'}));
+ fireEvent.change(screen.getByLabelText('Posição horizontal'),{target:{value:'25'}});
+ fireEvent.change(screen.getByLabelText('Zoom'),{target:{value:'150'}});
+ expect(view.container.querySelector('.ad-agent-cover img')).toHaveStyle({objectPosition:'25% 50%',transform:'scale(1.5)'});
+ fireEvent.click(screen.getByRole('button',{name:'Salvar ajuste'}));
+ expect(onAbrir).not.toHaveBeenCalled();
+ view.unmount();
+ render(<Card ficha={ficha} onAbrir={onAbrir}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Ajustar foto'}));
+ expect(screen.getByLabelText('Posição horizontal')).toHaveValue('25');
+ expect(screen.getByLabelText('Zoom')).toHaveValue('150');
+ fireEvent.click(screen.getByRole('button',{name:'Restaurar padrão'}));
+ expect(screen.getByLabelText('Zoom')).toHaveValue('100');
+ localStorage.clear();
+});
+test('dossiê mostra identidade, atributos e recursos preservando valores zero e abre por teclado',()=>{
+ const onAbrir=jest.fn();const ficha={fichaId:'1234',personagem:{nome:'Ana',nomeJogador:'Bia',nivel:5,classe:'Médica',fotoPerfil:'/ana.png',atributos:{forca:0,fonitude:20},membros:{cabeca:{atual:0,max:100}},sanidade:{atual:0,max:50},esperanca:{atual:30,max:40}}};
+ const {container}=render(<Card ficha={ficha} onAbrir={onAbrir}/>);
+ expect(screen.getByText('Ana')).toBeInTheDocument();expect(screen.getByText('Jogador · Bia')).toBeInTheDocument();expect(screen.getByText('Cabeça')).toBeInTheDocument();
+ expect(container.querySelector('.ad-integridade .ad-meter-track>i')).toHaveStyle({width:'0%'});
+ expect(container.querySelector('.ad-sanidade .ad-meter-track>i')).toHaveStyle({width:'0%'});
+ expect(container.querySelector('.ad-esperanca .ad-meter-track>i')).toHaveStyle({width:'75%'});
+ fireEvent.keyDown(screen.getByRole('button',{name:'Abrir ficha de Ana'}),{key:'Enter'});expect(onAbrir).toHaveBeenCalledWith(ficha,'jogador');
+});

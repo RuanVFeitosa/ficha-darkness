@@ -31,3 +31,12 @@ yarn-error.log*
 
 backend/data/party
 frontend/src/assets/IMG/perfil_template.webp
+
+# Temporary local work and runtime output (historical files live in archive/)
+/tmp/
+/work/
+/supabase/.temp/
+/backend/data/investigacao/
+/.codex-react-dev.pid
+*.log
+!/archive/development/logs/*.log

@@ -1,10 +1,10 @@
-import SiteBoot from '../components/SiteBoot';
+import SiteBoot from '../components/ui/SiteBoot';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { entrarJogador } from '../services/jogadorApi';
 import { MESTRE_AUTH_KEY, SENHA_MESTRE } from '../constants/masterAccess';
 import { PRONOMES_JOGADOR, saudacaoJogador } from '../utils/saudacaoJogador';
 import useLoginSound from '../utils/useLoginSound';
-import '../CSS/TelaInicial.css';
+import '../styles/TelaInicial.css';
 
 export const LOGIN_WELCOME_DURATION = 2600;
 const navegar = destino => window.location.assign(destino);

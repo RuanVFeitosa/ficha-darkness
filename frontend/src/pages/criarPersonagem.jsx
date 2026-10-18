@@ -11,7 +11,7 @@ import { ULTIMA_FICHA_KEY } from "../constants/session";
 import { estadoInicial } from "./fichaPersonagem";
 import { calcularModificador } from "../data/evolucaoPersonagem";
 import { compressProfileImage } from "../services/imageCompression";
-import "../CSS/CriarPersonagem.css";
+import "../styles/CriarPersonagem.css";
 
 const STORAGE_KEY = "fichaRPG_personagem";
 

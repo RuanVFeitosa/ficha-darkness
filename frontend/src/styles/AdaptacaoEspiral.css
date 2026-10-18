@@ -1,0 +1,27 @@
+.ae-overlay{position:fixed;inset:0;z-index:200000;background:#000d;display:flex;align-items:center;justify-content:center;padding:20px}
+.ae-dialog{box-sizing:border-box;width:min(960px,100%);max-height:calc(100dvh - 40px);overflow:auto;padding:24px;background:#101010;color:#eee;border:1px solid #555;border-top:2px solid #bfa66b;font:12px/1.7 'Courier New',monospace;text-align:left;overscroll-behavior:contain}
+.ae-dialog *{box-sizing:border-box;min-width:0}
+.ae-header{display:flex;justify-content:space-between;gap:16px;align-items:start;border-bottom:1px solid #444;padding-bottom:18px}
+.ae-header small{color:#bfa66b;font-size:9px;letter-spacing:.12em}
+.ae-dialog h2{font:32px Georgia,serif;margin:8px 0;color:#eee}
+.ae-dialog h3{font:22px Georgia,serif;color:#eee;margin:24px 0 12px}
+.ae-dialog p{color:#bbb;font:12px/1.7 'Courier New',monospace}
+.ae-dialog nav{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}
+.ae-dialog button{min-height:42px;padding:8px 14px;background:#151515;border:1px solid #555;border-radius:1px;color:#ddd;font:11px 'Courier New',monospace;cursor:pointer}
+.ae-dialog button[aria-current],.ae-dialog footer button:last-child{color:#101010;background:#bfa66b;border-color:#bfa66b}
+.ae-dialog button:disabled{opacity:.4;cursor:not-allowed}
+.ae-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.ae-dialog .ae-choice{display:grid;align-content:start;gap:8px;padding:14px;border:1px solid #393939;background:#141414;margin-bottom:12px;color:#eee;font-size:12px}
+.ae-choice strong{font:20px Georgia,serif;color:#eee}
+.ae-choice small{color:#aaa;font-size:10px}
+.ae-dialog :is(select,textarea,input:not([type=checkbox])){display:block;width:100%;padding:10px;min-height:42px;border:1px solid #555;border-radius:1px;background:#080808;color:#eee;font:12px/1.6 'Courier New',monospace}
+.ae-dialog textarea{resize:vertical;min-height:100px}
+.ae-dialog footer{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;bottom:-24px;background:#101010;padding:16px 0;border-top:1px solid #444;margin-top:24px}
+.ae-dialog footer>div{display:flex;gap:10px}
+.ae-dialog :is(button,select,input,textarea,summary):focus-visible{outline:2px solid #bfa66b;outline-offset:3px}
+.ae-dialog details{border:1px solid #444;padding:12px;margin:16px 0}
+.ae-dialog summary{cursor:pointer;color:#bfa66b}
+.ae-dialog pre{white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.7 'Courier New',monospace;color:#bbb}
+.ae-review{padding:16px;border:1px solid #555;background:#171610}
+.ae-replace{display:flex;align-items:start;gap:12px;margin-top:16px;color:#ddbd80}
+@media(max-width:620px){.ae-overlay{padding:8px}.ae-dialog{max-height:calc(100dvh - 16px);padding:16px}.ae-grid{grid-template-columns:1fr}.ae-dialog footer{bottom:-16px;flex-wrap:wrap}.ae-dialog h2{font-size:26px}.ae-dialog :is(select,textarea,input:not([type=checkbox])){font-size:16px}}

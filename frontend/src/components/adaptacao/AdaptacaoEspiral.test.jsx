@@ -1,0 +1,33 @@
+import React from 'react';
+import {render,screen,fireEvent} from '@testing-library/react';
+import AdaptacaoEspiral from './AdaptacaoEspiral';
+
+beforeEach(()=>localStorage.clear());
+const personagem={nome:'Ana',atributos:{forca:10,fonitude:30,inteligencia:20,reflexos:10,vontade:40},habilidadesPassivas:{lutar:10,investigacao:15},habilidadesCombate:{percepcao:50,carisma:50}};
+test('preenche valores pela tabela, recalcula integridade e salva escolhas sem alterar Absoluto',()=>{
+ const onConcluir=jest.fn();
+ const original=JSON.stringify(personagem);
+ render(<AdaptacaoEspiral personagem={personagem} fichaId="adapta" onClose={()=>{}} onConcluir={onConcluir}/>);
+ expect(screen.getByLabelText('Estágio de Pulso')).toHaveValue('4');
+ expect(screen.getByLabelText('Estágio de Sentido')).toHaveValue('2');
+ expect(screen.getByLabelText('Estágio de Voz')).toHaveValue('5');
+ expect(screen.getByRole('status')).toHaveTextContent('45');
+ fireEvent.change(screen.getByLabelText('Referência para Pulso'),{target:{value:'forca'}});
+ expect(screen.getByRole('status')).toHaveTextContent('35');
+ fireEvent.click(screen.getByRole('button',{name:'Continuar →'}));
+ expect(screen.getByLabelText('Grau de Armas')).toHaveValue('2');
+ expect(screen.getByLabelText('Grau de Investigação')).toHaveValue('3');
+ fireEvent.change(screen.getByLabelText('Grau de Armas'),{target:{value:'4'}});
+ fireEvent.click(screen.getByRole('button',{name:'Continuar →'}));
+ expect(screen.getByLabelText('Grau de Controle Mental')).toHaveValue('');
+ fireEvent.change(screen.getByLabelText('Grau de Controle Mental'),{target:{value:'4'}});
+ fireEvent.change(screen.getByLabelText('Grau de Propósito'),{target:{value:'3'}});
+ fireEvent.click(screen.getByRole('button',{name:'Continuar →'}));
+ expect(screen.getByRole('button',{name:'Salvar e abrir Espiral ↗'})).toBeDisabled();
+ fireEvent.change(screen.getByLabelText('Vertente da adaptação'),{target:{value:'Vigilante'}});
+ fireEvent.change(screen.getByLabelText('Habilidades de legado'),{target:{value:'Legado: +1 dado ao investigar.'}});
+ fireEvent.click(screen.getByRole('button',{name:'Salvar e abrir Espiral ↗'}));
+ expect(onConcluir).toHaveBeenCalledWith(expect.objectContaining({attributes:{pulso:2,razao:3,sentido:2,voz:5},integrity:35,vertente:'Vigilante',abilities:'Legado: +1 dado ao investigar.',phase:'campaign'}));
+ expect(onConcluir.mock.calls[0][0].resources.Armas).toBe(4);
+ expect(JSON.stringify(personagem)).toBe(original);
+});

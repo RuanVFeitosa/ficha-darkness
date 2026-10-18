@@ -7,5 +7,5 @@ binding = "MEDIA"
 bucket_name = "darkness-media"
 
 [vars]
-ALLOWED_ORIGINS = "http://localhost:3000"
+ALLOWED_ORIGINS = "http://localhost:3000,https://protocolo-darkness.vercel.app"
 SUPABASE_URL = "https://fiaglyhkapudhhdsgchx.supabase.co"

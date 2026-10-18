@@ -1,8 +1,8 @@
-import EspiralDice from '../components/EspiralDice';
+import EspiralDice from '../components/espiral/EspiralDice';
 import React, { useMemo, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiArrowLeft, mdiCart, mdiCheck, mdiClose, mdiMedicalBag, mdiPistol, mdiRadio, mdiShield, mdiSword, mdiToolbox, mdiAxe, mdiKnifeMilitary } from "@mdi/js";
-import "../CSS/LojaEspiral.css";
+import "../styles/LojaEspiral.css";
 import { CATALOGO_ESPIRAL, CATEGORIAS_ESPIRAL } from "../data/catalogoEspiral";
 import { obterIconeItem } from "../utils/itemIcons";
 

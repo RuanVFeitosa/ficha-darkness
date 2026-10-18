@@ -1,4 +1,4 @@
-import { mediaStorage, externalizarImagens } from "./mediaStorage";
+import { mediaStorage, externalizarImagens, r2Configurado } from "./mediaStorage";
 import { supabase, supabaseConfigurado, supabaseObrigatorioAusente } from "./supabase";
 import { tipoAudioUpload } from "../utils/audioUpload";
 
@@ -531,14 +531,17 @@ export const salvarClima3DCampanha = async (campanhaId, clima) => {
 };
 
 const EXTENSOES_MODELO_3D = new Set(["glb", "gltf", "bin", "png", "jpg", "jpeg", "webp", "ktx2", "basis"]);
-const LIMITE_ARQUIVO_MODELO_3D = 50 * 1024 * 1024;
+const LIMITE_ARQUIVO_MODELO_3D = 512 * 1024 * 1024;
 const nomeArquivoSeguro = (nome = "arquivo") => String(nome)
   .normalize("NFD")
   .replace(/[\u0300-\u036f]/g, "")
   .replace(/[^a-zA-Z0-9._-]+/g, "-")
   .replace(/^-+|-+$/g, "") || "arquivo";
 
-export const enviarModelo3DMapa = async (campanhaId, arquivos) => {
+export const enviarModelo3DMapa = async (campanhaId, arquivos, onProgress) => {
+  const demo = !supabaseConfigurado || campanhaId === 'demo' || String(campanhaId).startsWith('demo-');
+  if (supabaseObrigatorioAusente) throw new Error('Configure o Supabase para usar mapas 3D online.');
+  if (!demo && !r2Configurado) throw new Error('Configure o Cloudflare R2 antes de importar modelos 3D. Nenhum arquivo será enviado ao Supabase Storage.');
   const lista = Array.from(arquivos || []);
   const principais = lista.filter((arquivo) => /\.(glb|gltf)$/i.test(arquivo.name));
   if (principais.length !== 1) throw new Error("Selecione um arquivo .glb ou .gltf principal. Para GLTF, inclua também .bin e texturas.");
@@ -546,7 +549,7 @@ export const enviarModelo3DMapa = async (campanhaId, arquivos) => {
     throw new Error("Pacote 3D inválido. Use GLB/GLTF com BIN, PNG, JPG, WebP, KTX2 ou Basis.");
   }
   if (lista.some((arquivo) => arquivo.size > LIMITE_ARQUIVO_MODELO_3D)) {
-    throw new Error("Cada arquivo do modelo 3D deve ter no máximo 50 MB.");
+    throw new Error("Cada arquivo do modelo 3D deve ter no máximo 512 MB.");
   }
 
   const principal = principais[0];
@@ -562,6 +565,9 @@ export const enviarModelo3DMapa = async (campanhaId, arquivos) => {
     const caminho = `${campanhaId}/${pasta}/${nome}`;
     const { error } = await mediaStorage.from("mapas").upload(caminho, arquivo, {
       upsert: false,
+      requireR2: true,
+      multipart: true,
+      onProgress: (sent, total) => onProgress?.(arquivo.name, sent, total),
       contentType: arquivo.type || (/\.glb$/i.test(arquivo.name) ? "model/gltf-binary" : "application/octet-stream"),
     });
     if (error) throw error;
@@ -614,10 +620,11 @@ export const salvarCena = async (campanhaId, cena) => {
     const cenas = demo.cenas.some((item) => item.id === id) ? demo.cenas.map((item) => item.id === id ? nova : item) : [...demo.cenas, nova];
     salvarDemo({ ...demo, cenas }, campanhaId); return nova;
   }
-  const imagensPersistidas = normalizada.imagensCena.map(({ urlPersistida, ...midia }) => ({
+  const imagensPersistidas = await Promise.all(normalizada.imagensCena.map(async ({ urlPersistida, ...midia }) => ({
     ...midia,
     url: urlPersistida || midia.url,
-  }));
+    ...(midia.animation ? {animation:await externalizarImagens(midia.animation)} : {}),
+  })));
   const mapasPersistidos = normalizada.mapasBatalha.map(({ urlPersistida, ...midia }) => ({
     ...midia,
     url: urlPersistida || midia.url,
@@ -1604,6 +1611,8 @@ export const atualizarInimigoCampanha = async (campanhaId, inimigo) => {
   return { ...(data.dados || {}), ...data };
 };
 
+let campanhaListenerId = 0;
+
 export const ouvirCampanha = (campanhaId, aoMudar) => {
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
     const chave = chaveDemo(campanhaId);
@@ -1617,7 +1626,8 @@ export const ouvirCampanha = (campanhaId, aoMudar) => {
     };
   }
   const canal = supabase
-    .channel(`mesa:${campanhaId}`)
+    // The 3D stage and embedded session tools subscribe independently.
+    .channel(`mesa:${campanhaId}:${++campanhaListenerId}`)
     .on("postgres_changes", { event: "*", schema: "public", table: "campanhas", filter: `id=eq.${campanhaId}` }, aoMudar)
     .on("postgres_changes", { event: "*", schema: "public", table: "tokens_mapa", filter: `campanha_id=eq.${campanhaId}` }, aoMudar)
     .on("postgres_changes", { event: "*", schema: "public", table: "cenas", filter: `campanha_id=eq.${campanhaId}` }, aoMudar)

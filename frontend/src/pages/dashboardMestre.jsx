@@ -1,15 +1,16 @@
-import AbilityEditDiff from '../components/AbilityEditDiff';
+import AbsolutoAtivosResumo from '../components/absoluto/AbsolutoAtivosResumo';
+import AbilityEditDiff from '../components/habilidades/AbilityEditDiff';
 import {decidirEdicaoHabilidade} from '../utils/abilityEdits';
 import { espiralDie } from '../utils/espiralDice';
-import AbsolutoAgentCard from '../components/AbsolutoAgentCard';
+import AbsolutoAgentCard from '../components/absoluto/AbsolutoAgentCard';
 
-import AbilityDocument from '../components/AbilityDocument';
-import TokenAnimationStudio from '../components/TokenAnimationStudio';
-import EspiralEncounters from '../components/EspiralEncounters';
-import EspiralDashboardCatalog from '../components/EspiralDashboardCatalog';
+import AbilityDocument from '../components/habilidades/AbilityDocument';
+import TokenAnimationStudio from '../components/tokens/TokenAnimationStudio';
+import EspiralEncounters from '../components/espiral/EspiralEncounters';
+import EspiralDashboardCatalog from '../components/espiral/EspiralDashboardCatalog';
 import { grantEspiralCatalogEntry } from '../utils/espiralCatalogGrant';
-import { EspiralAgentCard, EspiralDashboardHeader } from "../components/EspiralDashboard";
-import "../CSS/EspiralDashboard.css";
+import { EspiralAgentCard, EspiralDashboardHeader } from "../components/espiral/EspiralDashboard";
+import "../styles/EspiralDashboard.css";
 import React, {
   memo,
   useCallback,
@@ -19,12 +20,13 @@ import React, {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { confirmarDialogo, solicitarDialogo } from "../components/DialogoGlobal";
+import { confirmarDialogo, solicitarDialogo } from "../components/ui/DialogoGlobal";
 import Icon from "@mdi/react";
 import { mdiArrowLeft, mdiDeleteOutline, mdiRefresh, mdiStoreCogOutline, mdiPencil, mdiPistol, mdiSword, mdiKnifeMilitary, mdiAxe, mdiBowArrow, mdiHammer, mdiBaseballBat, mdiTargetVariant } from "@mdi/js";
-import "../CSS/DashboardMestre.css";
-import "../CSS/DashboardMestreEspiral.css";
-import '../CSS/AbsolutoDashboard.css';
+import "../styles/DashboardMestre.css";
+import "../styles/DashboardMestreEspiral.css";
+import '../styles/AbsolutoDashboard.css';
+import '../styles/AbsolutoDashboardDossier.css';
 import { buscarDestinos, salvarDestinos, apagarPersonagem, buscarArvoresHabilidades, buscarCatalogoLoja, listarPersonagens, salvarArvoresHabilidades, salvarCatalogoLoja, buscarPersonagem, salvarPersonagem } from "../services/personagemApi";
 import { atualizarDestinoNaFicha } from "../utils/destinos";
 import {
@@ -45,8 +47,8 @@ import {
   obterTodasArvores,
   salvarArvoresCustom,
 } from "../data/Classes/arvoresHabilidades";
-import { receitasCriacao as RECEITAS_PADRAO } from "../components/data/receitasCriacao";
-import CampanhaDashboard from "../components/CampanhaDashboard";
+import { receitasCriacao as RECEITAS_PADRAO } from "../data/criacao/receitasCriacao";
+import CampanhaDashboard from "../components/campanha/CampanhaDashboard";
 import {
   CATEGORIAS_LOJA,
   DEFAULT_CATALOGO_LOJA,
@@ -3316,6 +3318,11 @@ const DashboardMestre = () => {
         </button>
       </header>}
 
+      {sistemaAtivo !== "espiral" && <section className="ad-page-intro" aria-labelledby="ad-page-title">
+        <div><span className="ad-page-eyebrow">NARRATIVA / PERSONAGENS / OPERAÇÕES</span><h2 id="ad-page-title">Toda operação<br/>deixa uma <em>marca.</em></h2><p>Organize sua mesa. Acompanhe os agentes.<br/>Prepare o próximo capítulo.</p></div>
+        <div className="ad-page-art" aria-hidden="true"><span>ARQUIVO ABSOLUTO</span><img src="/simbolo-absoluto.png" alt=""/></div>
+        <dl className="ad-page-summary"><div><dt>Agentes no arquivo</dt><dd>{String(fichasDaSubAba.length).padStart(2, '0')}<small>Fichas na seleção atual</small></dd></div><div><dt>Triagens pendentes</dt><dd>{String(habilidadesPendentes.length).padStart(2, '0')}<small>Solicitações aguardando análise</small></dd></div><div><dt>Mesa de controle</dt><dd className="ad-page-note">A história continua.<small>Cada decisão deixa consequências.</small></dd></div></dl>
+      </section>}
       {menuHamburguerAberto && (
         <div className="mestre-hamburguer-menu">
           <button
@@ -3446,9 +3453,14 @@ const DashboardMestre = () => {
                   onClick={() => setModalFichaAberto(false)}
                 >
                   <section
-                    className="mestre-modal-ficha minimalista"
+                    className="mestre-modal-ficha minimalista mestre-modal-personagem"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={`Dossiê de ${personagem.nome || 'personagem'}`}
+                    onKeyDown={(event) => { if (event.key === 'Escape') setModalFichaAberto(false); }}
                     onClick={(e) => e.stopPropagation()}
                   >
+                    <div className="ad-dossier-toolbar"><span>ARQUIVO ABSOLUTO <i>/</i> DOSSIÊ DO PERSONAGEM</span><button type="button" autoFocus onClick={() => setModalFichaAberto(false)} aria-label="Fechar dossiê">Fechar <span aria-hidden="true">×</span></button></div>
                     <header className="mestre-modal-header">
                       <div className="mestre-modal-header-esquerda">
                         <img
@@ -3461,7 +3473,7 @@ const DashboardMestre = () => {
                         />
 
                         <div className="mestre-modal-identidade">
-                          <span>PERSONAGEM</span>
+                          <span>REGISTRO DE CAMPO · PERSONAGEM</span>
                           <h2>{personagem.nome || "Sem Nome"}</h2>
                           <small>
                             {personagem.classe || "Sem Classe"} • NV{" "}
@@ -3505,7 +3517,7 @@ const DashboardMestre = () => {
                           <div className="mestre-admin-grid">
                             {/* Créditos */}
                             <div className="mestre-admin-grupo creditos">
-                              <label>💳 Créditos</label>
+                              <label>Créditos</label>
                               <div className="mestre-admin-controles">
                                 <input
                                   type="number"
@@ -3521,7 +3533,7 @@ const DashboardMestre = () => {
 
                             {/* Mementos */}
                             <div className="mestre-admin-grupo mementos">
-                              <label>🔮 Mementos</label>
+                              <label>Mementos</label>
                               <div className="mestre-admin-controles">
                                 <input
                                   type="number"
@@ -3539,7 +3551,7 @@ const DashboardMestre = () => {
 
                             {/* PE */}
                             <div className="mestre-admin-grupo pe">
-                              <label>⭐ PE (Evolução)</label>
+                              <label>PE · Evolução</label>
                               <div className="mestre-admin-controles">
                                 <input
                                   type="number"
@@ -3557,7 +3569,7 @@ const DashboardMestre = () => {
 
                             {/* Nível */}
                             <div className="mestre-admin-grupo nivel">
-                              <label>📈 Nível</label>
+                              <label>Nível</label>
                               <div className="mestre-admin-controles">
                                 <button
                                   className="mestre-btn-nivel"
@@ -3783,21 +3795,7 @@ const DashboardMestre = () => {
                       </div>
                     </div>
 
-                    {/* PASSIVAS */}
-                    <section className="mestre-modal-bloco full">
-                      <span>Passivas</span>
-
-                      <div className="mestre-passivas-grid">
-                        {Object.entries(
-                          personagem.habilidadesPassivas || {},
-                        ).map(([nome, valor]) => (
-                          <div key={nome} className="mestre-passiva-item">
-                            <small>{nome}</small>
-                            <strong>{valor}</strong>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
+                    <AbsolutoAtivosResumo personagem={personagem} />
 
                     <section className="mestre-modal-bloco full">
                       <div className="mestre-entrega-cabecalho">
@@ -3920,6 +3918,7 @@ const DashboardMestre = () => {
                       <span>Inventário</span>
 
                       <div className="mestre-inventario-grid">
+                        {(personagem.inventario || []).length === 0 && <p className="ad-dossier-empty">Nenhum item no inventário.</p>}
                         {(personagem.inventario || []).map((item, index) => (
                           <div
                             key={`${item.nome}-${index}`}
@@ -3945,6 +3944,7 @@ const DashboardMestre = () => {
                       <span>Ritos</span>
 
                       <div className="mestre-inventario-grid">
+                        {(personagem.rituais || []).length === 0 && <p className="ad-dossier-empty">Nenhum rito registrado.</p>}
                         {(personagem.rituais || []).map((rito, index) => (
                           <div
                             key={`${rito.nome}-${index}`}

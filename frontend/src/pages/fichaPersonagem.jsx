@@ -1,23 +1,25 @@
-import AbilityEditDialog from '../components/AbilityEditDialog';
+import AdaptacaoEspiral from '../components/adaptacao/AdaptacaoEspiral';
+import { nomesPassivas, ativosParaPassiva, dadosAtivos } from '../data/absolutoAtivos';
+import AbilityEditDialog from '../components/habilidades/AbilityEditDialog';
 import {solicitarEdicaoHabilidade} from '../utils/abilityEdits';
-import AbilityReadingLayout from '../components/AbilityReadingLayout';
-import PlayerPageLink from '../components/PlayerPageLink';
-import CardHabilidadeRecolhivel from '../components/CardHabilidadeRecolhivel';
-import AnimatedTokenImage from '../components/AnimatedTokenImage';
+import AbilityReadingLayout from '../components/habilidades/AbilityReadingLayout';
+import PlayerPageLink from '../components/jogador/PlayerPageLink';
+import CardHabilidadeRecolhivel from '../components/habilidades/CardHabilidadeRecolhivel';
+import AnimatedTokenImage from '../components/tokens/AnimatedTokenImage';
 // src/components/FichaPersonagem.jsx
 import React, { useState, useEffect, useRef } from "react";
-import "../CSS/FichaPersonagem.css";
-import "../CSS/CondicoesProfile.css";
-import "../CSS/AbsolutoDossier.css";
-import { alertarDialogo, confirmarDialogo, selecionarDialogo } from "../components/DialogoGlobal";
+import "../styles/FichaPersonagem.css";
+import "../styles/CondicoesProfile.css";
+import "../styles/AbsolutoDossier.css";
+import { alertarDialogo, confirmarDialogo, selecionarDialogo } from "../components/ui/DialogoGlobal";
 
-import { condicoes } from "../components/data/condicoes";
-import { receitasCriacao } from "../components/data/receitasCriacao";
+import { condicoes } from "../data/criacao/condicoes";
+import { receitasCriacao } from "../data/criacao/receitasCriacao";
 import profile from "../assets/IMG/OAbsoluto.webp";
 import "../assets/IMG/corpo_humano.webp";
-import { descricoesHabilidades } from "../components/descricoesHabilidades";
-import "../components/modal/modalDescricao";
-import PersonalizacaoToken from "../components/PersonalizacaoToken";
+import { descricoesHabilidades } from "../components/habilidades/descricoesHabilidades";
+import "../components/ui/modal/modalDescricao";
+import PersonalizacaoToken from "../components/tokens/PersonalizacaoToken";
 import {
   buscarArvoresHabilidades,
   buscarPersonagem,
@@ -473,6 +475,7 @@ const FichaPersonagem = () => {
   const [carregado, setCarregado] = useState(false);
   const [seletorMesaAberto, setSeletorMesaAberto] = useState(false);
   const [menuFichaAberto, setMenuFichaAberto] = useState(false);
+  const [adaptacaoAberta, setAdaptacaoAberta] = useState(false);
   const [campanhasDaFicha, setCampanhasDaFicha] = useState([]);
   const [carregandoCampanhas, setCarregandoCampanhas] = useState(false);
   const [erroCampanhas, setErroCampanhas] = useState("");
@@ -3185,100 +3188,6 @@ const FichaPersonagem = () => {
         </div>
       </div>
     );
-  };
-
-  const nomesPassivas = {
-    enganacao: "Enganação", raciocinioLogico: "Raciocínio Lógico", investigacao: "Investigação", instinto: "Instinto", sensibilidade: "Sensibilidade", instintoSobrevivencia: "Instinto de Sobrevivência", coragem: "Coragem", diplomacia: "Diplomacia", disciplina: "Disciplina", autocontrole: "Autocontrole", intimidacaoPassiva: "Intimidação Passiva", presenca: "Presença", memoria: "Memória", empatia: "Empatia", lealdade: "Lealdade", fe: "Fé", vitalidade: "Vitalidade", folego: "Fôlego", equilibrio: "Equilíbrio", velocidade: "Velocidade", precisao: "Precisão", lutar: "Lutar", resistenciaFisica: "Resistência Física", primeirosSocorros: "Primeiros Socorros", furtividade: "Furtividade", conhecimentoMedico: "Conhecimento Médico", conhecimentoTecnico: "Conhecimento Técnico", conhecimentoHistorico: "Conhecimento Histórico", conhecimentoOculto: "Conhecimento Oculto", tecnologia: "Tecnologia", tatica: "Tática", percepcaoAuditiva: "Percepção Auditiva", percepcaoVisual: "Percepção Visual", percepcaoOlfativa: "Percepção Olfativa", crime: "Crime", manipulacao: "Manipulação", intimidacao: "Intimidação", seducao: "Sedução", resistenciaMental: "Resistência Mental",
-  };
-
-  const ativosParaPassiva = {
-    enganacao: "carisma",
-    raciocinioLogico: "razao",
-    investigacao: "razao",
-    instinto: "intuicao",
-    sensibilidade: "persistencia",
-    coragem: "persistencia",
-
-    diplomacia: "carisma",
-    disciplina: "razao",
-    autocontrole: "persistencia",
-    intimidacaoPassiva: "violencia",
-    presenca: "carisma",
-    memoria: "razao",
-    empatia: "intuicao",
-    lealdade: "persistencia",
-    fe: "persistencia",
-
-    vitalidade: "resistencia",
-    folego: "resistencia",
-    equilibrio: "firmeza",
-    velocidade: "firmeza",
-    precisao: "percepcao",
-    lutar: "violencia",
-    resistenciaFisica: "resistencia",
-    primeirosSocorros: "razao",
-
-    conhecimentoMedico: "razao",
-    conhecimentoTecnico: "razao",
-    conhecimentoHistorico: "razao",
-    conhecimentoOculto: "razao",
-    tecnologia: "razao",
-    tatica: "razao",
-
-    percepcaoAuditiva: "percepcao",
-    percepcaoVisual: "percepcao",
-    percepcaoOlfativa: "percepcao",
-
-    crime: "firmeza",
-    manipulacao: "carisma",
-    intimidacao: "violencia",
-    seducao: "carisma",
-    resistenciaMental: "persistencia",
-
-    furtividade: "firmeza",
-    instintoSobrevivencia: "intuicao",
-  };
-
-  const dadosAtivos = {
-    razao: {
-      nome: "Razão",
-      atributo: "inteligencia",
-    },
-
-    intuicao: {
-      nome: "Intuição",
-      atributo: "inteligencia",
-    },
-
-    percepcao: {
-      nome: "Percepção",
-      atributo: "vontade",
-    },
-
-    firmeza: {
-      nome: "Firmeza",
-      atributo: "reflexos",
-    },
-
-    violencia: {
-      nome: "Violência",
-      atributo: "forca",
-    },
-
-    carisma: {
-      nome: "Carisma",
-      atributo: "vontade",
-    },
-
-    persistencia: {
-      nome: "Persistência",
-      atributo: "vontade",
-    },
-
-    resistencia: {
-      nome: "Resistência",
-      atributo: "fontitude",
-    },
   };
 
   const rolarPassiva = (nome, chave) => {
@@ -6665,6 +6574,7 @@ const FichaPersonagem = () => {
                   </div><div className="abs-heading-identity"><span className="abs-eyebrow"><img className="abs-system-sigil" src="/simbolo-absoluto.png" alt="Símbolo do Sistema Absoluto"/>SISTEMA ABSOLUTO / ARQUIVO DE PERSONAGEM</span><span className="abs-character-pronoun">{personagem.pronome || 'Pronome não informado'}</span><h1 aria-label={personagem.nome || 'Identidade desconhecida'}><input className="abs-character-name" aria-label="Nome do personagem" value={personagem.nome || ''} placeholder="Nome do personagem" maxLength={30} onChange={e=>setPersonagem(prev=>({...prev,nome:e.target.value}))}/></h1><p>{personagem.classe || 'Classe não informada'}{arquetipoNome ? ` / ${arquetipoNome}` : ''}</p></div><div className="abs-level"><span>NÍVEL</span><strong>{personagem.nivel || 1}</strong></div></div>
         <div className="abs-masthead-bottom"><div><button type="button" onClick={abrirUpgradeNivel}>Evolução ↗</button><button type="button" onClick={abrirLoja}>Arsenal ↗</button><button type="button" onClick={()=>{window.location.href=montarUrlFicha(personagem,fichaId,"?upgrade=1&trilha=criacao");}}>Criar habilidade ↗</button></div></div>
       </header>
+      {adaptacaoAberta && <AdaptacaoEspiral personagem={personagem} fichaId={fichaId} onClose={() => setAdaptacaoAberta(false)} onConcluir={sheet => { localStorage.setItem(`espiral:sheet:v1:${fichaId}`, JSON.stringify(sheet)); window.location.href=`/?sistema=espiral&ficha=${encodeURIComponent(fichaId)}`; }} />}
       <nav className="menu-ficha-flutuante" aria-label="Atalhos da ficha">
         {menuFichaAberto && (
           <div className="menu-ficha-opcoes">
@@ -6687,12 +6597,10 @@ const FichaPersonagem = () => {
             </button>
             <button
               type="button"
-              className="menu-ficha-item-em-breve"
-              disabled
-              title="Em breve"
+              onClick={() => { setMenuFichaAberto(false); setAdaptacaoAberta(true); }}
             >
               <Icon path={mdiSwapHorizontal} size={1} />
-              <span>Em breve</span>
+              <span>Adaptação ao Espiral</span>
             </button>
             <button
               type="button"

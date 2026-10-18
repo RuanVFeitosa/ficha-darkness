@@ -1,12 +1,12 @@
-import EspiralDice, { EspiralDie, EspiralDiceInput } from '../components/EspiralDice';
-import PlayerPageLink from '../components/PlayerPageLink';
-import EspiralDamage from '../components/EspiralDamage';
-import EspiralDamageResult from '../components/EspiralDamageResult';
+import EspiralDice, { EspiralDie, EspiralDiceInput } from '../components/espiral/EspiralDice';
+import PlayerPageLink from '../components/jogador/PlayerPageLink';
+import EspiralDamage from '../components/espiral/EspiralDamage';
+import EspiralDamageResult from '../components/espiral/EspiralDamageResult';
 import { INJURY_EFFECTS } from '../utils/espiralInjuries';
 
-import AnimatedTokenImage from '../components/AnimatedTokenImage';
+import AnimatedTokenImage from '../components/tokens/AnimatedTokenImage';
 import { externalizarImagens } from "../services/mediaStorage";
-import SceneDifficultySelector from "../components/SceneDifficultySelector";
+import SceneDifficultySelector from "../components/tabletop/SceneDifficultySelector";
 import React, { useEffect, useRef, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiAccountCircleOutline, mdiDiceMultipleOutline, mdiStoreOutline, mdiAutoFix, mdiDownload, mdiHeartPulse } from '@mdi/js';
@@ -23,14 +23,14 @@ import {
   parseDiceFormula,
   resolveRoll,
 } from "../data/espiral";
-import "../CSS/FichaEspiral.css";
-import "../CSS/InventarioEspiral.css";
-import "../CSS/FichaEspiralResponsive.css";
+import "../styles/FichaEspiral.css";
+import "../styles/InventarioEspiral.css";
+import "../styles/FichaEspiralResponsive.css";
 import { compressProfileImage, prepareTokenImage } from "../services/imageCompression";
 import { buscarPersonagem } from "../services/personagemApi";
 import { obterIconeItem } from "../utils/itemIcons";
-import { convertDarknessToEspiral } from "../utils/darknessToEspiral";
-import { selecionarDialogo, solicitarDialogo } from "../components/DialogoGlobal";
+import AdaptacaoEspiral from "../components/adaptacao/AdaptacaoEspiral";
+import { selecionarDialogo, solicitarDialogo } from "../components/ui/DialogoGlobal";
 import { APRIMORAMENTOS_HABILIDADES_ESPIRAL, CUSTOS_ESPERANCA_HABILIDADES, HABILIDADES_ESPIRAL } from "../data/habilidadesEspiral";
 import { CATALOGO_ESPIRAL } from "../data/catalogoEspiral";
 
@@ -363,6 +363,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
   const storageKey = `espiral:sheet:v1:${id}`;
   const initialStoredSheet = useRef(storedEspiralSheet(id));
   const [sheet, setSheet] = useState(() => initialStoredSheet.current || freshSheet());
+  const [adaptacaoPendente, setAdaptacaoPendente] = useState(null);
   const [saveState, setSaveState] = useState("Salvando…");
   const [tab, setTab] = useState("Visão geral");
   const [selectedInventoryKey, setSelectedInventoryKey] = useState(null);
@@ -469,23 +470,12 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
         legacyImportsInProgress.delete(id);
         return;
       }
-      const pulseSource = await selecionarDialogo(
-        "Escolha qual atributo antigo define o Pulso desta ficha ESPIRAL.",
-        { titulo: "Definir Pulso", valorInicial: "forca", opcoes: [
-          { valor: "forca", rotulo: `Força (${legacyCharacter.atributos?.forca || 0})` },
-          { valor: "fonitude", rotulo: `Fortitude (${legacyCharacter.atributos?.fonitude || 0})` },
-        ] },
-      );
-      if (!pulseSource) {
-        legacyImportsInProgress.delete(id);
-        return;
-      }
-      setSheet(convertDarknessToEspiral({ ...legacyCharacter, fichaId: id }, { pulseSource }));
-      setNotice("Ficha Darkness vinculada e adaptada automaticamente.");
+      setAdaptacaoPendente({ ...legacyCharacter, fichaId: id });
     };
     importarDarkness();
   }, [id, idFromUrl]);
   useEffect(() => {
+    if (adaptacaoPendente) return;
     try {
       localStorage.setItem(storageKey, JSON.stringify(sheet));
       setSaveState("Salvo neste dispositivo");
@@ -493,7 +483,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
     } catch {
       setSaveState("Não foi possível salvar. Exporte uma cópia.");
     }
-  }, [sheet, storageKey, id, onSheetChange]);
+  }, [sheet, storageKey, id, onSheetChange, adaptacaoPendente]);
   useEffect(() => {
     const updateAnimation=event => {
       if(event.type==='storage' && event.key!==storageKey) return;
@@ -956,6 +946,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
         </nav>
       </header>
       {tabletopAccessError && !hasEspiralToken(sheet) && <p role="alert">{MISSING_ESPIRAL_TOKEN}</p>}
+      {adaptacaoPendente && <AdaptacaoEspiral verificarExistente={false} personagem={adaptacaoPendente} fichaId={id} onClose={() => { setAdaptacaoPendente(null); legacyImportsInProgress.delete(id); }} onConcluir={adaptada => { setSheet(adaptada); setAdaptacaoPendente(null); setNotice("Adaptação concluída com suas escolhas."); }} />}
       <main className="es-main">
         <div className="es-breadcrumb">
           ARQUIVO PESSOAL <span>/</span> {id === "principal" ? "001" : id}{" "}

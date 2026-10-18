@@ -1,12 +1,12 @@
 import {persistirEnvioHabilidade,carregarRascunhoHabilidade,salvarRascunhoHabilidade} from '../services/abilitySubmission';
-import AbilityPageEditor from '../components/AbilityPageEditor';
-import AbilityDocument from '../components/AbilityDocument';
+import AbilityPageEditor from '../components/habilidades/AbilityPageEditor';
+import AbilityDocument from '../components/habilidades/AbilityDocument';
 import {paginasHabilidade,validarPaginas,descricaoDasPaginas} from '../utils/abilityPages';
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import Icon from "@mdi/react";
 import { mdiArrowLeft } from "@mdi/js";
-import "../CSS/UpgradeNivel.css";
-import "../CSS/UpgradeDossier.css";
+import "../styles/UpgradeNivel.css";
+import "../styles/UpgradeDossier.css";
 import { buscarPersonagem, salvarPersonagem } from "../services/personagemApi";
 import { notificarPersonagemAtualizado } from "../services/syncEvents";
 import { estadoInicial } from "./fichaPersonagem";

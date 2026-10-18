@@ -1,0 +1,43 @@
+import React from 'react';
+import {render,screen,fireEvent,waitFor} from '@testing-library/react';
+import MuralInvestigacao from './MuralInvestigacao';
+import {muralClient} from '../../services/investigacaoApi';
+jest.mock('../../services/investigacaoApi',()=>({muralClient:jest.fn()}));
+let client;
+beforeEach(()=>{client={load:jest.fn().mockResolvedValue({version:0,cards:[],links:[]}),mutate:jest.fn().mockResolvedValue({version:1,cards:[],links:[]})};muralClient.mockReturnValue(client);});
+test('cria cartão no mural pessoal e mantém campos ao falhar',async()=>{
+ render(<MuralInvestigacao id="1234" codigo="1234"/>);
+ await screen.findByText('A investigação começa com uma pista.');
+ fireEvent.click(screen.getByRole('button',{name:'+ Novo cartão'}));
+ fireEvent.change(screen.getByLabelText('Título'),{target:{value:'Testemunha'}});
+ fireEvent.change(screen.getByLabelText('Descrição e teoria'),{target:{value:'Viu o suspeito.'}});
+ client.mutate.mockRejectedValueOnce(new Error('O mural mudou. Atualize antes de salvar novamente.'));
+ fireEvent.click(screen.getByRole('button',{name:'Salvar cartão'}));
+ await screen.findByRole('alert');expect(screen.getByLabelText('Título')).toHaveValue('Testemunha');
+ fireEvent.click(screen.getByRole('button',{name:'Salvar cartão'}));
+ await waitFor(()=>expect(screen.queryByRole('form',{name:'Editor de cartão'})).not.toBeInTheDocument());
+ expect(client.mutate).toHaveBeenLastCalledWith(0,'saveCard',{card:expect.objectContaining({title:'Testemunha',description:'Viu o suspeito.'})});
+});
+test('conecta cartões e oferece movimentação por teclado',async()=>{
+ const cards=[{id:'a',title:'Pessoa',kind:'pessoa',description:'',x:40,y:40,canEdit:true},{id:'b',title:'Local',kind:'lugar',description:'',x:300,y:40,canEdit:true}];
+ client.load.mockResolvedValue({version:3,cards,links:[]});client.mutate.mockResolvedValue({version:4,cards,links:[]});
+ render(<MuralInvestigacao id="1234" codigo="1234"/>);
+ await screen.findByRole('button',{name:'Mover Pessoa'});
+ fireEvent.click(screen.getByRole('button',{name:'Conectar cartões'}));
+ fireEvent.change(screen.getByLabelText('Rótulo da conexão'),{target:{value:'esteve aqui'}});
+ fireEvent.click(screen.getByRole('button',{name:'Salvar conexão'}));
+ await waitFor(()=>expect(client.mutate).toHaveBeenCalledWith(3,'saveLink',{from:'a',to:'b',label:'esteve aqui'}));
+ await waitFor(()=>expect(screen.queryByRole('form',{name:'Nova conexão'})).not.toBeInTheDocument());
+ fireEvent.keyDown(screen.getByRole('button',{name:'Mover Pessoa'}),{key:'ArrowRight'});
+ await waitFor(()=>expect(client.mutate).toHaveBeenCalledWith(4,'moveCard',{id:'a',x:60,y:40}));
+});
+test('mestre pode preparar pista oculta e revelar cartão',async()=>{
+ const cards=[{id:'s',title:'Segredo',kind:'pista',hidden:true,x:40,y:40,canEdit:true}];client.load.mockResolvedValue({version:2,cards,links:[]});
+ render(<MuralInvestigacao scope="campanha" id="c1" mestre members={['ana']}/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Ver cartão Segredo'}));
+ fireEvent.click(screen.getByRole('button',{name:'Revelar aos jogadores'}));
+ await waitFor(()=>expect(client.mutate).toHaveBeenCalledWith(2,'reveal',{id:'s',hidden:false}));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'+ Novo cartão'})).toBeEnabled());
+ fireEvent.click(screen.getByRole('button',{name:'+ Novo cartão'}));
+ expect(screen.getByLabelText('Preparar como pista oculta (só o mestre vê)')).toBeInTheDocument();
+});

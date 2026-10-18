@@ -1,4 +1,5 @@
 jest.mock("./supabase", () => ({ supabase: { auth: { getSession: jest.fn() }, from: jest.fn() } }));
+jest.mock('./supabaseMedia', () => ({ supabaseMedia: require('./supabase').supabase }));
 jest.mock("./mediaStorage", () => ({ r2Configurado: true, externalizarImagens: jest.fn(async value => value.replace("data:image/png;base64,abc", "https://media.test/files/user/mapas/token.png")), mediaStorage: { from: jest.fn() } }));
 let api, supabase, storage;
 beforeEach(() => {

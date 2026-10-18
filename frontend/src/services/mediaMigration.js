@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { supabaseMedia } from './supabaseMedia';
 import { externalizarImagens, mediaStorage, r2Configurado } from "./mediaStorage";
 
 const tables = ["campanhas", "cenas", "tokens_mapa", "documentos_investigacao", "inimigos_campanha", "personagens"];
@@ -8,7 +9,7 @@ const imageTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/avif
 export async function verificarConfiguracaoMidia() {
   if (!r2Configurado) throw new Error("R2 não está configurado neste frontend. Reinicie o servidor de desenvolvimento; se estiver usando o build, gere um novo build com REACT_APP_MEDIA_URL.");
   if (!supabase) throw new Error("Configure o Supabase para autenticar os uploads.");
-  const { data, error } = await supabase.auth.getSession();
+  const { data, error } = await supabaseMedia.auth.getSession();
   if (error) throw error;
   if (!data?.session?.access_token) throw new Error("Você está acessando sem uma sessão Supabase. Entre na sua conta do mestre para enviar e migrar arquivos.");
   return data.session;

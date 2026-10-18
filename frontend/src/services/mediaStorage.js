@@ -1,4 +1,6 @@
 import { supabase } from "./supabase";
+import { supabaseMedia } from './supabaseMedia';
+import authenticateMedia from '../components/midia/MediaLogin';
 
 const endpoint = (process.env.REACT_APP_MEDIA_URL || "").trim().replace(/\/$/, "");
 export const r2Configurado = Boolean(endpoint);
@@ -7,14 +9,14 @@ const pending = new Map();
 const encodePath = path => path.split("/").map(encodeURIComponent).join("/");
 
 async function headers() {
-  const { data, error } = await supabase.auth.getSession();
+  const { data, error } = await supabaseMedia.auth.getSession();
   if (error) throw error;
-  if (!data?.session?.access_token) throw new Error("Entre na sua conta para enviar arquivos ao R2.");
-  return { Authorization: "Bearer " + data.session.access_token };
+  const session = data?.session?.access_token ? data.session : await authenticateMedia();
+  return { Authorization: "Bearer " + session.access_token };
 }
 async function request(path, options) {
   const response = await fetch(endpoint + path, options);
-  const result = await response.json();
+  const result = await response.json().catch(() => ({ error: `Serviço de arquivos indisponível (HTTP ${response.status}).` }));
   if (!response.ok) throw new Error(result.error || "Não foi possível acessar os arquivos no R2.");
   return result;
 }
@@ -22,8 +24,28 @@ export const mediaStorage = {
   from(bucket) {
     return {
       async upload(path, file, options = {}) {
+        if (!endpoint && options.requireR2) return { data: null, error: new Error('R2 obrigatório para modelos 3D. Configure REACT_APP_MEDIA_URL e publique novamente. Nenhum arquivo foi enviado ao Supabase.') };
         if (!endpoint) return supabase.storage.from(bucket).upload(path, file, options);
         try {
+          if (options.multipart) {
+            if (bucket !== 'mapas' || file.size <= 0 || file.size > 512 * 1024 * 1024) throw new Error('Modelo vazio ou maior que 512 MB.');
+            const auth = await headers();
+            const session = await request('/multipart/create', { method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify({ path: 'modelos3d/' + path, size: file.size }) });
+            try {
+              const size = session.partSize;
+              if (!session.id || size !== 8 * 1024 * 1024) throw new Error('Resposta multipart inválida. Atualize o Worker Cloudflare.');
+              for (let offset = 0, number = 1; offset < file.size; offset += size, number++) {
+                await request(`/multipart/${session.id}/part?number=${number}`, { method: 'PUT', headers: await headers(), body: file.slice(offset, offset + size) });
+                options.onProgress?.(Math.min(offset + size, file.size), file.size);
+              }
+              const result = await request(`/multipart/${session.id}/complete`, { method: 'POST', headers: await headers() });
+              urls.set(bucket + ':' + path, result.url);
+              return { data: { path: result.path }, error: null };
+            } catch (error) {
+              await headers().then(auth => request(`/multipart/${session.id}/abort`, { method: 'DELETE', headers: auth })).catch(() => {});
+              throw error;
+            }
+          }
           const result = await request("/upload/" + encodeURIComponent(bucket) + "/" + encodePath(path), {
             method: "PUT", body: file,
             headers: { ...await headers(), "Content-Type": options.contentType || file.type || "application/octet-stream" },
