@@ -1,3 +1,5 @@
+import SessionClockControls from '../components/tabletop/SessionClockControls';
+import { normalizeSessionClock, sessionMinutes, changeSessionClock, daylightWeather } from '../utils/tabletopClock';
 import NumberInput from '../components/ui/NumberInput';
 import AnimatedScene from '../components/tabletop/AnimatedScene';
 import { espiralDie } from '../utils/espiralDice';
@@ -8,7 +10,7 @@ import {createTabletopRenderer,isWebGLCreationError,tabletop2DUrl} from '../util
 import '../styles/TokenAnimationStudio.css';
 import AnimatedTokenArt from '../components/tokens/AnimatedTokenArt';
 import {readTokenAnimations} from '../utils/tokenAnimation';
-import { campaignCharacters, tabletopPlayerId } from "../utils/tabletopCharacters";
+import { campaignCharacters, tabletopPlayerId, canMoveTacticalToken } from "../utils/tabletopCharacters";
 import MobileTabletopControls from "../components/tabletop/MobileTabletopControls";
 import { suavizarPosicaoToken } from "../utils/tokenMotion";
 import { rotacaoToken } from "../utils/tokenOrientation";
@@ -17,7 +19,7 @@ import MediaMigrationPanel from "../components/midia/MediaMigrationPanel";
 import { externalizarImagens, r2Configurado } from "../services/mediaStorage";
 import { verificarConfiguracaoMidia } from "../services/mediaMigration";
 import SceneDifficultyPanel from "../components/tabletop/SceneDifficultyPanel";
-import {difficultyOptions,rollOutcome} from "../utils/sceneDifficulty";
+import {activeSceneDifficulty,rollOutcome} from "../utils/sceneDifficulty";
 import RollNotifications, {RollHistory} from "../components/tabletop/RollNotifications";
 import React, { Component, Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
@@ -54,7 +56,8 @@ const mapRevision = (maps = []) => (Array.isArray(maps) ? maps : [])
 const sameVisualWeather = (current, next) => {
   const keys = ["preset","label","skyColor","fogColor","sunColor","ambient","sun","sunSize","fogNear","fogFar","rain","snow","wind"];
   return keys.every((key) => current?.[key] === next?.[key])
-    && JSON.stringify(current?.sunPosition || []) === JSON.stringify(next?.sunPosition || []);
+    && JSON.stringify(current?.sunPosition || []) === JSON.stringify(next?.sunPosition || [])
+    && JSON.stringify(current?.clock || null) === JSON.stringify(next?.clock || null);
 };
 
 function loadSavedCustomTokens() {
@@ -99,18 +102,6 @@ function loadSavedDarknessCharacters() {
   return characters.sort((a,b) => String(a.sheet.nome || "").localeCompare(String(b.sheet.nome || ""),"pt-BR"));
 }
 
-const OBSTACLES = [[-4.3,-2.6,-3.1,0.1], [0.1,3.5,-3.3,-1.5], [-0.9,0.9,-0.9,0.3], [3.2,4.4,-0.6,0.7]];
-function free(x,z) {
-  return Math.abs(x)<4.3 && Math.abs(z)<3.3 && !OBSTACLES.some(([a,b,c,d]) => x>a && x<b && z>c && z<d);
-}
-function clearPath(from,to) {
-  const steps = Math.ceil(Math.hypot(to[0]-from[0],to[1]-from[1])/0.08);
-  for(let i=1;i<=steps;i++) if(!free(from[0]+(to[0]-from[0])*i/steps,from[1]+(to[1]-from[1])*i/steps)) return false;
-  return true;
-}
-function Box({ position,size,color,...props }) {
-  return <mesh position={position} castShadow receiveShadow {...props}><boxGeometry args={size}/><meshStandardMaterial color={color} roughness={0.85}/></mesh>;
-}
 function WeatherParticles({type,intensity=0,wind=0}) {
   const geometryRef=useRef();
   const count=Math.round(Math.max(0,Math.min(1,intensity))*1400);
@@ -190,36 +181,6 @@ function PanoramaBackground({url}) {
   </group>;
 }
 
-function Room({night,onFloor}) {
-  return <>
-    <pointLight position={[-3,2.7,-2]} color="#ffb66c" intensity={night ? 28 : 14} distance={10}/>
-    <Box position={[0,-0.25,0]} size={[9.5,0.45,7.5]} color="#302b28"/>
-    <mesh rotation={[-Math.PI/2,0,0]} receiveShadow onClick={onFloor}><planeGeometry args={[9,7]}/><meshStandardMaterial color="#9c8870" roughness={0.95}/></mesh>
-    {Array.from({length:13},(_,i) => <Box key={i} position={[0,0.006,-3.25+i*0.53]} size={[9,0.008,0.018]} color="#645747"/>)}
-    <Box position={[0,1.6,-3.6]} size={[9.4,3.2,0.18]} color="#b4a086"/>
-    <Box position={[-4.6,1.6,0]} size={[0.18,3.2,7.2]} color="#a5947d"/>
-    <Box position={[0,0.6,-3.47]} size={[9.2,1.2,0.08]} color="#594940"/>
-    <Box position={[-4.47,0.6,0]} size={[0.08,1.2,7.1]} color="#594940"/>
-    <Box position={[0,1.24,-3.4]} size={[9.2,0.1,0.14]} color="#382e29"/>
-    <Box position={[-4.4,1.24,0]} size={[0.14,0.1,7.1]} color="#382e29"/>
-    <Box position={[1.8,0.6,-2.4]} size={[2.8,1.2,1.2]} color="#50392c"/>
-    <Box position={[1.8,1.24,-2.4]} size={[3.05,0.12,1.4]} color="#967454"/>
-    <Box position={[2.5,1.4,-2.5]} size={[0.6,0.22,0.4]} color="#2d3736"/>
-    <Box position={[1,1.32,-2.3]} size={[0.55,0.025,0.35]} color="#d3c4a6"/>
-    <Box position={[0,0.75,-0.3]} size={[1.3,0.12,0.7]} color="#644937"/>
-    {[-0.5,0.5].map(x => <Box key={x} position={[x,0.36,-0.3]} size={[0.1,0.72,0.5]} color="#332c27"/>)}
-    {[-2.3,-1.2].map(z => <group key={z}><Box position={[-3.65,1,z]} size={[0.75,2,0.85]} color="#48524e"/>{[0.4,0.9,1.4,1.9].map(y => <group key={y}><Box position={[-3.24,y,z]} size={[0.04,0.39,0.75]} color="#59635d"/><Box position={[-3.2,y,z]} size={[0.06,0.04,0.22]} color="#b4ad8b"/></group>)}</group>)}
-    <Box position={[-1.1,2.15,-3.44]} size={[2,1.15,0.12]} color="#403229"/>
-    <Box position={[-1.1,2.15,-3.36]} size={[1.82,0.97,0.03]} color="#807252"/>
-    {[-1.6,-1,-0.5].map((x,i) => <Box key={x} position={[x,2.1+(i%2)*0.2,-3.32]} size={[0.32,0.42,0.02]} color="#c8bb95" rotation={[0,0,i*0.1]}/>)}
-    <Box position={[3.3,2.25,-3.46]} size={[1.3,1.25,0.1]} color="#342d29"/>
-    <Box position={[3.3,2.25,-3.39]} size={[1.1,1.05,0.03]} color={night ? "#364c5b" : "#8cabb2"}/>
-    <Box position={[3.3,2.25,-3.34]} size={[0.06,1.1,0.05]} color="#342d29"/>
-    <Box position={[3.3,2.25,-3.34]} size={[1.1,0.06,0.05]} color="#342d29"/>
-    <Box position={[3.8,0.4,0]} size={[0.7,0.8,0.65]} color="#573e30"/>
-    <mesh position={[-3,2.7,-2]}><sphereGeometry args={[0.12,16,12]}/><meshStandardMaterial color="#ffe4ad" emissive="#ffb65b" emissiveIntensity={3}/></mesh>
-  </>;
-}
 function CustomMapStage({onFloor,baseElevation=0}) {
   return <>
     <mesh rotation={[-Math.PI/2,0,0]} position={[0,(Number(baseElevation)||0)+0.006,0]} receiveShadow raycast={() => null}>
@@ -483,6 +444,17 @@ export function Camera({view,interactionLocked=false,mode="free",followPosition=
   const sheetCameraTransition=useRef(null);
   const appliedFocusRequest=useRef(0);
   const cameraPresetInitialized=useRef(false);
+  const viewFovTransition=useRef(null);
+  const characterViewInitialized=useRef(false);
+  const transitionFov=useCallback((target,smooth=true) => {
+    if (smooth && view!=="cinema" && !window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
+      viewFovTransition.current={from:camera.fov,to:target,elapsed:0};
+    } else {
+      viewFovTransition.current=null;
+      camera.fov=target;
+      camera.updateProjectionMatrix();
+    }
+  },[camera,view]);
   const right=useMemo(() => new THREE.Vector3(),[]);
   const movement=useMemo(() => new THREE.Vector3(),[]);
   const desiredTarget=useMemo(() => new THREE.Vector3(),[]);
@@ -672,25 +644,26 @@ export function Camera({view,interactionLocked=false,mode="free",followPosition=
     if(focusRequest>0) {sheetCameraTransition.current=null;cameraPresetInitialized.current=true;}
     const preset=CAMERA_PRESETS[view] || CAMERA_PRESETS.room;
     if(!cameraPresetInitialized.current) camera.position.set(...preset.position);
-    camera.fov=preset.fov;
+    transitionFov(preset.fov,cameraPresetInitialized.current);
     camera.near=0.05;
     camera.far=1200;
     camera.updateProjectionMatrix();
     if(!cameraPresetInitialized.current) controls.current.target.set(...preset.target);
     cameraPresetInitialized.current=true;
     controls.current.update();
-  },[camera,mode,view,focusRequest]);
+  },[camera,mode,view,focusRequest,transitionFov]);
   useEffect(() => {
     if(mode!=="character" || !view) return;
-    camera.fov=view==="panorama" ? 65 : view==="detail" ? 28 : 50;
-    camera.updateProjectionMatrix();
-  },[camera,mode,view]);
+    transitionFov(view==="panorama" ? 65 : view==="detail" ? 28 : 50,characterViewInitialized.current);
+    characterViewInitialized.current=true;
+  },[camera,mode,view,transitionFov]);
   useEffect(() => {
     if(appliedCameraSpawn.current?.key!==spawnKey) {
       appliedCameraSpawn.current={key:spawnKey,applied:false};
     }
     if(appliedCameraSpawn.current.applied) return;
     if(mode!=="free" || !controls.current || !Array.isArray(spawnPose?.position) || !Array.isArray(spawnPose?.target)) return;
+    viewFovTransition.current=null;
     camera.position.set(...spawnPose.position);
     camera.fov=Number(spawnPose.fov)||42;
     camera.near=0.05;
@@ -707,6 +680,15 @@ export function Camera({view,interactionLocked=false,mode="free",followPosition=
   useFrame((_,delta) => {
     const orbit=controls.current;
     if(!orbit) return;
+    const fovTransition=viewFovTransition.current;
+    if (fovTransition && mode!=="master" && !sheetCameraTransition.current) {
+      fovTransition.elapsed+=Math.min(delta,0.05);
+      const progress=Math.min(1,fovTransition.elapsed/0.65);
+      const eased=progress*progress*(3-2*progress);
+      camera.fov=fovTransition.from+(fovTransition.to-fovTransition.from)*eased;
+      camera.updateProjectionMatrix();
+      if (progress===1) viewFovTransition.current=null;
+    }
     const transition=sheetCameraTransition.current;
     if(transition && mode==="character") {
       transition.elapsed+=Math.min(delta,0.05);
@@ -830,7 +812,6 @@ export class SceneBoundary extends Component {
   });
   const playerCameraMode="character";
   const [tacticalMode,setTacticalMode]=useState(false);
-  const night=weather.preset==="noite";
   const [savingWeather,setSavingWeather]=useState(false);
   const [notice,setNotice]=useState("Selecione um personagem e clique no piso para movê-lo.");
   const actualPositions=useRef([]);
@@ -838,6 +819,14 @@ export class SceneBoundary extends Component {
   const [mapAssets,setMapAssets]=useState(localMapAssets);
   const [activeMapName,setActiveMapName]=useState(localMapAssets.length ? "Mapa 3D local" : "");
   const weatherRef=useRef(weather);
+  const [clockNow,setClockNow]=useState(Date.now);
+  const clockMinutes=sessionMinutes(weather.clock,clockNow);
+  const renderedWeather=daylightWeather(weather,clockMinutes,WEATHER_PRESETS);
+  useEffect(() => {
+    if (!weather.clock?.enabled || !weather.clock?.running) return undefined;
+    const timer=window.setInterval(() => setClockNow(Date.now()),250);
+    return () => window.clearInterval(timer);
+  },[weather.clock?.enabled,weather.clock?.running]);
   const lastCameraSyncRef=useRef(0);
   const masterCameraPoseRef=useRef(null);
   const campaignRef=useRef(null);
@@ -1117,11 +1106,36 @@ export class SceneBoundary extends Component {
     }
   };
   const applyWeatherPreset = (presetId) => {
-    const next={...WEATHER_PRESETS[presetId]};
+    if (!mestre) return;
+    const times={dia:540,sol:720,tarde:1050,noite:1320};
+    const currentClock=weatherRef.current.clock;
+    const next={...WEATHER_PRESETS[presetId],clock:currentClock ? changeSessionClock(currentClock,times[presetId]!==undefined ? {minutes:times[presetId]} : {}) : undefined};
     setWeather(next);
     persistWeather(next);
   };
   const customizeWeather = (patch) => setWeather(current => ({...current,...patch,preset:"custom",label:"Personalizado"}));
+  const changeClock = (patch) => {
+    if (!mestre) return;
+    const base=weatherRef.current;
+    const clock=changeSessionClock(base.clock || {...normalizeSessionClock(),minutes:540},patch);
+    const next={...base,clock};
+    weatherRef.current=next;
+    setWeather(next); setClockNow(Date.now());
+    persistWeather(next);
+  };
+  useEffect(() => {
+    if (!mestre || !weather.clock?.enabled || !weather.clock?.running) return undefined;
+    const timer=window.setInterval(() => {
+      const current=weatherRef.current;
+      const next={...current,clock:changeSessionClock(current.clock,{})};
+      weatherRef.current=next;
+      setWeather(next);
+      const synchronized={...next,...(masterCameraPoseRef.current ? {camera:masterCameraPoseRef.current} : {})};
+      try { localStorage.setItem(weatherStorageKey,JSON.stringify(synchronized)); } catch {}
+      if (campaign?.id) salvarClima3DCampanha(campaign.id,synchronized).catch(() => setNotice('O tempo continua localmente; não foi possível sincronizar o relógio.'));
+    },10000);
+    return () => window.clearInterval(timer);
+  },[mestre,campaign?.id,weather.clock?.enabled,weather.clock?.running,weatherStorageKey]);
   const persistBackground = async (url,name="") => {
     try {
       setSavingBackground(true);
@@ -1278,7 +1292,9 @@ export class SceneBoundary extends Component {
     setHudPanel(current => current === panel ? null : panel);
     setTokenPanelOpen(false);
   };
-  const activeDifficulty=difficultyOptions(campaign?.cenaAtiva,campaign?.inimigos || []).find(option=>option.id===(campaign?.cenaAtiva?.dificuldades?.contexto || "ambiente")) || difficultyOptions(campaign?.cenaAtiva)[0];
+  const rollingPerson=tabletopPeople[mestre ? selected : playerCharacterIndex];
+  const combatDifficulty=Boolean(campaign?.combateAtivo || (rollingPerson && sheetTokenTransforms[rollingPerson.id]?.combat));
+  const activeDifficulty=activeSceneDifficulty(campaign?.cenaAtiva,campaign?.inimigos || [],combatDifficulty);
   const updateSceneDifficulty=async(patch) => {
     if(!mestre || !campaign?.id || !campaign.cenaAtiva) return;
     const scene={...campaign.cenaAtiva,dificuldades:{ambiente:4,combateAmbiente:4,conflitos:4,...campaign.cenaAtiva.dificuldades,...patch}};
@@ -1341,7 +1357,6 @@ export class SceneBoundary extends Component {
     if(mestre || playerCharacterIndex<0) return;
     const person=tabletopPeople[playerCharacterIndex];
     const next=limitarPosicaoToken(destination);
-    if(!activeMapName && !clearPath(playerFollowPosition,next)) return;
     setPositions(previous => previous.map((position,index) => index===playerCharacterIndex ? next : position));
     if(Date.now()-lastPlayerMoveSave.current>=150) {
       lastPlayerMoveSave.current=Date.now();
@@ -1404,16 +1419,16 @@ export class SceneBoundary extends Component {
             spawnKey={activeMapId}
           />
           <PlayerTokenNavigation enabled={!staticScene && !mestre && playerCharacterIndex>=0 && !hudPanel && !tokenPanelOpen && !draggingToken} cameraRelative={!tacticalMode} position={playerFollowPosition} onMove={movePlayerToken} onStop={() => {if(playerCharacterIndex>=0 && playerFollowPosition) updateSheetToken(tabletopPeople[playerCharacterIndex].id,{x:playerFollowPosition[0],z:playerFollowPosition[1]});}}/>
-          <WeatherEnvironment weather={weather}/>
+          <WeatherEnvironment weather={renderedWeather}/>
           <PanoramaBackground url={activeBackgroundUrl}/>
-          {activeMapName ? <CustomMapStage onFloor={move} baseElevation={activeSpawnPoints.tokens?.y}/> : <Room night={night} onFloor={move}/>}
+          <CustomMapStage onFloor={move} baseElevation={activeSpawnPoints.tokens?.y}/>
           <PlacedAssets items={mapAssets} selectedId={null} onSelect={() => {}} onSurfaceClick={activeMapName ? move : undefined}/>
           {customTokens.map(token => <Suspense key={`${activeMapId}:${token.id}`} fallback={null}><CustomToken token={token} canDrag={mestre} aimWithCamera={!tacticalMode && cameraFlashlightId===token.id} onAim={lanterna => {if(mestre) saveCustomTokens(customTokens.map(item => item.id===token.id ? {...item,lanterna} : item));}} baseElevation={activeSpawnPoints.tokens?.y} selected={token.id === selectedToken} onSelect={id => {setSelectedToken(id);setPendingToken(null);setTokenMode(true);setNotice(`${token.name} selecionado. Arraste-o livremente para mover.`);}} onEdit={() => {setTokenPanelOpen(true);setHudPanel(null);setNotice(`Editando ${token.name}.`);}} onDragStart={() => setDraggingToken(true)} constrainPosition={limitarPosicaoToken} onDragEnd={finishTokenInteraction}/></Suspense>)}
           {tabletopPeople.map((person,i) => <Suspense key={`${activeMapId}:${person.id}`} fallback={null}><Person person={person} playerView={!mestre && i===playerCharacterIndex} sheetOpen={hudPanel==="sheet"} combat={Boolean(sheetTokenTransforms[person.id]?.combat)} animation={person.animation ? {...person.animation,enabled:sheetTokenTransforms[person.id]?.animationEnabled ?? person.animation.enabled} : sheetTokenTransforms[person.id]?.animation} canDrag={mestre} rotacao={sheetTokenTransforms[person.id]?.rotacao} olharCamera={sheetTokenTransforms[person.id]?.olharCamera} aimWithCamera={!tacticalMode && cameraFlashlightId===person.id} onAim={lanterna => updateSheetToken(person.id,{lanterna})} lanterna={sheetTokenTransforms[person.id]?.lanterna} position={positions[i] || person.start} scale={sheetTokenTransforms[person.id]?.scale} elevation={sheetTokenTransforms[person.id]?.elevation} baseElevation={activeSpawnPoints.tokens?.y} selected={!tokenMode && selected===i} onPosition={p => {actualPositions.current[i]=p;}} onSelect={() => {setSelected(i);setTokenMode(false);setSelectedToken(null);}} onEdit={() => {setTokenPanelOpen(true);setHudPanel(null);setNotice(`Editando o token de ${person.name}.`);}} onDragStart={() => setDraggingToken(true)} constrainPosition={limitarPosicaoToken} onDragEnd={(position,moved) => {setDraggingToken(false);setPositions(previous => previous.map((current,index) => index===i ? position : current));updateSheetToken(person.id,{x:position[0],z:position[1]});setNotice(moved ? `${person.name} foi reposicionado.` : `${person.name} selecionado. Clique com o botão direito para editar.`);}}/></Suspense>)}
         </Canvas>}
       </SceneBoundary>
 
-      {tacticalMode && !staticScene && <SceneBoundary><Suspense fallback={<div className="tt3-fallback">Carregando mapa tático…</div>}><TacticalTabletop assets={mapAssets} mapKey={activeMapId} center={tacticalCenter} locked={draggingToken} mestre={mestre} tokens={tacticalTokens} onFloor={move} onDragStart={() => setDraggingToken(true)} onDragEnd={() => setDraggingToken(false)} onSelect={token => {if(token.personIndex!==undefined) {setSelected(token.personIndex);setTokenMode(false);} else {setSelectedToken(token.id);setTokenMode(true);}}} onMove={(token,position) => {if(!mestre) return;if(token.personIndex!==undefined) {setPositions(current => current.map((p,index) => index===token.personIndex ? position : p));updateSheetToken(token.id,{x:position[0],z:position[1]});} else finishTokenInteraction(token.id,position,true);}}/></Suspense></SceneBoundary>}
+      {tacticalMode && !staticScene && <SceneBoundary><Suspense fallback={<div className="tt3-fallback">Carregando mapa tático…</div>}><TacticalTabletop playerTokenId={!mestre ? tabletopPeople[playerCharacterIndex]?.id : null} navigation={<PlayerTokenNavigation enabled={!mestre && playerCharacterIndex>=0 && !hudPanel && !tokenPanelOpen && !draggingToken} cameraRelative={false} position={playerFollowPosition} onMove={movePlayerToken} onStop={() => {if(playerCharacterIndex>=0 && playerFollowPosition) updateSheetToken(tabletopPeople[playerCharacterIndex].id,{x:playerFollowPosition[0],z:playerFollowPosition[1]});}}/>} assets={mapAssets} mapKey={activeMapId} center={tacticalCenter} locked={draggingToken} mestre={mestre} tokens={tacticalTokens} onFloor={move} onDragStart={() => setDraggingToken(true)} onDragEnd={() => setDraggingToken(false)} onSelect={token => {if(token.personIndex!==undefined) {setSelected(token.personIndex);setTokenMode(false);} else {setSelectedToken(token.id);setTokenMode(true);}}} onMove={(token,position) => {if(!canMoveTacticalToken(token,mestre,tabletopPeople[playerCharacterIndex]?.id)) return;position=limitarPosicaoToken(position);if(token.personIndex!==undefined) {setPositions(current => current.map((p,index) => index===token.personIndex ? position : p));updateSheetToken(token.id,{x:position[0],z:position[1]});} else finishTokenInteraction(token.id,position,true);}}/></Suspense></SceneBoundary>}
       {staticScene && <div className={`tt3-static-scene ${!mestre ? "tt3-static-scene-player" : ""}`}>{staticScene.animation?.enabled ? <AnimatedScene media={staticScene} id={`${campaign?.cenaAtiva?.id}:${staticScene.id}`} alt={staticScene.nome || campaign?.cenaAtiva?.nome || "Cena narrativa"}/> : <img src={staticScene.url} alt={staticScene.nome || campaign?.cenaAtiva?.nome || "Cena estática"}/>}</div>}
       <div className="tt3-cinema-shade" aria-hidden="true"/>
       <div className="tt3-film-grain" aria-hidden="true"/>
@@ -1484,13 +1499,13 @@ export class SceneBoundary extends Component {
       </div>
 
       {campaign && <RollNotifications key={campaign.id} rolls={campaign.rolagens || []} mestre={mestre}/>}
-      <div className="tt3-toast" role="status"><span>{notice}</span><small>{tacticalMode && !staticScene ? (mestre ? "Arraste os tokens para mover · arraste o mapa para navegar · roda: zoom" : "WASD: mover seu personagem · arraste o mapa para navegar · roda: zoom") : mestre ? "Botão direito + arrastar: olhar sem sair do lugar · botão esquerdo: orbitar · WASD: mover · Shift + arrastar: deslocar · roda: zoom · Q/E: descer/subir" : "WASD: mover seu personagem · botão direito + arrastar: olhar no mesmo lugar · botão esquerdo: orbitar · roda: aproximar"}</small></div>
+      <div className="tt3-toast" role="status"><span>{notice}</span><small>{tacticalMode && !staticScene ? (mestre ? "Arraste os tokens para mover · arraste o mapa para navegar · roda: zoom" : "Arraste seu personagem ou use WASD · arraste o mapa para navegar · roda: zoom") : mestre ? "Botão direito + arrastar: olhar sem sair do lugar · botão esquerdo: orbitar · WASD: mover · Shift + arrastar: deslocar · roda: zoom · Q/E: descer/subir" : "WASD: mover seu personagem · botão direito + arrastar: olhar no mesmo lugar · botão esquerdo: orbitar · roda: aproximar"}</small></div>
 
       {hudPanel && <aside className={`tt3-hud-drawer ${hudPanel==="sheet" && embeddedEspiralId ? "tt3-sheet-drawer" : ""}`} aria-label="Painel de ferramentas">
         <header><div><span>TABLETOP 3D</span><h2>{({scene:"Cena",weather:"Clima",background:"Background",initiative:"Iniciativa",dice:"Dados",evidence:"Pistas",audio:"Áudio",notes:"Notas",sheet:"Ficha"})[hudPanel]}</h2></div><button type="button" onClick={() => setHudPanel(null)} aria-label="Fechar painel">×</button></header>
-        {hudPanel==="scene" && <div className="tt3-drawer-content"><p className="tt3-kicker">Cena ativa</p><h3>{activeSceneName}</h3><p>{activeMapName ? `Mapa: ${activeMapName}` : "Esta cena ainda não possui um mapa 3D vinculado."}</p><div className="tt3-scene-stats"><span><strong>{tabletopPeople.length + customTokens.length}</strong> participantes</span><span><strong>{mapAssets.length}</strong> assets</span><span><strong>{night ? "Noite" : "Dia"}</strong> luz</span></div><div className="tt3-scene-browser">{(campaign?.cenas || []).map((scene,index) => {const maps=sceneMaps(scene);const active=scene.id===campaign?.cenaAtiva?.id;return <article key={scene.id} className={active ? "active" : ""}><button type="button" className="tt3-scene-choice" disabled={!mestre || switchingScene} onClick={() => switchScene(scene,(scene.imagensCena || []).length ? null : maps[0]?.link || null,(scene.imagensCena || [])[0] || null)}><small>CENA {String(index+1).padStart(2,"0")}</small><strong>{scene.nome}</strong><span>{maps.length ? `${maps.length} mapa(s) 3D` : "Sem mapa 3D"}</span></button>{maps.length>0 && <div>{maps.map(({link,map}) => <button type="button" key={link.id} className={active && map.id===activeMapId ? "active" : ""} disabled={!mestre || switchingScene} onClick={() => switchScene(scene,link)}>{map.nome}</button>)}</div>}{(scene.imagensCena || []).length>0 && <div>{scene.imagensCena.map(image => <button type="button" key={image.id} className={active && staticScene?.id===image.id ? "active" : ""} disabled={!mestre || switchingScene} onClick={() => switchScene(scene,null,image)}>{image.nome || "Cena estática"}</button>)}</div>}</article>;})}{!(campaign?.cenas || []).length && <p>Nenhuma cena cadastrada nesta campanha.</p>}</div>{!mestre && <small className="tt3-scene-sync-note">A troca de cena é controlada pelo mestre e sincronizada automaticamente.</small>}<button type="button" className="tt3-primary" onClick={() => {setPositions(tabletopPeople.map(person => [...person.start]));setNotice("Personagens nas posições iniciais.");}}>Reiniciar posições</button></div>}
+        {hudPanel==="scene" && <div className="tt3-drawer-content"><p className="tt3-kicker">Cena ativa</p><h3>{activeSceneName}</h3><p>{activeMapName ? `Mapa: ${activeMapName}` : "Esta cena ainda não possui um mapa 3D vinculado."}</p><div className="tt3-scene-stats"><span><strong>{tabletopPeople.length + customTokens.length}</strong> participantes</span><span><strong>{mapAssets.length}</strong> assets</span><span><strong>{weather.preset === "noite" ? "Noite" : "Dia"}</strong> luz</span></div><div className="tt3-scene-browser">{(campaign?.cenas || []).map((scene,index) => {const maps=sceneMaps(scene);const active=scene.id===campaign?.cenaAtiva?.id;return <article key={scene.id} className={active ? "active" : ""}><button type="button" className="tt3-scene-choice" disabled={!mestre || switchingScene} onClick={() => switchScene(scene,(scene.imagensCena || []).length ? null : maps[0]?.link || null,(scene.imagensCena || [])[0] || null)}><small>CENA {String(index+1).padStart(2,"0")}</small><strong>{scene.nome}</strong><span>{maps.length ? `${maps.length} mapa(s) 3D` : "Sem mapa 3D"}</span></button>{maps.length>0 && <div>{maps.map(({link,map}) => <button type="button" key={link.id} className={active && map.id===activeMapId ? "active" : ""} disabled={!mestre || switchingScene} onClick={() => switchScene(scene,link)}>{map.nome}</button>)}</div>}{(scene.imagensCena || []).length>0 && <div>{scene.imagensCena.map(image => <button type="button" key={image.id} className={active && staticScene?.id===image.id ? "active" : ""} disabled={!mestre || switchingScene} onClick={() => switchScene(scene,null,image)}>{image.nome || "Cena estática"}</button>)}</div>}</article>;})}{!(campaign?.cenas || []).length && <p>Nenhuma cena cadastrada nesta campanha.</p>}</div>{!mestre && <small className="tt3-scene-sync-note">A troca de cena é controlada pelo mestre e sincronizada automaticamente.</small>}<button type="button" className="tt3-primary" onClick={() => {setPositions(tabletopPeople.map(person => [...person.start]));setNotice("Personagens nas posições iniciais.");}}>Reiniciar posições</button></div>}
         {hudPanel==="flashlight" && <div className="tt3-drawer-content"><p>A luz acompanha o token no mapa.</p>{mestre && <label>Personagem ou NPC<select aria-label="Token da lanterna" value={flashlightPerson?.id || ""} onChange={event => setFlashlightTarget(event.target.value)}>{flashlightCandidates.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}</select></label>}{flashlightPerson ? <FlashlightControls value={flashlightPerson.lanterna} onChange={changeFlashlight}/> : <p>Nenhum token disponível no mapa.</p>}</div>}
-        {hudPanel==="weather" && <div className="tt3-drawer-content tt3-weather-panel">
+        {hudPanel==="weather" && <div className="tt3-drawer-content tt3-weather-panel"><SessionClockControls clock={weather.clock} minutes={clockMinutes} mestre={mestre} onChange={changeClock}/>
           <p>Escolha uma atmosfera pronta ou ajuste livremente para improvisar a cena.</p>
           <div className="tt3-weather-presets">{Object.entries(WEATHER_PRESETS).map(([id,preset]) => <button type="button" key={id} aria-pressed={weather.preset===id} onClick={() => applyWeatherPreset(id)}>{preset.label}</button>)}</div>
           <div className="tt3-weather-colors">

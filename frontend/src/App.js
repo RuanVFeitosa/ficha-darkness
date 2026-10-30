@@ -162,7 +162,7 @@ function App() {
     <div className="App">
       <PageTransition active={transitionActive} sistema={transitionSystem} simboloSistema={transitionFicha} />
       <DialogoGlobal />
-      {Boolean(search && search !== '?') && <AmbientMusicControls />}
+      {Boolean(search && search !== '?') && !estaNaMesa && params.get('tabletop3d') !== '1' && <AmbientMusicControls />}
 
       <Suspense fallback={<div style={{ color: "#eee", padding: 40 }}>Abrindo a loja…</div>}>
         {params.has("jogador") ? (<PaginaJogador key={params.get("jogador")} codigo={params.get("jogador")} onNavigate={navegarComTransicao} />) : estaNoCriadorMapa3D && mestreAutorizado ? (

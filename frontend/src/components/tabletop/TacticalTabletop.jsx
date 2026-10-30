@@ -1,3 +1,4 @@
+import { canMoveTacticalToken } from '../../utils/tabletopCharacters';
 import TabletopResolutionLimit from './TabletopResolutionLimit';
 import {createTabletopRenderer} from '../../utils/tabletopRenderer';
 import {BlinkMaterial,useReducedTokenMotion} from '../tokens/AnimatedTokenArt';
@@ -33,7 +34,7 @@ function TokenImage({url,animation,id}) {
  if(config.closedImage && (!config.image || config.image===url)) return <BlinkMaterial texture={texture} config={config} blink={blink}/>;
  return <meshBasicMaterial map={texture} transparent depthTest={false} toneMapped={false}/>;
 }
-function TacticalToken({token,selected,mestre,onSelect,onDragStart,onMove,onDragEnd}) {
+function TacticalToken({token,selected,canMove,onSelect,onDragStart,onMove,onDragEnd}) {
  const ref=useRef(),drag=useRef(null),art=useRef(null),reduced=useReducedTokenMotion();
  const animation=useMemo(() => normalizeTokenAnimation(token.animation && (!token.animation.image || token.animation.image===token.image) ? token.animation : {enabled:false}),[token.animation,token.image]);
  useFrame(({clock}) => {if(!art.current) return;const motion=tokenAnimationFrame(clock.elapsedTime,animation,token.id,reduced);art.current.scale.set(motion.scaleX,motion.scaleY,1);art.current.rotation.z=-(Number(token.rotacao)||0)*Math.PI/180+motion.rotation;});
@@ -42,7 +43,7 @@ function TacticalToken({token,selected,mestre,onSelect,onDragStart,onMove,onDrag
  const hit=useMemo(() => new THREE.Vector3(),[]);
  const start=event => {
   event.stopPropagation();onSelect();
-  if(!mestre || event.button!==0) return;
+  if(!canMove || event.button!==0) return;
   plane.constant=-(token.elevation || 0);
   if(!event.ray.intersectPlane(plane,hit)) return;
   drag.current={pointer:event.pointerId,offset:[token.x-hit.x,token.z-hit.z],position:[token.x,token.z]};
@@ -66,17 +67,17 @@ function TacticalToken({token,selected,mestre,onSelect,onDragStart,onMove,onDrag
   <mesh ref={art} renderOrder={1002} rotation={[0,0,-(Number(token.rotacao)||0)*Math.PI/180]}><circleGeometry args={[0.22,40]}/>{token.image ? <TokenImage url={token.image} animation={token.animation} id={token.id}/> : <meshBasicMaterial color={token.color || '#aaa'} depthTest={false}/>}</mesh>
  </group>;
 }
-export default function TacticalTabletop({assets,tokens,mapKey,center,locked,mestre,onFloor,onSelect,onMove,onDragStart,onDragEnd}) {
+export default function TacticalTabletop({assets,tokens,mapKey,center,locked,mestre,playerTokenId,navigation,onFloor,onSelect,onMove,onDragStart,onDragEnd}) {
  return <div className="tt3-tactical-map" aria-label="Mapa tático 2D">
   <Canvas dpr={1} gl={parameters => createTabletopRenderer(parameters,THREE.WebGLRenderer)} orthographic camera={{position:[center[0],100,center[1]+0.001],zoom:65,near:0.01,far:2000}}>
    <TabletopResolutionLimit/>
    <color attach="background" args={['#101416']}/>
    <ambientLight intensity={2}/><directionalLight position={[0,100,0]} intensity={2}/>
-   <TacticalControls key={mapKey} center={center} locked={locked}/>
+   <TacticalControls key={mapKey} center={center} locked={locked}/>{navigation}
    <gridHelper args={[2000,2000,'#53636b','#28343a']}/>
    <mesh rotation={[-Math.PI/2,0,0]} position={[0,-0.02,0]} onClick={onFloor}><planeGeometry args={[2000,2000]}/><meshBasicMaterial transparent opacity={0} depthWrite={false} side={THREE.DoubleSide}/></mesh>
    <Suspense fallback={null}><PlacedAssets items={assets} selectedId={null} onSelect={() => {}} onSurfaceClick={onFloor}/></Suspense>
-   {tokens.map(token => <Suspense key={token.id} fallback={null}><TacticalToken token={token} selected={token.selected} mestre={mestre} onSelect={() => onSelect(token)} onMove={position => onMove(token,position)} onDragStart={onDragStart} onDragEnd={onDragEnd}/></Suspense>)}
+   {tokens.map(token => <Suspense key={token.id} fallback={null}><TacticalToken token={token} selected={token.selected} canMove={canMoveTacticalToken(token,mestre,playerTokenId)} onSelect={() => onSelect(token)} onMove={position => onMove(token,position)} onDragStart={onDragStart} onDragEnd={onDragEnd}/></Suspense>)}
   </Canvas>
  </div>;
 }

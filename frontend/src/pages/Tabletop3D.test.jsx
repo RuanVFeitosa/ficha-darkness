@@ -25,9 +25,28 @@ test('preserva navegação após atualizar campanha e aplica spawn ao trocar map
  expect(mockCamera.position.toArray()).toEqual([8,9,10]);
  rerender(<Camera view="panorama" spawnKey="a" spawnPose={{...spawn}}/>);
  expect(mockCamera.position.toArray()).toEqual([8,9,10]);
+ expect(mockCamera.fov).not.toBe(65);
+ const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ frame({},.05);
+ expect(mockCamera.fov).toBeGreaterThan(spawn.fov);
+ expect(mockCamera.fov).toBeLessThan(65);
+ for(let i=0;i<14;i++) frame({},.05);
  expect(mockCamera.fov).toBe(65);
  rerender(<Camera view="panorama" spawnKey="b" spawnPose={spawn}/>);
  expect(mockCamera.position.toArray()).toEqual(spawn.position);
+});
+
+test('Cinema troca imediatamente e cancela uma transição de câmera em andamento', () => {
+ const {rerender}=render(<Camera view="room"/>);
+ rerender(<Camera view="panorama"/>);
+ const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ frame({},.05);
+ expect(mockCamera.fov).toBeLessThan(65);
+ rerender(<Camera view="cinema"/>);
+ const cinemaFov=mockCamera.fov;
+ const nextFrame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ for(let i=0;i<15;i++) nextFrame({},.05);
+ expect(mockCamera.fov).toBe(cinemaFov);
 });
 test('aplica spawn carregado depois da entrada', () => {
  const {rerender}=render(<Camera view="room" spawnKey="a"/>);

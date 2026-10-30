@@ -392,8 +392,9 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
   const [attribute, setAttribute] = useState("sentido");
   const [temporaryAttributeDice, setTemporaryAttributeDice] = useState({});
   const [resource, setResource] = useState("Investigação");
-  const [difficulty, setDifficulty] = useState(4);
+  const [manualDifficulty, setDifficulty] = useState(4);
   const contextDifficulty=rollContext?.value;
+  const difficulty=difficultyLocked && contextDifficulty != null ? Number(contextDifficulty) : manualDifficulty;
   const contextId=rollContext?.id;
   useEffect(()=>{if(contextDifficulty != null)setDifficulty(contextDifficulty);},[contextId,contextDifficulty]);
   const [modifier, setModifier] = useState(0);
@@ -548,6 +549,20 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
     window.addEventListener('online', sync);
     return () => { active = false; window.clearInterval(timer); window.removeEventListener('focus', sync); window.removeEventListener('online', sync); };
   }, [id, remoteReady, adaptacaoPendente]);
+  useEffect(() => {
+    const receive = event => {
+      try {
+        const next = event.type === 'storage'
+          ? (event.key === storageKey ? JSON.parse(event.newValue || 'null') : null)
+          : (event.detail?.id === id ? event.detail.sheet : null);
+        if (!next?.attributes || next.version !== 1) return;
+        setSheet(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : normalizarResistenciasEspiral(next));
+      } catch { /* Ignora apenas registros inválidos. */ }
+    };
+    window.addEventListener('espiral:sheet-updated',receive);
+    window.addEventListener('storage',receive);
+    return () => {window.removeEventListener('espiral:sheet-updated',receive);window.removeEventListener('storage',receive);};
+  }, [id, storageKey]);
   useEffect(() => {
     const updateAnimation=event => {
       if(event.type==='storage' && event.key!==storageKey) return;
@@ -2201,7 +2216,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
           </>}
         </section>
       </div>}
-      {rollModalOpen && history[0] && (
+      {!embedded && rollModalOpen && history[0] && (
         <div
           className="es-roll-modal-backdrop"
           role="presentation"

@@ -7,6 +7,12 @@ export function difficultyOptions(scene,enemies=[]) {
   {id:'conflitos',category:'Conflitos',label:'Perseguições e outros conflitos',value:Number(d.conflitos ?? 4)}
  ];
 }
+export function activeSceneDifficulty(scene,enemies=[],combat=false) {
+ const options=difficultyOptions(scene,enemies);
+ const selected=options.find(option=>option.id===(scene?.dificuldades?.contexto || 'ambiente')) || options[0];
+ // A postura de combate troca o contexto de cena, mas conserva um inimigo escolhido pelo mestre.
+ return combat && selected.category!=='Combate' ? options.find(option=>option.id==='combateAmbiente') : selected;
+}
 export function rollOutcome(result,difficulty) {
  const margin=Number(result)-Number(difficulty);
  return {difficulty:Number(difficulty),margin,outcome:margin<=-3?'Falha grave':margin<0?'Falha':margin===0?'Sucesso com consequência':margin<3?'Sucesso':'Sucesso excepcional'};

@@ -1,6 +1,7 @@
+import { buscarFichaEspiral, salvarFichaEspiral } from '../services/espiralApi';
 import EspiralDice from '../components/espiral/EspiralDice';
 import { espiralDie } from '../utils/espiralDice';
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   mdiArrowLeft,
   mdiLockOutline,
@@ -38,6 +39,18 @@ export default function TransformacaoEspiral() {
   const [selectedAbility, setSelectedAbility] = useState(null);
   const [selectedVertente, setSelectedVertente] = useState(sheet.vertente);
   const [notice, setNotice] = useState("");
+  const [loading,setLoading]=useState(true);
+  const [saving,setSaving]=useState(false);
+  const busyRef=useRef(false);
+  useEffect(() => {
+    let active=true;
+    buscarFichaEspiral(id).then(remote => {
+      if (!active || !remote || localStorage.getItem(`espiral:pending:${id}`)) return;
+      setSheet(remote);
+      localStorage.setItem(storageKey(id),JSON.stringify(remote));
+    }).catch(() => {}).finally(() => {if(active)setLoading(false);});
+    return () => {active=false;};
+  },[id]);
   const points = Math.max(0, Number(sheet.evolution?.points) || 0);
   const vertenteAbility = VERTENTE_HABILIDADES[sheet.vertente] || VERTENTE_HABILIDADES.Metódica;
   const savedVertente = sheet.evolution?.vertente?.nome;
@@ -48,10 +61,24 @@ export default function TransformacaoEspiral() {
     setSelectedVertente(sheet.vertente);
   }, [sheet.vertente]);
   const characterName = sheet.name || "ARQUIVO SEM IDENTIDADE";
-  const save = (next, message) => {
-    setSheet(next);
-    localStorage.setItem(storageKey(id), JSON.stringify(next));
-    setNotice(message);
+  const save = async (next, message) => {
+    if (loading || busyRef.current) return;
+    busyRef.current=true;setSaving(true);
+    let persisted=false;
+    try {
+      localStorage.setItem(`espiral:pending:${id}`, '1');
+      localStorage.setItem(storageKey(id), JSON.stringify(next));
+      persisted=true;
+      setSheet(next);
+      window.dispatchEvent(new CustomEvent('espiral:sheet-updated',{detail:{id,sheet:next}}));
+      setNotice('Salvando avanço…');
+      const saved=await salvarFichaEspiral(id,next);
+      if (!saved) throw new Error('Não foi possível compartilhar esta ficha.');
+      if (localStorage.getItem(storageKey(id))===JSON.stringify(next)) localStorage.removeItem(`espiral:pending:${id}`);
+      setNotice(message);
+    } catch {
+      setNotice(persisted ? 'Avanço salvo neste dispositivo. A sincronização está pendente; a compra e o desconto foram preservados.' : 'Não foi possível salvar o avanço neste dispositivo. Nenhum ponto foi gasto.');
+    } finally {busyRef.current=false;setSaving(false);}
   };
   const upgradeResource = (name) => {
     const current = Number(sheet.resources?.[name]) || 0;
@@ -270,7 +297,7 @@ export default function TransformacaoEspiral() {
                       </strong>
                       <button
                         type="button"
-                        disabled={maxed || points < cost}
+                        disabled={loading || saving || maxed || points < cost}
                         onClick={() => upgradeResource(name)}
                       >
                         {maxed ? (
@@ -314,7 +341,7 @@ export default function TransformacaoEspiral() {
                       <strong>{maxed ? "—" : `${cost} PONTOS`}</strong>
                       <button
                         type="button"
-                        disabled={maxed || points < cost}
+                        disabled={loading || saving || maxed || points < cost}
                         onClick={() => upgradeAttribute(key)}
                       >
                         {maxed ? (
@@ -442,7 +469,7 @@ export default function TransformacaoEspiral() {
                               <strong>ADQUIRIDA · NÍVEL {owned.level}</strong>
                               <button
                                 type="button"
-                                disabled={owned.level >= 3 || points < 3}
+                                disabled={loading || saving || owned.level >= 3 || points < 3}
                                 onClick={() => upgradeAbility(owned.id)}
                               >
                                 {owned.level >= 3 ? (
@@ -458,7 +485,7 @@ export default function TransformacaoEspiral() {
                           ) : (
                             <button
                               type="button"
-                              disabled={points < 3}
+                              disabled={loading || saving || points < 3}
                               onClick={() => acquireAbility(selectedAbility)}
                             >
                               <Icon path={mdiPlus} size={0.75} /> Adquirir · 3
@@ -494,7 +521,7 @@ export default function TransformacaoEspiral() {
                       </div>
                       <button
                         type="button"
-                        disabled={item.level >= 3 || points < 3}
+                        disabled={loading || saving || item.level >= 3 || points < 3}
                         onClick={() => upgradeAbility(item.id)}
                       >
                         {item.level >= 3 ? "Máximo" : `Aprimorar · 3`}
@@ -524,7 +551,7 @@ export default function TransformacaoEspiral() {
                 </div>
                 <div className="transformacao-upgrade-action">
                   <strong>{vertenteLevel >= 3 ? "HABILIDADE NO NÍVEL MÁXIMO" : "PRÓXIMO NÍVEL · 3 PONTOS DE EVOLUÇÃO"}</strong>
-                  <button type="button" disabled={vertenteLevel >= 3 || points < 3} onClick={upgradeVertente}>
+                  <button type="button" disabled={loading || saving || vertenteLevel >= 3 || points < 3} onClick={upgradeVertente}>
                     {vertenteLevel >= 3 ? <Icon path={mdiLockOutline} size={0.75} /> : <Icon path={mdiPlus} size={0.75} />}{" "}
                     {vertenteLevel >= 3 ? "Nível máximo" : `Aprimorar para o Nível ${vertenteLevel + 1} · 3 pontos`}
                   </button>
@@ -538,7 +565,7 @@ export default function TransformacaoEspiral() {
                 <select id="transformacao-vertente-select" value={selectedVertente} onChange={(event) => setSelectedVertente(event.target.value)}>
                   {Object.keys(VERTENTES).map((vertente) => <option value={vertente} key={vertente}>{vertente}</option>)}
                 </select>
-                <button type="button" disabled={selectedVertente === sheet.vertente} onClick={trocarVertente}>Trocar Vertente · sem custo</button>
+                <button type="button" disabled={loading || saving || selectedVertente === sheet.vertente} onClick={trocarVertente}>Trocar Vertente · sem custo</button>
               </article>
             </section>
           )}

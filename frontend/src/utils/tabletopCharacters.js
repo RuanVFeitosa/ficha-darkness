@@ -1,3 +1,6 @@
+export function canMoveTacticalToken(token, mestre, playerTokenId) {
+  return Boolean(mestre || (playerTokenId && token?.id === playerTokenId && token.personIndex !== undefined));
+}
 export function tabletopCharacterId(id) {
   const value = String(id || '');
   return /^(espiral:|darkness:|inimigo:|custom3d:)/.test(value) ? value : 'darkness:' + value;
