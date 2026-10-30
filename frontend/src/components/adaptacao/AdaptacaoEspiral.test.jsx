@@ -19,7 +19,8 @@ test('preenche valores pela tabela, recalcula integridade e salva escolhas sem a
  expect(screen.getByLabelText('Grau de Investigação')).toHaveValue('3');
  fireEvent.change(screen.getByLabelText('Grau de Armas'),{target:{value:'4'}});
  fireEvent.click(screen.getByRole('button',{name:'Continuar →'}));
- expect(screen.getByLabelText('Grau de Controle Mental')).toHaveValue('');
+ expect(screen.getByLabelText('Grau de Controle Mental')).toHaveValue('1');
+ expect(screen.getByLabelText('Grau de Propósito')).toHaveValue('1');
  fireEvent.change(screen.getByLabelText('Grau de Controle Mental'),{target:{value:'4'}});
  fireEvent.change(screen.getByLabelText('Grau de Propósito'),{target:{value:'3'}});
  fireEvent.click(screen.getByRole('button',{name:'Continuar →'}));

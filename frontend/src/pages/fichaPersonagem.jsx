@@ -3,7 +3,6 @@ import { LIMITE_DADOS_ABSOLUTO, rolarDadosAbsoluto, normalizarFormulaAbsoluto, c
 import AbsolutoMedo from '../components/absoluto/AbsolutoMedo';
 import AbsolutoDominio from '../components/absoluto/AbsolutoDominio';
 import { executarTesteDominio } from '../utils/absolutoRolagem';
-import AbsolutoMigration from '../components/absoluto/AbsolutoMigration';
 import AbsolutoLivro from '../components/absoluto/AbsolutoLivro';
 import { ehAbsolutoV1, DOMINIOS, REGIOES, limitar } from '../data/absolutoV1';
 import AdaptacaoEspiral from '../components/adaptacao/AdaptacaoEspiral';
@@ -567,6 +566,17 @@ const FichaPersonagem = () => {
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalRolagem, setModalRolagem] = useState(null);
+  const animacaoRolagemRef = useRef(null);
+  useEffect(() => () => window.clearTimeout(animacaoRolagemRef.current), []);
+  const abrirRolagemAnimada = (rolagem) => {
+    window.clearTimeout(animacaoRolagemRef.current);
+    setRolandoDados(true);
+    setModalRolagem(rolagem);
+    animacaoRolagemRef.current = window.setTimeout(() => {
+      setRolandoDados(false);
+      animacaoRolagemRef.current = null;
+    }, 1200);
+  };
   const [dtTesteV1, setDtTesteV1] = useState(1);
   const [esforcoTesteV1, setEsforcoTesteV1] = useState(false);
   const [contraFonteMedo, setContraFonteMedo] = useState(false);
@@ -1735,7 +1745,7 @@ const FichaPersonagem = () => {
       const resultado = rolarDanoArma(item.armaStatus.dmg, ultimoTesteV1.critico ? 1 : 0, [item.bonusDanoArma || '', item.municaoCarregada?.bonusDano || '']);
       const rolagem = { ...resultado, tipo: 'dano', titulo: item.nome, modo: ultimoTesteV1.critico ? 'Crítico · +1 dado de dano (máximo 8 dados)' : 'Dano bruto antes da Proteção', formula: resultado.texto, dados: [...resultado.rolagens, ...(resultado.rolagensBonus || [])], dadosDetalhados: resultado.dadosDetalhados, faces: interpretarDano(item.armaStatus.dmg)?.faces || 6, total: resultado.total };
       setUltimoTesteV1({ ...ultimoTesteV1, danoResolvido: true });
-      setModalRolagem(rolagem); setRolandoDados(false); registrarRolagemMestre(rolagem);
+      abrirRolagemAnimada(rolagem); registrarRolagemMestre(rolagem);
       if (item.municaoCarregada) { const index = encontrarIndexArmaNoInventario(item); if (index >= 0) consumirMunicaoDaArma(index); }
       if (item.durabilidade && item.durabilidade !== '—') reduzirDurabilidadeItem(item.index);
       return;
@@ -2879,8 +2889,7 @@ const FichaPersonagem = () => {
       const { rolagem, personagem: atualizado } = executarTesteDominio(personagem, chave, { dt: dtTesteV1, vantagem: modificadorDadosRolagem, esforco: esforcoTesteV1, contraFonte: contraFonteMedo, repetir: anterior });
       if (atualizado !== personagem) { revisaoRecursosRef.current += 1; setPersonagem(atualizado); }
       setUltimoTesteV1(rolagem);
-      setModalRolagem(rolagem);
-      setRolandoDados(false);
+      abrirRolagemAnimada(rolagem);
       registrarRolagemMestre(rolagem);
     } catch (error) { await alertarDialogo(error.message, { titulo: 'Teste de Domínio' }); }
   };
@@ -3422,7 +3431,7 @@ const FichaPersonagem = () => {
       const resultado = rolarDadosAbsoluto(formulaDadoPersonalizado);
       setErroRolagemPersonalizada('');
       const rolagem = { ...resultado, tipo: 'dano', titulo: 'Rolagem personalizada', modo: 'Absoluto · máximo 8 dados', maiorResultado: resultado.dados.length ? Math.max(...resultado.dados) : 0, dadosDetalhados: resultado.dados.map(valor => ({ valor, faces: resultado.faces })), bonusAtivo: 0, bonusPassiva: 0, finais: 0, resultadosExtras: [], bonusFinais: 0 };
-      setModalRolagem(rolagem); setRolandoDados(false); registrarRolagemMestre(rolagem);
+      abrirRolagemAnimada(rolagem); registrarRolagemMestre(rolagem);
     } catch (error) { setErroRolagemPersonalizada(error.message); }
   };
 
@@ -6635,7 +6644,6 @@ const FichaPersonagem = () => {
         <strong>{fichaId}</strong>
       </aside>
 
-      {carregado && !ehAbsolutoV1(personagem) && <AbsolutoMigration personagem={personagem} onApply={setPersonagem} />}
       {/* Container Principal: Perfil + Atributos + Sidebar */}
       <div className="main-content">
         {/* ... (seu conteúdo existente permanece igual) ... */}

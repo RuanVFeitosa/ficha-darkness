@@ -63,7 +63,7 @@ export function criarBaseV1(atributos = atributosIniciais(), dominios = dominios
   };
 }
 
-// A conversão é apresentada como uma proposta editável. O original é preservado.
+// Conversão automática das fichas antigas. O original é preservado.
 export function proporMigracaoV1(personagem) {
   if (ehAbsolutoV1(personagem)) return personagem;
   const atributos = Object.fromEntries(Object.keys(ATRIBUTOS_ABSOLUTO).map(k => {

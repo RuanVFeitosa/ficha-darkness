@@ -1,3 +1,4 @@
+import { isEspiralSheet, salvarFichaEspiral, unirFichasEspiral } from '../services/espiralApi';
 import NumberInput from '../components/ui/NumberInput';
 import { ehAbsolutoV1, REGIOES } from '../data/absolutoV1';
 import AbsolutoMedo from '../components/absoluto/AbsolutoMedo';
@@ -1006,7 +1007,7 @@ const DashboardMestre = () => {
         buscarArvoresHabilidades(),
       ]);
 
-      const fichasNormalizadas = fichasApi.map((ficha) => ({
+      const fichasNormalizadas = fichasApi.map((ficha) => isEspiralSheet(ficha.personagem) ? ficha : ({
         ...ficha,
         personagem: {
           ...estadoInicial,
@@ -1079,7 +1080,7 @@ const DashboardMestre = () => {
         Object.keys(arvoresApi || {}).length > 0 ? arvoresApi : arvoresLocais;
 
       const fichasEspiral = listarFichasEspiralLocais();
-      const fichasCompletas = [...fichasEspiral, ...fichasNormalizadas];
+      const fichasCompletas = unirFichasEspiral(fichasEspiral, fichasNormalizadas);
       setFichas(fichasCompletas);
       setCatalogo(catalogoNormalizado);
       setReceitasCriacaoDashboard(receitasCriacaoLocais);
@@ -1383,7 +1384,7 @@ const DashboardMestre = () => {
 
         if (cancelado) return;
 
-        const fichasDarkness = fichasApi.map((ficha) => ({
+        const fichasDarkness = fichasApi.map((ficha) => isEspiralSheet(ficha.personagem) ? ficha : ({
             ...ficha,
             personagem: {
               ...estadoInicial,
@@ -1392,9 +1393,8 @@ const DashboardMestre = () => {
             },
           }));
 
-        // A sincronização remota só conhece o Darkness. Reanexamos as fichas
-        // ESPIRAL salvas localmente em toda atualização para elas não sumirem.
-        setFichas([...listarFichasEspiralLocais(), ...fichasDarkness]);
+        // Combina as fichas compartilhadas com as cópias locais, sem duplicatas.
+        setFichas(unirFichasEspiral(listarFichasEspiralLocais(), fichasDarkness));
 
         if (arvoresApi && Object.keys(arvoresApi).length > 0) {
           salvarArvoresCustom(arvoresApi);
@@ -1442,10 +1442,7 @@ const DashboardMestre = () => {
     const atualizarFichasEspiral = (event) => {
       if (event.key && !event.key.startsWith("espiral:sheet:v1:")) return;
 
-      setFichas((atuais) => [
-        ...listarFichasEspiralLocais(),
-        ...atuais.filter((ficha) => !isFichaEspiral(ficha.personagem || ficha)),
-      ]);
+      setFichas((atuais) => unirFichasEspiral(listarFichasEspiralLocais(), atuais));
     };
 
     window.addEventListener("storage", atualizarFichasEspiral);
@@ -3102,17 +3099,18 @@ const DashboardMestre = () => {
     setInimigoEditando(personagemCard.id);
   }, []);
 
-  const salvarFichaEspiralDoMestre = useCallback((ficha, alteracoes) => {
+  const salvarFichaEspiralDoMestre = useCallback(async (ficha, alteracoes) => {
     const id = ficha?.espiralId;
     if (!id) return;
     const chave = `espiral:sheet:v1:${id}`;
     const atualizada = { ...(ficha.personagem || ficha), ...alteracoes };
     try {
+      await salvarFichaEspiral(ficha.espiralId, atualizada);
       localStorage.setItem(chave, JSON.stringify(atualizada));
       const proxima = { ...ficha, personagem: atualizada };
       setFichaEspiralAberta(proxima);
       setFichas((atuais) => atuais.map((item) => item.fichaId === ficha.fichaId ? proxima : item));
-      setMensagem("Ficha ESPIRAL atualizada.");
+      setMensagem("Ficha ESPIRAL atualizada e compartilhada.");
     } catch (error) {
       setMensagem("Não foi possível salvar a ficha ESPIRAL.");
     }
@@ -3121,9 +3119,10 @@ const DashboardMestre = () => {
   const salvarAnimacaoTokenDaFicha = async (ficha,patch) => {
     if(isFichaEspiral(ficha.personagem)) {
       const chave=`espiral:sheet:v1:${ficha.espiralId}`;
-      const atual=JSON.parse(localStorage.getItem(chave) || 'null');
+      const atual=JSON.parse(localStorage.getItem(chave) || 'null') || ficha.personagem;
       if(!atual) throw new Error('A ficha ESPIRAL não está disponível neste navegador.');
       const personagemAtualizado={...atual,...patch};
+      await salvarFichaEspiral(ficha.espiralId, personagemAtualizado);
       localStorage.setItem(chave,JSON.stringify(personagemAtualizado));
       const proxima={...ficha,personagem:personagemAtualizado};
       setFichas(atuais => atuais.map(item => item.fichaId===ficha.fichaId ? proxima : item));
@@ -3133,13 +3132,14 @@ const DashboardMestre = () => {
     }
     window.dispatchEvent(new CustomEvent('darkness:token-animation-updated',{detail:{fichaId:ficha.fichaId,patch}}));
   };
-  const concederEntradaEspiral = (ficha, entrada) => {
+  const concederEntradaEspiral = async (ficha, entrada) => {
     try {
       const chave = 'espiral:sheet:v1:' + ficha.espiralId;
-      const atual = JSON.parse(localStorage.getItem(chave) || 'null');
+      const atual = JSON.parse(localStorage.getItem(chave) || 'null') || ficha.personagem;
       if (!atual || atual.version !== 1) return false;
       const alteracoes = grantEspiralCatalogEntry(atual, entrada, entrada.id + '-' + Date.now() + '-' + Math.random());
       const atualizada = { ...atual, ...alteracoes };
+      await salvarFichaEspiral(ficha.espiralId, atualizada);
       localStorage.setItem(chave, JSON.stringify(atualizada));
       const proxima = { ...ficha, personagem: atualizada };
       setFichas(atuais => atuais.map(item => item.fichaId === ficha.fichaId ? proxima : item));

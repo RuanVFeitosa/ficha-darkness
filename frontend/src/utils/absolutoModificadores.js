@@ -1,3 +1,5 @@
+import { proporMigracaoV1 } from '../data/absolutoV1';
+
 // Única escala de modificadores do Absoluto: cada efeito concede/retira um dado.
 // Custos, recursos, alcances, durações, níveis e valores de Atributos não são bônus.
 export const LIMITE_DADOS_ABSOLUTO = 8;
@@ -84,7 +86,12 @@ export function normalizarConteudoAbsoluto(valor, campo = '') {
 
 export function normalizarFichaAbsoluto(personagem) {
   if (!personagem || personagem.sistema === 'espiral' || personagem.tipo === 'espiral' || personagem.attributes) return personagem;
-  const atualizado = normalizarConteudoAbsoluto(personagem);
+  // Migra antes de normalizar textos para preservar uma cópia fiel do original.
+  // Uma versão futura não deve ser rebaixada para 1.0.
+  const base = personagem.atributos && (!personagem.versaoRegras || Number(personagem.versaoRegras) < 1)
+    ? proporMigracaoV1(personagem)
+    : personagem;
+  const atualizado = normalizarConteudoAbsoluto(base);
   if (atualizado.versaoRegras === '1.0') atualizado.configuracaoAbsoluto = { ...atualizado.configuracaoAbsoluto, limiteDados: LIMITE_DADOS_ABSOLUTO };
   return atualizado;
 }

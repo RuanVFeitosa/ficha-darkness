@@ -127,7 +127,7 @@ export const freshSheet = () => ({
   age: "",
   vertente: "Metódica",
   attributes: { pulso: 2, razao: 2, sentido: 2, voz: 2 },
-  resources: Object.fromEntries(RESOURCES.map((r) => [r, 0])),
+  resources: Object.fromEntries(RESOURCES.map((r) => [r, ['Controle Mental', 'Propósito'].includes(r) ? 1 : 0])),
   temporaryResources: {},
   temaFicha: { ...TEMA_PADRAO_ESPIRAL },
   backgroundDescription: "",
@@ -153,6 +153,30 @@ export const freshSheet = () => ({
   protections: [],
   phase: "creation",
 });
+export function normalizarResistenciasEspiral(sheet) {
+  if (!sheet) return sheet;
+  const resources = { ...sheet.resources };
+  let changed = false;
+  for (const key of ['Controle Mental', 'Propósito']) {
+    if (!(Number(resources[key]) >= 1)) { resources[key] = 1; changed = true; }
+  }
+  return changed ? { ...sheet, resources } : sheet;
+}
+
+// Atualiza também as fichas já criadas neste dispositivo, sem alterar sua progressão.
+export function atualizarResistenciasEspiralSalvas(storage) {
+  for (let index = 0; index < storage.length; index += 1) {
+    const key = storage.key(index);
+    if (!key?.startsWith('espiral:sheet:v1:')) continue;
+    try {
+      const sheet = JSON.parse(storage.getItem(key));
+      if (sheet?.version !== 1 || !sheet.attributes) continue;
+      const updated = normalizarResistenciasEspiral(sheet);
+      if (updated !== sheet) storage.setItem(key, JSON.stringify(updated));
+    } catch { /* Uma ficha inválida ou sem espaço não impede abrir as demais. */ }
+  }
+}
+
 export function creationWarnings(sheet) {
   const stages = Object.values(sheet.attributes);
   const spent = stages.reduce(

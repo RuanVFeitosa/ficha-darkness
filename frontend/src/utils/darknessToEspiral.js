@@ -1,3 +1,4 @@
+import { normalizarResistenciasEspiral } from '../data/espiral';
 import { RESOURCES, freshSheet, integrityMax } from "../data/espiral";
 
 const number = (value) => Math.max(0, Number.parseInt(value, 10) || 0);
@@ -107,5 +108,5 @@ export function convertDarknessToEspiral(character = {}, { pulseSource = "maior"
     migratedFrom: "darkness",
     migratedFromId: character.fichaId || "",
   };
-  return sheet;
+  return normalizarResistenciasEspiral(sheet);
 }

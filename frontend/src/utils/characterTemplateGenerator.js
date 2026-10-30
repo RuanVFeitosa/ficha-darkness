@@ -1,5 +1,5 @@
 import { dominiosIniciais } from '../data/absolutoV1';
-import { freshSheet, creationWarnings, integrityMax, RESOURCES, VERTENTE_HABILIDADES } from '../data/espiral';
+import { freshSheet, creationWarnings, integrityMax, VERTENTE_HABILIDADES } from '../data/espiral';
 import { CATALOGO_ESPIRAL } from '../data/catalogoEspiral';
 import { grantEspiralCatalogEntry } from './espiralCatalogGrant';
 
@@ -26,7 +26,7 @@ export async function gerarPersonagemTemplate(sistema, ideiaId, perfil, random =
     sheet.occupation = ideia.nome; sheet.purpose = `Usar seus talentos para proteger o grupo. ${ideia.descricao}`;
     const estagios = random() < .5 ? [4,4,2,2] : [4,3,3,3];
     sheet.attributes = Object.fromEntries(ideia.espiral.map((chave,i) => [chave,estagios[i]]));
-    sheet.resources = Object.fromEntries(RESOURCES.map(r => [r,0]));
+    sheet.resources = { ...freshSheet().resources };
     ideia.recursos.forEach((r,i) => { sheet.resources[r] = [2,2,2,1][i]; });
     sheet.vertente = escolher(aleatorio ? Object.keys(VERTENTE_HABILIDADES) : ideia.vertentes,random);
     sheet.integrity = integrityMax(sheet.attributes.pulso);

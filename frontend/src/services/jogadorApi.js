@@ -1,10 +1,18 @@
+import { buscarFichaEspiral, salvarFichaEspiral } from './espiralApi';
+import { atualizarResistenciasEspiralSalvas } from '../data/espiral';
 import {validateCharacterLimit,PLAYER_CHARACTER_LIMIT} from '../utils/playerCharacters';
 import { buscarJogador, salvarJogador, buscarPersonagem } from './personagemApi';
 export const codigoValido = codigo => /^\d{4,8}$/.test(codigo);
 export const fichaKey = ficha => `${ficha.sistema}:${ficha.id}`;
 export async function carregarFicha(ref) {
   if (ref.sistema === 'espiral') {
-    const sheet = JSON.parse(localStorage.getItem(`espiral:sheet:v1:${ref.id}`) || 'null');
+    atualizarResistenciasEspiralSalvas(localStorage);
+    let sheet = JSON.parse(localStorage.getItem(`espiral:sheet:v1:${ref.id}`) || 'null');
+    try {
+      const remote = await buscarFichaEspiral(ref.id);
+      if (remote && !localStorage.getItem(`espiral:pending:${ref.id}`)) { sheet = remote; localStorage.setItem(`espiral:sheet:v1:${ref.id}`, JSON.stringify(remote)); }
+      else if (sheet?.name) { await salvarFichaEspiral(ref.id, sheet); localStorage.removeItem(`espiral:pending:${ref.id}`); }
+    } catch { /* A cópia local continua disponível sem rede. */ }
     if (!sheet?.attributes) throw new Error('Ficha ESPIRAL indisponível neste dispositivo.');
     return { ...ref, nome: sheet.name, foto: sheet.profileImage, detalhe: sheet.vertente, dados: sheet };
   }

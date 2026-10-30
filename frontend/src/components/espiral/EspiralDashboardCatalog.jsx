@@ -23,10 +23,10 @@ export default function EspiralDashboardCatalog({ kind, fichas = [], onGrant }) 
     return source.filter(entry => normalize([entry.name, entry.detail, entry.category, ...(entry.levels || [])].join(' ')).includes(normalize(query.trim())));
   }, [abilities, category, weaponGroup, query]);
   const selectedFicha = fichas.find(ficha => ficha.fichaId === recipient);
-  const grant = (entry) => {
+  const grant = async (entry) => {
     if (!selectedFicha) return;
     try {
-      if (onGrant(selectedFicha, entry) !== false) setNotice(`${entry.name} concedido a ${selectedFicha.personagem?.name || 'personagem'}.`);
+      if (await onGrant(selectedFicha, entry) !== false) setNotice(`${entry.name} concedido a ${selectedFicha.personagem?.name || 'personagem'}.`);
       else setNotice('Não foi possível salvar. Atualize o Dashboard e tente novamente.');
     } catch {
       setNotice('Não foi possível salvar. Atualize o Dashboard e tente novamente.');

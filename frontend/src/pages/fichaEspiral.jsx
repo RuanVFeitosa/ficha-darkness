@@ -1,3 +1,4 @@
+import { buscarFichaEspiral, salvarFichaEspiral } from '../services/espiralApi';
 import NumberInput from '../components/ui/NumberInput';
 import EspiralDice, { EspiralDie, EspiralDiceInput } from '../components/espiral/EspiralDice';
 import PlayerPageLink from '../components/jogador/PlayerPageLink';
@@ -19,6 +20,8 @@ import {
   VERTENTE_HABILIDADES,
   TEMA_PADRAO_ESPIRAL,
   freshSheet,
+  normalizarResistenciasEspiral,
+  atualizarResistenciasEspiralSalvas,
   integrityMax,
   creationWarnings,
   parseDiceFormula,
@@ -84,10 +87,11 @@ function InventoryIcon({ item, size = 1.45 }) {
 }
 const storedEspiralSheet = (id) => {
   try {
+    atualizarResistenciasEspiralSalvas(localStorage);
     const current = JSON.parse(localStorage.getItem(`espiral:sheet:v1:${id}`));
-    if (current?.version === 1) return { ...freshSheet(), ...current };
+    if (current?.version === 1) return normalizarResistenciasEspiral({ ...freshSheet(), ...current });
     const previous = JSON.parse(localStorage.getItem(`espiral:sheet:v1:darkness-${id}`));
-    if (previous?.version === 1) return { ...freshSheet(), ...previous };
+    if (previous?.version === 1) return normalizarResistenciasEspiral({ ...freshSheet(), ...previous });
   } catch {}
   return null;
 };
@@ -96,7 +100,7 @@ const isUnlinkedBlankSheet = (sheet) =>
   !sheet?.occupation && !sheet?.player && !sheet?.inventory && !(sheet?.inventoryItems || []).length && !sheet?.abilities &&
   !sheet?.backgroundDescription && !sheet?.backgroundHistory && !sheet?.backgroundConnections &&
   !(sheet?.injuries || []).length &&
-  Object.values(sheet?.resources || {}).every((grade) => Number(grade) === 0);
+  Object.entries(sheet?.resources || {}).every(([name, grade]) => Number(grade) <= (['Controle Mental', 'Propósito'].includes(name) ? 1 : 0));
 const legacyImportsInProgress = new Set();
 function Spiral({ small = false, className = "" }) {
   const points = Array.from({ length: 500 }, (_, i) => {
@@ -365,6 +369,21 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
   const storageKey = `espiral:sheet:v1:${id}`;
   const initialStoredSheet = useRef(storedEspiralSheet(id));
   const [sheet, setSheet] = useState(() => initialStoredSheet.current || freshSheet());
+  const sheetSnapshotRef = useRef(sheet);
+  sheetSnapshotRef.current = sheet;
+  const [remoteReady, setRemoteReady] = useState(false);
+  const remoteSnapshot = useRef(null);
+  useEffect(() => {
+    let active = true;
+    setRemoteReady(false);
+    const beforeLoad = JSON.stringify(sheetSnapshotRef.current);
+    buscarFichaEspiral(id).then(remote => {
+      if (!active || !remote || JSON.stringify(sheetSnapshotRef.current) !== beforeLoad || localStorage.getItem(`espiral:pending:${id}`)) return;
+      remoteSnapshot.current = JSON.stringify(remote);
+      setSheet(remote);
+    }).catch(() => {}).finally(() => { if (active) setRemoteReady(true); });
+    return () => { active = false; };
+  }, [id]);
   const [adaptacaoPendente, setAdaptacaoPendente] = useState(null);
   const [saveState, setSaveState] = useState("Salvando…");
   const [tab, setTab] = useState("Visão geral");
@@ -450,7 +469,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
   useEffect(() => {
     const shouldImport = idFromUrl &&
       (!initialStoredSheet.current || isUnlinkedBlankSheet(initialStoredSheet.current));
-    if (!shouldImport || legacyImportsInProgress.has(id)) return undefined;
+    if (!remoteReady || (sheet.name && !isUnlinkedBlankSheet(sheet)) || !shouldImport || legacyImportsInProgress.has(id)) return undefined;
     legacyImportsInProgress.add(id);
     const importarDarkness = async () => {
       let legacyCharacter = null;
@@ -475,7 +494,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
       setAdaptacaoPendente({ ...legacyCharacter, fichaId: id });
     };
     importarDarkness();
-  }, [id, idFromUrl]);
+  }, [id, idFromUrl, remoteReady]);
   useEffect(() => {
     if (adaptacaoPendente) return;
     try {
@@ -486,6 +505,49 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
       setSaveState("Não foi possível salvar. Exporte uma cópia.");
     }
   }, [sheet, storageKey, id, onSheetChange, adaptacaoPendente]);
+  useEffect(() => {
+    if (!remoteReady || adaptacaoPendente || !sheet.name?.trim()) return undefined;
+    const snapshot = JSON.stringify(sheet);
+    if (snapshot === remoteSnapshot.current) return undefined;
+    localStorage.setItem(`espiral:pending:${id}`, '1');
+    const timer = window.setTimeout(() => {
+      salvarFichaEspiral(id, sheet).then(saved => {
+        if (saved) { remoteSnapshot.current = snapshot; if (JSON.stringify(sheetSnapshotRef.current) === snapshot) localStorage.removeItem(`espiral:pending:${id}`); setSaveState('Salvo e compartilhado com o mestre'); }
+      }).catch(() => setSaveState('Salvo neste dispositivo · sincronização pendente'));
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [sheet, id, remoteReady, adaptacaoPendente]);
+  useEffect(() => {
+    if (!remoteReady || adaptacaoPendente) return undefined;
+    let active = true, busy = false;
+    const sync = async () => {
+      if (busy || document.hidden) return;
+      busy = true;
+      const current = sheetSnapshotRef.current;
+      const snapshot = JSON.stringify(current);
+      try {
+        if (localStorage.getItem(`espiral:pending:${id}`) && current.name?.trim()) {
+          const saved = await salvarFichaEspiral(id, current);
+          if (active && saved && JSON.stringify(sheetSnapshotRef.current) === snapshot) {
+            remoteSnapshot.current = snapshot;
+            localStorage.removeItem(`espiral:pending:${id}`);
+            setSaveState('Salvo e compartilhado com o mestre');
+          }
+        } else {
+          const remote = await buscarFichaEspiral(id);
+          if (active && remote && JSON.stringify(sheetSnapshotRef.current) === snapshot && !localStorage.getItem(`espiral:pending:${id}`)) {
+            remoteSnapshot.current = JSON.stringify(remote);
+            if (remoteSnapshot.current !== snapshot) setSheet(remote);
+          }
+        }
+      } catch { /* Mantém a cópia local e tenta no próximo ciclo ou ao reconectar. */ }
+      finally { busy = false; }
+    };
+    const timer = window.setInterval(sync, 15000);
+    window.addEventListener('focus', sync);
+    window.addEventListener('online', sync);
+    return () => { active = false; window.clearInterval(timer); window.removeEventListener('focus', sync); window.removeEventListener('online', sync); };
+  }, [id, remoteReady, adaptacaoPendente]);
   useEffect(() => {
     const updateAnimation=event => {
       if(event.type==='storage' && event.key!==storageKey) return;
@@ -827,7 +889,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
         )
       )
         throw new Error();
-      setSheet({ ...freshSheet(), ...data });
+      setSheet(normalizarResistenciasEspiral({ ...freshSheet(), ...data }));
       setHistory([]);
       setNotice("Ficha importada e salva neste dispositivo.");
     } catch {
@@ -952,7 +1014,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
         </nav>
       </header>
       {tabletopAccessError && !hasEspiralToken(sheet) && <p role="alert">{MISSING_ESPIRAL_TOKEN}</p>}
-      {adaptacaoPendente && <AdaptacaoEspiral verificarExistente={false} personagem={adaptacaoPendente} fichaId={id} onClose={() => { setAdaptacaoPendente(null); legacyImportsInProgress.delete(id); }} onConcluir={adaptada => { setSheet(adaptada); setAdaptacaoPendente(null); setNotice("Adaptação concluída com suas escolhas."); }} />}
+      {adaptacaoPendente && <AdaptacaoEspiral verificarExistente={false} personagem={adaptacaoPendente} fichaId={id} onClose={() => { setAdaptacaoPendente(null); legacyImportsInProgress.delete(id); }} onConcluir={adaptada => { setSheet(normalizarResistenciasEspiral(adaptada)); setAdaptacaoPendente(null); setNotice("Adaptação concluída com suas escolhas."); }} />}
       <main className="es-main">
         <div className="es-breadcrumb">
           ARQUIVO PESSOAL <span>/</span> {id === "principal" ? "001" : id}{" "}
@@ -1467,9 +1529,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
                     ))}
                     <p>
                       Escolha duas habilidades. Controle Mental e Propósito
-                      ficam fora dos 10 pontos convencionais; o livro não define
-                      claramente seu orçamento inicial. Combine os graus com o
-                      mestre.
+                      começam em Grau I, fora dos 10 pontos de Recursos convencionais.
                     </p>
                   </details>
                 )}

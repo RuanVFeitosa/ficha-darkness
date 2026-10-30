@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import EspiralDashboardCatalog from './EspiralDashboardCatalog';
 
 const ficha = { fichaId: 'espiral:123', espiralId: '123', personagem: { name: 'Ana', evolution: { points: 5, abilities: [] } } };
@@ -31,12 +31,12 @@ test('usa as habilidades da Transformação com custos e níveis e consulta vert
   expect(screen.queryByLabelText('Conceder a uma ficha local')).not.toBeInTheDocument();
 });
 
-test('habilidade já adquirida não pode ser concedida novamente e falha não anuncia sucesso', () => {
+test('habilidade já adquirida não pode ser concedida novamente e falha não anuncia sucesso', async () => {
   const onGrant = jest.fn(() => false);
   const ownedFicha = { ...ficha, personagem: { ...ficha.personagem, evolution: { abilities: [{ id: 'Ofensiva:Golpe Calculado' }] } } };
   render(<EspiralDashboardCatalog kind="abilities" fichas={[ownedFicha]} onGrant={onGrant} />);
   fireEvent.change(screen.getByLabelText('Conceder a uma ficha local'), { target: { value: ficha.fichaId } });
   expect(screen.getByRole('button', { name: 'Já concedida: Golpe Calculado' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Conceder: Sem Hesitar' }));
-  expect(screen.getByRole('status')).toHaveTextContent('Não foi possível salvar');
+  await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Não foi possível salvar'));
 });

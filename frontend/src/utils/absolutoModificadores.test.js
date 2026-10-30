@@ -4,6 +4,23 @@ import { CATALOGO_RITOS_ABSOLUTOS } from '../data/Catalogo/ritosAbsolutos';
 import { CATALOGO_COMBATE } from '../data/Catalogo/combate';
 import { salvarArvoresCustom, obterArvoreClasse } from '../data/Classes/arvoresHabilidades';
 
+test('fichas antigas são migradas automaticamente uma única vez, preservando o original', () => {
+  const antiga = {nome:'Lia', atributos:{forca:30,fonitude:20,inteligencia:40,vontade:20,reflexos:10}, habilidadesCombate:{firmeza:3,carisma:2}, inventario:[{dano:'2d6+15'}]};
+  const atual = normalizarFichaAbsoluto(antiga);
+  expect(atual).toMatchObject({versaoRegras:'1.0', atributos:{forca:3,inteligencia:4}, dominios:{mobilidade:3,influencia:2}, configuracaoAbsoluto:{limiteDados:8}});
+  expect(atual.legadoAbsoluto).toEqual(antiga);
+  expect(atual.inventario[0].dano).toBe('3d6');
+  expect(normalizarFichaAbsoluto(atual)).toEqual(atual);
+  expect(antiga.versaoRegras).toBeUndefined();
+});
+
+test('não converte fichas de outro sistema ou rebaixa uma versão futura', () => {
+  const espiral={sistema:'espiral',atributos:{forca:30}};
+  expect(normalizarFichaAbsoluto(espiral)).toBe(espiral);
+  const futura={versaoRegras:'2.0',atributos:{forca:3}};
+  expect(normalizarFichaAbsoluto(futura)).toEqual(futura);
+});
+
 test.each([
   ['Recebe +15 em ataques e −10 em esquivas.', 'Recebe +1 dado em ataques e −1 dado em esquivas.'],
   ['Causa +2d de dano adicional.', 'Causa +1 dado de dano adicional.'],

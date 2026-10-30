@@ -1,3 +1,4 @@
+import { normalizarResistenciasEspiral } from '../../data/espiral';
 import NumberInput from '../ui/NumberInput';
 import React, {useState} from 'react';
 import {ATTRIBUTES, RESOURCES, GRADES, VERTENTES, integrityMax} from '../../data/espiral';
@@ -13,7 +14,7 @@ export default function AdaptacaoEspiral({personagem,fichaId,onClose,onConcluir,
  const [etapa,setEtapa]=useState(0);
  const [atributos,setAtributos]=useState(()=>convertDarknessToEspiral(personagem).attributes);
  const [fontePulso,setFontePulso]=useState('maior');
- const [recursos,setRecursos]=useState(()=>({...convertDarknessToEspiral(personagem).resources,'Controle Mental':'','Propósito':''}));
+ const [recursos,setRecursos]=useState(()=>({...convertDarknessToEspiral(personagem).resources,'Controle Mental':1,'Propósito':1}));
  const [vertente,setVertente]=useState('');
  const [legado,setLegado]=useState('');
  const [proposito,setProposito]=useState('');
@@ -31,7 +32,7 @@ export default function AdaptacaoEspiral({personagem,fichaId,onClose,onConcluir,
   try {
    const base=convertDarknessToEspiral({...personagem,fichaId});
    const attributes=Object.fromEntries(Object.entries(atributos).map(([k,v])=>[k,Number(v)]));
-   const sheet={...base,attributes,resources:Object.fromEntries(Object.entries(recursos).map(([k,v])=>[k,Number(v)])),vertente,abilities:legado,purpose:proposito,integrity:integrityMax(attributes.pulso),sanity:Number(sanidade),hope:Number(esperanca),player:personagem.nomeJogador || personagem.jogador || '',adaptationVersion:2,notes:['ADAPTAÇÃO ABSOLUTO → ESPIRAL','Atributos e Recursos preenchidos pela tabela e revisados pelo jogador; Resistências, Vertente e legado escolhidos na adaptação.',personagem.anotacao,personagem.historia].filter(Boolean).join('\n\n')};
+   const sheet=normalizarResistenciasEspiral({...base,attributes,resources:Object.fromEntries(Object.entries(recursos).map(([k,v])=>[k,Number(v)])),vertente,abilities:legado,purpose:proposito,integrity:integrityMax(attributes.pulso),sanity:Number(sanidade),hope:Number(esperanca),player:personagem.nomeJogador || personagem.jogador || '',adaptationVersion:2,notes:['ADAPTAÇÃO ABSOLUTO → ESPIRAL','Atributos e Recursos preenchidos pela tabela e revisados pelo jogador; Resistências, Vertente e legado escolhidos na adaptação.',personagem.anotacao,personagem.historia].filter(Boolean).join('\n\n')});
    onConcluir(sheet);
   } catch {setErro('Não foi possível salvar. Tente novamente antes de sair.');}
  };

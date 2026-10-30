@@ -20,6 +20,15 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
+test('abre a ficha compartilhada em um navegador sem cópia local', async () => {
+  window.history.replaceState({}, '', '/?sistema=espiral&ficha=5258881');
+  buscarPersonagem.mockResolvedValueOnce({...freshSheet(),name:'Maya compartilhada',sistema:'espiral',espiralId:'5258881'});
+  render(<FichaEspiral/>);
+  expect(buscarPersonagem).toHaveBeenCalledWith('espiral_5258881');
+  await waitFor(() => expect(JSON.parse(localStorage.getItem('espiral:sheet:v1:5258881')).name).toBe('Maya compartilhada'));
+  expect(screen.queryByText('ADAPTAÇÃO DARKNESS → ESPIRAL')).not.toBeInTheDocument();
+});
+
 test.each([[4, 'Sucesso com consequência'], [5, 'Sucesso'], [7, 'Sucesso excepcional']])('sobrevivência remove uma falha e mostra verde em %s / %s', async (difficulty, outcome) => {
   const sheet = freshSheet();
   sheet.integrity = 0;
