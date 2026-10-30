@@ -1,3 +1,11 @@
+import NumberInput from '../components/ui/NumberInput';
+import { LIMITE_DADOS_ABSOLUTO, rolarDadosAbsoluto, normalizarFormulaAbsoluto, converterTextoAbsoluto, normalizarFichaAbsoluto } from '../utils/absolutoModificadores';
+import AbsolutoMedo from '../components/absoluto/AbsolutoMedo';
+import AbsolutoDominio from '../components/absoluto/AbsolutoDominio';
+import { executarTesteDominio } from '../utils/absolutoRolagem';
+import AbsolutoMigration from '../components/absoluto/AbsolutoMigration';
+import AbsolutoLivro from '../components/absoluto/AbsolutoLivro';
+import { ehAbsolutoV1, DOMINIOS, REGIOES, limitar } from '../data/absolutoV1';
 import AdaptacaoEspiral from '../components/adaptacao/AdaptacaoEspiral';
 import { nomesPassivas, ativosParaPassiva, dadosAtivos } from '../data/absolutoAtivos';
 import AbilityEditDialog from '../components/habilidades/AbilityEditDialog';
@@ -559,6 +567,10 @@ const FichaPersonagem = () => {
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalRolagem, setModalRolagem] = useState(null);
+  const [dtTesteV1, setDtTesteV1] = useState(1);
+  const [esforcoTesteV1, setEsforcoTesteV1] = useState(false);
+  const [contraFonteMedo, setContraFonteMedo] = useState(false);
+  const [ultimoTesteV1, setUltimoTesteV1] = useState(null);
   useState(false);
   useState("normal");
   const [modoAtaque, setModoAtaque] = useState("normal");
@@ -832,7 +844,7 @@ const FichaPersonagem = () => {
         if (!cancelado && dadosSalvos) {
           try {
             ignorarProximoSalvamentoRef.current = true;
-            setPersonagem(JSON.parse(dadosSalvos));
+            setPersonagem(normalizarFichaAbsoluto(JSON.parse(dadosSalvos)));
           } catch {
             console.warn("Nao foi possivel sincronizar a ficha local.");
           }
@@ -1096,7 +1108,7 @@ const FichaPersonagem = () => {
   // a condição Estado Crítico é ativada automaticamente.
   // Quando as duas deixam de estar em Grave, Estado Crítico é removido.
   useEffect(() => {
-    if (!carregado) return;
+    if (!carregado || personagem.versaoRegras === "1.0") return;
 
     const cabecaGrave = Boolean(personagem.membros?.cabeca?.grave);
     const torsoGrave = Boolean(personagem.membros?.torso?.grave);
@@ -1129,6 +1141,7 @@ const FichaPersonagem = () => {
     }
   }, [
     carregado,
+    personagem.versaoRegras,
     personagem.membros?.cabeca?.grave,
     personagem.membros?.torso?.grave,
     personagem.condicoesAtivas,
@@ -1435,16 +1448,6 @@ const FichaPersonagem = () => {
     };
   };
 
-  const combinarBonusDano = (baseBonus, extraBonus) => {
-    const partes = [baseBonus, extraBonus]
-      .filter(Boolean)
-      .map((texto) => texto.trim())
-      .filter(Boolean);
-
-    if (!partes.length) return "";
-    return partes.join(" + ");
-  };
-
   const registrarRolagemMestre = (rolagem) => {
     const novaRolagem = {
       id: `${Date.now()}-${Math.random()}`,
@@ -1531,7 +1534,7 @@ const FichaPersonagem = () => {
 
     const armaAtualizada = {
       ...arma,
-      armaStatus: { ...statusArmaEditavel },
+      armaStatus: { ...statusArmaEditavel, dmg: (() => { try { return normalizarFormulaAbsoluto(statusArmaEditavel.dmg); } catch { return statusArmaEditavel.dmg; } })() },
       statusPersonalizado: true,
     };
       inventario[index] = armaAtualizada;
@@ -1591,36 +1594,6 @@ const FichaPersonagem = () => {
     };
   };
 
-  const interpretarBonusDano = (bonusTexto) => {
-    const texto = String(bonusTexto || "")
-      .toLowerCase()
-      .replace(/\s/g, "");
-
-    if (!texto) {
-      return null;
-    }
-
-    const dado = interpretarDano(texto.replace(/^\+/, ""));
-
-    if (dado) {
-      return {
-        tipo: "dados",
-        ...dado,
-      };
-    }
-
-    const valorFixo = parseInt(texto, 10);
-
-    if (!Number.isNaN(valorFixo)) {
-      return {
-        tipo: "fixo",
-        bonus: valorFixo,
-      };
-    }
-
-    return null;
-  };
-
   const obterQuantidadeAlvosFirmeza = (mobilityTexto) => {
     const texto = String(mobilityTexto || "");
 
@@ -1642,59 +1615,21 @@ const FichaPersonagem = () => {
     return 2;
   };
 
-  const rolarDanoArma = (dmg, dadosExtras = 0, bonusDano = "") => {
-    const dano = interpretarDano(dmg);
-
-    if (!dano) {
-      return {
-        total: 0,
-        rolagens: [],
-        texto: "Dano inválido",
-      };
+  const rolarDanoArma = (dmg, dadosExtras = 0, bonusDano = '', limite = LIMITE_DADOS_ABSOLUTO) => {
+    try {
+      const extras = Array.isArray(dadosExtras) ? dadosExtras : [dadosExtras];
+      const fontes = Array.isArray(bonusDano) ? bonusDano : [bonusDano];
+      const ajustes = fontes.flatMap(fonte => {
+        const texto = String(fonte || '').trim();
+        if (!texto || /^[+−–-]?0$/.test(texto) || !/^[+−–-]?\s*(?:\d+|dados?)/i.test(texto)) return [];
+        // Cada fonte de bônus/penalidade contribui com apenas um dado.
+        return [(/^[−–-]/.test(texto) ? -1 : 1)];
+      });
+      const resultado = rolarDadosAbsoluto(dmg, [...extras, ...ajustes], Math.random, limite);
+      return { total: resultado.total, rolagens: resultado.dados, rolagensBonus: [], texto: resultado.formula, dadosDetalhados: resultado.dados.map(valor => ({ valor, faces: resultado.faces })) };
+    } catch {
+      return { total: 0, rolagens: [], rolagensBonus: [], texto: 'Dano inválido', dadosDetalhados: [] };
     }
-
-    const quantidadeFinal = dano.quantidade + dadosExtras;
-
-    const rolagens = Array.from({ length: quantidadeFinal }, () =>
-      rolarDado(dano.faces),
-    );
-
-    const bonus = interpretarBonusDano(bonusDano);
-    const rolagensBonus =
-      bonus?.tipo === "dados"
-        ? Array.from({ length: bonus.quantidade }, () => rolarDado(bonus.faces))
-        : [];
-
-    const total =
-      rolagens.reduce((soma, valor) => soma + valor, 0) +
-      dano.bonus +
-      rolagensBonus.reduce((soma, valor) => soma + valor, 0) +
-      (bonus?.bonus || 0);
-
-    const textoBonus =
-      bonus?.tipo === "dados"
-        ? ` + ${bonus.quantidade}d${bonus.faces}${bonus.bonus ? `+${bonus.bonus}` : ""}`
-        : bonus?.bonus
-          ? `${bonus.bonus > 0 ? " +" : " "}${bonus.bonus}`
-          : "";
-
-    return {
-      total,
-      rolagens,
-      rolagensBonus,
-      texto: `${quantidadeFinal}d${dano.faces}${dano.bonus ? `+${dano.bonus}` : ""}${textoBonus}`,
-
-      dadosDetalhados: [
-        ...rolagens.map((valor) => ({
-          valor,
-          faces: dano.faces,
-        })),
-        ...rolagensBonus.map((valor) => ({
-          valor,
-          faces: bonus?.faces || dano.faces,
-        })),
-      ],
-    };
   };
 
   const obterDadoAtributo = (valor) => {
@@ -1742,7 +1677,7 @@ const FichaPersonagem = () => {
     const quantidadeBase = quantidadeDadosBase !== null && Number.isInteger(Number(quantidadeDadosBase))
       ? Math.max(1, Number(quantidadeDadosBase))
       : obterModificadorAtributo(valorAtributo);
-    const quantidadeDados = Math.max(1, quantidadeBase + modificadorDados);
+    const quantidadeDados = Math.max(1, Math.min(LIMITE_DADOS_ABSOLUTO, quantidadeBase + modificadorDados + Math.sign(bonusAtivo) + Math.sign(bonusPassiva)));
     const faces = obterDadoAtributo(valorAtributo);
 
     const rolagens = Array.from({ length: quantidadeDados }, () =>
@@ -1760,7 +1695,7 @@ const FichaPersonagem = () => {
       0,
     );
 
-    const total = maiorResultado + bonusFinais + bonusAtivo + bonusPassiva;
+    const total = maiorResultado;
 
     return {
       quantidadeBase,
@@ -1773,8 +1708,8 @@ const FichaPersonagem = () => {
       resultadosExtras,
       bonusFinais,
       maiorResultado,
-      bonusAtivo,
-      bonusPassiva,
+      bonusAtivo: 0,
+      bonusPassiva: 0,
       total,
     };
   };
@@ -1791,6 +1726,20 @@ const FichaPersonagem = () => {
     critico = false,
     gruposCorpo = 1,
   ) => {
+    if (ehAbsolutoV1(personagem)) {
+      if (!ultimoTesteV1?.sucesso || ultimoTesteV1.danoResolvido) {
+        alertarDialogo('Realize primeiro um teste de Violência ou Precisão na aba Combate. Após acertar, use o botão da arma para rolar o dano.', { titulo: 'Dano do ataque' });
+        return;
+      }
+      if (!item.armaStatus?.dmg) return;
+      const resultado = rolarDanoArma(item.armaStatus.dmg, ultimoTesteV1.critico ? 1 : 0, [item.bonusDanoArma || '', item.municaoCarregada?.bonusDano || '']);
+      const rolagem = { ...resultado, tipo: 'dano', titulo: item.nome, modo: ultimoTesteV1.critico ? 'Crítico · +1 dado de dano (máximo 8 dados)' : 'Dano bruto antes da Proteção', formula: resultado.texto, dados: [...resultado.rolagens, ...(resultado.rolagensBonus || [])], dadosDetalhados: resultado.dadosDetalhados, faces: interpretarDano(item.armaStatus.dmg)?.faces || 6, total: resultado.total };
+      setUltimoTesteV1({ ...ultimoTesteV1, danoResolvido: true });
+      setModalRolagem(rolagem); setRolandoDados(false); registrarRolagemMestre(rolagem);
+      if (item.municaoCarregada) { const index = encontrarIndexArmaNoInventario(item); if (index >= 0) consumirMunicaoDaArma(index); }
+      if (item.durabilidade && item.durabilidade !== '—') reduzirDurabilidadeItem(item.index);
+      return;
+    }
     const arma = item.armaStatus;
 
     if (!arma) {
@@ -1818,7 +1767,7 @@ const FichaPersonagem = () => {
 
     const dadosExtrasBase = dadosExtrasPorModo[modo] || 0;
     const dadosCritico = critico ? extrairDadosCritico(arma.critico) : 0;
-    const dadosExtras = dadosExtrasBase + dadosCritico;
+    const dadosExtras = [dadosExtrasBase, dadosCritico];
     const danoBase = interpretarDano(arma.dmg);
     const quantidadeAlvosFirmeza =
       modo === "firmeza" ? obterQuantidadeAlvosFirmeza(arma.mobility) : 1;
@@ -1830,14 +1779,13 @@ const FichaPersonagem = () => {
     const bonusMunicao = item.municaoCarregada
       ? item.municaoCarregada.bonusDano
       : "";
-    const bonusFinal = combinarBonusDano(
-      item.bonusDanoArma || "",
-      bonusMunicao,
-    );
-
-    const resultadosAlvos = Array.from({ length: quantidadeGrupos }, () =>
-      rolarDanoArma(arma.dmg, dadosExtras, bonusFinal),
-    );
+    const bonusFinal = [item.bonusDanoArma || '', bonusMunicao];
+    let dadosRestantes = LIMITE_DADOS_ABSOLUTO;
+    const resultadosAlvos = Array.from({ length: quantidadeGrupos }, () => {
+      const resultadoAlvo = rolarDanoArma(arma.dmg, dadosExtras, bonusFinal, dadosRestantes);
+      dadosRestantes -= resultadoAlvo.rolagens.length;
+      return resultadoAlvo;
+    });
 
     const resultado = resultadosAlvos[0];
     const formula =
@@ -1926,7 +1874,7 @@ const FichaPersonagem = () => {
 
       const itemAtualizado = {
         ...item,
-        bonusDanoArma: bonusDano,
+        bonusDanoArma: converterTextoAbsoluto(bonusDano),
       };
 
       novoInventario[indexAlvo] = itemAtualizado;
@@ -2190,7 +2138,7 @@ const FichaPersonagem = () => {
   };
 
   useEffect(() => {
-    if (!temRitoAtivo) return;
+    if (!temRitoAtivo || personagem.versaoRegras === "1.0") return;
 
     const intervaloSanidade = setInterval(() => {
       setPersonagem((prev) => ({
@@ -2205,7 +2153,7 @@ const FichaPersonagem = () => {
     }, 60000); // 1 minuto
 
     return () => clearInterval(intervaloSanidade);
-  }, [temRitoAtivo, setPersonagem]);
+  }, [temRitoAtivo, setPersonagem, personagem.versaoRegras]);
 
   const reduzirDurabilidadeItem = (indexAlvo) => {
     let nomeItemQuebrou = null;
@@ -2761,38 +2709,8 @@ const FichaPersonagem = () => {
     );
   };
 
-  const incrementarPrecisao = (precisionTexto) => {
-    const texto = String(precisionTexto || "").trim();
-    const bonusMatch = texto.match(/([+-]\d+)/);
-    if (bonusMatch) {
-      const valorAtual = parseInt(bonusMatch[1], 10);
-      return texto.replace(/([+-]\d+)/, `${valorAtual + 1}`);
-    }
-
-    if (texto.includes("distância")) {
-      return texto.includes("|") ? `${texto} +1` : `${texto} | +1`;
-    }
-
-    if (texto.includes("|")) {
-      const [prefixo, sufixo] = texto.split("|").map((parte) => parte.trim());
-      return `${prefixo} | +1 ${sufixo}`;
-    }
-
-    return `Percepção | +1`;
-  };
-
-  const incrementarControle = (controlTexto) => {
-    const texto = String(controlTexto || "").trim();
-    const bonusMatch = texto.match(/([+-]\d+)/);
-    if (bonusMatch) {
-      const valorAtual = parseInt(bonusMatch[1], 10);
-      return texto.replace(/([+-]\d+)/, `${valorAtual + 1}`);
-    }
-    if (texto.includes("|")) {
-      return `${texto} +1`;
-    }
-    return `${texto || "Persistência"} | +1`;
-  };
+  const incrementarPrecisao = texto => converterTextoAbsoluto(`${String(texto || 'Percepção').replace(/[+−–-]\s*\d+(?:\s*dados?)?/g, '').trim()} | +1 dado`);
+  const incrementarControle = texto => converterTextoAbsoluto(`${String(texto || 'Persistência').replace(/[+−–-]\s*\d+(?:\s*dados?)?/g, '').trim()} | +1 dado`);
 
   const incrementarMobilidade = (mobilityTexto) => {
     const texto = String(mobilityTexto || "").trim();
@@ -2956,6 +2874,17 @@ const FichaPersonagem = () => {
     }));
   };
 
+  const rolarDominioV1 = async (chave, anterior = null) => {
+    try {
+      const { rolagem, personagem: atualizado } = executarTesteDominio(personagem, chave, { dt: dtTesteV1, vantagem: modificadorDadosRolagem, esforco: esforcoTesteV1, contraFonte: contraFonteMedo, repetir: anterior });
+      if (atualizado !== personagem) { revisaoRecursosRef.current += 1; setPersonagem(atualizado); }
+      setUltimoTesteV1(rolagem);
+      setModalRolagem(rolagem);
+      setRolandoDados(false);
+      registrarRolagemMestre(rolagem);
+    } catch (error) { await alertarDialogo(error.message, { titulo: 'Teste de Domínio' }); }
+  };
+
   // Componente para cada habilidade passiva
   const calcularModificadorAtivo = (valor) => {
     const numero = parseInt(valor) || 0;
@@ -2974,10 +2903,7 @@ const FichaPersonagem = () => {
     const modificadorAtributo = calcularModificadorAtivo(atributoValor);
     const valorAtivo = personagem.habilidadesCombate?.[chave] || 0;
     const valorTemporario = personagem.habilidadesTemporarias?.[chave] || 0;
-    const dadosDoAtivo = Math.max(
-      1,
-      modificadorAtributo + valorAtivo + valorTemporario,
-    );
+    const dadosDoAtivo = Math.min(LIMITE_DADOS_ABSOLUTO, Math.max(1, modificadorAtributo + Math.sign(valorAtivo) + Math.sign(valorTemporario)));
     const passivasVinculadas = Object.entries(ativosParaPassiva)
       .filter(([, ativoVinculado]) => ativoVinculado === chave)
       .map(([chavePassiva]) => ({
@@ -3149,7 +3075,7 @@ const FichaPersonagem = () => {
               -
             </button>
 
-            <input
+            <NumberInput
               type="number"
               value={valorTemporario}
               onChange={(e) => {
@@ -3273,9 +3199,6 @@ const FichaPersonagem = () => {
   const habilidadesSelecionadas = listarHabilidadesSelecionadas(personagem);
   const arquetipoDetalhes =
     personagem.classeEspecialidade?.arquetipoDetalhes || null;
-
-  const arquetipoNome =
-    personagem.classeEspecialidade?.arquetipo || personagem.arquetipo || "";
 
   const arquetipoItens = arquetipoDetalhes
     ? [
@@ -3495,118 +3418,12 @@ const FichaPersonagem = () => {
     valorPassiva("velocidade");
 
   const rolarFormulaPersonalizada = () => {
-    const formula = formulaDadoPersonalizado.replace(/\s/g, "");
-
-    if (!formula.trim()) {
-      setErroRolagemPersonalizada("Digite uma fórmula.");
-      return;
-    }
-
-    const partes = formula.match(/[+-]?[^+-]+/g) || [];
-
-    let total = 0;
-    const dados = [];
-
-    for (const parte of partes) {
-      const sinal = parte.startsWith("-") ? -1 : 1;
-      const texto = parte.replace(/^[+-]/, "");
-
-      const dadoMatch = texto.match(/^(\d*)d(\d+)$/i);
-
-      if (dadoMatch) {
-        const quantidade = parseInt(dadoMatch[1] || "1", 10);
-        const faces = parseInt(dadoMatch[2], 10);
-
-        if (quantidade <= 0 || faces <= 0) {
-          setErroRolagemPersonalizada("Fórmula inválida.");
-          return;
-        }
-
-        for (let i = 0; i < quantidade; i++) {
-          const valorOriginal = rolarDado(faces);
-          const valor = valorOriginal * sinal;
-
-          dados.push({
-            valor,
-            valorOriginal,
-            faces,
-            sinal,
-            origem: `${sinal < 0 ? "-" : ""}d${faces}`,
-          });
-
-          total += valor;
-        }
-
-        continue;
-      }
-
-      const numero = parseInt(texto, 10);
-
-      if (!Number.isNaN(numero)) {
-        total += numero * sinal;
-        continue;
-      }
-
-      setErroRolagemPersonalizada("Use fórmulas como 3d20+5d100-2.");
-      return;
-    }
-
-    const dadosPositivos = dados.filter((dado) => dado.sinal > 0);
-
-    const finais = dadosPositivos.filter(
-      (dado) => dado.valorOriginal === dado.faces,
-    ).length;
-
-    const valoresOrdenados = dadosPositivos
-      .map((dado) => dado.valorOriginal)
-      .sort((a, b) => b - a);
-
-    const resultadosExtras = valoresOrdenados.slice(1, 1 + finais);
-
-    const bonusFinais = resultadosExtras.reduce(
-      (soma, valor) => soma + valor,
-      0,
-    );
-
-    total += bonusFinais;
-
-    setErroRolagemPersonalizada("");
-    setRolandoDados(true);
-
-    const rolagem = {
-      tipo: "teste",
-      titulo: "Rolagem Personalizada",
-      modo: formulaDadoPersonalizado,
-      formula: formulaDadoPersonalizado,
-
-      dados: dados.map((dado) => dado.valor),
-
-      dadosDetalhados: dados.map((dado) => ({
-        valor: dado.valor,
-        faces: dado.faces,
-      })),
-
-      faces: 20,
-
-      maiorResultado: dados.length
-        ? Math.max(...dados.map((dado) => dado.valor))
-        : total,
-
-      bonusAtivo: 0,
-      bonusPassiva: 0,
-      finais,
-      resultadosExtras,
-      bonusFinais,
-      total,
-      dano: null,
-    };
-
-    setModalRolagem(rolagem);
-    registrarRolagemMestre(rolagem);
-
-    setTimeout(() => {
-      setRolandoDados(false);
-    }, 1200);
+    try {
+      const resultado = rolarDadosAbsoluto(formulaDadoPersonalizado);
+      setErroRolagemPersonalizada('');
+      const rolagem = { ...resultado, tipo: 'dano', titulo: 'Rolagem personalizada', modo: 'Absoluto · máximo 8 dados', maiorResultado: resultado.dados.length ? Math.max(...resultado.dados) : 0, dadosDetalhados: resultado.dados.map(valor => ({ valor, faces: resultado.faces })), bonusAtivo: 0, bonusPassiva: 0, finais: 0, resultadosExtras: [], bonusFinais: 0 };
+      setModalRolagem(rolagem); setRolandoDados(false); registrarRolagemMestre(rolagem);
+    } catch (error) { setErroRolagemPersonalizada(error.message); }
   };
 
   // Conteúdo das abas
@@ -3635,14 +3452,15 @@ const FichaPersonagem = () => {
     );
 
   const conteudoAbas = {
+    regras: <div className="abs-v1"><AbsolutoLivro /></div>,
     combate: (
       <div className="conteudo-aba">
-        <h4>ATIVOS</h4>
+        <h4>{ehAbsolutoV1(personagem) ? "DOMÍNIOS" : "ATIVOS"}</h4>
         <div className="controle-dados-pre-rolagem">
           <button
             type="button"
             onClick={() =>
-              setModificadorDadosRolagem((prev) => Math.max(-4, prev - 1))
+              setModificadorDadosRolagem((prev) => Math.max(-7, prev - 1))
             }
           >
             -1D
@@ -3655,7 +3473,7 @@ const FichaPersonagem = () => {
 
           <button
             type="button"
-            onClick={() => setModificadorDadosRolagem((prev) => prev + 1)}
+            onClick={() => setModificadorDadosRolagem((prev) => Math.min(7, prev + 1))}
           >
             +1D
           </button>
@@ -3665,8 +3483,15 @@ const FichaPersonagem = () => {
           </button>
         </div>
 
+        {ehAbsolutoV1(personagem) && <div className="controle-dados-pre-rolagem">
+          <label>DT / Defesa <NumberInput type="number" aria-label="DT do teste" min="1" max="5" value={dtTesteV1} onChange={e => setDtTesteV1(limitar(e.target.value, 1, 5))} /></label>
+          <label><input type="checkbox" checked={esforcoTesteV1} onChange={e => setEsforcoTesteV1(e.target.checked)} /> Esforço · 1 Esperança / +1D</label>
+          <label><input type="checkbox" checked={contraFonteMedo} onChange={e => setContraFonteMedo(e.target.checked)} /> Contra a fonte do Medo</label>
+        </div>}
         <div className="ativos-layout">
           <div className="lista-ativos">
+            {ehAbsolutoV1(personagem) ? Object.keys(DOMINIOS).map(chave => <AbsolutoDominio key={chave} chave={chave} personagem={personagem} onRoll={rolarDominioV1} vantagem={modificadorDadosRolagem} esforco={esforcoTesteV1} contraFonte={contraFonteMedo} />) : <>
+
             <Ativo nome="Razão" chave="razao" atributoBase="inteligencia" />
             <Ativo
               nome="Intuição"
@@ -3687,6 +3512,7 @@ const FichaPersonagem = () => {
               chave="resistencia"
               atributoBase="fonitude"
             />
+          </>}
           </div>
 
           <aside className="defesa-painel">
@@ -3696,14 +3522,14 @@ const FichaPersonagem = () => {
                   <h3 className="defesa-titulo">Defesa Base</h3>
 
                   <div className="escudo-defesa">
-                    <input inputMode="numeric" value={defesaBase} readOnly />
+                    <input inputMode="numeric" aria-label="Defesa Base" value={ehAbsolutoV1(personagem) ? limitar(personagem.defesaGeral || 2, 1, 5) : defesaBase} readOnly={!ehAbsolutoV1(personagem)} onChange={e => setPersonagem(p => ({ ...p, defesaGeral: limitar(e.target.value, 1, 5) }))} />
                   </div>
                 </div>
 
-                <div className="defesa-info">
+                {!ehAbsolutoV1(personagem) && <div className="defesa-info">
                   <label className="defesa-bonus-inline">
                     <span>{bonusDefesa >= 0 ? "+" : "-"}</span>
-                    <input
+                    <NumberInput
                       type="number"
                       inputMode="numeric"
                       value={Math.abs(personagem.bonusDefesa ?? 0)}
@@ -3720,10 +3546,10 @@ const FichaPersonagem = () => {
                   <div className="defesa-formula">
                     Base {defesaBaseNatural} + bonus
                   </div>
-                </div>
+                </div>}
               </div>
 
-              <div className="defesa-valores">
+              {!ehAbsolutoV1(personagem) && <div className="defesa-valores">
                 <label>
                   <span>BLOQUEIO</span>
                   <input type="text" value={bloqueio} readOnly />
@@ -3733,7 +3559,8 @@ const FichaPersonagem = () => {
                   <span>ESQUIVA</span>
                   <input type="text" value={esquiva} readOnly />
                 </label>
-              </div>
+              </div>}
+              {ehAbsolutoV1(personagem) && <small>Êxitos necessários para atingir.</small>}
             </div>
 
             <div className="defesa-campos">
@@ -3791,7 +3618,7 @@ const FichaPersonagem = () => {
           <button
             type="button"
             onClick={() =>
-              setModificadorDadosRolagem((prev) => Math.max(-4, prev - 1))
+              setModificadorDadosRolagem((prev) => Math.max(-7, prev - 1))
             }
           >
             -1D
@@ -3804,7 +3631,7 @@ const FichaPersonagem = () => {
 
           <button
             type="button"
-            onClick={() => setModificadorDadosRolagem((prev) => prev + 1)}
+            onClick={() => setModificadorDadosRolagem((prev) => Math.min(7, prev + 1))}
           >
             +1D
           </button>
@@ -5011,7 +4838,7 @@ const FichaPersonagem = () => {
                   {itemVisualizado.armaStatus &&
                     itemVisualizado.armaStatus.tipo !== "Corpo a Corpo" && (
                       <div className="arma-fogo-controles">
-                        <div className="modos-ataque">
+                        {!ehAbsolutoV1(personagem) && <div className="modos-ataque">
                           <span>Modo de ataque</span>
                           <div className="modos-botoes">
                             {[
@@ -5032,13 +4859,13 @@ const FichaPersonagem = () => {
                               </button>
                             ))}
                           </div>
-                        </div>
+                        </div>}
 
                         <div className="bonus-dano-arma">
                           <span>Bônus de dano</span>
                           <input
                             value={itemVisualizado.bonusDanoArma || ""}
-                            placeholder="+2, 1d6, 2d8+3..."
+                            placeholder="+1 dado ou −1 dado"
                             onChange={(event) =>
                               atualizarBonusDanoArma(
                                 itemVisualizado.index,
@@ -5048,7 +4875,7 @@ const FichaPersonagem = () => {
                           />
                         </div>
 
-                        <div className="ataque-critico">
+                        {!ehAbsolutoV1(personagem) && <div className="ataque-critico">
                           <label>
                             <input
                               type="checkbox"
@@ -5063,7 +4890,7 @@ const FichaPersonagem = () => {
                             )}{" "}
                             dados extras)
                           </label>
-                        </div>
+                        </div>}
                       </div>
                     )}
 
@@ -5195,7 +5022,7 @@ const FichaPersonagem = () => {
                           <span>Bônus de dano</span>
                           <input
                             value={itemVisualizado.bonusDanoArma || ""}
-                            placeholder="+2, 1d6, 2d8+3..."
+                            placeholder="+1 dado ou −1 dado"
                             onChange={(event) =>
                               atualizarBonusDanoArma(
                                 itemVisualizado.index,
@@ -5205,7 +5032,7 @@ const FichaPersonagem = () => {
                           />
                         </div>
 
-                        <div className="corpo-a-corpo-critico">
+                        {!ehAbsolutoV1(personagem) && <div className="corpo-a-corpo-critico">
                           <label>
                             <input
                               type="checkbox"
@@ -5220,11 +5047,11 @@ const FichaPersonagem = () => {
                             )}{" "}
                             dados extras)
                           </label>
-                        </div>
+                        </div>}
 
-                        <label className="corpo-a-corpo-grupos">
+                        {!ehAbsolutoV1(personagem) && <label className="corpo-a-corpo-grupos">
                           <span>Grupos de dados</span>
-                          <input
+                          <NumberInput
                             type="number"
                             min="1"
                             max="10"
@@ -5241,7 +5068,7 @@ const FichaPersonagem = () => {
                           <small>
                             Cada grupo rola {itemVisualizado.armaStatus.dmg} separadamente.
                           </small>
-                        </label>
+                        </label>}
                       </div>
                     )}
 
@@ -5482,7 +5309,7 @@ const FichaPersonagem = () => {
 
                     <span className="material-nome">{nome}</span>
 
-                    <input
+                    <NumberInput
                       type="number"
                       min="0"
                       value={personagem.materiaisCriacao?.[chave] || 0}
@@ -6076,6 +5903,8 @@ const FichaPersonagem = () => {
         <div className="sistema-membros-sidebar">
           <div className="corpo-container-sidebar">
             <div className="controles-membros-sidebar">
+              {ehAbsolutoV1(personagem) ? Object.entries(REGIOES).map(([chave, regiao]) => <MembroControle key={chave} nome={regiao.nome.toUpperCase()} membroChave={chave} membro={personagem.membros[chave]} onMaxChange={atualizarMaxMembro} onChange={valor => atualizarVidaMembro(chave, valor)} onDamage={dano => aplicarDanoMembro(chave, dano)} onDefesaChange={atualizarDefesaMembro} defesas={defesasDoMembro(chave)} onVisualizarDefesa={abrirVisualizador} classNameInput={`${chave}-input`} />) : <>
+
               <MembroControle
                 nome="CABEÇA"
                 membroChave="cabeca"
@@ -6156,15 +5985,16 @@ const FichaPersonagem = () => {
                 defesas={defesasDoMembro("pernaEsquerda")}
                 onVisualizarDefesa={abrirVisualizador}
                 classNameInput="pernaEsquerda-input"
-              />
+              /></>}
+
             </div>
           </div>
 
           <div className="vida-total-sidebar">
             <div className="vida-total-info">
-              <span className="vida-total-label">VIDA TOTAL:</span>
+              <span className="vida-total-label">{ehAbsolutoV1(personagem) ? "REGIÕES FUNCIONAIS:" : "VIDA TOTAL:"}</span>
               <span className="vida-total-valor">
-                {vidaTotal.atual} / {vidaTotal.max}
+                {ehAbsolutoV1(personagem) ? Object.keys(REGIOES).filter(k => personagem.membros[k]?.atual > 0).length : vidaTotal.atual} / {ehAbsolutoV1(personagem) ? 8 : vidaTotal.max}
               </span>
             </div>
           </div>
@@ -6366,15 +6196,15 @@ const FichaPersonagem = () => {
             <h4>Rolagem de Dados Personalizada</h4>
 
             <p>
-              Monte qualquer combinação. Exemplos: 3d20+5d100, 2d6+10,
-              1d20+4d8-3.
+              Até 8 dados por rolagem. Cada bônus ou penalidade vale +1 ou −1 dado. Exemplos: 3d6+1d6, 2d8−1 dado,
+              1d20−1 dado.
             </p>
 
             <div className="rolagem-personalizada-form">
               <input
                 value={formulaDadoPersonalizado}
                 onChange={(e) => setFormulaDadoPersonalizado(e.target.value)}
-                placeholder="Ex: 3d20+5d100"
+                placeholder="Ex.: 3d6+1d6 (máximo 8 dados)"
               />
 
               <button type="button" onClick={rolarFormulaPersonalizada}>
@@ -6518,6 +6348,7 @@ const FichaPersonagem = () => {
 
     try {
       const fotoComprimida = await compressProfileImage(arquivo);
+      if (!fotoComprimida) { event.target.value = ""; return; }
       setPersonagem((prev) => ({
         ...prev,
         fotoPerfil: fotoComprimida,
@@ -6531,7 +6362,7 @@ const FichaPersonagem = () => {
 
   return (
     <AbilityReadingLayout>{habilidadeEditando && <AbilityEditDialog key={habilidadeEditando.id} habilidade={habilidadeEditando} fichaId={fichaId} onSubmit={enviarEdicaoHabilidade} onClose={()=>setHabilidadeEditando(null)}/>}<div
-      className={new URLSearchParams(window.location.search).get("embed") === "mesa" ? "ficha-container absoluto-dossier ficha-embutida-mesa" : "ficha-container absoluto-dossier"}
+      className={`ficha-container absoluto-dossier${new URLSearchParams(window.location.search).get("embed") === "mesa" ? " ficha-embutida-mesa" : ""}`}
       style={{
         "--cor-primaria": personagem.temaFicha?.primaria,
         "--cor-secundaria": personagem.temaFicha?.secundaria,
@@ -6571,137 +6402,7 @@ const FichaPersonagem = () => {
                     />
 
                     <div className="profile-overlay"></div>
-                  </div><div className="abs-heading-identity"><span className="abs-eyebrow"><img className="abs-system-sigil" src="/simbolo-absoluto.png" alt="Símbolo do Sistema Absoluto"/>SISTEMA ABSOLUTO / ARQUIVO DE PERSONAGEM</span><span className="abs-character-pronoun">{personagem.pronome || 'Pronome não informado'}</span><h1 aria-label={personagem.nome || 'Identidade desconhecida'}><input className="abs-character-name" aria-label="Nome do personagem" value={personagem.nome || ''} placeholder="Nome do personagem" maxLength={30} onChange={e=>setPersonagem(prev=>({...prev,nome:e.target.value}))}/></h1><p>{personagem.classe || 'Classe não informada'}{arquetipoNome ? ` / ${arquetipoNome}` : ''}</p></div><div className="abs-level"><span>NÍVEL</span><strong>{personagem.nivel || 1}</strong></div></div>
-        <div className="abs-masthead-bottom"><div><button type="button" onClick={abrirUpgradeNivel}>Evolução ↗</button><button type="button" onClick={abrirLoja}>Arsenal ↗</button><button type="button" onClick={()=>{window.location.href=montarUrlFicha(personagem,fichaId,"?upgrade=1&trilha=criacao");}}>Criar habilidade ↗</button></div></div>
-      </header>
-      {adaptacaoAberta && <AdaptacaoEspiral personagem={personagem} fichaId={fichaId} onClose={() => setAdaptacaoAberta(false)} onConcluir={sheet => { localStorage.setItem(`espiral:sheet:v1:${fichaId}`, JSON.stringify(sheet)); window.location.href=`/?sistema=espiral&ficha=${encodeURIComponent(fichaId)}`; }} />}
-      <nav className="menu-ficha-flutuante" aria-label="Atalhos da ficha">
-        {menuFichaAberto && (
-          <div className="menu-ficha-opcoes">
-            <PlayerPageLink className="abs-player-profile-link" id={fichaId} sistema="darkness"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></svg><span>Perfil do Jogador</span><span className="abs-profile-arrow" aria-hidden="true">↗</span></PlayerPageLink>
-            <div className="menu-ficha-identidade">
-              {personagem.fotoPerfil && <img src={personagem.fotoPerfil} alt="" />}
-              <div>
-                <span>Jogador</span>
-                <strong>{personagem.nome || "Personagem"}</strong>
-                <small>Codigo da ficha: <b>{fichaId}</b></small>
-              </div>
-            </div>
-            <button type="button" onClick={abrirUpgradeNivel}>
-              <Icon path={mdiDiceD20} size={1} />
-              <span>Upgrade</span>
-            </button>
-            <button type="button" onClick={abrirLoja}>
-              <Icon path={mdiStorefrontOutline} size={1} />
-              <span>Loja</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMenuFichaAberto(false); setAdaptacaoAberta(true); }}
-            >
-              <Icon path={mdiSwapHorizontal} size={1} />
-              <span>Adaptação ao Espiral</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMenuFichaAberto(false); abrirTabletop(); }}
-            >
-              <Icon path={mdiMapOutline} size={1} />
-              <span>Mapa</span>
-            </button>
-          </div>
-        )}
-        <button
-          type="button"
-          className={`menu-ficha-gatilho${menuFichaAberto ? " aberto" : ""}`}
-          aria-expanded={menuFichaAberto}
-          aria-label={menuFichaAberto ? "Fechar menu da ficha" : "Abrir menu da ficha"}
-          title={menuFichaAberto ? "Fechar menu" : "Abrir menu"}
-          onClick={() => setMenuFichaAberto((aberto) => !aberto)}
-        >
-          <Icon path={menuFichaAberto ? mdiClose : mdiMenu} size={1.15} />
-        </button>
-      </nav>
-
-      {seletorMesaAberto && (
-        <div
-          className="seletor-mesa-overlay"
-          onClick={() => setSeletorMesaAberto(false)}
-        >
-          <section
-            className="seletor-mesa-painel"
-            aria-label="Escolher campanha"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <header>
-              <div>
-                <span>Entrar no tabletop</span>
-                <h2>Escolha uma campanha</h2>
-              </div>
-              <button
-                type="button"
-                title="Fechar"
-                onClick={() => setSeletorMesaAberto(false)}
-              >
-                <Icon path={mdiClose} size={0.85} />
-              </button>
-            </header>
-
-            <div className="seletor-mesa-lista">
-              {carregandoCampanhas ? (
-                <p>Carregando campanhas...</p>
-              ) : erroCampanhas ? (
-                <p className="seletor-mesa-erro">{erroCampanhas}</p>
-              ) : campanhasDaFicha.length ? (
-                campanhasDaFicha.map((campanha) => (
-                  <button
-                    key={campanha.id}
-                    type="button"
-                    onClick={() => entrarNoTabletop(campanha)}
-                  >
-                    <Icon path={mdiMapOutline} size={1} />
-                    <span>
-                      <strong>{campanha.nome}</strong>
-                      <small>Entrar com {personagem.nome || fichaId}</small>
-                    </span>
-                  </button>
-                ))
-              ) : (
-                <p>Esta ficha ainda nao foi adicionada a nenhuma campanha.</p>
-              )}
-            </div>
-          </section>
-        </div>
-      )}
-
-      <aside
-        className="ficha-identificacao-secreta"
-        aria-label="Dados da ficha"
-      >
-        <span>Jogador</span>
-        <strong>{personagem.nomeJogador || "Sem jogador"}</strong>
-        <span>Senha da ficha</span>
-        <strong>{fichaId}</strong>
-      </aside>
-
-      {/* Container Principal: Perfil + Atributos + Sidebar */}
-      <div className="main-content">
-        {/* ... (seu conteúdo existente permanece igual) ... */}
-        <div className="profile-section">
-          <div className="profile-container">
-            {temMarcaPendente && (
-              <button
-                className="marca-pendente-btn"
-                onClick={() => abrirModalMarca(marcasPendentes[0])}
-              >
-                ✦ Escolher seu Destino
-              </button>
-            )}
-            {/* Sanidade */}
-            <div className="sanidade-section">
-              <div className="sanidade-container">
-                <div className="sanidade-inputs">
-<div className="sanidade-completa">
+                  </div><div className="sanidade-completa">
                     <div className="nivel-acima-sanidade">
                       <span className="nivel-label">NÍVEL</span>
                       <span className="nivel-valor">
@@ -6819,38 +6520,162 @@ const FichaPersonagem = () => {
                         />
                       </div>
                     </div>
+                    {ehAbsolutoV1(personagem) && <AbsolutoMedo personagem={personagem} setPersonagem={atualizacao => { revisaoRecursosRef.current += 1; setPersonagem(atualizacao); }} />}
                   </div>
-                  </div></div>{/* Recursos movidos para o cabeçalho */}
-                  
+                  <div className="abs-level"><span>NÍVEL</span><strong>{personagem.nivel || 1}</strong></div></div>
+        <div className="abs-masthead-bottom"><div><button type="button" onClick={abrirUpgradeNivel}>Evolução ↗</button><button type="button" onClick={abrirLoja}>Arsenal ↗</button><button type="button" onClick={()=>{window.location.href=montarUrlFicha(personagem,fichaId,"?upgrade=1&trilha=criacao");}}>Criar habilidade ↗</button></div></div>
+      </header>
+      {adaptacaoAberta && <AdaptacaoEspiral personagem={personagem} fichaId={fichaId} onClose={() => setAdaptacaoAberta(false)} onConcluir={sheet => { localStorage.setItem(`espiral:sheet:v1:${fichaId}`, JSON.stringify(sheet)); window.location.href=`/?sistema=espiral&ficha=${encodeURIComponent(fichaId)}`; }} />}
+      <nav className="menu-ficha-flutuante" aria-label="Atalhos da ficha">
+        {menuFichaAberto && (
+          <div className="menu-ficha-opcoes">
+            <PlayerPageLink className="abs-player-profile-link" id={fichaId} sistema="darkness"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></svg><span>Perfil do Jogador</span><span className="abs-profile-arrow" aria-hidden="true">↗</span></PlayerPageLink>
+            <div className="menu-ficha-identidade">
+              {personagem.fotoPerfil && <img src={personagem.fotoPerfil} alt="" />}
+              <div>
+                <span>Jogador</span>
+                <strong>{personagem.nome || "Personagem"}</strong>
+                <small>Codigo da ficha: <b>{fichaId}</b></small>
+              </div>
             </div>
+            <button type="button" onClick={abrirUpgradeNivel}>
+              <Icon path={mdiDiceD20} size={1} />
+              <span>Upgrade</span>
+            </button>
+            <button type="button" onClick={abrirLoja}>
+              <Icon path={mdiStorefrontOutline} size={1} />
+              <span>Loja</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMenuFichaAberto(false); setAdaptacaoAberta(true); }}
+            >
+              <Icon path={mdiSwapHorizontal} size={1} />
+              <span>Adaptação ao Espiral</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMenuFichaAberto(false); abrirTabletop(); }}
+            >
+              <Icon path={mdiMapOutline} size={1} />
+              <span>Mapa</span>
+            </button>
+          </div>
+        )}
+        <button
+          type="button"
+          className={`menu-ficha-gatilho${menuFichaAberto ? " aberto" : ""}`}
+          aria-expanded={menuFichaAberto}
+          aria-label={menuFichaAberto ? "Fechar menu da ficha" : "Abrir menu da ficha"}
+          title={menuFichaAberto ? "Fechar menu" : "Abrir menu"}
+          onClick={() => setMenuFichaAberto((aberto) => !aberto)}
+        >
+          <Icon path={menuFichaAberto ? mdiClose : mdiMenu} size={1.15} />
+        </button>
+      </nav>
 
+      {seletorMesaAberto && (
+        <div
+          className="seletor-mesa-overlay"
+          onClick={() => setSeletorMesaAberto(false)}
+        >
+          <section
+            className="seletor-mesa-painel"
+            aria-label="Escolher campanha"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header>
+              <div>
+                <span>Entrar no tabletop</span>
+                <h2>Escolha uma campanha</h2>
+              </div>
+              <button
+                type="button"
+                title="Fechar"
+                onClick={() => setSeletorMesaAberto(false)}
+              >
+                <Icon path={mdiClose} size={0.85} />
+              </button>
+            </header>
+
+            <div className="seletor-mesa-lista">
+              {carregandoCampanhas ? (
+                <p>Carregando campanhas...</p>
+              ) : erroCampanhas ? (
+                <p className="seletor-mesa-erro">{erroCampanhas}</p>
+              ) : campanhasDaFicha.length ? (
+                campanhasDaFicha.map((campanha) => (
+                  <button
+                    key={campanha.id}
+                    type="button"
+                    onClick={() => entrarNoTabletop(campanha)}
+                  >
+                    <Icon path={mdiMapOutline} size={1} />
+                    <span>
+                      <strong>{campanha.nome}</strong>
+                      <small>Entrar com {personagem.nome || fichaId}</small>
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <p>Esta ficha ainda nao foi adicionada a nenhuma campanha.</p>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
+
+      <aside
+        className="ficha-identificacao-secreta"
+        aria-label="Dados da ficha"
+      >
+        <span>Jogador</span>
+        <strong>{personagem.nomeJogador || "Sem jogador"}</strong>
+        <span>Senha da ficha</span>
+        <strong>{fichaId}</strong>
+      </aside>
+
+      {carregado && !ehAbsolutoV1(personagem) && <AbsolutoMigration personagem={personagem} onApply={setPersonagem} />}
+      {/* Container Principal: Perfil + Atributos + Sidebar */}
+      <div className="main-content">
+        {/* ... (seu conteúdo existente permanece igual) ... */}
+        <div className="profile-section">
+          <div className="profile-container">
+            {temMarcaPendente && (
+              <button
+                className="marca-pendente-btn"
+                onClick={() => abrirModalMarca(marcasPendentes[0])}
+              >
+                ✦ Escolher seu Destino
+              </button>
+            )}
             {/* Coluna do Centro: Atributos em Linha */}
             <div className="atributoCompleto">
               <div className="atributos-coluna">
                 <div className="atributos-linha">
-                  <Atributo
+                  <Atributo v1={ehAbsolutoV1(personagem)}
                     nome="FORÇA"
                     valor={personagem.atributos.forca}
                     onChange={(valor) => atualizarAtributo("forca", valor)}
                   />
-                  <Atributo
+                  <Atributo v1={ehAbsolutoV1(personagem)}
                     nome="FORTITUDE"
                     valor={personagem.atributos.fonitude}
                     onChange={(valor) => atualizarAtributo("fonitude", valor)}
                   />
-                  <Atributo
+                  <Atributo v1={ehAbsolutoV1(personagem)}
                     nome="INTELIGÊNCIA"
                     valor={personagem.atributos.inteligencia}
                     onChange={(valor) =>
                       atualizarAtributo("inteligencia", valor)
                     }
                   />
-                  <Atributo
+                  <Atributo v1={ehAbsolutoV1(personagem)}
                     nome="REFLEXOS"
                     valor={personagem.atributos.reflexos}
                     onChange={(valor) => atualizarAtributo("reflexos", valor)}
                   />
-                  <Atributo
+                  <Atributo v1={ehAbsolutoV1(personagem)}
                     nome="VONTADE"
                     valor={personagem.atributos.vontade}
                     onChange={(valor) => atualizarAtributo("vontade", valor)}
@@ -6907,6 +6732,7 @@ const FichaPersonagem = () => {
             >
               Personalização
             </button>
+            <button className={`aba-btn ${abaAtiva === 'regras' ? 'ativa' : ''}`} onClick={() => setAbaAtiva('regras')}>Regras</button>
           </div>
 
           <div className="sidebar-conteudo">{conteudoAbas[abaAtiva]}</div>
@@ -7106,7 +6932,7 @@ const FichaPersonagem = () => {
         ${
           !rolandoDados &&
           modalRolagem.tipo !== "dano" &&
-          dado.valor === modalRolagem.maiorResultado
+          (modalRolagem.versaoRegras === "1.0" ? modalRolagem.dadosExitos?.[index] : dado.valor === modalRolagem.maiorResultado)
             ? "maior"
             : ""
         }
@@ -7120,7 +6946,12 @@ const FichaPersonagem = () => {
 
                 {!rolandoDados && !modalRolagem.alvos?.length && (
                   <>
-                    {modalRolagem.tipo === "dano" ? (
+                    {modalRolagem.versaoRegras === '1.0' && modalRolagem.tipo === 'teste' ? <>
+                      <div className="resultado-rolagem"><span>Êxitos / DT {modalRolagem.dt}</span><strong>{modalRolagem.exitos}</strong></div>
+                      <div className="bonus-finais"><span>Finais: {modalRolagem.finais}</span></div>
+                      <div className="total-rolagem"><span>Resultado</span><strong>{modalRolagem.critico ? 'Crítico' : modalRolagem.sucesso ? 'Sucesso' : 'Falha'}</strong></div>
+                      <button type="button" className="fechar-rolagem" disabled={modalRolagem.repetida || modalRolagem.esforco || modalRolagem.danoResolvido || personagem.esperanca.atual < 2} onClick={() => rolarDominioV1(modalRolagem.chaveDominio, modalRolagem)}>Última Tentativa · 2 Esperança</button>
+                    </> : modalRolagem.tipo === "dano" ? (
                       <div className="total-rolagem">
                         <span>Dano Total</span>
                         <strong>{modalRolagem.total}</strong>
@@ -7271,8 +7102,8 @@ const calcularDadoAtributo = (valor) => {
   return mdiDiceD4;
 };
 
-const Atributo = ({ nome, valor, especial = false, onRoll }) => {
-  const dado = calcularDadoAtributo(valor);
+const Atributo = ({ nome, valor, especial = false, onRoll, v1 = false }) => {
+  const dado = v1 ? mdiDiceD6 : calcularDadoAtributo(valor);
 
   return (
     <div className={`atributoCompleto${especial ? " atributo-destino" : ""}`}>
@@ -7294,7 +7125,7 @@ const Atributo = ({ nome, valor, especial = false, onRoll }) => {
               ROLAR 1D20
             </button>
           ) : (
-            <input
+            <NumberInput
               type="number"
               value={valor}
               className="atributo-valor atributo-bloqueado"

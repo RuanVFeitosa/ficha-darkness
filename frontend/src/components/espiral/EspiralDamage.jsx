@@ -1,3 +1,4 @@
+import NumberInput from '../ui/NumberInput';
 import React, { useState } from 'react';
 import { damageImpact, injurySeverity, INJURY_EFFECTS } from '../../utils/espiralInjuries';
 
@@ -18,7 +19,7 @@ export default function EspiralDamage({ region, onApply }) {
     <header className="es-damage-heading"><span className="es-eyebrow">APLICAR FERIMENTO</span><h3>Dano recebido</h3><span className="es-damage-region">{region}</span></header>
     <p>Dano − Proteção − outros efeitos = Impacto.</p>
     <div className="es-damage-fields">
-      {[["Dano rolado", damage, setDamage], ["Proteção aplicada", protection, setProtection], ["Redução por outros efeitos", reduction, setReduction]].map(([label, value, setter]) => <label className="es-field" key={label}><span>{label}</span><input type="number" min="0" step="1" value={value} onChange={event => { setter(event.target.value); setMessage(''); }} /></label>)}
+      {[["Dano rolado", damage, setDamage], ["Proteção aplicada", protection, setProtection], ["Redução por outros efeitos", reduction, setReduction]].map(([label, value, setter]) => <label className="es-field" key={label}><span>{label}</span><NumberInput type="number" min="0" step="1" value={value} onChange={event => { setter(event.target.value); setMessage(''); }} /></label>)}
     </div>
     <label className="es-damage-check"><input type="checkbox" checked={criticalRegion} onChange={event => setCritical(event.target.checked)} /> Região Crítica neste ferimento</label>
     <div className="es-damage-impact"><div><span>IMPACTO</span><strong>{impact}</strong></div><div><b>{severity || 'Sem lesão'}</b><p>{severity ? INJURY_EFFECTS[severity] : 'Sem perda de Integridade e sem lesão.'}</p></div></div>

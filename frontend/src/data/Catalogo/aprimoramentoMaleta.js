@@ -1,4 +1,5 @@
-export const APRIMORAMENTOS_MALETA = {
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
+export const APRIMORAMENTOS_MALETA = normalizarConteudoAbsoluto({
   medicinal: [
     { id: "compartimento-esterilizado", nome: "Compartimento Esterilizado", efeito: "1× por missão, rerrole 1 dado em teste de Cura." },
     { id: "kit-estabilizacao-rapida", nome: "Kit de Estabilização Rápida", efeito: "Estabilizar um aliado morrendo não exige teste (1× por cena)." },
@@ -61,4 +62,4 @@ export const APRIMORAMENTOS_MALETA = {
     { id: "kit-sobrevivencia-urbana", nome: "Kit de Sobrevivência Urbana", efeito: "Sem penalidades em ambientes colapsados." },
     { id: "organizador-neural", nome: "Organizador Neural", efeito: "1× por missão, repita um teste falho." },
   ],
-};
+});

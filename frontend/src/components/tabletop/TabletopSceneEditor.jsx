@@ -1,3 +1,4 @@
+import NumberInput from '../ui/NumberInput';
 import {ACEITAR_AUDIO} from '../../utils/audioUpload';
 import React,{useEffect,useState} from 'react';
 import Icon from '@mdi/react';
@@ -119,7 +120,7 @@ export default function TabletopSceneEditor({editando,setEditando,arquivos,campa
                     <span>{midia.nome || `Mapa ${indice + 1}`}</span>
                     <label>
                       Colunas
-                      <input
+                      <NumberInput
                         type="number"
                         min="1"
                         max="100"
@@ -135,7 +136,7 @@ export default function TabletopSceneEditor({editando,setEditando,arquivos,campa
                     </label>
                     <label>
                       Linhas
-                      <input
+                      <NumberInput
                         type="number"
                         min="1"
                         max="100"
@@ -172,7 +173,7 @@ export default function TabletopSceneEditor({editando,setEditando,arquivos,campa
                     </span>
                     <label>
                       Colunas
-                      <input
+                      <NumberInput
                         type="number"
                         min="1"
                         max="100"
@@ -188,7 +189,7 @@ export default function TabletopSceneEditor({editando,setEditando,arquivos,campa
                     </label>
                     <label>
                       Linhas
-                      <input
+                      <NumberInput
                         type="number"
                         min="1"
                         max="100"
@@ -228,7 +229,7 @@ export default function TabletopSceneEditor({editando,setEditando,arquivos,campa
               </label>            <div className="cena-editor-grade">
               <label>
                 Colunas padrao
-                <input
+                <NumberInput
                   type="number"
                   min="1"
                   max="100"
@@ -240,7 +241,7 @@ export default function TabletopSceneEditor({editando,setEditando,arquivos,campa
               </label>
               <label>
                 Linhas padrao
-                <input
+                <NumberInput
                   type="number"
                   min="1"
                   max="100"
@@ -312,7 +313,7 @@ export default function TabletopSceneEditor({editando,setEditando,arquivos,campa
                 </div>
               )}
             </section>
-<details className="sce-options"><summary>Dificuldades · Espiral</summary>              <fieldset className="tt3-scene-difficulties"><legend>Dificuldades da cena · ESPIRAL</legend>{[['ambiente','Ambiente'],['combateAmbiente','Combate — ambiente'],['conflitos','Conflitos — perseguições e outros']].map(([key,label])=><label key={key}>{label}<input type="number" min="0" max="30" value={editando.dificuldades?.[key] ?? 4} onChange={event=>setEditando({...editando,dificuldades:{ambiente:4,combateAmbiente:4,conflitos:4,...editando.dificuldades,[key]:Math.max(0,Math.min(30,Number(event.target.value)||0))}})}/></label>)}<small>No combate, a dificuldade de cada inimigo é sua Defesa.</small></fieldset>
+<details className="sce-options"><summary>Dificuldades · Espiral</summary>              <fieldset className="tt3-scene-difficulties"><legend>Dificuldades da cena · ESPIRAL</legend>{[['ambiente','Ambiente'],['combateAmbiente','Combate — ambiente'],['conflitos','Conflitos — perseguições e outros']].map(([key,label])=><label key={key}>{label}<NumberInput type="number" min="0" max="30" value={editando.dificuldades?.[key] ?? 4} onChange={event=>setEditando({...editando,dificuldades:{ambiente:4,combateAmbiente:4,conflitos:4,...editando.dificuldades,[key]:Math.max(0,Math.min(30,Number(event.target.value)||0))}})}/></label>)}<small>No combate, a dificuldade de cada inimigo é sua Defesa.</small></fieldset>
 
 </details><details className="sce-options"><summary>Cena especial · abertura e áudio</summary>            <section className="cena-editor-especial">
               <label className="cena-editor-loja">
@@ -329,7 +330,7 @@ export default function TabletopSceneEditor({editando,setEditando,arquivos,campa
                 <label>URL da midia<input value={editando.cenaEspecial.midiaUrl || ""} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, midiaUrl: e.target.value } })} placeholder="https://.../abertura.gif" /></label>
                 <label>URL da musica ou YouTube<input value={editando.cenaEspecial.audioUrl || ""} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, audioUrl: e.target.value, audioUrlPersistida: "" } })} placeholder="https://youtube.com/watch?v=..." /><small>Aceita um video do YouTube ou um link direto de audio.</small></label>
                 <label>Transicao<select value={editando.cenaEspecial.transicao || "cinema"} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, transicao: e.target.value } })}><option value="cinema">Cortinas de cinema</option><option value="fade">Fade sombrio</option><option value="impacto">Impacto</option></select></label>
-                <label>Atraso da musica (ms)<input type="number" min="0" max="30000" step="100" value={editando.cenaEspecial.atrasoAudio || 0} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, atrasoAudio: e.target.value } })} /></label>
+                <label>Atraso da musica (ms)<NumberInput type="number" min="0" max="30000" step="100" value={editando.cenaEspecial.atrasoAudio || 0} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, atrasoAudio: e.target.value } })} /></label>
                 <label className="cena-especial-opcao"><input type="checkbox" checked={editando.cenaEspecial.exibirTitulo !== false} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, exibirTitulo: e.target.checked } })} />Exibir titulo</label>
                 <label className="cena-especial-opcao"><input type="checkbox" checked={editando.cenaEspecial.loop !== false} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, loop: e.target.checked } })} />Repetir video</label>
               </div>}

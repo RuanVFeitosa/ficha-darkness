@@ -40,3 +40,10 @@ code {
   font-family:
     source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
+
+/* A cor se aplica somente ao traço das setas, nunca ao fundo. */
+:root { --control-arrow-color: #fff; }
+:root[data-control-theme="absoluto"] { --control-arrow-color: #bfa66b; }
+:root[data-control-theme="espiral"] { --control-arrow-color: #fff; }
+summary::marker { color: var(--control-arrow-color); }
+summary::-webkit-details-marker { color: var(--control-arrow-color); }

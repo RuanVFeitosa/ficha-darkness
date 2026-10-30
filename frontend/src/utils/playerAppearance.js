@@ -7,6 +7,13 @@ export function variaveisPaleta(p) {
   if (!paletaValida(p)) return {};
   return {'--pj-accent':p.primaria,'--pj-panel':p.secundaria,'--pj-ink':p.texto,'--pj-bg':p.fundo,'--pj-line':p.borda,'--pj-muted':`color-mix(in srgb, ${p.texto} 70%, ${p.fundo})`,'--pj-cyan':p.primaria,'--pj-symbol-filter':(parseInt(p.fundo.slice(1,3),16)*.299+parseInt(p.fundo.slice(3,5),16)*.587+parseInt(p.fundo.slice(5,7),16)*.114)>140 ? 'none' : 'invert(1)'};
 }
+export function variaveisEmblema(p) {
+  const cor = valor => /^#[0-9a-f]{6}$/i.test(valor || '');
+  return {
+    ...(cor(p?.halo) ? { '--pj-halo-color': p.halo } : {}),
+    ...(cor(p?.simbolo) ? { '--pj-symbol-color': p.simbolo } : {}),
+  };
+}
 export async function salvarPaletaFicha(ref, paleta) {
   if (!paletaValida(paleta)) throw new Error('Escolha uma cor válida para cada campo.');
   if (ref.sistema === 'espiral') {
@@ -15,6 +22,7 @@ export async function salvarPaletaFicha(ref, paleta) {
     if (!atual?.attributes) throw new Error('Ficha ESPIRAL não encontrada neste dispositivo.');
     const proxima={...atual,temaFicha:{...paleta}};
     localStorage.setItem(key,JSON.stringify(proxima));
+    window.dispatchEvent(new CustomEvent('darkness:espiral-theme-updated', { detail: { fichaId: `espiral:${ref.id}`, patch: { temaFicha: { ...paleta } } } }));
     return proxima;
   }
   const atual=await buscarPersonagem(ref.id);

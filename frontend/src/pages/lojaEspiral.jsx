@@ -3,11 +3,15 @@ import React, { useMemo, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiArrowLeft, mdiCart, mdiCheck, mdiClose, mdiMedicalBag, mdiPistol, mdiRadio, mdiShield, mdiSword, mdiToolbox, mdiAxe, mdiKnifeMilitary } from "@mdi/js";
 import "../styles/LojaEspiral.css";
+import "../styles/EspiralMerchant.css";
 import { CATALOGO_ESPIRAL, CATEGORIAS_ESPIRAL } from "../data/catalogoEspiral";
 import { obterIconeItem } from "../utils/itemIcons";
+import { iconeLojaEspiral } from '../utils/espiralStoreIcons';
 
 const sheetKey = (id) => `espiral:sheet:v1:${id || "principal"}`;
 const iconForItem = (item) => {
+  const especifico = iconeLojaEspiral(item);
+  if (especifico) return especifico;
   if (item.type === "weapon" && item.weaponGroup === "fogo") {
     const namesForLegacyIcons = {
       Carabina: "Fuzil",
@@ -41,8 +45,14 @@ export default function LojaEspiral() {
   const [category, setCategory] = useState("medicina");
   const [cart, setCart] = useState([]);
   const [notice, setNotice] = useState("");
+  const [busca, setBusca] = useState('');
+  const [selectedId, setSelectedId] = useState('');
   const equipmentCategories = CATEGORIAS_ESPIRAL.filter(({ id: categoryId }) => !["armas", "protecoes"].includes(categoryId));
-  const items = useMemo(() => CATALOGO_ESPIRAL.filter((item) => item.category === (area === "equipamentos" ? category : area) && (area !== "armas" || item.weaponGroup === weaponGroup)), [area, category, weaponGroup]);
+  const items = useMemo(() => {
+    const normalizar = valor => valor.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    return CATALOGO_ESPIRAL.filter((item) => item.category === (area === "equipamentos" ? category : area) && (area !== "armas" || item.weaponGroup === weaponGroup) && normalizar(`${item.name} ${item.detail}`).includes(normalizar(busca.trim())));
+  }, [area, category, weaponGroup, busca]);
+  const selected = items.find(item => item.id === selectedId) || items[0];
   const addToCart = (item) => { setCart((current) => [...current, { ...item, cartId: `${item.id}-${Date.now()}-${current.length}` }]); setNotice(`${item.name} separado para incorporação.`); };
   const removeFromCart = (cartId) => setCart((current) => current.filter((item) => item.cartId !== cartId));
   const finalize = () => {
@@ -88,15 +98,30 @@ export default function LojaEspiral() {
     setCart([]);
   };
   const catalogTitle = area === "equipamentos" ? equipmentCategories.find((entry) => entry.id === category)?.nome : area === "armas" ? "Armas" : "Proteções";
-  return <main className="espiral-store loja-page">
-    <header className="espiral-store-hero loja-hero"><div className="espiral-store-hero-overlay" /><a className="espiral-store-back loja-voltar" href={`?sistema=espiral&ficha=${encodeURIComponent(id)}`}><Icon path={mdiArrowLeft} size={0.8} /> Voltar à ficha</a><div className="espiral-store-hero-copy loja-hero-copy"><span className="loja-kicker">ESPIRAL // TERMINAL DE SUPRIMENTOS</span><h1>O que você leva<br />para o incerto.</h1><p>Recursos de campo catalogados para esta ficha. Separe os itens necessários e incorpore tudo ao arquivo quando estiver pronto.</p></div><div className="espiral-store-sigil" aria-hidden="true"><i /><i /><i /><i /></div></header>
+  return <main className="espiral-store loja-page espiral-merchant" style={{ '--store-texture': `url("${process.env.PUBLIC_URL || ''}/tabletop/textures/concrete_floor_diff_1k.jpg")` }}>
+    <header className="espiral-store-hero loja-hero"><div className="espiral-store-hero-overlay" /><a className="espiral-store-back loja-voltar" href={`?sistema=espiral&ficha=${encodeURIComponent(id)}`}><Icon path={mdiArrowLeft} size={0.8} /> Voltar à ficha</a><div className="espiral-store-hero-copy loja-hero-copy"><span className="loja-kicker">ESPIRAL / DEPÓSITO DE SUPRIMENTOS</span><h1>Leve o necessário.<br /><em>Volte inteiro.</em></h1><p>Uma lâmina confiável. Um colete gasto. O kit que pode salvar alguém. Escolha o que vai acompanhar você lá fora.</p><div className="espiral-store-hero-tags"><span><i/> Suprimentos de campo</span><span>Armas · Proteções · Equipamentos</span></div></div><div className="espiral-store-hero-art" aria-hidden="true"><div className="espiral-store-orbit"/><div className="espiral-store-case"><Icon path={mdiToolbox} size={5}/><span>ESPIRAL / MATERIAL DE CAMPO</span></div><span className="espiral-store-art-note">INSPECIONADO E CATALOGADO<br/>USO EM CAMPO</span><span className="espiral-store-art-cross">+</span></div></header>
     <section className="loja-shell espiral-store-shell">
-      <div className="loja-toolbar" aria-label="Categorias da loja"><button type="button" className={`loja-categoria ${area === "armas" ? "ativa" : ""}`} onClick={() => setArea("armas")}><Icon path={mdiPistol} size={0.8} /> Armas</button><button type="button" className={`loja-categoria ${area === "protecoes" ? "ativa" : ""}`} onClick={() => setArea("protecoes")}><Icon path={mdiShield} size={0.8} /> Proteções</button><button type="button" className={`loja-categoria ${area === "equipamentos" ? "ativa" : ""}`} onClick={() => setArea("equipamentos")}><Icon path={mdiToolbox} size={0.8} /> Equipamentos</button></div>
+      <div className="espiral-store-toolbar-row"><div className="loja-toolbar" aria-label="Categorias da loja"><button type="button" className={`loja-categoria ${area === "armas" ? "ativa" : ""}`} onClick={() => setArea("armas")}><Icon path={mdiPistol} size={0.8} /> Armas</button><button type="button" className={`loja-categoria ${area === "protecoes" ? "ativa" : ""}`} onClick={() => setArea("protecoes")}><Icon path={mdiShield} size={0.8} /> Proteções</button><button type="button" className={`loja-categoria ${area === "equipamentos" ? "ativa" : ""}`} onClick={() => setArea("equipamentos")}><Icon path={mdiToolbox} size={0.8} /> Equipamentos</button></div><label className="espiral-store-search"><span>Buscar no catálogo</span><input type="search" placeholder="Nome ou característica…" value={busca} onChange={e=>setBusca(e.target.value)}/></label></div>
       {area === "armas" && <div className="ritos-subabas espiral-store-subtabs" aria-label="Categorias de armas"><button type="button" className={weaponGroup === "brancas" ? "ativa" : ""} onClick={() => setWeaponGroup("brancas")}>Armas brancas</button><button type="button" className={weaponGroup === "fogo" ? "ativa" : ""} onClick={() => setWeaponGroup("fogo")}>Armas de fogo</button></div>}
       {area === "equipamentos" && <div className="ritos-subabas espiral-store-subtabs" aria-label="Categorias de equipamentos">{equipmentCategories.map((entry) => <button type="button" className={category === entry.id ? "ativa" : ""} onClick={() => setCategory(entry.id)} key={entry.id}>{entry.nome}</button>)}</div>}
       <div className="espiral-store-ledger"><span>CATÁLOGO ATIVO</span><b>{catalogTitle}</b><small>{items.length} REGISTROS DISPONÍVEIS</small></div>{notice && <p className="loja-mensagem espiral-store-notice" role="status">{notice}</p>}
-      <div className="loja-layout"><section className="loja-catalogo" aria-label="Catálogo">{items.map((item, index) => <article className="loja-item espiral-store-item" key={item.id}><div><div className="loja-item-topo"><div className="loja-item-icone">{renderItemIcon(item)}</div><span className="loja-item-tipo">{itemType(item)}</span><span className="espiral-store-index">{String(index + 1).padStart(2, "0")}</span></div><h2>{item.name}</h2>{item.damage && <div className="loja-item-beneficios"><span>DANO // {<EspiralDice value={item.damage}/>}</span></div>}{item.value !== undefined && <div className="loja-defesa-beneficios"><span>PROTEÇÃO // {item.value}</span></div>}<p>{item.detail}</p>{item.region && <p className="espiral-store-region">REGIÃO // {item.region}</p>}</div><div className="loja-item-footer"><button type="button" onClick={() => addToCart(item)}>Separar <Icon path={mdiCart} size={0.75} /></button></div></article>)}</section>
-        <aside className="loja-carrinho espiral-store-cart" aria-label="Itens separados"><div className="loja-carrinho-topo"><div><Icon path={mdiCart} size={0.9} /><span>INCORPORAÇÃO</span></div><strong>{cart.length} {cart.length === 1 ? "item" : "itens"}</strong></div><div className="loja-carrinho-lista">{cart.length === 0 ? <p className="loja-carrinho-vazio">Nenhum item separado.</p> : cart.map((item) => <div className="loja-carrinho-item" key={item.cartId}><span className="loja-carrinho-icone">{renderItemIcon(item, 0.75)}</span><div><strong>{item.name}</strong><small>{itemType(item)}</small></div><button type="button" onClick={() => removeFromCart(item.cartId)} aria-label={`Remover ${item.name}`}><Icon path={mdiClose} size={0.7} /></button></div>)}</div><div className="loja-total"><span>ARQUIVO ATIVO</span><strong>{id === "principal" ? "PRINCIPAL" : id}</strong></div><button className="loja-finalizar" type="button" disabled={!cart.length} onClick={finalize}><Icon path={mdiCheck} size={0.8} /> Incorporar à ficha</button></aside>
+      <div className="loja-layout">
+        <section className="merchant-list" aria-label="Catálogo">
+          <div className="merchant-list-heading"><span>SUPRIMENTOS DISPONÍVEIS</span><small>{String(items.length).padStart(2,'0')}</small></div>
+          {!items.length && <p className="espiral-store-empty">Nenhum item encontrado nesta categoria. Tente outra busca.</p>}
+          {items.map((item,index)=><button type="button" className={`merchant-row ${selected?.id===item.id?'selected':''}`} key={item.id} aria-pressed={selected?.id===item.id} onClick={()=>setSelectedId(item.id)}>
+            <span className="merchant-row-icon" aria-hidden="true">{renderItemIcon(item)}</span><span className="merchant-row-name">{item.name}<small>{itemType(item)}</small></span><span className="merchant-row-stat">{item.damage?<EspiralDice value={item.damage}/>:item.value!==undefined?`+${item.value}`:String(index+1).padStart(2,'0')}</span><span className="merchant-row-arrow" aria-hidden="true">›</span>
+          </button>)}
+        </section>
+        <section className="merchant-inspection" aria-label="Item selecionado">
+          {selected ? <div key={selected.id} className="merchant-inspection-content">
+            <header><span>{itemType(selected)} / {selected.weaponGroup==='fogo'?'ARMA DE FOGO':selected.weaponGroup==='brancas'?'ARMA BRANCA':'SUPRIMENTO DE CAMPO'}</span><small>ESPIRAL · CATÁLOGO DE CAMPO</small></header>
+            <div className="merchant-display" aria-hidden="true"><div className="merchant-display-object">{renderItemIcon(selected,9)}</div><span className="merchant-display-label">{selected.name}</span></div>
+            <div className="merchant-item-title"><h2>{selected.name}</h2><button type="button" onClick={()=>addToCart(selected)}>Separar <Icon path={mdiCart} size={0.75}/></button></div>
+            <div className="merchant-specification"><div><h3>Características</h3><p>{selected.detail}</p>{selected.region && <p>Região protegida: {selected.region}</p>}</div><dl>{selected.damage && <div><dt>Dano</dt><dd><EspiralDice value={selected.damage}/></dd></div>}{selected.value!==undefined && <div><dt>Proteção</dt><dd>{selected.value}</dd></div>}<div><dt>Categoria</dt><dd>{itemType(selected).toLowerCase()}</dd></div><div><dt>Destino</dt><dd>{selected.type==='weapon'?'Armamento':selected.type==='protection'?'Proteções':'Inventário'}</dd></div></dl></div>
+          </div> : <p className="espiral-store-empty">Escolha outra categoria ou ajuste sua busca para inspecionar um item.</p>}
+        </section>
+        <aside className="loja-carrinho espiral-store-cart" aria-label="Itens separados"><div className="loja-carrinho-topo"><div><Icon path={mdiCart} size={0.9} /><span>INCORPORAÇÃO</span></div><strong>{cart.length} {cart.length === 1 ? "item" : "itens"}</strong></div><div className="loja-carrinho-lista">{cart.length === 0 ? <p className="loja-carrinho-vazio">Seu próximo kit começa aqui. Separe os itens do catálogo para montar seu equipamento.</p> : cart.map((item) => <div className="loja-carrinho-item" key={item.cartId}><span className="loja-carrinho-icone">{renderItemIcon(item, 0.75)}</span><div><strong>{item.name}</strong><small>{itemType(item)}</small></div><button type="button" onClick={() => removeFromCart(item.cartId)} aria-label={`Remover ${item.name}`}><Icon path={mdiClose} size={0.7} /></button></div>)}</div><div className="loja-total"><span>ARQUIVO ATIVO</span><strong>{id === "principal" ? "PRINCIPAL" : id}</strong></div><button className="loja-finalizar" type="button" disabled={!cart.length} onClick={finalize}><Icon path={mdiCheck} size={0.8} /> Incorporar à ficha</button></aside>
       </div>
     </section>
   </main>;

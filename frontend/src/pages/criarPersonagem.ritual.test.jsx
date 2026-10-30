@@ -1,0 +1,50 @@
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import CriarPersonagem from './criarPersonagem';
+import { buscarJogador, criarPersonagem } from '../services/personagemApi';
+import { vincularAoJogadorAtivo } from '../services/jogadorApi';
+jest.mock('../services/personagemApi',()=>({buscarJogador:jest.fn(),criarPersonagem:jest.fn(),salvarPersonagem:jest.fn()}));
+jest.mock('../services/jogadorApi',()=>({verificarVagaPersonagem:jest.fn(),vincularAoJogadorAtivo:jest.fn()}));
+jest.mock('./fichaPersonagem',()=>({estadoInicial:{atributos:{},inventario:[]}}));
+
+beforeEach(()=>{
+ jest.clearAllMocks();
+ buscarJogador.mockResolvedValue({nome:'Ana do perfil'});
+ criarPersonagem.mockResolvedValue({fichaId:'lia',personagem:{nome:'Lia'}});
+ window.history.replaceState({},'','/?criar=1&sistema=darkness&jogadorOrigem=1234');
+ window.matchMedia=jest.fn(()=>({matches:true}));
+});
+afterEach(()=>delete window.matchMedia);
+test('apresenta o Absoluto como narrador e mantém a seleção dos fluxos',()=>{
+ render(<CriarPersonagem/>);
+ expect(screen.getByRole('heading',{level:1})).toHaveAccessibleName(/Aproxima-te/);
+ expect(screen.getByText('fala contigo')).toBeInTheDocument();
+ expect(screen.getByRole('link',{name:'← Retornar'})).toHaveAttribute('href','?jogador=1234');
+ expect(screen.getByRole('navigation',{name:'Etapas do rito'})).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:/Criar um Novo Personagem/}));
+ fireEvent.click(screen.getByRole('button',{name:/Continuar/}));
+ expect(screen.getByLabelText('Nome')).toBeInTheDocument();
+ expect(screen.getByRole('heading',{level:1})).toHaveAccessibleName(/Dize teu nome/);
+});
+test('usa o nome do perfil e conclui sem pedir nome do jogador nem código',async()=>{
+ const onNavigate=jest.fn();
+ render(<CriarPersonagem onNavigate={onNavigate}/>);
+ fireEvent.click(screen.getByRole('button',{name:/Adicionar personagem existente/}));
+ fireEvent.change(screen.getByLabelText('Nome'),{target:{value:'Lia'}});
+ expect(screen.queryByLabelText('Nome do Jogador')).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:/Continuar/}));
+ fireEvent.click(screen.getByRole('button',{name:/Continuar/}));
+ fireEvent.click(screen.getByRole('button',{name:/Continuar/}));
+ fireEvent.click(screen.getByRole('button',{name:/O Lutador/}));
+ fireEvent.click(screen.getByRole('button',{name:/Continuar/}));
+ fireEvent.click(screen.getByRole('button',{name:/Continuar/}));
+ expect(screen.getByLabelText('Foto do personagem')).toBeInTheDocument();
+ expect(screen.queryByLabelText(/codigo|código/i)).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:/Continuar/}));
+ expect(screen.getByRole('button',{name:'Criar ficha'})).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Criar ficha'}));
+ await waitFor(()=>expect(onNavigate).toHaveBeenCalled());
+ expect(buscarJogador).toHaveBeenCalledWith('1234');
+ expect(criarPersonagem).toHaveBeenCalledWith(expect.objectContaining({nome:'Lia',nomeJogador:'Ana do perfil'}));
+ expect(vincularAoJogadorAtivo).toHaveBeenCalledWith('lia','darkness');
+});

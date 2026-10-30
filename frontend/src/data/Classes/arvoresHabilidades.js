@@ -1,3 +1,4 @@
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
 import { arvoreEspecialista } from "./arvoreEspecialista";
 import { arvoreAtiradorElite } from "./arvoreAtiradorElite";
 import { arvoreMedicoCampo } from "./arvoreMedicoCampo";
@@ -740,13 +741,13 @@ const arvoreAniquilador = {
     },
   ],
 };
-export const arvoresHabilidades = {
+export const arvoresHabilidades = normalizarConteudoAbsoluto({
   aniquilador: arvoreAniquilador,
   especialista: arvoreEspecialista,
   atiradorElite: arvoreAtiradorElite,
   medicoDeCampo: arvoreMedicoCampo,
   renegado: arvoreRenegado,
-};
+});
 
 const normalizarClasse = (classe) =>
   String(classe || "")
@@ -875,7 +876,7 @@ export const carregarArvoresCustom = () => {
   }
 
   try {
-    arvoresCustomCache = JSON.parse(localStorage.getItem(ARVORES_CUSTOM_KEY)) || {};
+    arvoresCustomCache = normalizarConteudoAbsoluto(JSON.parse(localStorage.getItem(ARVORES_CUSTOM_KEY)) || {});
     return arvoresCustomCache;
   } catch {
     arvoresCustomCache = {};
@@ -884,7 +885,7 @@ export const carregarArvoresCustom = () => {
 };
 
 export const salvarArvoresCustom = (arvores) => {
-  arvoresCustomCache = arvores || {};
+  arvoresCustomCache = normalizarConteudoAbsoluto(arvores || {});
 
   try {
     localStorage.setItem(ARVORES_CUSTOM_KEY, JSON.stringify(arvoresCustomCache));

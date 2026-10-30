@@ -1,4 +1,5 @@
-export const CATALOGO_ITENS_COMUNS = [
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
+export const CATALOGO_ITENS_COMUNS = normalizarConteudoAbsoluto([
   {
     id: "kit-trauma",
     nome: "Kit de Trauma",
@@ -234,4 +235,4 @@ export const CATALOGO_ITENS_COMUNS = [
     entrega: "Violência +2 para imobilizar um alvo rendido",
     bonusTeste: "Violência +2 para imobilizar um alvo rendido",
   },
-];
+]);

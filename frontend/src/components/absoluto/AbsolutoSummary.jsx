@@ -1,7 +1,8 @@
+import { REGIOES, ehAbsolutoV1 } from '../../data/absolutoV1';
 import React from 'react';
 import { fichaHref } from '../../services/jogadorApi';
 import '../../styles/AbsolutoSummary.css';
-const atributos=[['forca','Força'],['fonitude','Fonitude'],['inteligencia','Inteligência'],['reflexos','Reflexos'],['vontade','Vontade']];
+const atributos=[['forca','Força'],['fonitude','Fortitude'],['inteligencia','Inteligência'],['reflexos','Reflexos'],['vontade','Vontade']];
 const membros=[['cabeca','Cabeça'],['torso','Torso'],['bracoDireito','Braço direito'],['bracoEsquerdo','Braço esquerdo'],['pernaDireita','Perna direita'],['pernaEsquerda','Perna esquerda']];
 const valor = v => v && typeof v==='object' ? v.atual ?? v.valor ?? '—' : v ?? '—';
 export function Recurso({nome,dados,classe}) {
@@ -13,6 +14,6 @@ export default function AbsolutoSummary({ficha}) {
  const d=ficha.dados || {};
  return <div className="as-layout">
    <dl className="as-atributos">{atributos.map(([key,nome])=><div key={key}><dt>{nome}</dt><dd>{valor(d.atributos?.[key])}</dd></div>)}</dl>
-   <div className="as-recursos"><div className="as-identidade"><h2>{ficha.nome}</h2><small>NV {d.nivel ?? '—'}</small>{d.nomeJogador && <small>{d.nomeJogador}</small>}<small>{ficha.detalhe || d.classe || 'Sistema Absoluto'}</small></div><h3>Integridade</h3><dl className="as-membros">{membros.map(([key,nome])=><div key={key}><dt>{nome}</dt><dd>{d.membros?.[key]?.atual ?? '—'} / {d.membros?.[key]?.max ?? '—'}</dd></div>)}</dl><Recurso nome="Sanidade" dados={d.sanidade} classe="sanidade"/><Recurso nome="Esperança" dados={d.esperanca} classe="esperanca"/><a className="as-abrir" href={fichaHref(ficha)}>Consultar arquivo ↗</a></div>
+   <div className="as-recursos"><div className="as-identidade"><h2>{ficha.nome}</h2><small>NV {d.nivel ?? '—'}</small>{d.nomeJogador && <small>{d.nomeJogador}</small>}<small>{ficha.detalhe || d.classe || 'Sistema Absoluto'}</small></div><h3>Integridade</h3><dl className="as-membros">{(ehAbsolutoV1(d) ? Object.entries(REGIOES).map(([k,r]) => [k,r.nome]) : membros).map(([key,nome])=><div key={key}><dt>{nome}</dt><dd>{d.membros?.[key]?.atual ?? '—'} / {d.membros?.[key]?.max ?? '—'}</dd></div>)}</dl><Recurso nome="Sanidade" dados={d.sanidade} classe="sanidade"/><Recurso nome="Esperança" dados={d.esperanca} classe="esperanca"/><a className="as-abrir" href={fichaHref(ficha)}>Consultar arquivo ↗</a></div>
  </div>;
 }

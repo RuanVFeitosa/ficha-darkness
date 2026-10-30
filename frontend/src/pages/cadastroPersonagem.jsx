@@ -20,7 +20,7 @@ export default function CadastroPersonagem(){
 const steps=['Identidade','Atributos','Recursos','Vertente','Foto e código','Revisão'];
 export function CriacaoEspiral(){
  const [sheet,setSheet]=useState(freshSheet),[step,setStep]=useState(0),[error,setError]=useState(''),[saving,setSaving]=useState(false),[uploading,setUploading]=useState(false);
- async function uploadPhoto(file) { if(!file)return; setUploading(true);setError('');try{update('profileImage',await compressProfileImage(file));}catch(e){setError(e.message || 'Não foi possível carregar a foto.');}finally{setUploading(false);} }
+ async function uploadPhoto(file) { if(!file)return; setUploading(true);setError('');try{const photo=await compressProfileImage(file);if(photo)update('profileImage',photo);}catch(e){setError(e.message || 'Não foi possível carregar a foto.');}finally{setUploading(false);} }
  const budget=creationWarnings(sheet);
  const update=(key,value)=>setSheet(old=>({...old,[key]:value}));
  function validate(){

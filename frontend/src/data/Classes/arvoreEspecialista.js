@@ -1,4 +1,5 @@
-export const arvoreEspecialista = {
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
+export const arvoreEspecialista = normalizarConteudoAbsoluto({
   classe: "Especialista",
   titulo: "A ESPECIALIZAÇÃO ABSOLUTA",
   beneficio:
@@ -674,4 +675,4 @@ export const arvoreEspecialista = {
       ],
     },
   ],
-};
+});

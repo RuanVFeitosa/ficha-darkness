@@ -1682,6 +1682,8 @@
   min-height: 365px;
 }
 .es-attribute-rail {
+  position: relative;
+  z-index: 1;
   grid-column: 1;
   display: flex;
   flex-direction: column;
@@ -1702,7 +1704,7 @@
 .es-rail-attribute {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr 48px;
+  grid-template-columns: minmax(0, 1fr) 65px;
   grid-template-rows: auto auto auto;
   align-items: center;
   min-height: 68px;
@@ -2133,12 +2135,12 @@
 .espiral-app .es-footer,
 .espiral-app .es-roll-modal,
 .espiral-app .es-attribute-picker {
-  filter: grayscale(1);
+  filter: none;
 }
 .espiral-app .es-content > :not(.es-injury-workspace),
 .espiral-app .es-sidebar,
 .espiral-app .es-injury-workspace > :not(.es-body-map) {
-  filter: grayscale(1);
+  filter: none;
 }
 
 /* Cores semânticas dos recursos vitais. */
@@ -2755,6 +2757,7 @@
 
 .es-attribute-dice-controls{grid-column:2;grid-row:1/4;display:flex;align-items:center;gap:5px;position:relative}.es-attribute-dice-controls .es-rail-value{grid-column:auto;grid-row:auto;cursor:pointer;border:0;padding:0;transition:filter .18s,transform .18s}.es-attribute-dice-controls .es-rail-value:hover:not(:disabled){filter:brightness(1.15);transform:translateY(-2px)}.es-attribute-dice-controls .es-rail-value:focus-visible{outline:0;filter:drop-shadow(0 0 3px #fff)}.es-attribute-add{background:transparent;border:1px solid var(--es-line,#555);color:var(--es-text,#eee);width:22px;height:24px;padding:0;font:18px/1 monospace;cursor:pointer;border-radius:3px}.es-attribute-add:hover:not(:disabled){background:#ffffff18}.es-attribute-add:disabled{opacity:.35;cursor:default}.es-attribute-quantity{position:absolute;top:100%;left:0;background:transparent;border:0;color:var(--es-text,#eee);padding:2px;font:10px monospace;cursor:pointer}.es-attribute-dice-controls button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
 
+.espiral-app .es-attribute-dice-controls .es-attribute-add{display:grid;place-items:center;flex-shrink:0;width:22px;height:24px;font-size:18px}
 .espiral-app .es-attribute-dice-controls .es-attribute-roll{display:grid;place-items:center;flex-shrink:0;min-width:38px;min-height:38px;padding:0;border:0;border-radius:0;background:transparent;color:#111;cursor:pointer}.espiral-app .es-attribute-roll .espiral-die{font-size:17px;width:34px;height:34px;min-width:34px;margin:0;transition:transform .18s,filter .18s}.espiral-app .es-attribute-roll:hover:not(:disabled) .espiral-die{transform:translateY(-2px);filter:brightness(1.1)}.espiral-app .es-attribute-roll:disabled{opacity:.6}.espiral-app .es-attribute-roll:focus-visible{outline:2px solid var(--es-text,#fff);outline-offset:2px}
 
 .espiral-app .es-attribute-dice-controls .es-attribute-quantity{position:absolute;top:-8px;left:21px;z-index:2;display:grid;place-items:center;min-width:25px;height:20px;box-sizing:border-box;padding:2px 5px;border:1px solid #888;border-radius:5px;background:#202020;color:#fff;font:700 11px/1 "Courier New",monospace;letter-spacing:-.5px;box-shadow:0 2px 5px #0009;transform:rotate(12deg);transform-origin:center;cursor:pointer;transition:transform .18s,background .18s,border-color .18s}.espiral-app .es-attribute-dice-controls .es-attribute-quantity:hover{background:#383838;border-color:#eee;transform:rotate(5deg) translateY(-1px)}.espiral-app .es-attribute-dice-controls .es-attribute-quantity:focus-visible{outline:2px solid #fff;outline-offset:3px}@media(prefers-reduced-motion:reduce){.espiral-app .es-attribute-dice-controls .es-attribute-quantity{transition:none}}
@@ -2820,3 +2823,18 @@
 @media (max-width: 400px) {
   .es-combat-kit .es-equipment-row { margin: 5px; padding: 6px; grid-template-columns: 22px minmax(0, 1fr) 65px 46px 20px; gap: 4px; }
 }
+
+/* As cores escolhidas prevalecem sobre os antigos acabamentos fixos. */
+.espiral-app .es-primary,.espiral-app .es-attribute-picker-actions .confirm{background:var(--es-accent);border-color:var(--es-accent);color:var(--es-bg)}
+.espiral-app .es-primary:hover,.espiral-app .es-attribute-picker-actions .confirm:hover{background:color-mix(in srgb,var(--es-accent) 85%,var(--es-bg));border-color:var(--es-accent);color:var(--es-bg)}
+.espiral-app :is(.es-theme-panel,.es-theme-color,.es-defense-card,.es-roll-panel,.es-rule-card,.es-identity,.es-settings,.es-custom-roll,.es-background-copy,.es-equipment-column){background:var(--es-surface);border-color:var(--es-line);color:var(--es-text)}
+.espiral-app :is(input,select,textarea){background:var(--es-surface);border-color:var(--es-line);color:var(--es-text)}
+.espiral-app :is(.es-theme-panel h3,.es-defense-card strong,.es-identity h1,.es-section-heading h2,.es-background-title){color:var(--es-text)}
+.espiral-app :is(.es-theme-panel p,.es-theme-color>span,.es-defense-card small,.es-defense-card .es-eyebrow,.es-section-heading small){color:var(--es-muted)}
+.espiral-app :is(.es-topbar,.es-tabs,.es-breadcrumb,.es-footer,.es-rail-attributes,.es-rail-attribute,.es-section-heading){border-color:var(--es-line)}
+.espiral-app :is(.es-tabs button,.es-rail-attribute,.es-resource-name,.es-theme-color button){color:var(--es-text)}
+.espiral-app .es-tabs button.active,.espiral-app .es-tabs button[aria-selected=true],.espiral-app .es-tabs button[aria-current=page],.espiral-app .es-resource-name.active{color:var(--es-accent);border-color:var(--es-accent)}
+.espiral-app .es-rail-attribute.active{background:color-mix(in srgb,var(--es-accent) 10%,var(--es-bg));border-left-color:var(--es-accent)}
+.espiral-app .es-resource-roll,.espiral-app .es-roll-modal,.espiral-app .es-attribute-picker{background-color:var(--es-surface)!important;border-color:var(--es-line)!important;color:var(--es-text)}
+.espiral-app .es-resource-roll:hover:not(:disabled){background:color-mix(in srgb,var(--es-accent) 15%,var(--es-surface))!important;border-color:var(--es-accent)!important}
+.espiral-app .es-theme-color button:hover,.espiral-app .es-theme-color button:focus-visible{color:var(--es-accent);border-color:var(--es-accent)}

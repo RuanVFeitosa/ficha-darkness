@@ -4,6 +4,12 @@ import PaginaJogador, { catalogoBuilds } from './PaginaJogador';
 import { entrarJogador, carregarFicha } from '../services/jogadorApi';
 import { salvarJogador } from '../services/personagemApi';
 import { listarCampanhasDaFicha } from '../services/mesaApi';
+import { prepararFotoPerfil } from '../utils/playerProfilePhoto';
+import { confirmarDialogo } from '../components/ui/DialogoGlobal';
+import { excluirFichaJogador } from '../services/excluirFichaJogador';
+jest.mock('../services/excluirFichaJogador',()=>({excluirFichaJogador:jest.fn()}));
+jest.mock('../components/ui/DialogoGlobal',()=>({...jest.requireActual('../components/ui/DialogoGlobal'),confirmarDialogo:jest.fn()}));
+jest.mock('../utils/playerProfilePhoto', () => ({ prepararFotoPerfil: jest.fn() }));
 jest.mock('../services/jogadorApi', () => ({ ...jest.requireActual('../services/jogadorApi'), entrarJogador: jest.fn(), carregarFicha: jest.fn() }));
 jest.mock('../services/personagemApi', () => ({ salvarJogador: jest.fn() }));
 jest.mock('../services/mesaApi', () => ({ listarCampanhasDaFicha: jest.fn() }));
@@ -96,4 +102,66 @@ test('perfil com dez personagens bloqueia adicionar outro',async()=>{
  entrarJogador.mockResolvedValue({nome:'Ruan',tema:'escuro',personagens:Array.from({length:10},(_,i)=>({id:String(i),sistema:'darkness'})),builds:[]});
  render(<PaginaJogador codigo="1234"/>);
  expect(await screen.findByRole('button',{name:'Limite de 10 personagens atingido'})).toBeDisabled();
+});
+
+test('cadastro salva nome, pronome e foto sem pedir configuração novamente', async () => {
+ const onNavigate = jest.fn();
+ prepararFotoPerfil.mockResolvedValue('data:image/png;base64,foto');
+ const view = render(<PaginaJogador codigo="novo" onNavigate={onNavigate}/>);
+ fireEvent.change(screen.getByLabelText('Nome do jogador'), { target: { value: ' Ana ' } });
+ fireEvent.change(screen.getByLabelText('Pronome do jogador'), { target: { value: 'Ela' } });
+ fireEvent.change(screen.getByLabelText('Senha do Jogador'), { target: { value: '012345' } });
+ fireEvent.change(screen.getByLabelText(/Foto de perfil/), { target: { files: [new File(['foto'], 'foto.png', { type: 'image/png' })] } });
+ expect(await screen.findByAltText('Prévia da foto de perfil')).toHaveAttribute('src', 'data:image/png;base64,foto');
+ fireEvent.click(screen.getByRole('button', { name: 'Criar / acessar perfil' }));
+ await waitFor(() => expect(onNavigate).toHaveBeenCalledWith('/?jogador=012345'));
+ expect(salvarJogador).toHaveBeenCalledWith('012345', expect.objectContaining({ nome: 'Ana', pronome: 'Ela', fotoPerfil: 'data:image/png;base64,foto', perfilConfigurado: true }));
+ const salvo = salvarJogador.mock.calls[0][1];
+ entrarJogador.mockResolvedValue(salvo);
+ view.rerender(<PaginaJogador codigo="012345"/>);
+ await screen.findByRole('button', { name: 'Editar perfil de Ana' });
+ expect(screen.queryByRole('dialog', { name: 'Como você quer aparecer?' })).not.toBeInTheDocument();
+});
+
+test('cadastro sem foto também conclui a configuração e preserva os dados se salvar falhar', async () => {
+ const onNavigate = jest.fn();
+ salvarJogador.mockRejectedValueOnce(new Error('Falha ao salvar'));
+ render(<PaginaJogador codigo="novo" onNavigate={onNavigate}/>);
+ fireEvent.change(screen.getByLabelText('Nome do jogador'), { target: { value: 'Ana' } });
+ fireEvent.change(screen.getByLabelText('Senha do Jogador'), { target: { value: '012345' } });
+ fireEvent.click(screen.getByRole('button', { name: 'Criar / acessar perfil' }));
+ expect(await screen.findByRole('alert')).toHaveTextContent('Falha ao salvar');
+ expect(onNavigate).not.toHaveBeenCalled();
+ expect(screen.getByLabelText('Nome do jogador')).toHaveValue('Ana');
+ fireEvent.click(screen.getByRole('button', { name: 'Criar / acessar perfil' }));
+ await waitFor(() => expect(onNavigate).toHaveBeenCalled());
+ expect(salvarJogador).toHaveBeenLastCalledWith('012345', expect.objectContaining({ fotoPerfil: '', perfilConfigurado: true }));
+});
+
+test('perfil configurado sem foto não abre a configuração automaticamente', async () => {
+ entrarJogador.mockResolvedValue({ nome: 'Ana', perfilConfigurado: true, personagens: [], builds: [] });
+ render(<PaginaJogador codigo="1234"/>);
+ await screen.findByRole('button', { name: 'Editar perfil de Ana' });
+ expect(screen.queryByRole('dialog', { name: 'Como você quer aparecer?' })).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button', { name: 'Editar perfil de Ana' }));
+ expect(screen.getByRole('dialog', { name: 'Como você quer aparecer?' })).toBeInTheDocument();
+});
+
+test('exclusão exige confirmação e remove a ficha da lista',async()=>{
+ confirmarDialogo.mockResolvedValue(true);
+ excluirFichaJogador.mockResolvedValue({nome:'Ruan',tema:'escuro',personagens:[],builds:[]});
+ render(<PaginaJogador codigo="1234"/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Excluir ficha de Ana'}));
+ await waitFor(()=>expect(excluirFichaJogador).toHaveBeenCalledWith('1234',expect.any(Object),expect.objectContaining({id:'1234',sistema:'darkness'})));
+ expect(confirmarDialogo).toHaveBeenCalledWith(expect.stringContaining('Ana'),expect.objectContaining({confirmarTexto:'Excluir ficha'}));
+ await waitFor(()=>expect(screen.queryByRole('link',{name:'Abrir ficha de Ana'})).not.toBeInTheDocument());
+ expect(screen.getByText('0 / 10 personagens')).toBeInTheDocument();
+});
+test('cancelar exclusão mantém a ficha e não chama o serviço',async()=>{
+ confirmarDialogo.mockResolvedValue(false);
+ render(<PaginaJogador codigo="1234"/>);
+ fireEvent.click(await screen.findByRole('button',{name:'Excluir ficha de Ana'}));
+ await waitFor(()=>expect(confirmarDialogo).toHaveBeenCalled());
+ expect(excluirFichaJogador).not.toHaveBeenCalled();
+ expect(screen.getByRole('link',{name:'Abrir ficha de Ana'})).toBeInTheDocument();
 });

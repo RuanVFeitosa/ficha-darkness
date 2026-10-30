@@ -1,4 +1,5 @@
-export const CATALOGO_COMBATE = [
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
+export const CATALOGO_COMBATE = normalizarConteudoAbsoluto([
   /* =========================================================
    ARMAS DE FOGO
    ========================================================= */
@@ -556,4 +557,4 @@ export const CATALOGO_COMBATE = [
     detalhe: "Pulso curto para localizar aparelhos ativos.",
     entrega: "Bateria 6h",
   },
-];
+]);

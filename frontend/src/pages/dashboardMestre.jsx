@@ -1,3 +1,6 @@
+import NumberInput from '../components/ui/NumberInput';
+import { ehAbsolutoV1, REGIOES } from '../data/absolutoV1';
+import AbsolutoMedo from '../components/absoluto/AbsolutoMedo';
 import AbsolutoAtivosResumo from '../components/absoluto/AbsolutoAtivosResumo';
 import AbilityEditDiff from '../components/habilidades/AbilityEditDiff';
 import {decidirEdicaoHabilidade} from '../utils/abilityEdits';
@@ -503,7 +506,7 @@ const ModalFichaEspiral = ({ ficha, onClose, onSalvar }) => {
         </div>
         <section className="espiral-leitura-recursos"><span>RECURSOS</span>{recursos.length ? recursos.map(([nome, grau]) => <div key={nome}><b>{nome}</b><small>GRAU {Number(grau) + 1}</small></div>) : <p>Nenhum recurso treinado.</p>}</section>
         <section className="espiral-leitura-edicao">
-          <div className="espiral-edicao-bloco espiral-evolucao-mestre"><span>PONTOS DE EVOLUÇÃO <em>{Math.max(0, Number(sheet.evolution?.points) || 0)}</em></span><p>Concedidos pelo Mestre para a Transformação.</p><div className="espiral-evolucao-controles"><input type="number" value={evolucaoDelta} onChange={(event) => setEvolucaoDelta(event.target.value)} step="1" aria-label="Quantidade de pontos de evolução" /><button type="button" onClick={alterarPontosEvolucao}>{Number(evolucaoDelta) >= 0 ? "Conceder" : "Remover"}</button></div></div>
+          <div className="espiral-edicao-bloco espiral-evolucao-mestre"><span>PONTOS DE EVOLUÇÃO <em>{Math.max(0, Number(sheet.evolution?.points) || 0)}</em></span><p>Concedidos pelo Mestre para a Transformação.</p><div className="espiral-evolucao-controles"><NumberInput type="number" value={evolucaoDelta} onChange={(event) => setEvolucaoDelta(event.target.value)} step="1" aria-label="Quantidade de pontos de evolução" /><button type="button" onClick={alterarPontosEvolucao}>{Number(evolucaoDelta) >= 0 ? "Conceder" : "Remover"}</button></div></div>
           <div className="espiral-edicao-bloco"><span>INVENTÁRIO <em>{inventario.length}</em></span><div className="espiral-edicao-lista">{inventario.length ? inventario.map((item, index) => <div key={`${item}-${index}`}><b>{item}</b><button type="button" aria-label={`Remover ${item}`} onClick={() => alterarLista("inventory", inventario.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>) : <small>Nenhum item no inventário.</small>}</div><form onSubmit={(event) => { event.preventDefault(); if (novoItem.trim()) { alterarLista("inventory", [...inventario, novoItem.trim()]); setNovoItem(""); } }}><input value={novoItem} onChange={(event) => setNovoItem(event.target.value)} placeholder="Adicionar item" /><button type="submit">Dar item</button></form></div>
           <div className="espiral-edicao-bloco"><span>HABILIDADES <em>{habilidades.length}</em></span><div className="espiral-edicao-lista">{habilidades.length ? habilidades.map((item, index) => <div key={`${item}-${index}`}><b>{item}</b><button type="button" aria-label={`Remover ${item}`} onClick={() => alterarLista("abilities", habilidades.filter((_, itemIndex) => itemIndex !== index))}>×</button></div>) : <small>Nenhuma habilidade registrada.</small>}</div><form onSubmit={(event) => { event.preventDefault(); if (novaHabilidade.trim()) { alterarLista("abilities", [...habilidades, novaHabilidade.trim()]); setNovaHabilidade(""); } }}><input value={novaHabilidade} onChange={(event) => setNovaHabilidade(event.target.value)} placeholder="Adicionar habilidade" /><button type="submit">Dar habilidade</button></form></div>
         </section>
@@ -2435,7 +2438,7 @@ const DashboardMestre = () => {
 
     const nivelAtual = Math.max(1, parseInt(personagem.nivel, 10) || 1);
     const proximoNivel = Math.min(10, nivelAtual + 1);
-    const pontosGanhos = obterCustosNivel(proximoNivel).acumulado;
+    const pontosGanhos = ehAbsolutoV1(personagem) ? 0 : obterCustosNivel(proximoNivel).acumulado;
     const recursosGanhos = calcularGanhoRecursosNivel(personagem);
 
     if (nivelAtual >= 10) {
@@ -2492,7 +2495,7 @@ const DashboardMestre = () => {
 
     const nivelAtual = Math.max(1, parseInt(personagem.nivel, 10) || 1);
     const proximoNivel = Math.max(1, nivelAtual - 1);
-    const pontosRemovidos = obterCustosNivel(nivelAtual).acumulado;
+    const pontosRemovidos = ehAbsolutoV1(personagem) ? 0 : obterCustosNivel(nivelAtual).acumulado;
     const recursosRemovidos = calcularGanhoRecursosNivel(personagem);
 
     if (nivelAtual <= 1) {
@@ -3519,7 +3522,7 @@ const DashboardMestre = () => {
                             <div className="mestre-admin-grupo creditos">
                               <label>Créditos</label>
                               <div className="mestre-admin-controles">
-                                <input
+                                <NumberInput
                                   type="number"
                                   value={creditosDelta}
                                   onChange={(e) =>
@@ -3535,7 +3538,7 @@ const DashboardMestre = () => {
                             <div className="mestre-admin-grupo mementos">
                               <label>Mementos</label>
                               <div className="mestre-admin-controles">
-                                <input
+                                <NumberInput
                                   type="number"
                                   value={ritosCreditosDelta}
                                   onChange={(e) =>
@@ -3553,7 +3556,7 @@ const DashboardMestre = () => {
                             <div className="mestre-admin-grupo pe">
                               <label>PE · Evolução</label>
                               <div className="mestre-admin-controles">
-                                <input
+                                <NumberInput
                                   type="number"
                                   value={evolucaoDelta}
                                   onChange={(e) =>
@@ -3649,7 +3652,7 @@ const DashboardMestre = () => {
                         <span>Integridade Corporal</span>
 
                         <div className="mestre-corpo-grid novo">
-                          {membrosFicha.map((membro) => {
+                          {(ehAbsolutoV1(personagem) ? Object.entries(REGIOES).map(([chave,r]) => ({chave,nome:r.nome})) : membrosFicha).map((membro) => {
                             const dados = personagem?.membros?.[membro.chave];
 
                             return (
@@ -3796,6 +3799,10 @@ const DashboardMestre = () => {
                     </div>
 
                     <AbsolutoAtivosResumo personagem={personagem} />
+                    {ehAbsolutoV1(personagem) && <section className="mestre-modal-bloco full"><AbsolutoMedo personagem={personagem} setPersonagem={next => {
+                      const atualizado = typeof next === 'function' ? next(personagem) : next;
+                      setPersonagem(atualizado); salvarFichaSelecionada(atualizado);
+                    }} /></section>}
 
                     <section className="mestre-modal-bloco full">
                       <div className="mestre-entrega-cabecalho">
@@ -4151,6 +4158,7 @@ const DashboardMestre = () => {
                                       try {
                                         const fotoComprimida =
                                           await compressProfileImage(arquivo);
+                                        if (!fotoComprimida) { event.target.value = ""; return; }
                                         atualizarCampoInimigo(
                                           "fotoPerfil",
                                           fotoComprimida,
@@ -4170,7 +4178,7 @@ const DashboardMestre = () => {
                                 <div className="inimigo-identidade">
                                   <label>
                                     NV
-                                    <input
+                                    <NumberInput
                                       type="number"
                                       value={inimigo.nivel || 1}
                                       onChange={(e) =>
@@ -4249,7 +4257,7 @@ const DashboardMestre = () => {
                                       <label key={atributo}>
                                         {atributo}
 
-                                        <input
+                                        <NumberInput
                                           type="number"
                                           value={valor}
                                           onChange={(e) =>
@@ -4272,7 +4280,7 @@ const DashboardMestre = () => {
                                 <div className="mestre-form-grid">
                                   <label>
                                     Atual
-                                    <input
+                                    <NumberInput
                                       type="number"
                                       value={inimigo.sanidade?.atual || 0}
                                       onChange={(e) =>
@@ -4287,7 +4295,7 @@ const DashboardMestre = () => {
 
                                   <label>
                                     Máxima
-                                    <input
+                                    <NumberInput
                                       type="number"
                                       value={inimigo.sanidade?.max || 0}
                                       onChange={(e) =>
@@ -4305,7 +4313,7 @@ const DashboardMestre = () => {
                               <section className="inimigo-ficha-bloco">
                                 <h3>Defesa</h3>
 
-                                <input
+                                <NumberInput
                                   type="number"
                                   value={inimigo.defesa || 0}
                                   onChange={(e) =>
@@ -4354,7 +4362,7 @@ const DashboardMestre = () => {
 
                                         <label>
                                           Atual
-                                          <input
+                                          <NumberInput
                                             type="number"
                                             value={dados.atual || 0}
                                             onChange={(e) =>
@@ -4368,7 +4376,7 @@ const DashboardMestre = () => {
 
                                         <label>
                                           Máx
-                                          <input
+                                          <NumberInput
                                             type="number"
                                             value={dados.max || 0}
                                             onChange={(e) =>
@@ -4382,7 +4390,7 @@ const DashboardMestre = () => {
 
                                         <label>
                                           DEF
-                                          <input
+                                          <NumberInput
                                             type="number"
                                             value={dados.defesa || 0}
                                             onChange={(e) =>
@@ -4805,6 +4813,7 @@ const DashboardMestre = () => {
                                     try {
                                       const fotoComprimida =
                                         await compressProfileImage(arquivo);
+                                      if (!fotoComprimida) { event.target.value = ""; return; }
                                       atualizarCampoNpc(
                                         "fotoPerfil",
                                         fotoComprimida,
@@ -4824,7 +4833,7 @@ const DashboardMestre = () => {
                               <div className="inimigo-identidade">
                                 <label>
                                   NV
-                                  <input
+                                  <NumberInput
                                     type="number"
                                     value={npc.nivel || 1}
                                     onChange={(e) =>
@@ -4892,7 +4901,7 @@ const DashboardMestre = () => {
                                   ([atributo, valor]) => (
                                     <label key={atributo}>
                                       {atributo}
-                                      <input
+                                      <NumberInput
                                         type="number"
                                         value={valor || 0}
                                         onChange={(e) =>
@@ -4915,7 +4924,7 @@ const DashboardMestre = () => {
                               <div className="mestre-duplo">
                                 <label>
                                   Atual
-                                  <input
+                                  <NumberInput
                                     type="number"
                                     value={npc.sanidade?.atual || 0}
                                     onChange={(e) =>
@@ -4929,7 +4938,7 @@ const DashboardMestre = () => {
 
                                 <label>
                                   Máxima
-                                  <input
+                                  <NumberInput
                                     type="number"
                                     value={npc.sanidade?.max || 0}
                                     onChange={(e) =>
@@ -4946,7 +4955,7 @@ const DashboardMestre = () => {
                             <section className="mestre-modal-bloco full">
                               <span>Defesa</span>
 
-                              <input
+                              <NumberInput
                                 type="number"
                                 value={npc.defesa || 0}
                                 onChange={(e) =>
@@ -4978,7 +4987,7 @@ const DashboardMestre = () => {
 
                                       <label>
                                         Atual
-                                        <input
+                                        <NumberInput
                                           type="number"
                                           value={dados.atual || 0}
                                           onChange={(e) =>
@@ -4993,7 +5002,7 @@ const DashboardMestre = () => {
 
                                       <label>
                                         Máx
-                                        <input
+                                        <NumberInput
                                           type="number"
                                           value={dados.max || 0}
                                           onChange={(e) =>
@@ -5008,7 +5017,7 @@ const DashboardMestre = () => {
 
                                       <label>
                                         Def
-                                        <input
+                                        <NumberInput
                                           type="number"
                                           value={dados.defesa || 0}
                                           onChange={(e) =>
@@ -5287,7 +5296,7 @@ const DashboardMestre = () => {
                   <div className="mestre-form-grid">
                     <label>
                       Preço
-                      <input
+                      <NumberInput
                         type="number"
                         min="0"
                         value={novoItemLoja.preco}
@@ -5366,7 +5375,7 @@ const DashboardMestre = () => {
                         </label>
                         <label>
                           Defesa concedida
-                          <input
+                          <NumberInput
                             type="number"
                             min="0"
                             value={novoItemLoja.defesaBonus || 0}
@@ -5399,7 +5408,7 @@ const DashboardMestre = () => {
                         </label>
                         <label>
                           Redução de dano
-                          <input
+                          <NumberInput
                             type="number"
                             min="0"
                             value={
@@ -5456,7 +5465,7 @@ const DashboardMestre = () => {
                         </label>
                         <label>
                           Quantidade por compra
-                          <input
+                          <NumberInput
                             type="number"
                             min="1"
                             value={novoItemLoja.quantidade || 0}
@@ -7092,7 +7101,7 @@ const DashboardMestre = () => {
                                   </label>
                                   <label>
                                     Defesa concedida
-                                    <input
+                                    <NumberInput
                                       type="number"
                                       min="0"
                                       value={dados.defesaBonus || 0}
@@ -7125,7 +7134,7 @@ const DashboardMestre = () => {
                                   </label>
                                   <label>
                                     Redução de dano
-                                    <input
+                                    <NumberInput
                                       type="number"
                                       min="0"
                                       value={
@@ -7190,7 +7199,7 @@ const DashboardMestre = () => {
                                     </label>
                                     <label>
                                       Quantidade por compra
-                                      <input
+                                      <NumberInput
                                         type="number"
                                         min="1"
                                         value={dados.quantidade || 0}
@@ -7231,7 +7240,7 @@ const DashboardMestre = () => {
                             <div className="loja-item-footer">
                               <span className="loja-preco">
                                 {isEditing ? (
-                                  <input
+                                  <NumberInput
                                     type="number"
                                     value={dados.preco}
                                     onChange={(e) =>

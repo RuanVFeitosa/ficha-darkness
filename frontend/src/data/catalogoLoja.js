@@ -1,3 +1,4 @@
+import { normalizarConteudoAbsoluto } from '../utils/absolutoModificadores';
 import { CATALOGO_COMBATE } from "./Catalogo/combate";
 import { CATALOGO_RITOS_ABSOLUTOS } from "./Catalogo/ritosAbsolutos";
 import { CATALOGO_PODERES_ABSOLUTOS } from "./Catalogo/poderesAbsolutos";
@@ -44,7 +45,7 @@ export const catalogoPossuiDefesasAtualizadas = (catalogo = []) =>
   catalogo.some(
     (item) =>
       item.id === "algemas-reforcadas" &&
-      item.bonusTeste === "Violência +2 para imobilizar um alvo rendido",
+      item.bonusTeste === "Violência +1 dado para imobilizar um alvo rendido",
   ) &&
   catalogo.some(
     (item) =>
@@ -60,11 +61,11 @@ export const catalogoPossuiDanosBalanceados = (catalogo = []) =>
   catalogo.some(
     (item) =>
       item.id === "fuzil-assalto-helena" &&
-      item.armaStatus?.dmg === "3d12+3",
+      item.armaStatus?.dmg === "4d12",
   ) &&
   catalogo.some(
     (item) =>
-      item.id === "katana-militar" && item.armaStatus?.dmg === "3d8+7",
+      item.id === "katana-militar" && item.armaStatus?.dmg === "4d8",
   );
 
 const aplicarDanosArmasBalanceados = (catalogo = []) => {
@@ -149,7 +150,7 @@ export const normalizarItemLoja = (item, index = 0) => {
         ? item.categoria
         : itemPadrao?.categoria || "itens";
 
-  return {
+  return normalizarConteudoAbsoluto({
     id,
 
     nome: nome || "Item sem nome",
@@ -199,5 +200,5 @@ export const normalizarItemLoja = (item, index = 0) => {
     ).trim(),
     aplicavel: String(item?.aplicavel || modificacaoPadrao?.aplicavel || "").trim(),
     modificacao: item?.modificacao || modificacaoPadrao?.modificacao || null,
-  };
+  });
 };

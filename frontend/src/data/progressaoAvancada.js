@@ -1,3 +1,4 @@
+import { normalizarConteudoAbsoluto } from '../utils/absolutoModificadores';
 const caminhos = {
   aniquilador: [
     ["carrasco", "Carrasco", "Passiva — uma vez por rodada, quando reduzir um inimigo a 0 de Integridade, recupere 2 PE e realize imediatamente um ataque corpo a corpo contra outro alvo ao seu alcance. O ataque extra não pode ativar Carrasco novamente."],
@@ -193,5 +194,5 @@ export const obterMarcosProgressao = (personagem = {}) => {
     marcos[nivel] = { titulo, tipo, opcoes: opcoes(progressao[nivel]) };
   });
 
-  return marcos;
+  return normalizarConteudoAbsoluto(marcos);
 };

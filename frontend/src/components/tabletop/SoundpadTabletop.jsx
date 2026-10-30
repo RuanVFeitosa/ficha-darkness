@@ -1,3 +1,4 @@
+import NumberInput from '../ui/NumberInput';
 import React, { useEffect, useRef, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiClose, mdiMusicNotePlus, mdiRepeat, mdiStop, mdiVolumeHigh } from "@mdi/js";
@@ -164,7 +165,7 @@ const SoundpadTabletop = ({ sons = [], estadoRemoto, controlavel = true, aoAlter
         return <article key={som.id} className={ativo ? "ativo" : ""}>
           <button className="soundpad-disparo" onClick={() => alternar(som)} disabled={!controlavel || !som.url || (!ativo && !sonsProntos[som.id])} title={`${ativo ? "Parar" : sonsProntos[som.id] ? "Tocar" : "Carregando"} ${som.nome}`}><i>{String(indice + 1).padStart(2, "0")}</i><Icon path={ativo ? mdiClose : mdiMusicNotePlus} size={.72} /><span><strong>{som.nome}</strong><small>{sonsProntos[som.id] ? (som.categoria || "Efeito") : "Carregando audio..."}</small></span></button>
           <label className="soundpad-volume-individual"><Icon path={mdiVolumeHigh} size={.48} /><input type="range" min="0" max="100" value={volume} onChange={(e) => ajustarSom(som.id, { volume: Number(e.target.value) })} /><b>{volume}%</b></label>
-          <div className="soundpad-ajustes"><label className={loop ? "ligado" : ""}><input type="checkbox" checked={Boolean(loop)} onChange={(e) => ajustarSom(som.id, { loop: e.target.checked })} /><Icon path={mdiRepeat} size={.5} />Loop</label><label>IN <input type="number" min="0" max="20" step=".1" value={fadeIn} onChange={(e) => ajustarSom(som.id, { fadeIn: Number(e.target.value) })} />s</label><label>OUT <input type="number" min="0" max="20" step=".1" value={fadeOut} onChange={(e) => ajustarSom(som.id, { fadeOut: Number(e.target.value) })} />s</label></div>
+          <div className="soundpad-ajustes"><label className={loop ? "ligado" : ""}><input type="checkbox" checked={Boolean(loop)} onChange={(e) => ajustarSom(som.id, { loop: e.target.checked })} /><Icon path={mdiRepeat} size={.5} />Loop</label><label>IN <NumberInput type="number" min="0" max="20" step=".1" value={fadeIn} onChange={(e) => ajustarSom(som.id, { fadeIn: Number(e.target.value) })} />s</label><label>OUT <NumberInput type="number" min="0" max="20" step=".1" value={fadeOut} onChange={(e) => ajustarSom(som.id, { fadeOut: Number(e.target.value) })} />s</label></div>
         </article>;
       })}
       {!sons.length && <p>Nenhum som cadastrado para esta campanha.</p>}

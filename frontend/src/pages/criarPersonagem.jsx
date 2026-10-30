@@ -1,24 +1,24 @@
+import { normalizarConteudoAbsoluto } from '../utils/absolutoModificadores';
+import { criarBaseV1, atributosIniciais, dominiosIniciais, custoAtributos, custoDominios, integridadeInicial, recursosIniciais, REGIOES } from '../data/absolutoV1';
+import { AbsolutoValores } from '../components/absoluto/AbsolutoValores';
+import ArchetypePicker from '../components/jogador/ArchetypePicker';
+import ClassArtwork from '../components/jogador/ClassArtwork';
 import { vincularAoJogadorAtivo, verificarVagaPersonagem } from "../services/jogadorApi";
 import React, { useEffect, useMemo, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiAccountPlus, mdiChevronLeft, mdiChevronRight } from "@mdi/js";
 import {
-  buscarPersonagem,
+  buscarJogador,
   criarPersonagem,
   salvarPersonagem,
 } from "../services/personagemApi";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
 import { estadoInicial } from "./fichaPersonagem";
-import { calcularModificador } from "../data/evolucaoPersonagem";
 import { compressProfileImage } from "../services/imageCompression";
 import "../styles/CriarPersonagem.css";
+import '../styles/CriacaoAbsolutoRitual.css';
 
 const STORAGE_KEY = "fichaRPG_personagem";
-
-const normalizarCodigoFicha = (valor) =>
-  String(valor || "")
-    .replace(/\D/g, "")
-    .slice(0, 8);
 
 const atributos = [
   { chave: "forca", nome: "Forca" },
@@ -28,64 +28,38 @@ const atributos = [
   { chave: "vontade", nome: "Vontade" },
 ];
 
-const membrosIntegridade = [
-  { chave: "cabeca", nome: "Cabeca" },
-  { chave: "torso", nome: "Torso" },
-  { chave: "bracoDireito", nome: "Braco direito" },
-  { chave: "bracoEsquerdo", nome: "Braco esquerdo" },
-  { chave: "pernaDireita", nome: "Perna direita" },
-  { chave: "pernaEsquerda", nome: "Perna esquerda" },
-];
 
-const classesPersonagem = [
+export const classesPersonagem = [
   {
     id: "aniquilador",
-    nome: "Aniquilidador",
+    nome: "Aniquilador",
     imagem: "/classes/aniquilador.webp",
-    sanidadeBase: 30,
-    sanidadeNivel: "5 SAN (+mod Fort)",
-    esperancaBase: 10,
-    esperancaNivel: "2 PE (+mod VON)",
   },
   {
     id: "especialista",
     nome: "Especialista",
     imagem: "/classes/especialista.webp",
-    sanidadeBase: 20,
-    sanidadeNivel: "2 SAN (+mod Fort)",
-    esperancaBase: 25,
-    esperancaNivel: "7 PE (+mod VON)",
   },
   {
     id: "atiradorElite",
     nome: "Atirador de Elite",
     imagem: "/classes/atirador-elite.webp",
-    sanidadeBase: 25,
-    sanidadeNivel: "3 SAN (+mod Fort)",
-    esperancaBase: 30,
-    esperancaNivel: "3 PE (+mod VON)",
   },
   {
     id: "medicoDeCampo",
-    nome: "Medico de Campo",
+    nome: "Médico de Campo",
     imagem: "/classes/medica.webp",
-    sanidadeBase: 20,
-    sanidadeNivel: "5 SAN (+mod Fort)",
-    esperancaBase: 40,
-    esperancaNivel: "5 PE (+mod VON)",
   },
   {
     id: "renegado",
     nome: "O Renegado",
     imagem: "/classes/renegado.webp",
-    sanidadeBase: 15,
-    sanidadeNivel: "3 SAN (+mod Fort)",
-    esperancaBase: 5,
-    esperancaNivel: "3 PE (+mod VON)",
   },
+  { id: 'ocultista', nome: 'Ocultista', imagem: '/simbolo-absoluto.png' },
+  { id: 'vestigio', nome: 'Vestígio', imagem: '/simbolo-absoluto.png' },
 ];
 
-const arquetiposPersonagem = [
+export const arquetiposPersonagem = normalizarConteudoAbsoluto([
   {
     id: "sobrevivente",
     nome: "O Sobrevivente",
@@ -553,61 +527,35 @@ const arquetiposPersonagem = [
     habilidadePrincipal:
       "Desafio Mortal: Uma vez por combate, foca em um oponente e recebe +4 contra ele.",
   },
-];
+]);
 
-const calcularRecursosClasse = (classe, atributosForm) => {
-  const modFortitude = calcularModificador(atributosForm.fonitude);
-  const modVontade = calcularModificador(atributosForm.vontade);
-
-  return {
-    sanidade: classe.sanidadeBase + modFortitude,
-    esperanca: classe.esperancaBase + modVontade,
-    modFortitude,
-    modVontade,
-  };
-};
+export const calcularRecursosClasse = (classe, atributosForm) => ({
+  ...recursosIniciais(atributosForm),
+  modFortitude: Number(atributosForm.fonitude) || 0,
+  modVontade: Number(atributosForm.vontade) || 0,
+});
 
 // Perguntas do fluxo de criação de personagem.
 
 
 const perguntasExistente = [
-  "Como posso te chamar?",
-  "Mostre-me sua Integridade.",
-  "Por favor, insira as suas caracteristicas.",
-  "Agora escolha seu arquétipo.",
-  "Escolha sua classe.",
-  "Deixe-me ver seu rosto.",
+  'Dize teu nome. Nenhuma alma permanece anônima diante de Mim.',
+  'Mostra-Me as marcas que teu corpo aprendeu a suportar.',
+  'Revela tua natureza. Conheço a força que escondes.',
+  'Toda alma carrega uma verdade. Qual é a tua?',
+  'Escolhe como Meu poder se manifestará através de ti.',
+  'Dá um rosto à tua existência. Que tua história seja reconhecida.',
 ];
 
 const perguntasNovo = [
-  "Como posso te chamar?",
-  "Deixe que o Absoluto defina sua Existencia",
-  "Distribua sua Existencia entre seus atributos.",
-  "Mostre-me sua Integridade.",
-  "Agora escolha seu arquetipo.",
-  "Escolha sua classe.",
-  "Deixe-me ver seu rosto.",
+  'Dize teu nome. Eu te escuto antes mesmo de tua primeira palavra.',
+  'Tua existência começa com cem possibilidades. Decide o que farás delas.',
+  'O dom te foi concedido. Decide onde ele criará raízes.',
+  'A carne é finita. Conhece os limites que tua Fortitude sustenta.',
+  'Sob todas as máscaras, uma verdade. Revela-Me quem és.',
+  'Meu poder tem muitas faces. Por qual delas serás conhecido?',
+  'Mostra-Me teu rosto. Que tua presença deixe uma marca neste mundo.',
 ];
-
-const somarValores = (valores = {}) =>
-  Object.values(valores).reduce(
-    (total, valor) => total + (parseInt(valor, 10) || 0),
-    0,
-  );
-
-const rolarExistencia = () => {
-  const dados = Array.from(
-    { length: 3 },
-    () => Math.floor(Math.random() * 6) + 1,
-  );
-  const maior = Math.max(...dados);
-
-  return {
-    dados,
-    maior,
-    pontos: maior * 20,
-  };
-};
 
 const criarSlugPersonagem = (nome) => {
   const slug = String(nome || "")
@@ -622,7 +570,7 @@ const criarSlugPersonagem = (nome) => {
   return slug || "personagem";
 };
 
-const criarFichaInicial = (form) => ({
+export const criarFichaInicial = (form) => ({
   ...estadoInicial,
 
   nome: form.nome.trim(),
@@ -654,11 +602,7 @@ const criarFichaInicial = (form) => ({
   },
 
   fotoPerfil: form.fotoPerfil,
-  existencia: {
-    dados: form.existenciaDados || [],
-    maiorDado: form.existenciaMaior || 0,
-    pontos: form.existenciaPontos || 0,
-  },
+
 
   sanidade: {
     atual: form.sanidadeInicial,
@@ -690,15 +634,17 @@ const criarFichaInicial = (form) => ({
     ...estadoInicial.atributos,
     ...form.atributos,
   },
+  ...criarBaseV1(form.atributos, form.dominios),
+  existencia: { pontos: 100, gastosAtributos: custoAtributos(form.atributos), gastosDominios: custoDominios(form.dominios) },
+  humanidade: form.humanidade || '',
 });
 
-const CriarPersonagem = () => {
+const CriarPersonagem = ({ onNavigate = destino => window.location.assign(destino) } = {}) => {
   const [modoCadastro, setModoCadastro] = useState(null);
   const [etapa, setEtapa] = useState(0);
   const [textoVisivel, setTextoVisivel] = useState("");
   const [form, setForm] = useState({
     nome: "",
-    nomeJogador: "",
     pronome: "Ele",
     classeId: classesPersonagem[0].id,
     classe: classesPersonagem[0].nome,
@@ -709,31 +655,16 @@ const CriarPersonagem = () => {
     sanidadeInicial: 0,
     esperancaInicial: 0,
     fotoPerfil: "",
-    codigoFicha: "",
     existenciaDados: [],
     existenciaMaior: 0,
-    existenciaPontos: 0,
-    integridade: {
-      cabeca: 100,
-      torso: 500,
-      bracoDireito: 500,
-      bracoEsquerdo: 500,
-      pernaDireita: 500,
-      pernaEsquerda: 500,
-    },
-    atributos: {
-      forca: 0,
-      fonitude: 0,
-      inteligencia: 0,
-      reflexos: 0,
-      vontade: 0,
-    },
+    existenciaPontos: 100,
+    dominios: dominiosIniciais(),
+    humanidade: "",
+    integridade: Object.fromEntries(Object.entries(integridadeInicial(1)).map(([k, m]) => [k, m.max])),
+    atributos: atributosIniciais(),
   });
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
-  const [rolandoExistencia, setRolandoExistencia] = useState(false);
-  const [existenciaTravada, setExistenciaTravada] = useState(false);
-  const [dadosAnimacao, setDadosAnimacao] = useState(["?", "?", "?"]);
   const [classeEmFoco, setClasseEmFoco] = useState(classesPersonagem[0]);
 
   const perguntasAtuais =
@@ -746,30 +677,20 @@ const CriarPersonagem = () => {
   const etapaClasse = modoCadastro === "novo" ? 6 : 5;
   const etapaFoto = modoCadastro === "novo" ? 7 : 6;
   const totalEtapas = perguntasAtuais.length;
-  const pontosAtributosUsados = somarValores(form.atributos);
+  const pontosAtributosUsados = custoAtributos(form.atributos) + custoDominios(form.dominios);
   const pontosAtributosRestantes = Math.max(
     0,
     form.existenciaPontos - pontosAtributosUsados,
   );
-  const pontosIntegridadeMax =
-    modoCadastro === "novo" ? (parseInt(form.atributos.fonitude, 10) || 0) * 20 : null;
-  const pontosIntegridadeUsados = somarValores(form.integridade);
-  const pontosIntegridadeRestantes =
-    pontosIntegridadeMax === null
-      ? null
-      : Math.max(0, pontosIntegridadeMax - pontosIntegridadeUsados);
-
   const dialogoAtual =
     etapa === 0
-      ? "O que deseja fazer?"
+      ? 'Aproxima-te. Vieste receber a existência ou revelar aquela que já carregas?'
       : perguntasAtuais[etapa - 1] ||
-        "Tudo pronto. Agora podemos criar sua ficha.";
+        'Eu vi tuas escolhas. Confirma teu pacto, e tua história terá início.';
+  const nomesRito = modoCadastro === 'existente'
+    ? ['O limiar','O nome','A carne','A natureza','A verdade','O chamado','O selo','O pacto']
+    : ['O limiar','O nome','O julgamento','O dom','A carne','A verdade','O chamado','O selo','O pacto'];
   const ultimaEtapa = etapa > totalEtapas;
-  const dadosExistenciaExibidos = rolandoExistencia
-    ? dadosAnimacao
-    : form.existenciaDados.length > 0
-      ? form.existenciaDados
-      : ["?", "?", "?"];
   const indiceClasseEmFoco = Math.max(
     classesPersonagem.findIndex((classe) => classe.id === classeEmFoco.id),
     0,
@@ -778,17 +699,14 @@ const CriarPersonagem = () => {
   const etapaValida = useMemo(() => {
     if (etapa === 0) return Boolean(modoCadastro);
     if (etapa === etapaNome) {
-      return form.nome.trim().length > 0 && form.nomeJogador.trim().length > 0;
+      return form.nome.trim().length > 0;
     }
     if (etapa === etapaExistencia) return form.existenciaPontos > 0;
     if (modoCadastro === "novo" && etapa === etapaAtributos) {
       return (
         pontosAtributosUsados <= form.existenciaPontos &&
-        atributos.every((atributo) => form.atributos[atributo.chave] <= 50)
+        atributos.every((atributo) => form.atributos[atributo.chave] >= 1 && form.atributos[atributo.chave] <= 3)
       );
-    }
-    if (modoCadastro === "novo" && etapa === etapaIntegridade) {
-      return pontosIntegridadeUsados <= pontosIntegridadeMax;
     }
     if (etapa === etapaArquetipo) {
       return Boolean(form.arquetipoId);
@@ -797,7 +715,7 @@ const CriarPersonagem = () => {
       return form.classe.trim().length > 0;
     }
 
-    if (etapa === etapaFoto) return form.codigoFicha.length >= 4;
+    if (etapa === etapaFoto) return true;
 
     return true;
   }, [
@@ -807,22 +725,21 @@ const CriarPersonagem = () => {
     etapaClasse,
     etapaExistencia,
     etapaFoto,
-    etapaIntegridade,
     etapaNome,
     form.arquetipoId,
     form.atributos,
     form.classe,
-    form.codigoFicha,
     form.existenciaPontos,
     form.nome,
-    form.nomeJogador,
     modoCadastro,
     pontosAtributosUsados,
-    pontosIntegridadeMax,
-    pontosIntegridadeUsados,
   ]);
 
   useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setTextoVisivel(dialogoAtual);
+      return;
+    }
     setTextoVisivel("");
 
     let indice = 0;
@@ -850,10 +767,6 @@ const CriarPersonagem = () => {
       ...prev,
       classeDetalhes: {
         nome: classe.nome,
-        sanidadeBase: classe.sanidadeBase,
-        sanidadeNivel: classe.sanidadeNivel,
-        esperancaBase: classe.esperancaBase,
-        esperancaNivel: classe.esperancaNivel,
         modFortitude: recursos.modFortitude,
         modVontade: recursos.modVontade,
       },
@@ -869,155 +782,11 @@ const CriarPersonagem = () => {
     }));
   };
 
-  const atualizarCodigoFicha = (valor) => {
-    atualizarCampo("codigoFicha", normalizarCodigoFicha(valor));
-  };
-
   const escolherModoCadastro = (modo) => {
     setModoCadastro(modo);
-    setErro("");
-    setRolandoExistencia(false);
+    setErro('');
     setEtapa(1);
-
-    if (modo === "novo") {
-      setForm((prev) => ({
-        ...prev,
-        existenciaDados: existenciaTravada ? prev.existenciaDados : [],
-        existenciaMaior: existenciaTravada ? prev.existenciaMaior : 0,
-        existenciaPontos: existenciaTravada ? prev.existenciaPontos : 0,
-        integridade: Object.fromEntries(
-          membrosIntegridade.map((membro) => [membro.chave, 0]),
-        ),
-        atributos: Object.fromEntries(
-          atributos.map((atributo) => [atributo.chave, 0]),
-        ),
-      }));
-      setDadosAnimacao((prev) =>
-        existenciaTravada && form.existenciaDados.length > 0
-          ? form.existenciaDados
-          : prev,
-      );
-    } else {
-      setForm((prev) => ({
-        ...prev,
-        existenciaDados: existenciaTravada ? prev.existenciaDados : [],
-        existenciaMaior: existenciaTravada ? prev.existenciaMaior : 0,
-        existenciaPontos: existenciaTravada ? prev.existenciaPontos : 0,
-        integridade: {
-          cabeca: 100,
-          torso: 500,
-          bracoDireito: 500,
-          bracoEsquerdo: 500,
-          pernaDireita: 500,
-          pernaEsquerda: 500,
-        },
-      }));
-      if (!existenciaTravada) {
-        setDadosAnimacao(["?", "?", "?"]);
-      }
-    }
-  };
-
-  const rolarExistenciaPersonagem = () => {
-    if (rolandoExistencia || existenciaTravada || form.existenciaPontos > 0) {
-      return;
-    }
-
-    const resultado = rolarExistencia();
-    let giro = 0;
-
-    setRolandoExistencia(true);
-    setErro("");
-    setDadosAnimacao(
-      Array.from({ length: 3 }, () => Math.floor(Math.random() * 6) + 1),
-    );
-
-    const animacao = window.setInterval(() => {
-      giro += 1;
-
-      if (giro >= 14) {
-        window.clearInterval(animacao);
-
-        setDadosAnimacao(resultado.dados);
-        setForm((prev) => ({
-          ...prev,
-          existenciaDados: resultado.dados,
-          existenciaMaior: resultado.maior,
-          existenciaPontos: resultado.pontos,
-          atributos: Object.fromEntries(
-            atributos.map((atributo) => [atributo.chave, 0]),
-          ),
-          integridade: Object.fromEntries(
-            membrosIntegridade.map((membro) => [membro.chave, 0]),
-          ),
-        }));
-        setExistenciaTravada(true);
-        setRolandoExistencia(false);
-        return;
-      }
-
-      setDadosAnimacao(
-        Array.from({ length: 3 }, () => Math.floor(Math.random() * 6) + 1),
-      );
-    }, 80);
-  };
-
-  const atualizarAtributo = (atributo, valor) => {
-    setForm((prev) => ({
-      ...prev,
-      atributos: (() => {
-        const valorNormalizado = Math.max(0, parseInt(valor, 10) || 0);
-        const valorLimitado =
-          modoCadastro === "novo"
-            ? Math.min(50, valorNormalizado)
-            : valorNormalizado;
-        const outrosTotal = Object.entries(prev.atributos).reduce(
-          (total, [chave, atributoValor]) =>
-            chave === atributo
-              ? total
-              : total + (parseInt(atributoValor, 10) || 0),
-          0,
-        );
-        const valorFinal =
-          modoCadastro === "novo"
-            ? Math.min(valorLimitado, Math.max(0, prev.existenciaPontos - outrosTotal))
-            : valorLimitado;
-        const atributosAtualizados = {
-          ...prev.atributos,
-          [atributo]: valorFinal,
-        };
-
-        return atributosAtualizados;
-      })(),
-    }));
-  };
-
-  const atualizarIntegridade = (membro, valor) => {
-    setForm((prev) => ({
-      ...prev,
-      integridade: (() => {
-        const valorNormalizado = Math.max(0, parseInt(valor, 10) || 0);
-        const valorComLimiteCabeca =
-          membro === "cabeca" ? Math.min(100, valorNormalizado) : valorNormalizado;
-        const limite =
-          modoCadastro === "novo"
-            ? (parseInt(prev.atributos.fonitude, 10) || 0) * 20
-            : null;
-        const outrosTotal = Object.entries(prev.integridade).reduce(
-          (total, [chave, membroValor]) =>
-            chave === membro ? total : total + (parseInt(membroValor, 10) || 0),
-          0,
-        );
-
-        return {
-          ...prev.integridade,
-          [membro]:
-            limite === null
-              ? valorComLimiteCabeca
-              : Math.min(valorComLimiteCabeca, Math.max(0, limite - outrosTotal)),
-        };
-      })(),
-    }));
+    setForm(prev => ({ ...prev, existenciaPontos: 100, existenciaDados: [], existenciaMaior: 0, atributos: atributosIniciais(), dominios: dominiosIniciais(), integridade: Object.fromEntries(Object.entries(integridadeInicial(1)).map(([k,m]) => [k,m.max])) }));
   };
 
   const selecionarClasse = (classe) => {
@@ -1035,10 +804,6 @@ const CriarPersonagem = () => {
 
       classeDetalhes: {
         nome: classe.nome,
-        sanidadeBase: classe.sanidadeBase,
-        sanidadeNivel: classe.sanidadeNivel,
-        esperancaBase: classe.esperancaBase,
-        esperancaNivel: classe.esperancaNivel,
         modFortitude: recursos.modFortitude,
         modVontade: recursos.modVontade,
       },
@@ -1075,6 +840,7 @@ const CriarPersonagem = () => {
 
     try {
       const fotoComprimida = await compressProfileImage(arquivo);
+      if (!fotoComprimida) return;
       atualizarCampo("fotoPerfil", fotoComprimida);
       setErro("");
     } catch (error) {
@@ -1082,7 +848,8 @@ const CriarPersonagem = () => {
     }
   };
 
-  const proximaEtapa = () => {
+  const proximaEtapa = (event) => {
+    event?.preventDefault();
     setErro("");
 
     if (!etapaValida) {
@@ -1114,63 +881,31 @@ const CriarPersonagem = () => {
       return;
     }
 
-    if (!form.nomeJogador.trim()) {
-      setErro("Informe o nome do jogador.");
-      setEtapa(etapaNome);
-      return;
-    }
-
     if (modoCadastro === "novo" && form.existenciaPontos <= 0) {
-      setErro("Role a Existencia antes de criar o personagem.");
+      setErro("A criação convencional exige 100 Pontos de Existência.");
       setEtapa(etapaExistencia);
       return;
     }
 
     if (
       modoCadastro === "novo" &&
-      pontosAtributosUsados > form.existenciaPontos
+      (pontosAtributosUsados > 100 || Object.values(form.atributos).some(v => v < 1 || v > 3))
     ) {
-      setErro("A Existencia distribuida nos atributos passou do limite.");
+      setErro("Revise os Atributos (1 a 3), os Domínios (10 EX por nível) e o orçamento de 100 EX.");
       setEtapa(etapaAtributos);
-      return;
-    }
-
-    if (
-      modoCadastro === "novo" &&
-      pontosIntegridadeUsados > pontosIntegridadeMax
-    ) {
-      setErro("A Integridade distribuida passou do limite de Fortitude x20.");
-      setEtapa(etapaIntegridade);
-      return;
-    }
-
-    if (form.codigoFicha.length < 4) {
-      setErro("Informe um codigo numerico da ficha com pelo menos 4 digitos.");
-      setEtapa(etapaFoto);
       return;
     }
 
     setSalvando(true);
 
     try {
-      const fichaInicial = criarFichaInicial(form);
-      const codigoFicha = normalizarCodigoFicha(form.codigoFicha);
-      const fichaExistente = await buscarPersonagem(codigoFicha);
-
-      if (fichaExistente) {
-        setErro("Ja existe uma ficha com esse codigo. Escolha outro numero.");
-        setEtapa(etapaFoto);
-        setSalvando(false);
-        return;
-      }
-
-      await verificarVagaPersonagem(codigoFicha,"darkness");
-      const resposta = codigoFicha
-        ? {
-            fichaId: codigoFicha,
-            personagem: await salvarPersonagem(codigoFicha, fichaInicial),
-          }
-        : await criarPersonagem(fichaInicial);
+      const codigoJogador = new URLSearchParams(window.location.search).get('jogadorOrigem') || sessionStorage.getItem('darkness:jogador');
+      const perfilJogador = codigoJogador ? await buscarJogador(codigoJogador) : null;
+      if (codigoJogador && !perfilJogador?.nome?.trim()) throw new Error('Não foi possível carregar seu perfil. Volte ao painel e tente novamente.');
+      const fichaInicial = criarFichaInicial({ ...form, nomeJogador: perfilJogador?.nome || '' });
+      if (codigoJogador) sessionStorage.setItem('darkness:jogador', codigoJogador);
+      await verificarVagaPersonagem('',"darkness");
+      const resposta = await criarPersonagem(fichaInicial);
 
       const { fichaId, personagem } = resposta;
       const personagemCriado = personagem?.nome ? personagem : fichaInicial;
@@ -1186,7 +921,7 @@ const CriarPersonagem = () => {
       );
       await vincularAoJogadorAtivo(fichaId, "darkness");
       const personagemUrl = criarSlugPersonagem(personagemCriado.nome || form.nome);
-      window.location.href = `/?sistema=darkness&ficha=${encodeURIComponent(personagemUrl)}&senha=${encodeURIComponent(fichaId)}`;
+      onNavigate(`/?sistema=darkness&ficha=${encodeURIComponent(personagemUrl)}&senha=${encodeURIComponent(fichaId)}`);
     } catch (error) {
       setErro(`Nao foi possivel criar a ficha. ${error.message}`);
       setSalvando(false);
@@ -1195,50 +930,55 @@ const CriarPersonagem = () => {
 
   return (
     <main
-      className={`criacao-container ${
+      className={`criacao-container criacao-ritual ${
         etapa === etapaClasse ? "classe-fundo-ativo" : ""
       }`}
     >
-      {etapa === etapaClasse && (
-        <img
-          key={classeEmFoco.id}
-          src={classeEmFoco.imagem}
-          alt=""
-          className="classe-bg-img"
-          aria-hidden="true"
-          decoding="async"
-        />
-      )}
+      <div className="absoluto-santuario" aria-hidden="true"><span/><span/><span/></div>
+      <header className="absoluto-rito-topo"><a href={new URLSearchParams(window.location.search).get('jogadorOrigem') ? `?jogador=${encodeURIComponent(new URLSearchParams(window.location.search).get('jogadorOrigem'))}` : '?'}>← Retornar</a><span>O ABSOLUTO <i> / </i> RITO DA EXISTÊNCIA</span><small>DA VONTADE, A FORMA.</small></header>
+      <nav className="absoluto-rito-progresso" aria-label="Etapas do rito"><ol>{nomesRito.map((nome,i)=><li key={nome} aria-current={etapa===i?'step':undefined} className={etapa>i?'concluida':''}><span>{String(i+1).padStart(2,'0')}</span>{nome}</li>)}</ol></nav>
+      {etapa === etapaClasse && <ClassArtwork classe={classeEmFoco}/>}
       <form className="criacao-form" onSubmit={enviar}>
         <section className="criacao-dialogo">
-          <p className="criacao-kicker">Voz desconhecida</p>
-          <h1>{textoVisivel}</h1>
+          <div className="absoluto-presenca" aria-hidden="true"><div/><img src="/simbolo-absoluto.png" alt=""/></div>
+          <p className="criacao-kicker">O Absoluto <span>fala contigo</span></p>
+          <h1 aria-label={dialogoAtual}>
+            <span className="absoluto-fala-reserva" aria-hidden="true">{dialogoAtual}</span>
+            <span className="absoluto-fala-visivel" aria-hidden="true">{textoVisivel}</span>
+          </h1>
+          <span className="absoluto-dialogo-ornamento" aria-hidden="true">✦</span>
         </section>
 
         <section className="criacao-etapa">
+          <div className="absoluto-etapa-titulo"><span>{String(etapa+1).padStart(2,'0')} / {String(nomesRito.length).padStart(2,'0')}</span><h2>{nomesRito[etapa] || 'O pacto'}</h2></div>
 
           {etapa === 0 && (
             <div className="modo-cadastro-etapa">
               <button
                 type="button"
                 className="modo-cadastro-card"
+                aria-pressed={modoCadastro==='novo'}
                 onClick={() => escolherModoCadastro("novo")}
               >
-                <span>Criar</span>
+                <span>I · A gênese</span>
                 <strong>Criar um Novo Personagem</strong>
+                <p>Receba sua existência. Dê forma a uma vida ainda não escrita.</p>
               </button>
 
               <button
                 type="button"
                 className="modo-cadastro-card"
+                aria-pressed={modoCadastro==='existente'}
                 onClick={() => escolherModoCadastro("existente")}
               >
-                <span>Importar</span>
+                <span>II · A revelação</span>
                 <strong>Adicionar personagem existente</strong>
+                <p>Apresente uma história que já existe. Registre seus atributos e marcas.</p>
               </button>
             </div>
           )}
 
+          {ultimaEtapa && <section className="abs-v1"><h3>Revise sua existência</h3><p>{form.nome} · {form.pronome} · {form.classe} · {form.arquetipo?.nome}</p><p>Existência: {pontosAtributosUsados} / 100 EX investidos. Restantes: {pontosAtributosRestantes} EX.</p><p>Sanidade: {form.sanidadeInicial} · Esperança: {form.esperancaInicial} · Medo: 0</p><p>Os Atributos determinam a quantidade de dados; os Domínios determinam as faces que contam como Êxito.</p><p>Use Voltar para revisar suas escolhas ou Criar ficha para concluir.</p></section>}
           {etapa === etapaNome && (
             <div className="criacao-bloco identidade">
               <label className="campo-largo">
@@ -1251,18 +991,6 @@ const CriarPersonagem = () => {
                   }
                   maxLength={30}
                   autoFocus
-                />
-              </label>
-
-              <label className="campo-largo">
-                <span>Nome do Jogador</span>
-                <input
-                  type="text"
-                  value={form.nomeJogador}
-                  onChange={(event) =>
-                    atualizarCampo("nomeJogador", event.target.value)
-                  }
-                  maxLength={40}
                 />
               </label>
 
@@ -1286,142 +1014,16 @@ const CriarPersonagem = () => {
             </div>
           )}
           
-          {etapa === etapaExistencia && (
-            <div className="existencia-etapa">
-              <div className="existencia-dados">
-                {dadosExistenciaExibidos.map((dado, index) => (
-                  <span
-                    key={`${dado}-${index}`}
-                    className={
-                      [
-                        rolandoExistencia ? "rolando" : "",
-                        !rolandoExistencia && dado === form.existenciaMaior
-                          ? "maior"
-                          : "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ") || undefined
-                    }
-                  >
-                    {dado}
-                  </span>
-                ))}
-              </div>
+          {etapa === etapaExistencia && <div className="abs-v1"><h3>100 Pontos de Existência</h3><p>Todos os personagens convencionais de Nível 1 começam com o mesmo orçamento. A criação usa Atributos e Domínios.</p><p>Cada Atributo começa em 1 gratuitamente. Elevar para 2 custa 10 EX; para 3 custa mais 15 EX.</p></div>}
+          {etapa === etapaAtributos && <div className="abs-v1">
+            <h3>Atributos e Domínios</h3><p>Existência disponível: {pontosAtributosRestantes} / 100 EX</p>
+            <AbsolutoValores personagem={form} criacao onChange={next => setForm({ ...next, integridade: Object.fromEntries(Object.entries(integridadeInicial(next.atributos.fonitude)).map(([k,m]) => [k,m.max])) })} />
+            <p>Cada nível de Domínio custa 10 EX. Investido em Atributos: {custoAtributos(form.atributos)} EX · Domínios: {custoDominios(form.dominios)} EX.</p>
 
-              <button
-                type="button"
-                className="existencia-rolar"
-                onClick={rolarExistenciaPersonagem}
-                disabled={
-                  rolandoExistencia ||
-                  existenciaTravada ||
-                  form.existenciaPontos > 0
-                }
-              >
-                {rolandoExistencia
-                  ? "Rolando..."
-                  : form.existenciaPontos > 0
-                    ? "Rolagem definida"
-                    : "Rolar 3d6"}
-              </button>
+          </div>}
+          {etapa === etapaIntegridade && <div className="abs-v1"><h3>Integridade determinada pela Fortitude</h3><p>Cada região tem sua própria reserva. Os pontos são calculados automaticamente.</p><div className="abs-v1-grid">{Object.entries(integridadeInicial(form.atributos.fonitude)).map(([k,m]) => <article key={k}><strong>{REGIOES[k].nome}</strong><p>{m.max} PI</p></article>)}</div><p>Sanidade: {form.sanidadeInicial} · Esperança: {form.esperancaInicial}</p><label>Humanidade: vínculos, medos e motivações<textarea value={form.humanidade} onChange={e => atualizarCampo('humanidade', e.target.value)} /></label></div>}
 
-              <strong>
-                Voce tem {form.existenciaPontos || 0} de Existencia
-              </strong>
-            </div>
-          )}
-
-          {etapa === etapaAtributos && (
-            <div className="criacao-atributos">
-              {modoCadastro === "novo" && (
-                <div className="criacao-saldo full">
-                  Existencia disponivel: {pontosAtributosRestantes} /{" "}
-                  {form.existenciaPontos}
-                  <small>Maximo 50 pontos por atributo.</small>
-                </div>
-              )}
-              {atributos.map((atributo) => (
-                <label key={atributo.chave}>
-                  <span>{atributo.nome}</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max={modoCadastro === "novo" ? 50 : undefined}
-                    value={form.atributos[atributo.chave]}
-                    onChange={(event) =>
-                      atualizarAtributo(atributo.chave, event.target.value)
-                    }
-                  />
-                </label>
-              ))}
-            </div>
-
-          )}
-          {etapa === etapaIntegridade && (
-            <div className="criacao-integridade">
-              {modoCadastro === "novo" && (
-                <div className="criacao-saldo full">
-                  Integridade disponivel: {pontosIntegridadeRestantes} /{" "}
-                  {pontosIntegridadeMax}
-                  <small>Fortitude x20 pontos para distribuir.</small>
-                </div>
-              )}
-              {membrosIntegridade.map((membro) => (
-                <label key={membro.chave}>
-                  <span>{membro.nome}</span>
-                  <input
-                    type="number"
-                    min="0"
-                    max={membro.chave === "cabeca" ? 100 : undefined}
-                    value={form.integridade[membro.chave]}
-                    onChange={(event) =>
-                      atualizarIntegridade(membro.chave, event.target.value)
-                    }
-                  />
-                </label>
-              ))}
-            </div>
-          )}
-
-          {etapa === etapaArquetipo && (
-            <div className="arquetipos-etapa">
-              {arquetiposPersonagem.map((arquetipo) => (
-                <button
-                  key={arquetipo.id}
-                  type="button"
-                  className={`arquetipo-card ${
-                    form.arquetipoId === arquetipo.id ? "ativo" : ""
-                  }`}
-                  onClick={() => selecionarArquetipo(arquetipo)}
-                >
-                  <span>Arquétipo</span>
-
-                  <h3>{arquetipo.nome}</h3>
-
-                  <p>{arquetipo.descricao}</p>
-
-                  <div className="arquetipo-bloco">
-                    <strong>Vantagens</strong>
-
-                    {arquetipo.vantagens.map((vantagem) => (
-                      <small key={vantagem}>{vantagem}</small>
-                    ))}
-                  </div>
-
-                  <div className="arquetipo-bloco">
-                    <strong>Desvantagem</strong>
-                    <small>{arquetipo.desvantagem}</small>
-                  </div>
-
-                  <div className="arquetipo-bloco habilidade">
-                    <strong>Habilidade Principal</strong>
-                    <small>{arquetipo.habilidadePrincipal}</small>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-
+          {etapa === etapaArquetipo && <ArchetypePicker arquetipos={arquetiposPersonagem} selecionado={form.arquetipoId} onSelect={selecionarArquetipo}/>}
           {etapa === etapaClasse && (
             <div className="classes-etapa">
               <section className="classe-resumo">
@@ -1431,16 +1033,14 @@ const CriarPersonagem = () => {
                 <h2>{classeEmFoco.nome}</h2>
                 <p>
                   Sanidade inicial:{" "}
-                  {classeEmFoco.sanidadeBase +
-                    calcularModificador(form.atributos.fonitude)}
+                  {form.sanidadeInicial}
                 </p>
-                <p>A cada novo nivel: {classeEmFoco.sanidadeNivel}</p>
+                <p>Sanidade máxima = 12 + 2 × Vontade.</p>
                 <p>
                   Esperanca inicial:{" "}
-                  {classeEmFoco.esperancaBase +
-                    calcularModificador(form.atributos.vontade)}
+                  {form.esperancaInicial}
                 </p>
-                <p>A cada novo nivel: {classeEmFoco.esperancaNivel}</p>
+                <p>Esperança máxima = 6 + Vontade. Benefícios de classe que usam a escala antiga devem ser adaptados com o Narrador.</p>
               </section>
 
               <div className="classe-navegacao">
@@ -1479,27 +1079,15 @@ const CriarPersonagem = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(event) => carregarFoto(event.target.files?.[0])}
+                  onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; carregarFoto(file); }}
                 />
               </label>
 
-              <label className="codigo-ficha-cadastro">
-                <span>Codigo numerico da ficha</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={8}
-                  value={form.codigoFicha}
-                  onChange={(event) => atualizarCodigoFicha(event.target.value)}
-                  placeholder="ex: 1234"
-                />
-              </label>
             </div>
           )}
         </section>
 
-        {erro && <p className="criacao-erro">{erro}</p>}
+        {erro && <p className="criacao-erro" role="alert">{erro}</p>}
 
         <div className="criacao-acoes">
           <button

@@ -1,4 +1,10 @@
 /* Absoluto: arquivo editorial, identidade à esquerda e mesa de operações à direita. */
+.absoluto-dossier .controle-dados-pre-rolagem input[type=number]{width:46px;min-width:0;padding:5px;background:transparent;border:1px solid var(--abs-line);border-radius:2px;color:var(--abs-ink);font:inherit;text-align:center}
+.absoluto-dossier .controle-dados-pre-rolagem input[type=checkbox]{accent-color:var(--abs-gold)}
+.absoluto-dossier .medo-regras{margin-top:8px;font:10px/1.6 'Courier New',monospace;color:var(--abs-ink)}
+.absoluto-dossier .medo-regras summary{cursor:pointer;font:inherit}
+.absoluto-dossier .medo-regras p{font:inherit;text-align:left}
+.absoluto-dossier .medo-regras .controle-dados-pre-rolagem{gap:6px;flex-wrap:wrap}
 .ficha-container.absoluto-dossier{--abs-gold:color-mix(in srgb,#b69a54 80%,var(--cor-primaria,#d4af37));--abs-ink:var(--cor-texto,#eee);--abs-line:var(--cor-borda,#333);--abs-panel:color-mix(in srgb,var(--cor-fundo,#080808) 94%,white);--cor-secundaria:#737373;--cor-texto-secundario:#aaa;--cor-fundo-card:#111;--fundo-card:#111;--radius-lg:4px;--radius-md:3px;background:var(--cor-fundo,#080808)!important;color:var(--abs-ink);padding:28px clamp(18px,4vw,72px) 64px!important;max-width:none;min-height:100dvh;font-family:'Courier New',monospace;isolation:isolate}
 .absoluto-dossier *{box-sizing:border-box}
 .absoluto-dossier .abs-masthead{width:100%;max-width:1600px;margin:0 auto 30px;text-align:left;position:relative;border-bottom:1px solid var(--abs-line)}
@@ -176,3 +182,42 @@
 .absoluto-dossier .menu-ficha-opcoes .abs-player-profile-link:focus-visible{outline:2px solid #dbc78f;outline-offset:3px}
 .absoluto-dossier .menu-ficha-opcoes .abs-player-profile-link[aria-disabled=true]{opacity:.6;cursor:progress}
 @media(prefers-reduced-motion:reduce){.absoluto-dossier .menu-ficha-opcoes .abs-player-profile-link{transition:none}}
+
+/* Cabeçalho: retrato e barras juntos, com a identidade no espaço seguinte. */
+.ficha-container.absoluto-dossier .abs-heading{display:grid;grid-template-columns:120px minmax(260px,320px) minmax(0,1fr) 72px;gap:24px;align-items:center}
+.ficha-container.absoluto-dossier .abs-heading .abs-heading-identity{grid-column:3;grid-row:1;min-width:0}
+.ficha-container.absoluto-dossier .abs-heading .profile-wrapper{grid-column:1;grid-row:1;width:120px!important;height:144px!important;margin:0!important}
+.ficha-container.absoluto-dossier .abs-heading .sanidade-completa{grid-column:2;grid-row:1;width:100%!important;min-width:0;gap:16px;border:0;background:transparent;box-shadow:none;padding:0}
+.ficha-container.absoluto-dossier .abs-heading .abs-level{grid-column:4;grid-row:1;margin:0;width:auto;padding:0 0 0 16px}
+@media(max-width:900px){.ficha-container.absoluto-dossier .abs-heading{grid-template-columns:100px minmax(220px,280px) minmax(0,1fr) 56px;gap:16px}.ficha-container.absoluto-dossier .abs-heading .profile-wrapper{width:100px!important;height:124px!important}.ficha-container.absoluto-dossier .abs-heading h1{font-size:36px}}
+@media(max-width:700px){.ficha-container.absoluto-dossier .abs-heading{grid-template-columns:90px minmax(0,1fr);gap:16px}.ficha-container.absoluto-dossier .abs-heading .profile-wrapper{grid-column:1;grid-row:1;width:90px!important;height:116px!important}.ficha-container.absoluto-dossier .abs-heading .abs-heading-identity{grid-column:2;grid-row:1}.ficha-container.absoluto-dossier .abs-heading .sanidade-completa{grid-column:1/-1;grid-row:2}.ficha-container.absoluto-dossier .abs-heading .abs-level{grid-column:1/-1;grid-row:3;display:flex;flex-direction:row;justify-content:flex-start;gap:12px;border:0;padding:0}}
+
+/* Identidade começa no topo, no lugar do antigo título do sistema. */
+.ficha-container.absoluto-dossier .abs-heading .abs-heading-identity{align-self:start}
+.ficha-container.absoluto-dossier .abs-heading .abs-heading-identity h1{margin-top:0}
+
+/* Medo: ações em um painel ancorado, sem expandir a altura do cabeçalho. */
+.absoluto-dossier .medo-regras{position:relative;text-align:left}
+.absoluto-dossier .medo-regras>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 0;list-style:none;color:var(--abs-gold)}
+.absoluto-dossier .medo-regras>summary::-webkit-details-marker{display:none}
+.absoluto-dossier .medo-resumo-extra{font-size:9px;color:#999;text-align:right}
+.absoluto-dossier .medo-painel{position:absolute;z-index:80;top:calc(100% + 12px);left:0;width:400px;max-width:calc(100vw - 40px);max-height:min(570px,70dvh);overflow-y:auto;padding:18px;background:var(--cor-fundo,#080808);border:1px solid var(--abs-line);border-top:2px solid var(--abs-gold);border-radius:3px;box-shadow:0 18px 50px #000b;color:var(--abs-ink)}
+.absoluto-dossier .medo-painel header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin:0 0 12px;padding:0;border:0}
+.absoluto-dossier .medo-painel header small{font:8px 'Courier New',monospace;letter-spacing:.14em;color:#999}
+.absoluto-dossier .medo-painel h3{font:23px Georgia,serif;text-align:left;color:var(--abs-ink);margin:5px 0 0}
+.absoluto-dossier .medo-painel h3 span{font:11px 'Courier New',monospace;color:var(--abs-gold);margin-left:8px}
+.absoluto-dossier .medo-painel .medo-fechar{flex:none;border:0;background:transparent;color:#aaa;font-size:22px;line-height:1;padding:0 3px;cursor:pointer}
+.absoluto-dossier .medo-painel p{font:11px/1.65 'Courier New',monospace;margin:0;text-align:left;color:#bbb}
+.absoluto-dossier .medo-efeito{padding-bottom:12px}
+.absoluto-dossier .medo-ruptura{border-left:2px solid var(--abs-gold);padding:9px 11px;margin:0 0 14px;background:#b69a5408}
+.absoluto-dossier .medo-ruptura strong{display:block;font:10px 'Courier New',monospace;color:var(--abs-gold);margin-bottom:4px}
+.absoluto-dossier .medo-acoes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.absoluto-dossier .medo-acoes button{display:flex;flex-direction:column;gap:5px;align-items:flex-start;justify-content:flex-start;text-align:left;white-space:normal;min-width:0;padding:11px 10px;border:1px solid var(--abs-line);border-radius:2px;background:transparent;color:var(--abs-ink);cursor:pointer;box-shadow:none}
+.absoluto-dossier .medo-acoes button strong{font:10px/1.4 'Courier New',monospace}
+.absoluto-dossier .medo-acoes button small{font:9px/1.5 'Courier New',monospace;color:#999}
+.absoluto-dossier .medo-acoes button:hover:not(:disabled){border-color:var(--abs-gold);background:#b69a540a}
+.absoluto-dossier .medo-acoes button:disabled{opacity:.4;cursor:default}
+.absoluto-dossier .medo-recuperacao{margin-top:14px;border-top:1px solid var(--abs-line);padding-top:12px}
+.absoluto-dossier .medo-recuperacao>summary{color:#aaa;margin-bottom:10px;font:10px 'Courier New',monospace}
+.absoluto-dossier .medo-regras summary:focus-visible,.absoluto-dossier .medo-painel button:focus-visible{outline:2px solid var(--abs-gold);outline-offset:3px}
+@media(max-width:420px){.absoluto-dossier .medo-painel{padding:14px}.absoluto-dossier .medo-acoes{grid-template-columns:1fr}}

@@ -1,2 +1,136 @@
 .espiral-store-firearm-icon{display:block;width:82%;height:82%;object-fit:contain;filter:grayscale(1) brightness(2)}
 .espiral-store{--bg:#050505;--surface:#101010;--line:#343434;--text:#f5f5f5;--muted:#a8a8a8;min-height:100vh;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}.espiral-store *{box-sizing:border-box}.espiral-store-hero{position:relative;min-height:45vh;overflow:hidden;border-bottom:1px solid #fff;background:linear-gradient(118deg,#151515,#070707 55%,#111)}.espiral-store-hero:before{content:"";position:absolute;right:11%;top:-210px;width:560px;height:560px;border:1px solid #555;border-radius:50%;box-shadow:0 0 0 44px #1c1c1c,0 0 0 45px #444,0 0 0 92px #111,0 0 0 93px #333;opacity:.8}.espiral-store-hero:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 59px,#ffffff08 60px 61px);pointer-events:none}.espiral-store-hero-overlay{position:absolute;inset:0;background:linear-gradient(90deg,#05050522,transparent 70%,#05050588)}.espiral-store .loja-voltar{position:absolute;z-index:2;top:22px;left:22px;display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid #555;background:#090909dd;color:var(--text);text-decoration:none;font:700 10px "Courier New",monospace;letter-spacing:.7px;text-transform:uppercase}.espiral-store .loja-voltar:hover{border-color:#fff}.espiral-store .loja-hero-copy{position:relative;z-index:1;width:min(680px,calc(100% - 40px));padding:126px 0 64px;margin-left:clamp(20px,7vw,110px)}.espiral-store .loja-kicker{color:#c7c7c7;font:700 10px "Courier New",monospace;letter-spacing:2px}.espiral-store .loja-hero h1{margin:12px 0;color:var(--text);font:400 clamp(2.3rem,7vw,5.2rem)/.95 Arial,Helvetica,sans-serif;letter-spacing:-3px}.espiral-store .loja-hero p{max-width:560px;margin:0;color:var(--muted);font-size:13px;line-height:1.6}.espiral-store-sigil{position:absolute;z-index:1;right:clamp(28px,8vw,130px);bottom:46px;display:grid;grid-template-columns:repeat(2,1fr);gap:7px;width:92px;aspect-ratio:1;padding:9px;border:1px solid #aaa;transform:rotate(45deg);opacity:.8}.espiral-store-sigil i{border:1px solid #888;background:#ffffff0c}.espiral-store-sigil i:nth-child(2),.espiral-store-sigil i:nth-child(3){background:#eee}.espiral-store-shell{width:min(1800px,calc(100% - 36px));margin:auto;padding:28px 0 44px}.loja-toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}.espiral-store button{cursor:pointer}.espiral-store .loja-categoria,.espiral-store .loja-item-footer button,.espiral-store .loja-finalizar{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:10px 13px;border:1px solid var(--line);background:var(--surface);color:#ddd;font:700 10px "Courier New",monospace;letter-spacing:.7px;text-transform:uppercase}.espiral-store .loja-categoria:hover,.espiral-store .loja-categoria.ativa{border-color:#fff;background:#fff;color:#090909}.espiral-store .ritos-subabas{display:flex;flex-wrap:wrap;gap:8px;margin:-7px 0 25px;padding-left:15px;border-left:1px solid #777}.espiral-store .ritos-subabas button{min-height:33px;padding:6px 12px;border:1px solid var(--line);background:#0c0c0c;color:var(--muted);font:700 9px "Courier New",monospace;letter-spacing:.7px;text-transform:uppercase}.espiral-store .ritos-subabas button:hover,.espiral-store .ritos-subabas button.ativa{border-color:#ddd;background:#ddd;color:#111}.espiral-store-ledger{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;margin-bottom:18px;padding:13px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.espiral-store-ledger span,.espiral-store-ledger small{color:var(--muted);font:9px "Courier New",monospace;letter-spacing:1.4px}.espiral-store-ledger b{font:400 24px Georgia,serif}.espiral-store .loja-mensagem{margin:-7px 0 18px;padding:10px 12px;border-left:2px solid #eee;background:#111;color:#eee;font:700 10px "Courier New",monospace}.loja-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}.espiral-store .loja-catalogo{display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:1px;border:1px solid var(--line);background:var(--line)}.espiral-store .loja-item{display:flex;flex-direction:column;justify-content:space-between;min-height:330px;padding:18px;background:#0a0a0a}.espiral-store .loja-item:hover{background:#151515;box-shadow:inset 0 0 0 1px #eee}.espiral-store .loja-item-topo{position:relative;display:flex;align-items:center;gap:14px;min-height:52px;margin-bottom:12px}.espiral-store .loja-item-icone{display:grid;width:48px;height:48px;flex:0 0 48px;place-items:center;border:1px solid #666;background:#141414;color:#eee}.espiral-store .loja-item-tipo{color:#aaa;font:700 9px "Courier New",monospace;letter-spacing:1px}.espiral-store-index{position:absolute;top:0;right:0;color:#777;font:10px "Courier New",monospace}.espiral-store .loja-item h2{margin:7px 0 14px;color:#f1f1ed;font:400 25px/1.05 Georgia,serif}.espiral-store .loja-item p{color:#aaa;font-size:11px;line-height:1.55}.espiral-store .loja-item-beneficios,.espiral-store .loja-defesa-beneficios{display:grid;gap:5px;margin:0 0 12px}.espiral-store .loja-item-beneficios span,.espiral-store .loja-defesa-beneficios span{padding:6px 8px;border-left:2px solid #eee;background:#ffffff0c;color:#eee;font:700 10px "Courier New",monospace;letter-spacing:.4px}.espiral-store-region{color:#777!important;font:9px "Courier New",monospace!important;letter-spacing:.7px}.espiral-store .loja-item-footer button:hover,.espiral-store .loja-finalizar:hover:not(:disabled){border-color:#eee;background:#eee;color:#080808}.espiral-store .loja-carrinho{position:sticky;top:20px;border:1px solid var(--line);background:#0c0c0c}.espiral-store .loja-carrinho-topo{display:flex;align-items:center;justify-content:space-between;padding:15px;border-bottom:1px solid var(--line)}.espiral-store .loja-carrinho-topo>div{display:flex;align-items:center;gap:8px;color:#eee;font:700 10px "Courier New",monospace;letter-spacing:1px}.espiral-store .loja-carrinho-topo strong{color:#aaa;font:10px "Courier New",monospace}.espiral-store .loja-carrinho-lista{max-height:315px;overflow:auto;padding:5px 15px}.espiral-store .loja-carrinho-vazio{padding:15px 0;color:#888;font:11px "Courier New",monospace}.espiral-store .loja-carrinho-item{display:flex;align-items:center;gap:9px;padding:11px 0;border-bottom:1px solid #292929}.espiral-store .loja-carrinho-item strong{color:#e8e8e8;font-size:12px}.espiral-store .loja-carrinho-item small{display:block;margin-top:4px;color:#777;font:8px "Courier New",monospace;letter-spacing:.8px}.espiral-store .loja-carrinho-icone{display:grid;width:29px;height:29px;flex:0 0 29px;place-items:center;border:1px solid #555;color:#eee}.espiral-store .loja-carrinho-item button{margin-left:auto;border:0;background:transparent;color:#888}.espiral-store .loja-carrinho-item button:hover{color:#fff}.espiral-store .loja-total{display:flex;justify-content:space-between;gap:10px;padding:15px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.espiral-store .loja-total span{color:#888;font:9px "Courier New",monospace;letter-spacing:1px}.espiral-store .loja-total strong{overflow:hidden;color:#eee;font:700 11px "Courier New",monospace;text-overflow:ellipsis}.espiral-store .loja-finalizar{width:calc(100% - 28px);margin:14px}.espiral-store .loja-finalizar:disabled{opacity:.35;cursor:not-allowed}@media(max-width:860px){.loja-layout{grid-template-columns:1fr}.espiral-store .loja-carrinho{position:static}.espiral-store-sigil{opacity:.35}}@media(max-width:600px){.espiral-store-shell{width:min(100% - 28px,1800px)}.espiral-store-hero{min-height:390px}.espiral-store .loja-hero-copy{width:calc(100% - 34px);margin-left:18px;padding-top:108px}.espiral-store .loja-hero h1{font-size:clamp(2.3rem,15vw,4rem)}.espiral-store-ledger{grid-template-columns:1fr;gap:5px}.espiral-store .loja-catalogo{grid-template-columns:1fr}.espiral-store-sigil{right:22px;bottom:25px;width:65px}}
+
+/* Terminal de campo: superfícies em petróleo, sinalização verde e catálogo visual. */
+.espiral-store{--bg:#090e10;--surface:#121c20;--line:#2a393d;--text:#edf4ef;--muted:#9bada9;--store-accent:#b7e6c1;background:radial-gradient(ellipse at 15% 35%,#18302a33,transparent 55%),var(--bg);text-align:left;padding-bottom:40px}
+.espiral-store :focus-visible{outline:2px solid var(--store-accent);outline-offset:4px}
+.espiral-store .espiral-store-hero{min-height:360px;background:radial-gradient(ellipse at 78% 45%,#26473d77,transparent 50%),linear-gradient(110deg,#101c1e,#0a1113);border-bottom:1px solid var(--line)}
+.espiral-store .espiral-store-hero:before{display:none}
+.espiral-store .espiral-store-hero:after{background:linear-gradient(transparent 95%,#b7e6c108 95%),linear-gradient(90deg,transparent 95%,#b7e6c108 95%);background-size:60px 60px;opacity:.4;mask-image:linear-gradient(90deg,transparent,#000)}
+.espiral-store .loja-voltar{top:24px;left:max(24px,calc((100% - 1440px)/2));border:0;background:transparent;padding:8px 0;color:#afc1b9;font-size:10px;letter-spacing:.08em}
+.espiral-store .loja-hero-copy{width:min(650px,57%);margin-left:max(24px,calc((100% - 1440px)/2));padding:100px 0 44px;text-align:left}
+.espiral-store .loja-kicker{color:var(--store-accent);font-size:10px;letter-spacing:.18em}
+.espiral-store .loja-hero h1{font:500 clamp(36px,4.2vw,62px)/1.08 Arial,Helvetica,sans-serif;letter-spacing:-.05em;margin:18px 0;color:var(--text)}
+.espiral-store .loja-hero h1 em{font:italic 1.05em Georgia,serif;color:var(--store-accent);letter-spacing:-.045em}
+.espiral-store .loja-hero p{max-width:460px;font:13px/1.8 Arial,Helvetica,sans-serif;color:#9bada9}
+.espiral-store-hero-tags{display:flex;flex-wrap:wrap;gap:20px;margin-top:26px;font:10px Arial,sans-serif;color:#8ea69b}
+.espiral-store-hero-tags span{display:flex;align-items:center;gap:8px}
+.espiral-store-hero-tags i{height:6px;width:6px;background:var(--store-accent);border-radius:50%;box-shadow:0 0 12px #b7e6c177}
+.espiral-store-hero-art{position:absolute;right:max(24px,calc((100% - 1440px)/2));top:28px;width:36%;height:310px;display:grid;place-items:center;pointer-events:none;color:var(--store-accent)}
+.espiral-store-orbit{position:absolute;width:290px;height:290px;border:1px solid #b7e6c12e;border-radius:50%;box-shadow:0 0 0 24px #b7e6c105,0 0 0 25px #b7e6c110;animation:store-orbit 80s linear infinite}
+.espiral-store-orbit:before{content:'';position:absolute;inset:15px;border:1px dashed #b7e6c122;border-radius:50%}
+.espiral-store-orbit:after{content:'';position:absolute;top:50%;left:-4px;width:7px;height:7px;background:var(--store-accent);border-radius:50%;box-shadow:0 0 14px #b7e6c1}
+.espiral-store-case{display:flex;flex-direction:column;align-items:center;gap:10px;rotate:-10deg;filter:drop-shadow(0 18px 25px #0008);color:#b9d1c4}
+.espiral-store-case>svg{width:130px!important;height:130px!important}
+.espiral-store-case>span{font:8px monospace;letter-spacing:.22em}
+.espiral-store-art-note{position:absolute;bottom:12px;right:0;font:8px/1.8 monospace;letter-spacing:.15em;color:#719889}
+.espiral-store-art-cross{position:absolute;left:10px;top:50px;font:24px monospace;color:#b7e6c166}
+.espiral-store .espiral-store-shell{width:min(1440px,calc(100% - 48px));padding-top:32px}
+.espiral-store-toolbar-row{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-bottom:22px}
+.espiral-store .loja-toolbar{gap:6px;margin:0;padding:5px;border:1px solid var(--line);border-radius:10px;background:#0d1517}
+.espiral-store .loja-categoria{border:0;border-radius:6px;background:transparent;color:var(--muted);padding:12px 20px;font:600 12px Arial,sans-serif;text-transform:none;letter-spacing:0;transition:background .2s,color .2s}
+.espiral-store .loja-categoria.ativa,.espiral-store .loja-categoria:hover{background:var(--store-accent);color:#14261c}
+.espiral-store-search{display:grid;gap:7px;min-width:240px;font:10px Arial,sans-serif;color:var(--muted)}
+.espiral-store-search input{width:100%;border:1px solid var(--line);border-radius:6px;background:#10191c;color:var(--text);padding:11px 14px;font:12px Arial,sans-serif}
+.espiral-store .ritos-subabas{border:0;padding:0;margin:0 0 26px;gap:8px}
+.espiral-store .ritos-subabas button{border-radius:20px;text-transform:none;font:11px Arial,sans-serif;letter-spacing:0;background:transparent;padding:8px 14px;color:var(--muted)}
+.espiral-store .ritos-subabas button.ativa,.espiral-store .ritos-subabas button:hover{background:#b7e6c110;color:var(--store-accent);border-color:#b7e6c166}
+.espiral-store-ledger{border-top:0;padding:0 0 18px;grid-template-columns:1fr auto;margin-bottom:22px}
+.espiral-store-ledger>span{display:none}
+.espiral-store-ledger b{font:500 25px Arial,sans-serif;letter-spacing:-.035em}
+.espiral-store-ledger small{font-size:9px;letter-spacing:.06em;color:#78928a}
+.espiral-store .loja-layout{grid-template-columns:minmax(0,1fr) 300px;gap:26px}
+.espiral-store .loja-catalogo{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;background:transparent;border:0}
+.espiral-store .loja-item{min-height:330px;padding:18px;border:1px solid var(--line);border-radius:10px;background:linear-gradient(150deg,#172327,#0f181b 75%);transition:transform .2s,border-color .2s,box-shadow .2s;text-align:left;overflow:hidden}
+.espiral-store .loja-item:hover{background:linear-gradient(150deg,#1d302f,#121d20 75%);border-color:#8ab99b88;box-shadow:0 12px 25px #0004;transform:translateY(-4px)}
+.espiral-store .loja-item-topo{height:100px;display:block;margin:0 0 18px;border-radius:6px;background:radial-gradient(ellipse at center,#b7e6c111,transparent 75%);border-bottom:1px solid #b7e6c111}
+.espiral-store .loja-item-icone{position:absolute;left:50%;top:44%;translate:-50% -50%;width:80px;height:62px;border:0;background:transparent;color:#b5cfc1;filter:drop-shadow(0 6px 10px #0007)}
+.espiral-store .loja-item-icone>svg{width:55px!important;height:55px!important}
+.espiral-store .loja-item-tipo{position:absolute;bottom:9px;left:0;font:8px Arial,sans-serif;letter-spacing:.14em;color:#82a18f}
+.espiral-store-index{top:4px;color:#557466;font-size:9px}
+.espiral-store .loja-item h2{font:500 20px/1.2 Arial,sans-serif;letter-spacing:-.025em;text-align:left;margin:0 0 14px}
+.espiral-store .loja-item p{font:12px/1.7 Arial,sans-serif;color:#99aaa5;text-align:left}
+.espiral-store .loja-item-beneficios>span,.espiral-store .loja-defesa-beneficios>span{display:flex;align-items:center;gap:8px;background:#b7e6c10b;border:0;border-radius:5px;color:#c9e9d2;padding:9px 10px;font-size:10px;min-height:32px}
+.espiral-store .loja-item-beneficios span span{padding:0;border:0;background:transparent;font:inherit}
+.espiral-store .loja-item-footer{margin-top:20px}
+.espiral-store .loja-item-footer button{width:100%;border-radius:5px;background:#b7e6c109;border-color:#b7e6c133;color:var(--store-accent);font:600 11px Arial,sans-serif;text-transform:none;letter-spacing:.02em;justify-content:space-between}
+.espiral-store .loja-item-footer button:hover{background:var(--store-accent);color:#15261b;border-color:var(--store-accent)}
+.espiral-store .loja-carrinho{top:24px;border-radius:10px;overflow:hidden;background:linear-gradient(145deg,#172422,#0f171a);border-color:#b7e6c133;box-shadow:0 8px 30px #0003}
+.espiral-store .loja-carrinho-topo{padding:20px 18px;border-bottom:1px solid var(--line)}
+.espiral-store .loja-carrinho-topo>div{color:var(--store-accent);font:600 10px Arial,sans-serif;letter-spacing:.1em}
+.espiral-store .loja-carrinho-topo strong{border-radius:12px;background:#b7e6c112;padding:5px 9px;color:var(--store-accent);white-space:nowrap}
+.espiral-store .loja-carrinho-vazio{padding:32px 10px;line-height:1.8;font:12px/1.8 Arial,sans-serif;color:#91a59b;text-align:center}
+.espiral-store .loja-carrinho-item{border-color:var(--line)}
+.espiral-store .loja-carrinho-item strong{font:500 12px Arial,sans-serif;color:var(--text)}
+.espiral-store .loja-carrinho-icone{border:0;color:var(--store-accent);background:#b7e6c10b;border-radius:4px}
+.espiral-store .loja-total{border-color:var(--line);padding:16px 18px}
+.espiral-store .loja-total strong{color:var(--store-accent)}
+.espiral-store .loja-finalizar{border-radius:6px;background:var(--store-accent);border-color:var(--store-accent);color:#14261c;font:600 11px Arial,sans-serif;letter-spacing:0;text-transform:none;padding:14px 10px}
+.espiral-store .loja-finalizar:disabled{background:#1c2927;color:#627a6a;border-color:#304038;opacity:1}
+.espiral-store .loja-finalizar:hover:not(:disabled){background:#d1f5d9;border-color:#d1f5d9;color:#14261c}
+.espiral-store .espiral-store-notice{background:#b7e6c10d;border-color:var(--store-accent);color:var(--store-accent);border-radius:5px;padding:14px;font:12px Arial,sans-serif}
+.espiral-store-empty{grid-column:1/-1;padding:40px 20px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-size:13px;text-align:center}
+@keyframes store-orbit{to{rotate:360deg}}
+@media(max-width:1000px){.espiral-store .loja-layout{grid-template-columns:minmax(0,1fr) 270px}.espiral-store .loja-catalogo{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}.espiral-store-orbit{width:240px;height:240px}}
+@media(max-width:760px){.espiral-store .loja-layout{grid-template-columns:1fr}.espiral-store .loja-carrinho{position:static}.espiral-store-toolbar-row{flex-wrap:wrap;gap:16px}.espiral-store-search{flex:1;min-width:200px}.espiral-store .loja-hero-copy{width:70%;padding-top:90px}.espiral-store-hero-art{right:-80px;opacity:.35;width:40%;top:50px}.espiral-store-art-note{display:none}.espiral-store .loja-categoria{padding:11px 14px}.espiral-store .loja-item{min-height:315px}}
+@media(max-width:480px){.espiral-store .espiral-store-shell{width:calc(100% - 32px)}.espiral-store .loja-hero-copy{margin-left:20px;width:calc(100% - 40px);padding-bottom:32px}.espiral-store .loja-hero h1{font-size:40px}.espiral-store .loja-hero p{font-size:12px;max-width:300px}.espiral-store .loja-hero-copy{z-index:2}.espiral-store-hero-art{opacity:.12}.espiral-store-hero-tags{gap:12px}.espiral-store .loja-catalogo{grid-template-columns:1fr}.espiral-store .loja-item{min-height:300px}.espiral-store-ledger small{font-size:8px}.espiral-store .loja-toolbar{width:100%;justify-content:space-between}.espiral-store .loja-categoria{font-size:11px;padding:11px}.espiral-store-search{width:100%}}
+@media(prefers-reduced-motion:reduce){.espiral-store *,.espiral-store *:before,.espiral-store *:after{animation:none!important;transition:none!important}}
+
+/* Depósito: concreto, ferro escurecido e etiquetas de latão envelhecido. */
+.espiral-store{--bg:#0b0a09;--surface:#191715;--line:#3b3630;--text:#e4ded3;--muted:#a49b8e;--store-accent:#c4ac7d;background:radial-gradient(ellipse at 50% 0,#30271a33,transparent 65%),#0b0a09}
+.espiral-store .espiral-store-hero{background:linear-gradient(90deg,#0b0a09f5 5%,#100e0bd9 55%,#0b0a09cc),var(--store-texture) center/700px;border-bottom:1px solid #554633;min-height:360px;box-shadow:inset 0 -40px 60px #0005}
+.espiral-store .espiral-store-hero:after{background:repeating-linear-gradient(0deg,transparent 0 3px,#00000014 3px 4px);background-size:auto;mask-image:none;opacity:.4}
+.espiral-store .espiral-store-hero-overlay{background:radial-gradient(ellipse at 75% 20%,#b08b4a12,transparent 55%)}
+.espiral-store .loja-voltar{color:#aaa092;font-weight:400;letter-spacing:.1em}
+.espiral-store .loja-kicker{color:#ad9671;font-weight:400;letter-spacing:.22em}
+.espiral-store .loja-hero h1{font:400 clamp(40px,4.6vw,68px)/1.05 Georgia,'Times New Roman',serif;letter-spacing:-.045em;color:#e4ded3}
+.espiral-store .loja-hero h1 em{font:italic 1em Georgia,serif;letter-spacing:-.04em;color:#c4b396}
+.espiral-store .loja-hero p{font:13px/1.9 Arial,sans-serif;color:#a69b8c;max-width:435px}
+.espiral-store-hero-tags{font:9px 'Courier New',monospace;color:#9a8a73;letter-spacing:.05em}
+.espiral-store-hero-tags i{background:#a38a60;box-shadow:none;border-radius:0;width:5px;height:5px}
+.espiral-store-hero-art{color:#b3a185}
+.espiral-store-orbit{border:1px solid #89755655;box-shadow:0 0 0 12px #0002,0 0 0 13px #89755622,0 0 0 35px #0001; background:radial-gradient(circle,#a186530a,transparent 70%)}
+.espiral-store-orbit:before{border-color:#b29b7426;inset:10px}
+.espiral-store-orbit:after{background:#9e855e;box-shadow:none;border-radius:0;width:5px;height:5px}
+.espiral-store-case{color:#a79d8d;filter:drop-shadow(0 12px 5px #0009);rotate:-8deg}
+.espiral-store-case>svg{opacity:.85}
+.espiral-store-case>span{color:#8b7f6c;font-size:8px;letter-spacing:.15em;border-top:1px solid #8b7f6c55;padding-top:12px}
+.espiral-store-art-note{color:#81725d;font-family:'Courier New',monospace}
+.espiral-store-art-cross{color:#80705266}
+.espiral-store .loja-toolbar{background:#11100f;border-color:#3c362f;border-radius:2px;padding:3px}
+.espiral-store .loja-categoria{border-radius:1px;font:11px 'Courier New',monospace;text-transform:uppercase;letter-spacing:.06em;color:#a99d8e}
+.espiral-store .loja-categoria.ativa,.espiral-store .loja-categoria:hover{background:#b6a181;color:#17130e;box-shadow:inset 0 1px #e2d1b34d}
+.espiral-store-search{color:#958977;font:9px 'Courier New',monospace;letter-spacing:.03em}
+.espiral-store-search input{background:#141210;border-color:#3c362e;border-radius:2px;color:#ded4c5}
+.espiral-store .ritos-subabas button{border-radius:2px;font:10px 'Courier New',monospace;background:transparent;border-color:#36312a;color:#928575}
+.espiral-store .ritos-subabas button.ativa,.espiral-store .ritos-subabas button:hover{background:#b59b6810;border-color:#8f7957;color:#c4ad86}
+.espiral-store-ledger b{font:28px Georgia,serif;letter-spacing:-.025em;color:#ded4c5}
+.espiral-store-ledger small{color:#8c7c64;font:9px 'Courier New',monospace}
+.espiral-store .loja-item{border-color:#38322b;border-radius:2px;background:linear-gradient(140deg,#25221d66,#11100fee 55%),var(--store-texture) center/460px;box-shadow:inset 0 1px #ffffff06;position:relative}
+.espiral-store .loja-item:after{content:'';position:absolute;top:6px;right:6px;width:3px;height:3px;border-radius:50%;background:#746856;box-shadow:0 1px 2px #000;pointer-events:none}
+.espiral-store .loja-item:hover{background:linear-gradient(140deg,#38302266,#15120fee 55%),var(--store-texture) center/460px;border-color:#8a7553;box-shadow:0 10px 24px #0006;transform:translateY(-3px)}
+.espiral-store .loja-item-topo{background:radial-gradient(ellipse,#90816a14,transparent 75%);border-color:#8a755326;border-radius:0;height:110px}
+.espiral-store .loja-item-icone{color:#b7ad9e;filter:drop-shadow(2px 7px 3px #0009)}
+.espiral-store .espiral-store-firearm-icon{filter:grayscale(1) brightness(1.4)}
+.espiral-store .loja-item-tipo{color:#9e8b6b;font:8px 'Courier New',monospace;letter-spacing:.13em}
+.espiral-store-index{color:#77674e;font-family:'Courier New',monospace}
+.espiral-store .loja-item h2{font:24px/1.15 Georgia,serif;color:#e0d7c9;letter-spacing:-.02em}
+.espiral-store .loja-item p{color:#a89b89;font-size:12px}
+.espiral-store .loja-item-beneficios>span,.espiral-store .loja-defesa-beneficios>span{color:#d4c09c;background:#c5a56a0b;border-left:2px solid #806c4b;border-radius:0;letter-spacing:.04em}
+.espiral-store .loja-item-beneficios .espiral-die{background:#d5c9b3;color:#18140e;padding:0;min-width:20px;min-height:20px}
+.espiral-store .loja-item-beneficios .espiral-die>span{color:#18140e;font-weight:bold;background:transparent}
+.espiral-store .loja-item-footer button{border-radius:1px;background:#b59b680a;border-color:#68583f;color:#beab8b;font:10px 'Courier New',monospace;text-transform:uppercase}
+.espiral-store .loja-item-footer button:hover{background:#b6a181;border-color:#b6a181;color:#17130e}
+.espiral-store .loja-carrinho{border-radius:2px;border-color:#635039;background:linear-gradient(135deg,#252016,#13110e 60%);box-shadow:0 8px 30px #0005}
+.espiral-store .loja-carrinho-topo{border-bottom:1px solid #4c402f;background:#b69a6408}
+.espiral-store .loja-carrinho-topo>div{color:#c2ad8a;font:10px 'Courier New',monospace}
+.espiral-store .loja-carrinho-topo strong{border-radius:1px;background:#b69a6410;color:#c2ad8a}
+.espiral-store .loja-carrinho-vazio{color:#968774}
+.espiral-store .loja-carrinho-item strong{color:#d5c9b6}
+.espiral-store .loja-carrinho-item small{color:#958165}
+.espiral-store .loja-carrinho-icone{color:#b9a68a;background:#b69a6408;border-radius:0}
+.espiral-store .loja-total strong{color:#c2ad8a}
+.espiral-store .loja-finalizar{background:#b7a07a;border-color:#b7a07a;border-radius:1px;color:#1a140d;font:10px 'Courier New',monospace;text-transform:uppercase}
+.espiral-store .loja-finalizar:hover:not(:disabled){background:#d1bd9a;border-color:#d1bd9a;color:#1a140d}
+.espiral-store .loja-finalizar:disabled{background:#242018;color:#76694f;border-color:#3c3427}
+.espiral-store .espiral-store-notice{border-radius:1px;background:#b69a640c;color:#c8b18b;border-color:#9a8055}

@@ -1,3 +1,4 @@
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
 const criarRito = (id, nome, nivelRito, preco, entrega, detalhe) => ({
   id,
   nome,
@@ -8,7 +9,7 @@ const criarRito = (id, nome, nivelRito, preco, entrega, detalhe) => ({
   detalhe,
 });
 
-export const CATALOGO_RITOS_ABSOLUTOS = [
+export const CATALOGO_RITOS_ABSOLUTOS = normalizarConteudoAbsoluto([
   // I — INICIANTE
   criarRito("rito-sussurro-cinza", "Sussurro da Cinza", "iniciante", 1, "AÇÃO: Padrão | DISTÂNCIA: Curto | DURAÇÃO: 1 | REQUISITOS: Um punhado de cinzas | ALVO: 1 criatura", "Você sussurra antigas palavras para a cinza em sua mão, e ela se espalha em um breve redemoinho. O alvo tem sua voz abafada por ecos e só pode falar em sussurros durante a duração."),
   criarRito("rito-maos-mortas", "Mãos Mortas", "iniciante", 1, "AÇÃO: Padrão | DISTÂNCIA: Toque | DURAÇÃO: 1 | REQUISITOS: Nenhum | ALVO: 1 objeto", "Ao tocar um objeto, você o torna frio e frágil como cadáver. Objetos pequenos ficam quebradiços e podem ser partidos facilmente."),
@@ -94,4 +95,4 @@ export const CATALOGO_RITOS_ABSOLUTOS = [
   criarRito("rito-lamina-penitente", "Lâmina Penitente", "experiente", 4, "AÇÃO: Padrão | DISTÂNCIA: Toque | DURAÇÃO: Instantânea | REQUISITOS: Arma leve | ALVO: 1 criatura", "Causa 1d6+5. Falha em d6–5 deixa Sangrando."),
   criarRito("rito-sepulcro-alma-falha", "Sepulcro da Alma Falha", "experiente", 4, "AÇÃO: Completa | DISTÂNCIA: Curta | DURAÇÃO: 3 rodadas | REQUISITOS: Nenhum | ALVO: 1 criatura", "Alvo sofre –4 em tudo e move metade."),
   criarRito("rito-chamado-martir-esquecido", "Chamado do Mártir Esquecido", "experiente", 4, "AÇÃO: Completa | DISTÂNCIA: Longa | DURAÇÃO: Instantânea | REQUISITOS: Sacrificar 1 PV | ALVO: 1 criatura", "Causa 4d6 de dano puro."),
-];
+]);

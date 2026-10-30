@@ -1,0 +1,21 @@
+.photo-crop-dialog{box-sizing:border-box;width:min(480px,calc(100vw - 28px));max-height:calc(100dvh - 28px);overflow:auto;padding:26px;border:1px solid #b9a0f34d;border-radius:14px;background:#100d17;color:#eee9f5;box-shadow:0 25px 100px #0009;font:13px 'Courier New',monospace;color-scheme:dark}
+.photo-crop-dialog *{box-sizing:border-box}
+.photo-crop-dialog::backdrop{background:#000b;backdrop-filter:blur(5px)}
+.photo-crop-dialog header>span{font-size:9px;letter-spacing:.14em;color:#b9a0f3}
+.photo-crop-dialog h2{font:30px Georgia,serif;margin:12px 0}
+.photo-crop-dialog p{font-size:12px;line-height:1.6;color:#aaa0b9}
+.photo-crop-preview{width:min(280px,100%);aspect-ratio:1;margin:22px auto 16px;overflow:hidden;border:1px solid #b9a0f388;background:repeating-conic-gradient(#211b2b 0% 25%,#16111f 0% 50%) 50% / 16px 16px}
+.photo-crop-preview.is-circle{border-radius:50%;box-shadow:0 0 0 5px #b9a0f30b}
+.photo-crop-preview canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.photo-crop-preview canvas:active{cursor:grabbing}
+.photo-crop-dialog .photo-crop-shape{display:flex;align-items:center;justify-content:center;gap:8px;font-size:11px;color:#c6bad6}
+.photo-crop-shape input{accent-color:#b9a0f3}
+.photo-crop-controls{display:grid;gap:14px;margin:24px 0}
+.photo-crop-controls label{display:block;color:#c6bad6;font-size:12px}
+.photo-crop-controls output{float:right;color:#b9a0f3}
+.photo-crop-controls input{display:block;width:100%;margin:10px 0 0;accent-color:#b9a0f3}
+.photo-crop-dialog footer,.photo-crop-dialog footer>div{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.photo-crop-dialog button{padding:10px 12px;border:1px solid #b9a0f344;border-radius:5px;background:transparent;color:#d9cdef;font:11px 'Courier New',monospace;cursor:pointer}
+.photo-crop-dialog button.photo-crop-apply{background:#b9a0f3;color:#191121;border-color:#b9a0f3}
+.photo-crop-dialog :focus-visible{outline:2px solid #d4bfff;outline-offset:3px}
+@media(max-width:380px){.photo-crop-dialog{padding:20px}.photo-crop-dialog footer>div{width:100%;justify-content:space-between}}

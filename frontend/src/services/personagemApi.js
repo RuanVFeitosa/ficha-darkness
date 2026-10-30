@@ -1,3 +1,4 @@
+import { normalizarFichaAbsoluto } from '../utils/absolutoModificadores';
 import { supabase, supabaseConfigurado } from "./supabase";
 import { iniciarPollingVisivel, SYNC_INTERVALS } from "./syncPolicy";
 
@@ -61,28 +62,28 @@ const request = async (path, options = {}) => {
 
 export const buscarPersonagem = async (fichaId) => {
   const data = await request(`/personagens/${encodeURIComponent(fichaId)}`);
-  return data.personagem;
+  return normalizarFichaAbsoluto(data.personagem);
 };
 
 export const listarPersonagens = async () => {
   const data = await request("/personagens");
-  return data.personagens || [];
+  return (data.personagens || []).map(item => item.personagem ? { ...item, personagem: normalizarFichaAbsoluto(item.personagem) } : normalizarFichaAbsoluto(item));
 };
 
 export const criarPersonagem = async (personagem) => {
   return request("/personagens", {
     method: "POST",
-    body: JSON.stringify(personagem),
+    body: JSON.stringify(normalizarFichaAbsoluto(personagem)),
   });
 };
 
 export const salvarPersonagem = async (fichaId, personagem) => {
   const data = await request(`/personagens/${encodeURIComponent(fichaId)}`, {
     method: "PUT",
-    body: JSON.stringify(personagem),
+    body: JSON.stringify(normalizarFichaAbsoluto(personagem)),
   });
 
-  const personagemSalvo = data.personagem;
+  const personagemSalvo = normalizarFichaAbsoluto(data.personagem);
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("darkness:personagem-atualizado", {
       detail: { fichaId, personagem: personagemSalvo },

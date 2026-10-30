@@ -1,3 +1,4 @@
+import NumberInput from '../ui/NumberInput';
 import SceneAnimationEditor from '../tabletop/SceneAnimationEditor';
 import { ACEITAR_AUDIO } from "../../utils/audioUpload";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -1147,7 +1148,7 @@ const CampanhaDashboard = () => {
                   </label>
                   <label>
                     Fade in (s)
-                    <input
+                    <NumberInput
                       type="number"
                       min="0"
                       max="20"
@@ -1160,7 +1161,7 @@ const CampanhaDashboard = () => {
                   </label>
                   <label>
                     Fade out (s)
-                    <input
+                    <NumberInput
                       type="number"
                       min="0"
                       max="20"
@@ -1516,7 +1517,7 @@ const CampanhaDashboard = () => {
                       })
                     }
                   />
-                  <input
+                  <NumberInput
                     aria-label="Colunas"
                     type="number"
                     min="1"
@@ -1528,7 +1529,7 @@ const CampanhaDashboard = () => {
                       })
                     }
                   />
-                  <input
+                  <NumberInput
                     aria-label="Linhas"
                     type="number"
                     min="1"

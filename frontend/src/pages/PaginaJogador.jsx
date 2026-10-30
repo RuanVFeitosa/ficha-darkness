@@ -1,10 +1,16 @@
+import HaloEclipse from '../components/ui/HaloEclipse';
+import TintedDarknessSymbol from '../components/ui/TintedDarknessSymbol';
+import CharacterTemplateCreator from '../components/jogador/CharacterTemplateCreator';
+import { confirmarDialogo } from '../components/ui/DialogoGlobal';
+import { excluirFichaJogador } from '../services/excluirFichaJogador';
+import { prepararFotoPerfil } from '../utils/playerProfilePhoto';
 import {characterTemplates,PLAYER_CHARACTER_LIMIT,PLAYER_CHARACTER_PAGE_SIZE,validateCharacterLimit} from '../utils/playerCharacters';
 import {fecharAnimado} from '../utils/pageMotion';
 import PlayerProfile from '../components/jogador/PlayerProfile';
 import EvidenceGrid from '../components/campanha/EvidenceGrid';
 import MuralInvestigacao from '../components/campanha/MuralInvestigacao';
 import PlayerAppearance from "../components/jogador/PlayerAppearance";
-import { variaveisPaleta } from "../utils/playerAppearance";
+import { variaveisPaleta, variaveisEmblema } from "../utils/playerAppearance";
 import CharacterDossier from "../components/jogador/CharacterDossier";
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { entrarJogador, carregarFicha, fichaKey, fichaHref, documentoVisivel } from '../services/jogadorApi';
@@ -21,6 +27,8 @@ import '../styles/PaginaJogador.css';
 import '../styles/PaginaJogadorResponsive.css';
 import '../styles/PaginaJogadorMotion.css';
 import '../styles/PaginaJogadorRefined.css';
+import '../styles/PaginaJogadorAtmosphere.css';
+import '../styles/CadastroJogador.css';
 export { catalogoBuilds } from '../utils/buildCatalog';
 
 function Simbolo({ sistema }) {
@@ -36,10 +44,11 @@ function Documento({ doc }) {
   if (mime === 'application/pdf') return <iframe title={doc.nome} src={doc.url}/>;
   return <p>Abra o arquivo para consultar seu conteúdo.</p>;
 }
-export default function PaginaJogador({ codigo }) {
+export default function PaginaJogador({ codigo, onNavigate = destino => window.location.assign(destino) }) {
   const [muralSelecionado,setMuralSelecionado]=useState('pessoal');
   const [perfil, setPerfil] = useState(null), [fichas, setFichas] = useState([]), [campanhas, setCampanhas] = useState([]);
   const [templates,setTemplates]=useState(false),[paginaPersonagens,setPaginaPersonagens]=useState(0);
+  const [criandoTemplate,setCriandoTemplate]=useState(false);
   const fichasTemplates=useMemo(characterTemplates,[]);
   const listaPersonagens=templates?fichasTemplates:fichas;
   const totalPaginasPersonagens=Math.max(1,Math.ceil(listaPersonagens.length/PLAYER_CHARACTER_PAGE_SIZE));
@@ -50,6 +59,8 @@ export default function PaginaJogador({ codigo }) {
   function fecharAdicionar(){setAdicionando(false);botaoAdicionar.current?.focus();}
   const [aba, setAba] = useState('personagens'), [erro, setErro] = useState(''), [aviso, setAviso] = useState(''), [ocupado, setOcupado] = useState(false);
   const [pronome, setPronome] = useState('Elu');
+  const [fotoPerfil, setFotoPerfil] = useState('');
+  const [processandoFoto, setProcessandoFoto] = useState(false);
   const [novoCodigo, setNovoCodigo] = useState(''), [nome, setNome] = useState(''), [sistema, setSistema] = useState('darkness'), [vinculo, setVinculo] = useState('');
   const [revelado, setRevelado] = useState(''), [doc, setDoc] = useState(null), [campanhaFiltro, setCampanhaFiltro] = useState('');
   const [busca, setBusca] = useState(''), [buildNome, setBuildNome] = useState(''), [selecionadas, setSelecionadas] = useState([]), [notas, setNotas] = useState(''), [editando, setEditando] = useState(null);
@@ -83,10 +94,39 @@ export default function PaginaJogador({ codigo }) {
     catch (e) { setErro(e.message); return false; }
     finally { setOcupado(false); }
   }
+  const excluindo = useRef(false);
+  async function excluirFicha(ficha) {
+    if (ocupado || excluindo.current) return;
+    excluindo.current = true;
+    try {
+      const confirmado = await confirmarDialogo(`Excluir permanentemente a ficha de ${ficha.nome}? ${ficha.sistema === 'espiral' ? 'A ficha ESPIRAL será apagada deste dispositivo.' : 'A ficha do Absoluto será apagada do servidor e ficará indisponível para quem usa seu código.'} O vínculo com seu perfil será removido. Essa ação não pode ser desfeita.`, {titulo:'Excluir ficha',confirmarTexto:'Excluir ficha',cancelarTexto:'Cancelar'});
+      if (!confirmado) return;
+      setOcupado(true);setErro('');
+      const salvo = await excluirFichaJogador(codigo,perfil,ficha);
+      setPerfil(salvo);setFichas(atuais=>atuais.filter(f=>fichaKey(f)!==fichaKey(ficha)));
+      setRevelado('');setAviso(`Ficha de ${ficha.nome} excluída.`);
+    } catch(e) {setErro(e.message || 'Não foi possível excluir a ficha.');}
+    finally {excluindo.current=false;setOcupado(false);}
+  }
   async function criarPerfil(e) {
-    e.preventDefault(); setOcupado(true); setErro('');
-    try { const p = await entrarJogador(novoCodigo, true); await salvarJogador(novoCodigo, { ...p, nome: nome.trim() || p.nome, pronome }); window.location.href = `/?jogador=${novoCodigo}`; }
+    e.preventDefault();
+    if (ocupado || processandoFoto) return;
+    setOcupado(true); setErro('');
+    try {
+      const p = await entrarJogador(novoCodigo, true);
+      await salvarJogador(novoCodigo, { ...p, nome: nome.trim() || p.nome, pronome: pronome || undefined, fotoPerfil: fotoPerfil || p.fotoPerfil || '', perfilConfigurado: true });
+      onNavigate(`/?jogador=${novoCodigo}`);
+    }
     catch(e) { setErro(e.message); setOcupado(false); }
+  }
+  async function carregarFotoCadastro(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setProcessandoFoto(true); setErro('');
+    try { const foto = await prepararFotoPerfil(file); if (foto) setFotoPerfil(foto); }
+    catch (error) { setErro(error.message); }
+    finally { setProcessandoFoto(false); }
   }
   async function vincular(e) {
     e.preventDefault(); setErro(''); setOcupado(true);
@@ -108,22 +148,29 @@ export default function PaginaJogador({ codigo }) {
   const ids = perfil?.personagens.map(p => p.sistema === 'espiral' ? `espiral:${p.id}` : p.id) || [];
   const documentos = campanhas.filter(c => !campanhaFiltro || c.id === campanhaFiltro).flatMap(c => (c.documentosInvestigacao || []).filter(d => documentoVisivel(d, ids)).map(d => ({ ...d, campanhaId: c.id, campanhaNome: c.nome })));
   const evidenciaInterativa = !!doc && ((doc.mimeType || doc.mime_type || '').includes('modern-pc') || doc.categoria === 'interativa');
-  if (codigo === 'novo') return <main className="pj pj-escuro pj-cadastro"><a href="?">← Início</a><p className="pj-eyebrow">UNIVERSO DARKNESS / NOVO ARQUIVO</p><h1>Seu lugar<br/>neste universo.</h1><form onSubmit={criarPerfil}><label>Nome do jogador<input required value={nome} onChange={e => setNome(e.target.value)} maxLength={80}/></label><label>Pronome do jogador<select value={pronome} onChange={e=>setPronome(e.target.value)}>{["Ele","Ela","Elu"].map(p=><option key={p}>{p}</option>)}</select></label><label>Senha do Jogador<input required type="password" autoComplete="new-password" inputMode="numeric" pattern="[0-9]{4,8}" minLength={4} maxLength={8} value={novoCodigo} onChange={e => setNovoCodigo(e.target.value.replace(/\D/g,''))}/></label><p>Escolha uma senha numérica de 4 a 8 dígitos para entrar pelo painel. O código antigo do personagem também funciona como senha do jogador.</p><button disabled={ocupado}>Criar / acessar perfil</button>{erro && <p role="alert">{erro}</p>}</form></main>;
+  if (codigo === 'novo') return <main className="pj pj-escuro pj-cadastro"><div className="pj-cadastro-arte" aria-hidden="true"><div className="pj-cadastro-emblema"><HaloEclipse /><img src="/simbolo-darkness.png" alt="" draggable="false"/></div></div><a href="?">← Início</a><p className="pj-eyebrow">UNIVERSO DARKNESS / NOVO ARQUIVO</p><h1>Seu lugar<br/>neste universo.</h1><form className="pj-cadastro-form" onSubmit={criarPerfil}><div className="pj-cadastro-form-heading"><span>01 / IDENTIDADE</span><span>PERFIL DO JOGADOR</span></div><label className="pj-cadastro-foto">{fotoPerfil ? <img src={fotoPerfil} alt="Prévia da foto de perfil"/> : <span className="pj-cadastro-avatar" aria-hidden="true">{nome.trim().slice(0,1).toUpperCase() || '?'}</span>}<span className="pj-cadastro-photo-title">Foto de perfil (opcional)</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={carregarFotoCadastro} disabled={ocupado || processandoFoto}/></label><label>Nome do jogador<input required autoComplete="nickname" placeholder="Como você quer ser chamado?" value={nome} onChange={e => setNome(e.target.value)} maxLength={80}/></label><label>Pronome do jogador<select value={pronome} onChange={e=>setPronome(e.target.value)}><option value="">Prefiro não informar</option>{["Ele","Ela","Elu"].map(p=><option key={p}>{p}</option>)}</select></label><label>Senha do Jogador<input required type="password" autoComplete="new-password" inputMode="numeric" placeholder="Sua chave de acesso" pattern="[0-9]{4,8}" minLength={4} maxLength={8} value={novoCodigo} onChange={e => setNovoCodigo(e.target.value.replace(/\D/g,''))}/></label><p>Escolha uma senha numérica de 4 a 8 dígitos para entrar pelo painel. O código antigo do personagem também funciona como senha do jogador.</p><button disabled={ocupado || processandoFoto}>{processandoFoto ? 'Preparando foto…' : ocupado ? 'Salvando…' : 'Criar / acessar perfil'}</button>{erro && <p role="alert">{erro}</p>}</form></main>;
   if (!perfil) return <main className="pj pj-escuro"><a href="?">← Início</a><p role={erro ? 'alert' : 'status'}>{erro || 'Abrindo seu arquivo…'}</p></main>;
-  return <main className={`pj pj-dashboard pj-refined ${perfil.paletaPagina ? 'pj-paleta-personalizada' : ''}`} style={variaveisPaleta(perfil.paletaPagina)}>
-    <div className="pj-marca-lateral" aria-hidden="true"><img src="/simbolo-darkness.png" alt=""/></div>
-    <header className="pj-topo"><a href="?" className="pj-marca">← UNIVERSO DARKNESS</a><PlayerAppearance perfil={perfil} fichas={fichas} onSavePagina={paleta=>persistir({...perfil,paletaPagina:paleta})} onFichaSalva={(ficha,dados)=>setFichas(atuais=>atuais.map(f=>fichaKey(f)===fichaKey(ficha) ? {...f,dados} : f))}/><PlayerProfile key={codigo} perfil={perfil} onSave={persistir}/></header>
+  return <main className={`pj pj-dashboard pj-refined ${perfil.paletaPagina ? 'pj-paleta-personalizada' : ''}`} style={{...variaveisPaleta(perfil.paletaPagina),...variaveisEmblema(perfil.paletaPagina)}}>
+    <div className="pj-marca-lateral pj-cadastro-arte pj-dashboard-arte" aria-hidden="true"><div className="pj-cadastro-emblema"><HaloEclipse /><TintedDarknessSymbol cor={perfil.paletaPagina?.simbolo} /></div></div>
+    <header className="pj-topo"><a href="?" className="pj-marca">← UNIVERSO DARKNESS</a><PlayerAppearance perfil={perfil} fichas={fichas} onSavePagina={paleta=>persistir({...perfil,paletaPagina:paleta})} onSavePaletas={paletas=>persistir({...perfil,paletasPersonalizadas:paletas})} onFichaSalva={(ficha,dados)=>setFichas(atuais=>atuais.map(f=>fichaKey(f)===fichaKey(ficha) ? {...f,dados} : f))}/><PlayerProfile key={codigo} perfil={perfil} onSave={persistir}/></header>
     <div className="pj-file-intro"><div><span className="pj-file-eyebrow">ARQUIVO PESSOAL / JOGADOR</span><h1>Seu arquivo.</h1><p>Personagens, descobertas e os próximos passos da sua história.</p></div><span className="pj-file-index">UNIVERSO<br/>DARKNESS <i aria-hidden="true">↗</i></span></div>
     <nav className="pj-abas" aria-label="Áreas do jogador">{[['personagens','01','Personagens'],['investigacao','02','Investigação'],['livros','03','Livros de regras'],['builds','04','Builds']].map(([id,n,label]) => <button key={id} aria-current={aba === id ? 'page' : undefined} onClick={() => {setAba(id); setDoc(null);}}><small>{n}</small>{label}</button>)}</nav>
     {erro && <p className="pj-alerta" role="alert">{erro}</p>}{aviso && <p className="pj-alerta" role="status">{aviso}<button aria-label="Fechar aviso" onClick={() => setAviso('')}>×</button></p>}
     {aba === 'personagens' && <section className={`pj-area-personagens pj-character-roster ${adicionando?'pj-adding-character':''}`} aria-label="Seus personagens">
       <div className="pj-characters-main"><header className="pj-collection-header"><div><small>DOSSIÊS VINCULADOS</small><h2>{templates?'Templates de teste':'Seus personagens'}</h2></div><span>{listaPersonagens.length} / {PLAYER_CHARACTER_LIMIT} personagens</span></header>
       {templates && <p className="pj-demo-notice" role="status">Demonstração com 10 templates. Esses modelos não alteram suas fichas nem ocupam vagas no perfil.</p>}
-      <div className="pj-personagens">{fichasVisiveis.map(f=><CharacterDossier key={fichaKey(f)} ficha={f} aberto={revelado===fichaKey(f)} onToggle={()=>setRevelado(revelado===fichaKey(f) ? '' : fichaKey(f))}/>)}</div>
+      <div className="pj-personagens">{fichasVisiveis.map(f=><CharacterDossier key={fichaKey(f)} ficha={f} onDelete={excluirFicha} disabled={ocupado} aberto={revelado===fichaKey(f)} onToggle={()=>setRevelado(revelado===fichaKey(f) ? '' : fichaKey(f))}/>)}</div>
       {listaPersonagens.length>PLAYER_CHARACTER_PAGE_SIZE && <nav className="pj-character-pagination" aria-label="Páginas de personagens"><span>Página {paginaAtualPersonagens+1} de {totalPaginasPersonagens}</span><div>{Array.from({length:totalPaginasPersonagens},(_,i)=><button type="button" key={i} aria-label={'Página '+(i+1)+' de personagens'} aria-current={paginaAtualPersonagens===i?'page':undefined} onClick={()=>{setPaginaPersonagens(i);setRevelado('');}}>{i+1}</button>)}</div></nav>}
       {!listaPersonagens.length && <p className="pj-vazio">Seu arquivo começa aqui. Crie um personagem ou vincule uma ficha existente.</p>}
-      <div className="pj-gerenciar"><button disabled={perfil.personagens.length>=PLAYER_CHARACTER_LIMIT} ref={botaoAdicionar} type="button" className="pj-add-character-trigger" aria-expanded={adicionando} aria-controls="pj-add-character-panel" onClick={()=>adicionando?fecharAdicionar():setAdicionando(true)}>{perfil.personagens.length>=PLAYER_CHARACTER_LIMIT?'Limite de 10 personagens atingido':'+ Adicionar personagem'}</button><button type="button" className="pj-template-trigger" aria-pressed={templates} onClick={()=>{setTemplates(!templates);setPaginaPersonagens(0);setRevelado('');}}>{templates?'Voltar aos meus personagens':'Testar com 10 templates'}</button></div>
+      <div className="pj-gerenciar"><button type="button" className="pj-template-trigger" aria-expanded={criandoTemplate} onClick={()=>{setCriandoTemplate(!criandoTemplate);setAdicionando(false);}}>Criar personagem Template</button><button disabled={perfil.personagens.length>=PLAYER_CHARACTER_LIMIT} ref={botaoAdicionar} type="button" className="pj-add-character-trigger" aria-expanded={adicionando} aria-controls="pj-add-character-panel" onClick={()=>adicionando?fecharAdicionar():setAdicionando(true)}>{perfil.personagens.length>=PLAYER_CHARACTER_LIMIT?'Limite de 10 personagens atingido':'+ Adicionar personagem'}</button><button type="button" className="pj-template-trigger" aria-pressed={templates} onClick={()=>{setTemplates(!templates);setPaginaPersonagens(0);setRevelado('');}}>{templates?'Voltar aos meus personagens':'Testar com 10 templates'}</button></div>
       </div>
+      {criandoTemplate && <CharacterTemplateCreator perfil={perfil} fichas={fichas} onClose={()=>setCriandoTemplate(false)} onSaveModelos={modelos=>persistir({...perfil,templatesPersonagem:modelos})} onCreated={async ref=>{
+        const personagens=[...new Map([...perfil.personagens,ref].map(p=>[fichaKey(p),p])).values()];
+        validateCharacterLimit(personagens);
+        const salvo=await persistir({...perfil,personagens});
+        if(salvo){setTemplates(false);setPaginaPersonagens(0);setAviso(`Personagem template criado. Código: ${ref.id}.`);}
+        return salvo;
+      }}/>}
       {adicionando && <aside ref={painelAdicionar} id="pj-add-character-panel" className="pj-system-picker" aria-label="Adicionar personagem" onKeyDown={e=>{if(e.key==='Escape'){e.stopPropagation();fecharAdicionar();}}}>
         <header><div><small>NOVO DOSSIÊ</small><h2 tabIndex={-1}>Escolha seu sistema.</h2></div><button type="button" onClick={fecharAdicionar} aria-label="Fechar seleção de sistema">×</button></header>
         <div className="pj-system-options">{[['darkness','01 / O ABSOLUTO','Absoluto','Encare a escuridão. Defina sua existência.'],['espiral','02 / A ESPIRAL','ESPIRAL','Toda escolha deixa uma marca. Comece a sua história.']].map(([id,label,title,description])=><a key={id} className={`pj-system-choice pj-system-${id}`} href={`?criar=1&sistema=${id}&jogadorOrigem=${encodeURIComponent(codigo)}`} onClick={()=>sessionStorage.setItem('darkness:jogador',codigo)}><div className="pj-system-choice-art" aria-hidden="true"><Simbolo sistema={id}/></div><small>{label}</small><h3>{title}</h3><p>{description}</p><strong>Escolher {title} <span aria-hidden="true">↗</span></strong></a>)}</div>

@@ -126,7 +126,7 @@ body {
 .page-transition-espiral { background: radial-gradient(ellipse at center, #191919 0%, #050505 65%); color: #eeeae1; }
 .page-transition-symbol { width: min(72vw, 72vh); height: min(72vw, 72vh); overflow: visible; }
 .page-transition-espiral.active { animation: spiralTransitionFade 1s ease-in-out forwards; }
-.page-transition-espiral.active .page-transition-symbol { animation: spiralTransitionTurn 1s cubic-bezier(.2,.65,.3,1) both; }
+.page-transition-espiral.active svg.page-transition-symbol { animation: spiralTransitionTurn 1s cubic-bezier(.2,.65,.3,1) both; }
 @keyframes spiralTransitionFade {
   0% { opacity: 1; }
   70% { opacity: 1; }

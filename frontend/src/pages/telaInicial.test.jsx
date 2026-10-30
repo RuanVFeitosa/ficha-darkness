@@ -7,6 +7,15 @@ import { saudacaoJogador } from '../utils/saudacaoJogador';
 jest.mock('../services/jogadorApi', () => ({ entrarJogador: jest.fn() }));
 const mockTocar = jest.fn();
 jest.mock('../utils/useLoginSound', () => () => ({ tocar: mockTocar, ativo: true, alternar: jest.fn() }));
+
+test('controle de música persiste a preferência e permite reativar', () => {
+ render(<TelaInicial inicializar={false}/>);
+ fireEvent.click(screen.getByRole('button', { name: 'Desativar música ambiente' }));
+ expect(localStorage.getItem('darkness:login:musica')).toBe('off');
+ expect(screen.getByRole('button', { name: 'Ativar música ambiente' })).toHaveAttribute('aria-pressed', 'false');
+ fireEvent.click(screen.getByRole('button', { name: 'Ativar música ambiente' }));
+ expect(localStorage.getItem('darkness:login:musica')).toBe('on');
+});
 beforeEach(() => { jest.useFakeTimers(); localStorage.clear(); sessionStorage.clear(); jest.clearAllMocks(); });
 afterEach(() => { jest.useRealTimers(); });
 test.each([['Ele','Bem-vindo'],['Ela','Bem-vinda'],['Elu','Bem-vinde'],['','Bem-vinde']])('saudação respeita %s', (pronome, texto) => {

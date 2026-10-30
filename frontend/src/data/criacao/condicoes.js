@@ -1,4 +1,5 @@
-export const condicoes = [
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
+export const condicoes = normalizarConteudoAbsoluto([
   {
     nome: "Enfraquecido",
     classe: "enfraquecido",
@@ -222,4 +223,4 @@ export const condicoes = [
     descricao:
       "Cabeça ou Torso chegaram a 0 de Integridade.",
   },
-];
+]);

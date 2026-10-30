@@ -1,3 +1,4 @@
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
 // Bônus de Defesa não se acumulam entre peças do mesmo espaço corporal.
 // A resistência descrita é situacional e complementa a Defesa da peça.
 const DEFESAS_BASE = [
@@ -222,7 +223,7 @@ const RESISTENCIAS_DANO = {
   ],
 };
 
-export const CATALOGO_DEFESAS = DEFESAS_BASE.map((defesa) => ({
+export const CATALOGO_DEFESAS = normalizarConteudoAbsoluto(DEFESAS_BASE.map((defesa) => ({
   ...defesa,
   resistenciasDano: RESISTENCIAS_DANO[defesa.id] || [],
-}));
+})));

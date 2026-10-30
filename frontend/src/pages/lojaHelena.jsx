@@ -1,3 +1,4 @@
+import { normalizarFormulaAbsoluto, normalizarConteudoAbsoluto } from '../utils/absolutoModificadores';
 import React, { useEffect, useMemo, useState } from "react";
 import Icon from "@mdi/react";
 import {
@@ -710,47 +711,11 @@ const LojaHelena = () => {
   const aplicarEfeitosModificador = (armaStatus, efeitos) => {
     if (!armaStatus || !efeitos) return armaStatus;
 
-    // 1. Bônus de Dano (número fixo ou dado extra)
-    if (efeitos.bonusDano !== undefined && efeitos.bonusDano !== null) {
-      const bonus = efeitos.bonusDano;
-      const danoAtual = interpretarDano(armaStatus.dmg);
-      if (danoAtual) {
-        let novaQtd = danoAtual.quantidade;
-        let novoBonus = danoAtual.bonus || 0;
-        // Se for número, soma ao bônus fixo
-        if (typeof bonus === "number" || !isNaN(parseInt(bonus))) {
-          novoBonus += parseInt(bonus);
-        }
-        // Se for string com 'd' (ex: "1d"), adiciona +1 dado
-        else if (typeof bonus === "string" && bonus.includes("d")) {
-          const extra = interpretarDano(bonus);
-          if (extra) {
-            // Se as faces forem iguais, soma a quantidade
-            if (extra.faces === danoAtual.faces) {
-              novaQtd += extra.quantidade;
-            } else {
-              // Se faces diferentes, concatena (ex: 1d6 + 1d8)
-              armaStatus.dmg = `${armaStatus.dmg} + ${bonus}`;
-              return armaStatus;
-            }
-          }
-        }
-        armaStatus.dmg = `${novaQtd}d${danoAtual.faces}${novoBonus > 0 ? "+" + novoBonus : ""}`;
-      }
-    }
-
-    // 2. Dano Adicional (ex: "1d6")
-    if (efeitos.danoAdicional) {
-      const danoAtual = interpretarDano(armaStatus.dmg);
-      const extra = interpretarDano(efeitos.danoAdicional);
-      if (danoAtual && extra) {
-        if (danoAtual.faces === extra.faces) {
-          const novaQtd = danoAtual.quantidade + extra.quantidade;
-          armaStatus.dmg = `${novaQtd}d${danoAtual.faces}${danoAtual.bonus > 0 ? "+" + danoAtual.bonus : ""}`;
-        } else {
-          armaStatus.dmg = `${armaStatus.dmg} + ${efeitos.danoAdicional}`;
-        }
-      }
+    // Cada efeito de dano acrescenta ou retira um dado da reserva base.
+    for (const bonus of [efeitos.bonusDano, efeitos.danoAdicional]) {
+      if (bonus === undefined || bonus === null || bonus === '' || bonus === 0) continue;
+      const sinal = /^[−–-]/.test(String(bonus).trim()) ? '-' : '+';
+      try { armaStatus.dmg = normalizarFormulaAbsoluto(`${armaStatus.dmg}${sinal}1 dado`); } catch { /* Item sem fórmula de dano. */ }
     }
 
     // 3. Bônus de Teste de Ataque
@@ -794,13 +759,13 @@ const LojaHelena = () => {
     // 8. Modificadores de Alcance/Precisão
     if (efeitos.bonusLongo || efeitos.penalidadeCurto) {
       let precision = armaStatus.precision || "";
-      if (efeitos.bonusLongo) precision += ` | Longo +${efeitos.bonusLongo}`;
+      if (efeitos.bonusLongo) precision += ` | Longo +1 dado`;
       if (efeitos.penalidadeCurto)
-        precision += ` | Curto ${efeitos.penalidadeCurto}`;
+        precision += ` | Curto −1 dado`;
       armaStatus.precision = precision.trim();
     }
 
-    return armaStatus;
+    return normalizarConteudoAbsoluto(armaStatus);
   };
 
   // =====================

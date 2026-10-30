@@ -63,6 +63,7 @@ export const calcularModificador = (valor) => {
 };
 
 export const calcularGanhoRecursosNivel = (personagem = {}) => {
+  if (personagem.versaoRegras === '1.0') return { sanidade: 0, esperanca: 0, classeId: obterClasseIdRecursos(personagem) };
   const classeId = obterClasseIdRecursos(personagem);
   const recursosClasse = RECURSOS_NIVEL_CLASSE[classeId];
 

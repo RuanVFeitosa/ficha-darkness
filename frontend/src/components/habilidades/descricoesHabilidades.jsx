@@ -1,5 +1,6 @@
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
 // src/components/DescricoesHabilidades.jsx
-export const descricoesHabilidades = {
+export const descricoesHabilidades = normalizarConteudoAbsoluto({
   // HABILIDADES ATIVAS
   razao:
     "Mede a capacidade analítica da personagem. Uma PJ com Razão elevada é boa em coleta de informações e investigação.",
@@ -111,4 +112,4 @@ export const descricoesHabilidades = {
 
   seducao:
     "Habilidade para seduzir, manipular emocionalmente, fingir sentimentos amorosos de maneira convincente e usar charme.",
-};
+});

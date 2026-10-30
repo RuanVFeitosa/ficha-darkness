@@ -58,3 +58,104 @@
 @media(max-width:600px){.login-screen:not(.login-is-master) .login-prompt{font-size:clamp(18px,4.6vw,25px)}}
 .login-screen.login-is-master .login-prompt{font-size:clamp(18px,2.6vh,28px);letter-spacing:.08em;background:transparent;padding:0;border-radius:0}
 @media(max-width:600px){.login-screen.login-is-master .login-prompt{font-size:clamp(17px,4.5vw,24px)}}
+/* Atmosfera da entrada Darkness. */
+.login-screen{--login-accent:#b9a0f3;background:radial-gradient(ellipse at 50% 33%,#281d40 0%,#100e1c 43%,#090910 80%);padding:28px 24px 60px}
+.login-atmosfera{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 50% 100%,#68528b22,transparent 55%)}
+.login-atmosfera::before{content:"";position:absolute;left:50%;top:32vh;width:min(59vh,80vw);aspect-ratio:1;translate:-50% -50%;border:1px solid #b9a0f31c;border-radius:50%;box-shadow:0 0 100px #a776ea14,inset 0 0 80px #a776ea0c}
+.login-atmosfera>span{position:absolute;width:2px;height:2px;border-radius:50%;background:var(--login-accent);left:calc(7% + var(--i)*5.7%);bottom:-10px;box-shadow:0 0 9px var(--login-accent);animation:login-drift calc(12s + var(--i)*1.1s) linear infinite;animation-delay:calc(var(--i)*-2.3s);opacity:0}
+.login-marca{position:absolute;top:32px;left:40px;text-align:left;font-size:13px;letter-spacing:.32em;font-weight:700;color:#e8e0f5}
+.login-marca span{display:block;margin-top:9px;font-size:9px;letter-spacing:.12em;font-weight:400;color:#a39aae}
+.login-preferencias{top:28px;right:34px;gap:12px}
+.login-papel{border:1px solid #b9a0f326;border-radius:20px;padding:8px 12px;color:var(--login-accent);opacity:1}
+.login-screen .login-simbolo{top:32vh;width:min(53vh,70vw,580px);height:min(53vh,70vw,580px);filter:drop-shadow(0 0 22px #bba0ff33);animation:login-breathe 7s ease-in-out infinite}
+.login-screen .login-form{padding-top:57vh;width:min(580px,100%)}
+.login-screen .login-prompt{background:none;padding:0;font-size:clamp(20px,2.9vh,30px);letter-spacing:.14em;font-weight:400}
+.login-instrucao{font-size:12px;color:#aaa1b9;letter-spacing:.045em;margin:14px 0 0}
+.login-screen .login-password{margin:30px auto 0;height:48px}
+.login-slots{gap:12px;align-items:center}
+.login-slots span{width:38px;height:46px;border:1px solid #b9a0f333;border-radius:7px;background:#b9a0f306;font-size:16px;color:#e4d5ff;transition:background .2s,border-color .2s,box-shadow .2s}
+.login-slots span.preenchido{border-color:#b9a0f388;background:#b9a0f319;box-shadow:0 0 16px #b9a0f30c}
+.login-password:focus-within{outline:none}
+.login-password:focus-within .login-slots span{border-color:#b9a0f399;box-shadow:0 0 0 3px #b9a0f309}
+.login-feedback{min-height:26px;margin-top:10px}
+.login-acoes{grid-template-columns:1fr 1.2fr 1fr;gap:12px;margin-top:8px;text-shadow:none}
+.login-acoes a,.login-acoes button{min-width:0;width:100%;padding:15px 10px;font-size:12px;letter-spacing:.12em;border:1px solid #b9a0f326;border-radius:6px;background:#ffffff03;transition:background .2s,transform .2s,border-color .2s,box-shadow .2s}
+.login-acoes button[type=submit]{background:#d8c6fa;color:#20162e;border-color:#d8c6fa;box-shadow:0 4px 28px #b9a0f31a}
+.login-acoes a:hover,.login-acoes button:hover{background:#b9a0f315;border-color:#b9a0f388;opacity:1;transform:translateY(-2px)}
+.login-acoes button[type=submit]:hover{background:#e7dbff;box-shadow:0 4px 32px #b9a0f338}
+.login-abrir-teclado{margin-top:16px;color:#b4a8c4;opacity:.85;text-shadow:none;font-size:10px!important}
+.login-teclado{background:#151020;border-color:#b9a0f344;margin-top:10px}
+.login-claro{--login-accent:#ead1a4;background:radial-gradient(ellipse at 50% 33%,#3d3027 0%,#1b1719 43%,#0e0c11 80%)}
+.login-claro .login-simbolo{mix-blend-mode:screen;filter:sepia(.5) drop-shadow(0 0 24px #eac68b33)}
+.login-claro .login-preferencias{color:#eadfcf}
+.login-master-identity{top:44px;left:0}
+.login-screen.login-welcome .login-simbolo{top:43vh;width:min(62vh,78vw);height:min(62vh,78vw)}
+.login-boas-vindas{top:77vh;font-size:clamp(24px,4vh,40px);letter-spacing:.08em}
+.login-claro .login-boas-vindas{background:none}
+@keyframes login-breathe{0%,100%{opacity:.85;scale:1}50%{opacity:1;scale:1.025}}
+@keyframes login-drift{0%{translate:0 0;opacity:0}20%{opacity:.5}80%{opacity:.3}100%{translate:25px -90vh;opacity:0}}
+@media(max-width:600px){.login-screen{padding:24px 22px 60px}.login-marca{left:24px;top:25px;font-size:11px}.login-marca span{display:none}.login-preferencias{top:18px;right:18px;gap:2px}.login-screen .login-simbolo{top:31vh;width:min(51vh,88vw);height:min(51vh,88vw)}.login-screen .login-form{padding-top:56vh}.login-screen .login-prompt{font-size:20px!important;letter-spacing:.1em}.login-instrucao{font-size:11px}.login-slots{gap:8px}.login-slots span{width:30px;height:40px}.login-acoes{gap:8px}.login-acoes a,.login-acoes button{font-size:10px;padding:15px 4px}.login-screen .login-password{margin-top:24px}.login-master-identity{top:40px;max-width:85vw}}
+@media(max-height:650px) and (min-width:601px){.login-screen .login-simbolo{top:29vh;width:46vh;height:46vh}.login-screen .login-form{padding-top:53vh}.login-screen .login-password{margin-top:16px}.login-instrucao{margin-top:8px}.login-acoes a,.login-acoes button{padding:11px}.login-abrir-teclado{margin-top:10px}}
+@media(prefers-reduced-motion:reduce){.login-screen *,.login-screen *::before,.login-screen *::after{animation:none!important;transition:none!important}.login-atmosfera>span{opacity:.25;bottom:calc(10% + var(--i)*5%)}}
+
+/* Mestre: símbolo central e detalhes em ouro sobre preto. */
+.login-screen.login-is-master{
+  --login-accent:#d8b96f;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  padding:76px 24px 20px;
+  background:radial-gradient(ellipse at 50% 34svh,#242016 0%,#10100f 38%,#070708 78%);
+  color:#f7f7f4;
+}
+.login-screen.login-is-master .login-simbolo{
+  position:relative;
+  top:auto;
+  left:auto;
+  width:min(50svh,70vw,580px,max(80px,calc(100svh - 430px)));
+  height:auto;
+  aspect-ratio:1;
+  flex-shrink:0;
+  filter:drop-shadow(0 0 24px #d8b96f28);
+  mix-blend-mode:screen;
+  transform:none;
+}
+.login-is-master .login-atmosfera{background:radial-gradient(ellipse at 50% 34svh,#d8b96f0a,transparent 60%)}
+.login-is-master .login-atmosfera::before{top:34svh;width:min(56svh,78vw,max(100px,calc(100svh - 400px)));border-color:#d8b96f26;box-shadow:0 0 100px #d8b96f0d,inset 0 0 80px #d8b96f08}
+.login-screen.login-is-master .login-form{padding-top:0;margin:0 auto;flex-shrink:0}
+.login-is-master .login-marca,.login-is-master .login-preferencias{color:#f7f7f4}
+.login-is-master .login-marca span,.login-is-master .login-instrucao,.login-is-master .login-abrir-teclado{color:#aaa79e}
+.login-is-master .login-papel{border-color:#d8b96f40;color:#e2c684}
+.login-is-master .login-slots span{border-color:#d8b96f40;background:#ffffff03;color:#fff}
+.login-is-master .login-slots span.preenchido{border-color:#d8b96f99;background:#d8b96f16;box-shadow:0 0 16px #d8b96f10}
+.login-is-master .login-password:focus-within .login-slots span{border-color:#d8b96faa;box-shadow:0 0 0 3px #d8b96f0c}
+.login-is-master .login-acoes a,.login-is-master .login-acoes button{border-color:#d8b96f38;background:#ffffff03;color:#f7f7f4}
+.login-is-master .login-acoes a:hover,.login-is-master .login-acoes button:hover{border-color:#d8b96f99;background:#d8b96f12}
+.login-is-master .login-acoes button[type=submit]{background:#d8b96f;border-color:#d8b96f;color:#14110a;box-shadow:0 4px 28px #d8b96f20}
+.login-is-master .login-acoes button[type=submit]:hover{background:#ead49e;box-shadow:0 4px 32px #d8b96f30}
+.login-is-master .login-teclado{background:#10100f;border-color:#d8b96f55}
+.login-is-master .login-teclado button{border-color:#d8b96f38}
+.login-is-master .login-teclado button:hover{background:#d8b96f20}
+.login-is-master .login-master-identity{position:relative;top:auto;left:auto;width:100%;max-width:100%;margin:18px auto 0;text-align:center}
+.login-is-master .login-master-identity summary{background:#ffffff05;border:1px solid #d8b96f30;color:#d6c69e}
+.login-is-master .login-master-identity>div{background:#111110;text-align:left;border:1px solid #d8b96f30}
+.login-is-master .login-master-identity input,.login-is-master .login-master-identity select{background:#090909;border-color:#d8b96f66}
+.login-is-master .login-master-identity[open]>div{position:absolute;bottom:100%;left:0;width:100%;z-index:6}
+.login-screen.login-is-master.login-welcome .login-simbolo{position:absolute;top:43svh;left:50%;width:min(62vh,78vw);height:min(62vh,78vw);transform:translate(-50%,-50%)}
+
+/* Coroa de eclipse: raios finos, fragmentos e borda incandescente. */
+.login-screen .login-simbolo{overflow:visible;filter:none;mix-blend-mode:normal}
+.login-glyph{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;mix-blend-mode:screen;filter:drop-shadow(0 0 12px #b9a0f322)}
+.login-screen .login-eclipse{position:absolute;inset:auto;left:50%;top:50%;width:148%;height:148%;max-width:none;max-height:none;margin:0;display:block;translate:-50% -50%;transform:none;transform-origin:50% 50%;overflow:visible;color:var(--login-accent);pointer-events:none;animation:login-eclipse-girar 180s linear infinite}
+.login-eclipse-raios{stroke:currentColor;fill:none;stroke-linecap:butt}
+.login-eclipse-aura{fill:#09090c;stroke:currentColor;stroke-width:12;stroke-opacity:.12;filter:blur(7px)}
+.login-eclipse-borda{fill:none;stroke:currentColor;stroke-width:1.5;filter:drop-shadow(0 0 4px currentColor)}
+.login-atmosfera::before{display:none}
+.login-screen.login-is-master .login-simbolo{filter:none;mix-blend-mode:normal}
+.login-is-master .login-glyph{filter:drop-shadow(0 0 12px #d8b96f22)}
+.login-is-master .login-eclipse{color:#eec477}
+@keyframes login-eclipse-girar{to{rotate:360deg}}
+@media(prefers-reduced-motion:reduce){.login-eclipse{animation:none!important}}
+@media(max-width:420px){.login-preferencias{top:49px;right:16px}.login-preferencias button,.login-papel{font-size:9px;padding:7px}.login-marca{top:23px}}

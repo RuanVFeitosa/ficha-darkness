@@ -1,0 +1,117 @@
+.criacao-container.criacao-ritual{--rito-ouro:#c7af78;--rito-linha:#c7af7838;--rito-texto:#f0ece2;--rito-sutil:#a49c8b;display:flex;flex-direction:column;justify-content:flex-start;align-items:stretch;isolation:isolate;min-height:100svh;padding:30px clamp(20px,5vw,90px) 55px;background:radial-gradient(ellipse at 24% 40%,#6e531219,transparent 50%),#070707;color:var(--rito-texto);font-family:Arial,Helvetica,sans-serif}
+.criacao-ritual *{box-sizing:border-box}
+.criacao-ritual.classe-fundo-ativo{background:radial-gradient(ellipse at 80% 50%,#6e531216,transparent 55%),#070707}
+.absoluto-santuario{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.absoluto-santuario:before,.absoluto-santuario:after{content:'';position:absolute;top:100px;bottom:35px;width:19vw;border:1px solid #c7af7810;border-radius:50% 50% 0 0}
+.absoluto-santuario:before{left:-12vw}.absoluto-santuario:after{right:-12vw}
+.absoluto-santuario>span{position:absolute;top:0;left:25%;width:1px;height:100%;background:linear-gradient(transparent,#c7af7810,transparent)}
+.absoluto-santuario>span:nth-child(2){left:50%}.absoluto-santuario>span:nth-child(3){left:75%}
+.absoluto-rito-topo{display:flex;justify-content:space-between;align-items:center;gap:24px;width:100%;max-width:1380px;margin:0 auto;padding-bottom:26px;border-bottom:1px solid var(--rito-linha);font:9px 'Courier New',monospace;letter-spacing:.15em;color:var(--rito-sutil)}
+.absoluto-rito-topo a{font:10px Arial,sans-serif;letter-spacing:.04em;color:var(--rito-sutil);text-decoration:none}
+.absoluto-rito-topo a:hover{color:var(--rito-ouro)}
+.absoluto-rito-topo>span{color:var(--rito-texto);letter-spacing:.23em}
+.absoluto-rito-topo i{font-style:normal;color:var(--rito-ouro);padding:0 12px}
+.absoluto-rito-topo small{font:8px 'Courier New',monospace;color:#7d7462}
+.absoluto-rito-progresso{width:100%;max-width:1380px;margin:25px auto 30px}
+.absoluto-rito-progresso ol{display:flex;gap:0;list-style:none;padding:0;margin:0;overflow:auto;scrollbar-width:thin}
+.absoluto-rito-progresso li{flex:1;min-width:95px;border-bottom:1px solid #ffffff12;padding:8px 10px 14px;color:#726c60;font:9px Arial,sans-serif;white-space:nowrap}
+.absoluto-rito-progresso li>span{display:block;color:#575145;font:8px 'Courier New',monospace;margin-bottom:9px}
+.absoluto-rito-progresso li[aria-current=step]{border-bottom-color:var(--rito-ouro);color:#eee7da}
+.absoluto-rito-progresso li[aria-current=step]>span,.absoluto-rito-progresso li.concluida>span{color:var(--rito-ouro)}
+.criacao-ritual .criacao-form{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(0,1.25fr);gap:0 7%;width:100%;max-width:1280px;margin:auto;padding:30px 0;border:0;border-radius:0;background:transparent;box-shadow:none;align-items:start}
+.criacao-ritual .criacao-dialogo{grid-column:1;grid-row:1/4;position:sticky;top:35px;min-height:450px;padding:0 20px 30px 0;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible;text-align:left}
+.criacao-ritual .criacao-dialogo:before{display:none}
+.absoluto-presenca{position:relative;width:175px;height:175px;display:grid;place-items:center;margin:0 0 32px 20px;isolation:isolate}
+.absoluto-presenca:before{content:'';position:absolute;inset:-15px;border:1px solid #c7af7820;border-radius:50%;background:radial-gradient(circle,#c7af780d,transparent 70%)}
+.absoluto-presenca:after{content:'';position:absolute;left:50%;top:-30px;bottom:-30px;width:1px;background:linear-gradient(transparent,#c7af7833,transparent);z-index:-1}
+.absoluto-presenca>div{position:absolute;inset:0;border:1px dashed #c7af7840;border-radius:50%;animation:absoluto-orbita 100s linear infinite}
+.absoluto-presenca img{width:125px;height:125px;object-fit:contain;mix-blend-mode:screen;opacity:.85;filter:sepia(.6) drop-shadow(0 0 14px #c7af781a);animation:absoluto-presenca 7s ease-in-out infinite}
+.criacao-ritual .criacao-kicker{font:10px 'Courier New',monospace;color:var(--rito-ouro);letter-spacing:.22em;margin:0 0 19px;text-transform:uppercase}
+.criacao-ritual .criacao-kicker>span{font:8px Arial,sans-serif;color:#898170;letter-spacing:.08em;display:block;margin-top:10px;text-transform:none}
+.criacao-ritual .criacao-dialogo h1{font:400 clamp(28px,2.8vw,42px)/1.28 Georgia,'Times New Roman',serif;letter-spacing:-.025em;color:var(--rito-texto);text-shadow:none;min-height:165px;margin:0;max-width:440px}
+.criacao-ritual .criacao-dialogo h1:after{width:1px;height:.8em;background:var(--rito-ouro);box-shadow:none;margin-left:6px}
+.absoluto-dialogo-ornamento{display:block;margin-top:24px;color:var(--rito-ouro);font-size:12px}
+.criacao-ritual .criacao-etapa{grid-column:2;min-height:320px;max-width:100%;padding:0;animation:absoluto-revelar .5s ease both}
+.absoluto-etapa-titulo{display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid var(--rito-linha);padding:0 0 20px;margin-bottom:24px}
+.absoluto-etapa-titulo>span{font:9px 'Courier New',monospace;color:#8c7c5d;letter-spacing:.1em;order:2}
+.absoluto-etapa-titulo h2{font:26px Georgia,serif;color:var(--rito-texto);margin:0;letter-spacing:-.02em}
+.criacao-ritual .modo-cadastro-etapa{display:grid;grid-template-columns:1fr;gap:16px;padding:0;min-height:0}
+.criacao-ritual .modo-cadastro-card{position:relative;text-align:left;padding:26px 28px;border:1px solid var(--rito-linha);border-radius:0;background:linear-gradient(120deg,#c7af7808,transparent);min-height:145px;color:var(--rito-texto);transition:border-color .25s,background .25s,transform .25s}
+.criacao-ritual .modo-cadastro-card:after{content:'↗';position:absolute;right:20px;top:22px;font-size:18px;color:#8c7c5d}
+.criacao-ritual .modo-cadastro-card:hover,.criacao-ritual .modo-cadastro-card[aria-pressed=true]{border-color:var(--rito-ouro);background:#c7af780e;transform:translateX(3px)}
+.criacao-ritual .modo-cadastro-card>span{display:block;font:8px 'Courier New',monospace;letter-spacing:.16em;color:var(--rito-ouro);margin-bottom:13px}
+.criacao-ritual .modo-cadastro-card>strong{font:22px/1.2 Georgia,serif;display:block;font-weight:400;text-transform:none;max-width:90%}
+.criacao-ritual .modo-cadastro-card>p{font:11px/1.8 Arial,sans-serif;color:var(--rito-sutil);max-width:340px;margin:12px 0 0}
+.criacao-ritual .criacao-form label,.criacao-ritual .criacao-form label>span,.criacao-ritual .pronome-grupo legend{font:10px Arial,sans-serif;color:var(--rito-sutil);letter-spacing:.05em;text-transform:none}
+.criacao-ritual .criacao-form input,.criacao-ritual .criacao-form textarea{font:15px Arial,sans-serif;background:#0e0e0d;border:1px solid #c7af7833;border-radius:0;color:var(--rito-texto);padding:13px 14px;box-shadow:none}
+.criacao-ritual .criacao-form input:focus,.criacao-ritual .criacao-form textarea:focus{outline:1px solid var(--rito-ouro);outline-offset:2px;border-color:var(--rito-ouro);box-shadow:none}
+.criacao-ritual input[type=radio]{accent-color:var(--rito-ouro)}
+.criacao-ritual .arquetipo-card{border-radius:0;background:#10100e;border-color:var(--rito-linha);box-shadow:none}
+.criacao-ritual .arquetipo-card.ativo{border-color:var(--rito-ouro);background:#c7af780b}
+.criacao-ritual .arquetipo-card h3,.criacao-ritual .classe-resumo h2{font-family:Georgia,serif;color:var(--rito-texto)}
+.criacao-ritual .criacao-saldo{background:#c7af7809;border:1px solid var(--rito-linha);border-radius:0;color:var(--rito-texto)}
+.criacao-ritual .existencia-dados>span{border-radius:0;border-color:var(--rito-linha);background:#11110e;color:#ddd4c3;box-shadow:none}
+.criacao-ritual .existencia-dados>span.maior{border-color:var(--rito-ouro);color:var(--rito-ouro);background:#c7af7810}
+.criacao-ritual .existencia-rolar{border-radius:0;background:var(--rito-ouro);border-color:var(--rito-ouro);color:#17130a}
+.criacao-ritual .criacao-acoes{grid-column:2;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--rito-linha);padding-top:22px;margin-top:30px;gap:12px}
+.criacao-ritual .criacao-acoes button{border-radius:0;font:10px Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:14px 20px;box-shadow:none;min-height:44px}
+.criacao-ritual .criacao-secundario{background:transparent;border:1px solid #c7af7826;color:var(--rito-sutil)}
+.criacao-ritual .criacao-submit{border:1px solid var(--rito-ouro);background:var(--rito-ouro);color:#151109}
+.criacao-ritual .criacao-submit:hover:not(:disabled){background:#dfcb9f;color:#151109}
+.criacao-ritual button:disabled{opacity:.3;cursor:not-allowed}
+.criacao-ritual :focus-visible{outline:2px solid var(--rito-ouro);outline-offset:4px}
+.criacao-ritual .criacao-erro{grid-column:2;border-left:2px solid var(--rito-ouro);padding:12px 16px;background:#c7af780a;color:var(--rito-texto);font:12px/1.6 Arial,sans-serif}
+.criacao-ritual .classe-bg-img{width:45%;opacity:.12;filter:grayscale(1);z-index:-1;mask-image:linear-gradient(90deg,transparent,#000);animation:none}
+@keyframes absoluto-orbita{to{rotate:360deg}}
+@keyframes absoluto-presenca{0%,100%{opacity:.65}50%{opacity:1}}
+@keyframes absoluto-revelar{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}
+@media(max-width:900px){.absoluto-rito-topo small{display:none}.criacao-ritual .criacao-form{gap:0 5%;grid-template-columns:minmax(230px,.85fr) minmax(0,1.15fr)}.criacao-ritual .criacao-dialogo h1{font-size:30px}.absoluto-presenca{width:140px;height:140px}.absoluto-presenca img{width:105px;height:105px}}
+@media(max-width:650px){.criacao-container.criacao-ritual{padding:22px 20px 80px}.absoluto-rito-topo{gap:15px;padding-bottom:20px}.absoluto-rito-topo>span{font-size:8px;letter-spacing:.12em;text-align:right}.absoluto-rito-topo i{padding:0 5px}.absoluto-rito-progresso{margin:18px 0}.absoluto-rito-progresso li{min-width:80px;font-size:8px}.criacao-ritual .criacao-form{display:flex;flex-direction:column;padding-top:5px;gap:24px}.criacao-ritual .criacao-dialogo{position:relative;top:auto;grid-row:auto;min-height:0;padding:0 0 18px 105px;width:100%;border-bottom:1px solid var(--rito-linha)}.absoluto-presenca{position:absolute;left:0;top:5px;width:75px;height:75px;margin:0}.absoluto-presenca img{width:60px;height:60px}.absoluto-presenca:before{inset:-8px}.criacao-ritual .criacao-dialogo h1{font-size:25px;min-height:130px}.criacao-ritual .criacao-kicker{font-size:9px;margin-bottom:14px}.absoluto-dialogo-ornamento{display:none}.criacao-ritual .criacao-etapa,.criacao-ritual .criacao-acoes{width:100%;min-height:0}.criacao-ritual .criacao-acoes{margin-top:0}.criacao-ritual .modo-cadastro-card{padding:22px}.criacao-ritual .modo-cadastro-card>strong{font-size:21px}}
+@media(prefers-reduced-motion:reduce){.criacao-ritual *,.criacao-ritual *:before,.criacao-ritual *:after{animation:none!important;transition:none!important}.criacao-ritual .criacao-dialogo h1:after{display:none}}
+
+/* Arquétipos: mini cards e leitura da escolha no painel lateral. */
+.criacao-ritual .criacao-form:has(.arquetipo-selecao){grid-template-columns:minmax(210px,.55fr) minmax(0,1.45fr);column-gap:5%}
+.arquetipo-selecao{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:22px;align-items:start;min-width:0}
+.arquetipo-mini-lista{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-height:58svh;overflow:auto;overscroll-behavior:contain;padding:2px 8px 4px 2px;scrollbar-width:thin;scrollbar-color:#85734f #10100e}
+.criacao-ritual .arquetipo-mini{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-height:112px;padding:14px 12px;text-align:left;background:#0e0e0c;border:1px solid var(--rito-linha);border-radius:0;color:var(--rito-texto);cursor:pointer;transition:border-color .2s,background .2s}
+.criacao-ritual .arquetipo-mini:hover{border-color:#c7af7888;background:#c7af7808}
+.criacao-ritual .arquetipo-mini.ativo{border-color:var(--rito-ouro);background:#c7af7810;box-shadow:inset 2px 0 var(--rito-ouro)}
+.arquetipo-mini-numero{font:8px 'Courier New',monospace;color:#8d7b56;letter-spacing:.1em}
+.arquetipo-mini strong{font:17px/1.2 Georgia,serif;color:var(--rito-texto);font-weight:400}
+.arquetipo-mini small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:10px/1.6 Arial,sans-serif;color:var(--rito-sutil)}
+.arquetipo-detalhes{position:sticky;top:30px;min-width:0;min-height:330px;max-height:58svh;overflow:auto;scrollbar-width:thin;scrollbar-color:#85734f #10100e;border:1px solid var(--rito-linha);background:linear-gradient(145deg,#c7af7807,#0b0b0a);padding:22px}
+.arquetipo-detalhes-conteudo{animation:absoluto-revelar .3s ease both}
+.arquetipo-detalhe-kicker{font:8px 'Courier New',monospace;letter-spacing:.15em;color:var(--rito-ouro)}
+.arquetipo-detalhes h3{font:28px/1.15 Georgia,serif;margin:14px 0;color:var(--rito-texto);letter-spacing:-.02em}
+.arquetipo-detalhes p,.arquetipo-detalhes li{font:12px/1.8 Arial,sans-serif;color:#c6bfaf}
+.arquetipo-detalhe-bloco{border-top:1px solid var(--rito-linha);margin-top:20px;padding-top:16px}
+.arquetipo-detalhe-bloco h4{font:9px 'Courier New',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--rito-ouro);margin:0 0 10px}
+.arquetipo-detalhe-bloco p{margin:0}
+.arquetipo-detalhe-bloco ul{margin:0;padding-left:16px}
+.arquetipo-detalhe-bloco li+li{margin-top:8px}
+.arquetipo-detalhe-bloco.habilidade{padding:16px;background:#c7af7808;border:1px solid #c7af7826}
+.arquetipo-detalhe-selecionado{display:block;margin-top:22px;color:var(--rito-ouro);font:9px Arial,sans-serif;letter-spacing:.03em}
+.arquetipo-detalhes-vazio{display:flex;flex-direction:column;justify-content:center;min-height:290px;text-align:center}
+.arquetipo-detalhes-vazio>span{color:var(--rito-ouro);font-size:20px}
+.arquetipo-detalhes-vazio h3{font-size:25px}
+.arquetipo-detalhes-vazio p{font-size:11px;color:var(--rito-sutil)}
+@media(max-width:1050px) and (min-width:651px){.arquetipo-mini-lista{grid-template-columns:1fr}.arquetipo-selecao{gap:14px}.arquetipo-detalhes{padding:16px}.arquetipo-mini{min-height:92px}.criacao-ritual .criacao-form:has(.arquetipo-selecao){grid-template-columns:minmax(200px,.6fr) minmax(0,1.4fr);column-gap:4%}}
+@media(max-width:650px){.arquetipo-selecao{grid-template-columns:1fr;gap:16px}.arquetipo-mini-lista{max-height:270px;grid-template-columns:repeat(2,minmax(0,1fr))}.arquetipo-detalhes{position:static;max-height:none;min-height:0}.arquetipo-detalhes-vazio{min-height:160px}.arquetipo-detalhes h3{font-size:27px}}
+
+.classe-arte-transicao{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.criacao-ritual .classe-arte-transicao .classe-bg-img{height:100%;width:45%;opacity:.12;will-change:opacity,transform;mask-image:linear-gradient(90deg,transparent,#000 45%);filter:grayscale(1)}
+.criacao-ritual .classe-arte-transicao .classe-imagem-entrada{animation:absoluto-classe-entrar .65s cubic-bezier(.22,1,.36,1) both}
+.criacao-ritual .classe-arte-transicao .classe-imagem-saida{animation:absoluto-classe-sair .65s ease both}
+@keyframes absoluto-classe-entrar{from{opacity:0;transform:translateX(24px) scale(1.025)}to{opacity:.12;transform:translateX(0) scale(1)}}
+@keyframes absoluto-classe-sair{from{opacity:.12;transform:translateX(0)}to{opacity:0;transform:translateX(-18px)}}
+@media(max-width:650px){.criacao-ritual .classe-arte-transicao .classe-bg-img{width:85%}}
+@media(prefers-reduced-motion:reduce){.criacao-ritual .classe-arte-transicao .classe-bg-img{animation:none!important;transform:none;will-change:auto}.criacao-ritual .classe-arte-transicao .classe-imagem-saida{display:none}}
+
+/* A fala inteira define a altura; a digitação ocupa a mesma célula. */
+.criacao-ritual .criacao-dialogo h1{display:grid}
+.criacao-ritual .criacao-dialogo h1:after{display:none}
+.criacao-ritual .criacao-dialogo h1>.absoluto-fala-reserva,.criacao-ritual .criacao-dialogo h1>.absoluto-fala-visivel{grid-area:1/1;align-self:start;min-width:0;font:inherit;line-height:inherit;letter-spacing:inherit;overflow-wrap:break-word}
+.absoluto-fala-reserva{visibility:hidden;pointer-events:none;user-select:none}
+.absoluto-fala-reserva:after,.absoluto-fala-visivel:after{content:'';display:inline-block;width:1px;height:.8em;margin-left:6px;vertical-align:-.12em}
+.absoluto-fala-visivel:after{background:var(--rito-ouro);animation:cursorPisca .9s steps(2,start) infinite}
+@media(prefers-reduced-motion:reduce){.absoluto-fala-visivel:after{visibility:hidden}}

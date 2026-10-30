@@ -1,3 +1,4 @@
+import NumberInput from '../components/ui/NumberInput';
 import AnimatedScene from '../components/tabletop/AnimatedScene';
 import { espiralDie } from '../utils/espiralDice';
 import CombatPostureButton from '../components/absoluto/CombatPostureButton';
@@ -1528,7 +1529,7 @@ export class SceneBoundary extends Component {
         {editableTokenData && <div className="tt3-token-transform">
           {(mestre || (!selectedTokenData && selectedSheetPerson?.id===tabletopPeople[playerCharacterIndex]?.id)) && <FlashlightControls value={editableTokenData.lanterna} onChange={lanterna => updateEditableToken({lanterna})}/>}
           {mestre && editableTokenData.fromSheet && <label><input type="checkbox" checked={Boolean(selectedSheetTransform?.combat)} onChange={event => updateEditableToken({combat:event.target.checked})}/> Postura de combate</label>}{mestre && <div className="tt3-token-rotation">
-            <label><span>Rotação do token</span><input aria-label="Rotação do token" type="number" min="0" max="359" step="5" value={((Number(editableTokenData.rotacao)||0)%360+360)%360} onChange={event => updateEditableToken({rotacao:((Number(event.target.value)||0)%360+360)%360,olharCamera:false})}/></label>
+            <label><span>Rotação do token</span><NumberInput aria-label="Rotação do token" type="number" min="0" max="359" step="5" value={((Number(editableTokenData.rotacao)||0)%360+360)%360} onChange={event => updateEditableToken({rotacao:((Number(event.target.value)||0)%360+360)%360,olharCamera:false})}/></label>
             <section><button type="button" onClick={() => updateEditableToken({rotacao:((Number(editableTokenData.rotacao)||0)+315)%360,olharCamera:false})}>↶ 45°</button><button type="button" onClick={() => updateEditableToken({rotacao:((Number(editableTokenData.rotacao)||0)+45)%360,olharCamera:false})}>↷ 45°</button></section>
             <label><input type="checkbox" checked={editableTokenData.olharCamera!==false} onChange={event => updateEditableToken({olharCamera:event.target.checked})}/> Sempre olhar para a câmera</label>
           </div>}
@@ -1536,7 +1537,7 @@ export class SceneBoundary extends Component {
           <p>Arraste o token pela imagem. Use os controles abaixo para alinhar os pés com qualquer superfície.</p>
           <div>
             <span>Altura precisa <b>{(Number(editableTokenData.elevation)||0).toFixed(2)} m</b></span>
-            <input
+            <NumberInput
               type="number"
               min="-500"
               max="500"

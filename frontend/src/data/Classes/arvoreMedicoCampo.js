@@ -1,3 +1,4 @@
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
 const habilidade = (id, nome, nivel, custo, descricao) => ({
   id,
   nome,
@@ -6,7 +7,7 @@ const habilidade = (id, nome, nivel, custo, descricao) => ({
   descricao,
 });
 
-export const arvoreMedicoCampo = {
+export const arvoreMedicoCampo = normalizarConteudoAbsoluto({
   id: "medico-de-campo",
   classe: "Médico de Campo",
   titulo: "A MEDICINA ABSOLUTA",
@@ -189,4 +190,4 @@ export const arvoreMedicoCampo = {
       ],
     },
   ],
-};
+});

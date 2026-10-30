@@ -1,3 +1,4 @@
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
 const criarMunicao = (arma, municao) => ({
   id: `municao-${arma.id}-${municao.id}`,
   nome: `${municao.nome} — ${arma.nome}`,
@@ -106,8 +107,8 @@ const ARMAS = [
   },
 ];
 
-export const CATALOGO_MUNICOES_ESPECIAIS = ARMAS.flatMap((arma) =>
+export const CATALOGO_MUNICOES_ESPECIAIS = normalizarConteudoAbsoluto(ARMAS.flatMap((arma) =>
   [...MUNICOOES_BASE, ...arma.unicas].map((municao) =>
     criarMunicao(arma, municao),
   ),
-);
+));

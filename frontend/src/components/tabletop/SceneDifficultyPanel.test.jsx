@@ -8,7 +8,8 @@ test('exibe todas as categorias e permite selecionar e editar sem editar Defesa'
  expect(screen.getByRole('heading',{name:'Combate'})).toBeInTheDocument();
  expect(screen.getByRole('heading',{name:'Conflitos'})).toBeInTheDocument();
  expect(screen.getAllByRole('spinbutton')).toHaveLength(3);
- expect(screen.queryByRole('button')).not.toBeInTheDocument();
+ expect(screen.queryByRole('button',{name:/salvar/i})).not.toBeInTheDocument();
+ expect(screen.getAllByRole('button',{name:'Aumentar valor'})).toHaveLength(3);
  const input=screen.getByLabelText('Dificuldade de Ambiente da cena');
  fireEvent.change(input,{target:{value:'7'}});fireEvent.blur(input);
  expect(onSave).toHaveBeenCalledWith({ambiente:7});

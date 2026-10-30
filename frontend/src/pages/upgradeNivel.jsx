@@ -1,3 +1,6 @@
+import NumberInput from '../components/ui/NumberInput';
+import AbsolutoEvolucao from '../components/absoluto/AbsolutoEvolucao';
+import { ehAbsolutoV1 } from '../data/absolutoV1';
 import {persistirEnvioHabilidade,carregarRascunhoHabilidade,salvarRascunhoHabilidade} from '../services/abilitySubmission';
 import AbilityPageEditor from '../components/habilidades/AbilityPageEditor';
 import AbilityDocument from '../components/habilidades/AbilityDocument';
@@ -819,7 +822,7 @@ const UpgradeNivel = () => {
         <span>{trilha === "criacao" ? "ESTÚDIO DO JOGADOR / SISTEMA ABSOLUTO" : "SISTEMA ABSOLUTO / EVOLUÇÃO"}</span>
         <h1>{trilha === "criacao" ? "Crie sua próxima habilidade." : "O próximo passo."}</h1><div className="upgrade-character-identity"><strong>{personagem.nome || "Personagem"}</strong><span>{personagem.classe || "Sistema Absoluto"}</span></div>
         <p>
-          {trilha === "criacao" ? "Organize efeitos em páginas, monte tabelas e veja o card enquanto escreve. Seu rascunho é salvo neste dispositivo." : "Distribua seus pontos de evolução livremente entre Integridade, Atributos e Passivos. Cada ponto gasto aumenta permanentemente o valor escolhido."}
+          {trilha === "criacao" ? "Organize efeitos em páginas, monte tabelas e veja o card enquanto escreve. Seu rascunho é salvo neste dispositivo." : "Distribua seus pontos de evolução livremente entre Integridade, Atributos e Domínios. Cada ponto gasto aumenta permanentemente o valor escolhido."}
         </p>
       </section>
 
@@ -873,7 +876,7 @@ const UpgradeNivel = () => {
                 aria-pressed={trilha === item}
                 onClick={() => alterarTrilha(item)}
               >
-                {item === "criacao" ? "Criar habilidade" : item === "integridade" ? "Integridade" : item === "marcos" ? "Marcos NV5+" : item.charAt(0).toUpperCase() + item.slice(1)}
+                {item === "passivos" ? "Domínios" : item === "criacao" ? "Criar habilidade" : item === "integridade" ? "Integridade" : item === "marcos" ? "Marcos NV5+" : item.charAt(0).toUpperCase() + item.slice(1)}
               </button>
             ))}
           </div>
@@ -887,7 +890,7 @@ const UpgradeNivel = () => {
                 ? "Saldo para habilidades"
                 : trilha === "integridade"
                 ? `Integridade disponível: ${disponiveisIntegridade}`
-                : `Distribuindo pontos em ${trilha}`}
+                : `Distribuindo pontos em ${trilha === "passivos" ? "Domínios" : trilha}`}
             </span>
             <strong>
               {trilha === "marcos"
@@ -900,8 +903,17 @@ const UpgradeNivel = () => {
             </strong>
           </div>
 
+          {ehAbsolutoV1(personagem) && ['atributos', 'passivos'].includes(trilha) && <AbsolutoEvolucao key={trilha} grupo={trilha === 'passivos' ? 'dominios' : 'atributos'} personagem={personagem} onSave={async atualizado => {
+    localStorage.setItem(storageKey, JSON.stringify(atualizado));
+    setPersonagem(atualizado);
+    notificarPersonagemAtualizado(fichaId, atualizado);
+    try { const salvo = await salvarPersonagem(fichaId, atualizado); notificarPersonagemAtualizado(fichaId, salvo || atualizado); }
+    catch { mostrarNotificacao('Evolução salva neste dispositivo. Sincronização pendente.', 'aviso'); }
+  }} />
+ }
+
           {/* ATRIBUTOS */}
-          {trilha === "atributos" && (
+          {trilha === "atributos" && !ehAbsolutoV1(personagem) && (
             <div className="upgrade-lista">
               {ATRIBUTOS_UPGRADE.map((atributo) => {
                 const valorAtual = personagem.atributos?.[atributo.chave] || 0;
@@ -937,7 +949,7 @@ const UpgradeNivel = () => {
                         >
                           +
                         </button>
-                        <input
+                        <NumberInput
                           type="number"
                           min="0"
                           value={pontosAlocados}
@@ -974,7 +986,7 @@ const UpgradeNivel = () => {
           )}
 
           {/* PASSIVOS */}
-          {trilha === "passivos" && (
+          {trilha === "passivos" && !ehAbsolutoV1(personagem) && (
             <div className="upgrade-lista">
               {opcoesPassivas.map((passiva) => {
                 const valorAtual = personagem.habilidadesPassivas?.[passiva.chave] || 0;
@@ -1010,7 +1022,7 @@ const UpgradeNivel = () => {
                         >
                           +
                         </button>
-                        <input
+                        <NumberInput
                           type="number"
                           min="0"
                           max={Math.max(0, PASSIVOS_MAXIMO - valorAtual)}
@@ -1192,7 +1204,7 @@ const UpgradeNivel = () => {
                         >
                           +
                         </button>
-                        <input
+                        <NumberInput
                           type="number"
                           min="0"
                           value={pontosAlocados}
@@ -1233,6 +1245,7 @@ const UpgradeNivel = () => {
             <button
               type="button"
               className="upgrade-confirmar"
+              style={ehAbsolutoV1(personagem) && ["atributos", "passivos"].includes(trilha) ? { display: "none" } : undefined}
               onClick={aplicarUpgrade}
               disabled={
                 (trilha === "integridade" && integridadeAlocada === 0) ||
@@ -1285,7 +1298,7 @@ const UpgradeNivel = () => {
                 <div className="modal-input-group">
                   <label>
                     Quantidade de pontos:
-                    <input
+                    <NumberInput
                       type="number"
                       min="1"
                       max={modal.maximo}

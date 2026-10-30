@@ -1,0 +1,11 @@
+.ambient-music{position:fixed;bottom:18px;right:20px;z-index:900;font:12px Arial,sans-serif;color:#f5f2ea;text-align:left}
+.ambient-music>summary{cursor:pointer;padding:11px 15px;border:1px solid #bfa66b66;border-radius:20px;background:#101012f5;box-shadow:0 4px 20px #0006;list-style:none}
+.ambient-music>summary::-webkit-details-marker{display:none}
+.ambient-music-panel{position:absolute;right:0;bottom:48px;display:grid;gap:16px;width:min(280px,calc(100vw - 32px));max-height:70svh;overflow:auto;padding:20px;background:#111114fa;border:1px solid #bfa66b66;border-radius:12px;box-shadow:0 8px 30px #0008}
+.ambient-music-panel label{display:grid;gap:8px;color:#d2c5a4}
+.ambient-music-panel select,.ambient-music-panel button{font:inherit;padding:9px;border:1px solid #bfa66b66;border-radius:5px;color:#f5f2ea;background:#202024}
+.ambient-music-panel button{cursor:pointer}
+.ambient-music-panel input{width:100%;accent-color:#d8b96f}
+.ambient-music-panel small{color:#aaa;line-height:1.5}
+.ambient-music :focus-visible{outline:2px solid #d8b96f;outline-offset:3px}
+@media(max-width:600px){.ambient-music{bottom:12px;right:12px}}

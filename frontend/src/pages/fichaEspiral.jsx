@@ -1,3 +1,4 @@
+import NumberInput from '../components/ui/NumberInput';
 import EspiralDice, { EspiralDie, EspiralDiceInput } from '../components/espiral/EspiralDice';
 import PlayerPageLink from '../components/jogador/PlayerPageLink';
 import EspiralDamage from '../components/espiral/EspiralDamage';
@@ -119,10 +120,11 @@ function Spiral({ small = false, className = "" }) {
   );
 }
 function Field({ label, value, onChange, ...props }) {
+  const Input = props.type === 'number' ? NumberInput : 'input';
   return (
     <label className="es-field">
       <span>{label}</span>
-      <input
+      <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         {...props}
@@ -140,7 +142,7 @@ function Counter({ label, value, max, onChange }) {
       >
         −
       </button>
-      <input
+      <NumberInput hideArrows
         aria-label={typeof label === "string" ? label : "Bônus / penalidade"}
         type="number"
         min="0"
@@ -490,14 +492,15 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
       if(event.type!=='storage' && event.detail?.fichaId!==`espiral:${id}`) return;
       try {const latest=event.type==='storage' ? JSON.parse(event.newValue || 'null') : event.detail?.patch;
         if(latest) setSheet(previous => {
+ const temaFicha=latest.temaFicha ?? previous.temaFicha;
  const profileTokenAnimation=latest.profileTokenAnimation ?? previous.profileTokenAnimation,tabletopTokenAnimation=latest.tabletopTokenAnimation ?? previous.tabletopTokenAnimation;
- if(JSON.stringify([profileTokenAnimation,tabletopTokenAnimation])===JSON.stringify([previous.profileTokenAnimation,previous.tabletopTokenAnimation])) return previous;
- return {...previous,profileTokenAnimation,tabletopTokenAnimation};
+ if(JSON.stringify([profileTokenAnimation,tabletopTokenAnimation,temaFicha])===JSON.stringify([previous.profileTokenAnimation,previous.tabletopTokenAnimation,previous.temaFicha])) return previous;
+ return {...previous,profileTokenAnimation,tabletopTokenAnimation,temaFicha};
 });
       } catch {}
     };
-    window.addEventListener('storage',updateAnimation);window.addEventListener('darkness:token-animation-updated',updateAnimation);
-    return () => {window.removeEventListener('storage',updateAnimation);window.removeEventListener('darkness:token-animation-updated',updateAnimation);};
+    window.addEventListener('darkness:espiral-theme-updated',updateAnimation);window.addEventListener('storage',updateAnimation);window.addEventListener('darkness:token-animation-updated',updateAnimation);
+    return () => {window.removeEventListener('darkness:espiral-theme-updated',updateAnimation);window.removeEventListener('storage',updateAnimation);window.removeEventListener('darkness:token-animation-updated',updateAnimation);};
   },[storageKey,id]);  useEffect(() => {
     if(!embedded) document.title = sheet.name || "Ficha de personagem";
   }, [sheet.name,embedded]);
@@ -552,7 +555,9 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
     }
     try {
       setNotice("Preparando foto de perfil…");
-      update("profileImage", await compressProfileImage(file));
+      const photo = await compressProfileImage(file);
+      if (!photo) { setNotice(""); return; }
+      update("profileImage", photo);
       setNotice("Foto de perfil atualizada.");
     } catch (error) {
       setNotice(error?.message || "Não foi possível preparar esta imagem.");
@@ -914,6 +919,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
         "--es-text": sheet.temaFicha?.texto,
         "--es-bg": sheet.temaFicha?.fundo,
         "--es-line": sheet.temaFicha?.borda,
+        "--es-muted": "color-mix(in srgb, var(--es-text) 65%, var(--es-bg))",
       }}
     >
       <header className="es-topbar">

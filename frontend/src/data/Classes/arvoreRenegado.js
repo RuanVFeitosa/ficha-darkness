@@ -1,4 +1,5 @@
-export const arvoreRenegado = {
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
+export const arvoreRenegado = normalizarConteudoAbsoluto({
   classe: "Renegado",
   titulo: "A RENEGAÇÃO ABSOLUTA",
   beneficio:
@@ -530,4 +531,4 @@ export const arvoreRenegado = {
       ],
     }, 
   ],
-};
+});

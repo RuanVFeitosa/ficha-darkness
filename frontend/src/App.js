@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useState } from "react";
+import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import PageTransition from "./pages/pageTransition";
 import { pageTransitionSystem } from "./utils/pageTransitionSystem";
 import "./App.css";
@@ -12,6 +12,8 @@ import { hasEspiralToken, readEspiralTabletopSheet, MISSING_ESPIRAL_TOKEN } from
 import LojaEspiral from "./pages/lojaEspiral";
 import TransformacaoEspiral from "./pages/transformacaoEspiral";
 import Tabletop3DAccess from './components/tabletop/Tabletop3DAccess';
+import { useAmbientPlayback } from './utils/useLoginAmbient';
+import AmbientMusicControls from './components/ui/AmbientMusicControls';
 
 const PaginaJogador = lazy(() => import("./pages/PaginaJogador"));
 const ArvoreHabilidades = lazy(() => import("./pages/arvoreHabilidades"));
@@ -27,64 +29,78 @@ const UpgradeNivel = lazy(() => import("./pages/upgradeNivel"));
 const FichaEspiral = lazy(() => import("./pages/fichaEspiral"));
 
 function App() {
+  useAmbientPlayback();
   const [transitionFicha,setTransitionFicha]=useState(()=>new URLSearchParams(window.location.search).has('ficha'));
   const [search, setSearch] = useState(window.location.search);
   const [tabletopUnlocked, setTabletopUnlocked] = useState(false);
   const [transitionActive, setTransitionActive] = useState(() => Boolean(window.location.search));
   const [transitionSystem,setTransitionSystem]=useState(() => pageTransitionSystem(window.location.search));
+  const transitionTimers = useRef([]);
+
+  const navegarComTransicao = useCallback((destino, atualizarHistorico = true) => {
+    transitionTimers.current.forEach(clearTimeout);
+    const url = new URL(destino, window.location.href);
+    const destination = url.searchParams;
+    if (atualizarHistorico && new URLSearchParams(window.location.search).get('sistema') === 'darkness' && !destination.has('sistema')) {
+      destination.set('sistema', 'darkness');
+    }
+    setTransitionFicha(destination.has('ficha') && !destination.has('jogador'));
+    setTransitionSystem(pageTransitionSystem(destination.has('sistema') || destination.has('mestre') || destination.has('papel') ? url.search : window.location.search));
+    setTransitionActive(true);
+    transitionTimers.current = [setTimeout(() => {
+      if (atualizarHistorico) window.history.pushState({}, '', `${url.pathname}${url.search}${url.hash}`);
+      setSearch(url.search);
+    }, 700), setTimeout(() => setTransitionActive(false), 1000)];
+  }, []);
 
   useEffect(() => {
-    const startTimer = setTimeout(() => {
+    transitionTimers.current = [setTimeout(() => {
       setTransitionActive(false);
-    }, 1000);
+    }, 1000)];
 
-    return () => clearTimeout(startTimer);
+    return () => transitionTimers.current.forEach(clearTimeout);
   }, []);
 
   useEffect(() => {
     const handleClick = (event) => {
-      const link = event.target.closest("a");
+      const link = event.target.closest?.("a");
 
       if (!link || event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
 
-      let href = link.getAttribute("href");
+      const href = link.getAttribute("href");
 
-      if (!href || !href.startsWith("?")) return;
-
-      const destination = new URLSearchParams(href);
-      if (new URLSearchParams(window.location.search).get('sistema') === 'darkness' && !destination.has('sistema')) {
-        destination.set('sistema', 'darkness');
-        href = `?${destination.toString()}`;
-      }
+      if (!href || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+      const url = new URL(href, window.location.href);
+      if (url.origin !== window.location.origin || url.pathname !== window.location.pathname || href.startsWith('#')) return;
 
       event.preventDefault();
 
-      setTransitionFicha(destination.has('ficha') && !destination.has('jogador'));
-      setTransitionSystem(pageTransitionSystem(destination.has("sistema") ? href : window.location.search));
-      setTransitionActive(true);
-
-      setTimeout(() => {
-        window.history.pushState({}, "", href);
-        setSearch(window.location.search);
-        setTimeout(() => setTransitionActive(false), 300);
-      }, 700);
+      navegarComTransicao(href);
 
     };
 
     window.addEventListener("click", handleClick);
 
     return () => window.removeEventListener("click", handleClick);
-  }, []);
+  }, [navegarComTransicao]);
 
   useEffect(() => {
-    const onPopState = () => setSearch(window.location.search);
+    const onPopState = () => navegarComTransicao(window.location.href, false);
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, []);
+  }, [navegarComTransicao]);
 
   const params = new URLSearchParams(search);
   void (params.get("sistema") === "darkness");
   const sistemaEspiral = params.get("sistema") === "espiral";
+
+  useEffect(() => {
+    const rota = new URLSearchParams(search);
+    const sistema = rota.get('sistema');
+    const areaFicha = ['ficha', 'upgrade', 'habilidades', 'criar', 'loja', 'lojaEspiral', 'transformacao'].some(chave => rota.has(chave));
+    document.documentElement.dataset.controlTheme = areaFicha && sistema === 'darkness' ? 'absoluto' : areaFicha && sistema === 'espiral' ? 'espiral' : 'site';
+    return () => { delete document.documentElement.dataset.controlTheme; };
+  }, [search]);
 
   const temFicha = Boolean(params.get("ficha"));
   const estaCriando = params.get("criar") === "1";
@@ -146,9 +162,10 @@ function App() {
     <div className="App">
       <PageTransition active={transitionActive} sistema={transitionSystem} simboloSistema={transitionFicha} />
       <DialogoGlobal />
+      {Boolean(search && search !== '?') && <AmbientMusicControls />}
 
       <Suspense fallback={<div style={{ color: "#eee", padding: 40 }}>Abrindo a loja…</div>}>
-        {params.has("jogador") ? (<PaginaJogador codigo={params.get("jogador")} />) : estaNoCriadorMapa3D && mestreAutorizado ? (
+        {params.has("jogador") ? (<PaginaJogador key={params.get("jogador")} codigo={params.get("jogador")} onNavigate={navegarComTransicao} />) : estaNoCriadorMapa3D && mestreAutorizado ? (
           <CriadorMapa3D />
         ) : params.get("tabletop3d") === "1" ? (
           tabletop3DAutorizado ? <Tabletop3D /> : <Tabletop3DAccess onAuthorized={() => setTabletopUnlocked(true)} />
@@ -171,7 +188,7 @@ function App() {
         ) : estaCriando ? (
           <CriarPersonagem key={params.get("sistema") || "escolha"} />
         ) : (
-          <TelaInicial />
+          <TelaInicial onNavigate={navegarComTransicao} />
         )}
       </Suspense>
     </div>

@@ -1,4 +1,5 @@
-export const receitasCriacao = [
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
+export const receitasCriacao = normalizarConteudoAbsoluto([
   {
     categoria: "Armas Aprimoráveis",
 
@@ -296,4 +297,4 @@ export const receitasCriacao = [
       },
     ],
   },
-];
+]);

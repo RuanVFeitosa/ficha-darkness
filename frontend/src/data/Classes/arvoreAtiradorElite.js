@@ -1,4 +1,5 @@
-export const arvoreAtiradorElite = {
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
+export const arvoreAtiradorElite = normalizarConteudoAbsoluto({
   classe: "Atirador de Elite",
 
   titulo: "A BALÍSTICA ABSOLUTA",
@@ -564,4 +565,4 @@ export const arvoreAtiradorElite = {
       ],
     },
   ],
-};
+});

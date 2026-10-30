@@ -1,3 +1,4 @@
+import { normalizarFichaAbsoluto } from './absolutoModificadores';
 export const PASSIVOS_INCREMENTO = 5;
 export const PASSIVOS_MAXIMO = 15;
 
@@ -7,6 +8,8 @@ const revisaoPassivos = (personagem = {}) =>
 // Converte fichas antigas (que aceitavam valores unitários) para os patamares
 // atuais de +5, +10 e +15. A operação é idempotente e preserva valores já válidos.
 export const normalizarPassivosParaNovaEscala = (personagem = {}) => {
+  personagem = normalizarFichaAbsoluto(personagem);
+  if (!personagem || personagem.versaoRegras === "1.0") return personagem;
   const passivos = personagem.habilidadesPassivas;
   if (!passivos || typeof passivos !== "object") return personagem;
 
@@ -40,6 +43,8 @@ export const mesclarPassivosPorRevisao = (principal, alternativa) => {
   const alternativaNormalizada = normalizarPassivosParaNovaEscala(alternativa);
 
   if (!principalNormalizado) return alternativaNormalizada;
+  if (principalNormalizado.versaoRegras === '1.0') return principalNormalizado;
+  if (alternativaNormalizada?.versaoRegras === '1.0') return alternativaNormalizada;
   if (!alternativaNormalizada) return principalNormalizado;
   if (revisaoPassivos(alternativaNormalizada) <= revisaoPassivos(principalNormalizado)) return principalNormalizado;
 

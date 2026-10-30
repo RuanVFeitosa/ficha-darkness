@@ -1,3 +1,5 @@
+import { ajustarEnquadramento } from '../components/ui/PhotoCropDialog';
+
 const MAX_PROFILE_IMAGE_SIZE = 512;
 const PROFILE_IMAGE_QUALITY = 0.72;
 const MAX_PROFILE_IMAGE_BYTES = 120 * 1024;
@@ -43,12 +45,8 @@ export const compressProfileImage = async (file) => {
     throw new Error("Escolha um arquivo de imagem valido.");
   }
 
-  const originalDataUrl = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Nao foi possivel ler a imagem."));
-    reader.readAsDataURL(file);
-  });
+  const originalDataUrl = await ajustarEnquadramento(file);
+  if (!originalDataUrl) return null;
   const image = await loadImage(originalDataUrl);
   const ratio = Math.min(
     1,

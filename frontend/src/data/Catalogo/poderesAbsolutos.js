@@ -1,3 +1,4 @@
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
 const criarPoderAbsoluto = (id, nome, preco, detalhe, absolutismo) => ({
   id,
   nome,
@@ -7,7 +8,7 @@ const criarPoderAbsoluto = (id, nome, preco, detalhe, absolutismo) => ({
   entrega: absolutismo,
 });
 
-export const CATALOGO_PODERES_ABSOLUTOS = [
+export const CATALOGO_PODERES_ABSOLUTOS = normalizarConteudoAbsoluto([
   criarPoderAbsoluto(
     "poder-passos-cacador-noturno",
     "Passos do Caçador Noturno",
@@ -183,4 +184,4 @@ export const CATALOGO_PODERES_ABSOLUTOS = [
     "Quando fica Abalado, Amedrontado ou Enfraquecido, pode, como ação livre no início do seu turno, remover essa condição. Se fizer isso, ganha 2 PE temporários até o final da cena.",
     "Absolutismo: Você também pode usar esta habilidade quando um aliado adjacente sofrer uma dessas condições, removendo-a dele e ganhando os PE temporários.",
   ),
-];
+]);

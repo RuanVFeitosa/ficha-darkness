@@ -1,4 +1,5 @@
-export const MODIFICACOES = [
+import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
+export const MODIFICACOES = normalizarConteudoAbsoluto([
   // ===== MIRAS (Armas de Fogo) =====
   {
     id: "mira-telescopica-2x",
@@ -599,4 +600,4 @@ export const MODIFICACOES = [
       slots: 1,
     },
   },
-];
+]);

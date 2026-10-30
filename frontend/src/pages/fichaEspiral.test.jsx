@@ -1,7 +1,8 @@
 import { prepareTokenImage } from '../services/imageCompression';
 import { externalizarImagens } from '../services/mediaStorage';
 import React from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { salvarPaletaFicha, PALETA_CLARA } from '../utils/playerAppearance';
 import FichaEspiral from './fichaEspiral';
 import { buscarPersonagem } from '../services/personagemApi';
 import DialogoGlobal from '../components/ui/DialogoGlobal';
@@ -223,6 +224,17 @@ test('personaliza e preserva as cores da ficha', () => {
 
   expect(view.container.querySelector('.espiral-app')).toHaveStyle({ '--es-accent': '#ff0000' });
   expect(JSON.parse(localStorage.getItem('espiral:sheet:v1:principal')).temaFicha.primaria).toBe('#ff0000');
+});
+
+test('aplicar paleta da biblioteca atualiza uma ficha ESPIRAL já aberta e preserva recursos',async()=>{
+ const ficha={...freshSheet(),name:'Maya',sanity:7,hope:6};
+ localStorage.setItem('espiral:sheet:v1:principal',JSON.stringify(ficha));
+ const view=render(<FichaEspiral/>);
+ await act(async()=>{await salvarPaletaFicha({id:'principal',sistema:'espiral'},{...PALETA_CLARA,primaria:'#ff0000'});});
+ const raiz=view.container.querySelector('.espiral-app');
+ expect(raiz).toHaveStyle({'--es-accent':'#ff0000','--es-bg':'#ffffff','--es-surface':'#f0f0f0','--es-text':'#151515','--es-line':'#b8b8b8'});
+ const salva=JSON.parse(localStorage.getItem('espiral:sheet:v1:principal'));
+ expect(salva.sanity).toBe(7);expect(salva.hope).toBe(6);expect(salva.name).toBe('Maya');
 });
 test('bloqueia entrada no tabletop sem corpo inteiro mesmo com foto de perfil', () => {
  localStorage.setItem('espiral:sheet:v1:principal',JSON.stringify({...freshSheet(),profileImage:'https://example.com/portrait.png'}));

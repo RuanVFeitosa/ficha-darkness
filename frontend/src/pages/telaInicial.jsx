@@ -1,9 +1,11 @@
+import HaloEclipse from '../components/ui/HaloEclipse';
 import SiteBoot from '../components/ui/SiteBoot';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { entrarJogador } from '../services/jogadorApi';
 import { MESTRE_AUTH_KEY, SENHA_MESTRE } from '../constants/masterAccess';
 import { PRONOMES_JOGADOR, saudacaoJogador } from '../utils/saudacaoJogador';
 import useLoginSound from '../utils/useLoginSound';
+import useLoginAmbient from '../utils/useLoginAmbient';
 import '../styles/TelaInicial.css';
 
 export const LOGIN_WELCOME_DURATION = 2600;
@@ -28,6 +30,7 @@ export default function TelaInicial({ onNavigate = navegar, inicializar = true }
   const [mestrePronome, setMestrePronome] = useState(() => lerMestre().pronome || 'Elu');
   const input = useRef(null), timer = useRef(null), ocupado = useRef(false), montado = useRef(true);
   const { tocar, ativo: somAtivo, alternar: alternarSom } = useLoginSound();
+  const { ativo: musicaAtiva, alternar: alternarMusica } = useLoginAmbient();
   const mestre = modo === 'mestre';
   const tema = mestre ? 'claro' : 'escuro';
   const entrando = etapa !== 'senha';
@@ -75,14 +78,18 @@ export default function TelaInicial({ onNavigate = navegar, inicializar = true }
   return <><main aria-hidden={iniciando ? true : undefined} inert={iniciando ? "" : undefined} className={`login-screen login-boot-stage ${loginRevelado ? "" : "login-boot-hidden"} login-${tema} ${mestre ? 'login-is-master' : ''} ${etapa === 'boas-vindas' ? 'login-welcome' : ''}`}>
     <div className="login-preferencias" aria-label="Preferências da tela de login">
       <span className="login-papel">{mestre ? 'MESTRE' : 'JOGADOR'}</span>
+      <button type="button" onClick={alternarMusica} aria-pressed={musicaAtiva} aria-label={musicaAtiva ? 'Desativar música ambiente' : 'Ativar música ambiente'}>MÚSICA {musicaAtiva ? 'ON' : 'OFF'}</button>
       <button type="button" onClick={alternarSom} aria-pressed={somAtivo} aria-label={somAtivo ? 'Desativar sons de teclado' : 'Ativar sons de teclado'}>SOM {somAtivo ? 'ON' : 'OFF'}</button>
     </div>
-    <img className="login-simbolo" src="/simbolo-darkness.png" alt="Símbolo Darkness" draggable="false"/>
+    <div className="login-atmosfera" aria-hidden="true">{Array.from({ length: 16 }, (_, i) => <span key={i} style={{ '--i': i }} />)}</div>
+    <div className="login-marca" aria-hidden="true">DARKNESS<span>O desconhecido espera por você</span></div>
+    <div className="login-simbolo"><HaloEclipse /><img className="login-glyph" src="/simbolo-darkness.png" alt="Símbolo Darkness" draggable="false"/></div>
     {etapa === 'boas-vindas' && <h1 className="login-boas-vindas" role="status">{boasVindas}</h1>}
     <form className="login-form" onSubmit={entrar} aria-label={mestre ? 'Entrada do mestre' : 'Entrada do jogador'} aria-hidden={etapa === 'boas-vindas' ? true : undefined}>
       <fieldset disabled={entrando}>
         <h1 className="login-prompt"><label htmlFor="login-senha">{mestre ? "ÁREA DO MESTRE" : "ÁREA DO JOGADOR"}</label></h1>
         
+        <p className="login-instrucao">{mestre ? 'Toda história começa com quem a conduz.' : 'Sua próxima história começa aqui.'}</p>
         <div className="login-password" onClick={() => input.current?.focus()}>
           <div className="login-slots" aria-hidden="true">{Array.from({ length: mestre ? SENHA_MESTRE.length : Math.max(6, senha.length) }, (_, i) => <span key={i} className={i < senha.length ? 'preenchido' : ''}>{i < senha.length ? '●' : ''}</span>)}</div>
           <input id="login-senha" ref={input} type="password" inputMode="numeric" autoComplete="current-password" maxLength={mestre ? SENHA_MESTRE.length : 8} value={senha} onChange={e => atualizarSenha(e.target.value)} aria-invalid={!!erro} aria-describedby={erro ? 'login-erro' : 'login-ajuda'} aria-label={mestre ? 'Senha do mestre' : 'Senha do jogador'}/>

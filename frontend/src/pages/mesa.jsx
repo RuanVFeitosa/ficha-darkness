@@ -1,3 +1,4 @@
+import NumberInput from '../components/ui/NumberInput';
 import AnimatedScene from '../components/tabletop/AnimatedScene';
 import TabletopSceneEditor from '../components/tabletop/TabletopSceneEditor';
 import AnimatedTokenImage from '../components/tokens/AnimatedTokenImage';
@@ -139,7 +140,7 @@ const ControleVitalInimigo = ({ nome, recurso, aoAlterar, tipo = "" }) => {
         >
           −
         </button>
-        <input
+        <NumberInput
           type="number"
           min="0"
           inputMode="numeric"
@@ -1205,9 +1206,8 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
       iniciativasRascunho,
       fichaId,
     );
-    const texto = possuiRascunho
-      ? String(iniciativasRascunho[fichaId] ?? "")
-      : String(campanha.iniciativas?.[fichaId] ?? "");
+    if (!possuiRascunho) return;
+    const texto = String(iniciativasRascunho[fichaId] ?? "");
 
     try {
       if (!texto) {
@@ -1232,6 +1232,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
       }
 
       setIniciativasRascunho((atuais) => {
+        if (atuais[fichaId] !== texto) return atuais;
         const proximo = { ...atuais };
         delete proximo[fichaId];
         return proximo;
@@ -3988,7 +3989,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
                 />
                 <label className="inimigo-defesa-resumo">
                   <span>Defesa</span>
-                  <input
+                  <NumberInput
                     key={inimigoAberto.defesa}
                     type="number"
                     min="0"
@@ -4339,6 +4340,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
                               onChange={(event) =>
                                 alterarRascunhoIniciativa(entrada.membro, event.target.value)
                               }
+                              onBlur={() => confirmarIniciativaMestre(entrada.membro)}
                               onKeyDown={(event) => {
                                 if (event.key === "Enter") {
                                   event.preventDefault();
@@ -4434,7 +4436,8 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
                                   "")
                             }
                             aria-label={`Iniciativa de ${personagem?.nome || membro.nome}`}
-                            title="Digite a iniciativa e confirme"
+                            title="Salva ao sair do campo ou pressionar Enter"
+                            onBlur={() => confirmarIniciativaMestre(membro)}
                             onDragStart={(event) => event.preventDefault()}
                             onChange={(event) =>
                               alterarRascunhoIniciativa(

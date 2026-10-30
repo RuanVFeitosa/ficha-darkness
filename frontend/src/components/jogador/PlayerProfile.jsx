@@ -1,9 +1,10 @@
 import {fecharAnimado} from '../../utils/pageMotion';
 import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
+import { prepararFotoPerfil } from '../../utils/playerProfilePhoto';
 
 export default function PlayerProfile({perfil,onSave}) {
- const [aberto,setAberto]=useState(!perfil.fotoPerfil);
+ const [aberto,setAberto]=useState(!perfil.perfilConfigurado && !perfil.fotoPerfil);
  const [nome,setNome]=useState(perfil.nome || '');
  const [pronome,setPronome]=useState(perfil.perfilConfigurado ? perfil.pronome || '' : '');
  const [foto,setFoto]=useState(perfil.fotoPerfil || '');
@@ -15,18 +16,10 @@ export default function PlayerProfile({perfil,onSave}) {
  useEffect(()=>{if(aberto) dialog.current?.querySelector('input')?.focus();},[aberto,portalRoot]);
  const fechar=()=>fecharAnimado(dialog.current,()=>{setAberto(false);botao.current?.focus();});
  async function carregarFoto(e) {
-  const file=e.target.files?.[0];if(!file)return;
-  if(!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size>5*1024*1024){setErro('Escolha uma imagem PNG, JPG ou WebP de até 5 MB.');return;}
+  const file=e.target.files?.[0];e.target.value='';if(!file)return;
   setOcupado(true);setErro('');
-  try {
-   const url=URL.createObjectURL(file);
-   try {
-    const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url;});
-    const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;
-    const size=Math.min(img.width,img.height);canvas.getContext('2d').drawImage(img,(img.width-size)/2,(img.height-size)/2,size,size,0,0,256,256);
-    setFoto(canvas.toDataURL('image/png'));
-   }finally{URL.revokeObjectURL(url);}
-  }catch{setErro('Não foi possível abrir essa imagem. Escolha outra foto.');}finally{setOcupado(false);}
+  try { const result = await prepararFotoPerfil(file); if(result) setFoto(result); }
+  catch(error){setErro(error.message);}finally{setOcupado(false);}
  }
  async function salvar(e){e.preventDefault();setErro('');setOcupado(true);try{if(await onSave({...perfil,nome:nome.trim() || perfil.nome,pronome:pronome || undefined,fotoPerfil:foto,perfilConfigurado:true}))fechar();else setErro('Não foi possível salvar o perfil. Tente novamente.');}catch{setErro('Não foi possível salvar o perfil. Tente novamente.');}finally{setOcupado(false);}}
  return <div className="pj-player-profile">
