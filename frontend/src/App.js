@@ -119,7 +119,7 @@ function App() {
 
   useEffect(() => {
     if (temFicha) return undefined;
-    const pageTitle = new URLSearchParams(search).has("jogador") ? "Perfil do Jogador" : estaNoCriadorMapa3D ? "Criador de mapas 3D" : new URLSearchParams(search).get("tabletop3d") === "1" ? "Tabletop 3D" : estaNaMesa
+    const pageTitle = new URLSearchParams(search).has("jogador") ? "Perfil do Jogador" : estaNoCriadorMapa3D ? "Editor de mapas 3D" : new URLSearchParams(search).get("tabletop3d") === "1" ? "Tabletop 3D" : estaNaMesa
       ? "Tabletop"
       : estaNoDashboardMestre
         ? "Painel do Mestre"

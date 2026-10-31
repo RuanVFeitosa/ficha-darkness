@@ -1,3 +1,4 @@
+import MasterShield from '../components/tabletop/MasterShield';
 import NumberInput from '../components/ui/NumberInput';
 import AnimatedScene from '../components/tabletop/AnimatedScene';
 import TabletopSceneEditor from '../components/tabletop/TabletopSceneEditor';
@@ -344,6 +345,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
   const [arquivos, setArquivos] = useState({ cena: [], mapa: [], especial: [], audio: [] });
   const [salvando, setSalvando] = useState(false);
   const [transicao, setTransicao] = useState(false);
+  const [escudoAberto,setEscudoAberto]=useState(false);
   const audioCenaEspecialRef = useRef(null);
   const [audioEspecialPronto, setAudioEspecialPronto] = useState(false);
   const [fichasDisponiveis, setFichasDisponiveis] = useState([]);
@@ -3260,11 +3262,12 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
           </div>
         )}
       </section>
+      {mestre&&escudoAberto&&<aside className="mesa-master-shield-panel" aria-label="Escudo do mestre" onKeyDown={event=>{if(event.key==="Escape")setEscudoAberto(false);}}><header><strong>Consulta privada</strong><button type="button" onClick={()=>setEscudoAberto(false)} aria-label="Fechar escudo do mestre">Fechar ×</button></header><MasterShield campaignId={campanha.id} scene={campanha.cenaAtiva} combat={campanha.combateAtivo}/></aside>}
       {mestre && (
         <nav
           className={`mesa-lateral-navegacao ${campanha.investigacaoAtiva || documentosDisponiveis.length ? "com-documentos" : ""}`}
           aria-label="Conteudo da lateral"
-        >
+        ><button type="button" className={escudoAberto?"ativo":""} aria-pressed={escudoAberto} onClick={()=>setEscudoAberto(!escudoAberto)}>Escudo do mestre</button>
           <button
             className={abaLateralMestre === "participantes" ? "ativo" : ""}
             onClick={() => {

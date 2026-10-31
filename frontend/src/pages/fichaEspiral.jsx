@@ -823,7 +823,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
     setNotice("");
     const dice = Array.from({ length: parsed.amount }, () => randomDie(parsed.sides));
     setRolling(true);
-    setHistory((previous) => [{ type: "formula", label: `${weapon.name || "Dano"} · ${parsed.formula}`, dice, sides: parsed.sides, pressure: [], total: dice.reduce((sum, die) => sum + die, parsed.modifier), modifier: parsed.modifier, at: Date.now() }, ...previous].slice(0, 12));
+    setHistory((previous) => [{ type: "formula", tipo: "dano", label: `${weapon.name || "Dano"} · ${parsed.formula}`, dice, sides: parsed.sides, pressure: [], total: dice.reduce((sum, die) => sum + die, parsed.modifier), modifier: parsed.modifier, at: Date.now() }, ...previous].slice(0, 12));
     setRollModalOpen(true);
     window.setTimeout(() => setRolling(false), 650);
   }

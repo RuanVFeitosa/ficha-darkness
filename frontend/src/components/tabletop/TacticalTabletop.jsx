@@ -1,3 +1,4 @@
+import {normalizeCameraSpeed} from '../../utils/cameraSpeed';
 import { canMoveTacticalToken } from '../../utils/tabletopCharacters';
 import TabletopResolutionLimit from './TabletopResolutionLimit';
 import {createTabletopRenderer} from '../../utils/tabletopRenderer';
@@ -10,7 +11,7 @@ import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import * as THREE from 'three';
 import {PlacedAssets} from './MapEditor3D';
 
-function TacticalControls({center,locked}) {
+function TacticalControls({center,locked,cameraSpeed,mestre}) {
  const {camera,gl}=useThree();
  const controls=useRef();
  useEffect(() => {
@@ -23,6 +24,8 @@ function TacticalControls({center,locked}) {
   return () => orbit.dispose();
  },[camera,gl,center]);
  useEffect(() => {if(controls.current) controls.current.enabled=!locked;},[locked]);
+ useEffect(()=>{if(controls.current){controls.current.panSpeed=normalizeCameraSpeed(cameraSpeed);controls.current.zoomSpeed=normalizeCameraSpeed(cameraSpeed);}},[cameraSpeed,center]);
+ useEffect(()=>{if(controls.current)controls.current.mouseButtons.RIGHT=mestre ? THREE.MOUSE.PAN : null;},[mestre,center]);
  useFrame(() => controls.current?.update());
  return null;
 }
@@ -67,16 +70,16 @@ function TacticalToken({token,selected,canMove,onSelect,onDragStart,onMove,onDra
   <mesh ref={art} renderOrder={1002} rotation={[0,0,-(Number(token.rotacao)||0)*Math.PI/180]}><circleGeometry args={[0.22,40]}/>{token.image ? <TokenImage url={token.image} animation={token.animation} id={token.id}/> : <meshBasicMaterial color={token.color || '#aaa'} depthTest={false}/>}</mesh>
  </group>;
 }
-export default function TacticalTabletop({assets,tokens,mapKey,center,locked,mestre,playerTokenId,navigation,onFloor,onSelect,onMove,onDragStart,onDragEnd}) {
+export default function TacticalTabletop({assets,tokens,mapKey,center,locked,mestre,cameraSpeed=1,playerTokenId,navigation,onFloor,onSelect,onMove,onDragStart,onDragEnd}) {
  return <div className="tt3-tactical-map" aria-label="Mapa tático 2D">
   <Canvas dpr={1} gl={parameters => createTabletopRenderer(parameters,THREE.WebGLRenderer)} orthographic camera={{position:[center[0],100,center[1]+0.001],zoom:65,near:0.01,far:2000}}>
    <TabletopResolutionLimit/>
    <color attach="background" args={['#101416']}/>
    <ambientLight intensity={2}/><directionalLight position={[0,100,0]} intensity={2}/>
-   <TacticalControls key={mapKey} center={center} locked={locked}/>{navigation}
+   <TacticalControls mestre={mestre} cameraSpeed={cameraSpeed} key={mapKey} center={center} locked={locked}/>{navigation}
    <gridHelper args={[2000,2000,'#53636b','#28343a']}/>
    <mesh rotation={[-Math.PI/2,0,0]} position={[0,-0.02,0]} onClick={onFloor}><planeGeometry args={[2000,2000]}/><meshBasicMaterial transparent opacity={0} depthWrite={false} side={THREE.DoubleSide}/></mesh>
-   <Suspense fallback={null}><PlacedAssets items={assets} selectedId={null} onSelect={() => {}} onSurfaceClick={onFloor}/></Suspense>
+   <Suspense fallback={null}><PlacedAssets revealUV={mestre} items={assets.filter(item=>mestre || !item.uvOnly)} selectedId={null} onSelect={() => {}} onSurfaceClick={onFloor}/></Suspense>
    {tokens.map(token => <Suspense key={token.id} fallback={null}><TacticalToken token={token} selected={token.selected} canMove={canMoveTacticalToken(token,mestre,playerTokenId)} onSelect={() => onSelect(token)} onMove={position => onMove(token,position)} onDragStart={onDragStart} onDragEnd={onDragEnd}/></Suspense>)}
   </Canvas>
  </div>;

@@ -25,7 +25,7 @@ export function BlinkMaterial({texture,config,blink}) {
  },[closed,config.region,config.closedTransform,blink]);
  return <meshStandardMaterial key={JSON.stringify([config.region,config.closedTransform])+config.closedImage} map={texture} transparent alphaTest={0.08} side={THREE.DoubleSide} roughness={0.88} onBeforeCompile={compile} customProgramCacheKey={() => 'token-blink-v1'}/>;
 }
-export default function AnimatedTokenArt({image,animation,id,height,selected=false,bottom=0}) {
+export default function AnimatedTokenArt({image,animation,id,height,selected=false,bottom=0,unlit=false}) {
  const config=useMemo(() => normalizeTokenAnimation(animation && (!animation.image || animation.image===image) ? animation : {enabled:false}),[animation,image]);
  const sourceTexture=useLoader(THREE.TextureLoader,config.image || image),group=useRef(),blink=useMemo(() => ({value:0}),[]),reduced=useReducedTokenMotion();
  const bounds=useMemo(() => tokenImageBounds(sourceTexture.image,config.cropTransparent),[sourceTexture,config.cropTransparent]);
@@ -35,7 +35,7 @@ export default function AnimatedTokenArt({image,animation,id,height,selected=fal
  useFrame(({clock}) => {if(!group.current) return;const m=tokenAnimationFrame(clock.elapsedTime,config,id,reduced);group.current.scale.set(m.scaleX,m.scaleY,1);group.current.rotation.z=m.rotation;blink.value=m.blink;});
  return <group position={[0,bottom,0]}><group ref={group}><mesh position={[0,height/2,0]} castShadow receiveShadow scale={selected ? 1.04 : 1}>
  <planeGeometry args={[artWidth,height]}/><meshDepthMaterial attach="customDepthMaterial" map={texture} alphaTest={0.08} side={THREE.DoubleSide} depthPacking={THREE.RGBADepthPacking}/>
- {config.closedImage ? <BlinkMaterial texture={texture} config={config} blink={blink}/> : <meshStandardMaterial map={texture} transparent alphaTest={0.08} side={THREE.DoubleSide} roughness={0.88}/>}
+ {unlit ? <meshBasicMaterial map={texture} transparent alphaTest={0.08} side={THREE.DoubleSide} toneMapped={false}/> : config.closedImage ? <BlinkMaterial texture={texture} config={config} blink={blink}/> : <meshStandardMaterial map={texture} transparent alphaTest={0.08} side={THREE.DoubleSide} roughness={0.88}/>}
  </mesh></group></group>;
 }
 

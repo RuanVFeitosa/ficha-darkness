@@ -1,7 +1,11 @@
 import React from 'react';
 import {render,screen,act} from '@testing-library/react';
-import RollNotifications,{RollHistory,notificationDice} from './RollNotifications';
+import RollNotifications,{RollHistory,notificationDice,notificationTitle} from './RollNotifications';
 const roll={id:'new',autor_nome:'Victoria',expressao:'1d20',resultado:18};
+
+test.each([[0,'Sem lesão'],[3,'Lesão Superficial'],[6,'Lesão Moderada'],[9,'Lesão Grave'],[12,'Lesão Crítica'],[13,'Lesão Catastrófica / Fatal']])('dano %s mostra a lesão em vez de sucesso', (total,title)=>{
+ expect(notificationTitle({...roll,resultado:total,detalhes:{tipo:'dano',sistema:'espiral',total,outcome:'Sucesso'}})).toBe(title);
+});
 test('mostra somente rolagens novas, não duplica e desaparece após sete segundos',()=>{
  jest.useFakeTimers();
  const {rerender}=render(<RollNotifications rolls={[]}/>);

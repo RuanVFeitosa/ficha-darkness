@@ -1,5 +1,5 @@
 jest.mock('three', () => {
- class Vector3 { constructor() {this.set(0,0,0);} set(x,y,z) {this.x=x;this.y=y;this.z=z;return this;} toArray() {return [this.x,this.y,this.z];} }
+ class Vector3 { constructor() {this.set(0,0,0);} set(x,y,z) {this.x=x;this.y=y;this.z=z;return this;} add(v) {this.x+=v.x;this.y+=v.y;this.z+=v.z;return this;} toArray() {return [this.x,this.y,this.z];} }
  return {Raycaster:class {setFromCamera() {} intersectObjects() {return [];}},Vector2:class {},Vector3,Plane:class {},PerspectiveCamera:class {position=new Vector3(); updateProjectionMatrix() {}},MOUSE:{},TOUCH:{}};
 });
 import React from 'react';
@@ -63,12 +63,71 @@ test('arrastar com botão direito muda a direção sem deslocar a câmera', () =
  };
  mockGl.domElement.dispatchEvent(pointer('pointerdown',100,100));
  window.dispatchEvent(pointer('pointermove',200,150));
+ useFrame.mock.calls[useFrame.mock.calls.length-1][0]({},1/60);
  expect(mockOrbit.target.toArray()).not.toEqual(spawn.target);
  expect(mockOrbit.enabled).toBe(false);
  expect(mockCamera.position.toArray()).toEqual(before);
  window.dispatchEvent(pointer('pointerup',200,150));
  expect(mockOrbit.enabled).toBe(true);
+ const first=mockOrbit.target.toArray();
+ const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ frame({},1/60);
+ expect(mockOrbit.target.toArray()).not.toEqual(first);
+ for(let i=0;i<120;i++)frame({},1/60);
+ const settled=mockOrbit.target.toArray();
+ frame({},1/60);
+ expect(mockOrbit.target.toArray()).toEqual(settled);
  expect(mockCamera.position.toArray()).toEqual(before);
+});
+
+test('jogador não gira com botão direito e mantém o controle esquerdo',()=>{
+ render(<Camera allowRightLook={false} view="room" spawnKey="player-right-blocked" spawnPose={spawn}/>);
+ const before=mockOrbit.target.toArray();
+ const pointer=(type,x)=>{const event=new Event(type,{bubbles:true,cancelable:true});Object.assign(event,{button:2,pointerId:1,clientX:x,clientY:100});return event;};
+ mockGl.domElement.dispatchEvent(pointer('pointerdown',100));
+ window.dispatchEvent(pointer('pointermove',200));
+ useFrame.mock.calls[useFrame.mock.calls.length-1][0]({},1/60);
+ expect(mockOrbit.target.toArray()).toEqual(before);
+ expect(mockOrbit.mouseButtons.RIGHT).toBeNull();
+ expect(mockOrbit.mouseButtons).toHaveProperty('LEFT');
+ expect(mockOrbit.enabled).toBe(true);
+ window.dispatchEvent(pointer('pointerup',200));
+});
+
+test('distância do jogador aproxima suavemente preservando o alvo',()=>{
+ render(<Camera mode="character" characterDistance={2} view="room" spawnKey="distance" spawnPose={spawn}/>);
+ const target=mockOrbit.target.toArray();
+ const distance=()=>Math.hypot(mockCamera.position.x-mockOrbit.target.x,mockCamera.position.y-mockOrbit.target.y,mockCamera.position.z-mockOrbit.target.z);
+ const initial=distance();const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ frame({},1/60);
+ expect(distance()).toBeLessThan(initial);expect(distance()).toBeGreaterThan(2);
+ for(let i=0;i<120;i++)frame({},1/60);
+ expect(distance()).toBeCloseTo(2,2);
+ expect(mockOrbit.target.toArray()).toEqual(target);
+});
+
+test('primeira pessoa segue os olhos e permite olhar com o esquerdo sem orbitar',()=>{
+ const props={mode:'character',followPosition:[4,7],followHeight:2,followElevation:1,allowRightLook:false};
+ const {rerender}=render(<Camera {...props} view="room"/>);
+ const original=mockCamera.position.toArray();
+ rerender(<Camera {...props} view="firstPerson"/>);
+ let frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ for(let i=0;i<90;i++)frame({},1/60);
+ expect(mockCamera.position.x).toBeCloseTo(4,3);
+ expect(mockCamera.position.y).toBeCloseTo(2.8,3);
+ expect(mockCamera.position.z).toBeCloseTo(7,3);
+ expect(mockOrbit.enabled).toBe(false);
+ const target=mockOrbit.target.toArray();
+ const pointer=(type,x)=>{const event=new Event(type,{bubbles:true,cancelable:true});Object.assign(event,{button:0,pointerId:1,clientX:x,clientY:100});return event;};
+ mockGl.domElement.dispatchEvent(pointer('pointerdown',100));
+ window.dispatchEvent(pointer('pointermove',180));frame({},1/60);
+ expect(mockOrbit.target.toArray()).not.toEqual(target);
+ expect(mockCamera.position.x).toBeCloseTo(4,3);
+ window.dispatchEvent(pointer('pointerup',180));
+ rerender(<Camera {...props} view="room"/>);
+ frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ for(let i=0;i<40;i++)frame({},1/60);
+ expect(mockCamera.position.toArray()).toEqual(original);
 });
 test('Meu personagem enquadra o token próximo, à esquerda e na altura da superfície', () => {
  render(<Camera mode="character" followPosition={[10,20]} followHeight={2} followElevation={3}/>);
@@ -201,6 +260,7 @@ test('olhar no mesmo lugar também funciona na câmera vinculada ao token', () =
  const pointer=(type,x,y) => {const event=new Event(type,{bubbles:true,cancelable:true});Object.assign(event,{button:2,pointerId:99,clientX:x,clientY:y});return event;};
  mockGl.domElement.dispatchEvent(pointer('pointerdown',100,100));
  window.dispatchEvent(pointer('pointermove',200,150));
+ useFrame.mock.calls[useFrame.mock.calls.length-1][0]({},1/60);
  expect(mockOrbit.target.toArray()).not.toEqual(previousTarget);
  expect(mockCamera.position.toArray()).toEqual(before);
  window.dispatchEvent(pointer('pointerup',200,150));
@@ -215,6 +275,7 @@ test('arrasto de toque gira a câmera sem deslocar sua posição', () => {
  mockGl.domElement.getBoundingClientRect=() => ({left:0,top:0,width:600,height:400});
  mockGl.domElement.dispatchEvent(touchEvent('pointerdown',1,100,100));
  window.dispatchEvent(touchEvent('pointermove',1,200,140));
+ useFrame.mock.calls[useFrame.mock.calls.length-1][0]({},1/60);
  expect(mockCamera.position.toArray()).toEqual(before);
  expect(mockOrbit.target.toArray()).not.toEqual(spawn.target);
  expect(mockOrbit.enabled).toBe(false);

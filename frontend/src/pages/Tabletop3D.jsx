@@ -1,3 +1,18 @@
+import useTabletopTokenSync from '../components/tabletop/useTabletopTokenSync';
+import {sharedCustomToken} from '../utils/sharedCustomToken';
+import PlayerUVControls from '../components/tabletop/PlayerUVControls';
+import {tokenFlashlight,playerFlashlightPatch,flashlightModeActive,toggleFlashlightMode} from '../utils/flashlightAccess';
+import useUVReveal from '../components/tabletop/useUVReveal';
+import {uvTextImage} from '../utils/uvLight';
+import UVClueControls from '../components/tabletop/UVClueControls';
+import PlayerCameraDistance,{PLAYER_CAMERA_DISTANCE_KEY,normalizePlayerDistance} from '../components/tabletop/PlayerCameraDistance';
+import {cameraDamping} from '../utils/cameraMotion';
+import CameraMotionControls,{CAMERA_MOTION_KEY,normalizeCameraMotion} from '../components/tabletop/CameraMotionControls';
+import HandheldCameraMotion from '../components/tabletop/HandheldCameraMotion';
+import useCameraSpeedShortcut from '../components/tabletop/useCameraSpeedShortcut';
+import { normalizeCameraSpeed, CAMERA_SPEED_KEY } from '../utils/cameraSpeed';
+import TokenSizeControls from '../components/tabletop/TokenSizeControls';
+import MasterShield from '../components/tabletop/MasterShield';
 import SessionClockControls from '../components/tabletop/SessionClockControls';
 import { normalizeSessionClock, sessionMinutes, changeSessionClock, daylightWeather } from '../utils/tabletopClock';
 import NumberInput from '../components/ui/NumberInput';
@@ -208,7 +223,7 @@ function BillboardPersonArt({image,artRef,selected,animation,id}) {
   return <group ref={artRef}><AnimatedTokenArt image={image} animation={animation} id={id} width={1.02} height={1.86} bottom={-0.02} selected={selected}/></group>;
 }
 
-function Person({person,position,selected,onSelect,onEdit,onPosition,onDragStart,onDragEnd,constrainPosition,scale=0.35,elevation=0,baseElevation=0,lanterna,aimWithCamera,onAim,rotacao=0,olharCamera=true,canDrag=true,animation,playerView=false,sheetOpen=false,combat=false}) {
+function Person({person,position,selected,onSelect,onEdit,onPosition,onDragStart,onDragEnd,constrainPosition,scale=0.35,elevation=0,baseElevation=0,lanterna,aimWithCamera,onAim,rotacao=0,olharCamera=true,canDrag=true,animation,playerView=false,sheetOpen=false,combat=false,firstPerson=false}) {
   const ref = useRef();
   const artRef = useRef();
   const initialPosition = useRef([...position]);
@@ -281,11 +296,12 @@ function Person({person,position,selected,onSelect,onEdit,onPosition,onDragStart
   const safeElevation=(Number(baseElevation)||0)+Math.max(-500,Math.min(500,Number(elevation)||0));
   return <group userData={{tokenInteraction:true}} ref={ref} position={[initialPosition.current[0],safeElevation,initialPosition.current[1]]} scale={safeScale} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={endDrag} onPointerCancel={endDrag} onContextMenu={edit}>
     {lanterna?.ativa && <TokenFlashlight config={lanterna} aimWithCamera={aimWithCamera} onAim={onAim} scale={safeScale} height={1.1*safeScale}/>}
-    {person.avatar3D?.modelUrl
+    <group visible={!firstPerson}>{person.avatar3D?.modelUrl
       ? <group ref={artRef} rotation={[0,Math.PI+(Number(rotacao)||0)*Math.PI/180,0]} scale={selected ? 1.04 : 1}><RealisticAvatarModel avatar={person.avatar3D}/></group>
       : <BillboardPersonArt image={presentation.image} artRef={artRef} selected={selected} animation={presentation.animation} id={person.id}/>
     }
-    {selected && <mesh rotation={[-Math.PI/2,0,0]} position={[0,0.012,0]}>
+    </group>
+    {selected && !firstPerson && <mesh rotation={[-Math.PI/2,0,0]} position={[0,0.012,0]}>
       <ringGeometry args={[0.48,0.57,48]}/>
       <meshBasicMaterial color="#d5bd79" transparent opacity={0.9} depthWrite={false}/>
     </mesh>}
@@ -298,11 +314,13 @@ function CustomToken({ token, selected, onSelect, onEdit, onDragStart, onDragEnd
   const touchTimer=useRef(null);
   useEffect(() => () => clearTimeout(touchTimer.current),[]);
   const initialPosition = useRef([token.x,token.z]);
-  const texture = useLoader(THREE.TextureLoader, token.image);
+  const image=useMemo(()=>token.uvText ? uvTextImage(token.uvText) : token.image,[token.uvText,token.image]);
+  const texture = useLoader(THREE.TextureLoader, image);
   const aspect = texture.image?.width && texture.image?.height ? texture.image.width / texture.image.height : 0.55;
   const tokenHeight = 0.65;
   const tokenWidth = Math.min(0.52, Math.max(0.18, tokenHeight * aspect));
   const scale = Math.max(0.01, Math.min(3, Number(token.scale) || 1));
+  useUVReveal(ref,Boolean(token.uvOnly),canDrag,tokenHeight/2);
   const elevation = (Number(baseElevation)||0)+Math.max(-500, Math.min(500, Number(token.elevation) || 0));
   useEffect(() => {
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -319,7 +337,7 @@ function CustomToken({ token, selected, onSelect, onEdit, onDragStart, onDragEnd
     }
   });
   const startDrag = (event) => {
-    if(event.button !== 0) return;
+    if(event.button !== 0 || ref.current?.visible===false) return;
     event.stopPropagation();
     if(event.pointerType==="touch") {touchTimer.current=setTimeout(() => onEdit?.(token.id),550);if(!selected) {onSelect(token.id);return;}}
     if(!canDrag) {onSelect(token.id);return;}
@@ -362,15 +380,16 @@ function CustomToken({ token, selected, onSelect, onEdit, onDragStart, onDragEnd
     onDragEnd?.(token.id, position, moved);
   };
   const edit = (event) => {
+    if(ref.current?.visible===false || !canDrag) return;
     event.stopPropagation();
     event.nativeEvent?.preventDefault();
     onSelect(token.id);
     onEdit?.(token.id);
   };
-  return <group userData={{tokenInteraction:true}} ref={ref} position={[initialPosition.current[0], elevation, initialPosition.current[1]]} scale={scale} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={endDrag} onPointerCancel={endDrag} onContextMenu={edit}>
+  return <group visible={!token.uvOnly || canDrag} userData={{tokenInteraction:true}} ref={ref} position={[initialPosition.current[0], elevation, initialPosition.current[1]]} scale={scale} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={endDrag} onPointerCancel={endDrag} onContextMenu={edit}>
 
     {token.lanterna?.ativa && <TokenFlashlight config={token.lanterna} aimWithCamera={aimWithCamera} onAim={onAim} scale={scale} height={tokenHeight*scale*0.65}/>}
-    <group ref={artRef}><AnimatedTokenArt image={token.image} animation={token.animation} id={token.id} width={tokenWidth} height={tokenHeight} selected={selected}/></group>
+    <group ref={artRef}><AnimatedTokenArt unlit={Boolean(token.uvOnly)} image={image} animation={token.animation} id={token.id} width={tokenWidth} height={tokenHeight} selected={selected}/></group>
   </group>;
 }
 const CAMERA_PRESETS = {
@@ -427,11 +446,19 @@ export function PlayerTokenNavigation({enabled,position,onMove,onStop,cameraRela
   });
   return null;
 }
-export function Camera({view,interactionLocked=false,mode="free",followPosition=null,followHeight=0.65,followElevation=0,sheetFocus=false,focusRequest=0,syncedPose=null,onPoseChange,spawnPose=null,spawnKey=""}) {
+export function Camera({view,cameraSpeed=1,allowRightLook=true,characterDistance=null,interactionLocked=false,mode="free",followPosition=null,followHeight=0.65,followElevation=0,sheetFocus=false,focusRequest=0,syncedPose=null,onPoseChange,spawnPose=null,spawnKey=""}) {
   const {camera,gl,scene}=useThree();
   const controls=useRef();
+  const cameraSpeedRef=useRef(1);
+  cameraSpeedRef.current=normalizeCameraSpeed(cameraSpeed);
   const pressedKeys=useRef(new Set());
   const lookDrag=useRef(null);
+  const smoothLook=useRef(null);
+  const distanceTarget=useRef(null);
+  const firstPersonPose=useRef(null);
+  useEffect(()=>{firstPersonPose.current=null;},[spawnKey]);
+  useEffect(()=>{distanceTarget.current=mode==="character" && characterDistance!==null ? normalizePlayerDistance(characterDistance) : null;},[characterDistance,mode,spawnKey]);
+  useEffect(()=>{smoothLook.current=null;},[interactionLocked,mode,view,spawnKey,sheetFocus,focusRequest]);
   const lastReportedPose=useRef(null);
   const appliedCameraSpawn=useRef(null);
   const forward=useMemo(() => new THREE.Vector3(),[]);
@@ -461,13 +488,13 @@ export function Camera({view,interactionLocked=false,mode="free",followPosition=
   useEffect(() => {
     const orbit=new OrbitControls(camera,gl.domElement);
     orbit.enableDamping=true;
-    orbit.dampingFactor=0.065;
+    orbit.dampingFactor=0.045;
     orbit.enableRotate=true;
     orbit.enablePan=true;
     orbit.enableZoom=true;
     orbit.zoomToCursor=true;
     orbit.screenSpacePanning=true;
-    orbit.rotateSpeed=0.22;
+    orbit.rotateSpeed=0.18;
     orbit.panSpeed=0.28;
     orbit.zoomSpeed=1.6;
     orbit.keyPanSpeed=18;
@@ -483,25 +510,29 @@ export function Camera({view,interactionLocked=false,mode="free",followPosition=
       orbit.dispose();
     };
   },[camera,gl]);
+  useEffect(()=>{if(controls.current)controls.current.mouseButtons.RIGHT=allowRightLook ? THREE.MOUSE.ROTATE : null;},[allowRightLook]);
+  useEffect(()=>{const orbit=controls.current;if(!orbit)return;const factor=normalizeCameraSpeed(cameraSpeed);orbit.rotateSpeed=.18*factor;orbit.panSpeed=.28*factor;orbit.zoomSpeed=1.6*factor;orbit.keyPanSpeed=18*factor;},[cameraSpeed]);
   useEffect(() => {
     const touches=touchPoints.current;
     const canvas=gl.domElement;
     const finishLook=() => {
       if(!lookDrag.current) return;
       lookDrag.current=null;
-      if(controls.current) controls.current.enabled=!interactionLocked && mode!=="master";
+      if(controls.current) controls.current.enabled=!interactionLocked && mode!=="master" && view!=="firstPerson";
     };
     const startLook=(event) => {
+      if(event.button===2 && event.pointerType!=="touch" && !allowRightLook) return;
+      if(event.button===0 && event.pointerType!=="touch") smoothLook.current=null;
       if(interactionLocked || !controls.current || !["free","character"].includes(mode)) return;
       if(event.pointerType==="touch") {
         touchPoints.current.set(event.pointerId,{x:event.clientX,y:event.clientY});
-        if(touchPoints.current.size===2) {lookDrag.current=null;pinchDistance.current=null;controls.current.enabled=false;event.preventDefault();event.stopImmediatePropagation();return;}
+        if(touchPoints.current.size===2) {lookDrag.current=null;smoothLook.current=null;pinchDistance.current=null;controls.current.enabled=false;event.preventDefault();event.stopImmediatePropagation();return;}
         const ray=new THREE.Raycaster();const bounds=canvas.getBoundingClientRect();
         ray.setFromCamera(new THREE.Vector2((event.clientX-bounds.left)/bounds.width*2-1,-(event.clientY-bounds.top)/bounds.height*2+1),camera);
         const hit=scene ? ray.intersectObjects(scene.children,true)[0] : null;
         let object=hit?.object;while(object) {if(object.userData?.tokenInteraction) return;object=object.parent;}
       }
-      if((event.button!==2 && event.pointerType!=="touch") || !["free","character"].includes(mode) || interactionLocked || !controls.current) return;
+      if((event.button!==2 && !(view==="firstPerson" && event.button===0) && event.pointerType!=="touch") || !["free","character"].includes(mode) || interactionLocked || !controls.current) return;
       stationaryLook.current=mode==="character";
       stationaryFollow.current=null;
       event.preventDefault();
@@ -515,6 +546,10 @@ export function Camera({view,interactionLocked=false,mode="free",followPosition=
       orbit.enableDamping=damping;
       camera.position.set(...frozenPosition);
       orbit.enabled=false;
+      const dx=orbit.target.x-camera.position.x,dy=orbit.target.y-camera.position.y,dz=orbit.target.z-camera.position.z;
+      const distance=Math.max(Math.hypot(dx,dy,dz),.08);
+      const yaw=Math.atan2(dx,dz),pitch=Math.asin(Math.max(-1,Math.min(1,dy/distance)));
+      smoothLook.current={yaw,pitch,targetYaw:yaw,targetPitch:pitch,distance};
       lookDrag.current={id:event.pointerId,x:event.clientX,y:event.clientY};
     };
     const moveLook=(event) => {
@@ -531,18 +566,12 @@ export function Camera({view,interactionLocked=false,mode="free",followPosition=
       if(!drag || drag.id!==event.pointerId) return;
       event.preventDefault();
       event.stopImmediatePropagation();
-      const orbit=controls.current;
-      const x=orbit.target.x-camera.position.x;
-      const y=orbit.target.y-camera.position.y;
-      const z=orbit.target.z-camera.position.z;
-      const distance=Math.max(Math.hypot(x,y,z),0.08);
-      const yaw=Math.atan2(x,z)-(event.clientX-drag.x)*0.004;
-      const pitch=Math.max(-Math.PI/2+0.01,Math.min(Math.PI/2-0.01,Math.asin(y/distance)-(event.clientY-drag.y)*0.004));
-      const horizontal=Math.cos(pitch)*distance;
-      orbit.target.set(camera.position.x+Math.sin(yaw)*horizontal,camera.position.y+Math.sin(pitch)*distance,camera.position.z+Math.cos(yaw)*horizontal);
+      const look=smoothLook.current;
+      if(!look) return;
+      look.targetYaw-=(event.clientX-drag.x)*.0035*cameraSpeedRef.current;
+      look.targetPitch=Math.max(-Math.PI/2+.01,Math.min(Math.PI/2-.01,look.targetPitch-(event.clientY-drag.y)*.0035*cameraSpeedRef.current));
       drag.x=event.clientX;
       drag.y=event.clientY;
-      orbit.update();
     };
     const endLook=(event) => {
       if(event.pointerType==="touch") {touchPoints.current.delete(event.pointerId);pinchDistance.current=null;if(!touchPoints.current.size && controls.current) controls.current.enabled=!interactionLocked && mode!=="master";}
@@ -557,14 +586,14 @@ export function Camera({view,interactionLocked=false,mode="free",followPosition=
     window.addEventListener("blur",finishLook);
     return () => {
       finishLook();
-      touches.clear();pinchDistance.current=null;
+      touches.clear();smoothLook.current=null;pinchDistance.current=null;
       canvas.removeEventListener("pointerdown",startLook,true);
       window.removeEventListener("pointermove",moveLook,true);
       window.removeEventListener("pointerup",endLook,true);
       window.removeEventListener("pointercancel",endLook,true);
       window.removeEventListener("blur",finishLook);
     };
-  },[camera,gl,scene,interactionLocked,mode]);
+  },[camera,gl,scene,interactionLocked,mode,allowRightLook,view]);
   useEffect(() => {
     const navigationKeys=new Set(["w","a","s","d","q","e","arrowup","arrowdown","arrowleft","arrowright"]);
     const isEditable=(target) => target instanceof HTMLElement && (target.isContentEditable || Boolean(target.closest("input, textarea, select, button")));
@@ -674,12 +703,23 @@ export function Camera({view,interactionLocked=false,mode="free",followPosition=
     appliedCameraSpawn.current.applied=true;
   },[camera,mode,spawnKey,spawnPose]);
   useEffect(() => {
-    if (controls.current) controls.current.enabled = !interactionLocked && mode!=="master" && !lookDrag.current && touchPoints.current.size<2;
+    if (controls.current) controls.current.enabled = view!=="firstPerson" && !interactionLocked && mode!=="master" && !lookDrag.current && touchPoints.current.size<2;
     if (interactionLocked || mode!=="free") pressedKeys.current.clear();
-  }, [interactionLocked,mode]);
+  }, [interactionLocked,mode,view]);
+  useEffect(()=>{
+    const previous=firstPersonPose.current;
+    if(view!=="firstPerson" && previous && controls.current){
+      const shift=Array.isArray(followPosition) ? [followPosition[0]-previous.follow[0],(Number(followElevation)||0)-previous.elevation,followPosition[1]-previous.follow[1]] : [0,0,0];
+      const to={position:previous.position.map((v,i)=>v+shift[i]),target:previous.target.map((v,i)=>v+shift[i]),fov:previous.fov};
+      if(mode==="character")sheetCameraTransition.current={from:{position:camera.position.toArray(),target:controls.current.target.toArray(),fov:camera.fov},to,elapsed:0};
+      else {camera.position.set(...to.position);controls.current.target.set(...to.target);controls.current.update();}
+      firstPersonPose.current=null;
+    }
+  },[view,mode,camera,followPosition,followElevation]);
   useFrame((_,delta) => {
     const orbit=controls.current;
     if(!orbit) return;
+    orbit.dampingFactor=cameraDamping(delta);
     const fovTransition=viewFovTransition.current;
     if (fovTransition && mode!=="master" && !sheetCameraTransition.current) {
       fovTransition.elapsed+=Math.min(delta,0.05);
@@ -688,6 +728,24 @@ export function Camera({view,interactionLocked=false,mode="free",followPosition=
       camera.fov=fovTransition.from+(fovTransition.to-fovTransition.from)*eased;
       camera.updateProjectionMatrix();
       if (progress===1) viewFovTransition.current=null;
+    }
+    if(view==="firstPerson" && Array.isArray(followPosition)){
+      orbit.enabled=false;
+      if(!firstPersonPose.current){
+        firstPersonPose.current={position:camera.position.toArray(),target:orbit.target.toArray(),fov:camera.fov,follow:[...followPosition],elevation:Number(followElevation)||0};
+        const dx=orbit.target.x-camera.position.x,dz=orbit.target.z-camera.position.z;
+        firstPersonPose.current.yaw=Math.atan2(dx,dz);firstPersonPose.current.pitch=0;
+        const damping=orbit.enableDamping;orbit.enableDamping=false;orbit.update();orbit.enableDamping=damping;
+        sheetCameraTransition.current=null;
+      }
+      const pose=firstPersonPose.current,look=smoothLook.current;
+      if(look){const alpha=1-Math.exp(-12*Math.min(delta,.05));look.yaw+=(look.targetYaw-look.yaw)*alpha;look.pitch+=(look.targetPitch-look.pitch)*alpha;pose.yaw=look.yaw;pose.pitch=look.pitch;}
+      const alpha=1-Math.exp(-12*Math.min(delta,.05));
+      const eye=[Number(followPosition[0])||0,(Number(followElevation)||0)+Math.max(.05,Number(followHeight)||.65)*.9,Number(followPosition[1])||0];
+      camera.position.set(camera.position.x+(eye[0]-camera.position.x)*alpha,camera.position.y+(eye[1]-camera.position.y)*alpha,camera.position.z+(eye[2]-camera.position.z)*alpha);
+      const horizontal=Math.cos(pose.pitch);
+      orbit.target.set(camera.position.x+Math.sin(pose.yaw)*horizontal,camera.position.y+Math.sin(pose.pitch),camera.position.z+Math.cos(pose.yaw)*horizontal);
+      orbit.update();return;
     }
     const transition=sheetCameraTransition.current;
     if(transition && mode==="character") {
@@ -748,11 +806,29 @@ export function Camera({view,interactionLocked=false,mode="free",followPosition=
       if(pressedKeys.current.has("e")) movement.y+=1;
       if(pressedKeys.current.has("q")) movement.y-=1;
       if(movement.lengthSq()>0) {
-        const speed=0.65;
+        const speed=0.65*cameraSpeedRef.current;
         movement.normalize().multiplyScalar(speed*Math.min(delta,0.05));
         camera.position.add(movement);
         orbit.target.add(movement);
       }
+    }
+    if(distanceTarget.current!==null && mode==="character") {
+      const dx=camera.position.x-orbit.target.x,dy=camera.position.y-orbit.target.y,dz=camera.position.z-orbit.target.z;
+      const current=Math.max(.0001,Math.hypot(dx,dy,dz));
+      const target=distanceTarget.current;
+      const next=current+(target-current)*(1-Math.exp(-9*Math.min(delta,.05)));
+      const factor=next/current;
+      camera.position.set(orbit.target.x+dx*factor,orbit.target.y+dy*factor,orbit.target.z+(current<=.0001 ? next : dz*factor));
+      if(Math.abs(next-target)<.001)distanceTarget.current=null;
+    }
+    const look=smoothLook.current;
+    if(look && !interactionLocked && mode!=="master" && !sheetCameraTransition.current) {
+      const alpha=1-Math.exp(-12*Math.min(delta,.05));
+      look.yaw+=(look.targetYaw-look.yaw)*alpha;
+      look.pitch+=(look.targetPitch-look.pitch)*alpha;
+      const horizontal=Math.cos(look.pitch)*look.distance;
+      orbit.target.set(camera.position.x+Math.sin(look.yaw)*horizontal,camera.position.y+Math.sin(look.pitch)*look.distance,camera.position.z+Math.cos(look.yaw)*horizontal);
+      if(!lookDrag.current && Math.abs(look.targetYaw-look.yaw)+Math.abs(look.targetPitch-look.pitch)<.00001) smoothLook.current=null;
     }
     orbit.update();
     if(mode==="free" && onPoseChange) {
@@ -863,6 +939,13 @@ export class SceneBoundary extends Component {
   const tokenFileRef=useRef(null);
   const [hudPanel,setHudPanel]=useState(null);
   const [sessionOpen,setSessionOpen]=useState(false);
+  const [playerCameraDistance,setPlayerCameraDistance]=useState(()=>{try{return normalizePlayerDistance(JSON.parse(localStorage.getItem(PLAYER_CAMERA_DISTANCE_KEY)||'1.5'));}catch{return 1.5;}});
+  useEffect(()=>{if(!mestre)localStorage.setItem(PLAYER_CAMERA_DISTANCE_KEY,JSON.stringify(playerCameraDistance));},[playerCameraDistance,mestre]);
+  const [cameraMotion,setCameraMotion]=useState(()=>{try{return normalizeCameraMotion(JSON.parse(localStorage.getItem(CAMERA_MOTION_KEY)||'null'));}catch{return normalizeCameraMotion(null);}});
+  useEffect(()=>{localStorage.setItem(CAMERA_MOTION_KEY,JSON.stringify(cameraMotion));},[cameraMotion]);
+  const [cameraSpeed,setCameraSpeed]=useState(()=>{try{return normalizeCameraSpeed(JSON.parse(localStorage.getItem(CAMERA_SPEED_KEY) || '1'));}catch{return 1;}});
+  useCameraSpeedShortcut(setCameraSpeed,setCameraMotion,mestre);
+  useEffect(()=>{localStorage.setItem(CAMERA_SPEED_KEY,JSON.stringify(cameraSpeed));},[cameraSpeed]);
   const [sessionTool,setSessionTool]=useState("");
   const [sessionRequest,setSessionRequest]=useState(0);
   const [hudHidden,setHudHidden]=useState(false);
@@ -1183,9 +1266,17 @@ export class SceneBoundary extends Component {
     persistBackground(url,"URL personalizada");
     setBackgroundUrlInput("");
   };
-  const publishCustomToken=(token) => {
+  useTabletopTokenSync(campaignCode,Boolean(campaign?.id),tokens=>{
+    setCampaign(current=>current && JSON.stringify(current.tokens)!==JSON.stringify(tokens) ? {...current,tokens} : current);
+  });
+  const publishCustomToken=async(token) => {
     if(!mestre || !campaign?.id) return;
-    salvarTokenCustom3D(campaign.id,activeMapId,token,tokenSyncOrigin.current).catch(error => setNotice(error.message || "Não foi possível sincronizar o token importado com a campanha."));
+    try{
+      const saved=await salvarTokenCustom3D(campaign.id,activeMapId,sharedCustomToken(token),tokenSyncOrigin.current);
+      if(saved)setCampaign(current=>current ? {...current,tokens:[...(current.tokens || []).filter(item=>item.id!==saved.id),saved]} : current);
+      if(token.uvOnly)setNotice('Pista UV compartilhada com os jogadores. Ela será revelada quando iluminada por UV.');
+    }catch(error){setNotice(`Não foi possível compartilhar ${token.name || 'o token'}: ${error.message || 'falha na sincronização'}. Use Sincronizar pistas no painel da lanterna.`);}
+
   };
   const saveCustomTokens = (next) => {
     next.filter(token => JSON.stringify(token)!==JSON.stringify(customTokens.find(item => item.id===token.id))).forEach(publishCustomToken);
@@ -1227,6 +1318,7 @@ export class SceneBoundary extends Component {
   };
   const updateSheetToken = (personId,patch) => {
     if(!personId || (!mestre && personId!==tabletopPeople[playerCharacterIndex]?.id)) return;
+    if(!mestre)patch=playerFlashlightPatch(sheetTokenTransforms[personId] || {},patch);
     const sharedToken=campaign?.tokens?.find(token => (token.ficha_id===personId || `darkness:${token.ficha_id}`===personId));
     if(sharedToken) {
       const person=tabletopPeople.find(person => person.id===personId);
@@ -1344,7 +1436,7 @@ export class SceneBoundary extends Component {
     ...selectedSheetPerson,
     elevation:Number(selectedSheetTransform?.elevation)||0,
     scale:Number(selectedSheetTransform?.scale)||0.35,
-    lanterna:selectedSheetTransform?.lanterna,
+    lanterna:tokenFlashlight(selectedSheetTransform),
     rotacao:Number(selectedSheetTransform?.rotacao)||0,
     olharCamera:selectedSheetTransform?.olharCamera!==false,animation:selectedSheetPerson?.animation ? {...selectedSheetPerson.animation,enabled:selectedSheetTransform?.animationEnabled ?? selectedSheetPerson.animation.enabled} : selectedSheetTransform?.animation,
     fromSheet:true,
@@ -1364,6 +1456,14 @@ export class SceneBoundary extends Component {
     }
   };
   const embeddedEspiralId=mestre ? (selectedSheetPerson?.id?.startsWith("espiral:") ? selectedSheetPerson.id.slice("espiral:".length) : null) : routeParams.get("sistema")==="espiral" ? playerSheetId || "principal" : null;
+  function prepareUVClue(text){
+    if(!mestre)return;
+    try {
+      setPendingToken({id:`uv-${Date.now()}`,name:text,image:uvTextImage(text),uvOnly:true,uvText:text,x:0,z:0,elevation:0,scale:2,color:'#b78aff'});
+      setHudPanel(null);setTokenPanelOpen(false);setTacticalMode(false);
+      setNotice('Pista UV pronta. Clique no piso para posicioná-la. Depois ajuste a altura para colocá-la em uma parede.');
+    }catch(error){setNotice(error.message);}
+  }
   function move(e) {
     e.stopPropagation();
     // A floor click only places a newly imported token; existing tokens move by dragging.
@@ -1375,7 +1475,7 @@ export class SceneBoundary extends Component {
     setNotice(placed.name+" inserido. Arraste o token para mover.");
   }
   const tacticalCenter=useMemo(() => [Number(activeSpawnPoints.tokens?.x)||0,Number(activeSpawnPoints.tokens?.z)||0],[activeSpawnPoints.tokens?.x,activeSpawnPoints.tokens?.z]);
-  const flashlightCandidates=mestre ? [...tabletopPeople.map(person => ({id:person.id,name:person.name,lanterna:sheetTokenTransforms[person.id]?.lanterna})),...customTokens.map(token => ({...token,custom:true}))] : playerCharacterIndex>=0 ? [{...tabletopPeople[playerCharacterIndex],lanterna:sheetTokenTransforms[tabletopPeople[playerCharacterIndex].id]?.lanterna}] : [];
+  const flashlightCandidates=mestre ? [...tabletopPeople.map(person => ({id:person.id,name:person.name,lanterna:tokenFlashlight(sheetTokenTransforms[person.id])})),...customTokens.map(token => ({...token,custom:true}))] : playerCharacterIndex>=0 ? [{...tabletopPeople[playerCharacterIndex],lanterna:tokenFlashlight(sheetTokenTransforms[tabletopPeople[playerCharacterIndex].id])}] : [];
   const flashlightPerson=flashlightCandidates.find(person => person.id===flashlightTarget) || flashlightCandidates[0];
   const changeFlashlight=lanterna => {
     if(!flashlightPerson) return;
@@ -1383,8 +1483,8 @@ export class SceneBoundary extends Component {
     if(flashlightPerson.custom) saveCustomTokens(customTokens.map(token => token.id===flashlightPerson.id ? {...token,lanterna} : token));
     else updateSheetToken(flashlightPerson.id,{lanterna});
   };
-  const cameraFlashlightId=mestre ? (hudPanel==="flashlight" ? flashlightPerson?.id : tokenMode ? selectedToken : tabletopPeople[selected]?.id) : tabletopPeople[playerCharacterIndex]?.id;
-  const tacticalTokens=[...tabletopPeople.map((person,index) => ({id:person.id,name:person.name,image:person.portrait || "",animation:person.portraitAnimation,color:person.color,rotacao:sheetTokenTransforms[person.id]?.rotacao,lanterna:sheetTokenTransforms[person.id]?.lanterna,x:(positions[index] || person.start)[0],z:(positions[index] || person.start)[1],elevation:(Number(activeSpawnPoints.tokens?.y)||0)+(Number(sheetTokenTransforms[person.id]?.elevation)||0),personIndex:index,selected:!tokenMode && selected===index})),...customTokens.map(token => ({...token,selected:tokenMode && selectedToken===token.id}))];
+  const cameraFlashlightId=mestre ? (view==="firstPerson" ? masterFocusId : hudPanel==="flashlight" ? flashlightPerson?.id : tokenMode ? selectedToken : tabletopPeople[selected]?.id) : tabletopPeople[playerCharacterIndex]?.id;
+  const tacticalTokens=[...tabletopPeople.map((person,index) => ({id:person.id,name:person.name,image:person.portrait || "",animation:person.portraitAnimation,color:person.color,rotacao:sheetTokenTransforms[person.id]?.rotacao,lanterna:tokenFlashlight(sheetTokenTransforms[person.id]),x:(positions[index] || person.start)[0],z:(positions[index] || person.start)[1],elevation:(Number(activeSpawnPoints.tokens?.y)||0)+(Number(sheetTokenTransforms[person.id]?.elevation)||0),personIndex:index,selected:!tokenMode && selected===index})),...customTokens.filter(token=>mestre || !token.uvOnly).map(token => ({...token,selected:tokenMode && selectedToken===token.id}))];
   return <main className={`tt3 ${mobile ? "tt3-mobile" : ""} ${mobileMenu ? "tt3-mobile-menu-open" : ""} ${view==="cinema" && !tacticalMode ? "tt3-letterboxed" : ""} ${!mestre && hudPanel==="sheet" && !hudHidden && !staticScene && !tacticalMode ? "tt3-player-sheet-open" : ""} ${hudHidden ? "tt3-hud-hidden" : ""}`}>
     <ContextTransition contextKey={campaign ? `${campaign.cenaAtiva?.id}:${campaign.midiaAtivaId}:${campaign.modo}` : "loading"}/>
     <Suspense fallback={null}><TabletopSessionTools open={sessionOpen} tool={sessionTool} requestVersion={sessionRequest} onClose={() => setSessionOpen(false)}/></Suspense>
@@ -1404,12 +1504,12 @@ export class SceneBoundary extends Component {
           fallback={<div className="tt3-fallback">Seu navegador não oferece suporte a WebGL.</div>}
         >
           <TabletopResolutionLimit/>
-          <Camera
+          <Camera characterDistance={mestre ? null : playerCameraDistance} allowRightLook={mestre} cameraSpeed={mestre ? cameraSpeed : 1}
             view={view}
             interactionLocked={draggingToken || Boolean(staticScene) || tacticalMode}
             mode={mestre ? (masterFocusId ? "character" : "free") : playerCameraMode}
             focusRequest={mestre ? masterFocusRequest : 0}
-            sheetFocus={(!mobile || landscape) && !mestre && hudPanel==="sheet" && !hudHidden && !staticScene && !tacticalMode}
+            sheetFocus={(!mobile || landscape) && !mestre && hudPanel==="sheet" && !hudHidden && !staticScene && !tacticalMode && view!=="firstPerson"}
             followPosition={cameraFollowPosition}
             followHeight={1.86*(Number(sheetTokenTransforms[tabletopPeople[cameraPersonIndex]?.id]?.scale)||0.35)}
             followElevation={(Number(activeSpawnPoints.tokens?.y)||0)+(Number(sheetTokenTransforms[tabletopPeople[cameraPersonIndex]?.id]?.elevation)||0)}
@@ -1418,17 +1518,18 @@ export class SceneBoundary extends Component {
             spawnPose={activeSpawnPoints.camera}
             spawnKey={activeMapId}
           />
+          <HandheldCameraMotion {...(mestre ? cameraMotion : normalizeCameraMotion(null))}/>
           <PlayerTokenNavigation enabled={!staticScene && !mestre && playerCharacterIndex>=0 && !hudPanel && !tokenPanelOpen && !draggingToken} cameraRelative={!tacticalMode} position={playerFollowPosition} onMove={movePlayerToken} onStop={() => {if(playerCharacterIndex>=0 && playerFollowPosition) updateSheetToken(tabletopPeople[playerCharacterIndex].id,{x:playerFollowPosition[0],z:playerFollowPosition[1]});}}/>
           <WeatherEnvironment weather={renderedWeather}/>
           <PanoramaBackground url={activeBackgroundUrl}/>
           <CustomMapStage onFloor={move} baseElevation={activeSpawnPoints.tokens?.y}/>
-          <PlacedAssets items={mapAssets} selectedId={null} onSelect={() => {}} onSurfaceClick={activeMapName ? move : undefined}/>
+          <PlacedAssets revealUV={mestre} items={mapAssets} selectedId={null} onSelect={() => {}} onSurfaceClick={activeMapName ? move : undefined}/>
           {customTokens.map(token => <Suspense key={`${activeMapId}:${token.id}`} fallback={null}><CustomToken token={token} canDrag={mestre} aimWithCamera={!tacticalMode && cameraFlashlightId===token.id} onAim={lanterna => {if(mestre) saveCustomTokens(customTokens.map(item => item.id===token.id ? {...item,lanterna} : item));}} baseElevation={activeSpawnPoints.tokens?.y} selected={token.id === selectedToken} onSelect={id => {setSelectedToken(id);setPendingToken(null);setTokenMode(true);setNotice(`${token.name} selecionado. Arraste-o livremente para mover.`);}} onEdit={() => {setTokenPanelOpen(true);setHudPanel(null);setNotice(`Editando ${token.name}.`);}} onDragStart={() => setDraggingToken(true)} constrainPosition={limitarPosicaoToken} onDragEnd={finishTokenInteraction}/></Suspense>)}
-          {tabletopPeople.map((person,i) => <Suspense key={`${activeMapId}:${person.id}`} fallback={null}><Person person={person} playerView={!mestre && i===playerCharacterIndex} sheetOpen={hudPanel==="sheet"} combat={Boolean(sheetTokenTransforms[person.id]?.combat)} animation={person.animation ? {...person.animation,enabled:sheetTokenTransforms[person.id]?.animationEnabled ?? person.animation.enabled} : sheetTokenTransforms[person.id]?.animation} canDrag={mestre} rotacao={sheetTokenTransforms[person.id]?.rotacao} olharCamera={sheetTokenTransforms[person.id]?.olharCamera} aimWithCamera={!tacticalMode && cameraFlashlightId===person.id} onAim={lanterna => updateSheetToken(person.id,{lanterna})} lanterna={sheetTokenTransforms[person.id]?.lanterna} position={positions[i] || person.start} scale={sheetTokenTransforms[person.id]?.scale} elevation={sheetTokenTransforms[person.id]?.elevation} baseElevation={activeSpawnPoints.tokens?.y} selected={!tokenMode && selected===i} onPosition={p => {actualPositions.current[i]=p;}} onSelect={() => {setSelected(i);setTokenMode(false);setSelectedToken(null);}} onEdit={() => {setTokenPanelOpen(true);setHudPanel(null);setNotice(`Editando o token de ${person.name}.`);}} onDragStart={() => setDraggingToken(true)} constrainPosition={limitarPosicaoToken} onDragEnd={(position,moved) => {setDraggingToken(false);setPositions(previous => previous.map((current,index) => index===i ? position : current));updateSheetToken(person.id,{x:position[0],z:position[1]});setNotice(moved ? `${person.name} foi reposicionado.` : `${person.name} selecionado. Clique com o botão direito para editar.`);}}/></Suspense>)}
+          {tabletopPeople.map((person,i) => <Suspense key={`${activeMapId}:${person.id}`} fallback={null}><Person firstPerson={!tacticalMode && view==="firstPerson" && cameraPersonIndex===i} person={person} playerView={!mestre && i===playerCharacterIndex} sheetOpen={hudPanel==="sheet"} combat={Boolean(sheetTokenTransforms[person.id]?.combat)} animation={person.animation ? {...person.animation,enabled:sheetTokenTransforms[person.id]?.animationEnabled ?? person.animation.enabled} : sheetTokenTransforms[person.id]?.animation} canDrag={mestre} rotacao={sheetTokenTransforms[person.id]?.rotacao} olharCamera={sheetTokenTransforms[person.id]?.olharCamera} aimWithCamera={!tacticalMode && cameraFlashlightId===person.id} onAim={lanterna => updateSheetToken(person.id,{lanterna})} lanterna={tokenFlashlight(sheetTokenTransforms[person.id])} position={positions[i] || person.start} scale={sheetTokenTransforms[person.id]?.scale} elevation={sheetTokenTransforms[person.id]?.elevation} baseElevation={activeSpawnPoints.tokens?.y} selected={!tokenMode && selected===i} onPosition={p => {actualPositions.current[i]=p;}} onSelect={() => {setSelected(i);setTokenMode(false);setSelectedToken(null);}} onEdit={() => {setTokenPanelOpen(true);setHudPanel(null);setNotice(`Editando o token de ${person.name}.`);}} onDragStart={() => setDraggingToken(true)} constrainPosition={limitarPosicaoToken} onDragEnd={(position,moved) => {setDraggingToken(false);setPositions(previous => previous.map((current,index) => index===i ? position : current));updateSheetToken(person.id,{x:position[0],z:position[1]});setNotice(moved ? `${person.name} foi reposicionado.` : `${person.name} selecionado. Clique com o botão direito para editar.`);}}/></Suspense>)}
         </Canvas>}
       </SceneBoundary>
 
-      {tacticalMode && !staticScene && <SceneBoundary><Suspense fallback={<div className="tt3-fallback">Carregando mapa tático…</div>}><TacticalTabletop playerTokenId={!mestre ? tabletopPeople[playerCharacterIndex]?.id : null} navigation={<PlayerTokenNavigation enabled={!mestre && playerCharacterIndex>=0 && !hudPanel && !tokenPanelOpen && !draggingToken} cameraRelative={false} position={playerFollowPosition} onMove={movePlayerToken} onStop={() => {if(playerCharacterIndex>=0 && playerFollowPosition) updateSheetToken(tabletopPeople[playerCharacterIndex].id,{x:playerFollowPosition[0],z:playerFollowPosition[1]});}}/>} assets={mapAssets} mapKey={activeMapId} center={tacticalCenter} locked={draggingToken} mestre={mestre} tokens={tacticalTokens} onFloor={move} onDragStart={() => setDraggingToken(true)} onDragEnd={() => setDraggingToken(false)} onSelect={token => {if(token.personIndex!==undefined) {setSelected(token.personIndex);setTokenMode(false);} else {setSelectedToken(token.id);setTokenMode(true);}}} onMove={(token,position) => {if(!canMoveTacticalToken(token,mestre,tabletopPeople[playerCharacterIndex]?.id)) return;position=limitarPosicaoToken(position);if(token.personIndex!==undefined) {setPositions(current => current.map((p,index) => index===token.personIndex ? position : p));updateSheetToken(token.id,{x:position[0],z:position[1]});} else finishTokenInteraction(token.id,position,true);}}/></Suspense></SceneBoundary>}
+      {tacticalMode && !staticScene && <SceneBoundary><Suspense fallback={<div className="tt3-fallback">Carregando mapa tático…</div>}><TacticalTabletop cameraSpeed={mestre ? cameraSpeed : 1} playerTokenId={!mestre ? tabletopPeople[playerCharacterIndex]?.id : null} navigation={<PlayerTokenNavigation enabled={!mestre && playerCharacterIndex>=0 && !hudPanel && !tokenPanelOpen && !draggingToken} cameraRelative={false} position={playerFollowPosition} onMove={movePlayerToken} onStop={() => {if(playerCharacterIndex>=0 && playerFollowPosition) updateSheetToken(tabletopPeople[playerCharacterIndex].id,{x:playerFollowPosition[0],z:playerFollowPosition[1]});}}/>} assets={mapAssets} mapKey={activeMapId} center={tacticalCenter} locked={draggingToken} mestre={mestre} tokens={tacticalTokens} onFloor={move} onDragStart={() => setDraggingToken(true)} onDragEnd={() => setDraggingToken(false)} onSelect={token => {if(token.personIndex!==undefined) {setSelected(token.personIndex);setTokenMode(false);} else {setSelectedToken(token.id);setTokenMode(true);}}} onMove={(token,position) => {if(!canMoveTacticalToken(token,mestre,tabletopPeople[playerCharacterIndex]?.id)) return;position=limitarPosicaoToken(position);if(token.personIndex!==undefined) {setPositions(current => current.map((p,index) => index===token.personIndex ? position : p));updateSheetToken(token.id,{x:position[0],z:position[1]});} else finishTokenInteraction(token.id,position,true);}}/></Suspense></SceneBoundary>}
       {staticScene && <div className={`tt3-static-scene ${!mestre ? "tt3-static-scene-player" : ""}`}>{staticScene.animation?.enabled ? <AnimatedScene media={staticScene} id={`${campaign?.cenaAtiva?.id}:${staticScene.id}`} alt={staticScene.nome || campaign?.cenaAtiva?.nome || "Cena narrativa"}/> : <img src={staticScene.url} alt={staticScene.nome || campaign?.cenaAtiva?.nome || "Cena estática"}/>}</div>}
       <div className="tt3-cinema-shade" aria-hidden="true"/>
       <div className="tt3-film-grain" aria-hidden="true"/>
@@ -1439,6 +1540,10 @@ export class SceneBoundary extends Component {
           <div><span>{activeMapName ? `CENA ${activeSceneLabel} · ${activeMapName}` : `CENA ${activeSceneLabel} · SEM MAPA 3D`}</span><h1>{activeSceneName}</h1></div>
         </div>
         <div className="tt3-session-meta">
+          {mestre && <a className="tt3-role" href={`/?${new URLSearchParams({criarMapa3d:"1",campanha:campaignCode,...(activeMapId ? {mapa3d:activeMapId} : {})})}`}>Editar mapa</a>}
+          {!mestre && !tacticalMode && !staticScene && view!=="firstPerson" && <PlayerCameraDistance value={playerCameraDistance} onChange={setPlayerCameraDistance}/>}
+          {mestre && <CameraMotionControls value={cameraMotion} onChange={setCameraMotion}/>}
+          {mestre && <div className="tt3-speed-indicator" title="Ctrl + scroll para ajustar a velocidade da câmera"><span>Velocidade</span><output aria-label="Velocidade da câmera" aria-live="polite">{cameraSpeed.toLocaleString('pt-BR',{maximumFractionDigits:2})}×</output><small>Ctrl + scroll</small></div>}
           <span className="tt3-role">{mestre ? "Visão do mestre" : "Visão do jogador"}</span>{!mestre && playerCharacterIndex>=0 && <CombatPostureButton active={Boolean(sheetTokenTransforms[tabletopPeople[playerCharacterIndex].id]?.combat)} animation={tabletopPeople[playerCharacterIndex].animation || sheetTokenTransforms[tabletopPeople[playerCharacterIndex].id]?.animation} onChange={combat => updateSheetToken(tabletopPeople[playerCharacterIndex].id,{combat})} onNotice={setNotice}/>}
           <button type="button" onClick={() => setHudHidden(true)} title="Ocultar interface (H)">Modo cinema</button>
         </div>
@@ -1456,6 +1561,7 @@ export class SceneBoundary extends Component {
           ["npcs","NPCs",""],
           ["investigation","Investigação",""],
           ["dashboard","Dashboard",""],
+          ["shield","Escudo do mestre","Consulta"],
           ["weather","Clima",weather.preset==="custom" ? "Livre" : weather.label],
           ["background","Fundo",activeBackgroundUrl ? "Ativo" : "—"],
           ["dice","Dados","D20"],
@@ -1468,6 +1574,7 @@ export class SceneBoundary extends Component {
           ["notes","Notas",notes ? "•" : ""],
         ] : [
           ["sheet","Ficha",""],
+          ["flashlight","Lanterna",""],
           ["dice","Dados","D20"],
           ["initiative","Iniciativa",""],
           ["evidence","Pistas",""],
@@ -1487,24 +1594,26 @@ export class SceneBoundary extends Component {
 
       {mestre && <div className="tt3-cast-bar" aria-label="Personagens na cena">
         {tabletopPeople.map((person,index) => <button type="button" key={person.id} aria-pressed={!tokenMode && selected===index} onClick={() => {setSelected(index);setTokenMode(false);setSelectedToken(null);if(mestre){setMasterFocusId(person.id);setMasterFocusRequest(value=>value+1);setTacticalMode(false);}}} onContextMenu={event => {event.preventDefault();setSelected(index);setTokenMode(false);setSelectedToken(null);setTokenPanelOpen(true);setHudPanel(null);setNotice(`Editando o token de ${person.name}.`);}} title={`${person.name} · ${person.role} · botão direito para editar`}><i style={{background:person.color}}/><span>{person.name}</span></button>)}
-        {customTokens.map(token => <button type="button" key={token.id} aria-pressed={tokenMode && selectedToken===token.id} onClick={() => {setTokenMode(true);setPendingToken(null);setSelectedToken(token.id);if(mestre){setMasterFocusId(token.id);setMasterFocusRequest(value=>value+1);setTacticalMode(false);}}} onContextMenu={event => {event.preventDefault();setTokenMode(true);setPendingToken(null);setSelectedToken(token.id);setTokenPanelOpen(true);setHudPanel(null);setNotice(`Editando ${token.name}.`);}} title={`Token · ${token.name} · botão direito para editar`}><i style={{background:token.color || "#7a5b78"}}/><span>{token.name}</span></button>)}
+        {customTokens.filter(token=>mestre || !token.uvOnly).map(token => <button type="button" key={token.id} aria-pressed={tokenMode && selectedToken===token.id} onClick={() => {setTokenMode(true);setPendingToken(null);setSelectedToken(token.id);if(mestre){setMasterFocusId(token.id);setMasterFocusRequest(value=>value+1);setTacticalMode(false);}}} onContextMenu={event => {event.preventDefault();setTokenMode(true);setPendingToken(null);setSelectedToken(token.id);setTokenPanelOpen(true);setHudPanel(null);setNotice(`Editando ${token.name}.`);}} title={`Token · ${token.name} · botão direito para editar`}><i style={{background:token.color || "#7a5b78"}}/><span>{token.name}</span></button>)}
       </div>}
 
-      {!mestre && !staticScene && <button type="button" className="tt3-player-flashlight" aria-label={flashlightPerson?.lanterna?.ativa ? "Apagar lanterna" : "Acender lanterna"} aria-pressed={Boolean(flashlightPerson?.lanterna?.ativa)} title={flashlightPerson?.lanterna?.ativa ? "Lanterna acesa · clique para apagar" : "Lanterna apagada · clique para acender"} disabled={!flashlightPerson} onClick={() => changeFlashlight({...normalizarLanterna(flashlightPerson?.lanterna),ativa:!flashlightPerson?.lanterna?.ativa})}>
-        <svg viewBox="0 0 32 32" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><g transform="rotate(-35 16 16)"><path d="M12 13h8v14h-8zM10 6h12v5l-2 2h-8l-2-2z"/><path d="M10 6h12M14 18h4"/>{flashlightPerson?.lanterna?.ativa && <path d="M16 1v2M9 1l2 2M23 1l-2 2"/>}</g>{!flashlightPerson?.lanterna?.ativa && <path d="M5 27L27 5"/>}</svg>
+      {!mestre && !staticScene && <button type="button" className="tt3-player-flashlight" aria-label={flashlightModeActive(flashlightPerson?.lanterna,'normal') ? "Apagar lanterna" : "Acender lanterna"} aria-pressed={Boolean(flashlightModeActive(flashlightPerson?.lanterna,'normal'))} title={flashlightModeActive(flashlightPerson?.lanterna,'normal') ? "Lanterna acesa · clique para apagar" : "Lanterna apagada · clique para acender"} disabled={!flashlightPerson} onClick={() => changeFlashlight(toggleFlashlightMode(normalizarLanterna(flashlightPerson?.lanterna),'normal'))}>
+        <svg viewBox="0 0 32 32" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><g transform="rotate(-35 16 16)"><path d="M12 13h8v14h-8zM10 6h12v5l-2 2h-8l-2-2z"/><path d="M10 6h12M14 18h4"/>{flashlightModeActive(flashlightPerson?.lanterna,'normal') && <path d="M16 1v2M9 1l2 2M23 1l-2 2"/>}</g>{!flashlightModeActive(flashlightPerson?.lanterna,'normal') && <path d="M5 27L27 5"/>}</svg>
       </button>}
       <div className="tt3-camera-dock" aria-label="Modos de câmera">
-        {[['room','Cena'],['cinema','Cinema'],['panorama','Panorâmica'],['detail','Detalhe']].map(([id,label]) => <button type="button" key={id} aria-pressed={!tacticalMode && view===id} onClick={() => {if(mestre)setMasterFocusId(null);setTacticalMode(false);setView(id);}}>{label}</button>)}
+        {[['room','Cena'],['cinema','Cinema'],['panorama','Panorâmica'],['detail','Detalhe'],['firstPerson','Primeira pessoa']].map(([id,label]) => <button type="button" key={id} disabled={id==="firstPerson" && (mestre ? !tabletopPeople.length : playerCharacterIndex<0)} aria-pressed={!tacticalMode && view===id} onClick={() => {if(mestre)setMasterFocusId(id==="firstPerson" ? (tabletopPeople[selected] || tabletopPeople[0])?.id : null);setTacticalMode(false);setView(id);}}>{label}</button>)}
         <button type="button" disabled={Boolean(staticScene)} aria-pressed={tacticalMode} onClick={() => setTacticalMode(value => !value)}>Mapa tático 2D</button>
       </div>
 
+      {!mestre && !staticScene && <button type="button" className="tt3-player-flashlight tt3-player-uv" aria-label="Lanterna UV" title={sheetTokenTransforms[flashlightPerson?.id]?.uvPermitida===false ? 'Modo UV bloqueado pelo mestre' : 'Ligar ou apagar lanterna UV'} disabled={!flashlightPerson || sheetTokenTransforms[flashlightPerson?.id]?.uvPermitida===false} aria-pressed={Boolean(flashlightPerson?.lanterna?.ativa && flashlightPerson?.lanterna?.modo==='uv')} onClick={()=>changeFlashlight(toggleFlashlightMode(normalizarLanterna(flashlightPerson?.lanterna),'uv'))}> <svg viewBox="0 0 32 32" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><g transform="rotate(-35 16 16)"><path d="M12 13h8v14h-8zM10 6h12v5l-2 2h-8l-2-2z"/><path d="M10 6h12M14 18h4"/>{(flashlightPerson?.lanterna?.ativa && flashlightPerson?.lanterna?.modo==='uv') && <path d="M16 1v2M9 1l2 2M23 1l-2 2"/>}</g>{!(flashlightPerson?.lanterna?.ativa && flashlightPerson?.lanterna?.modo==='uv') && <path d="M5 27L27 5"/>}</svg></button>}
       {campaign && <RollNotifications key={campaign.id} rolls={campaign.rolagens || []} mestre={mestre}/>}
-      <div className="tt3-toast" role="status"><span>{notice}</span><small>{tacticalMode && !staticScene ? (mestre ? "Arraste os tokens para mover · arraste o mapa para navegar · roda: zoom" : "Arraste seu personagem ou use WASD · arraste o mapa para navegar · roda: zoom") : mestre ? "Botão direito + arrastar: olhar sem sair do lugar · botão esquerdo: orbitar · WASD: mover · Shift + arrastar: deslocar · roda: zoom · Q/E: descer/subir" : "WASD: mover seu personagem · botão direito + arrastar: olhar no mesmo lugar · botão esquerdo: orbitar · roda: aproximar"}</small></div>
+      <div className="tt3-toast" role="status"><span>{notice}</span><small>{mestre && "Ctrl + roda: velocidade · Shift + roda: inclinação lateral · "}{view==="firstPerson" ? (mestre ? "Botão esquerdo + arrastar: olhar ao redor · visão do personagem selecionado" : "Botão esquerdo + arrastar: olhar ao redor · WASD: mover seu personagem") : tacticalMode && !staticScene ? (mestre ? "Arraste os tokens para mover · arraste o mapa para navegar · roda: zoom" : "Arraste seu personagem ou use WASD · arraste o mapa para navegar · roda: zoom") : mestre ? "Botão direito + arrastar: olhar sem sair do lugar · botão esquerdo: orbitar · WASD: mover · Shift + arrastar: deslocar · roda: zoom · Q/E: descer/subir" : "WASD: mover seu personagem · botão esquerdo: orbitar · roda: aproximar"}</small></div>
 
-      {hudPanel && <aside className={`tt3-hud-drawer ${hudPanel==="sheet" && embeddedEspiralId ? "tt3-sheet-drawer" : ""}`} aria-label="Painel de ferramentas">
-        <header><div><span>TABLETOP 3D</span><h2>{({scene:"Cena",weather:"Clima",background:"Background",initiative:"Iniciativa",dice:"Dados",evidence:"Pistas",audio:"Áudio",notes:"Notas",sheet:"Ficha"})[hudPanel]}</h2></div><button type="button" onClick={() => setHudPanel(null)} aria-label="Fechar painel">×</button></header>
+      {hudPanel && <aside className={`tt3-hud-drawer ${hudPanel==="shield"?"tt3-master-shield-drawer":""} ${hudPanel==="sheet" && embeddedEspiralId ? "tt3-sheet-drawer" : ""}`} aria-label="Painel de ferramentas">
+        <header><div><span>TABLETOP 3D</span><h2>{({camera:"Câmera",shield:"Consulta do mestre",scene:"Cena",weather:"Clima",background:"Background",initiative:"Iniciativa",dice:"Dados",evidence:"Pistas",audio:"Áudio",notes:"Notas",sheet:"Ficha"})[hudPanel]}</h2></div><button type="button" onClick={() => setHudPanel(null)} aria-label="Fechar painel">×</button></header>
         {hudPanel==="scene" && <div className="tt3-drawer-content"><p className="tt3-kicker">Cena ativa</p><h3>{activeSceneName}</h3><p>{activeMapName ? `Mapa: ${activeMapName}` : "Esta cena ainda não possui um mapa 3D vinculado."}</p><div className="tt3-scene-stats"><span><strong>{tabletopPeople.length + customTokens.length}</strong> participantes</span><span><strong>{mapAssets.length}</strong> assets</span><span><strong>{weather.preset === "noite" ? "Noite" : "Dia"}</strong> luz</span></div><div className="tt3-scene-browser">{(campaign?.cenas || []).map((scene,index) => {const maps=sceneMaps(scene);const active=scene.id===campaign?.cenaAtiva?.id;return <article key={scene.id} className={active ? "active" : ""}><button type="button" className="tt3-scene-choice" disabled={!mestre || switchingScene} onClick={() => switchScene(scene,(scene.imagensCena || []).length ? null : maps[0]?.link || null,(scene.imagensCena || [])[0] || null)}><small>CENA {String(index+1).padStart(2,"0")}</small><strong>{scene.nome}</strong><span>{maps.length ? `${maps.length} mapa(s) 3D` : "Sem mapa 3D"}</span></button>{maps.length>0 && <div>{maps.map(({link,map}) => <button type="button" key={link.id} className={active && map.id===activeMapId ? "active" : ""} disabled={!mestre || switchingScene} onClick={() => switchScene(scene,link)}>{map.nome}</button>)}</div>}{(scene.imagensCena || []).length>0 && <div>{scene.imagensCena.map(image => <button type="button" key={image.id} className={active && staticScene?.id===image.id ? "active" : ""} disabled={!mestre || switchingScene} onClick={() => switchScene(scene,null,image)}>{image.nome || "Cena estática"}</button>)}</div>}</article>;})}{!(campaign?.cenas || []).length && <p>Nenhuma cena cadastrada nesta campanha.</p>}</div>{!mestre && <small className="tt3-scene-sync-note">A troca de cena é controlada pelo mestre e sincronizada automaticamente.</small>}<button type="button" className="tt3-primary" onClick={() => {setPositions(tabletopPeople.map(person => [...person.start]));setNotice("Personagens nas posições iniciais.");}}>Reiniciar posições</button></div>}
-        {hudPanel==="flashlight" && <div className="tt3-drawer-content"><p>A luz acompanha o token no mapa.</p>{mestre && <label>Personagem ou NPC<select aria-label="Token da lanterna" value={flashlightPerson?.id || ""} onChange={event => setFlashlightTarget(event.target.value)}>{flashlightCandidates.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}</select></label>}{flashlightPerson ? <FlashlightControls value={flashlightPerson.lanterna} onChange={changeFlashlight}/> : <p>Nenhum token disponível no mapa.</p>}</div>}
+        {hudPanel==="flashlight" && <div className="tt3-drawer-content tt3-flashlight-panel"><div className="tt3-light-intro"><span>ILUMINAÇÃO</span><h3>Lanterna</h3><p>Controle a luz de cada personagem no cenário.</p></div>{mestre && <label className="tt3-light-target">Personagem ou NPC<select aria-label="Token da lanterna" value={flashlightPerson?.id || ""} onChange={event => setFlashlightTarget(event.target.value)}>{flashlightCandidates.map(person => <option key={person.id} value={person.id}>{person.name}</option>)}</select></label>}{flashlightPerson ? <FlashlightControls uvAllowed={sheetTokenTransforms[flashlightPerson.id]?.uvPermitida!==false} value={flashlightPerson.lanterna} onChange={changeFlashlight}/> : <p>Nenhum token disponível no mapa.</p>}{mestre && <PlayerUVControls players={tabletopPeople.filter(person=>!person.id.startsWith("inimigo:")).map(person=>({id:person.id,name:person.name,state:sheetTokenTransforms[person.id]}))} onChange={updateSheetToken}/>} {mestre && <UVClueControls onSync={()=>customTokens.filter(token=>token.uvOnly).forEach(publishCustomToken)} clues={customTokens.filter(token=>token.uvOnly)} onCreate={prepareUVClue} onEdit={id=>{setSelectedToken(id);setTokenMode(true);setTokenPanelOpen(true);setHudPanel(null);}} onRemove={id=>saveCustomTokens(customTokens.filter(token=>token.id!==id))}/>}</div>}
+        {mestre && hudPanel==="shield" && <MasterShield campaignId={campaign?.id} scene={campaign?.cenaAtiva} combat={campaign?.combateAtivo}/> }
         {hudPanel==="weather" && <div className="tt3-drawer-content tt3-weather-panel"><SessionClockControls clock={weather.clock} minutes={clockMinutes} mestre={mestre} onChange={changeClock}/>
           <p>Escolha uma atmosfera pronta ou ajuste livremente para improvisar a cena.</p>
           <div className="tt3-weather-presets">{Object.entries(WEATHER_PRESETS).map(([id,preset]) => <button type="button" key={id} aria-pressed={weather.preset===id} onClick={() => applyWeatherPreset(id)}>{preset.label}</button>)}</div>
@@ -1535,21 +1644,25 @@ export class SceneBoundary extends Component {
         </div>}
         {hudPanel==="notes" && <div className="tt3-drawer-content"><p>Anotações privadas desta campanha, salvas neste navegador.</p><textarea value={notes} onChange={event => setNotes(event.target.value)} placeholder="Registre suspeitas, nomes e decisões..."/><small>Salvamento automático.</small></div>}
         {hudPanel==="sheet" && (embeddedEspiralId ? <div className="tt3-embedded-sheet" onKeyDown={event => event.stopPropagation()} onKeyUp={event => event.stopPropagation()}>
-          <Suspense fallback={<p role="status">Carregando ficha ESPIRAL…</p>}><FichaEspiral key={embeddedEspiralId} sheetId={embeddedEspiralId} embedded scene={campaign?.cenaAtiva} sceneEnemies={campaign?.inimigos || []} rollContext={activeDifficulty} difficultyLocked={!mestre} onRollContextChange={setDifficultyContext} onSheetChange={updateEspiralSheet} onRoll={(roll,author) => {if(campaign?.id) registrarRolagem(campaign.id,author,{...roll,...rollOutcome(roll.total ?? roll.best ?? roll.resultado ?? 0,roll.difficulty ?? activeDifficulty.value),context:roll.context || activeDifficulty.label,category:roll.category || activeDifficulty.category,formula:roll.label,sistema:"espiral"}).catch(() => setNotice("Não foi possível compartilhar a rolagem da ficha."));}}/></Suspense>
+          <Suspense fallback={<p role="status">Carregando ficha ESPIRAL…</p>}><FichaEspiral key={embeddedEspiralId} sheetId={embeddedEspiralId} embedded scene={campaign?.cenaAtiva} sceneEnemies={campaign?.inimigos || []} rollContext={activeDifficulty} difficultyLocked={!mestre} onRollContextChange={setDifficultyContext} onSheetChange={updateEspiralSheet} onRoll={(roll,author) => {if(campaign?.id) registrarRolagem(campaign.id,author,{...roll,...(roll.tipo==="dano" ? {} : rollOutcome(roll.total ?? roll.best ?? roll.resultado ?? 0,roll.difficulty ?? activeDifficulty.value)),context:roll.context || activeDifficulty.label,category:roll.category || activeDifficulty.category,formula:roll.label,sistema:"espiral"}).catch(() => setNotice("Não foi possível compartilhar a rolagem da ficha."));}}/></Suspense>
         </div> : <div className="tt3-drawer-content tt3-empty-panel"><span>▤</span><h3>Ficha do personagem</h3><a href={returnUrl} className="tt3-primary">Abrir ficha</a></div>)}
       </aside>}
 
-      {tokenPanelOpen && <aside className="tt3-token-panel" aria-label="Importar e ajustar token">
-        <header><div><span>PERSONAGEM · IMAGEM</span><strong>{editableTokenData ? editableTokenData.name : "Adicionar token"}</strong></div><button type="button" onClick={() => setTokenPanelOpen(false)} aria-label="Fechar">×</button></header>
+      {tokenPanelOpen && <aside className="tt3-token-panel tt3-token-inspector" aria-label="Importar e ajustar token">
+        <header><div><span>PERSONAGEM / AJUSTES NO TABULEIRO</span><strong>{editableTokenData ? editableTokenData.name : "Adicionar token"}</strong></div><button type="button" onClick={() => setTokenPanelOpen(false)} aria-label="Fechar">×</button></header>
+        <div className="tt3-token-inspector-body">
         {editableTokenData && <div className="tt3-token-transform">
-          {(mestre || (!selectedTokenData && selectedSheetPerson?.id===tabletopPeople[playerCharacterIndex]?.id)) && <FlashlightControls value={editableTokenData.lanterna} onChange={lanterna => updateEditableToken({lanterna})}/>}
-          {mestre && editableTokenData.fromSheet && <label><input type="checkbox" checked={Boolean(selectedSheetTransform?.combat)} onChange={event => updateEditableToken({combat:event.target.checked})}/> Postura de combate</label>}{mestre && <div className="tt3-token-rotation">
+          <div className="tt3-token-overview">{editableTokenData.image ? <img src={editableTokenData.image} alt={`Token de ${editableTokenData.name || 'personagem'}`}/> : <span aria-hidden="true">◇</span>}<div><strong>{editableTokenData.name || 'Personagem'}</strong><small>{editableTokenData.fromSheet ? 'Vinculado à ficha do personagem' : 'Token personalizado da cena'}</small><p>Ajustes aplicados diretamente no tabuleiro.</p></div></div>
+          <label className="tt3-token-name"><span>Nome do personagem</span><input type="text" value={editableTokenData.name || ""} readOnly={editableTokenData.fromSheet} onChange={(event) => updateEditableToken({name:event.target.value})} placeholder="Nome do personagem"/></label>
+          {(mestre || (!selectedTokenData && selectedSheetPerson?.id===tabletopPeople[playerCharacterIndex]?.id)) && <details className="tt3-token-section"><summary><span>Lanterna</span><small>{editableTokenData.lanterna?.ativa ? "Ligada" : "Desligada"}</small></summary><FlashlightControls uvAllowed={sheetTokenTransforms[selectedSheetPerson?.id]?.uvPermitida!==false} value={editableTokenData.lanterna} onChange={lanterna => updateEditableToken({lanterna})}/></details>}
+          {mestre && selectedTokenData && <label className="tt3-token-check"><input type="checkbox" checked={Boolean(editableTokenData.uvOnly)} onChange={event=>updateEditableToken({uvOnly:event.target.checked})}/> Revelar somente com lanterna UV</label>}
+          <details className="tt3-token-section" hidden={!mestre}><summary><span>Postura e direção</span><small>Orientação do token</small></summary>{mestre && editableTokenData.fromSheet && <label className="tt3-token-check"><input type="checkbox" checked={Boolean(selectedSheetTransform?.combat)} onChange={event => updateEditableToken({combat:event.target.checked})}/> Postura de combate</label>}{mestre && <div className="tt3-token-rotation">
             <label><span>Rotação do token</span><NumberInput aria-label="Rotação do token" type="number" min="0" max="359" step="5" value={((Number(editableTokenData.rotacao)||0)%360+360)%360} onChange={event => updateEditableToken({rotacao:((Number(event.target.value)||0)%360+360)%360,olharCamera:false})}/></label>
             <section><button type="button" onClick={() => updateEditableToken({rotacao:((Number(editableTokenData.rotacao)||0)+315)%360,olharCamera:false})}>↶ 45°</button><button type="button" onClick={() => updateEditableToken({rotacao:((Number(editableTokenData.rotacao)||0)+45)%360,olharCamera:false})}>↷ 45°</button></section>
             <label><input type="checkbox" checked={editableTokenData.olharCamera!==false} onChange={event => updateEditableToken({olharCamera:event.target.checked})}/> Sempre olhar para a câmera</label>
-          </div>}
-          <label className="tt3-token-name"><span>Nome do personagem</span><input type="text" value={editableTokenData.name || ""} readOnly={editableTokenData.fromSheet} onChange={(event) => updateEditableToken({name:event.target.value})} placeholder="Nome do personagem"/></label>
-          <p>Arraste o token pela imagem. Use os controles abaixo para alinhar os pés com qualquer superfície.</p>
+          </div>}</details>
+
+          <section className="tt3-token-position"><h3>Posição e tamanho</h3><p>Ajuste a altura dos pés e o tamanho do personagem no cenário.</p>
           <div>
             <span>Altura precisa <b>{(Number(editableTokenData.elevation)||0).toFixed(2)} m</b></span>
             <NumberInput
@@ -1567,33 +1680,20 @@ export class SceneBoundary extends Component {
               <button type="button" onClick={() => updateEditableToken({elevation:Math.min(500,(Number(editableTokenData.elevation)||0)+0.05)})} disabled={(Number(editableTokenData.elevation)||0)>=500} aria-label="Subir token">↑ 5 cm</button>
             </section>
           </div>
-          <div>
-            <span>Tamanho livre <b>{Math.round((Number(editableTokenData.scale)||1)*100)}%</b></span>
-            <input
-              type="range"
-              min="0.01"
-              max="3"
-              step="0.01"
-              value={Number(editableTokenData.scale)||1}
-              onChange={(event) => updateEditableToken({scale:Number(event.target.value)})}
-              aria-label="Tamanho preciso do token"
-            />
-            <section>
-              <button type="button" onClick={() => updateEditableToken({scale:Math.max(0.01,(Number(editableTokenData.scale)||1)-0.05)})} disabled={(Number(editableTokenData.scale)||1)<=0.01} aria-label="Diminuir token">− 5%</button>
-              <button type="button" onClick={() => updateEditableToken({scale:Math.min(3,(Number(editableTokenData.scale)||1)+0.05)})} disabled={(Number(editableTokenData.scale)||1)>=3} aria-label="Aumentar token">+ 5%</button>
-            </section>
-          </div>
+          <TokenSizeControls scale={Number(editableTokenData.scale)||0.35} onChange={scale=>updateEditableToken({scale})}/>
+          </section>
           {editableTokenData.fromSheet
             ? <button type="button" className="tt3-token-remove" onClick={() => resetSheetToken(editableTokenData.id)}>Restaurar tamanho, altura e posição</button>
             : <button type="button" className="tt3-token-remove" onClick={removeSelectedToken}>Apagar token</button>}
         </div>}
-                {mestre && <section className="tt3-animation-library" aria-label="Animações de tokens"><strong>Animações do mestre</strong><a href="/?mestre=1&amp;aba=animacoes" target="_blank" rel="noreferrer">Abrir Estúdio de Tokens</a>{animationLibrary.length===0 && <small>As animações salvas nas fichas são aplicadas automaticamente aos tokens. Configure-as no Dashboard.</small>}{animationLibrary.filter(entry => !entry.fichaId && entry.tokenType!=="2d").map(entry => <button type="button" key={entry.id} onClick={() => {const animation={...entry.animation,image:entry.image};if(editableTokenData) {updateEditableToken(editableTokenData.fromSheet ? {animation} : {image:entry.image,animation});setNotice(`Animação ${entry.name} aplicada ao token.`);} else {prepareToken(entry.image,entry.name,animation);}}}>{editableTokenData ? 'Aplicar' : 'Adicionar'}: {entry.name}</button>)}{editableTokenData?.animation && <button type="button" onClick={() => updateEditableToken(editableTokenData.fromSheet ? {animationEnabled:editableTokenData.animation.enabled===false} : {animation:{...editableTokenData.animation,enabled:editableTokenData.animation.enabled===false}})}>{editableTokenData.animation.enabled===false ? 'Ativar animação' : 'Desativar animação'}</button>}</section>}
-        <p>Escolha uma imagem PNG/JPG, de preferência com fundo transparente, para colocar no tabuleiro.</p>
+                {mestre && <details className="tt3-token-section"><summary><span>Animações</span><small>Movimento e piscadas</small></summary><section className="tt3-animation-library" aria-label="Animações de tokens"><strong>Animações do mestre</strong><a href="/?mestre=1&amp;aba=animacoes" target="_blank" rel="noreferrer">Abrir Estúdio de Tokens</a>{animationLibrary.length===0 && <small>As animações salvas nas fichas são aplicadas automaticamente aos tokens. Configure-as no Dashboard.</small>}{animationLibrary.filter(entry => !entry.fichaId && entry.tokenType!=="2d").map(entry => <button type="button" key={entry.id} onClick={() => {const animation={...entry.animation,image:entry.image};if(editableTokenData) {updateEditableToken(editableTokenData.fromSheet ? {animation} : {image:entry.image,animation});setNotice(`Animação ${entry.name} aplicada ao token.`);} else {prepareToken(entry.image,entry.name,animation);}}}>{editableTokenData ? 'Aplicar' : 'Adicionar'}: {entry.name}</button>)}{editableTokenData?.animation && <button type="button" onClick={() => updateEditableToken(editableTokenData.fromSheet ? {animationEnabled:editableTokenData.animation.enabled===false} : {animation:{...editableTokenData.animation,enabled:editableTokenData.animation.enabled===false}})}>{editableTokenData.animation.enabled===false ? 'Ativar animação' : 'Desativar animação'}</button>}</section></details>}
+        <details className="tt3-token-section tt3-token-image-section" open={!editableTokenData}><summary><span>Imagem do token</span><small>Dispositivo ou link</small></summary><p>Escolha uma imagem PNG/JPG, de preferência com fundo transparente, para colocar no tabuleiro.</p>
         <button type="button" className="tt3-token-upload" onClick={() => tokenFileRef.current?.click()}>Escolher imagem do dispositivo</button>
         <input ref={tokenFileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={importTokenFile} hidden/>
         <div className="tt3-token-url"><input value={tokenUrl} onChange={event => setTokenUrl(event.target.value)} placeholder="https://site.com/personagem.png" aria-label="URL da imagem"/><button type="button" onClick={importTokenUrl}>Usar URL</button></div>
         <small>Imagens importadas usam R2 quando configurado. URLs externas continuam no site de origem.</small>
-        {mestre && <MediaMigrationPanel/>}
+        </details>{mestre && <details className="tt3-token-section tt3-token-advanced"><summary><span>Armazenamento</span><small>Configuração e migração</small></summary><MediaMigrationPanel/></details>}
+        </div>
       </aside>}
 
     </section>

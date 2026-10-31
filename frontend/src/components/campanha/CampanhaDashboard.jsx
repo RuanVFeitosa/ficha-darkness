@@ -607,7 +607,7 @@ const CampanhaDashboard = () => {
                 <small className={`campanha-tabletop-tipo tipo-${tipoTabletopCampanha(item)}`}>Tabletop {tipoTabletopCampanha(item).toUpperCase()}</small>
               </button>
               <div>
-                {tipoTabletopCampanha(item) === "3d" && <a href={urlCriadorMapa3D(item)}>Criar mapa</a>}
+                {tipoTabletopCampanha(item) === "3d" && <a href={urlCriadorMapa3D(item)}>Editar mapas</a>}
                 <a
                   href={urlTabletopCampanha(item)}
                   onClick={() => autorizarTabletopCampanha(item)}
@@ -764,7 +764,7 @@ const CampanhaDashboard = () => {
         <div>
           {tipoTabletopCampanha(campanha) === "3d" && <a href={urlCriadorMapa3D(campanha)}>
             <Icon path={mdiMapOutline} size={0.78} />
-            Criar mapa
+            Editar mapas
           </a>}
           <a
             href={urlTabletopCampanha(campanha)}
@@ -1445,7 +1445,7 @@ const CampanhaDashboard = () => {
                 {(campanha.mapas3D || []).length ? <div>{campanha.mapas3D.map((mapa) => {
                   const selecionado=(editando.mapasBatalha || []).some((item) => item.mapa3dId === mapa.id);
                   return <button type="button" key={mapa.id} className={selecionado ? "selecionado" : ""} onClick={() => alternarMapa3DNaCena(mapa)}><span>{selecionado ? "✓" : "+"}</span><div><strong>{mapa.nome}</strong><small>{mapa.assets?.length || 0} assets</small></div></button>;
-                })}</div> : <p>Nenhum mapa 3D salvo. Use “Criar mapa” no painel da campanha.</p>}
+                })}</div> : <p>Nenhum mapa 3D salvo. Use “Editar mapas” no painel da campanha.</p>}
               </div>}
               {editando.mapasBatalha?.map((item) => (
                 <div className={`campanha-midia-linha mapa ${item.origem === "tabletop3d" ? "mapa-3d" : ""}`} key={item.id}>

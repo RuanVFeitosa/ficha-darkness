@@ -1,3 +1,6 @@
+import useUVReveal from './useUVReveal';
+import UVClueControls from './UVClueControls';
+import {uvTextImage} from '../../utils/uvLight';
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as THREE from "three";
@@ -189,30 +192,37 @@ function LoadingAsset({ failed = false }) {
   return <mesh position={[0,0.32,0]} castShadow><boxGeometry args={[0.55,0.55,0.55]}/><meshStandardMaterial color={failed ? "#9b4c47" : "#756b5d"} wireframe/></mesh>;
 }
 
+function AnnotationAsset({asset}){
+ const [texture,setTexture]=useState(null);
+ useEffect(()=>{
+   let active=true,loaded;
+   new THREE.TextureLoader().load(asset.image,value=>{loaded=value;if(active){value.colorSpace=THREE.SRGBColorSpace;setTexture(value);}else value.dispose();});
+   return ()=>{active=false;loaded?.dispose();};
+ },[asset.image]);
+ if(!texture)return null;
+ return <mesh><planeGeometry args={[2,1]}/><meshBasicMaterial map={texture} transparent alphaTest={.05} depthWrite={false} side={THREE.DoubleSide} toneMapped={false}/></mesh>;
+}
 export function AssetModel({ asset }) {
   if (!asset) return null;
+  if(asset.kind==='annotation')return <AnnotationAsset asset={asset}/>;
   return asset.kind
     ? <PrimitiveAsset kind={asset.kind}/>
     : <RemoteAsset file={asset.fileUrl || asset.file} dependencies={asset.dependencies} modelRole={asset.modelRole}/>;
 }
 
-export function PlacedAssets({ items, selectedId, onSelect, onSurfaceClick }) {
-  return items.map((item) => (
-    <group
-      key={item.instanceId}
-      position={[item.x,0.01,item.z]}
-      rotation={[0,item.rotation || 0,0]}
-      scale={item.scale || 1}
-      onClick={(event) => {
-        event.stopPropagation();
-        if(onSurfaceClick) onSurfaceClick(event);
-        else onSelect(item.instanceId);
-      }}
-    >
-      <AssetModel asset={item.asset}/>
-      {selectedId === item.instanceId && <mesh rotation={[-Math.PI/2,0,0]} position={[0,0.025,0]}><ringGeometry args={[0.68,0.75,40]}/><meshBasicMaterial color="#ffe09b" transparent opacity={0.95}/></mesh>}
-    </group>
-  ));
+function PlacedAsset({item,selectedId,onSelect,onSurfaceClick,revealUV}){
+ const ref=useRef();
+ useUVReveal(ref,Boolean(item.uvOnly),revealUV,item.asset?.kind==='annotation' ? 0 : .5);
+ return <group ref={ref} visible={!item.uvOnly || revealUV} userData={{tokenInteraction:Boolean(item.uvOnly)}} position={[item.x,(Number(item.y)||0)+.01,item.z]} rotation={[(Number(item.tilt)||0)*Math.PI/180,item.rotation || 0,0]} scale={item.scale || 1} onClick={event=>{
+   if(ref.current?.visible===false)return;
+   event.stopPropagation();if(onSurfaceClick)onSurfaceClick(event);else onSelect?.(item.instanceId);
+ }}>
+  <AssetModel asset={item.asset}/>
+  {selectedId===item.instanceId && <mesh rotation={[-Math.PI/2,0,0]} position={[0,.025,0]}><ringGeometry args={[.68,.75,40]}/><meshBasicMaterial color="#ffe09b" transparent opacity={.95}/></mesh>}
+ </group>;
+}
+export function PlacedAssets({items,selectedId,onSelect,onSurfaceClick,revealUV=true}){
+ return items.map(item=><PlacedAsset key={item.instanceId} item={item} selectedId={selectedId} onSelect={onSelect} onSurfaceClick={onSurfaceClick} revealUV={revealUV}/>);
 }
 
 const normalize = (value) => String(value || "").toLocaleLowerCase("pt-BR");
@@ -224,6 +234,7 @@ export default function MapEditor3D({
   pendingAsset,
   onClose,
   onPrepare,
+  onPrepareAnnotation,
   onUpdate,
   onDuplicate,
   onDelete,
@@ -355,10 +366,12 @@ export default function MapEditor3D({
 
   if (!open) return null;
   return <aside className="tt3-editor" aria-label="Criador de mapas 3D">
-    <div className="tt3-editor-head"><div><small>OFICINA DE CENÁRIOS</small><h2>Construa seu mundo</h2></div><button type="button" onClick={onClose} aria-label="Fechar criador">×</button></div>
+    <div className="tt3-editor-head"><div><small>OFICINA DE CENÁRIOS</small><h2>Editor de cenários</h2></div><button type="button" onClick={onClose} aria-label="Fechar criador">×</button></div>
     <div className="tt3-map-summary"><span>{mapName || 'Mapa sem título'}</span><small className={dirty ? 'is-dirty' : ''}>{dirty ? 'Alterações não salvas' : 'Sem alterações pendentes'}</small></div>
-    <nav className="tt3-editor-tabs" aria-label="Ferramentas de construção">{[['library','Biblioteca'],['objects',`Objetos (${items.length})`],['settings','Configurações']].map(([id,label])=><button type="button" key={id} aria-pressed={panel===id} onClick={()=>setPanel(id)}>{label}</button>)}</nav>
+    <div className="tt3-map-open"><label>Mapa em edição<select value={activeMapId} onChange={event=>onLoadMap(event.target.value)} aria-label="Abrir mapa 3D"><option value="">Mapa novo</option>{savedMaps.map(map=><option key={map.id} value={map.id}>{map.nome}</option>)}</select></label></div>
+    <nav className="tt3-editor-tabs" aria-label="Ferramentas de construção">{[['library','Biblioteca'],['objects',`Objetos (${items.length})`],...(onPrepareAnnotation ? [['clues','Pistas UV']] : []),['settings','Configurações']].map(([id,label])=><button type="button" key={id} aria-pressed={panel===id} onClick={()=>setPanel(id)}>{label}</button>)}</nav>
     <div className="tt3-editor-workspace">
+    {onPrepareAnnotation && <section hidden={panel!=='clues'} className="tt3-editor-clues"><UVClueControls imageHint="Selecione um objeto do mapa e marque Revelar somente com lanterna UV para ocultá-lo dos jogadores." clues={[]} onCreate={onPrepareAnnotation}/><p>As pistas fazem parte do mapa salvo. Use Objetos para selecionar, mover ou remover cada pista.</p></section>}
     <section className="tt3-map-settings" hidden={panel!=='settings'}><div className="tt3-panel-intro"><span>SEU ARQUIVO</span><h3>Organize o mapa</h3><p>Nomeie, abra um cenário salvo ou importe um modelo completo.</p></div>
     <section className="tt3-map-document">
       <input value={mapName} onChange={(event) => onMapNameChange(event.target.value)} placeholder="Nome do mapa" aria-label="Nome do mapa 3D"/>
@@ -391,7 +404,10 @@ export default function MapEditor3D({
     </section>}
     {selected && <section className="tt3-selection">
       <div><span>OBJETO SELECIONADO</span><strong>{selected.asset.name}</strong></div>
-      <div className="tt3-position-fields">{[['x','Posição X'],['z','Posição Z']].map(([key,label])=><label key={key}>{label}<input aria-label={label} type="number" step="0.25" value={selected[key] ?? 0} onChange={event=>{if(event.target.value!=='' && Number.isFinite(Number(event.target.value)))onUpdate({[key]:Number(event.target.value)});}}/></label>)}</div>
+      <div className="tt3-position-fields">{[['x','Posição X'],['y','Altura Y'],['z','Posição Z']].map(([key,label])=><label key={key}>{label}<input aria-label={label} type="number" step="0.25" value={selected[key] ?? 0} onChange={event=>{if(event.target.value!=='' && Number.isFinite(Number(event.target.value)))onUpdate({[key]:Number(event.target.value)});}}/></label>)}</div>
+      <label className="tt3-editor-uv"><input type="checkbox" checked={Boolean(selected.uvOnly)} onChange={event=>onUpdate({uvOnly:event.target.checked})}/> Revelar somente com lanterna UV</label>
+      <label className="tt3-range">Inclinação em graus<input type="number" aria-label="Inclinação do objeto" min="-180" max="180" step="1" value={selected.tilt || 0} onChange={event=>onUpdate({tilt:Number(event.target.value)||0})}/></label>
+      {selected.asset.kind==='annotation' && <label className="tt3-annotation-text">Texto da pista<textarea aria-label="Editar texto da pista UV" maxLength={240} defaultValue={selected.asset.text || ''} key={selected.instanceId} onBlur={event=>{const text=event.target.value.trim();if(text && text!==selected.asset.text)onUpdate({asset:{...selected.asset,name:text,text,image:uvTextImage(text)}});}}/></label>}
       <label className="tt3-range">Escala <input type="range" min="0.25" max="4" step="0.05" value={selected.scale || 1} onChange={(event) => onUpdate({ scale: Number(event.target.value) })}/><b>{(selected.scale || 1).toFixed(2)}×</b></label>
       <div className="tt3-transform-row"><button type="button" onClick={() => onUpdate({rotation:(selected.rotation || 0) - Math.PI/4})}>↶ Girar</button><button type="button" onClick={() => onUpdate({rotation:(selected.rotation || 0) + Math.PI/4})}>↷ Girar</button></div>
       <div className="tt3-transform-row"><button type="button" onClick={onDuplicate}>Duplicar</button><button type="button" className="danger" onClick={onDelete}>Remover</button></div>

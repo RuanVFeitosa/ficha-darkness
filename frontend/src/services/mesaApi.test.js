@@ -1,6 +1,25 @@
 import { registrarRolagem, salvarTokenCustom3D, salvarEstadoToken3D, obterEstadoToken3D, ativarCena, atualizarEstadoMusica, atualizarRevelacaoDocumentoInvestigacao, buscarCampanhaPorCodigo, criarCampanhaMesa, desvincularFicha, excluirCena, listarCampanhas, listarCampanhasDaFicha, moverToken, salvarCena, salvarClima3DCampanha, salvarEvidenciaInterativa, salvarMusicasCampanha, salvarMapas3DCampanha, validarArquivoImagem, vincularFicha } from "./mesaApi";
 
 describe("biblioteca local da mesa", () => {
+  test('texto UV criado no tabletop chega a outro leitor sem imagem enviada ao storage',async()=>{
+    await salvarTokenCustom3D('demo','uv-text-map',{id:'text-direct',name:'A verdade será contada',uvText:'A verdade será contada',image:'',uvOnly:true,x:3,z:4,elevation:1},'mestre');
+    const received=await buscarCampanhaPorCodigo('DARK26');
+    const token=received.tokens.find(item=>item.ficha_id==='custom3d:text-direct');
+    expect(obterEstadoToken3D(token,'uv-text-map')).toMatchObject({uvText:'A verdade será contada',uvOnly:true,x:3,z:4,elevation:1,image:''});
+  });
+  test('edição do mapa preserva o modelo 3D e as pistas UV posicionadas',async()=>{
+    const maps=[{id:'existing-map',nome:'Cidade',assets:[{instanceId:'model',asset:{fileUrl:'/city.glb'},scale:2,x:0,z:0},{instanceId:'clue',asset:{kind:'annotation',text:'37',image:'/uv.png'},uvOnly:true,x:3,y:1.5,z:4,rotation:1,tilt:-90}]}];
+    await salvarMapas3DCampanha('demo',maps);
+    const campaign=await buscarCampanhaPorCodigo('DARK26');
+    expect(campaign.mapas3D).toMatchObject(maps);
+  });
+  test('pistas UV e modo da lanterna persistem no mapa sem afetar outros mapas',async()=>{
+    await salvarTokenCustom3D('demo','uv-map',{id:'uv-clue',name:'Código secreto',image:'/mark.png',uvOnly:true,uvText:'Código secreto',x:4,z:5,lanterna:{ativa:true,modo:'uv',alcance:18}},'mestre');
+    const campaign=await buscarCampanhaPorCodigo('DARK26');
+    const token=campaign.tokens.find(item=>item.ficha_id==='custom3d:uv-clue');
+    expect(obterEstadoToken3D(token,'uv-map')).toMatchObject({uvOnly:true,uvText:'Código secreto',lanterna:{modo:'uv'}});
+    expect(obterEstadoToken3D(token,'other-map')).toBeNull();
+  });
   test('salva e reabre a animação individual das imagens narrativas', async()=>{
     const animation={enabled:true,breathing:.01,sway:.005,closedImage:'data:image/webp;base64,YQ==',region:{x:.2,y:.15,width:.5,height:.2}};
     const cena=await salvarCena('demo',{nome:'Boss',imagensCena:[{id:'boss',nome:'O guardião',url:'/boss.webp',animation},{id:'local',nome:'Sala',url:'/sala.webp'}],mapasBatalha:[]});

@@ -1,21 +1,24 @@
+import {initialEditorMap} from '../utils/mapEditorDocument';
+import {uvTextImage} from '../utils/uvLight';
 import React, { Component, useEffect, useRef, useState } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import * as THREE from "three";
-import MapEditor3D, { AssetModel, MAP_STORAGE_KEY, PlacedAssets, loadSavedMap } from "../components/tabletop/MapEditor3D";
+import MapEditor3D, { AssetModel, MAP_STORAGE_KEY, PlacedAssets } from "../components/tabletop/MapEditor3D";
 import { ativarCena, buscarCampanhaPorCodigo, enviarModelo3DMapa, salvarCena, salvarMapas3DCampanha } from "../services/mesaApi";
 import "../styles/Tabletop3D.css";
 import "../styles/CriadorMapa3D.css";
 
-function CameraEditor({ poseApiRef }) {
+export function CameraEditor({ poseApiRef }) {
   const { camera, gl } = useThree();
   const controls = useRef();
   useEffect(() => {
     const orbit = new OrbitControls(camera, gl.domElement);
     orbit.enableDamping = true;
-    orbit.minDistance = 4;
-    orbit.maxDistance = 24;
-    orbit.maxPolarAngle = Math.PI / 2.04;
+    orbit.minDistance = 0.1;
+    orbit.maxDistance = 500;
+    orbit.maxPolarAngle = Math.PI - .01;
+    orbit.dampingFactor=.075;
     orbit.target.set(0, 0, 0);
     controls.current = orbit;
     poseApiRef.current=() => ({position:camera.position.toArray(),target:orbit.target.toArray(),fov:camera.fov});
@@ -25,21 +28,22 @@ function CameraEditor({ poseApiRef }) {
     camera.position.set(9, 11, 11);
     controls.current?.update();
   }, [camera]);
+  useFrame(()=>controls.current?.update());
   return null;
 }
 
 function AreaDeTrabalho({ onFloor, onPointerMove }) {
   return <>
     <color attach="background" args={["#11191b"]}/>
-    <fog attach="fog" args={["#11191b", 14, 32]}/>
+    <fog attach="fog" args={["#11191b", 80, 500]}/>
     <ambientLight intensity={1.15}/>
     <hemisphereLight args={["#a8c5ce", "#4a382c", 1.25]}/>
     <directionalLight position={[5, 12, 7]} intensity={2.2} color="#ffe0b5" castShadow shadow-mapSize={[1024, 1024]}/>
     <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow onClick={onFloor} onPointerMove={onPointerMove}>
-      <planeGeometry args={[20, 20]}/>
+      <planeGeometry args={[200, 200]}/>
       <meshStandardMaterial color="#554c42" roughness={0.96}/>
     </mesh>
-    <gridHelper args={[20, 20, "#a98e61", "#393b38"]} position={[0, 0.012, 0]}/>
+    <gridHelper args={[200, 200, "#a98e61", "#393b38"]} position={[0, 0.012, 0]}/>
   </>;
 }
 
@@ -82,8 +86,10 @@ class SceneBoundary extends Component {
 export default function CriadorMapa3D() {
   const params = new URLSearchParams(window.location.search);
   const campaignCode = params.get("campanha") || "";
+  const requestedMapId=params.get("mapa3d") || "";
   const [campaign, setCampaign] = useState(null);
-  const [items, setItems] = useState(loadSavedMap);
+  const [items, setItems] = useState([]);
+  const [loading,setLoading]=useState(true);
   const [savedMaps, setSavedMaps] = useState([]);
   const [activeMapId, setActiveMapId] = useState("");
   const [mapName, setMapName] = useState("");
@@ -103,17 +109,22 @@ export default function CriadorMapa3D() {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
     buscarCampanhaPorCodigo(campaignCode)
       .then((loadedCampaign) => {
         if (!active || !loadedCampaign) return;
         const maps = Array.isArray(loadedCampaign.mapas3D) ? loadedCampaign.mapas3D : [];
         setCampaign(loadedCampaign);
         setSavedMaps(maps);
-        setItems([]);
+        const map=initialEditorMap(loadedCampaign,requestedMapId);
+        setItems(map?.assets || []);setActiveMapId(map?.id || '');setMapName(map?.nome || '');
+        setSpawnPoints(map?.spawnPoints || {camera:null,tokens:null});
+        setNotice(map ? `Editando ${map.nome}. Selecione um objeto ou adicione uma pista ao mapa.` : requestedMapId ? 'O mapa solicitado não foi encontrado. Escolha um mapa salvo.' : 'Nenhum mapa salvo nesta campanha. Importe um modelo para começar.');
       })
-      .catch(() => setNotice("Não foi possível carregar a campanha."));
+      .catch(() => setNotice("Não foi possível carregar a campanha."))
+      .finally(()=>{if(active)setLoading(false);});
     return () => { active = false; };
-  }, [campaignCode]);
+  }, [campaignCode,requestedMapId]);
 
   const updateSelected = (patch) => setItems((current) => current.map((item) =>
     item.instanceId === selectedId ? { ...item, ...patch } : item));
@@ -134,7 +145,7 @@ export default function CriadorMapa3D() {
   const persistMap = async () => {
     const name = mapName.trim() || `Mapa ${savedMaps.length + 1}`;
     const id = activeMapId || `mapa3d-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    const savedMap = { id, nome: name, assets: items, spawnPoints, atualizadoEm: new Date().toISOString() };
+    const savedMap = { ...savedMaps.find(map=>map.id===id), id, nome: name, assets: items, spawnPoints, atualizadoEm: new Date().toISOString() };
     const nextMaps = savedMaps.some((map) => map.id === id)
       ? savedMaps.map((map) => map.id === id ? savedMap : map)
       : [...savedMaps, savedMap];
@@ -152,7 +163,7 @@ export default function CriadorMapa3D() {
   };
 
   const saveMap = async () => {
-    if (savingMap || publishingScene) return;
+    if (loading || savingMap || publishingScene) return;
     setSavingMap(true);
     try {
       const { savedMap } = await persistMap();
@@ -194,7 +205,7 @@ export default function CriadorMapa3D() {
       setPublishingScene(true);
       const { savedMap } = await persistMap();
       const currentScene = campaign.cenaAtiva || campaign.cenas?.[0];
-      const otherMaps = (currentScene?.mapasBatalha || []).filter((map) => map.origem !== "tabletop3d");
+      const otherMaps = (currentScene?.mapasBatalha || []).filter((map) => map.mapa3dId !== savedMap.id);
       const sceneMap = { id:`mapa3d-cena-${savedMap.id}`, nome:savedMap.nome, url:"", origem:"tabletop3d", mapa3dId:savedMap.id, larguraGrade:12, alturaGrade:8, exibirGrade:false };
       const savedScene = await salvarCena(campaign.id, {
         ...(currentScene || {}),
@@ -214,7 +225,8 @@ export default function CriadorMapa3D() {
     }
   };
 
-  const loadMap = (id) => {
+  const loadMap = (id,confirmed=false) => {
+    if(!confirmed && dirty && !window.confirm("Abrir outro mapa? As alterações não salvas serão descartadas."))return;
     const map = savedMaps.find((item) => item.id === id);
     setActiveMapId(map?.id || "");
     setMapName(map?.nome || "");
@@ -228,7 +240,7 @@ export default function CriadorMapa3D() {
 
   const newMap = () => {
     if (items.length && !window.confirm("Iniciar outro mapa? Alterações não salvas serão descartadas.")) return;
-    loadMap("");
+    loadMap("",true);
   };
 
   const clearMap = () => {
@@ -274,10 +286,19 @@ export default function CriadorMapa3D() {
       setNotice("Ponto de surgimento dos tokens definido. Salve o mapa para confirmar.");
       return;
     }
-    const destination = { x: snapPosition(event.point.x), z: snapPosition(event.point.z) };
+    const destination = { x: snapPosition(event.point.x), y: Number(event.point.y)||0, z: snapPosition(event.point.z) };
     if (pendingAsset) {
       const instanceId = `asset-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-      setItems((current) => [...current, { instanceId, asset: pendingAsset, ...destination, rotation: placement.rotation, scale: placement.scale }]);
+      const normal=event.face?.normal?.clone().transformDirection(event.object.matrixWorld);
+      const annotation=pendingAsset.kind==='annotation' ? {
+        uvOnly:pendingAsset.uvOnly!==false,
+        x:destination.x+(normal?.x || 0)*.025,
+        y:destination.y+(normal?.y || 0)*.025,
+        z:destination.z+(normal?.z || 0)*.025,
+        tilt:Math.abs(normal?.y || 0)>.7 ? -Math.sign(normal.y)*90 : 0,
+        rotation:normal && Math.abs(normal.y)<.7 ? Math.atan2(normal.x,normal.z) : placement.rotation,
+      } : {};
+      setItems((current) => [...current, { instanceId, asset: pendingAsset, ...destination, rotation: placement.rotation, scale: placement.scale, ...annotation }]);
       setSelectedId(placement.repeat ? null : instanceId);
       if (!placement.repeat) setPendingAsset(null);
       setNotice(placement.repeat ? `${pendingAsset.name} inserido. Clique novamente para adicionar outro.` : `${pendingAsset.name} inserido e selecionado.`);
@@ -301,9 +322,9 @@ export default function CriadorMapa3D() {
     ? JSON.stringify([mapName,items,spawnPoints])!==JSON.stringify([activeSavedMap.nome,activeSavedMap.assets,activeSavedMap.spawnPoints || {camera:null,tokens:null}])
     : Boolean(items.length || mapName.trim() || spawnPoints.camera || spawnPoints.tokens);
   return <main className="tt3 mapa3d-criador">
-    <section className="tt3-stage editor-open" aria-label="Criador de mapas 3D">
+    <section className="tt3-stage editor-open" aria-label="Editor de mapas 3D">
       <div className="mapa3d-viewport"><SceneBoundary>
-        <Canvas shadows dpr={[1, 1.5]} camera={{ position: [9, 11, 11], fov: 44 }} gl={{ antialias: true }} onCreated={({ gl }) => {
+        <Canvas shadows dpr={[1, 1.5]} camera={{ position: [9, 11, 11], fov: 44, near:.05,far:2000 }} gl={{ antialias: true }} onCreated={({ gl }) => {
           gl.toneMapping = THREE.ACESFilmicToneMapping;
           gl.toneMappingExposure = 0.95;
         }}>
@@ -314,12 +335,12 @@ export default function CriadorMapa3D() {
           <PlacedAssets items={items} selectedId={selectedId} onSelect={(id) => {
             setSelectedId(id);
             setPendingAsset(null);
-          }} onSurfaceClick={placingTokenSpawn ? placeAsset : null}/>
+          }} onSurfaceClick={placingTokenSpawn || pendingAsset ? placeAsset : null}/>
         </Canvas>
       </SceneBoundary></div>
       <header className="mapa3d-criador-header">
         <a href="/?mestre=1" aria-label="Voltar ao painel do mestre">←</a>
-        <div><span>OFICINA DE MAPAS 3D</span><h1>{mapName || "Novo cenário"}<small>{campaign?.nome || "Carregando campanha…"}</small></h1></div><span className="mapa3d-document-status">{dirty ? "● Alterações não salvas" : "✓ Tudo em dia"}</span>
+        <div><span>OFICINA DE MAPAS 3D</span><h1>{mapName || "Editor de mapas 3D"}<small>{campaign?.nome || "Carregando campanha…"}</small></h1></div><span className="mapa3d-document-status">{dirty ? "● Alterações não salvas" : "✓ Tudo em dia"}</span>
       </header>
       <div className="mapa3d-criador-ajuda" role="status">{notice}<small>Arraste para orbitar · roda para aproximar</small></div>
       <div className="mapa3d-spawn-tools" aria-label="Pontos de surgimento">
@@ -330,13 +351,14 @@ export default function CriadorMapa3D() {
       <div className="mapa3d-criador-shortcuts" aria-label="Atalhos do editor"><span><kbd>Q</kbd><kbd>E</kbd> girar</span><span><kbd>Del</kbd> remover</span><span><kbd>Esc</kbd> cancelar</span></div>
       <MapEditor3D
         open
-        savingMap={savingMap}
+        savingMap={savingMap || loading}
         dirty={dirty}
         onSelectItem={id=>{setSelectedId(id);setPendingAsset(null);}}
         items={items}
         selectedId={selectedId}
         pendingAsset={pendingAsset}
         onClose={() => { window.location.href = "/?mestre=1"; }}
+        onPrepareAnnotation={(text)=>{try{setPendingAsset({id:`annotation-${Date.now()}`,kind:'annotation',name:text,text,image:uvTextImage(text),uvOnly:true});setSelectedId(null);setPlacement(current=>({...current,rotation:0,scale:1}));setNotice('Clique no mapa para posicionar a pista UV. Depois ajuste altura e inclinação.');}catch(error){setNotice(error.message);}}}
         onPrepare={(asset) => { setPendingAsset(asset); setSelectedId(null); setPlacement((current) => ({ ...current, rotation: 0, scale: 1 })); setNotice(`Posicione ${asset.name} usando a pré-visualização.`); }}
         onUpdate={updateSelected}
         onDuplicate={duplicateSelected}

@@ -26,3 +26,16 @@ test('permite ajustar coordenadas da peça selecionada e evita salvar novamente 
  expect(screen.getByRole('button',{name:'Salvando…'})).toBeDisabled();
  expect(screen.getByRole('button',{name:'Salvar e usar na cena'})).toBeDisabled();
 });
+
+test('abre mapas existentes e ajusta altura, inclinação e visibilidade UV',()=>{
+ const onLoadMap=jest.fn();
+ render(<MapEditor3D {...props} selectedId="piece-1" savedMaps={[{id:'saved',nome:'Cidade'}]} onLoadMap={onLoadMap}/>);
+ fireEvent.change(screen.getByLabelText('Abrir mapa 3D'),{target:{value:'saved'}});
+ expect(onLoadMap).toHaveBeenCalledWith('saved');
+ fireEvent.change(screen.getByLabelText('Altura Y'),{target:{value:'1.75'}});
+ expect(props.onUpdate).toHaveBeenCalledWith({y:1.75});
+ fireEvent.change(screen.getByLabelText('Inclinação do objeto'),{target:{value:'-90'}});
+ expect(props.onUpdate).toHaveBeenCalledWith({tilt:-90});
+ fireEvent.click(screen.getByRole('checkbox',{name:'Revelar somente com lanterna UV'}));
+ expect(props.onUpdate).toHaveBeenCalledWith({uvOnly:true});
+});

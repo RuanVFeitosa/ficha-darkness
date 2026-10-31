@@ -1,0 +1,45 @@
+import React,{useMemo,useState} from 'react';
+import {masterShieldEntries,normalizeShieldSearch,SHIELD_CATEGORIES} from '../../data/masterShield';
+import {EXITO_DOMINIO,REGIOES,resolverTeste} from '../../data/absolutoV1';
+import {resolveRoll} from '../../data/espiral';
+import {damageImpact,injurySeverity} from '../../utils/espiralInjuries';
+import '../../styles/MasterShield.css';
+function readStored(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback;}catch{return fallback;}}
+function usePrivateStorage(key,fallback){const [value,set]=useState(()=>readStored(key,fallback));return [value,next=>{set(next);try{localStorage.setItem(key,JSON.stringify(next));}catch{}}];}
+function ResolutionTools({system}){
+ const [dice,setDice]=useState(''),[pressure,setPressure]=useState(''),[target,setTarget]=useState(system==='espiral'?4:1),[domain,setDomain]=useState(1),[sides,setSides]=useState(6);
+ const [damage,setDamage]=useState(0),[armor,setArmor]=useState(0),[reduction,setReduction]=useState(0),[critical,setCritical]=useState(false);
+ const parse=value=>value.split(/[\s,;]+/).filter(Boolean).map(Number);
+ let result='Insira os resultados já rolados para consultar a resolução.';
+ if(dice.trim())try{
+  const values=parse(dice);
+  if(system==='espiral'){
+   const extra=parse(pressure);if(values.some(v=>!Number.isInteger(v)||v<1||v>sides)||extra.some(v=>!Number.isInteger(v)||v<1||v>6))throw new Error('Confira as faces dos dados informados.');
+   const roll=resolveRoll(values,extra,sides,target);result=`${roll.outcome} · margem ${roll.margin>=0?'+':''}${roll.margin} · ${roll.stress}${roll.mastery?' · Domínio':''}`;
+  }else {const roll=resolverTeste(values,target,domain);result=`${roll.critico?'Crítico':roll.sucesso?'Sucesso':'Falha'} · ${roll.exitos} Êxitos · ${roll.finais} Finais`;}
+ }catch(error){result=error.message;}
+ const impact=damageImpact(damage,armor,reduction);
+ return <div className="shield-tools"><details><summary>Resolver um teste</summary><p>Consulta dos dados informados; não gera nem compartilha rolagens.</p><label>Resultados dos dados<input value={dice} onChange={e=>setDice(e.target.value)} placeholder="Ex.: 6, 4, 2"/></label><div className="shield-input-row"><label>Dificuldade<input aria-label="Dificuldade da consulta" type="number" min="1" max={system==='espiral'?30:5} value={target} onChange={e=>setTarget(Number(e.target.value))}/></label>{system==='espiral'?<label>Faces do Atributo<select value={sides} onChange={e=>setSides(Number(e.target.value))}>{[4,6,8,10,12].map(n=><option key={n} value={n}>d{n}</option>)}</select></label>:<label>Domínio<select value={domain} onChange={e=>setDomain(Number(e.target.value))}>{EXITO_DOMINIO.map((text,i)=><option key={i} value={i}>{i} · {text}</option>)}</select></label>}</div>{system==='espiral'&&<label>Dados de Pressão<input value={pressure} onChange={e=>setPressure(e.target.value)} placeholder="Ex.: 1, 5"/></label>}<output aria-label="Resolução da consulta">{result}</output></details>
+ <details><summary>Calcular dano e proteção</summary><div className="shield-input-row">{[['Dano bruto',damage,setDamage],['Proteção / RD',armor,setArmor],['Redução adicional',reduction,setReduction]].map(([label,value,set])=><label key={label}>{label}<input type="number" min="0" value={value} onChange={e=>set(Math.max(0,Number(e.target.value)||0))}/></label>)}</div>{system==='espiral'&&<label className="shield-checkbox"><input type="checkbox" checked={critical} onChange={e=>setCritical(e.target.checked)}/>Região Crítica</label>}<output aria-label="Dano líquido">{impact} de {system==='espiral'?'Impacto':'dano líquido'}{system==='espiral'?` · ${injurySeverity(impact,critical) || 'Sem lesão'}`:' · aplicar somente à região atingida'}</output></details></div>;
+}
+function PrivateSession({campaignId}){
+ const prefix=`darkness:master-shield:${campaignId || 'local'}`;
+ const [note,setNote]=usePrivateStorage(prefix+':notes','');
+ const [clock,setClock]=usePrivateStorage(prefix+':clock',{name:'',size:6,value:0});
+ return <details className="shield-private"><summary>Relógio de progresso e notas privadas</summary><p>Salvos apenas neste navegador, por campanha. Não são enviados aos jogadores.</p><label>Nome do relógio<input placeholder="Ex.: A ameaça chega" value={clock.name} onChange={e=>setClock({...clock,name:e.target.value})}/></label><div className="shield-clock"><select aria-label="Segmentos do relógio" value={clock.size} onChange={e=>setClock({...clock,size:Number(e.target.value),value:Math.min(clock.value,Number(e.target.value))})}>{[4,6,8,12].map(size=><option key={size} value={size}>{size} segmentos</option>)}</select><button type="button" aria-label="Reduzir progresso" disabled={!clock.value} onClick={()=>setClock({...clock,value:clock.value-1})}>−</button><output aria-label="Progresso do relógio">{clock.value} / {clock.size}</output><button type="button" aria-label="Avançar progresso" disabled={clock.value>=clock.size} onClick={()=>setClock({...clock,value:clock.value+1})}>+</button></div><progress max={clock.size} value={clock.value}/><label>Anotações do mestre<textarea rows="5" value={note} onChange={e=>setNote(e.target.value)} placeholder="Nomes, pistas, perigos, lembretes…"/></label></details>;
+}
+export default function MasterShield({campaignId,scene,combat=false}){
+ const [system,setSystem]=usePrivateStorage('darkness:master-shield:system','absoluto');
+ const [query,setQuery]=useState(''),[category,setCategory]=useState('Todas'),[onlyFavorites,setOnlyFavorites]=useState(false);
+ const [favorites,setFavorites]=usePrivateStorage('darkness:master-shield:favorites',[]);
+ const entries=useMemo(()=>masterShieldEntries(system),[system]);
+ const visible=entries.filter(entry=>(category==='Todas'||entry.categoria===category)&&(!onlyFavorites||favorites.includes(entry.id))&&normalizeShieldSearch(entry.titulo+' '+entry.texto).includes(normalizeShieldSearch(query)));
+ return <div className="master-shield" onKeyDown={event=>{if(event.key!=="Escape")event.stopPropagation();}} onKeyUp={event=>event.stopPropagation()}><header><span>CONSULTA PRIVADA / NARRADOR</span><h2>Escudo do mestre</h2><p>Regras à mão. A atenção continua na mesa.</p></header><nav className="shield-systems" aria-label="Sistema do escudo">{[['absoluto','Absoluto 1.0'],['espiral','ESPIRAL']].map(([id,label])=><button type="button" key={id} aria-pressed={system===id} onClick={()=>{setSystem(id);setQuery('');setCategory('Todas');}}>{label}</button>)}</nav>
+ {scene&&<div className="shield-context"><strong>{scene.nome || 'Cena atual'}</strong><span>{combat?'Combate ativo':'Exploração'} · Ambiente {scene.dificuldades?.ambiente??4} · Combate {scene.dificuldades?.combateAmbiente??4} · Conflitos {scene.dificuldades?.conflitos??4}</span><small>Estes valores são da cena. A escala de DT do Absoluto continua sendo 1–5.</small></div>}
+ <section className="shield-quick"><h3>{system==='espiral'?'Maior dado − dificuldade':'Atributo define dados · Domínio define Êxitos'}</h3>{system==='espiral'?<dl>{[['≤ −3','Falha grave'],['−2 / −1','Falha'],['0','Sucesso com consequência'],['+1 / +2','Sucesso'],['≥ +3','Sucesso excepcional']].map(([value,label])=><div key={value}><dt>{value}</dt><dd>{label}</dd></div>)}</dl>:<><p>Até 8d6 · DT 1 Comum / 2 Desafiadora / 3 Difícil / 4 Extrema / 5 Absoluta.</p><dl>{EXITO_DOMINIO.map((text,i)=><div key={text}><dt>Domínio {i}</dt><dd>{text}</dd></div>)}</dl></>}</section>
+ <ResolutionTools key={system} system={system}/><PrivateSession key={campaignId || 'local'} campaignId={campaignId}/>
+ <div className="shield-search"><input type="search" aria-label="Buscar no escudo do mestre" placeholder="Buscar medo, dano, esperança…" value={query} onChange={e=>setQuery(e.target.value)}/><button type="button" aria-pressed={onlyFavorites} aria-label="Mostrar somente favoritos" onClick={()=>setOnlyFavorites(!onlyFavorites)}>★</button></div><nav className="shield-categories" aria-label="Categorias de referência">{SHIELD_CATEGORIES.map(label=><button type="button" key={label} aria-pressed={category===label} onClick={()=>setCategory(label)}>{label}</button>)}</nav><small className="shield-count">{visible.length} referências</small>
+ <div className="shield-rules">{visible.map(entry=><article key={entry.id}><button type="button" className="shield-favorite" aria-label={`Favoritar ${entry.titulo}`} aria-pressed={favorites.includes(entry.id)} onClick={()=>setFavorites(favorites.includes(entry.id)?favorites.filter(id=>id!==entry.id):[...favorites,entry.id])}>★</button><details><summary>{entry.titulo}</summary><p>{entry.texto}</p><small>{entry.fonte}</small></details></article>)}{!visible.length&&<p>Nenhuma referência encontrada. Tente outro termo ou categoria.</p>}</div>
+ {system==='absoluto'&&<details className="shield-regions"><summary>Integridade por região</summary><dl>{Object.entries(REGIOES).map(([id,region])=><div key={id}><dt>{region.nome}</dt><dd>{region.base} + {region.fator===2?'2 × ':''}Fortitude</dd></div>)}</dl></details>}
+ </div>;
+}

@@ -1,9 +1,10 @@
+import NumberInput from '../ui/NumberInput';
 import React, { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 export function normalizarLanterna(value = {}) {
   const number = (key, fallback, min, max) => Math.max(min, Math.min(max, Number.isFinite(Number(value[key])) ? Number(value[key]) : fallback));
-  return { ...(Array.isArray(value.vetor) && value.vetor.length===3 && value.vetor.every(Number.isFinite) ? {vetor:value.vetor} : {}), ativa: Boolean(value.ativa), alcance: number("alcance", 18, 4, 60), abertura: number("abertura", 50, 20, 120), direcao: number("direcao", 0, -180, 180), cor: /^#[a-f0-9]{6}$/i.test(value.cor || "") ? value.cor : "#fff1cd" };
+  return { ...(Array.isArray(value.vetor) && value.vetor.length===3 && value.vetor.every(Number.isFinite) ? {vetor:value.vetor} : {}), ativa: Boolean(value.ativa), modo: value.modo==="uv" ? "uv" : "normal", alcance: number("alcance", 18, 4, 60), abertura: number("abertura", 50, 20, 120), direcao: number("direcao", 0, -180, 180), cor: /^#[a-f0-9]{6}$/i.test(value.cor || "") ? value.cor : "#fff1cd" };
 }
 export function direcaoDaCamera(vector) {
   const length=Math.hypot(...vector) || 1;
@@ -32,17 +33,20 @@ export default function TokenFlashlight({ config, scale = 1, height = 1.1, aimWi
   else target.position.set(Math.sin(angle)*light.alcance,height-0.2,-Math.cos(angle)*light.alcance);
   return <group scale={1 / Math.max(0.01, scale)}>
     <primitive object={target}/>
-    <spotLight castShadow shadow-mapSize={[1024,1024]} shadow-camera-near={0.05} shadow-camera-far={light.alcance} shadow-bias={-0.0002} shadow-normalBias={0.01} shadow-radius={2} position={[0,height,0]} target={target} color={light.cor} intensity={35} distance={light.alcance} angle={light.abertura * Math.PI / 360} penumbra={0.35} decay={1}/>
+    <spotLight userData={{uvLight:light.modo==='uv'}} castShadow shadow-mapSize={[1024,1024]} shadow-camera-near={0.05} shadow-camera-far={light.alcance} shadow-bias={-0.0002} shadow-normalBias={0.01} shadow-radius={2} position={[0,height,0]} target={target} color={light.modo==='uv' ? '#a46bff' : light.cor} intensity={35} distance={light.alcance} angle={light.abertura * Math.PI / 360} penumbra={0.35} decay={1}/>
   </group>;
 }
-export function FlashlightControls({ value, onChange }) {
-  const light = normalizarLanterna(value);
+export function FlashlightControls({ value, onChange, uvAllowed=true }) {
+  const light = normalizarLanterna(!uvAllowed ? {...value,modo:"normal"} : value);
   const update = patch => onChange({ ...light, ...patch });
   return <div className="tt3-flashlight-controls">
-    <label><input type="checkbox" checked={light.ativa} onChange={event => update({ ativa: event.target.checked })}/> Lanterna ligada</label>
-    <label>Alcance · {light.alcance} m<input aria-label="Alcance da lanterna" type="range" min="4" max="60" value={light.alcance} onChange={event => update({ alcance: Number(event.target.value) })}/></label>
-    <p>A direção acompanha a câmera, incluindo olhar para cima e para baixo.</p>
-    <label>Abertura · {light.abertura}°<input aria-label="Abertura da lanterna" type="range" min="20" max="120" value={light.abertura} onChange={event => update({ abertura: Number(event.target.value) })}/></label>
-    <label>Cor da luz<input aria-label="Cor da lanterna" type="color" value={light.cor} onChange={event => update({ cor: event.target.value })}/></label>
+    <div className="tt3-light-mode" role="group" aria-label="Tipo de luz">{[["normal","Luz comum"],["uv","Ultravioleta · UV"]].map(([modo,label])=><button type="button" key={modo} disabled={modo==='uv' && !uvAllowed} aria-pressed={light.modo===modo} onClick={()=>update({modo})}>{label}</button>)}</div>
+    {!uvAllowed && <small className="tt3-uv-blocked">O mestre desativou o modo UV deste personagem.</small>}
+    <label className="tt3-light-switch"><span><strong>Lanterna</strong><small>{light.ativa ? "Iluminando o cenário" : "Luz desligada"}</small></span><input aria-label="Lanterna ligada" type="checkbox" checked={light.ativa} onChange={event => update({ ativa: event.target.checked })}/><i aria-hidden="true"/></label>
+    <label className="tt3-light-range"><span>Alcance <span className="tt3-light-number"><NumberInput hideArrows aria-label="Alcance exato da lanterna" min="4" max="60" value={light.alcance} onChange={event=>{if(event.target.value!=='')update({alcance:Math.max(4,Math.min(60,Number(event.target.value)))});}}/><b>m</b></span></span><input aria-label="Alcance da lanterna" type="range" min="4" max="60" value={light.alcance} onChange={event => update({ alcance: Number(event.target.value) })}/></label>
+    <label className="tt3-light-range"><span>Abertura <span className="tt3-light-number"><NumberInput hideArrows aria-label="Abertura exata da lanterna" min="20" max="120" value={light.abertura} onChange={event=>{if(event.target.value!=='')update({abertura:Math.max(20,Math.min(120,Number(event.target.value)))});}}/><b>°</b></span></span><input aria-label="Abertura da lanterna" type="range" min="20" max="120" value={light.abertura} onChange={event => update({ abertura: Number(event.target.value) })}/></label>
+    <label className="tt3-light-color">Cor da luz <span><input aria-label="Cor da lanterna" type="color" value={light.cor} onChange={event => update({ cor: event.target.value })}/><small>{light.cor.toUpperCase()}</small></span></label>
+    <div className="tt3-light-presets" aria-label="Cores rápidas da lanterna">{[["#fff1cd","Quente"],["#ffffff","Branca"],["#cce6ff","Fria"]].map(([cor,label])=><button type="button" key={cor} aria-pressed={light.cor.toLowerCase()===cor} onClick={()=>update({cor})}><i style={{background:cor}}/>{label}</button>)}</div>
+    <p>{light.modo==="uv" ? "O feixe UV revela pistas ocultas enquanto elas estiverem iluminadas. Aponte a câmera para procurar." : "A luz acompanha a direção da câmera, inclusive para cima e para baixo."}</p>
   </div>;
 }
