@@ -1,3 +1,4 @@
+import RefazerFicha from '../components/jogador/RefazerFicha';
 import { buscarFichaEspiral, salvarFichaEspiral } from '../services/espiralApi';
 import NumberInput from '../components/ui/NumberInput';
 import EspiralDice, { EspiralDie, EspiralDiceInput } from '../components/espiral/EspiralDice';
@@ -2145,7 +2146,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
             </section>
           </aside>}
         </div>
-        <details className="es-rules es-settings">
+        <RefazerFicha sistema="espiral" id={id} sheet={sheet}/><details className="es-rules es-settings">
           <summary>
             Referência de regras & arquivo{" "}
             <span>ESPIRAL / PRIMEIRA EDIÇÃO DA FICHA</span>

@@ -1,3 +1,4 @@
+import useRecriacao from '../utils/useRecriacao';
 import { normalizarConteudoAbsoluto } from '../utils/absolutoModificadores';
 import { criarBaseV1, atributosIniciais, dominiosIniciais, custoAtributos, custoDominios, integridadeInicial, recursosIniciais, REGIOES } from '../data/absolutoV1';
 import { AbsolutoValores } from '../components/absoluto/AbsolutoValores';
@@ -640,6 +641,7 @@ export const criarFichaInicial = (form) => ({
 });
 
 const CriarPersonagem = ({ onNavigate = destino => window.location.assign(destino) } = {}) => {
+  const recriacao=useRecriacao("darkness");
   const [modoCadastro, setModoCadastro] = useState(null);
   const [etapa, setEtapa] = useState(0);
   const [textoVisivel, setTextoVisivel] = useState("");
@@ -667,6 +669,12 @@ const CriarPersonagem = ({ onNavigate = destino => window.location.assign(destin
   const [salvando, setSalvando] = useState(false);
   const [classeEmFoco, setClasseEmFoco] = useState(classesPersonagem[0]);
 
+  useEffect(()=>{
+    const source=recriacao.original;if(!source)return;
+    setModoCadastro('existente');setEtapa(1);
+    setForm(previous=>({...previous,...source,arquetipo:source.classeEspecialidade?.arquetipoDetalhes || arquetiposPersonagem.find(item=>item.id===source.arquetipoId) || {nome:typeof source.arquetipo==='string'?source.arquetipo:''},sanidadeInicial:source.sanidade?.max || 0,esperancaInicial:source.esperanca?.max || 0,existenciaPontos:source.existencia?.pontos || 100,integridade:Object.fromEntries(Object.entries(source.membros || {}).map(([key,value])=>[key,value.max]))}));
+    setClasseEmFoco(classesPersonagem.find(item=>item.id===source.classeId) || classesPersonagem[0]);
+  },[recriacao.original]);
   const perguntasAtuais =
     modoCadastro === "novo" ? perguntasNovo : perguntasExistente;
   const etapaNome = 1;
@@ -783,6 +791,7 @@ const CriarPersonagem = ({ onNavigate = destino => window.location.assign(destin
   };
 
   const escolherModoCadastro = (modo) => {
+    if(recriacao.id){setEtapa(1);return;}
     setModoCadastro(modo);
     setErro('');
     setEtapa(1);
@@ -899,6 +908,14 @@ const CriarPersonagem = ({ onNavigate = destino => window.location.assign(destin
     setSalvando(true);
 
     try {
+      if(recriacao.id){
+        const original=recriacao.original;
+        const proposta=criarFichaInicial({...form,nomeJogador:original?.nomeJogador || ''});
+        proposta.existencia={...original.existencia,gastosAtributos:custoAtributos(form.atributos),gastosDominios:custoDominios(form.dominios)};
+        proposta.classeEspecialidade={...original.classeEspecialidade,arquetipo:form.arquetipo?.nome || '',arquetipoId:form.arquetipoId,arquetipoDetalhes:form.arquetipo,classeEscolhida:form.classe};
+        if(original.classeId===form.classeId)proposta.classeDetalhes=original.classeDetalhes;
+        await recriacao.enviar(proposta);onNavigate(recriacao.voltar);return;
+      }
       const codigoJogador = new URLSearchParams(window.location.search).get('jogadorOrigem') || sessionStorage.getItem('darkness:jogador');
       const perfilJogador = codigoJogador ? await buscarJogador(codigoJogador) : null;
       if (codigoJogador && !perfilJogador?.nome?.trim()) throw new Error('Não foi possível carregar seu perfil. Volte ao painel e tente novamente.');
@@ -928,6 +945,7 @@ const CriarPersonagem = ({ onNavigate = destino => window.location.assign(destin
     }
   };
 
+  if(recriacao.id&&!recriacao.original)return <main><h1>Refazer ficha</h1><p role="status">{recriacao.erro || "Carregando sua ficha…"}</p><a href={recriacao.voltar}>Voltar à ficha</a></main>;
   return (
     <main
       className={`criacao-container criacao-ritual ${
@@ -938,7 +956,7 @@ const CriarPersonagem = ({ onNavigate = destino => window.location.assign(destin
       <header className="absoluto-rito-topo"><a href={new URLSearchParams(window.location.search).get('jogadorOrigem') ? `?jogador=${encodeURIComponent(new URLSearchParams(window.location.search).get('jogadorOrigem'))}` : '?'}>← Retornar</a><span>O ABSOLUTO <i> / </i> RITO DA EXISTÊNCIA</span><small>DA VONTADE, A FORMA.</small></header>
       <nav className="absoluto-rito-progresso" aria-label="Etapas do rito"><ol>{nomesRito.map((nome,i)=><li key={nome} aria-current={etapa===i?'step':undefined} className={etapa>i?'concluida':''}><span>{String(i+1).padStart(2,'0')}</span>{nome}</li>)}</ol></nav>
       {etapa === etapaClasse && <ClassArtwork classe={classeEmFoco}/>}
-      <form className="criacao-form" onSubmit={enviar}>
+      <form className="criacao-form" onSubmit={enviar}>{recriacao.id&&<p role="status">Revisão da ficha existente · sua proposta será enviada ao mestre para aprovação.</p>}{recriacao.erro&&<p role="alert">{recriacao.erro}</p>}
         <section className="criacao-dialogo">
           <div className="absoluto-presenca" aria-hidden="true"><div/><img src="/simbolo-absoluto.png" alt=""/></div>
           <p className="criacao-kicker">O Absoluto <span>fala contigo</span></p>
@@ -1106,7 +1124,7 @@ const CriarPersonagem = ({ onNavigate = destino => window.location.assign(destin
               disabled={salvando}
             >
               <Icon path={mdiAccountPlus} size={0.9} />
-              {salvando ? "Criando..." : "Criar ficha"}
+              {salvando ? "Salvando…" : recriacao.id ? "Enviar ao mestre" : "Criar ficha"}
             </button>
           ) : (
             <button

@@ -1,3 +1,4 @@
+const fichaRecriacao = require('./fichaRecriacao.cjs');
 const http = require("http");
 const fs = require("fs/promises");
 const path = require("path");
@@ -334,6 +335,8 @@ const revisaoPassivos = (personagem = {}) =>
   Math.max(0, Number(personagem?.sincronizacaoCampos?.habilidadesPassivas) || 0);
 
 const protegerPassivosContraSobrescrita = (armazenado, recebido) => {
+  if ((Number(armazenado?.revisaoRecriacao)||0) > (Number(recebido?.revisaoRecriacao)||0)) return armazenado;
+  if (armazenado) recebido={...recebido,recriacaoPendente:armazenado.recriacaoPendente || null,historicoRecriacao:armazenado.historicoRecriacao || [],revisaoRecriacao:armazenado.revisaoRecriacao || 0};
   // Clientes anteriores à migração não podem recolocar a ficha na escala antiga.
   if (armazenado?.versaoRegras === '1.0' && recebido?.versaoRegras !== '1.0') return armazenado;
   if (recebido?.versaoRegras === '1.0') return { ...recebido, habilidadesPassivas: {}, habilidadesCombate: {} };
@@ -920,6 +923,21 @@ const handleRequest = async (req, res) => {
 
     }
 
+    const recreationMatch=url.pathname.match(/^\/api\/personagens\/([a-zA-Z0-9_-]+)\/recriacao$/);
+    if(recreationMatch && req.method==='POST') {
+      const body=await readJsonBody(req);
+      if(body.acao && body.senhaMestre !== (process.env.MESTRE_PASSWORD || '13062000')) return sendJson({req,res,statusCode:403,payload:{error:'Apenas o mestre pode analisar a solicitação.'}});
+      const id=sanitizeFichaId(recreationMatch[1]);
+      if(id.startsWith('__'))return sendJson({req,res,statusCode:400,payload:{error:'Ficha inválida.'}});
+      try {
+        const personagem=await executarComBloqueioDeFicha(id,async()=>{
+          const current=await readPersonagem(id);
+          const next=body.acao ? fichaRecriacao.decide(current,body) : fichaRecriacao.propose(current,body);
+          return writePersonagem(id,next);
+        });
+        return sendJson({req,res,statusCode:200,payload:{personagem}});
+      } catch(error){return sendJson({req,res,statusCode:error.status || 500,payload:{error:error.message}});}
+    }
     const legacyPersonagemRoute = url.pathname === "/api/personagem";
     const personagemMatch = url.pathname.match(/^\/api\/personagens\/([^/]+)$/);
     const fichaId = personagemMatch

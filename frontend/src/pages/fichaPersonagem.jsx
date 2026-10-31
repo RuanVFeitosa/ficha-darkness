@@ -1,3 +1,4 @@
+import RefazerFicha from '../components/jogador/RefazerFicha';
 import NumberInput from '../components/ui/NumberInput';
 import { LIMITE_DADOS_ABSOLUTO, rolarDadosAbsoluto, normalizarFormulaAbsoluto, converterTextoAbsoluto, normalizarFichaAbsoluto } from '../utils/absolutoModificadores';
 import AbsolutoMedo from '../components/absoluto/AbsolutoMedo';
@@ -6537,7 +6538,7 @@ const FichaPersonagem = () => {
       {adaptacaoAberta && <AdaptacaoEspiral personagem={personagem} fichaId={fichaId} onClose={() => setAdaptacaoAberta(false)} onConcluir={sheet => { localStorage.setItem(`espiral:sheet:v1:${fichaId}`, JSON.stringify(sheet)); window.location.href=`/?sistema=espiral&ficha=${encodeURIComponent(fichaId)}`; }} />}
       <nav className="menu-ficha-flutuante" aria-label="Atalhos da ficha">
         {menuFichaAberto && (
-          <div className="menu-ficha-opcoes">
+          <div className="menu-ficha-opcoes"><RefazerFicha sistema="darkness" id={fichaId} sheet={personagem}/>
             <PlayerPageLink className="abs-player-profile-link" id={fichaId} sistema="darkness"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></svg><span>Perfil do Jogador</span><span className="abs-profile-arrow" aria-hidden="true">↗</span></PlayerPageLink>
             <div className="menu-ficha-identidade">
               {personagem.fotoPerfil && <img src={personagem.fotoPerfil} alt="" />}

@@ -1,3 +1,4 @@
+import RecriacaoRequests from '../components/jogador/RecriacaoRequests';
 import { isEspiralSheet, salvarFichaEspiral, unirFichasEspiral } from '../services/espiralApi';
 import NumberInput from '../components/ui/NumberInput';
 import { ehAbsolutoV1, REGIOES } from '../data/absolutoV1';
@@ -657,6 +658,7 @@ const DashboardMestre = () => {
 
   const [popup, setPopup] = useState(null);
 
+  const recriacoesPendentes=fichas.filter(ficha=>ficha.personagem?.recriacaoPendente).length;
   const habilidadesPendentes = useMemo(
     () =>
       fichas.flatMap((ficha) =>
@@ -3289,7 +3291,7 @@ const DashboardMestre = () => {
 
   return (
     <main className={`mestre-page ${sistemaAtivo === "espiral" ? "espiral-dashboard" : "absoluto-dashboard"}`}>
-      {sistemaAtivo === "espiral" ? <EspiralDashboardHeader agents={fichasDaSubAba.length} pending={habilidadesPendentes.length} loading={carregando} onRefresh={carregarTudo} onSystemChange={alternarSistema} onHome={() => { window.location.href = "/"; }} /> : <header className="mestre-header">
+      {sistemaAtivo === "espiral" ? <EspiralDashboardHeader agents={fichasDaSubAba.length} pending={habilidadesPendentes.length+recriacoesPendentes} loading={carregando} onRefresh={carregarTudo} onSystemChange={alternarSistema} onHome={() => { window.location.href = "/"; }} /> : <header className="mestre-header">
         <button
           className="mestre-voltar"
           onClick={() => {
@@ -3324,7 +3326,7 @@ const DashboardMestre = () => {
       {sistemaAtivo !== "espiral" && <section className="ad-page-intro" aria-labelledby="ad-page-title">
         <div><span className="ad-page-eyebrow">NARRATIVA / PERSONAGENS / OPERAÇÕES</span><h2 id="ad-page-title">Toda operação<br/>deixa uma <em>marca.</em></h2><p>Organize sua mesa. Acompanhe os agentes.<br/>Prepare o próximo capítulo.</p></div>
         <div className="ad-page-art" aria-hidden="true"><span>ARQUIVO ABSOLUTO</span><img src="/simbolo-absoluto.png" alt=""/></div>
-        <dl className="ad-page-summary"><div><dt>Agentes no arquivo</dt><dd>{String(fichasDaSubAba.length).padStart(2, '0')}<small>Fichas na seleção atual</small></dd></div><div><dt>Triagens pendentes</dt><dd>{String(habilidadesPendentes.length).padStart(2, '0')}<small>Solicitações aguardando análise</small></dd></div><div><dt>Mesa de controle</dt><dd className="ad-page-note">A história continua.<small>Cada decisão deixa consequências.</small></dd></div></dl>
+        <dl className="ad-page-summary"><div><dt>Agentes no arquivo</dt><dd>{String(fichasDaSubAba.length).padStart(2, '0')}<small>Fichas na seleção atual</small></dd></div><div><dt>Triagens pendentes</dt><dd>{String(habilidadesPendentes.length+recriacoesPendentes).padStart(2, '0')}<small>Solicitações aguardando análise</small></dd></div><div><dt>Mesa de controle</dt><dd className="ad-page-note">A história continua.<small>Cada decisão deixa consequências.</small></dd></div></dl>
       </section>}
       {menuHamburguerAberto && (
         <div className="mestre-hamburguer-menu">
@@ -3400,8 +3402,8 @@ const DashboardMestre = () => {
           onClick={() => setAba("analises")}
         >
           {sistemaAtivo === "espiral" ? "Solicitações" : "Triagem"}{" "}
-          {habilidadesPendentes.length
-            ? `(${habilidadesPendentes.length})`
+          {habilidadesPendentes.length+recriacoesPendentes
+            ? `(${habilidadesPendentes.length+recriacoesPendentes})`
             : ""}
         </button>
         {sistemaAtivo === "darkness" && <button
@@ -7670,7 +7672,7 @@ const DashboardMestre = () => {
             </section>
           )}
           {aba === "analises" && (
-            <section className="mestre-analises">
+            <section className="mestre-analises"><RecriacaoRequests fichas={fichas} onSaved={(ficha,saved)=>{setFichas(current=>current.map(item=>item.fichaId===ficha.fichaId?{...item,personagem:saved}:item));setMensagem("Solicitação de recriação analisada.");}}/>
               <div className="mestre-analises-topo">
                 <div>
                   <span>Habilidades criadas pelos jogadores</span>

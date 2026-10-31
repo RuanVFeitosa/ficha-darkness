@@ -64,6 +64,8 @@ export const buscarPersonagem = async (fichaId) => {
   const data = await request(`/personagens/${encodeURIComponent(fichaId)}`);
   return normalizarFichaAbsoluto(data.personagem);
 };
+export const solicitarRecriacao = async (id, base, proposta) => (await request(`/personagens/${encodeURIComponent(id)}/recriacao`, {method:'POST',body:JSON.stringify({base,proposta})})).personagem;
+export const decidirRecriacao = async (id, solicitacaoId, acao, senhaMestre) => (await request(`/personagens/${encodeURIComponent(id)}/recriacao`, {method:'POST',body:JSON.stringify({solicitacaoId,acao,senhaMestre})})).personagem;
 
 export const listarPersonagens = async () => {
   const data = await request("/personagens");

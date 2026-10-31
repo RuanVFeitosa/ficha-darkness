@@ -66,7 +66,7 @@ export function converterTextoAbsoluto(valor) {
 }
 
 const CAMPOS_DANO = new Set(['dmg','dano','cura','formula']);
-const CAMPOS_PRESERVADOS = new Set(['id','nome','titulo','codigo','fichaId','tipo','categoria','subcategoria','preco','custo','requisitos','nivel','nivelRito','data','historia','anotacao','humanidade','legadoAbsoluto','arquetipoId','classeId','idade','imagem','fotoPerfil','url','arquivo','createdAt','updatedAt','bonusMunicao']);
+const CAMPOS_PRESERVADOS = new Set(['id','nome','titulo','codigo','fichaId','tipo','categoria','subcategoria','preco','custo','requisitos','nivel','nivelRito','data','historia','anotacao','humanidade','recriacaoPendente','historicoRecriacao','legadoAbsoluto','arquetipoId','classeId','idade','imagem','fotoPerfil','url','arquivo','createdAt','updatedAt','bonusMunicao']);
 
 export function normalizarConteudoAbsoluto(valor, campo = '') {
   if (Array.isArray(valor)) return valor.map(v => normalizarConteudoAbsoluto(v, campo));
