@@ -1,16 +1,16 @@
 import { buscarPersonagem, salvarPersonagem } from './personagemApi';
-import { normalizarResistenciasEspiral } from '../data/espiral';
+import { normalizarFichaEspiral } from '../data/espiral';
 
 export const espiralRemoteId = id => `espiral_${String(id).toLowerCase()}`;
 export const isEspiralSheet = sheet => sheet?.version === 1 && !!sheet.attributes && !sheet.atributos;
 export async function buscarFichaEspiral(id) {
   const sheet = await buscarPersonagem(espiralRemoteId(id));
-  return isEspiralSheet(sheet) ? normalizarResistenciasEspiral(sheet) : null;
+  return isEspiralSheet(sheet) ? normalizarFichaEspiral(sheet) : null;
 }
 export async function salvarFichaEspiral(id, sheet) {
   if (!isEspiralSheet(sheet) || !sheet.name?.trim()) return null;
   return salvarPersonagem(espiralRemoteId(id), {
-    ...normalizarResistenciasEspiral(sheet), sistema:'espiral', espiralId:String(id), nome:sheet.name.trim(),
+    ...normalizarFichaEspiral(sheet), sistema:'espiral', espiralId:String(id), nome:sheet.name.trim(),
   });
 }
 

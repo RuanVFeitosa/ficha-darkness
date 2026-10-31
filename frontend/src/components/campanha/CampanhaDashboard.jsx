@@ -1,3 +1,5 @@
+import SceneCreationPreview from './SceneCreationPreview';
+import '../../styles/SceneComposer.css';
 import NumberInput from '../ui/NumberInput';
 import SceneAnimationEditor from '../tabletop/SceneAnimationEditor';
 import { ACEITAR_AUDIO } from "../../utils/audioUpload";
@@ -1303,26 +1305,28 @@ const CampanhaDashboard = () => {
 
       {editorAberto && (
         <div
-          className="campanha-editor-fundo"
+          className="campanha-editor-fundo scene-composer-backdrop"
           onMouseDown={(e) =>
-            e.target === e.currentTarget && setEditorAberto(false)
+            e.target === e.currentTarget && !salvando && setEditorAberto(false)
           }
         >
-          <form className="campanha-editor" onSubmit={confirmar}>
+          <form className="campanha-editor scene-composer" role="dialog" aria-modal="true" aria-labelledby="scene-composer-title" onSubmit={confirmar} onKeyDown={event=>{if(event.key==='Escape'&&!salvando){event.stopPropagation();setEditorAberto(false);}if(event.key==='Tab'){const controls=[...event.currentTarget.querySelectorAll('button:not(:disabled),input:not(:disabled),textarea,select,summary,a[href]')].filter(el=>el.getClientRects().length);const first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}}}>
             <header>
               <div>
-                <span>Campanha</span>
-                <h3>{editando.id ? "Editar cena" : "Nova cena"}</h3>
+                <span>ATELIÊ DE CENAS / CAMPANHA</span>
+                <h3 id="scene-composer-title">{editando.id ? "Editar cena" : "Nova cena"}</h3>
               </div>
-              <button type="button" onClick={() => setEditorAberto(false)}>
+              <button type="button" disabled={salvando} onClick={() => setEditorAberto(false)}>
                 Fechar
               </button>
             </header>
+            <div className="scene-composer-layout"><div className="scene-composer-fields">
+            <section className="scene-composer-identity"><div className="scene-section-heading"><span>01</span><div><h4>Defina o cenário</h4><p>Um nome, um lugar e o que espera pelos jogadores.</p></div></div>
             <div className="campanha-editor-linha">
               <label>
                 Nome
                 <input
-                  required
+                  autoFocus required maxLength={120} placeholder="Ex.: Ecos na estação abandonada"
                   value={editando.nome || ""}
                   onChange={(e) =>
                     setEditando({ ...editando, nome: e.target.value })
@@ -1338,7 +1342,7 @@ const CampanhaDashboard = () => {
                   onChange={(e) =>
                     setEditando({ ...editando, pasta: e.target.value })
                   }
-                  placeholder="Ex.: Prisao Blackgate"
+                  placeholder="Ex.: Capítulo I"
                 />
                 <datalist id="pastas-campanha">
                   {pastas.map((pasta) => (
@@ -1348,56 +1352,20 @@ const CampanhaDashboard = () => {
               </label>
             </div>
             <label>
-              Descricao
+              Descrição <small className="scene-optional">opcional</small>
               <textarea
-                rows="3"
+                rows="3" placeholder="Descreva a atmosfera, os acontecimentos e o que os jogadores podem descobrir…"
                 value={editando.descricao || ""}
                 onChange={(e) =>
                   setEditando({ ...editando, descricao: e.target.value })
                 }
               />
             </label>
-            <section className="campanha-cena-visibilidade">
-              <div>
-                <strong>Visibilidade da cena</strong>
-                <small>
-                  {editando.visualizarTodos !== false
-                    ? "Todos os jogadores verão esta cena quando ela estiver ativa."
-                    : "Apenas as fichas selecionadas verão a cena."}
-                </small>
-              </div>
-              <button
-                type="button"
-                className={editando.visualizarTodos !== false ? "ativo" : ""}
-                onClick={() => setEditando((atual) => ({
-                  ...atual,
-                  visualizarTodos: atual.visualizarTodos === false,
-                }))}
-              >
-                {editando.visualizarTodos !== false ? "Todos" : "Específicos"}
-              </button>
-              {editando.visualizarTodos === false && (
-                <div className="campanha-cena-jogadores">
-                  {(campanha.membros || []).map((membro) => {
-                    const fichaId = String(membro.ficha_id || "");
-                    const selecionado = (editando.jogadoresVisiveis || [])
-                      .map(String)
-                      .includes(fichaId);
-                    return (
-                      <label key={membro.id || fichaId} className={selecionado ? "selecionado" : ""}>
-                        <input type="checkbox" checked={selecionado} onChange={() => alternarJogadorCena(fichaId)} />
-                        <span>{membro.nome || fichaId}</span>
-                      </label>
-                    );
-                  })}
-                  {!campanha.membros?.length && <small>Vincule fichas à campanha antes de restringir a cena.</small>}
-                </div>
-              )}
             </section>
-            <section className="campanha-midias-editor">
+            <section className="campanha-midias-editor scene-composer-media">
               <header>
                 <div>
-                  <strong>Cenas estaticas</strong>
+                  <strong><span className="scene-section-number">02</span> Imagens da cena</strong>
                   <span>
                     {editando.imagensCena?.length || 0} arquivos · max. 2 MB
                   </span>
@@ -1407,6 +1375,7 @@ const CampanhaDashboard = () => {
                   Adicionar
                 </button>
               </header>
+              {!editando.imagensCena?.length && <div className="scene-media-empty"><Icon path={mdiImagePlusOutline} size={1.2}/><div><strong>Dê um rosto à sua história</strong><p>Use imagens de ambientes, personagens ou momentos importantes.</p></div></div>}
               {editando.imagensCena?.map((item) => (
                 <div className="campanha-midia-linha cena-editor-com-animacao" key={item.id}>
                   <input
@@ -1460,7 +1429,7 @@ const CampanhaDashboard = () => {
             <section className="campanha-midias-editor">
               <header>
                 <div>
-                  <strong>Mapas de batalha</strong>
+                  <strong><span className="scene-section-number">03</span> Mapas de batalha</strong>
                   <span>
                     {editando.mapasBatalha?.length || 0} arquivos · max. 5 MB
                   </span>
@@ -1470,6 +1439,7 @@ const CampanhaDashboard = () => {
                   Adicionar
                 </button>
               </header>
+              {!editando.mapasBatalha?.length && tipoTabletopCampanha(campanha)!=="3d" && <div className="scene-media-empty"><Icon path={mdiMapOutline} size={1.2}/><div><strong>Prepare o terreno</strong><p>Adicione mapas para explorar e conduzir encontros táticos.</p></div></div>}
               {tipoTabletopCampanha(campanha) === "3d" && <div className="campanha-mapas3d-biblioteca">
                 <div><strong>Mapas criados no Tabletop 3D</strong><small>Selecione quais mapas pertencem a esta cena.</small></div>
                 {(campanha.mapas3D || []).length ? <div>{campanha.mapas3D.map((mapa) => {
@@ -1563,8 +1533,46 @@ const CampanhaDashboard = () => {
                 </div>
               ))}
             </section>
-            {erro && <p className="campanha-dashboard-erro">{erro}</p>}
-            <footer>
+            <section className="campanha-cena-visibilidade">
+              <div>
+                <strong><span className="scene-section-number">04</span> Quem pode ver?</strong>
+                <small>
+                  {editando.visualizarTodos !== false
+                    ? "Todos os jogadores verão esta cena quando ela estiver ativa."
+                    : "Apenas as fichas selecionadas verão a cena."}
+                </small>
+              </div>
+              <button
+                type="button"
+                className={editando.visualizarTodos !== false ? "ativo" : ""}
+                onClick={() => setEditando((atual) => ({
+                  ...atual,
+                  visualizarTodos: atual.visualizarTodos === false,
+                }))}
+              >
+                {editando.visualizarTodos !== false ? "Todos" : "Específicos"}
+              </button>
+              {editando.visualizarTodos === false && (
+                <div className="campanha-cena-jogadores">
+                  {(campanha.membros || []).map((membro) => {
+                    const fichaId = String(membro.ficha_id || "");
+                    const selecionado = (editando.jogadoresVisiveis || [])
+                      .map(String)
+                      .includes(fichaId);
+                    return (
+                      <label key={membro.id || fichaId} className={selecionado ? "selecionado" : ""}>
+                        <input type="checkbox" checked={selecionado} onChange={() => alternarJogadorCena(fichaId)} />
+                        <span>{membro.nome || fichaId}</span>
+                      </label>
+                    );
+                  })}
+                  {!campanha.membros?.length && <small>Vincule fichas à campanha antes de restringir a cena.</small>}
+                </div>
+              )}
+            </section>
+            </div><SceneCreationPreview scene={editando}/></div>
+            {erro && <p className="campanha-dashboard-erro" role="alert">{erro}</p>}
+            <footer><span className="scene-save-note">{salvando ? "Enviando materiais e salvando a cena…" : "Tudo pronto para o próximo momento da história."}</span>
               <button type="button" onClick={() => setEditorAberto(false)}>
                 Cancelar
               </button>
@@ -1574,74 +1582,6 @@ const CampanhaDashboard = () => {
             </footer>
           </form>
         </div>
-      )}
-      {editorAberto && (
-        <aside
-          className="campanha-previas-editor"
-          aria-label="Previa das cenas e mapas"
-        >
-          <header>
-            <span>Previa da cena</span>
-            <strong>{editando.nome || "Nova cena"}</strong>
-          </header>
-          <div>
-            {[
-              ...(editando.imagensCena || []).map((item) => ({
-                ...item,
-                tipo: "Cena estatica",
-                chave: "imagensCena",
-              })),
-              ...(editando.mapasBatalha || []).map((item) => ({
-                ...item,
-                tipo: "Mapa de batalha",
-                chave: "mapasBatalha",
-              })),
-            ].map((item) => (
-              <article key={item.id}>
-                <div className="campanha-previa-imagem">
-                  {item.previewUrl || item.url ? (
-                    <img src={item.previewUrl || item.url} alt="" />
-                  ) : (
-                    <Icon
-                      path={
-                        item.chave === "mapasBatalha"
-                          ? mdiMapOutline
-                          : mdiImagePlusOutline
-                      }
-                      size={1.2}
-                    />
-                  )}
-                </div>
-                <label>
-                  <span>{item.tipo}</span>
-                  <input
-                    required
-                    value={item.nome || ""}
-                    onChange={(event) =>
-                      atualizarMidia(item.chave, item.id, {
-                        nome: event.target.value,
-                      })
-                    }
-                    placeholder={
-                      item.chave === "mapasBatalha"
-                        ? "Nome do mapa"
-                        : "Nome da cena"
-                    }
-                  />
-                </label>
-                {item.chave === "mapasBatalha" && (
-                  <small>
-                    {item.larguraGrade || 12} × {item.alturaGrade || 8}{" "}
-                    quadrados
-                  </small>
-                )}
-              </article>
-            ))}
-          </div>
-          {!(editando.imagensCena?.length || editando.mapasBatalha?.length) && (
-            <p>Adicione uma cena estatica ou mapa para visualizar.</p>
-          )}
-        </aside>
       )}
     </section>
   );

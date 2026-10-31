@@ -175,3 +175,39 @@
 .tt3-editor footer { padding:10px 14px; background:#070d0f; }
 @media(max-width:800px){.tt3-editor{right:8px;bottom:8px;left:8px;width:auto;height:min(72dvh,640px)}.tt3-asset-main img,.tt3-asset-main .tt3-asset-icon{height:78px}}
 @media(max-width:520px){.tt3-placement-tools{grid-template-columns:1fr 1fr}.tt3-map-document{grid-template-columns:1fr auto}.tt3-map-document select{grid-column:1}.tt3-asset-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Navegação da oficina: documento, biblioteca e seleção com salvamento persistente. */
+.tt3-editor-workspace{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#74664a #111}
+.tt3-editor-workspace>[hidden]{display:none!important}
+.tt3-map-summary{padding:12px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #ffffff12}
+.tt3-map-summary>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:#ddd5c6}
+.tt3-map-summary>small{font-size:9px;color:#8f9e94;text-align:right}
+.tt3-map-summary>small.is-dirty{color:#d8b678}
+.tt3-editor-tabs{display:flex;padding:0 12px;gap:4px;border-bottom:1px solid #ffffff17;flex:none}
+.tt3-editor .tt3-editor-tabs button{flex:1;border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:13px 6px;font-size:11px;color:#9a9a91}
+.tt3-editor .tt3-editor-tabs button[aria-pressed=true]{border-bottom-color:#d8c69c;color:#efdfb9;background:#d8c69c08}
+.tt3-panel-intro{padding:20px 18px 14px}
+.tt3-panel-intro>span{font-size:9px;color:#c0ae87;letter-spacing:.12em}
+.tt3-panel-intro h3{font:22px Georgia,serif;margin:8px 0;color:#eee3ce}
+.tt3-panel-intro p,.tt3-map-reset p{font-size:11px;line-height:1.7;color:#949990;margin:0}
+.tt3-map-settings .tt3-map-document{display:grid;grid-template-columns:1fr 76px;gap:10px;padding:8px 18px 20px}
+.tt3-map-settings .tt3-map-document>input{grid-column:1/-1}
+.tt3-map-settings .tt3-model-import{margin:0 18px;padding:18px 0;border-block:1px solid #ffffff18;display:grid;gap:12px}
+.tt3-map-reset{padding:20px 18px;display:grid;gap:8px}
+.tt3-map-reset strong{font-size:12px;color:#d0b6ad}
+.tt3-editor .tt3-map-reset button{margin-top:6px;padding:10px;border-color:#a8645544;color:#c9978b;font-size:11px}
+.tt3-object-list{flex:none}
+.tt3-editor .tt3-object-list>button{display:flex;align-items:center;gap:12px;text-align:left;width:calc(100% - 32px);margin:0 16px 8px;padding:12px;border:1px solid #ffffff19;border-radius:6px;background:#ffffff03;color:#aba797}
+.tt3-object-list>button>span{font:10px 'Courier New',monospace;color:#867e6c}
+.tt3-object-list>button>div{flex:1;min-width:0;display:grid;gap:5px}
+.tt3-object-list strong{font-size:12px;color:#ded8ca;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tt3-object-list small{font-size:10px;color:#91968e}
+.tt3-editor .tt3-object-list>button[aria-pressed=true]{border-color:#d8c69c66;background:#d8c69c0b}
+.tt3-editor-empty{padding:28px 22px;text-align:center;display:grid;gap:12px;color:#ddd0b6}
+.tt3-editor-empty strong{font:20px Georgia,serif}
+.tt3-editor-empty p{font-size:12px;line-height:1.7;color:#96998e;margin:0}
+.tt3-editor-empty button{padding:10px;margin-top:6px}
+.tt3-position-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.tt3-position-fields label{display:grid;gap:5px;font-size:10px;color:#aba896}
+.tt3-editor .tt3-position-fields input{min-width:0;width:100%;padding:9px;border:1px solid #ffffff22;border-radius:4px;background:#080a0b;color:#eee;font-size:12px;box-sizing:border-box}
+.tt3-editor .tt3-editor-actions{flex:none}
+.tt3-editor :is(button,input,select):focus-visible{outline:2px solid #d8c69c;outline-offset:2px}

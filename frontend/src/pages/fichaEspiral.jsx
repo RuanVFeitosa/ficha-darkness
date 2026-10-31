@@ -20,7 +20,7 @@ import {
   VERTENTE_HABILIDADES,
   TEMA_PADRAO_ESPIRAL,
   freshSheet,
-  normalizarResistenciasEspiral,
+  normalizarFichaEspiral,
   atualizarResistenciasEspiralSalvas,
   integrityMax,
   creationWarnings,
@@ -89,9 +89,9 @@ const storedEspiralSheet = (id) => {
   try {
     atualizarResistenciasEspiralSalvas(localStorage);
     const current = JSON.parse(localStorage.getItem(`espiral:sheet:v1:${id}`));
-    if (current?.version === 1) return normalizarResistenciasEspiral({ ...freshSheet(), ...current });
+    if (current?.version === 1) return normalizarFichaEspiral({ ...freshSheet(), ...current });
     const previous = JSON.parse(localStorage.getItem(`espiral:sheet:v1:darkness-${id}`));
-    if (previous?.version === 1) return normalizarResistenciasEspiral({ ...freshSheet(), ...previous });
+    if (previous?.version === 1) return normalizarFichaEspiral({ ...freshSheet(), ...previous });
   } catch {}
   return null;
 };
@@ -556,7 +556,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
           ? (event.key === storageKey ? JSON.parse(event.newValue || 'null') : null)
           : (event.detail?.id === id ? event.detail.sheet : null);
         if (!next?.attributes || next.version !== 1) return;
-        setSheet(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : normalizarResistenciasEspiral(next));
+        setSheet(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : normalizarFichaEspiral(next));
       } catch { /* Ignora apenas registros inválidos. */ }
     };
     window.addEventListener('espiral:sheet-updated',receive);
@@ -694,12 +694,12 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
     if (rolling) return;
     setResource(resourceOverride);
     setAttribute(attributeOverride);
-    const sides = sheet.attributes[attributeOverride] * 2 + 2;
+    const sides = (Number(sheet.attributes?.[attributeOverride]) || 2) * 2 + 2;
     setTemporaryAttributeDice(previous => ({...previous,[attributeOverride]:0}));
     const temporaryGrade = temporaryGradeFor(resourceOverride);
     const count = Math.max(
       1,
-      1 + sheet.resources[resourceOverride] + temporaryGrade + modifier + (temporaryAttributeDice[attributeOverride] || 0),
+      1 + (Number(sheet.resources?.[resourceOverride]) || 0) + temporaryGrade + (Number(modifier) || 0) + (Number(temporaryAttributeDice[attributeOverride]) || 0),
     );
     const pressureCount =
       sheet.pressure +
@@ -904,7 +904,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
         )
       )
         throw new Error();
-      setSheet(normalizarResistenciasEspiral({ ...freshSheet(), ...data }));
+      setSheet(normalizarFichaEspiral({ ...freshSheet(), ...data }));
       setHistory([]);
       setNotice("Ficha importada e salva neste dispositivo.");
     } catch {
@@ -1029,7 +1029,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
         </nav>
       </header>
       {tabletopAccessError && !hasEspiralToken(sheet) && <p role="alert">{MISSING_ESPIRAL_TOKEN}</p>}
-      {adaptacaoPendente && <AdaptacaoEspiral verificarExistente={false} personagem={adaptacaoPendente} fichaId={id} onClose={() => { setAdaptacaoPendente(null); legacyImportsInProgress.delete(id); }} onConcluir={adaptada => { setSheet(normalizarResistenciasEspiral(adaptada)); setAdaptacaoPendente(null); setNotice("Adaptação concluída com suas escolhas."); }} />}
+      {adaptacaoPendente && <AdaptacaoEspiral verificarExistente={false} personagem={adaptacaoPendente} fichaId={id} onClose={() => { setAdaptacaoPendente(null); legacyImportsInProgress.delete(id); }} onConcluir={adaptada => { setSheet(normalizarFichaEspiral(adaptada)); setAdaptacaoPendente(null); setNotice("Adaptação concluída com suas escolhas."); }} />}
       <main className="es-main">
         <div className="es-breadcrumb">
           ARQUIVO PESSOAL <span>/</span> {id === "principal" ? "001" : id}{" "}

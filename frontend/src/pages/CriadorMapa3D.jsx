@@ -94,9 +94,10 @@ export default function CriadorMapa3D() {
   const [spawnPoints,setSpawnPoints]=useState({camera:null,tokens:null});
   const [placingTokenSpawn,setPlacingTokenSpawn]=useState(false);
   const cameraPoseApi=useRef(null);
-  const [notice, setNotice] = useState("Escolha um asset e clique na grade para posicioná-lo.");
+  const [notice, setNotice] = useState("Escolha uma peça na biblioteca para começar a construir.");
   const [importingModel, setImportingModel] = useState(false);
   const [publishingScene, setPublishingScene] = useState(false);
+  const [savingMap,setSavingMap]=useState(false);
 
   const snapPosition = (value) => placement.snap ? Math.round(value * 2) / 2 : value;
 
@@ -151,12 +152,14 @@ export default function CriadorMapa3D() {
   };
 
   const saveMap = async () => {
+    if (savingMap || publishingScene) return;
+    setSavingMap(true);
     try {
       const { savedMap } = await persistMap();
       setNotice(`${savedMap.nome} salvo com ${savedMap.assets.length} asset(s).`);
     } catch (error) {
       setNotice(error.message || "Não foi possível salvar o mapa.");
-    }
+    } finally { setSavingMap(false); }
   };
 
   const importModel = async (files) => {
@@ -293,9 +296,13 @@ export default function CriadorMapa3D() {
     setNotice("Posição atual da câmera definida como ponto de surgimento. Salve o mapa para confirmar.");
   };
 
+  const activeSavedMap=savedMaps.find(map=>map.id===activeMapId);
+  const dirty=activeSavedMap
+    ? JSON.stringify([mapName,items,spawnPoints])!==JSON.stringify([activeSavedMap.nome,activeSavedMap.assets,activeSavedMap.spawnPoints || {camera:null,tokens:null}])
+    : Boolean(items.length || mapName.trim() || spawnPoints.camera || spawnPoints.tokens);
   return <main className="tt3 mapa3d-criador">
     <section className="tt3-stage editor-open" aria-label="Criador de mapas 3D">
-      <SceneBoundary>
+      <div className="mapa3d-viewport"><SceneBoundary>
         <Canvas shadows dpr={[1, 1.5]} camera={{ position: [9, 11, 11], fov: 44 }} gl={{ antialias: true }} onCreated={({ gl }) => {
           gl.toneMapping = THREE.ACESFilmicToneMapping;
           gl.toneMappingExposure = 0.95;
@@ -309,10 +316,10 @@ export default function CriadorMapa3D() {
             setPendingAsset(null);
           }} onSurfaceClick={placingTokenSpawn ? placeAsset : null}/>
         </Canvas>
-      </SceneBoundary>
+      </SceneBoundary></div>
       <header className="mapa3d-criador-header">
         <a href="/?mestre=1" aria-label="Voltar ao painel do mestre">←</a>
-        <div><span>OFICINA DE MAPAS 3D</span><h1>{campaign?.nome || "Carregando campanha…"}</h1></div>
+        <div><span>OFICINA DE MAPAS 3D</span><h1>{mapName || "Novo cenário"}<small>{campaign?.nome || "Carregando campanha…"}</small></h1></div><span className="mapa3d-document-status">{dirty ? "● Alterações não salvas" : "✓ Tudo em dia"}</span>
       </header>
       <div className="mapa3d-criador-ajuda" role="status">{notice}<small>Arraste para orbitar · roda para aproximar</small></div>
       <div className="mapa3d-spawn-tools" aria-label="Pontos de surgimento">
@@ -323,6 +330,9 @@ export default function CriadorMapa3D() {
       <div className="mapa3d-criador-shortcuts" aria-label="Atalhos do editor"><span><kbd>Q</kbd><kbd>E</kbd> girar</span><span><kbd>Del</kbd> remover</span><span><kbd>Esc</kbd> cancelar</span></div>
       <MapEditor3D
         open
+        savingMap={savingMap}
+        dirty={dirty}
+        onSelectItem={id=>{setSelectedId(id);setPendingAsset(null);}}
         items={items}
         selectedId={selectedId}
         pendingAsset={pendingAsset}

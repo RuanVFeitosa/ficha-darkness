@@ -242,8 +242,12 @@ export default function MapEditor3D({
   importingModel = false,
   onPublishScene,
   publishingScene = false,
+  savingMap = false,
+  onSelectItem,
+  dirty = false,
 }) {
   const modelInputRef = useRef(null);
+  const [panel,setPanel]=useState("library");
   const [source, setSource] = useState("structures");
   const [structureCategory, setStructureCategory] = useState("all");
   const [realisticCategory, setRealisticCategory] = useState("all");
@@ -351,7 +355,11 @@ export default function MapEditor3D({
 
   if (!open) return null;
   return <aside className="tt3-editor" aria-label="Criador de mapas 3D">
-    <div className="tt3-editor-head"><div><small>OFICINA 3D · {items.length} OBJETOS</small><h2>Construtor de cenários</h2></div><button type="button" onClick={onClose} aria-label="Fechar criador">×</button></div>
+    <div className="tt3-editor-head"><div><small>OFICINA DE CENÁRIOS</small><h2>Construa seu mundo</h2></div><button type="button" onClick={onClose} aria-label="Fechar criador">×</button></div>
+    <div className="tt3-map-summary"><span>{mapName || 'Mapa sem título'}</span><small className={dirty ? 'is-dirty' : ''}>{dirty ? 'Alterações não salvas' : 'Sem alterações pendentes'}</small></div>
+    <nav className="tt3-editor-tabs" aria-label="Ferramentas de construção">{[['library','Biblioteca'],['objects',`Objetos (${items.length})`],['settings','Configurações']].map(([id,label])=><button type="button" key={id} aria-pressed={panel===id} onClick={()=>setPanel(id)}>{label}</button>)}</nav>
+    <div className="tt3-editor-workspace">
+    <section className="tt3-map-settings" hidden={panel!=='settings'}><div className="tt3-panel-intro"><span>SEU ARQUIVO</span><h3>Organize o mapa</h3><p>Nomeie, abra um cenário salvo ou importe um modelo completo.</p></div>
     <section className="tt3-map-document">
       <input value={mapName} onChange={(event) => onMapNameChange(event.target.value)} placeholder="Nome do mapa" aria-label="Nome do mapa 3D"/>
       <select value={activeMapId} onChange={(event) => onLoadMap(event.target.value)} aria-label="Mapas 3D salvos">
@@ -360,12 +368,13 @@ export default function MapEditor3D({
       </select>
       <button type="button" onClick={onNewMap} title="Criar mapa vazio">＋ Novo</button>
     </section>
-    <div className="tt3-editor-actions"><button type="button" className="primary" onClick={onSave}>Salvar mapa</button><button type="button" className="scene" onClick={onPublishScene} disabled={!items.length || publishingScene}>{publishingScene ? "Publicando…" : "Salvar e usar na cena"}</button><button type="button" onClick={onClear} disabled={!items.length}>Limpar tudo</button></div>
     <section className="tt3-model-import">
       <div><span>IMPORTAR MAPA 3D</span><small>GLB ou pacote GLTF com BIN e texturas</small></div>
       <button type="button" onClick={() => modelInputRef.current?.click()} disabled={importingModel}>{importingModel ? "Enviando…" : "Importar modelo"}</button>
       <input ref={modelInputRef} type="file" multiple accept=".glb,.gltf,.bin,.png,.jpg,.jpeg,.webp,.ktx2,.basis" hidden onChange={(event) => { const files=Array.from(event.target.files || []); event.target.value=""; if(files.length) onImportModel(files); }}/>
     </section>
+    <div className="tt3-map-reset"><strong>Começar de novo</strong><p>Remove os objetos do mapa em edição.</p><button type="button" className="danger" onClick={onClear} disabled={!items.length}>Limpar objetos do mapa</button></div></section>
+    <section className="tt3-object-list" hidden={panel!=='objects'}><div className="tt3-panel-intro"><span>HIERARQUIA DO CENÁRIO</span><h3>Objetos do mapa</h3><p>Selecione uma peça para ajustar sua posição, escala ou rotação.</p></div>{items.length ? items.map((item,index)=><button type="button" key={item.instanceId} aria-pressed={selectedId===item.instanceId} onClick={()=>onSelectItem?.(item.instanceId)}><span>{String(index+1).padStart(2,'0')}</span><div><strong>{item.asset.name || 'Objeto 3D'}</strong><small>X {Number(item.x || 0).toFixed(1)} · Z {Number(item.z || 0).toFixed(1)}</small></div><span>↗</span></button>) : <div className="tt3-editor-empty"><strong>Seu cenário começa aqui</strong><p>Escolha uma peça na biblioteca e clique na grade para posicioná-la.</p><button type="button" onClick={()=>setPanel('library')}>Explorar biblioteca →</button></div>}</section>
     {pendingAsset && <section className="tt3-placement">
       <div className="tt3-placement-title"><span>POSICIONANDO</span><strong>{pendingAsset.name}</strong><button type="button" onClick={onCancelPlacement}>Cancelar</button></div>
       <div className="tt3-placement-tools">
@@ -382,13 +391,14 @@ export default function MapEditor3D({
     </section>}
     {selected && <section className="tt3-selection">
       <div><span>OBJETO SELECIONADO</span><strong>{selected.asset.name}</strong></div>
+      <div className="tt3-position-fields">{[['x','Posição X'],['z','Posição Z']].map(([key,label])=><label key={key}>{label}<input aria-label={label} type="number" step="0.25" value={selected[key] ?? 0} onChange={event=>{if(event.target.value!=='' && Number.isFinite(Number(event.target.value)))onUpdate({[key]:Number(event.target.value)});}}/></label>)}</div>
       <label className="tt3-range">Escala <input type="range" min="0.25" max="4" step="0.05" value={selected.scale || 1} onChange={(event) => onUpdate({ scale: Number(event.target.value) })}/><b>{(selected.scale || 1).toFixed(2)}×</b></label>
       <div className="tt3-transform-row"><button type="button" onClick={() => onUpdate({rotation:(selected.rotation || 0) - Math.PI/4})}>↶ Girar</button><button type="button" onClick={() => onUpdate({rotation:(selected.rotation || 0) + Math.PI/4})}>↷ Girar</button></div>
       <div className="tt3-transform-row"><button type="button" onClick={onDuplicate}>Duplicar</button><button type="button" className="danger" onClick={onDelete}>Remover</button></div>
       <p>Clique na grade para mover · Q/E gira · Delete remove.</p>
     </section>}
-    <section className="tt3-library">
-      <div className="tt3-library-title"><div><span>BIBLIOTECA DE ASSETS</span><strong>{source === "structures" ? `${STRUCTURE_ASSETS.length} peças PBR` : `${realisticCatalog.length} modelos PBR`}</strong></div><a href={source === "structures" ? "https://polyhaven.com/textures" : "https://polyhaven.com/models"} target="_blank" rel="noreferrer">Poly Haven ↗</a></div>
+    <section className="tt3-library" hidden={panel!=="library"}>
+      <div className="tt3-library-title"><div><span>PEÇAS PARA CONSTRUIR</span><strong>{source === "structures" ? `${STRUCTURE_ASSETS.length} peças PBR` : `${realisticCatalog.length} modelos PBR`}</strong></div><a href={source === "structures" ? "https://polyhaven.com/textures" : "https://polyhaven.com/models"} target="_blank" rel="noreferrer">Poly Haven ↗</a></div>
       <div className="tt3-library-filters">
         <select value={source} onChange={(event) => {setSource(event.target.value);setSearch("");setCatalogError("");}} aria-label="Estilo da biblioteca"><option value="structures">Construção PBR · pisos e paredes</option><option value="polyhaven">Objetos PBR · Poly Haven</option></select>
         {source === "structures" ? <select value={structureCategory} onChange={(event) => setStructureCategory(event.target.value)} aria-label="Categoria de construção">{STRUCTURE_CATEGORIES.map(([id,label]) => <option key={id} value={id}>{label}</option>)}</select> : <select value={sort} onChange={(event) => setSort(event.target.value)} aria-label="Ordenar assets"><option value="popular">Mais populares</option><option value="recent">Mais recentes</option><option value="name">Nome A–Z</option></select>}
@@ -405,6 +415,8 @@ export default function MapEditor3D({
       </article>)}</div>
       {!loading && !visibleAssets.length && <p className="tt3-library-message">Nenhum asset encontrado.</p>}
     </section>
+    </div>
+    <div className="tt3-editor-actions"><button type="button" className="primary" onClick={onSave} disabled={savingMap || publishingScene}>{savingMap ? "Salvando…" : "Salvar mapa"}</button><button type="button" className="scene" onClick={onPublishScene} disabled={!items.length || publishingScene || savingMap}>{publishingScene ? "Publicando…" : "Salvar e usar na cena"}</button></div>
     <footer><span>{pendingAsset ? "Pré-visualização ativa no cenário" : `${items.length} objeto(s) no mapa`}</span><a href="https://polyhaven.com" target="_blank" rel="noreferrer">Materiais e assets CC0 · Poly Haven</a></footer>
   </aside>;
 }

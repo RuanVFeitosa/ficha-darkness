@@ -140,6 +140,24 @@ test('dado clicável rola dados extras temporários sem alterar a categoria', as
  view.unmount();
 });
 
+test('ficha antiga sem Investigação recupera grau zero e rola um dado válido', async () => {
+ const sheet={...freshSheet(),name:'Maya',attributes:{pulso:4},resources:{Armas:2}};
+ localStorage.setItem('espiral:sheet:v1:principal',JSON.stringify(sheet));
+ Object.defineProperty(window,'crypto',{configurable:true,value:{getRandomValues:array=>{array[0]=0;return array;}}});
+ const onRoll=jest.fn();
+ render(<FichaEspiral onRoll={onRoll}/>);
+ expect(screen.getByRole('button',{name:'Adicionar grau temporário a Investigação'})).toHaveTextContent('0 · Sem preparo');
+ fireEvent.click(screen.getByRole('button',{name:'Rolar Investigação'}));
+ fireEvent.click(within(screen.getByRole('dialog',{name:'Investigação'})).getByRole('button',{name:/Pulso/}));
+ fireEvent.click(screen.getByRole('button',{name:/Rolar Pulso \+ Investigação/}));
+ await waitFor(()=>expect(onRoll).toHaveBeenCalled());
+ const result=onRoll.mock.calls[0][0];
+ expect(result.dice).toEqual([1]);
+ expect(Number.isFinite(result.best)).toBe(true);
+ expect(Number.isFinite(result.margin)).toBe(true);
+ expect(document.body).not.toHaveTextContent('Infinity');
+});
+
 test('rolagem consome pressão e exibe o resultado', () => {
   Object.defineProperty(window, 'crypto', { configurable: true, value: { getRandomValues: array => { array[0] = 0; return array; } } });
   render(<FichaEspiral />);

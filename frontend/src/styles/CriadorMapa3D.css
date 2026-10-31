@@ -19,3 +19,51 @@
   .mapa3d-criador-ajuda,.mapa3d-criador-shortcuts { display: none; }
   .mapa3d-spawn-tools { top:68px; left:10px; width:170px; }
 }
+/* Oficina em três zonas: barra do documento, área 3D e painel de ferramentas. */
+.mapa3d-criador{--map-panel:380px;--map-gap:16px;font-family:Arial,sans-serif}
+.mapa3d-criador .tt3-stage{background:#0c1011}
+.mapa3d-viewport{position:absolute;top:90px;bottom:68px;left:16px;right:calc(var(--map-panel) + 32px);border:1px solid #ffffff12;border-radius:10px;overflow:hidden;background:#11191b}
+.mapa3d-viewport>div{height:100%!important;width:100%!important}
+.mapa3d-criador .mapa3d-criador-header{top:16px;left:16px;right:16px;max-width:none;height:58px;padding:10px 18px 10px 12px;border-radius:9px;background:#121717;border-color:#d8c69c22;box-shadow:none;gap:16px}
+.mapa3d-criador-header h1{display:flex;align-items:center;gap:20px;font-size:23px;margin-top:4px}
+.mapa3d-criador-header h1 small{padding-left:20px;border-left:1px solid #ffffff20;font:11px Arial,sans-serif;color:#8f968d;letter-spacing:0}
+.mapa3d-criador .mapa3d-criador-header>span.mapa3d-document-status{margin-left:auto;color:#c5b38d;font-size:10px;letter-spacing:0}
+.mapa3d-criador .tt3-editor{top:90px;bottom:16px;right:16px;width:var(--map-panel);border:1px solid #d8c69c2b;border-radius:10px;background:#111616;box-shadow:none;backdrop-filter:none;color:#e5dfd2;font:12px Arial,sans-serif}
+.mapa3d-criador .tt3-editor-head{padding:20px 18px 16px;background:linear-gradient(110deg,#d8c69c08,transparent)}
+.mapa3d-criador .tt3-editor-head small{font-size:9px;color:#b5a47f}
+.mapa3d-criador .tt3-editor-head h2{font-size:25px;margin-top:8px}
+.mapa3d-criador .tt3-editor-head>button{font-size:22px;border-color:#ffffff16}
+.mapa3d-criador .tt3-library{flex:none;padding:18px;gap:12px;overflow:visible}
+.mapa3d-criador .tt3-library-title span{font-size:9px;letter-spacing:.12em}
+.mapa3d-criador .tt3-library-title strong{font-size:12px;margin-top:6px}
+.mapa3d-criador .tt3-library-title a{font-size:10px;color:#b9a67a}
+.mapa3d-criador .tt3-library-filters{grid-template-columns:1fr;gap:8px}
+.mapa3d-criador .tt3-library-filters select,.mapa3d-criador .tt3-search-row input{min-height:40px;font-size:12px;background:#080c0d;border-color:#ffffff20}
+.mapa3d-criador .tt3-category-chips{display:flex;flex-wrap:wrap;gap:6px;overflow:visible;white-space:normal;padding:0}
+.mapa3d-criador .tt3-category-chips button{flex:none;font-size:10px;padding:7px 9px;min-height:30px;background:#ffffff03;border:1px solid #ffffff16;border-radius:5px;color:#a5aaa0}
+.mapa3d-criador .tt3-category-chips button.active{color:#e3d1a8;border-color:#d8c69c66;background:#d8c69c10}
+.mapa3d-criador .tt3-asset-grid{flex:none;overflow:visible;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0}
+.mapa3d-criador .tt3-asset-grid article{border-color:#ffffff18;border-radius:7px;background:#171d1d;transition:border-color .2s,background .2s}
+.mapa3d-criador .tt3-asset-grid article:hover{border-color:#d8c69c66;background:#202620}
+.mapa3d-criador .tt3-asset-grid article.active{border-color:#d8c69c;background:#d8c69c0b}
+.mapa3d-criador .tt3-asset-main{padding:8px;text-align:left}
+.mapa3d-criador .tt3-asset-main img{height:96px;border-radius:4px;object-fit:contain;background:#ffffff03}
+.mapa3d-criador .tt3-asset-main strong{font-size:12px;line-height:1.5;margin-top:9px;color:#e0ddcf;font-weight:normal}
+.mapa3d-criador .tt3-asset-main small{font-size:9px;color:#8e978b;margin:4px 0 2px}
+.mapa3d-criador .tt3-editor-actions{padding:14px 16px;border-top:1px solid #d8c69c24;border-bottom:0;gap:8px;background:#141a18}
+.mapa3d-criador .tt3-editor-actions button{min-height:42px;padding:10px 8px;font-size:11px;border-radius:5px}
+.mapa3d-criador .tt3-editor-actions button.primary{color:#171a15;background:#d8c69c;border-color:#d8c69c}
+.mapa3d-criador .tt3-editor-actions button.scene{color:#d8c69c;border-color:#d8c69c55;background:transparent}
+.mapa3d-criador .tt3-editor>footer{padding:10px 16px;gap:8px;font-size:9px;flex:none;background:#0d1212}
+.mapa3d-criador .tt3-editor>footer a{font-size:8px;color:#8e957f}
+.mapa3d-criador .tt3-selection,.mapa3d-criador .tt3-placement{flex:none;margin:12px 16px;padding:16px;border:1px solid #d8c69c44;border-radius:8px;background:#d8c69c08}
+.mapa3d-criador .tt3-selection strong,.mapa3d-criador .tt3-placement strong{color:#e2d0a5}
+.mapa3d-criador .mapa3d-spawn-tools{left:30px;top:104px;width:205px;padding:12px;background:#0c1212e8;border-radius:7px;box-shadow:none;gap:8px}
+.mapa3d-criador .mapa3d-spawn-tools>span{color:#b4a787;font-size:9px}
+.mapa3d-criador .mapa3d-spawn-tools button{font-size:10px;padding:9px 10px}
+.mapa3d-criador .mapa3d-criador-ajuda{left:16px;bottom:16px;max-width:calc(100% - var(--map-panel) - 300px);background:none;border:0;backdrop-filter:none;box-shadow:none;padding:4px 0;font-size:11px;color:#c8cabe}
+.mapa3d-criador .mapa3d-criador-ajuda small{font-size:10px;margin-top:3px}
+.mapa3d-criador .mapa3d-criador-shortcuts{right:calc(var(--map-panel) + 32px);bottom:18px;background:none;border:0;backdrop-filter:none;padding:0}
+.mapa3d-criador .mapa3d-criador-shortcuts span{font-size:9px}
+@media(max-width:1100px){.mapa3d-criador{--map-panel:330px}.mapa3d-criador .mapa3d-document-status{display:none}.mapa3d-criador .tt3-asset-main img{height:84px}.mapa3d-criador .mapa3d-criador-shortcuts{display:none}.mapa3d-criador .mapa3d-criador-ajuda{max-width:calc(100% - var(--map-panel) - 48px)}}
+@media(max-width:700px){.mapa3d-criador .mapa3d-criador-header{top:8px;left:8px;right:8px;height:55px;padding:8px}.mapa3d-criador-header h1{font-size:18px}.mapa3d-criador-header h1 small{display:none}.mapa3d-viewport{top:72px;left:8px;right:8px;bottom:48dvh}.mapa3d-criador .tt3-editor{top:auto;bottom:8px;left:8px;right:8px;width:auto;height:calc(48dvh - 16px)}.mapa3d-criador .tt3-editor-head{display:none}.mapa3d-criador .tt3-map-summary{padding:8px 12px}.mapa3d-criador .tt3-editor-tabs button{padding:10px 6px}.mapa3d-criador .tt3-editor>footer{display:none}.mapa3d-criador .tt3-editor-actions{padding:8px 12px}.mapa3d-criador .mapa3d-spawn-tools{top:82px;left:18px;width:175px;padding:8px}.mapa3d-criador .mapa3d-spawn-tools button{font-size:9px;padding:6px}.mapa3d-criador .tt3-asset-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.mapa3d-criador .tt3-asset-main img{height:68px}}

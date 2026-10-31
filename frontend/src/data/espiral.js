@@ -163,6 +163,18 @@ export function normalizarResistenciasEspiral(sheet) {
   return changed ? { ...sheet, resources } : sheet;
 }
 
+export function normalizarFichaEspiral(sheet) {
+  if (!sheet) return sheet;
+  const defaults = freshSheet();
+  const numeric = (value, fallback, min, max) => Number.isFinite(Number(value)) && value !== null && value !== ''
+    ? Math.max(min, Math.min(max, Math.floor(Number(value)))) : fallback;
+  const resources = { ...sheet.resources };
+  for (const name of RESOURCES) resources[name] = numeric(resources[name], defaults.resources[name], defaults.resources[name], 4);
+  const attributes = { ...sheet.attributes };
+  for (const name of Object.keys(ATTRIBUTES)) attributes[name] = numeric(attributes[name], defaults.attributes[name], 1, 5);
+  return { ...defaults, ...sheet, resources, attributes };
+}
+
 // Atualiza também as fichas já criadas neste dispositivo, sem alterar sua progressão.
 export function atualizarResistenciasEspiralSalvas(storage) {
   for (let index = 0; index < storage.length; index += 1) {
@@ -171,8 +183,8 @@ export function atualizarResistenciasEspiralSalvas(storage) {
     try {
       const sheet = JSON.parse(storage.getItem(key));
       if (sheet?.version !== 1 || !sheet.attributes) continue;
-      const updated = normalizarResistenciasEspiral(sheet);
-      if (updated !== sheet) storage.setItem(key, JSON.stringify(updated));
+      const updated = normalizarFichaEspiral(sheet);
+      if (JSON.stringify(updated) !== JSON.stringify(sheet)) storage.setItem(key, JSON.stringify(updated));
     } catch { /* Uma ficha inválida ou sem espaço não impede abrir as demais. */ }
   }
 }
@@ -205,6 +217,9 @@ export function creationWarnings(sheet) {
   };
 }
 export function resolveRoll(dice, pressure, sides, difficulty) {
+  if (![...dice, ...pressure].length || [...dice, ...pressure].some(value => !Number.isFinite(value))) {
+    throw new Error('A rolagem precisa de pelo menos um dado com valor válido.');
+  }
   const best = Math.max(...dice, ...pressure);
   const margin = best - difficulty;
   const ones = pressure.filter((n) => n === 1).length;

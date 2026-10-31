@@ -1,0 +1,77 @@
+/* Editor da biblioteca de cenas, com prévia integrada e rolagem independente. */
+.campanha-editor-fundo.scene-composer-backdrop{padding:28px;background:#030405ce;backdrop-filter:blur(10px)}
+.campanha-editor.scene-composer{--sc-line:#d0bc912b;--sc-muted:#a09a8e;--sc-accent:#d8c69c;width:min(1120px,100%);height:min(840px,calc(100dvh - 56px));max-height:calc(100dvh - 56px);padding:0;gap:0;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--sc-line)!important;border-radius:12px;background:#101111!important;color:#eee9df;box-shadow:0 32px 120px #0009!important;translate:none;font:12px/1.6 Arial,sans-serif}
+.scene-composer *{box-sizing:border-box;min-width:0}
+.campanha-editor.scene-composer>header{flex:none;padding:24px 28px;margin:0;border-bottom:1px solid var(--sc-line);background:linear-gradient(100deg,#d0bc9108,transparent)}
+.scene-composer>header>div>span{font:9px 'Courier New',monospace;letter-spacing:.18em;color:var(--sc-accent)}
+.campanha-editor.scene-composer h3{font:34px/1.2 Georgia,serif;margin:8px 0 0;text-transform:none;letter-spacing:-.02em}
+.scene-composer>header>button{padding:8px 12px;min-height:36px;border:1px solid var(--sc-line);border-radius:5px;font-size:10px;color:var(--sc-muted)}
+.scene-composer-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);flex:1;min-height:0}
+.scene-composer-fields{overflow:auto;padding:26px 28px;display:flex;flex-direction:column;gap:28px;scrollbar-width:thin;scrollbar-color:#675e4a #141414;overscroll-behavior:contain}
+.scene-composer-identity{display:grid;gap:18px}
+.scene-section-heading{display:flex;align-items:flex-start;gap:12px;margin:0 0 2px}
+.scene-section-heading>span,.scene-composer .scene-section-number{display:inline-flex;justify-content:center;align-items:center;width:26px;height:26px;margin-right:8px;border:1px solid var(--sc-line);border-radius:5px;font:10px 'Courier New',monospace;color:var(--sc-accent)}
+.scene-section-heading>span{margin:0;flex:none}
+.scene-section-heading h4{font:18px Georgia,serif;margin:0 0 4px;color:#e9e1d1}
+.scene-composer .scene-section-heading p{margin:0;font-size:12px;color:var(--sc-muted);line-height:1.6}
+.scene-composer .campanha-editor-linha{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px}
+.campanha-editor.scene-composer label{font-size:11px;text-transform:none;letter-spacing:0;gap:8px;color:#c5bfb2}
+.scene-composer .scene-optional{display:inline;color:#79766e;font-size:10px}
+.campanha-editor.scene-composer input:not([type=checkbox]):not([type=file]),.campanha-editor.scene-composer textarea{min-height:44px;border:1px solid #ffffff26;background:#080a0b!important;color:#eee9df!important;font:13px/1.6 Arial,sans-serif;border-radius:5px;padding:11px 12px;margin:0}
+.campanha-editor.scene-composer textarea{min-height:100px;resize:vertical}
+.scene-composer input::placeholder,.scene-composer textarea::placeholder{color:#6e706c;font-size:12px}
+.scene-composer :is(button,input,textarea,summary):focus-visible{outline:2px solid var(--sc-accent);outline-offset:3px}
+.scene-composer .campanha-midias-editor.scene-composer-media{padding:0;gap:12px;border:0;background:none}
+.scene-composer .scene-composer-media>header{padding:0 0 12px;border-bottom:1px solid var(--sc-line);align-items:center;gap:12px}
+.scene-composer .scene-composer-media>header strong{font:18px Georgia,serif;display:flex;align-items:center;color:#e9e1d1}
+.scene-composer .scene-composer-media>header>div>span{font-size:10px;text-transform:none;color:var(--sc-muted);margin-left:34px}
+.scene-composer .scene-composer-media>header button{min-height:36px;padding:0 12px;border:1px solid #d0bc9155;border-radius:5px;background:#d0bc910b;color:var(--sc-accent);font-size:11px;text-transform:none}
+.scene-media-empty{display:flex;align-items:center;gap:16px;min-height:105px;border:1px dashed #d0bc9138;border-radius:8px;padding:20px;background:linear-gradient(120deg,#d0bc9107,transparent);color:#ad9b75}
+.scene-composer .scene-media-empty strong{font:13px Arial,sans-serif;color:#c7bfae}
+.scene-composer .scene-media-empty p{font-size:11px;color:var(--sc-muted);margin:5px 0 0;line-height:1.7}
+.scene-composer .campanha-midia-linha,.scene-composer .campanha-midia-linha.mapa{position:relative;display:grid;grid-template-columns:1fr 1fr 34px;gap:10px;padding:14px;border:1px solid var(--sc-line);background:#161717;border-radius:8px;align-items:center}
+.scene-composer .campanha-midia-linha>input:first-child{display:block;grid-column:1/3}
+.scene-composer .campanha-midia-linha>button{grid-column:3;grid-row:1;width:32px;height:32px;border:1px solid #b9746a44;border-radius:4px}
+.scene-composer .campanha-midia-linha>label:not(.campanha-grade-toggle){grid-column:1/-1;min-height:44px;border:1px dashed #d0bc9144;border-radius:5px;background:#d0bc9107;justify-content:center;position:relative}
+.scene-composer .campanha-midia-linha>label>span{font-size:11px;color:#c9bb9a}
+.scene-composer .campanha-midia-linha>label:focus-within{outline:2px solid var(--sc-accent);outline-offset:2px}
+.scene-composer .campanha-midia-linha>input[placeholder]{grid-column:1/-1}
+.scene-composer .campanha-midia-linha.mapa>input[type=number]{grid-column:auto}
+.scene-composer .campanha-midia-linha .scene-animation-editor{grid-column:1/-1;min-width:0;margin:0;font-size:11px}
+.scene-composer .campanha-cena-visibilidade{margin:0;padding:18px;border:1px solid var(--sc-line);background:#d0bc9105;border-radius:8px;gap:12px}
+.scene-composer .campanha-cena-visibilidade strong{font:17px Georgia,serif;display:flex;align-items:center}
+.scene-composer .campanha-cena-visibilidade small{font-size:11px;line-height:1.6;margin-top:8px}
+.scene-composer .campanha-cena-visibilidade>button{padding:8px 12px;min-height:36px;border-radius:5px;font-size:10px}
+.scene-composer .campanha-cena-jogadores{display:flex;flex-wrap:wrap;gap:8px}
+.scene-composer .campanha-cena-jogadores label{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:5px}
+.scene-composer .campanha-cena-jogadores input[type=checkbox]{width:15px;height:15px;position:static;accent-color:var(--sc-accent)}
+.scene-composer-preview{overflow:auto;padding:26px 24px;border-left:1px solid var(--sc-line);background:linear-gradient(160deg,#d0bc9107,#090b0c);scrollbar-width:thin;overscroll-behavior:contain}
+.scene-preview-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px;font:9px 'Courier New',monospace;letter-spacing:.12em;color:var(--sc-accent)}
+.scene-preview-dot{letter-spacing:0;color:#989b91;display:flex;gap:6px;align-items:center}
+.scene-preview-dot:before{content:'';width:5px;height:5px;border-radius:50%;background:#aaa17f}
+.scene-preview-stage{position:relative;aspect-ratio:4/3;border:1px solid var(--sc-line);border-radius:8px;background:#030505;overflow:hidden}
+.scene-preview-stage>img{width:100%;height:100%;object-fit:contain}
+.scene-preview-stage.is-empty{background:radial-gradient(ellipse at 50% 25%,#d0bc9110,transparent 70%),repeating-linear-gradient(0deg,transparent,transparent 29px,#ffffff04 30px),repeating-linear-gradient(90deg,transparent,transparent 29px,#ffffff04 30px)}
+.scene-preview-stage>div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:28px;height:100%;color:#a99b7c}
+.scene-composer .scene-preview-stage strong{font:20px/1.3 Georgia,serif;color:#ddd1ba}
+.scene-composer .scene-preview-stage p{margin:0;font:12px/1.7 Arial,sans-serif;color:var(--sc-muted)}
+.scene-preview-caption{position:absolute;bottom:0;left:0;right:0;padding:24px 12px 10px;background:linear-gradient(transparent,#000c);font-size:10px;color:#ddd5c6;pointer-events:none}
+.scene-preview-thumbnails{display:flex;gap:8px;overflow:auto;margin-top:12px;padding:3px}
+.scene-composer .scene-preview-thumbnails button{flex:0 0 64px;width:64px;height:44px;padding:0;background:#080a0a;border:1px solid #ffffff22;border-radius:4px;color:#b4a784;overflow:hidden}
+.scene-preview-thumbnails img{width:100%;height:100%;object-fit:cover}
+.scene-composer .scene-preview-thumbnails button[aria-pressed=true]{border-color:var(--sc-accent);box-shadow:0 0 0 2px #d0bc9122}
+.scene-preview-copy{padding:24px 0 20px;overflow-wrap:anywhere}
+.scene-preview-copy>span{font:9px 'Courier New',monospace;text-transform:uppercase;letter-spacing:.12em;color:#a69a81}
+.scene-composer .scene-preview-copy h4{font:28px/1.2 Georgia,serif;letter-spacing:-.02em;margin:10px 0 12px;color:#ece4d3}
+.scene-composer .scene-preview-copy p{font:12px/1.8 Arial,sans-serif;color:var(--sc-muted);margin:0;white-space:pre-wrap}
+.scene-preview-facts{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:10px;padding:18px 0;margin:0;border-block:1px solid var(--sc-line)}
+.scene-preview-facts dt{font-size:10px;color:#8e9189;margin-bottom:6px}
+.scene-preview-facts dd{font:15px Georgia,serif;color:#d8c9ad;margin:0}
+.scene-composer .scene-preview-note{font-size:11px;line-height:1.7;color:#7e827b;margin:18px 0 0}
+.campanha-editor.scene-composer>footer{flex:none;display:flex;align-items:center;margin:0;padding:18px 28px;border-top:1px solid var(--sc-line);background:#101212;gap:10px}
+.scene-composer .scene-save-note{margin-right:auto;max-width:50%;font-size:11px;color:var(--sc-muted)}
+.campanha-editor.scene-composer>footer button{min-height:44px;padding:0 20px;border-radius:5px;font-size:12px;text-transform:none}
+.scene-composer>footer button:disabled{opacity:.5;cursor:wait}
+.scene-composer>.campanha-dashboard-erro{flex:none;margin:0;padding:10px 28px;border-top:1px solid #b9746a55;background:#301711;color:#efb6ad;font-size:12px}
+@media(max-width:850px){.campanha-editor-fundo.scene-composer-backdrop{padding:12px}.campanha-editor.scene-composer{height:calc(100dvh - 24px);max-height:calc(100dvh - 24px)}.scene-composer-layout{display:block;overflow:auto}.scene-composer-fields{overflow:visible;padding:22px}.scene-composer-preview{overflow:visible;border-left:0;border-top:1px solid var(--sc-line);padding:22px}.scene-preview-stage{aspect-ratio:16/9;max-height:300px}.scene-preview-copy{padding:20px 0}.scene-composer .scene-save-note{display:none}.campanha-editor.scene-composer>header{padding:20px 22px}.campanha-editor.scene-composer>footer{padding:14px 22px}}
+@media(max-width:480px){.campanha-editor.scene-composer h3{font-size:28px}.scene-composer .campanha-editor-linha{grid-template-columns:1fr}.scene-composer-fields,.scene-composer-preview{padding:18px}.scene-composer .scene-composer-media>header strong{font-size:16px}.campanha-editor.scene-composer input:not([type=checkbox]):not([type=file]),.campanha-editor.scene-composer textarea{font-size:16px}.scene-composer-preview .scene-preview-copy h4{font-size:25px}}
