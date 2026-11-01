@@ -20,7 +20,7 @@ test('a criação usa 100 EX, custos acumulativos e oito reservas independentes'
   expect(custoAtributos(p.atributos)).toBe(45);
   expect(custoDominios(p.dominios)).toBe(50);
   expect(Object.keys(p.membros)).toHaveLength(8);
-  expect(p.membros).toMatchObject({cabeca:{max:5},pescoco:{max:4},torso:{max:12},abdomen:{max:8},bracoDireito:{max:6},pernaDireita:{max:7}});
+  expect(p.membros).toMatchObject({cabeca:{max:24},pescoco:{max:20},torso:{max:50},abdomen:{max:40},bracoDireito:{max:28},pernaDireita:{max:32}});
   expect(p.sanidade).toEqual({atual:14,max:14});
   expect(p.esperanca).toEqual({atual:7,max:7});
 });
@@ -37,23 +37,24 @@ test('reserva respeita incapacidade, limite de oito, vantagem e penalidade de Me
   expect(quantidadeDados(medo,'razao',0,0,false)).toBe(3);
 });
 
-test('Ruptura ocorre uma vez por cena e descanso não apaga ferimentos ou recupera Sanidade', () => {
+test('Medo permanece em VI sem bloqueio por cena e descanso preserva Sanidade', () => {
   const p = {...criarBaseV1(),medo:5};
   const ruptura = alterarMedo(p,1);
-  expect(ruptura).toMatchObject({medo:3,rupturaNaCena:true,sanidade:{atual:9}});
+  expect(ruptura).toMatchObject({medo:6,rupturaNaCena:true,sanidade:{atual:9}});
   const segunda = alterarMedo(ruptura,3);
-  expect(segunda).toMatchObject({medo:5,sanidade:{atual:9}});
+  expect(segunda).toMatchObject({medo:6,sanidade:{atual:9}});
+  expect(alterarMedo(alterarMedo(segunda,-1),1)).toMatchObject({medo:6,sanidade:{atual:4}});
   const repouso = descansar({...segunda,esperanca:{atual:6,max:7}});
   expect(repouso).toMatchObject({medo:0,sanidade:{atual:9},esperanca:{atual:7,max:7}});
 });
 
 test('aumentar atributos preserva o dano já sofrido e os sacrifícios permanentes', () => {
   const p = criarBaseV1();
-  p.membros.cabeca.atual = 2;
+  p.membros.cabeca.atual = p.membros.cabeca.max - 2;
   p.sanidade = {atual:9,max:11};
   p.ajustesRecursosV1 = {sanidade:-3};
   const next = recalcularBases(p,{...p.atributos,fonitude:2,vontade:2});
-  expect(next.membros.cabeca).toMatchObject({atual:3,max:5});
+  expect(next.membros.cabeca).toMatchObject({atual:22,max:24});
   expect(next.sanidade).toEqual({atual:11,max:13});
 });
 
@@ -86,4 +87,11 @@ test.each([[1,2,10],[2,3,15],[3,4,25],[4,5,30],[1,3,25],[1,5,80]])('Atributo %i 
   expect(novo.atributos.forca).toBe(destino);
   expect(novo.pontosEvolucao.disponiveis).toBe(100-custo);
   expect(()=>evoluirV1({...p,pontosEvolucao:{disponiveis:custo-1}},'atributos','forca',0,destino)).toThrow('insuficientes');
+});
+
+test('dois ou mais resultados 1 causam falha crítica; cada 6 conta um Final', () => {
+ expect(resolverTeste([1,1],1,1)).toMatchObject({falhaCritica:true,sucesso:false,critico:false,finais:0});
+ expect(resolverTeste([1,1,6,6],1,5)).toMatchObject({falhaCritica:true,sucesso:false,critico:false,finais:2});
+ expect(resolverTeste([1,6],1,0)).toMatchObject({falhaCritica:false,sucesso:true,finais:1});
+ expect(resolverTeste([2,3],1,0)).toMatchObject({falhaCritica:false,sucesso:false,finais:0});
 });

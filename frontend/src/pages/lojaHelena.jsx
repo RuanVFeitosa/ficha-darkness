@@ -1,3 +1,7 @@
+import AbsolutoMerchant from '../components/absoluto/AbsolutoMerchant';
+import HelenaToken from '../components/absoluto/HelenaToken';
+import '../styles/EspiralMerchant.css';
+import '../styles/AbsolutoMerchant.css';
 import { normalizarFormulaAbsoluto, normalizarConteudoAbsoluto } from '../utils/absolutoModificadores';
 import React, { useEffect, useMemo, useState } from "react";
 import Icon from "@mdi/react";
@@ -117,6 +121,7 @@ const LojaHelena = () => {
   const [subAbaMaleta, setSubAbaMaleta] = useState("medicinal");
   useState("todos");
   const [carrinho, setCarrinho] = useState([]);
+  const [buscaCatalogo,setBuscaCatalogo]=useState('');
   const [mensagem, setMensagem] = useState("");
 
   // Estado para Aprimoramento de Armas
@@ -715,7 +720,10 @@ const LojaHelena = () => {
     for (const bonus of [efeitos.bonusDano, efeitos.danoAdicional]) {
       if (bonus === undefined || bonus === null || bonus === '' || bonus === 0) continue;
       const sinal = /^[−–-]/.test(String(bonus).trim()) ? '-' : '+';
-      try { armaStatus.dmg = normalizarFormulaAbsoluto(`${armaStatus.dmg}${sinal}1 dado`); } catch { /* Item sem fórmula de dano. */ }
+      try {
+        const base=String(armaStatus.dmg).match(/^(\d+d\d+)([+-]\d+)?$/i);
+        armaStatus.dmg = base ? `${normalizarFormulaAbsoluto(`${base[1]}${sinal}1 dado`)}${base[2]||''}` : normalizarFormulaAbsoluto(`${armaStatus.dmg}${sinal}1 dado`);
+      } catch { /* Item sem fórmula de dano. */ }
     }
 
     // 3. Bônus de Teste de Ataque
@@ -1597,54 +1605,18 @@ const LojaHelena = () => {
 
 
   return (
-    <main className="loja-page">
-      <section
-        className={`loja-hero ${usandoLojaAbsoluto ? "loja-hero-ritos" : ""}`}
-      >
-        <img
-          src={usandoLojaAbsoluto ? "/SalaMarcos.webp" : "/loja-helena.webp"}
-          alt="Loja"
-          className="loja-hero-img"
-          decoding="async"
-        />
-
-        <div className="loja-hero-overlay" />
-
-        <button
-          className="loja-voltar"
-          onClick={voltarParaFicha}
-          title="Voltar para ficha"
-        >
-          <Icon path={mdiArrowLeft} size={1} />
-          Ficha
-        </button>
-
-        <div className="loja-hero-copy">
-          <span className="loja-kicker">
-            {usandoRitos
-              ? "Conhecimento proibido"
-              : usandoPoderes
-                ? "Dons do Absoluto"
-                : "Arsenal particular"}
-          </span>
-
-          <h1>
-            {usandoRitos
-              ? "Ritos Absolutos"
-              : usandoPoderes
-                ? "Poderes Absolutos"
-                : "Loja da Helena"}
-          </h1>
-
-          <p>
-            {usandoRitos
-              ? "Fragmentos do Absoluto esquecidos entre simbolos, sangue e sacrificios."
-              : usandoPoderes
-                ? "Poderes marcados por vontade, dor e uma verdade que não deveria existir."
-                : "Armas, defesas, recursos de campo para quem sabe que preparo tambem e sobrevivencia."}
-          </p>
-        </div>
-      </section>
+    <main className="loja-page absoluto-merchant" style={{'--abs-store-background':`url("${process.env.PUBLIC_URL || ''}/loja-absoluto/fundo.png")`}}>
+      <img className="abs-store-scene" src="/loja-absoluto/fundo.png" alt="" aria-hidden="true"/>
+      <div className="abs-store-scene-shade" aria-hidden="true"/>
+      <HelenaToken/>
+      <img className="abs-store-glass abs-store-counter" src="/loja-absoluto/vitrine.png" alt="" aria-hidden="true"/>
+      <header className="abs-store-hero">
+        <img className="abs-store-background" src="/loja-absoluto/fundo.png" alt=""/>
+        <div className="abs-store-hero-shade"/>
+        <button className="loja-voltar" onClick={voltarParaFicha}><Icon path={mdiArrowLeft} size={.8}/> Voltar à ficha</button>
+        <div className="abs-store-hero-copy"><span>ABSOLUTO / ARSENAL PARTICULAR</span><h1>{usandoRitos?'Ritos Absolutos':usandoPoderes?'Poderes Absolutos':'Loja da Helena'}</h1><p>O preparo faz a diferença. Escolha o que vai acompanhar você lá fora.</p></div>
+        <svg className="abs-store-filter" aria-hidden="true"><defs><filter id="helena-white-key" colorInterpolationFilters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -1 -1 -1 0 3"/><feComposite in2="SourceGraphic" operator="in"/></filter></defs></svg>
+      </header>
 
       <section className="loja-shell">
         <div className="loja-toolbar" aria-label="Categorias da loja">
@@ -1759,186 +1731,11 @@ const LojaHelena = () => {
           </div>
         )}
 
+        <div className="abs-store-catalog-heading"><h2>{categorias.find(category=>category.id===categoriaAtiva)?.nome||'Catálogo'}</h2><label>Buscar no catálogo<input type="search" value={buscaCatalogo} onChange={event=>setBuscaCatalogo(event.target.value)} placeholder="Nome ou característica…"/></label></div>
         <div className="loja-layout">
-          <div className="loja-catalogo">
-            {categoriaAtiva === "aprimoramento"
-              ? renderizarAprimoramento()
-              : itensFiltrados.map((item) => (
-                  <article
-                    key={item.id}
-                    className={`loja-item ${item.armaStatus ? "loja-arma" : ""}`}
-                  >
-                    <div>
-                      <div className="loja-item-topo">
-                        <div className="loja-item-icone" aria-hidden="true">
-                          {renderizarIconeItem(item, 1.8)}{" "}
-                        </div>
-
-                        <span className={`loja-item-tipo ${item.categoria}`}>
-                          {item.armaStatus?.tipo || item.categoria}
-                        </span>
-                      </div>
-
-                      <h2>{item.nome}</h2>
-                      <p>{item.detalhe}</p>
-
-                      {item.categoria === "itens" &&
-                        (item.dano ||
-                          item.cura ||
-                          item.bonusDano ||
-                          item.bonusTeste) && (
-                          <div className="loja-item-beneficios">
-                            {item.dano && <span>Dano: {item.dano}</span>}
-                            {item.cura && <span>Cura: {item.cura}</span>}
-                            {item.bonusDano && (
-                              <span>Bônus de dano: {item.bonusDano}</span>
-                            )}
-                            {item.bonusTeste && (
-                              <span>Teste: {item.bonusTeste}</span>
-                            )}
-                          </div>
-                        )}
-
-                      {item.categoria === "municoes-especiais" && (
-                        <div className="loja-item-beneficios municao-beneficios">
-                          <span>Compatível: {item.tipoArma}</span>
-                          <span>Bônus de dano: {item.bonusDano}</span>
-                          <span>Quantidade: {item.quantidade}</span>
-                        </div>
-                      )}
-
-                      {item.categoria === "defesas" && (
-                        <div className="loja-defesa-beneficios">
-                          {item.defesaBonus > 0 && (
-                            <span>Defesa concedida: +{item.defesaBonus}</span>
-                          )}
-                          {item.resistencia && (
-                            <span>
-                              Resistência: {(item.resistenciasDano || [])
-                                .map(
-                                  (resistencia) =>
-                                    `${resistencia.tipo} −${resistencia.reducao}`,
-                                )
-                                .join(" | ") || item.resistencia}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {item.armaStatus && (
-                        <div className="arma-status-card">
-                          {/* ===== GRID PRINCIPAL (3 colunas) ===== */}
-                          <div className="arma-status-principais">
-                            <div>
-                              <span>
-                                {item.categoria === "armas-corpo"
-                                  ? "Dano"
-                                  : "DMG"}
-                              </span>
-                              <strong>
-                                {item.armaStatus.dmg || item.dano || "—"}
-                              </strong>
-                            </div>
-                            <div>
-                              <span>Crítico</span>
-                              <strong>
-                                {item.armaStatus.critico}
-                              </strong>
-                            </div>
-                            <div>
-                              <span>
-                                {item.categoria === "armas-corpo"
-                                  ? "Cabeça"
-                                  : "MAG"}
-                              </span>
-                              <strong>
-                                {item.categoria === "armas-corpo"
-                                  ? item.armaStatus.danoCabeca || "0"
-                                  : item.armaStatus.mag || "—"}
-                              </strong>
-                            </div>
-                          </div>
-
-                          {/* ===== SEÇÃO DE MODOS / DETALHES ===== */}
-                          {item.categoria === "armas-corpo" ? (
-                            // Corpo a corpo: exibe apenas o Tipo
-                            <div
-                              className="arma-status-modos"
-                              style={{ display: "block" }}
-                            >
-
-                            </div>
-                          ) : (
-                            // Armas de fogo: exibe os 4 modos
-                            <div className="arma-status-modos">
-                              <div>
-                                <span>HIPFIRE</span>
-                                <strong>{item.armaStatus.hipfire}</strong>
-                              </div>
-                              <div>
-                                <span>PRECISION</span>
-                                <strong>{item.armaStatus.precision}</strong>
-                              </div>
-                              <div>
-                                <span>CONTROL</span>
-                                <strong>{item.armaStatus.control}</strong>
-                              </div>
-                              <div>
-                                <span>MOBILITY</span>
-                                <strong>{item.armaStatus.mobility}</strong>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* ===== SEÇÃO EXTRA ===== */}
-                          <div className="arma-status-extra">
-                            {item.categoria === "armas-corpo" ? (
-                              // Corpo a corpo: não mostra disparos nem recarga
-                              <>
-                                <span>
-                                  Crítico: {item.armaStatus.critico || "1x..."}
-                                </span>
-                                <span>
-                                  Cabeça: {item.armaStatus.danoCabeca || "0"}
-                                </span>
-                              </>
-                            ) : (
-                              // Armas de fogo: mostra disparos, recarga, crítico e cabeça
-                              <>
-                                <span>
-                                  Disparos:{" "}
-                                  {item.armaStatus.disparosSemDesvantagem}
-                                </span>
-                                <span>Recarga: {item.armaStatus.recarga}</span>
-                                <span>Crítico: {item.armaStatus.critico}</span>
-                                <span>
-                                  Cabeça: {item.armaStatus.danoCabeca}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="loja-item-footer">
-                      <span className="loja-preco">{formatarPreco(item)}</span>
-                      <button
-                        onClick={() => adicionarAoCarrinho(item)}
-                        disabled={Boolean(obterConflitoDefesa(item))}
-                        title={
-                          obterConflitoDefesa(item)
-                            ? `Área já protegida por ${obterConflitoDefesa(item).nome}`
-                            : "Comprar"
-                        }
-                      >
-                        <Icon path={mdiCart} size={0.75} />
-                        {obterConflitoDefesa(item) ? "Já protegido" : "Comprar"}
-                      </button>
-                    </div>
-                  </article>
-                ))}
-          </div>
+          {categoriaAtiva==='aprimoramento'?<div className="abs-store-upgrades">{renderizarAprimoramento()}</div>:<AbsolutoMerchant items={itensFiltrados.filter(item=>
+            (item.nome+' '+item.detalhe).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().includes(buscaCatalogo.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim())
+          )} renderIcon={renderizarIconeItem} formatPrice={formatarPreco} onAdd={adicionarAoCarrinho} conflict={obterConflitoDefesa}/>}
 
           <aside className="loja-carrinho" aria-label="Carrinho">
             <div className="loja-carrinho-topo">

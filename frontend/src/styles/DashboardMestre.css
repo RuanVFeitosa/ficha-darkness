@@ -4718,10 +4718,14 @@
   margin-top: 6px;
 }
 
+.mestre-modal-personagem .mestre-admin-controles > .themed-number-input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .mestre-modal-personagem .mestre-admin-controles input[type="number"] {
   box-sizing: border-box;
-  flex: 1 1 0;
-  width: 0;
+  width: 100%;
   min-width: 0;
   max-width: none;
 }

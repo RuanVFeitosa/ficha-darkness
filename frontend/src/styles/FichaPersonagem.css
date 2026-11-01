@@ -13373,3 +13373,81 @@ body {
     display: none;
   }
 }
+
+/* Sidebar de atalhos: independente do botão de música ambiente. */
+.ficha-container.absoluto-dossier .menu-ficha-flutuante.ficha-drawer-menu{position:fixed!important;top:18px!important;left:18px!important;right:auto!important;bottom:auto!important;z-index:1000;display:block}
+.ficha-drawer-menu .menu-ficha-gatilho{width:44px;height:44px;border:1px solid #c6af7360;border-radius:5px;background:#10120ff2;color:#d6c28d;box-shadow:0 4px 18px #0006}
+.ficha-drawer-menu .ficha-drawer-backdrop{position:fixed;inset:0;z-index:1;background:#0009;backdrop-filter:blur(3px)}
+.ficha-drawer-menu .menu-ficha-opcoes.ficha-drawer{position:fixed;inset:0 auto 0 0;z-index:2;box-sizing:border-box;width:320px;max-width:calc(100vw - 32px);height:100dvh;display:flex;flex-direction:column;align-items:stretch;gap:10px;margin:0;padding:24px 18px;overflow-y:auto;border:0;border-right:1px solid #c6af7340;border-radius:0;background:#10120f;box-shadow:16px 0 60px #0008;animation:ficha-drawer-in .22s ease-out;text-align:left}
+.ficha-drawer .ficha-drawer-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:0 0 20px;border:0;border-bottom:1px solid #c6af7328}
+.ficha-drawer .ficha-drawer-header small{font:9px 'Courier New',monospace;letter-spacing:2px;color:#9f967a}
+.ficha-drawer .ficha-drawer-header h2{margin:7px 0 0;color:#e0d1a7;font:24px Georgia,serif;text-align:left}
+.ficha-drawer .ficha-drawer-header>button{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;min-height:34px;padding:0;border:1px solid #c6af7330;border-radius:4px;background:transparent;color:#d6c28d}
+.ficha-drawer-menu .ficha-drawer .menu-ficha-identidade{display:flex;align-items:center;gap:12px;order:0;margin:4px 0 8px;padding:14px 10px;border-bottom:1px solid #c6af7320;color:#c7c8bb}
+.ficha-drawer .menu-ficha-identidade img{width:42px;height:48px;object-fit:cover;border:1px solid #c6af7340;border-radius:3px}
+.ficha-drawer .menu-ficha-identidade>div{display:grid;gap:5px;min-width:0}
+.ficha-drawer .menu-ficha-identidade span,.ficha-drawer .menu-ficha-identidade small{font:10px/1.5 'Courier New',monospace;color:#8f9886;overflow-wrap:anywhere}
+.ficha-drawer .menu-ficha-identidade strong{font:17px Georgia,serif;color:#dfd4b6;overflow-wrap:anywhere}
+.ficha-drawer-menu .ficha-drawer>button{display:flex;align-items:center;gap:12px;flex-shrink:0;min-height:46px;padding:12px;border:1px solid #c6af731c;border-radius:4px;background:#c6af7305;color:#d0c9b4;font:12px 'Courier New',monospace;text-transform:none;font-weight:400}
+.ficha-drawer-menu .ficha-drawer button:hover{background:#c6af7315;border-color:#c6af7380}
+.ficha-drawer-menu :is(button,a):focus-visible{outline:2px solid #d6c28d;outline-offset:3px}
+@keyframes ficha-drawer-in{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.ficha-drawer-menu .menu-ficha-opcoes.ficha-drawer{animation:none}}
+@media(max-width:600px){.ficha-container.absoluto-dossier .menu-ficha-flutuante.ficha-drawer-menu{top:12px!important;left:12px!important}}
+
+
+/* Detalhe do inventário: conteúdo compacto com hierarquia de equipamento. */
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto{box-sizing:border-box;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;width:100%;max-width:960px;margin:16px auto 0;padding:20px;border:1px solid #c6af7335;border-radius:8px;background:linear-gradient(135deg,#c6af7307,transparent 55%),#0b0e0b;text-align:left}
+.inventario-detalhe-compacto>*{grid-column:1/-1;min-width:0}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-topo{display:flex;align-items:center;gap:16px;min-height:0;margin:0;padding:0 0 16px;border-bottom:1px solid #c6af7325;border-radius:0;background:none}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-icone{display:grid;place-items:center;flex:0 0 76px;width:76px;height:64px;min-height:0;padding:8px;border:1px solid #c6af7330;border-radius:5px;background:#c6af7308;color:#d0c4a0}
+.inventario-detalhe-compacto .item-visualizer-icone :is(img,svg){max-width:100%;max-height:48px;object-fit:contain}
+.inventario-detalhe-compacto .visualizer-info{flex:1;min-width:0}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .visualizer-categoria{font:9px/1.5 'Courier New',monospace;letter-spacing:1.6px;color:#9b9f8a}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .visualizer-nome-acoes{display:flex;align-items:center;gap:10px}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .visualizer-info h2{margin:5px 0 0;font:21px/1.3 Georgia,serif;text-align:left;text-transform:none;color:#e3d7b7;overflow-wrap:anywhere}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-fechar{position:static;flex:0 0 30px;width:30px;height:30px;min-height:0;margin:0;padding:0;border:1px solid #c6af7330;border-radius:4px;background:transparent;color:#c8c4b4;font:20px Arial,sans-serif}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-info{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0;padding:0;border:0;background:none}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-info:empty{display:none}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-info p{margin:0;padding:0;border:0;border-radius:0;background:none;font:12px/1.6 'Courier New',monospace;text-align:left;color:#adb29f}
+.inventario-detalhe-compacto .item-visualizer-info strong{color:#c9bd98;font-weight:400}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .status-arma-acoes{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;padding:0;border:0;background:none}
+.inventario-detalhe-compacto .status-arma-acoes>span{font:10px 'Courier New',monospace;letter-spacing:1px;color:#9eaa92}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-status{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0;padding:0}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-status>span{display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:12px;border:1px solid #c6af731c;border-radius:4px;background:#c6af7305;font:13px/1.5 'Courier New',monospace;color:#e0d3ad;text-align:left}
+.inventario-detalhe-compacto .item-visualizer-status strong{font:9px/1.4 'Courier New',monospace;text-transform:uppercase;color:#929d86}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto :is(.arma-fogo-controles,.corpo-a-corpo-bonus){grid-column:1;margin:0;padding:0;border:0;background:none;display:grid;gap:10px}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .bonus-dano-arma{display:grid;gap:8px;margin:0;padding:12px;border:1px solid #c6af7325;border-radius:4px;background:#c6af7304}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .bonus-dano-arma>span{margin:0;color:#b9b395;font:9px 'Courier New',monospace;letter-spacing:1px;text-align:left}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .bonus-dano-arma input{box-sizing:border-box;width:100%;min-height:36px;margin:0;padding:8px 10px;border:1px solid #c6af7325;border-radius:4px;background:#070a07;color:#ddd2b5;font:12px 'Courier New',monospace}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-municao{grid-column:2;margin:0;padding:12px;border:1px dashed #c6af7325;border-radius:4px;background:none}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-municao>p{margin:0;color:#8f9984;font:11px/1.7 'Courier New',monospace;text-align:left}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-acoes{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;margin:0;padding:12px 0 0;border-top:1px solid #c6af7320}
+.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-ataque-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:10px 18px;border:1px solid #c6af7360;border-radius:4px;background:#c6af7315;color:#e1cfa0;font:11px 'Courier New',monospace}
+@media(max-width:650px){.ficha-container.absoluto-dossier .inventario-detalhe-compacto{grid-template-columns:minmax(0,1fr);padding:14px;gap:12px}.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-status{grid-template-columns:repeat(2,minmax(0,1fr))}.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-municao{grid-column:1}.ficha-container.absoluto-dossier .inventario-detalhe-compacto .visualizer-info h2{font-size:18px}.ficha-container.absoluto-dossier .inventario-detalhe-compacto .item-visualizer-icone{flex-basis:52px;width:52px;height:52px}}
+
+/* Mochila em duas áreas: seleção e detalhe alinhados no topo. */
+.ficha-container.absoluto-dossier .inventario-workspace{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start;margin-top:18px}
+.ficha-container.absoluto-dossier .inventario-workspace.com-detalhe{grid-template-columns:minmax(0,1fr)}
+.ficha-container.absoluto-dossier .inventario-workspace .lista-inventario.inventario-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));grid-auto-rows:104px;align-content:start;gap:10px;margin:0;padding:2px;max-height:240px;max-height:min(240px,30dvh);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#c6af7360 #10130e}
+.ficha-container.absoluto-dossier .inventario-workspace.com-detalhe .lista-inventario.inventario-cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.ficha-container.absoluto-dossier .inventario-workspace .item-inventario.inventario-card{box-sizing:border-box;width:100%;height:104px;min-height:0;aspect-ratio:auto!important;padding:10px;border:1px solid #c6af7328;border-left:2px solid #c6af7330;border-radius:5px;background:#10130e;cursor:pointer}
+.ficha-container.absoluto-dossier .inventario-workspace .inventario-resumo{position:relative;display:flex;align-items:center;gap:7px;flex-direction:column;justify-content:center;width:100%;height:100%;min-height:0;padding:0}
+.ficha-container.absoluto-dossier .inventario-workspace .inventario-card .inventario-card-icone{display:grid;place-items:center;flex:0 0 48px;width:48px;height:48px;padding:6px;box-sizing:border-box;border:1px solid #c6af7325;border-radius:4px;background:#c6af7308;color:#d6c99f}
+.ficha-container.absoluto-dossier .inventario-workspace .inventario-card .inventario-card-icone :is(svg,img){max-width:100%;max-height:36px;object-fit:contain;filter:none;color:inherit}
+.ficha-container.absoluto-dossier .inventario-workspace .inventario-card .inventario-item-nome{position:static;display:block;width:auto;max-width:none;height:auto;padding:0;overflow:visible;clip:auto;background:none;color:#d8d0b8;font:12px/1.3 Georgia,serif;letter-spacing:0;text-align:center;white-space:normal;text-transform:none;transform:none;opacity:1;overflow-wrap:anywhere}
+.ficha-container.absoluto-dossier .inventario-workspace .inventario-card.arma-selecionada{border-color:#c6af7370;border-left-color:#d6c28d;background:#c6af7310}
+.ficha-container.absoluto-dossier .inventario-workspace .inventario-card:hover{border-color:#c6af7380;background:#c6af7315}
+.ficha-container.absoluto-dossier .inventario-workspace .inventario-arma-selecionada{position:absolute;top:-6px;left:34px;right:auto;width:16px;height:16px;font-size:10px}
+.ficha-container.absoluto-dossier .inventario-workspace .item-visualizer-inline{margin:0;min-width:0}
+.ficha-container.absoluto-dossier .inventario-workspace .inventario-detalhe-compacto{max-width:none;margin:0;padding:18px;gap:12px}
+.ficha-container.absoluto-dossier .inventario-workspace:not(.com-detalhe) .item-visualizer-inline{display:none}
+@media(max-width:900px){.ficha-container.absoluto-dossier .inventario-workspace.com-detalhe{grid-template-columns:minmax(0,1fr)}.ficha-container.absoluto-dossier .inventario-workspace.com-detalhe .lista-inventario.inventario-cards{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}}
+
+.ficha-container.absoluto-dossier .inventario-workspace .inventario-card .inventario-item-nome{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-height:32px}
+.ficha-container.absoluto-dossier .inventario-workspace .inventario-arma-selecionada{top:0;left:auto;right:0}
+.ficha-container.absoluto-dossier .inventario-workspace .inventario-detalhe-compacto{max-height:48dvh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#c6af7360 #10130e}
+
+/* Inventário transparente, incluindo os estados de seleção e hover. */
+.ficha-container.absoluto-dossier .inventario-workspace :is(.item-inventario.inventario-card,.inventario-card .inventario-card-icone,.inventario-detalhe-compacto,.item-visualizer-icone,.item-visualizer-status>span,.bonus-dano-arma,.item-visualizer-municao){background:transparent!important;box-shadow:none}
+.ficha-container.absoluto-dossier .inventario-workspace .inventario-card.arma-selecionada .inventario-card-icone :is(svg,img){color:#dfcf9f!important;filter:none!important}

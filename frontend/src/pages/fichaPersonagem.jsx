@@ -1,10 +1,23 @@
+import HopeVoid from '../components/absoluto/HopeVoid';
+import RitoCracks from '../components/absoluto/RitoCracks';
+import { converterCustoUso, custoUsoRito } from '../data/absolutoCustos';
+import AbilityUseControls, { ActiveAbilityEffects } from '../components/habilidades/AbilityUseControls';
+import { aplicarUso, renovarUsos, encerrarEfeito } from '../utils/absolutoHabilidadeUso';
+import AbsolutoResources from '../components/absoluto/AbsolutoResources';
+import SanityStatic,{SanityZeroSymbol} from '../components/absoluto/SanityStatic';
+import HopeWhispers from '../components/absoluto/HopeWhispers';
+import RollDieOutline from '../components/absoluto/RollDieOutline';
+import {rolarDanoTabela} from '../data/absolutoWeaponDamage';
+import '../styles/AbsolutoRollView.css';
+import AbsolutoBody from '../components/absoluto/AbsolutoBody';
+import AbsolutoCombatWeapons,{combatWeapons} from '../components/absoluto/AbsolutoCombatWeapons';
+import AttributeDicePool from '../components/absoluto/AttributeDicePool';
 import RefazerFicha from '../components/jogador/RefazerFicha';
 import NumberInput from '../components/ui/NumberInput';
-import { LIMITE_DADOS_ABSOLUTO, rolarDadosAbsoluto, normalizarFormulaAbsoluto, converterTextoAbsoluto, normalizarFichaAbsoluto } from '../utils/absolutoModificadores';
-import AbsolutoMedo from '../components/absoluto/AbsolutoMedo';
+import { LIMITE_DADOS_ABSOLUTO, rolarDadosAbsoluto, converterTextoAbsoluto, normalizarFichaAbsoluto } from '../utils/absolutoModificadores';
+
 import AbsolutoDominio from '../components/absoluto/AbsolutoDominio';
 import { executarTesteDominio } from '../utils/absolutoRolagem';
-import AbsolutoLivro from '../components/absoluto/AbsolutoLivro';
 import { ehAbsolutoV1, DOMINIOS, REGIOES, limitar } from '../data/absolutoV1';
 import AdaptacaoEspiral from '../components/adaptacao/AdaptacaoEspiral';
 import { nomesPassivas, ativosParaPassiva, dadosAtivos } from '../data/absolutoAtivos';
@@ -16,6 +29,7 @@ import CardHabilidadeRecolhivel from '../components/habilidades/CardHabilidadeRe
 import AnimatedTokenImage from '../components/tokens/AnimatedTokenImage';
 // src/components/FichaPersonagem.jsx
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from 'react-dom';
 import "../styles/FichaPersonagem.css";
 import "../styles/CondicoesProfile.css";
 import "../styles/AbsolutoDossier.css";
@@ -136,31 +150,6 @@ const salvarPersonagemLocalSeguro = (chave, personagem) => {
       console.warn("Nao foi possivel limpar o salvamento local.", error);
     }
   }
-};
-
-const CampoNumeroEditavel = ({ valor, onConfirmar, ...props }) => {
-  const [rascunho, setRascunho] = useState(String(valor ?? ""));
-
-  useEffect(() => {
-    setRascunho(String(valor ?? ""));
-  }, [valor]);
-
-  const confirmar = () => {
-    const numero = parseInt(rascunho, 10);
-    onConfirmar(Number.isFinite(numero) ? numero : 0);
-  };
-
-  return (
-    <input
-      {...props}
-      value={rascunho}
-      onChange={(event) => setRascunho(event.target.value)}
-      onBlur={confirmar}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") event.currentTarget.blur();
-      }}
-    />
-  );
 };
 
 const TEMA_PADRAO_FICHA = {
@@ -483,6 +472,27 @@ const FichaPersonagem = () => {
   const [carregado, setCarregado] = useState(false);
   const [seletorMesaAberto, setSeletorMesaAberto] = useState(false);
   const [menuFichaAberto, setMenuFichaAberto] = useState(false);
+  const menuFichaGatilhoRef = useRef(null);
+  const menuFichaPainelRef = useRef(null);
+  useEffect(() => {
+    if (!menuFichaAberto) return;
+    const painel = menuFichaPainelRef.current;
+    painel?.querySelector('button, a[href]')?.focus();
+    const teclado = (event) => {
+      if (event.key === 'Escape') {
+        setMenuFichaAberto(false);
+        menuFichaGatilhoRef.current?.focus();
+      }
+      if (event.key === 'Tab') {
+        const itens = [...painel.querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled)')];
+        const primeiro = itens[0], ultimo = itens[itens.length - 1];
+        if (event.shiftKey && document.activeElement === primeiro) { event.preventDefault(); ultimo?.focus(); }
+        else if (!event.shiftKey && document.activeElement === ultimo) { event.preventDefault(); primeiro?.focus(); }
+      }
+    };
+    document.addEventListener('keydown', teclado);
+    return () => document.removeEventListener('keydown', teclado);
+  }, [menuFichaAberto]);
   const [adaptacaoAberta, setAdaptacaoAberta] = useState(false);
   const [campanhasDaFicha, setCampanhasDaFicha] = useState([]);
   const [carregandoCampanhas, setCarregandoCampanhas] = useState(false);
@@ -540,7 +550,7 @@ const FichaPersonagem = () => {
   const [visualizadorFechando, setVisualizadorFechando] = useState(false);
   const [defesaVisualizada, setDefesaVisualizada] = useState(null);
   const [ritoVisualizado, setRitoVisualizado] = useState(null);
-  const [ritoDesativando, setRitoDesativando] = useState(false);
+  const [ritoDesativando] = useState(false);
   const [sanidadeSaindo, setSanidadeSaindo] = useState(false);
   const [esperancaSaindo, setEsperancaSaindo] = useState(false);
   const [ultimoEstadoSanidade, setUltimoEstadoSanidade] = useState("");
@@ -567,6 +577,10 @@ const FichaPersonagem = () => {
   const [modalTitulo, setModalTitulo] = useState("");
   const [modalDescricao, setModalDescricao] = useState("");
   const [modalRolagem, setModalRolagem] = useState(null);
+  const [rolagemFechando,setRolagemFechando]=useState(false);
+  const fecharRolagemTimer=useRef(null);
+  useEffect(()=>{setRolagemFechando(false);clearTimeout(fecharRolagemTimer.current);},[modalRolagem]);
+  useEffect(()=>()=>clearTimeout(fecharRolagemTimer.current),[]);
   const animacaoRolagemRef = useRef(null);
   useEffect(() => () => window.clearTimeout(animacaoRolagemRef.current), []);
   const abrirRolagemAnimada = (rolagem) => {
@@ -1115,15 +1129,19 @@ const FichaPersonagem = () => {
   }, [presetsRolagem]);
 
   // ESTADO CRÍTICO AUTOMÁTICO
-  // Cabeça e Torso são regiões vitais. Se qualquer uma entrar em Grave,
-  // a condição Estado Crítico é ativada automaticamente.
-  // Quando as duas deixam de estar em Grave, Estado Crítico é removido.
+  // Na versão 1.0, cabeça ou tórax sem Integridade ativam Estado Crítico.
+  // As fichas antigas mantêm a regra do marcador Grave.
   useEffect(() => {
-    if (!carregado || personagem.versaoRegras === "1.0") return;
+    if (!carregado) return;
 
     const cabecaGrave = Boolean(personagem.membros?.cabeca?.grave);
     const torsoGrave = Boolean(personagem.membros?.torso?.grave);
-    const deveTerEstadoCritico = cabecaGrave || torsoGrave;
+    const deveTerEstadoCritico = ehAbsolutoV1(personagem)
+      ? ['cabeca','torso'].some(chave => {
+          const atual=personagem.membros?.[chave]?.atual;
+          return atual!=null && Number.isFinite(Number(atual)) && Number(atual)<=0;
+        })
+      : cabecaGrave || torsoGrave;
 
     const condicoesAtuais = personagem.condicoesAtivas || [];
     const jaTemEstadoCritico = condicoesAtuais.includes("estado-critico");
@@ -1155,6 +1173,8 @@ const FichaPersonagem = () => {
     personagem.versaoRegras,
     personagem.membros?.cabeca?.grave,
     personagem.membros?.torso?.grave,
+    personagem.membros?.cabeca?.atual,
+    personagem.membros?.torso?.atual,
     personagem.condicoesAtivas,
   ]);
 
@@ -1545,7 +1565,7 @@ const FichaPersonagem = () => {
 
     const armaAtualizada = {
       ...arma,
-      armaStatus: { ...statusArmaEditavel, dmg: (() => { try { return normalizarFormulaAbsoluto(statusArmaEditavel.dmg); } catch { return statusArmaEditavel.dmg; } })() },
+      armaStatus: { ...statusArmaEditavel, dmg: statusArmaEditavel.dmg },
       statusPersonalizado: true,
     };
       inventario[index] = armaAtualizada;
@@ -1636,7 +1656,7 @@ const FichaPersonagem = () => {
         // Cada fonte de bônus/penalidade contribui com apenas um dado.
         return [(/^[−–-]/.test(texto) ? -1 : 1)];
       });
-      const resultado = rolarDadosAbsoluto(dmg, [...extras, ...ajustes], Math.random, limite);
+      const resultado = rolarDanoTabela(dmg, [...extras, ...ajustes], Math.random, limite);
       return { total: resultado.total, rolagens: resultado.dados, rolagensBonus: [], texto: resultado.formula, dadosDetalhados: resultado.dados.map(valor => ({ valor, faces: resultado.faces })) };
     } catch {
       return { total: 0, rolagens: [], rolagensBonus: [], texto: 'Dano inválido', dadosDetalhados: [] };
@@ -2122,31 +2142,6 @@ const FichaPersonagem = () => {
 
   const temRitoAtivo = ritosAtivos.length > 0;
 
-  const alternarRitoAtivo = (rito, index) => {
-    const ritoId = obterRitoId(rito, index);
-
-    const estaAtivo = (personagem.ritosAtivos || []).includes(ritoId);
-
-    if (estaAtivo) {
-      setRitoDesativando(true);
-
-      setTimeout(() => {
-        setPersonagem((prev) => ({
-          ...prev,
-          ritosAtivos: (prev.ritosAtivos || []).filter((id) => id !== ritoId),
-        }));
-
-        setRitoDesativando(false);
-      }, 450);
-
-      return;
-    }
-
-    setPersonagem((prev) => ({
-      ...prev,
-      ritosAtivos: [...(prev.ritosAtivos || []), ritoId],
-    }));
-  };
 
   useEffect(() => {
     if (!temRitoAtivo || personagem.versaoRegras === "1.0") return;
@@ -2426,7 +2421,9 @@ const FichaPersonagem = () => {
       setItemVisualizado(null);
     }
 
-    setModalRolagem(null);
+    if(rolagemFechando)return;
+    setRolagemFechando(true);
+    fecharRolagemTimer.current=setTimeout(()=>setModalRolagem(null),350);
   };
 
   const renderizarIconeItem = (item) => {
@@ -3206,7 +3203,14 @@ const FichaPersonagem = () => {
     };
   }
 
-  const habilidadesSelecionadas = listarHabilidadesSelecionadas(personagem);
+  const usarPoderFicha = (habilidade,tipo) => {
+    const atualizado=aplicarUso(personagem,habilidade,tipo);
+    revisaoRecursosRef.current+=1;
+    setPersonagem(atualizado);
+  };
+  const controlesUso = (habilidade,tipo='habilidade') => <AbilityUseControls habilidade={habilidade} tipo={tipo} personagem={personagem} onUse={usarPoderFicha} onDeactivate={id=>setPersonagem(p=>encerrarEfeito(p,id))}/>;
+  const painelEfeitos = <ActiveAbilityEffects personagem={personagem} onEnd={id=>setPersonagem(p=>encerrarEfeito(p,id))} onReset={periodo=>setPersonagem(p=>renovarUsos(p,periodo))}/>;
+  const habilidadesSelecionadas = listarHabilidadesSelecionadas(personagem).map(converterCustoUso);
   const arquetipoDetalhes =
     personagem.classeEspecialidade?.arquetipoDetalhes || null;
 
@@ -3462,10 +3466,10 @@ const FichaPersonagem = () => {
     );
 
   const conteudoAbas = {
-    regras: <div className="abs-v1"><AbsolutoLivro /></div>,
     combate: (
-      <div className="conteudo-aba">
-        <h4>{ehAbsolutoV1(personagem) ? "DOMÍNIOS" : "ATIVOS"}</h4>
+      <div className={`conteudo-aba ${ehAbsolutoV1(personagem) ? "abs-combat" : ""}`}>
+        {ehAbsolutoV1(personagem) ? <header className="abs-combat-heading"><div><span>01 / COMBATE</span><h3>Domínios de ação</h3><p>Prepare a rolagem e escolha como agir.</p></div><span className="abs-combat-dice-note">Reservas de d6</span></header> : <h4>ATIVOS</h4>}
+        <div className="abs-combat-roll-controls">
         <div className="controle-dados-pre-rolagem">
           <button
             type="button"
@@ -3477,7 +3481,7 @@ const FichaPersonagem = () => {
           </button>
 
           <span>
-            Dados da rolagem: {modificadorDadosRolagem >= 0 ? "+" : ""}
+            Ajuste de dados: {modificadorDadosRolagem >= 0 ? "+" : ""}
             {modificadorDadosRolagem}
           </span>
 
@@ -3489,7 +3493,7 @@ const FichaPersonagem = () => {
           </button>
 
           <button type="button" onClick={() => setModificadorDadosRolagem(0)}>
-            Reset
+            Zerar
           </button>
         </div>
 
@@ -3498,6 +3502,7 @@ const FichaPersonagem = () => {
           <label><input type="checkbox" checked={esforcoTesteV1} onChange={e => setEsforcoTesteV1(e.target.checked)} /> Esforço · 1 Esperança / +1D</label>
           <label><input type="checkbox" checked={contraFonteMedo} onChange={e => setContraFonteMedo(e.target.checked)} /> Contra a fonte do Medo</label>
         </div>}
+        </div>
         <div className="ativos-layout">
           <div className="lista-ativos">
             {ehAbsolutoV1(personagem) ? Object.keys(DOMINIOS).map(chave => <AbsolutoDominio key={chave} chave={chave} personagem={personagem} onRoll={rolarDominioV1} vantagem={modificadorDadosRolagem} esforco={esforcoTesteV1} contraFonte={contraFonteMedo} />) : <>
@@ -3525,6 +3530,9 @@ const FichaPersonagem = () => {
           </>}
           </div>
 
+
+        </div>
+        <div className="abs-combat-side">
           <aside className="defesa-painel">
             <div className="defesa-linha-principal">
               <div className="defesa-topo">
@@ -3574,32 +3582,6 @@ const FichaPersonagem = () => {
             </div>
 
             <div className="defesa-campos">
-              <label>
-                <span>PROTEÇÃO</span>
-                <input
-                  value={personagem.protecao || ""}
-                  onChange={(e) =>
-                    setPersonagem((prev) => ({
-                      ...prev,
-                      protecao: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-
-              <label>
-                <span>PROFICIÊNCIAS</span>
-                <input
-                  value={personagem.proficiencias || ""}
-                  onChange={(e) =>
-                    setPersonagem((prev) => ({
-                      ...prev,
-                      proficiencias: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-
               {(personagem.resistenciasDano || []).length > 0 && (
                 <div className="defesa-resistencias-cards">
                   <span>RESISTÊNCIAS ATIVAS</span>
@@ -3618,6 +3600,7 @@ const FichaPersonagem = () => {
               )}
             </div>
           </aside>
+        {ehAbsolutoV1(personagem) && <AbsolutoCombatWeapons onQuickChange={(slot,index)=>setPersonagem(p=>({...p,inventario:p.inventario.map((item,i)=>({...item,acessoRapidoCombate:i===index ? slot : item.acessoRapidoCombate===slot ? null : item.acessoRapidoCombate}))}))} weapons={combatWeapons(personagem.inventario,CATALOGO_COMBATE)} ready={Boolean(ultimoTesteV1?.sucesso && !ultimoTesteV1.danoResolvido)} renderIcon={renderizarIconeItem} onManage={()=>{setAbaAtiva('inventario');setSubAbaInventario('mochila');}} onAttack={item=>rolarDominioV1(item.categoria==='armas-corpo' || item.armaStatus.tipo==='Corpo a Corpo' ? 'violencia' : 'precisao')} onDamage={item=>rolarAtaqueArma(item)}/>}
         </div>
       </div>
     ),
@@ -3839,6 +3822,8 @@ const FichaPersonagem = () => {
                 })}
           </div>
 
+          <div className="habilidades-workspace">
+          <div className="habilidades-workspace-cards">
           {subAbaHabilidade === "arquetipo" && (
             <section className="grupo-habilidades-ficha habilidades-grid-cards">
               {arquetipoItens.length > 0 ? (
@@ -3863,7 +3848,8 @@ const FichaPersonagem = () => {
                   <CardHabilidadeRecolhivel
                     key={habilidade.id}
                     habilidade={habilidade}
-                    tipo="APTIDÃO"
+                    tipo={`APTIDÃO · ${habilidade.categoriaUso || ""}`}
+                    uso={controlesUso(habilidade)}
                   />
                 ))
               ) : (
@@ -3885,6 +3871,7 @@ const FichaPersonagem = () => {
                         : "ESPECIALISMO"
                     }
                     classeExtra="especialismo"
+                    uso={controlesUso(habilidade)}
                   />
                 ))
               ) : (
@@ -3908,7 +3895,7 @@ const FichaPersonagem = () => {
                       <div className="custo-absoluta">{habilidade.custo}</div>
                     )}
 
-                    <p>{habilidade.descricao}</p>
+                    <p>{habilidade.descricao}</p>{controlesUso(habilidade,"absoluta")}
                   </div>
                 ))
               ) : (
@@ -3947,6 +3934,7 @@ const FichaPersonagem = () => {
                           selo={`${habilidade.custo || 0} ${recurso}`.trim()}
                           classeExtra={`criada ${status}`}
                           onEditar={()=>setHabilidadeEditando(habilidade)}
+                          uso={controlesUso(habilidade)}
                           acao={{
                             rotulo: "Vender",
                             onClick: () => venderHabilidadeCriada(habilidade),
@@ -4018,7 +4006,7 @@ const FichaPersonagem = () => {
                       {subAbaMarcaSelecionada.habilidades.map((hab, idx) => (
                         <div key={idx} className="marca-habilidade-item">
                           <b>{String(idx + 1).padStart(2, "0")}</b>
-                          <div><strong>{hab.nome}</strong><p>{hab.descricao}</p></div>
+                          <div><strong>{hab.nome}</strong><p>{hab.descricao}</p>{controlesUso(hab)}</div>
                         </div>
                       ))}
                     </div>
@@ -4027,12 +4015,17 @@ const FichaPersonagem = () => {
               </div>
             </section>
           )}
+          </div>
+          <aside className="habilidades-workspace-efeitos">{painelEfeitos}</aside>
+          </div>
         </section>
       </div>
     ),
 
     rituais: (
       <div className="conteudo-aba rituais-aba">
+        <div className="habilidades-workspace rituais-workspace">
+        <div className="habilidades-workspace-cards">
         <div className="rituais-topo">
           <span>Biblioteca do Absoluto</span>
           <h4>RITOS CONHECIDOS</h4>
@@ -4095,7 +4088,7 @@ const FichaPersonagem = () => {
 
                     <div className="ritual-card-info">
                       <strong>{poder.nome}</strong>
-                      <small>{poder.custo || "Absoluto"}</small>
+                      {controlesUso(poder,"absoluta")}
                     </div>
                   </article>
                 ));
@@ -4141,33 +4134,22 @@ const FichaPersonagem = () => {
                       </div>
 
                       <div className="ritual-card-info">
-                        <strong>{ritual.nome}</strong>
+                        <strong>{ritual.nome}</strong>{controlesUso({...ritual,index:originalIndex},"rito")}
                         <small>
                           {ritual.nivelRito || ritual.nivel
                             ? `Nível ${ritual.nivelRito || ritual.nivel}`
                             : "Ritual Obscuro"}
                         </small>
                       </div>
-
-                      <button
-                        className="btn-ativar-rito"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          alternarRitoAtivo(ritual, originalIndex);
-                        }}
-                      >
-                        {ritosAtivos.includes(
-                          obterRitoId(ritual, originalIndex),
-                        )
-                          ? "Desativar"
-                          : "Ativar"}
-                      </button>
                     </article>
                   );
                 });
               })()}
         </div>
 
+        </div>
+        <aside className="habilidades-workspace-efeitos">{painelEfeitos}</aside>
+        </div>
         {/* ============================================================
         VISUALIZADOR (funciona para poderes e rituais)
         ============================================================ */}
@@ -4195,7 +4177,7 @@ const FichaPersonagem = () => {
                         : "Ritual Obscuro"}
                   </span>
 
-                  <h2>{ritoVisualizado.nome}</h2>
+                  <h2>{ritoVisualizado.nome}</h2>{!ritoVisualizado.isPoder && <p>Ativação · {custoUsoRito(ritoVisualizado)} PE</p>}
                 </div>
 
                 <button
@@ -4327,27 +4309,7 @@ const FichaPersonagem = () => {
               </div>
 
               <div className="rito-visualizer-acoes">
-                {/* Botão de ativar/desativar só para rituais normais */}
-                {!ritoVisualizado.isPoder && (
-                  <button
-                    className={
-                      ritosAtivos.includes(
-                        obterRitoId(ritoVisualizado, ritoVisualizado.index),
-                      )
-                        ? "btn-rito-ativo"
-                        : ""
-                    }
-                    onClick={() =>
-                      alternarRitoAtivo(ritoVisualizado, ritoVisualizado.index)
-                    }
-                  >
-                    {ritosAtivos.includes(
-                      obterRitoId(ritoVisualizado, ritoVisualizado.index),
-                    )
-                      ? "Desativar Rito"
-                      : "Ativar Rito"}
-                  </button>
-                )}
+                {controlesUso(ritoVisualizado,ritoVisualizado.isPoder ? "absoluta" : "rito")}
               </div>
             </div>
           </div>
@@ -4373,12 +4335,6 @@ const FichaPersonagem = () => {
           </button>
 
           <button
-            className={subAbaInventario === "criacao" ? "ativa" : ""}
-            onClick={() => setSubAbaInventario("criacao")}
-          >
-            Criação
-          </button>
-          <button
             className={subAbaInventario === "personalizado" ? "ativa" : ""}
             onClick={() => setSubAbaInventario("personalizado")}
           >
@@ -4398,6 +4354,7 @@ const FichaPersonagem = () => {
           <>
             <h4>INVENTÁRIO</h4>
 
+            <div className={`inventario-workspace${visualizadorAberto ? " com-detalhe" : ""}`}>
             <div className="lista-inventario inventario-cards">
               {personagem.inventario
                 .map((item, index) => ({ item, index }))
@@ -4452,7 +4409,7 @@ const FichaPersonagem = () => {
               className={`item-visualizer-inline ${visualizadorAberto ? "aberto" : ""} ${visualizadorFechando ? "fechando" : ""}`}
             >
               {itemVisualizado && (
-                <div className="item-visualizador">
+                <div className="item-visualizador inventario-detalhe-compacto">
                   {/* TOPO */}
                   <div className="item-visualizer-topo">
                     <div className="item-visualizer-icone">
@@ -4602,7 +4559,7 @@ const FichaPersonagem = () => {
                     )}
                     {itemVisualizado.entrega && (
                       <p>
-                        <strong>Proteção:</strong> {itemVisualizado.entrega}
+                        <strong>{itemVisualizado.armaStatus ? "Inclui:" : "Proteção:"}</strong> {itemVisualizado.entrega}
                       </p>
                     )}
                   </div>
@@ -4646,12 +4603,7 @@ const FichaPersonagem = () => {
                             "disparosSemDesvantagem",
                             "recarga",
                             "critico",
-                            "danoCabeca",
-                            "hipfire",
-                            "precision",
-                            "control",
-                            "mobility",
-                          ]
+                            "danoCabeca",                          ]
                       ).map((campo) => (
                         <label key={campo}>
                           {(
@@ -4737,38 +4689,10 @@ const FichaPersonagem = () => {
                             <strong>Dano Cabeca:</strong>{" "}
                             {itemVisualizado.armaStatus.danoCabeca}
                           </span>
-                          <span
-                            onClick={() =>
-                              abrirDescricaoStatus("Hipfire", "hipfire")
-                            }
-                          >
-                            <strong>Hipfire:</strong>{" "}
-                            {itemVisualizado.armaStatus.hipfire}
-                          </span>
-                          <span
-                            onClick={() =>
-                              abrirDescricaoStatus("Precision", "precision")
-                            }
-                          >
-                            <strong>Precision:</strong>{" "}
-                            {itemVisualizado.armaStatus.precision}
-                          </span>
-                          <span
-                            onClick={() =>
-                              abrirDescricaoStatus("Control", "control")
-                            }
-                          >
-                            <strong>Control:</strong>{" "}
-                            {itemVisualizado.armaStatus.control}
-                          </span>
-                          <span
-                            onClick={() =>
-                              abrirDescricaoStatus("Mobility", "mobility")
-                            }
-                          >
-                            <strong>Mobility:</strong>{" "}
-                            {itemVisualizado.armaStatus.mobility}
-                          </span>
+                          
+                          
+                          
+                          
                         </div>
                       )}
                     </>
@@ -5141,6 +5065,7 @@ const FichaPersonagem = () => {
                   </div>
                 </div>
               )}
+            </div>
             </div>
           </>
         )}
@@ -5891,7 +5816,7 @@ const FichaPersonagem = () => {
     ),
 
     corpo: (
-      <div className="conteudo-aba corpo-aba">
+      <div className={`conteudo-aba corpo-aba ${ehAbsolutoV1(personagem) ? "abs-body-tab" : ""}`}>
         <label className="tipo-dano-corporal">
           Tipo de dano recebido
           <select
@@ -5913,7 +5838,7 @@ const FichaPersonagem = () => {
         <div className="sistema-membros-sidebar">
           <div className="corpo-container-sidebar">
             <div className="controles-membros-sidebar">
-              {ehAbsolutoV1(personagem) ? Object.entries(REGIOES).map(([chave, regiao]) => <MembroControle key={chave} nome={regiao.nome.toUpperCase()} membroChave={chave} membro={personagem.membros[chave]} onMaxChange={atualizarMaxMembro} onChange={valor => atualizarVidaMembro(chave, valor)} onDamage={dano => aplicarDanoMembro(chave, dano)} onDefesaChange={atualizarDefesaMembro} defesas={defesasDoMembro(chave)} onVisualizarDefesa={abrirVisualizador} classNameInput={`${chave}-input`} />) : <>
+              {ehAbsolutoV1(personagem) ? <AbsolutoBody members={personagem.membros} onChange={atualizarVidaMembro} onMaxChange={atualizarMaxMembro} onDamage={aplicarDanoMembro} onDefenseChange={atualizarDefesaMembro} defensesFor={defesasDoMembro} onInspectDefense={abrirVisualizador}/> : <>
 
               <MembroControle
                 nome="CABEÇA"
@@ -6269,7 +6194,7 @@ const FichaPersonagem = () => {
       </div>
     ),
   };
-  const primeiraCondicaoAtiva = personagem.condicoesAtivas?.[0] || "";
+  const condicoesRetrato = (personagem.condicoesAtivas || []).join(" ");
 
   const obterEstadoRecurso = (recurso, prefixo) => {
     const atual = Number(recurso?.atual) || 0;
@@ -6374,6 +6299,7 @@ const FichaPersonagem = () => {
     <AbilityReadingLayout>{habilidadeEditando && <AbilityEditDialog key={habilidadeEditando.id} habilidade={habilidadeEditando} fichaId={fichaId} onSubmit={enviarEdicaoHabilidade} onClose={()=>setHabilidadeEditando(null)}/>}<div
       className={`ficha-container absoluto-dossier${new URLSearchParams(window.location.search).get("embed") === "mesa" ? " ficha-embutida-mesa" : ""}`}
       style={{
+        "--abs-hope-saturation": Number(personagem.esperanca?.max)>0 && Number.isFinite(Number(personagem.esperanca?.atual)) ? Math.max(0,Math.min(1,Number(personagem.esperanca.atual)/Number(personagem.esperanca.max))) : 1,
         "--cor-primaria": personagem.temaFicha?.primaria,
         "--cor-secundaria": personagem.temaFicha?.secundaria,
         "--cor-texto": personagem.temaFicha?.texto,
@@ -6381,16 +6307,67 @@ const FichaPersonagem = () => {
         "--cor-borda": personagem.temaFicha?.borda,
       }}
     >
+      {Number(personagem.medo)>0 && <RitoCracks medo={personagem.medo}/>}
+      <HopeVoid resource={personagem.esperanca}/>
+      <SanityStatic resource={personagem.sanidade}/>
       <header className="abs-masthead">
         <PlayerPageLink className="abs-return" id={fichaId} sistema="darkness">← Página do Jogador</PlayerPageLink>
-        <div className="abs-heading"><div
-                    className={`profile-wrapper profile-editavel ${primeiraCondicaoAtiva} ${estadoSanidadePerfil} ${estadoEsperancaPerfil} ${
+        <div className="abs-header-overview"><div className="profile-section">
+          <div className="profile-container">
+            {temMarcaPendente && (
+              <button
+                className="marca-pendente-btn"
+                onClick={() => abrirModalMarca(marcasPendentes[0])}
+              >
+                ✦ Escolher seu Destino
+              </button>
+            )}
+            {/* Coluna do Centro: Atributos em Linha */}
+            <div className="atributoCompleto">
+              <div className="atributos-coluna">
+                <div className="atributos-linha">
+                  <Atributo v1={ehAbsolutoV1(personagem)}
+                    nome="FORÇA"
+                    valor={personagem.atributos.forca}
+                    onChange={(valor) => atualizarAtributo("forca", valor)}
+                  />
+                  <Atributo v1={ehAbsolutoV1(personagem)}
+                    nome="FORTITUDE"
+                    valor={personagem.atributos.fonitude}
+                    onChange={(valor) => atualizarAtributo("fonitude", valor)}
+                  />
+                  <Atributo v1={ehAbsolutoV1(personagem)}
+                    nome="INTELIGÊNCIA"
+                    valor={personagem.atributos.inteligencia}
+                    onChange={(valor) =>
+                      atualizarAtributo("inteligencia", valor)
+                    }
+                  />
+                  <Atributo v1={ehAbsolutoV1(personagem)}
+                    nome="REFLEXOS"
+                    valor={personagem.atributos.reflexos}
+                    onChange={(valor) => atualizarAtributo("reflexos", valor)}
+                  />
+                  <Atributo v1={ehAbsolutoV1(personagem)}
+                    nome="VONTADE"
+                    valor={personagem.atributos.vontade}
+                    onChange={(valor) => atualizarAtributo("vontade", valor)}
+                  />
+                  <Atributo nome="DESTINO" especial onRoll={rolarDestino} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="abs-heading"><div className="abs-portrait-stage"><HopeWhispers resource={personagem.esperanca} messages={personagem.esperancaMensagens}/><img className="abs-portrait-symbol" src="/simbolo-absoluto.png" alt="" aria-hidden="true"/><div
+                    className={`profile-wrapper profile-editavel ${estadoSanidadePerfil} ${estadoEsperancaPerfil} ${
                       temRitoAtivo ? "rito-ativo-perfil" : ""
                     } ${ritoDesativando ? "rito-desativando" : ""} ${
                       sanidadeSaindo ? "sanidade-saindo" : ""
                     } ${esperancaSaindo ? "esperanca-saindo" : ""}`}
                     title="Clique para trocar a foto de perfil"
                   >
+                    <div className={`portrait-condition ${condicoesRetrato}`}>
                     <label
                       className="profile-upload-label"
                       htmlFor="foto-perfil-input"
@@ -6411,134 +6388,22 @@ const FichaPersonagem = () => {
                       onChange={atualizarFotoPerfil}
                     />
 
-                    <div className="profile-overlay"></div>
-                  </div><div className="sanidade-completa">
-                    <div className="nivel-acima-sanidade">
-                      <span className="nivel-label">NÍVEL</span>
-                      <span className="nivel-valor">
-                        {personagem.nivel || 1}
-                      </span>
-                    </div>
-
-                    <div className="barra-recurso-rpg sanidade-barra">
-                      <div className="barra-rpg-header">
-                        <span className="barra-rpg-label">Sanidade</span>
-                        <button
-                          type="button"
-                          className="barra-btn barra-btn-menos"
-                          onClick={() => ajustarSanidade(-1)}
-                        >
-                          −
-                        </button>
-                        <span className="barra-rpg-valores">
-                          <CampoNumeroEditavel
-                            type="number"
-                            valor={personagem.sanidade.atual}
-                            onConfirmar={atualizarSanidade}
-                            className="barra-rpg-input atual"
-                            min="0"
-                            max={personagem.sanidade.max}
-                          />
-                          <span className="barra-rpg-sep">/</span>
-                          <CampoNumeroEditavel
-                            type="number"
-                            valor={personagem.sanidade.max}
-                            onConfirmar={(valor) =>
-                              setPersonagem((prev) => ({
-                                ...prev,
-                                sanidade: {
-                                  ...prev.sanidade,
-                                  max: Math.max(0, valor),
-                                },
-                              }))
-                            }
-                            className="barra-rpg-input max"
-                            min="0"
-                          />
-                        </span>
-                        <button
-                          type="button"
-                          className="barra-btn barra-btn-mais"
-                          onClick={() => ajustarSanidade(1)}
-                        >
-                          +
-                        </button>
-                      </div>
-                      <div className="barra-rpg-track">
-                        <div
-                          className="barra-rpg-fill sanidade-fill"
-                          style={{
-                            width: `${personagem.sanidade.max > 0 ? Math.min(100, (personagem.sanidade.atual / personagem.sanidade.max) * 100) : 0}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="barra-recurso-rpg esperanca-barra">
-                      <div className="barra-rpg-header">
-                        <span className="barra-rpg-label esperanca-label">
-                          Esperança
-                        </span>
-                        <button
-                          type="button"
-                          className="barra-btn barra-btn-menos esperanca-btn"
-                          onClick={() => ajustarEsperanca(-1)}
-                        >
-                          −
-                        </button>
-
-                        <span className="barra-rpg-valores">
-                          <CampoNumeroEditavel
-                            type="number"
-                            valor={personagem.esperanca.atual}
-                            onConfirmar={atualizarEsperanca}
-                            className="barra-rpg-input atual esperanca-input"
-                            min="0"
-                            max={personagem.esperanca.max}
-                          />
-                          <span className="barra-rpg-sep">/</span>
-                          <CampoNumeroEditavel
-                            type="number"
-                            valor={personagem.esperanca.max}
-                            onConfirmar={(valor) =>
-                              setPersonagem((prev) => ({
-                                ...prev,
-                                esperanca: {
-                                  ...prev.esperanca,
-                                  max: Math.max(0, valor),
-                                },
-                              }))
-                            }
-                            className="barra-rpg-input max esperanca-input"
-                            min="0"
-                          />
-                        </span>
-                        <button
-                          type="button"
-                          className="barra-btn barra-btn-mais esperanca-btn"
-                          onClick={() => ajustarEsperanca(1)}
-                        >
-                          +
-                        </button>
-                      </div>
-                      <div className="barra-rpg-track-esperanca-track">
-                        <div
-                          className="barra-rpg-fill esperanca-fill"
-                          style={{
-                            width: `${personagem.esperanca.max > 0 ? Math.min(100, (personagem.esperanca.atual / personagem.esperanca.max) * 100) : 0}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                    {ehAbsolutoV1(personagem) && <AbsolutoMedo personagem={personagem} setPersonagem={atualizacao => { revisaoRecursosRef.current += 1; setPersonagem(atualizacao); }} />}
-                  </div>
+                    <div className="profile-overlay"></div></div>{Number(personagem.medo)>0 && <RitoCracks portrait medo={personagem.medo}/>}
+                    <SanityStatic resource={personagem.sanidade} portrait/>
+                    <SanityZeroSymbol resource={personagem.sanidade} hopeResource={personagem.esperanca} membros={personagem.membros}/><HopeVoid resource={personagem.esperanca} portrait/>
+                  </div></div><AbsolutoResources personagem={personagem} setPersonagem={atualizacao=>{revisaoRecursosRef.current+=1;setPersonagem(atualizacao);}} onSanity={atualizarSanidade} onHope={atualizarEsperanca} onSanityStep={ajustarSanidade} onHopeStep={ajustarEsperanca} showFear={ehAbsolutoV1(personagem)}/>
                   <div className="abs-level"><span>NÍVEL</span><strong>{personagem.nivel || 1}</strong></div></div>
+        </div>
         <div className="abs-masthead-bottom"><div><button type="button" onClick={abrirUpgradeNivel}>Evolução ↗</button><button type="button" onClick={abrirLoja}>Arsenal ↗</button><button type="button" onClick={()=>{window.location.href=montarUrlFicha(personagem,fichaId,"?upgrade=1&trilha=criacao");}}>Criar habilidade ↗</button></div></div>
       </header>
       {adaptacaoAberta && <AdaptacaoEspiral personagem={personagem} fichaId={fichaId} onClose={() => setAdaptacaoAberta(false)} onConcluir={sheet => { localStorage.setItem(`espiral:sheet:v1:${fichaId}`, JSON.stringify(sheet)); window.location.href=`/?sistema=espiral&ficha=${encodeURIComponent(fichaId)}`; }} />}
-      <nav className="menu-ficha-flutuante" aria-label="Atalhos da ficha">
+      <nav className="menu-ficha-flutuante ficha-drawer-menu" aria-label="Atalhos da ficha">
         {menuFichaAberto && (
-          <div className="menu-ficha-opcoes"><RefazerFicha sistema="darkness" id={fichaId} sheet={personagem}/>
+          <>
+          <div className="ficha-drawer-backdrop" aria-hidden="true" onClick={() => { setMenuFichaAberto(false); menuFichaGatilhoRef.current?.focus(); }} />
+          <div className="menu-ficha-opcoes ficha-drawer" id="ficha-atalhos-sidebar" role="dialog" aria-modal="true" aria-label="Menu da ficha" ref={menuFichaPainelRef}>
+            <header className="ficha-drawer-header"><div><small>REGISTRO DE CAMPO</small><h2>Menu da ficha</h2></div><button type="button" aria-label="Recolher sidebar" onClick={() => { setMenuFichaAberto(false); menuFichaGatilhoRef.current?.focus(); }}><Icon path={mdiClose} size={1}/></button></header>
+            <RefazerFicha sistema="darkness" id={fichaId} sheet={personagem}/>
             <PlayerPageLink className="abs-player-profile-link" id={fichaId} sistema="darkness"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></svg><span>Perfil do Jogador</span><span className="abs-profile-arrow" aria-hidden="true">↗</span></PlayerPageLink>
             <div className="menu-ficha-identidade">
               {personagem.fotoPerfil && <img src={personagem.fotoPerfil} alt="" />}
@@ -6571,10 +6436,13 @@ const FichaPersonagem = () => {
               <span>Mapa</span>
             </button>
           </div>
+          </>
         )}
         <button
           type="button"
           className={`menu-ficha-gatilho${menuFichaAberto ? " aberto" : ""}`}
+          ref={menuFichaGatilhoRef}
+          aria-controls={menuFichaAberto ? "ficha-atalhos-sidebar" : undefined}
           aria-expanded={menuFichaAberto}
           aria-label={menuFichaAberto ? "Fechar menu da ficha" : "Abrir menu da ficha"}
           title={menuFichaAberto ? "Fechar menu" : "Abrir menu"}
@@ -6648,54 +6516,6 @@ const FichaPersonagem = () => {
       {/* Container Principal: Perfil + Atributos + Sidebar */}
       <div className="main-content">
         {/* ... (seu conteúdo existente permanece igual) ... */}
-        <div className="profile-section">
-          <div className="profile-container">
-            {temMarcaPendente && (
-              <button
-                className="marca-pendente-btn"
-                onClick={() => abrirModalMarca(marcasPendentes[0])}
-              >
-                ✦ Escolher seu Destino
-              </button>
-            )}
-            {/* Coluna do Centro: Atributos em Linha */}
-            <div className="atributoCompleto">
-              <div className="atributos-coluna">
-                <div className="atributos-linha">
-                  <Atributo v1={ehAbsolutoV1(personagem)}
-                    nome="FORÇA"
-                    valor={personagem.atributos.forca}
-                    onChange={(valor) => atualizarAtributo("forca", valor)}
-                  />
-                  <Atributo v1={ehAbsolutoV1(personagem)}
-                    nome="FORTITUDE"
-                    valor={personagem.atributos.fonitude}
-                    onChange={(valor) => atualizarAtributo("fonitude", valor)}
-                  />
-                  <Atributo v1={ehAbsolutoV1(personagem)}
-                    nome="INTELIGÊNCIA"
-                    valor={personagem.atributos.inteligencia}
-                    onChange={(valor) =>
-                      atualizarAtributo("inteligencia", valor)
-                    }
-                  />
-                  <Atributo v1={ehAbsolutoV1(personagem)}
-                    nome="REFLEXOS"
-                    valor={personagem.atributos.reflexos}
-                    onChange={(valor) => atualizarAtributo("reflexos", valor)}
-                  />
-                  <Atributo v1={ehAbsolutoV1(personagem)}
-                    nome="VONTADE"
-                    valor={personagem.atributos.vontade}
-                    onChange={(valor) => atualizarAtributo("vontade", valor)}
-                  />
-                  <Atributo nome="DESTINO" especial onRoll={rolarDestino} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Coluna da Direita: Sidebar com Abas */}
         <div className="sidebar-container">
           <div className="sidebar-abas" role="group" aria-label="Seções da ficha Absoluto">
@@ -6741,7 +6561,6 @@ const FichaPersonagem = () => {
             >
               Personalização
             </button>
-            <button className={`aba-btn ${abaAtiva === 'regras' ? 'ativa' : ''}`} onClick={() => setAbaAtiva('regras')}>Regras</button>
           </div>
 
           <div className="sidebar-conteudo">{conteudoAbas[abaAtiva]}</div>
@@ -6863,13 +6682,17 @@ const FichaPersonagem = () => {
             </div>
           )}
           {/* MODAL DE ROLAGEM */}
-          {modalRolagem && (
+          {modalRolagem && createPortal(
+            <div className="ficha-container abs-roll-portal" style={{display:'contents'}}>
             <div
-              className="modal-rolagem-overlay"
+              className={`modal-rolagem-overlay abs-roll-view${rolagemFechando?' is-closing':''}`}
               onClick={() => !rolandoDados && fecharModalRolagem()}
             >
               <div
                 className="modal-rolagem"
+                role="dialog"
+                aria-modal="true"
+                aria-label={`Rolagem: ${modalRolagem.titulo}`}
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="modal-rolagem-topo">
@@ -6907,7 +6730,7 @@ const FichaPersonagem = () => {
                                     rolandoDados ? "rolando" : ""
                                   }`}
                                 >
-                                  <span>{rolandoDados ? "?" : dado.valor}</span>
+                                  <RollDieOutline sides={dado.faces}/><span>{rolandoDados ? "?" : dado.valor}</span>
                                 </div>
                               ),
                             )}
@@ -6938,6 +6761,7 @@ const FichaPersonagem = () => {
         dado-rolagem
         d${dado.faces}
         ${rolandoDados ? "rolando" : ""}
+        ${!rolandoDados && modalRolagem.versaoRegras === "1.0" && modalRolagem.tipo === "teste" ? modalRolagem.dadosExitos?.[index] ? "is-success" : "is-failure" : ""}
         ${
           !rolandoDados &&
           modalRolagem.tipo !== "dano" &&
@@ -6947,7 +6771,7 @@ const FichaPersonagem = () => {
         }
       `}
                       >
-                        <span>{rolandoDados ? "?" : dado.valor}</span>
+                        <RollDieOutline sides={dado.faces}/><span>{rolandoDados ? "?" : dado.valor}</span>
                       </div>
                     ))}
                   </div>
@@ -6958,7 +6782,7 @@ const FichaPersonagem = () => {
                     {modalRolagem.versaoRegras === '1.0' && modalRolagem.tipo === 'teste' ? <>
                       <div className="resultado-rolagem"><span>Êxitos / DT {modalRolagem.dt}</span><strong>{modalRolagem.exitos}</strong></div>
                       <div className="bonus-finais"><span>Finais: {modalRolagem.finais}</span></div>
-                      <div className="total-rolagem"><span>Resultado</span><strong>{modalRolagem.critico ? 'Crítico' : modalRolagem.sucesso ? 'Sucesso' : 'Falha'}</strong></div>
+                      <div className="total-rolagem"><span>Resultado</span><strong>{modalRolagem.falhaCritica ? 'Falha crítica' : modalRolagem.critico ? 'Crítico' : modalRolagem.sucesso ? 'Sucesso' : 'Falha'}</strong></div>
                       <button type="button" className="fechar-rolagem" disabled={modalRolagem.repetida || modalRolagem.esforco || modalRolagem.danoResolvido || personagem.esperanca.atual < 2} onClick={() => rolarDominioV1(modalRolagem.chaveDominio, modalRolagem)}>Última Tentativa · 2 Esperança</button>
                     </> : modalRolagem.tipo === "dano" ? (
                       <div className="total-rolagem">
@@ -7017,6 +6841,7 @@ const FichaPersonagem = () => {
                 )}
               </div>
             </div>
+            </div>, document.body
           )}
         </div>
         {modalAberto && (
@@ -7115,9 +6940,9 @@ const Atributo = ({ nome, valor, especial = false, onRoll, v1 = false }) => {
   const dado = v1 ? mdiDiceD6 : calcularDadoAtributo(valor);
 
   return (
-    <div className={`atributoCompleto${especial ? " atributo-destino" : ""}`}>
+    <div className={`atributoCompleto${especial ? " atributo-destino" : ""}${v1 && !especial ? " atributo-reserva-v1" : ""}`}>
       <div className="atributo-dado">
-        <Icon path={especial ? mdiDiceD20 : dado} size={2} />
+        {v1 && !especial ? <AttributeDicePool name={nome} value={valor}/> : <Icon path={especial ? mdiDiceD20 : dado} size={2} />}
       </div>
 
       <div className="atributo-item">
@@ -7133,7 +6958,7 @@ const Atributo = ({ nome, valor, especial = false, onRoll, v1 = false }) => {
             >
               ROLAR 1D20
             </button>
-          ) : (
+          ) : v1 ? null : (
             <NumberInput
               type="number"
               value={valor}
@@ -7303,9 +7128,6 @@ const MembroControle = ({
 };
 
 export default FichaPersonagem;
-
-
-
 
 
 

@@ -1,0 +1,9 @@
+/* Esperança zero: luz esvaída e vinheta lenta, sem interferir nos controles. */
+.abs-hope-void{position:fixed;inset:0;z-index:3;pointer-events:none;user-select:none;background:radial-gradient(ellipse at 50% 42%,transparent 28%,#0004 63%,#000b 100%);opacity:.65;animation:abs-hope-fade 9s ease-in-out infinite}
+.abs-hope-void.is-portrait{position:absolute;z-index:3;background:radial-gradient(ellipse at 50% 38%,transparent 12%,#0007 62%,#000e 100%);box-shadow:inset 0 -25px 35px #000b}
+.abs-portrait-stage:has(.abs-hope-void) .profile-upload-label{filter:grayscale(1) brightness(.65);transition:filter 1s ease}
+.abs-portrait-stage .abs-sanity-zero-symbol.is-hopeless>img{animation:abs-hope-symbol-fade 9s ease-in-out infinite;filter:grayscale(1) brightness(.85) drop-shadow(0 0 3px #ffffff40)}
+.abs-portrait-stage .abs-sanity-zero-symbol.is-hopeless>.abs-sanity-symbol-echo{display:none}
+@keyframes abs-hope-fade{0%,100%{opacity:.5}50%{opacity:.9}}
+@keyframes abs-hope-symbol-fade{0%,100%{opacity:.45}50%{opacity:.8}}
+@media(prefers-reduced-motion:reduce){.abs-hope-void,.abs-portrait-stage .abs-sanity-zero-symbol.is-hopeless>img{animation:none}}

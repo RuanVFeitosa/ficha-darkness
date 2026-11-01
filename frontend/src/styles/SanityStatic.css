@@ -1,0 +1,38 @@
+/* Visible grain, shared by the page and the portrait. */
+.abs-sanity-static{position:fixed;inset:0;z-index:5;pointer-events:none;overflow:hidden;opacity:0;animation:abs-static-burst var(--static-cycle) linear infinite}
+.abs-sanity-static>span{position:absolute;inset:-30%;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.32 .6' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23n)' d='M0 0h180v180H0z'/%3E%3C/svg%3E");background-repeat:repeat;filter:grayscale(1);animation:abs-static-grain .24s steps(1,end) infinite}
+.abs-sanity-static>span{filter:grayscale(1) contrast(5);background-size:540px 360px;image-rendering:pixelated}
+.abs-sanity-static::after{content:"";position:absolute;inset:-30%;background:repeating-linear-gradient(0deg,transparent 0 7px,#0008 7px 10px,transparent 10px 19px,#ffffff60 19px 22px,transparent 22px 47px),linear-gradient(0deg,transparent 35%,#ffffff50 36%,#0009 39%,transparent 44%,transparent 71%,#ffffff35 72%,transparent 76%);opacity:.55;animation:abs-static-bands 1.8s steps(1,end) infinite}
+.abs-sanity-static.is-portrait{position:absolute;z-index:3}
+.abs-portrait-stage .profile-wrapper .profile-upload-label,
+.abs-portrait-stage .abs-sanity-static.is-portrait{
+ -webkit-mask-image:linear-gradient(to right,transparent,#000 16%,#000 84%,transparent),linear-gradient(to bottom,transparent,#000 12%,#000 80%,transparent);
+ -webkit-mask-composite:source-in;
+ mask-image:linear-gradient(to right,transparent,#000 16%,#000 84%,transparent),linear-gradient(to bottom,transparent,#000 12%,#000 80%,transparent);
+ mask-composite:intersect;
+}
+.abs-sanity-static.is-continuous{animation:none;opacity:var(--static-strength)}
+.abs-portrait-stage .profile-wrapper{position:relative;isolation:isolate}
+.absoluto-dossier .abs-portrait-stage .profile-wrapper:is(.sanidade-metade,.sanidade-critico,.sanidade-zero,.sanidade-saindo)::before{content:none!important;animation:none!important}
+.abs-portrait-stage:has(.abs-sanity-zero-symbol)>.abs-portrait-symbol{visibility:hidden}
+.abs-portrait-stage:has(.abs-sanity-zero-symbol) .profile-upload-label{filter:brightness(.65)}
+.abs-sanity-zero-symbol{position:absolute;inset:0;z-index:4;pointer-events:none;mix-blend-mode:screen;animation:abs-symbol-appear .6s ease-out both}
+.abs-portrait-stage .abs-sanity-zero-symbol>img{position:absolute;inset:-25%;width:150%!important;height:150%!important;max-width:none!important;max-height:none!important;margin:0;object-fit:contain;object-position:center;opacity:1;filter:brightness(1.5) sepia(.35) drop-shadow(0 0 4px #decf9faa);animation:abs-symbol-glitch 2.4s steps(1,end) infinite}
+.abs-sanity-zero-symbol>.abs-sanity-symbol-echo{opacity:0;filter:sepia(1) hue-rotate(140deg);animation:abs-symbol-echo 2.4s steps(1,end) infinite}
+@keyframes abs-symbol-appear{from{opacity:0}to{opacity:1}}
+@keyframes abs-symbol-glitch{0%,26%,36%,66%,77%,86%,96%,100%{transform:none;clip-path:inset(0);opacity:1}28%,68%,88%{transform:translate(2px,-1px);clip-path:inset(8% 0 18%);opacity:.8}31%,71%,91%{transform:translate(-2px,1px);clip-path:inset(0);opacity:1}34%,74%,94%{transform:translateX(1px);clip-path:inset(20% 0 6%)}}
+@keyframes abs-symbol-echo{0%,26%,36%,66%,77%,86%,96%,100%{opacity:0;transform:none}28%,31%,68%,71%,88%,91%{opacity:.4;transform:translateX(-3px);clip-path:inset(38% 0 46%)}34%,74%,94%{opacity:.3;transform:translateX(3px);clip-path:inset(64% 0 19%)}}
+@media(prefers-reduced-motion:reduce){.abs-sanity-zero-symbol,.abs-sanity-zero-symbol>img{animation:none}.abs-sanity-zero-symbol>.abs-sanity-symbol-echo{display:none}}
+@keyframes abs-static-burst{0%,76%,100%{opacity:0}81%,95%{opacity:var(--static-strength)}}
+@keyframes abs-static-grain{0%{transform:translate(0,0)}25%{transform:translate(8%,-7%)}50%{transform:translate(-6%,9%)}75%{transform:translate(5%,4%)}}
+@keyframes abs-static-bands{0%{transform:translateY(-8%)}25%{transform:translateY(12%)}50%{transform:translateY(-16%)}75%{transform:translateY(5%)}}
+@media(prefers-reduced-motion:reduce){.abs-sanity-static{animation:none;opacity:calc(var(--static-strength)*.5)}.abs-sanity-static>span,.abs-sanity-static::after{animation:none}}
+
+
+
+
+/* Morrendo: símbolo vermelho com batimento duplo e intenso. */
+.abs-portrait-stage .abs-sanity-zero-symbol.is-dying>img{filter:brightness(0) saturate(100%) invert(19%) sepia(99%) saturate(5751%) hue-rotate(350deg) brightness(105%) contrast(118%) drop-shadow(0 0 7px #ff172f);animation:abs-dying-heartbeat 1.25s ease-in-out infinite;transform-origin:center}
+.abs-portrait-stage .abs-sanity-zero-symbol.is-dying>.abs-sanity-symbol-echo{display:none}
+@keyframes abs-dying-heartbeat{0%,38%,100%{transform:scale(.95);opacity:.65}10%{transform:scale(1.13);opacity:1}19%{transform:scale(1);opacity:.85}27%{transform:scale(1.09);opacity:1}48%{transform:scale(.95);opacity:.65}}
+@media(prefers-reduced-motion:reduce){.abs-portrait-stage .abs-sanity-zero-symbol.is-dying>img{animation:none;opacity:1}}

@@ -8,8 +8,9 @@ const CardHabilidadeRecolhivel = ({
     selo,
     acao,
     onEditar,
+    uso,
   }) => {
-    const [aberto, setAberto] = useState(classeExtra.includes("arquetipo"));
+    const [aberto, setAberto] = useState(false);
 
     const reading=useAbilityReading();
     const descricaoId = React.useId();
@@ -54,6 +55,7 @@ const CardHabilidadeRecolhivel = ({
 
         {habilidade.edicaoPendente && <p className="ability-edit-pending">Edição aguardando aprovação do mestre. Versão atual mantida.</p>}
         {!habilidade.edicaoPendente && habilidade.ultimaEdicao && <p className="ability-edit-pending">Última edição {habilidade.ultimaEdicao.status=== 'aprovada'?'aprovada':'recusada pelo mestre'}.</p>}
+        {uso}
         <div id={descricaoId} className="habilidade-expandivel-corpo" aria-hidden={!aberto}>
           <AbilityDocument habilidade={{...habilidade,descricao}}/>
         </div>

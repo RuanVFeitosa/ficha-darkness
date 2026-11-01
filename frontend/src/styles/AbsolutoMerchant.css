@@ -1,0 +1,825 @@
+.loja-page.absoluto-merchant {
+  --abs-gold: #cbb77c;
+  --abs-line: #cbb77c30;
+  background: #090a08;
+  color: #e5dfce;
+}
+.absoluto-merchant .abs-store-hero {
+  position: relative;
+  isolation: isolate;
+  height: 410px;
+  overflow: hidden;
+  border-bottom: 1px solid #cbb77c65;
+}
+.abs-store-background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 45%;
+  filter: brightness(0.65) saturate(0.65);
+  z-index: -3;
+}
+.abs-store-hero-shade {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(90deg, #070905ed 0%, #10120ba6 38%, transparent 80%),
+    linear-gradient(0deg, #06070550, transparent 60%);
+}
+.abs-store-filter {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+.abs-store-helena {
+  position: absolute;
+  bottom: 55px;
+  left: 57%;
+  width: 350px;
+  height: 350px;
+  object-fit: contain;
+  object-position: bottom;
+  filter: url(#helena-white-key);
+  z-index: 1;
+  pointer-events: none;
+}
+.abs-store-glass {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 105px;
+  object-fit: cover;
+  object-position: center;
+  z-index: 3;
+  pointer-events: none;
+  filter: brightness(0.62) saturate(0.65);
+  border-top: 1px solid #d8c99e60;
+}
+.abs-store-hero-copy {
+  position: relative;
+  z-index: 2;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 115px 32px 110px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.abs-store-hero-copy > span {
+  font:
+    9px "Courier New",
+    monospace;
+  letter-spacing: 2px;
+  color: #d7c696;
+}
+.abs-store-hero-copy h1 {
+  font:
+    clamp(34px, 4vw, 58px)/1.05 Georgia,
+    serif;
+  color: #f0e6c8;
+  margin: 18px 0;
+}
+.abs-store-hero-copy p {
+  max-width: 400px;
+  font:
+    13px/1.8 Arial,
+    sans-serif;
+  color: #bdb9a6;
+}
+.absoluto-merchant .loja-voltar {
+  z-index: 5;
+  left: max(32px, calc((100% - 1376px) / 2));
+  top: 24px;
+  background: #090b09a8;
+  border-color: #cbb77c50;
+  color: #e0d0a0;
+}
+.loja-page.absoluto-merchant .loja-shell {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px 32px 70px;
+  box-sizing: border-box;
+}
+.absoluto-merchant .loja-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px;
+  background: #10110d;
+  border: 1px solid var(--abs-line);
+  border-radius: 0;
+  margin-bottom: 24px;
+}
+.absoluto-merchant .loja-categoria {
+  padding: 13px 16px;
+  border: 0;
+  background: none;
+  color: #aaa68e;
+  font:
+    10px "Courier New",
+    monospace;
+  box-shadow: none;
+  border-radius: 0;
+}
+.absoluto-merchant .loja-categoria.ativa,
+.absoluto-merchant .loja-categoria:hover {
+  background: #cbb77c;
+  color: #11130d;
+}
+.absoluto-merchant .ritos-subabas {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin: 12px 0 22px;
+}
+.absoluto-merchant .ritos-subabas button {
+  background: transparent;
+  border: 1px solid var(--abs-line);
+  color: #aaa68e;
+  border-radius: 0;
+  font:
+    10px "Courier New",
+    monospace;
+}
+.absoluto-merchant .ritos-subabas button.ativa {
+  color: #e6d5a1;
+  border-color: #cbb77c;
+  background: #cbb77c12;
+}
+.abs-store-catalog-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  border-bottom: 1px solid var(--abs-line);
+  padding-bottom: 20px;
+  margin-bottom: 22px;
+}
+.abs-store-catalog-heading h2 {
+  font:
+    30px Georgia,
+    serif;
+  color: #e8dfc6;
+  margin: 0;
+}
+.abs-store-catalog-heading label {
+  display: grid;
+  gap: 6px;
+  font:
+    9px "Courier New",
+    monospace;
+  color: #a59c7a;
+}
+.abs-store-catalog-heading input {
+  box-sizing: border-box;
+  width: 240px;
+  max-width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--abs-line);
+  background: #10110d;
+  color: #e5dfce;
+  font:
+    12px Arial,
+    sans-serif;
+  border-radius: 0;
+}
+.loja-page.absoluto-merchant .loja-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.5fr);
+  gap: 0 36px;
+  align-items: start;
+}
+.absoluto-merchant .merchant-list {
+  background: none;
+  border-color: var(--abs-line);
+  top: 20px;
+}
+.absoluto-merchant .merchant-list-heading {
+  color: #9d9577;
+}
+.absoluto-merchant .merchant-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 76px;
+  padding: 12px 10px;
+  border: 0;
+  border-top: 1px solid #cbb77c20;
+  background: none;
+  box-shadow: none;
+  color: #c6c0ad;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0;
+}
+.absoluto-merchant .merchant-row.selected {
+  background: #cbb77c14;
+  box-shadow: inset 2px 0 #cbb77c;
+}
+.absoluto-merchant .merchant-row:hover {
+  background: #cbb77c09;
+}
+.absoluto-merchant .merchant-row-name {
+  min-width: 0;
+  font:
+    17px/1.3 Georgia,
+    serif;
+}
+.absoluto-merchant .merchant-row-name small {
+  color: #928b71;
+}
+.absoluto-merchant .merchant-row-icon {
+  color: #b8ad8a;
+  flex-basis: 50px;
+}
+.absoluto-merchant .merchant-row-icon img {
+  width: 44px;
+  height: 36px;
+  object-fit: contain;
+}
+.absoluto-merchant .merchant-row-stat {
+  font:
+    12px "Courier New",
+    monospace;
+  color: #cfbd86;
+}
+.absoluto-merchant .merchant-row-arrow {
+  color: #cfbd86;
+}
+.absoluto-merchant .merchant-inspection {
+  grid-column: 2;
+  grid-row: 1;
+  background: none;
+  border-color: var(--abs-line);
+}
+.absoluto-merchant .merchant-inspection header {
+  color: #a39773;
+  text-transform: uppercase;
+}
+.absoluto-merchant .merchant-display {
+  background: radial-gradient(ellipse, #cbb77c0c, transparent 70%), #10110d;
+  border: 1px solid var(--abs-line);
+  box-shadow: none;
+}
+.absoluto-merchant .merchant-display:after {
+  display: none;
+}
+.absoluto-merchant .merchant-display-object {
+  rotate: 0deg;
+  color: #c8bb96;
+}
+.absoluto-merchant .merchant-display-object img {
+  width: 75%;
+  height: 80%;
+  object-fit: contain;
+  filter: sepia(0.5);
+}
+.absoluto-merchant .merchant-display-label {
+  color: #a89b76;
+}
+.absoluto-merchant .merchant-item-title {
+  border-color: var(--abs-line);
+}
+.absoluto-merchant .merchant-item-title h2 {
+  color: #eee4c8;
+}
+.absoluto-merchant .merchant-item-title button {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex: none;
+  padding: 12px 18px;
+  border: 1px solid #cbb77c70;
+  background: none;
+  color: #dccb98;
+  font:
+    11px "Courier New",
+    monospace;
+  cursor: pointer;
+  border-radius: 0;
+}
+.absoluto-merchant .merchant-item-title button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.absoluto-merchant .merchant-specification h3,
+.absoluto-merchant .merchant-specification dt {
+  color: #a8a08a;
+  border-color: var(--abs-line);
+}
+.absoluto-merchant .merchant-specification p {
+  color: #c1bcaa;
+}
+.absoluto-merchant .merchant-specification dd {
+  color: #dfd2a9;
+  overflow-wrap: anywhere;
+  text-transform: none;
+}
+.absoluto-merchant .merchant-specification dl > div {
+  border-color: #cbb77c20;
+}
+.loja-page.absoluto-merchant .loja-carrinho {
+  grid-column: 2;
+  grid-row: 2;
+  position: static;
+  margin-top: 12px;
+  background: #10110d;
+  border: 1px solid var(--abs-line);
+  box-shadow: none;
+  border-radius: 0;
+}
+.absoluto-merchant .loja-carrinho-topo {
+  background: none;
+  border-color: var(--abs-line);
+}
+.absoluto-merchant .loja-carrinho-topo strong,
+.absoluto-merchant .loja-total strong {
+  color: #dac68a;
+}
+.absoluto-merchant .loja-finalizar {
+  background: #cbb77c;
+  color: #10120d;
+  border-color: #cbb77c;
+  border-radius: 0;
+}
+.absoluto-merchant .loja-finalizar:disabled {
+  background: #22251b;
+  color: #747765;
+  border-color: #393b30;
+}
+.abs-store-upgrades {
+  grid-column: 1/-1;
+  min-width: 0;
+}
+.abs-store-empty {
+  padding: 20px;
+  font:
+    12px/1.7 Arial,
+    sans-serif;
+  color: #a59d84;
+}
+@media (max-width: 1000px) {
+  .loja-page.absoluto-merchant .loja-layout {
+    grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.3fr);
+    gap: 0 22px;
+  }
+  .absoluto-merchant .merchant-row-icon {
+    flex-basis: 32px;
+  }
+  .absoluto-merchant .merchant-row-name {
+    font-size: 15px;
+  }
+  .abs-store-helena {
+    left: auto;
+    right: 6%;
+  }
+  .abs-store-hero-copy {
+    padding-left: 28px;
+  }
+  .abs-store-hero-copy p {
+    max-width: 300px;
+  }
+}
+@media (max-width: 700px) {
+  .absoluto-merchant .abs-store-hero {
+    height: 360px;
+  }
+  .abs-store-hero-copy {
+    padding: 95px 20px 110px;
+    max-width: none;
+  }
+  .abs-store-hero-copy h1 {
+    font-size: 34px;
+    max-width: 240px;
+  }
+  .abs-store-hero-copy p {
+    max-width: 190px;
+    font-size: 11px;
+  }
+  .abs-store-helena {
+    height: 280px;
+    width: 280px;
+    right: -30px;
+    bottom: 55px;
+    opacity: 0.85;
+  }
+  .abs-store-glass {
+    height: 80px;
+  }
+  .loja-page.absoluto-merchant .loja-shell {
+    padding: 22px 16px 50px;
+  }
+  .loja-page.absoluto-merchant .loja-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .absoluto-merchant .merchant-list {
+    width: 100%;
+    max-height: 300px;
+    position: static;
+  }
+  .absoluto-merchant .merchant-inspection,
+  .loja-page.absoluto-merchant .loja-carrinho {
+    width: 100%;
+  }
+  .abs-store-catalog-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .abs-store-catalog-heading label,
+  .abs-store-catalog-heading input {
+    width: 100%;
+  }
+  .absoluto-merchant .merchant-specification {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .absoluto-merchant .merchant-item-title h2 {
+    font-size: 25px;
+  }
+  .absoluto-merchant .merchant-display {
+    height: 240px;
+  }
+  .absoluto-merchant .loja-categoria {
+    padding: 12px;
+    font-size: 9px;
+  }
+  .absoluto-merchant .merchant-inspection header small {
+    display: none;
+  }
+  .absoluto-merchant .merchant-row-icon {
+    flex-basis: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .absoluto-merchant .merchant-inspection-content {
+    animation: none;
+  }
+}
+
+/* The shop surrounds the whole catalogue; Helena stands behind the counter. */
+.loja-page.absoluto-merchant {
+  position: relative;
+  isolation: isolate;
+  background:
+    linear-gradient(#080a07bd, #080a07e8),
+    var(--abs-store-background) center/cover fixed;
+  padding-bottom: 180px;
+}
+.absoluto-merchant .abs-store-hero {
+  height: 210px;
+  border-bottom: 1px solid #cbb77c30;
+  background: transparent;
+  overflow: visible;
+}
+.absoluto-merchant .abs-store-background,
+.absoluto-merchant .abs-store-hero-shade {
+  display: none;
+}
+.absoluto-merchant .abs-store-hero-copy {
+  padding: 90px 32px 20px;
+}
+.absoluto-merchant .abs-store-hero-copy h1 {
+  font-size: 40px;
+  margin: 12px 0;
+}
+.absoluto-merchant .abs-store-hero-copy p {
+  max-width: none;
+  margin: 0;
+}
+.absoluto-merchant .abs-store-merchant-stage {
+  height: 290px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 0;
+  background: radial-gradient(ellipse at 50% 70%, #cbb77c18, transparent 70%);
+}
+.absoluto-merchant .abs-store-merchant-stage .abs-store-helena {
+  left: 50%;
+  right: auto;
+  bottom: -45px;
+  transform: translateX(-50%);
+  height: 340px;
+  width: 340px;
+  max-width: none;
+  opacity: 1;
+  object-fit: contain;
+  filter: url(#helena-white-key);
+}
+.absoluto-merchant .merchant-list,
+.absoluto-merchant .merchant-inspection {
+  background: #080a07c9;
+}
+.absoluto-merchant .merchant-specification,
+.absoluto-merchant .merchant-item-title {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+.absoluto-merchant .merchant-display {
+  height: 240px;
+  background: #10110dee;
+}
+.absoluto-merchant .merchant-display-object {
+  width: 80%;
+  height: 80%;
+  min-height: 0;
+  overflow: hidden;
+}
+.absoluto-merchant .merchant-display-object > img,
+.absoluto-merchant .merchant-display-object > svg {
+  width: 90% !important;
+  height: 90% !important;
+  max-width: 100% !important;
+  max-height: 190px !important;
+  object-fit: contain;
+}
+.absoluto-merchant .abs-store-glass.abs-store-counter {
+  position: fixed;
+  z-index: 40;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: clamp(100px, 17vw, 190px);
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  box-shadow: 0 -12px 30px #0008;
+  filter: brightness(0.75) saturate(0.7);
+}
+@media (max-width: 700px) {
+  .absoluto-merchant .abs-store-hero {
+    height: 230px;
+  }
+  .absoluto-merchant .abs-store-hero-copy {
+    padding: 85px 20px 20px;
+  }
+  .absoluto-merchant .abs-store-hero-copy h1 {
+    font-size: 32px;
+    max-width: none;
+  }
+  .absoluto-merchant .abs-store-hero-copy p {
+    font-size: 12px;
+    max-width: 100%;
+  }
+  .absoluto-merchant .abs-store-merchant-stage {
+    height: 240px;
+  }
+  .absoluto-merchant .abs-store-merchant-stage .abs-store-helena {
+    width: 280px;
+    height: 280px;
+    bottom: -35px;
+  }
+  .loja-page.absoluto-merchant {
+    padding-bottom: 120px;
+  }
+  .absoluto-merchant .abs-store-glass.abs-store-counter {
+    height: 100px;
+  }
+}
+
+/* Use the supplied scene intact: Helena on the right, the counter in front. */
+.loja-page.absoluto-merchant {
+  background: #12140f;
+  padding-bottom: 190px;
+}
+.absoluto-merchant .abs-store-scene {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100dvh;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+}
+.abs-store-scene-shade {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    #05070582 0%,
+    #05070550 48%,
+    transparent 72%
+  );
+}
+.loja-page.absoluto-merchant .loja-shell {
+  width: 66%;
+  max-width: 1200px;
+  margin: 0 0 0 3%;
+  padding: 24px 24px 70px;
+  background: #080a079c;
+  border: 1px solid #cbb77c25;
+  backdrop-filter: blur(5px);
+}
+.absoluto-merchant .abs-store-hero {
+  height: 200px;
+  width: 66%;
+  border: 0;
+}
+.absoluto-merchant .abs-store-hero-copy {
+  padding: 85px 0 20px;
+  margin-left: calc(4.5vw + 10px);
+}
+.absoluto-merchant .abs-store-hero-copy p {
+  max-width: 500px;
+  text-shadow: 0 2px 4px #000;
+}
+.absoluto-merchant .loja-voltar {
+  left: calc(4.5vw + 10px);
+}
+.loja-page.absoluto-merchant .loja-layout {
+  grid-template-columns: minmax(180px, 0.85fr) minmax(0, 1.3fr);
+  gap: 0 20px;
+}
+.absoluto-merchant .merchant-row-name {
+  font-size: 15px;
+}
+.absoluto-merchant .merchant-row-icon {
+  flex-basis: 30px;
+}
+.absoluto-merchant .merchant-row-stat {
+  font-size: 11px;
+}
+.absoluto-merchant .merchant-display {
+  height: 230px;
+}
+.absoluto-merchant .merchant-item-title {
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.absoluto-merchant .merchant-item-title h2 {
+  font-size: 26px;
+}
+.absoluto-merchant .merchant-specification {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1100px) {
+  .loja-page.absoluto-merchant .loja-shell {
+    width: 70%;
+    margin-left: 2%;
+    padding: 20px 16px 50px;
+  }
+  .loja-page.absoluto-merchant .loja-layout {
+    grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.2fr);
+    gap: 0 14px;
+  }
+  .absoluto-merchant .merchant-row {
+    gap: 8px;
+    padding: 10px 7px;
+  }
+  .absoluto-merchant .merchant-row-icon {
+    display: none;
+  }
+  .absoluto-merchant .merchant-row-name {
+    font-size: 14px;
+  }
+}
+@media (max-width: 700px) {
+  .absoluto-merchant .abs-store-scene {
+    object-position: 70% center;
+  }
+  .abs-store-scene-shade {
+    background: #05070555;
+  }
+  .absoluto-merchant .abs-store-hero {
+    height: 230px;
+    width: 100%;
+  }
+  .absoluto-merchant .abs-store-hero-copy {
+    padding: 85px 20px 20px;
+    margin: 0;
+  }
+  .absoluto-merchant .loja-voltar {
+    left: 20px;
+  }
+  .loja-page.absoluto-merchant .loja-shell {
+    width: calc(100% - 24px);
+    margin: 0 12px;
+    padding: 18px 12px 35px;
+    background: #080a07d9;
+  }
+  .loja-page.absoluto-merchant .loja-layout {
+    display: flex;
+  }
+  .absoluto-merchant .merchant-row-icon {
+    display: grid;
+  }
+  .loja-page.absoluto-merchant {
+    padding-bottom: 130px;
+  }
+}
+
+/* Independent scenery layers keep the counter spanning the entire viewport. */
+.loja-page.absoluto-merchant {
+  --counter-height: clamp(130px, 22vh, 240px);
+  padding-bottom: calc(var(--counter-height) + 35px);
+}
+.absoluto-merchant .abs-store-shopkeeper {
+  position: fixed;
+  right: 0;
+  bottom: calc(var(--counter-height) - clamp(120px, 12vw, 250px));
+  z-index: 2;
+  width: 40vw;
+  height: 130vh;
+  max-width: 7080px;
+  object-fit: contain;
+  object-position: right bottom;
+  filter: url(#helena-white-key);
+  pointer-events: none;
+}
+.absoluto-merchant .abs-store-glass.abs-store-counter {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: var(--counter-height);
+  object-fit: cover;
+  object-position: center;
+  filter: brightness(0.85) saturate(0.85);
+  pointer-events: none;
+}
+@media (max-width: 700px) {
+  .loja-page.absoluto-merchant {
+    --counter-height: 110px;
+  }
+  .absoluto-merchant .abs-store-shopkeeper {
+    width: 76vw;
+    height: 64vh;
+    bottom: calc(var(--counter-height) - 23vw);
+    right: -5vw;
+    z-index: -1;
+    opacity: 0.65;
+  }
+  .absoluto-merchant .abs-store-glass.abs-store-counter {
+    height: var(--counter-height);
+  }
+}
+
+.absoluto-merchant .abs-store-shopkeeper {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0;
+}
+
+/* Browse cards first; inspect one item across the full shop workspace. */
+.absoluto-merchant .abs-merchant-catalog{grid-column:1/-1;min-width:0;width:100%}
+.absoluto-merchant .abs-merchant-cards>.merchant-list-heading{padding:10px 0 18px}
+.abs-merchant-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.absoluto-merchant .abs-merchant-card{display:flex;flex-direction:column;gap:14px;min-width:0;padding:16px;background:#0c0e09d9;border:1px solid #cbb77c35;border-radius:5px;color:#ddd3b6;text-align:left;cursor:pointer;box-shadow:none;transition:background .2s,border-color .2s}
+.absoluto-merchant .abs-merchant-card:hover{background:#21251aee;border-color:#cbb77c99}
+.abs-merchant-card-art{display:grid;place-items:center;height:105px;width:100%;color:#c8bb96}
+.absoluto-merchant .abs-merchant-card-art>img,.absoluto-merchant .abs-merchant-card-art>svg{width:80%!important;height:90px!important;max-width:140px;object-fit:contain}
+.abs-merchant-card-name{font:18px/1.3 Georgia,serif;overflow-wrap:anywhere}
+.abs-merchant-card-name small{display:block;font:9px/1.5 'Courier New',monospace;color:#99927a;margin-top:6px}
+.abs-merchant-card-footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font:11px 'Courier New',monospace;color:#baa978;margin-top:auto}
+.abs-merchant-card-footer strong{font-weight:400;color:#e1cc91}
+.abs-merchant-card-action{border-top:1px solid #cbb77c25;padding-top:12px;font:10px 'Courier New',monospace;color:#a79e80}
+.absoluto-merchant .abs-merchant-detail{width:100%;grid-column:auto;grid-row:auto;border:0;background:#080a0790}
+.absoluto-merchant .abs-merchant-back{margin:0 0 16px;padding:10px 12px;border:1px solid #cbb77c50;border-radius:3px;background:#0d100a;color:#d4c293;font:11px 'Courier New',monospace;cursor:pointer}
+.absoluto-merchant .abs-merchant-detail .merchant-display{height:300px}
+.absoluto-merchant .abs-merchant-detail .merchant-display-object>img,.absoluto-merchant .abs-merchant-detail .merchant-display-object>svg{max-height:240px!important}
+.loja-page.absoluto-merchant .loja-layout>.loja-carrinho{grid-column:1/-1;grid-row:auto;width:100%;box-sizing:border-box;margin-top:24px}
+@media(max-width:1100px){.abs-merchant-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+@media(max-width:700px){.abs-merchant-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.absoluto-merchant .abs-merchant-card{padding:12px;gap:10px}.abs-merchant-card-name{font-size:15px}.abs-merchant-card-art{height:80px}.absoluto-merchant .abs-merchant-card-art>img,.absoluto-merchant .abs-merchant-card-art>svg{height:70px!important}.absoluto-merchant .abs-merchant-detail .merchant-display{height:240px}}
+@media(prefers-reduced-motion:reduce){.absoluto-merchant .abs-merchant-card{transition:none}}
+
+/* Compact inspection: weapon on the left, all specifications on the right. */
+.absoluto-merchant .abs-merchant-detail .merchant-inspection-content{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:0 22px;align-items:start}
+.absoluto-merchant .abs-merchant-detail .merchant-inspection-content>header{grid-column:1/-1;padding:8px 0 12px}
+.absoluto-merchant .abs-merchant-detail .merchant-display{grid-column:1;grid-row:2/4;height:280px;align-self:stretch;min-height:220px}
+.absoluto-merchant .abs-merchant-detail .merchant-item-title{grid-column:2;grid-row:2;padding:4px 0 12px;gap:10px;align-items:center}
+.absoluto-merchant .abs-merchant-detail .merchant-item-title h2{font-size:24px;line-height:1.2}
+.absoluto-merchant .abs-merchant-detail .merchant-item-title button{padding:9px 12px}
+.absoluto-merchant .abs-merchant-detail .merchant-specification{grid-column:2;grid-row:3;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;padding:12px 0 0}
+.absoluto-merchant .abs-merchant-detail .merchant-specification h3{font-size:12px;margin:0 0 7px;padding-bottom:6px}
+.absoluto-merchant .abs-merchant-detail .merchant-specification p{font-size:12px;line-height:1.5;margin:0 0 5px}
+.absoluto-merchant .abs-merchant-detail .merchant-specification dl>div{padding:6px 0}
+.absoluto-merchant .abs-merchant-detail .merchant-specification dt{font-size:11px}
+.absoluto-merchant .abs-merchant-detail .merchant-specification dd{font-size:13px}
+.absoluto-merchant .abs-merchant-detail .abs-merchant-back{margin-bottom:8px}
+@media(max-width:700px){.absoluto-merchant .abs-merchant-detail .merchant-inspection-content{grid-template-columns:minmax(0,1fr);gap:0}.absoluto-merchant .abs-merchant-detail .merchant-display{grid-column:1;grid-row:2;height:150px;min-height:0}.absoluto-merchant .abs-merchant-detail .merchant-item-title{grid-column:1;grid-row:3;padding-top:12px}.absoluto-merchant .abs-merchant-detail .merchant-specification{grid-column:1;grid-row:4}.absoluto-merchant .abs-merchant-detail .merchant-display-object>img,.absoluto-merchant .abs-merchant-detail .merchant-display-object>svg{max-height:130px!important}}
+
+/* Give inspection controls and values breathing room inside the panel. */
+.absoluto-merchant .abs-merchant-detail{box-sizing:border-box;padding:18px 24px 22px}
+.absoluto-merchant .abs-merchant-detail .merchant-inspection-content{column-gap:26px}
+.absoluto-merchant .abs-merchant-detail .merchant-specification dl>div{padding-left:2px;padding-right:8px}
+@media(max-width:700px){.absoluto-merchant .abs-merchant-detail{padding:14px 16px 18px}}

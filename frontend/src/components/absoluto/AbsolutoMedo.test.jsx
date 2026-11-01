@@ -7,17 +7,22 @@ function Ficha() {
   const [p,setP]=useState({...criarBaseV1(),medo:5});
   return <><output aria-label="Sanidade">{p.sanidade.atual}</output><AbsolutoMedo personagem={p} setPersonagem={setP}/></>;
 }
-test('a barra compacta aplica Ruptura uma vez por cena e preserva o limite após a Ruptura', () => {
+test('a barra permite alcançar VI e permanecer nele sem bloqueio por cena', () => {
   render(<Ficha/>);
   fireEvent.click(screen.getByRole('button',{name:'Aumentar Medo'}));
-  expect(screen.getByLabelText('Medo atual')).toHaveValue(3);
+  expect(screen.getByLabelText('Medo atual')).toHaveValue(6);
   expect(screen.getByLabelText('Sanidade')).toHaveTextContent('9');
-  fireEvent.click(screen.getByText('Abalado', {selector:'summary > span'}));
+  fireEvent.click(screen.getByText('Aterrorizado', {selector:'summary > span'}));
   fireEvent.click(screen.getByRole('button',{name:'+3 Medo'}));
-  expect(screen.getByLabelText('Medo atual')).toHaveValue(5);
+  expect(screen.getByLabelText('Medo atual')).toHaveValue(6);
   expect(screen.getByLabelText('Sanidade')).toHaveTextContent('9');
   fireEvent.click(screen.getByRole('button',{name:'Nova cena'}));
   fireEvent.click(screen.getByRole('button',{name:'Aumentar Medo'}));
+  expect(screen.getByLabelText('Medo atual')).toHaveValue(6);
+  expect(screen.getByLabelText('Sanidade')).toHaveTextContent('9');
+  fireEvent.click(screen.getByRole('button',{name:'Diminuir Medo'}));
+  fireEvent.click(screen.getByRole('button',{name:'Aumentar Medo'}));
+  expect(screen.getByLabelText('Medo atual')).toHaveValue(6);
   expect(screen.getByLabelText('Sanidade')).toHaveTextContent('4');
 });
 

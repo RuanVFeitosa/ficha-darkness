@@ -18,14 +18,14 @@ export const DOMINIOS = {
   vigor: { nome: 'Vigor', atributo: 'fonitude', descricao: 'Resistir a venenos, sangramento e desgaste físico.' },
 };
 export const REGIOES = {
-  cabeca: { nome: 'Cabeça', base: 3, fator: 1 },
-  pescoco: { nome: 'Pescoço', base: 2, fator: 1 },
-  torso: { nome: 'Tórax', base: 8, fator: 2 },
-  abdomen: { nome: 'Abdômen', base: 6, fator: 1 },
-  bracoDireito: { nome: 'Braço direito', base: 4, fator: 1 },
-  bracoEsquerdo: { nome: 'Braço esquerdo', base: 4, fator: 1 },
-  pernaDireita: { nome: 'Perna direita', base: 5, fator: 1 },
-  pernaEsquerda: { nome: 'Perna esquerda', base: 5, fator: 1 },
+  cabeca: { nome: 'Cabeça', base: 18, fator: 3 },
+  pescoco: { nome: 'Pescoço', base: 14, fator: 3 },
+  torso: { nome: 'Tórax', base: 40, fator: 5 },
+  abdomen: { nome: 'Abdômen', base: 32, fator: 4 },
+  bracoDireito: { nome: 'Braço direito', base: 20, fator: 4 },
+  bracoEsquerdo: { nome: 'Braço esquerdo', base: 20, fator: 4 },
+  pernaDireita: { nome: 'Perna direita', base: 24, fator: 4 },
+  pernaEsquerda: { nome: 'Perna esquerda', base: 24, fator: 4 },
 };
 export const ESCALA_DOMINIO = ['Inexperiente', 'Treinado', 'Especialista', 'Mestre', 'Excepcional', 'Absoluto'];
 export const EXITO_DOMINIO = ['Apenas 6', '5 e 6', '5 e 6; um único 4 adicional', '4, 5 e 6', '4, 5 e 6; um único 3 adicional', '3, 4, 5 e 6'];
@@ -56,7 +56,7 @@ export function criarBaseV1(atributos = atributosIniciais(), dominios = dominios
     esperanca: { atual: recursos.esperanca, max: recursos.esperanca },
     medo: 0, rupturaNaCena: false, esperancaNarrativaSessao: 0,
     existencia: { pontos: 100, gastosAtributos: custoAtributos(normalizados), gastosDominios: custoDominios(dominios) },
-    configuracaoAbsoluto: { limiteDados: LIMITE_DADOS_ABSOLUTO },
+    configuracaoAbsoluto: { limiteDados: LIMITE_DADOS_ABSOLUTO, integridadeFormula:2 },
     // Estes grupos deixam de participar de qualquer cálculo na versão 1.0.
     habilidadesCombate: {}, habilidadesPassivas: {}, habilidadesTemporarias: {},
     vida: { atual: 0, max: 0 },
@@ -98,17 +98,18 @@ export function resolverTeste(dados, dt, dominio) {
   });
   const exitos = dadosExitos.filter(Boolean).length;
   const finais = dados.filter(d => d === 6).length;
-  const sucesso = exitos >= Number(dt);
-  return { dados, dadosExitos, faces: 6, dt: Number(dt), dominio: nivel, exitos, finais, sucesso, critico: sucesso && finais >= 2, total: exitos };
+  const falhaCritica = dados.filter(d => d === 1).length >= 2;
+  const sucesso = !falhaCritica && exitos >= Number(dt);
+  return { dados, dadosExitos, faces: 6, dt: Number(dt), dominio: nivel, exitos, finais, falhaCritica, sucesso, critico: sucesso && finais >= 2, total: exitos };
 }
 
 export function alterarMedo(personagem, variacao) {
   const medo = limitar(Number(personagem.medo || 0) + Number(variacao), 0, 6);
-  if (medo === 6 && !personagem.rupturaNaCena) return {
-    ...personagem, medo: 3, rupturaNaCena: true,
+  if (medo === 6 && Number(personagem.medo || 0) < 6) return {
+    ...personagem, medo: 6, rupturaNaCena: true,
     sanidade: { ...personagem.sanidade, atual: Math.max(0, personagem.sanidade.atual - 5) },
   };
-  return { ...personagem, medo: personagem.rupturaNaCena ? Math.min(5, medo) : medo };
+  return { ...personagem, medo };
 }
 
 export function descansar(personagem) {
@@ -123,7 +124,7 @@ export function recalcularBases(personagem, atributos) {
   const membros = integridadeInicial(atributos.fonitude);
   for (const k of Object.keys(membros)) {
     const anterior = personagem.membros[k];
-    if (anterior) membros[k] = { ...anterior, ...recalcular(anterior, membros[k].max) };
+    if (anterior) membros[k] = { ...anterior, ...recalcular(anterior, membros[k].max), ...(anterior.atual===0 ? {atual:0} : {}) };
   }
   return { ...personagem, atributos, membros, sanidade: recalcular(personagem.sanidade, recursos.sanidade), esperanca: recalcular(personagem.esperanca, recursos.esperanca) };
 }
@@ -151,4 +152,17 @@ export function evoluirV1(personagem, grupo, chave, _custo, destino) {
 
 export function rolarDanoV1(expressao, critico = false, random = Math.random) {
   return { tipo: 'dano', ...rolarDadosAbsoluto(expressao, critico ? [1] : [], random) };
+}
+
+// Apply the new regional formulas once, preserving injuries and exhausted limbs.
+export function atualizarIntegridadeV1(personagem){
+ if(!ehAbsolutoV1(personagem) || personagem.configuracaoAbsoluto?.integridadeFormula===2)return personagem;
+ const membros=integridadeInicial(personagem.atributos?.fonitude);
+ for(const [key,novo] of Object.entries(membros)){
+  const old=personagem.membros?.[key];if(!old)continue;
+  const max=Number(old.max),atual=Number(old.atual);
+  const damage=Number.isFinite(max)&&Number.isFinite(atual) ? Math.max(0,max-atual) : 0;
+  membros[key]={...old,max:novo.max,atual:Number.isFinite(atual)&&atual<=0 ? 0 : Math.max(0,novo.max-damage)};
+ }
+ return {...personagem,membros,configuracaoAbsoluto:{...personagem.configuracaoAbsoluto,integridadeFormula:2}};
 }

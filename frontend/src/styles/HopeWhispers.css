@@ -1,0 +1,44 @@
+.abs-hope-whispers{position:absolute;inset:0;z-index:6;pointer-events:none;user-select:none}
+.abs-hope-whispers>span{position:absolute;left:50%;top:50%;width:max-content;max-width:145px;box-sizing:border-box;padding:7px 11px;border:1px solid #bdbdbd20;border-radius:16px;background:radial-gradient(ellipse,#080808b8,#08080860);transform:translate(-50%,-50%);text-align:center;color:#c1c1c1;font:italic 12px/1.5 Georgia,serif;letter-spacing:.03em;text-shadow:0 2px 5px #000;opacity:0;animation:abs-hope-whisper 24s ease-in-out infinite;animation-delay:var(--whisper-delay)}
+.abs-hope-whispers>span:nth-child(1){left:48%;top:3%}
+.abs-hope-whispers>span:nth-child(2){left:7%;top:27%}
+.abs-hope-whispers>span:nth-child(3){left:94%;top:72%}
+.abs-hope-whispers>span:nth-child(4){left:48%;top:94%}
+.abs-hope-whispers>span:nth-child(5){left:92%;top:24%}
+.abs-hope-whispers>span:nth-child(6){left:9%;top:73%}
+.abs-hope-whispers>span:nth-child(7){left:50%;top:49%}
+@keyframes abs-hope-whisper{0%,33%,100%{opacity:0;translate:-3px 8px}6%{opacity:.85;translate:0 2px}18%{opacity:.9;translate:3px -3px}26%{opacity:.75;translate:0 -7px}}
+@media(max-width:550px){.abs-hope-whispers>span{max-width:105px;padding:5px 8px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.abs-hope-whispers>span{animation:none}.abs-hope-whispers>span:first-child{opacity:.75}}
+
+/* Editor do mestre: escopo próprio para preservar a hierarquia no modal. */
+.mestre-modal-personagem .abs-whispers-editor,
+.abs-whispers-editor{box-sizing:border-box;width:100%;margin:8px 0;border:1px solid #c6af7330;border-radius:8px;background:linear-gradient(120deg,#c6af7308,transparent 65%),#10110f;text-align:left;color:#c9c5ba;overflow:hidden}
+.abs-whispers-editor>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;cursor:pointer;list-style:none;color:#d6c28d}
+.abs-whispers-editor>summary::-webkit-details-marker{display:none}
+.abs-whispers-heading{display:grid;gap:6px}
+.abs-whispers-heading small{font:9px/1.4 'Courier New',monospace;letter-spacing:2px;color:#9e977f}
+.abs-whispers-heading strong{font:20px/1.2 Georgia,serif;font-weight:400}
+.abs-whispers-trigger{display:grid;place-items:center;flex:0 0 28px;height:28px;border:1px solid #c6af7330;border-radius:50%;font:18px Arial,sans-serif;transition:transform .2s}
+.abs-whispers-editor[open] .abs-whispers-trigger{transform:rotate(180deg)}
+.abs-whispers-editor[open]>summary{border-bottom:1px solid #c6af731a}
+.abs-whispers-editor .abs-whispers-content{padding:18px 20px 20px}
+.abs-whispers-editor .abs-whispers-description{max-width:660px;margin:0 0 22px;font:13px/1.7 Arial,sans-serif;color:#a7aa9e}
+.abs-whispers-field-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.abs-whispers-editor .abs-whispers-field-heading label{display:block;margin:0;font:10px/1.5 'Courier New',monospace;letter-spacing:1px;text-transform:uppercase;color:#d1cbb8}
+.abs-whispers-limit{flex-shrink:0;padding:4px 8px;border:1px solid #c6af7325;border-radius:4px;color:#c9bb92;font:10px/1.4 'Courier New',monospace}
+.mestre-modal-personagem .abs-whispers-editor textarea,
+.abs-whispers-editor textarea{display:block;box-sizing:border-box;width:100%;min-height:190px;margin:0;padding:14px 16px;border:1px solid #c6af733d;border-radius:5px;background:#080b08;color:#e0ddce;resize:vertical;font:13px/1.9 'Courier New',monospace;letter-spacing:0;box-shadow:inset 0 2px 8px #0003}
+.mestre-modal-personagem .abs-whispers-editor textarea:focus,
+.abs-whispers-editor textarea:focus{outline:2px solid #c6af7350;outline-offset:2px;border-color:#c6af73;box-shadow:none}
+.abs-whispers-editor textarea::placeholder{color:#646c60}
+.abs-whispers-help{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font:11px/1.6 Arial,sans-serif;color:#858e7d}
+.abs-whispers-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:20px;padding-top:16px;border-top:1px solid #c6af731a}
+.abs-whispers-footer>span{font:11px/1.6 Arial,sans-serif;color:#969b8c}
+.abs-whispers-editor .abs-whispers-footer button{flex-shrink:0;width:auto;min-height:38px;padding:10px 16px;border:1px solid #c6af7360;border-radius:4px;background:#c6af7315;color:#dfcf9f;font:11px 'Courier New',monospace;cursor:pointer;transition:background .2s,border-color .2s}
+.abs-whispers-editor .abs-whispers-footer button:hover:not(:disabled){background:#c6af7328;border-color:#c6af73}
+.abs-whispers-editor .abs-whispers-footer button:disabled{opacity:.45;cursor:default}
+.abs-whispers-editor .is-invalid,.abs-whispers-editor .abs-whispers-error{color:#e7a093}
+.abs-whispers-editor .abs-whispers-error{font:12px/1.6 Arial,sans-serif;margin:12px 0 0}
+.abs-whispers-editor [role=status]{display:block;margin-top:12px;font:12px/1.6 Arial,sans-serif;color:#d6c28d}
+@media(max-width:550px){.abs-whispers-editor>summary{padding:16px}.abs-whispers-editor .abs-whispers-content{padding:16px}.abs-whispers-heading strong{font-size:18px}.abs-whispers-field-heading{align-items:flex-start}.abs-whispers-footer{align-items:stretch;flex-direction:column}.abs-whispers-editor .abs-whispers-footer button{width:100%}}

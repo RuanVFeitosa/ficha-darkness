@@ -1,4 +1,5 @@
-import { proporMigracaoV1 } from '../data/absolutoV1';
+import { proporMigracaoV1, atualizarIntegridadeV1 } from '../data/absolutoV1';
+import {atualizarDanoArma} from '../data/absolutoWeaponDamage';
 
 // Única escala de modificadores do Absoluto: cada efeito concede/retira um dado.
 // Custos, recursos, alcances, durações, níveis e valores de Atributos não são bônus.
@@ -70,10 +71,11 @@ const CAMPOS_PRESERVADOS = new Set(['id','nome','titulo','codigo','fichaId','tip
 
 export function normalizarConteudoAbsoluto(valor, campo = '') {
   if (Array.isArray(valor)) return valor.map(v => normalizarConteudoAbsoluto(v, campo));
-  if (valor && typeof valor === 'object') return Object.fromEntries(Object.entries(valor).map(([k,v]) => [k, CAMPOS_PRESERVADOS.has(k) ? v : normalizarConteudoAbsoluto(v,k)]));
+  if (valor && typeof valor === 'object') return atualizarDanoArma(Object.fromEntries(Object.entries(valor).map(([k,v]) => [k, CAMPOS_PRESERVADOS.has(k) ? v : normalizarConteudoAbsoluto(v,k)])));
   if (typeof valor === 'number' && /^(?:bonus|penalidade)/i.test(campo)) return modificadorParaDado(valor);
   if (typeof valor !== 'string') return valor;
   if (CAMPOS_DANO.has(campo)) {
+    if(campo==='dmg'&&/^\d+d(?:4|6|8|10|12|20|100)(?:[+-]\d+)?$/i.test(valor.replace(/\s/g,'')))return valor.replace(/\s/g,'');
     try { return normalizarFormulaAbsoluto(valor); } catch { return converterTextoAbsoluto(valor); }
   }
   if (/^(?:bonus|penalidade)/i.test(campo)) {
@@ -91,7 +93,7 @@ export function normalizarFichaAbsoluto(personagem) {
   const base = personagem.atributos && (!personagem.versaoRegras || Number(personagem.versaoRegras) < 1)
     ? proporMigracaoV1(personagem)
     : personagem;
-  const atualizado = normalizarConteudoAbsoluto(base);
+  const atualizado = atualizarIntegridadeV1(normalizarConteudoAbsoluto(base));
   if (atualizado.versaoRegras === '1.0') atualizado.configuracaoAbsoluto = { ...atualizado.configuracaoAbsoluto, limiteDados: LIMITE_DADOS_ABSOLUTO };
   return atualizado;
 }

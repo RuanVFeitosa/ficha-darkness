@@ -1,0 +1,47 @@
+.ficha-container .abs-roll-view{background:transparent!important;backdrop-filter:none!important;animation:abs-roll-enter .4s ease both;padding:20px;box-sizing:border-box;overflow-y:auto}
+.ficha-container .abs-roll-view.is-closing{animation:abs-roll-exit .35s ease both;pointer-events:none}
+.ficha-container .abs-roll-view .modal-rolagem{width:min(680px,100%);max-height:calc(100dvh - 40px);overflow-y:auto;box-sizing:border-box;padding:24px 12px;background:none!important;border:0!important;box-shadow:none!important;color:#f1e7cd;text-shadow:0 2px 5px #000,0 0 12px #000;filter:drop-shadow(0 3px 5px #000);border-radius:0}
+.abs-roll-view .modal-rolagem-topo>span{font:9px 'Courier New',monospace;letter-spacing:2px;color:#c7b78f}
+.abs-roll-view .modal-rolagem-topo h3{font:600 20px/1.3 Georgia,serif;margin:9px 0 5px}
+.abs-roll-view .modal-rolagem-topo p{font:12px Arial,sans-serif;color:#bbb;margin:0}
+.ficha-container .abs-roll-view .modal-rolagem-formula{display:block;width:auto;margin:14px auto 18px;padding:0;border:0;background:none;box-shadow:none;font:12px 'Courier New',monospace;color:#cfc4a6}
+.ficha-container .abs-roll-view .dados-rolagem{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin:18px 0}
+.ficha-container .abs-roll-view .dado-rolagem{position:relative;display:block;flex:none;width:clamp(42px,7vw,58px);height:auto;aspect-ratio:1;min-width:0;min-height:0;padding:0;border:0!important;border-radius:0;background:none!important;box-shadow:none!important;clip-path:none!important;transform:none;scale:1;color:#d4c9a9;filter:drop-shadow(0 2px 4px #000)}
+.ficha-container .abs-roll-view .dado-rolagem::before,.ficha-container .abs-roll-view .dado-rolagem::after{display:none!important}
+.ficha-container .abs-roll-view .dado-rolagem .abs-roll-die-outline{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2}
+.abs-roll-die-outline path{opacity:.35;stroke-width:1}
+.ficha-container .abs-roll-view .dado-rolagem>span{position:absolute;inset:0;display:grid;place-items:center;transform:none;padding:0;font:700 clamp(17px,3vw,23px) Arial,sans-serif;color:inherit}
+.ficha-container .abs-roll-view .dado-rolagem.maior{color:#fff0b4;scale:1;filter:drop-shadow(0 0 5px #e1c67a55)}
+.ficha-container .abs-roll-view .dado-rolagem.rolando{animation:abs-die-tumble .45s ease-in-out infinite}
+.ficha-container .abs-roll-view :is(.resultado-rolagem,.bonus-finais,.bonus-rolagem,.total-rolagem,.resultado-alvo-dano){background:none!important;border:0!important;box-shadow:none!important;margin:12px 0;padding:0;color:#d1c5a7}
+.ficha-container .abs-roll-view :is(.resultado-rolagem,.total-rolagem)>span{font:10px 'Courier New',monospace;letter-spacing:1px;color:#bdb6a4}
+.ficha-container .abs-roll-view .resultado-rolagem>strong{font:24px Georgia,serif;color:#f0e5c8}
+.ficha-container .abs-roll-view .total-rolagem>strong{font:700 clamp(26px,5vw,36px) Georgia,serif;color:#f0dc9e}
+.ficha-container .abs-roll-view .bonus-finais{font:11px 'Courier New',monospace;color:#bfb8a6}
+.ficha-container .abs-roll-view .fechar-rolagem{padding:9px 13px;margin:12px 4px 0;border:1px solid #cdbd8640;border-radius:4px;background:#08080870;color:#d9cba9;box-shadow:none;font:10px 'Courier New',monospace;cursor:pointer}
+.abs-roll-view .fechar-rolagem:disabled{opacity:.4;cursor:default}
+.ficha-container .abs-roll-view .cards-alvos-dano{display:flex;flex-wrap:wrap;justify-content:center;gap:20px}
+.ficha-container .abs-roll-view .card-alvo-dano{background:none;border:0;box-shadow:none;padding:10px}
+@keyframes abs-roll-enter{from{opacity:0;translate:0 8px}to{opacity:1;translate:0 0}}
+@keyframes abs-roll-exit{from{opacity:1}to{opacity:0;translate:0 -6px}}
+@keyframes abs-die-tumble{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(8deg) translateY(-5px)}}
+@media(max-width:600px){.ficha-container .abs-roll-view{padding:12px}.ficha-container .abs-roll-view .modal-rolagem{padding:18px 4px}.abs-roll-view .modal-rolagem-topo h3{font-size:18px}}
+@media(prefers-reduced-motion:reduce){.ficha-container .abs-roll-view,.ficha-container .abs-roll-view.is-closing,.ficha-container .abs-roll-view .dado-rolagem.rolando{animation:none}}
+
+/* Restore contrast against the sheet and distinguish each domain die. */
+.ficha-container .abs-roll-view{background:#0009!important;backdrop-filter:blur(3px)!important}
+.ficha-container .abs-roll-view .modal-rolagem{padding:28px 20px;background:radial-gradient(ellipse at top,#24231f,#0b0c0bf7 65%)!important;border:1px solid #d2c39535!important;border-radius:12px;box-shadow:0 18px 70px #000b!important;filter:none}
+.ficha-container .abs-roll-view .dado-rolagem.is-success{color:#9fdbab;filter:drop-shadow(0 0 6px #53ad6b55)}
+.ficha-container .abs-roll-view .dado-rolagem.is-failure{color:#e99696;filter:drop-shadow(0 0 5px #bd515144)}
+.ficha-container .abs-roll-view .dado-rolagem.is-success .abs-roll-die-outline{fill:#2b603b55}
+.ficha-container .abs-roll-view .dado-rolagem.is-failure .abs-roll-die-outline{fill:#6d292944}
+@media(max-width:600px){.ficha-container .abs-roll-view .modal-rolagem{padding:22px 14px}}
+
+/* Portal no body: posição independente da rolagem e dos transforms da ficha. */
+.ficha-container.abs-roll-portal .abs-roll-view{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;margin:0;z-index:99999;overflow:hidden;translate:none;animation:abs-roll-fade-in .25s ease both}
+.ficha-container.abs-roll-portal .abs-roll-view.is-closing{animation:abs-roll-fade-out .25s ease both}
+.ficha-container.abs-roll-portal .abs-roll-view .modal-rolagem{height:min(540px,calc(100dvh - 40px));max-height:calc(100dvh - 40px);margin:0;overflow-y:auto;overscroll-behavior:contain;animation:none;transform:none;scrollbar-width:thin}
+@keyframes abs-roll-fade-in{from{opacity:0}to{opacity:1}}
+@keyframes abs-roll-fade-out{from{opacity:1}to{opacity:0}}
+@media(max-width:600px){.ficha-container.abs-roll-portal .abs-roll-view .modal-rolagem{height:min(540px,calc(100dvh - 24px));max-height:calc(100dvh - 24px)}}
+@media(prefers-reduced-motion:reduce){.ficha-container.abs-roll-portal .abs-roll-view{animation:none}}

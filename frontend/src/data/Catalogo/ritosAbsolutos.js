@@ -1,9 +1,11 @@
+import { custoUsoRito } from '../absolutoCustos';
 import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
 const criarRito = (id, nome, nivelRito, preco, entrega, detalhe) => ({
   id,
   nome,
   categoria: "ritos",
   nivelRito,
+  custoAtivacao: custoUsoRito({nivelRito}),
   preco,
   entrega,
   detalhe,

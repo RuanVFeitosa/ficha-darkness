@@ -1,5 +1,6 @@
 import { DOMINIOS, limitar, quantidadeDados, resolverTeste } from '../data/absolutoV1';
 import { LIMITE_DADOS_ABSOLUTO } from './absolutoModificadores';
+import { bonusHabilidades } from './absolutoHabilidadeUso';
 
 export function executarTesteDominio(personagem, chave, opcoes = {}, random = Math.random) {
   const anterior = opcoes.repetir;
@@ -7,7 +8,7 @@ export function executarTesteDominio(personagem, chave, opcoes = {}, random = Ma
   if (anterior && (anterior.repetida || anterior.esforco || anterior.danoResolvido)) throw new Error('Este teste já foi repetido, usou Esforço Extraordinário ou já teve seu dano resolvido.');
   const custo = anterior ? 2 : opcoes.esforco ? 1 : 0;
   if ((Number(personagem.esperanca?.atual) || 0) < custo) throw new Error('Esperança insuficiente.');
-  const n = anterior ? Math.min(LIMITE_DADOS_ABSOLUTO, anterior.dados.length) : quantidadeDados(personagem, chave, opcoes.vantagem || 0, opcoes.esforco ? 1 : 0, opcoes.contraFonte);
+  const n = anterior ? Math.min(LIMITE_DADOS_ABSOLUTO, anterior.dados.length) : quantidadeDados(personagem, chave, (Number(opcoes.vantagem)||0) + bonusHabilidades(personagem,chave), opcoes.esforco ? 1 : 0, opcoes.contraFonte);
   if (!n) throw new Error('Atributo 0: não é possível realizar um teste convencional.');
   const dominio = anterior ? anterior.dominio : limitar(personagem.dominios?.[chave]);
   const resultado = resolverTeste(Array.from({ length: n }, () => Math.floor(random() * 6) + 1), anterior ? anterior.dt : opcoes.dt || 1, dominio);

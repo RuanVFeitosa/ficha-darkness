@@ -1,0 +1,46 @@
+.ability-use-controls{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;padding:10px 0;margin-top:8px;border-top:1px solid #c6af7325;color:#b8b49d;font:11px/1.5 'Courier New',monospace;cursor:default}.ability-use-controls>span{margin-right:auto}.ability-use-controls strong{color:#dfcf9f}.ability-use-controls small{font:10px/1.6 Arial,sans-serif}.ability-use-controls [role=status]{flex-basis:100%}.ficha-container .ability-use-controls button,.ficha-container .ability-active-effects button{width:auto;min-height:30px;padding:6px 11px;border:1px solid #c6af7350;border-radius:4px;background:transparent;color:#dfcf9f;font:11px 'Courier New',monospace;cursor:pointer}.ability-use-controls button:disabled{opacity:.5;cursor:default}.ability-active-effects{margin:16px 0;padding:16px;border:1px solid #c6af7330;border-radius:5px;color:#b9beab;text-align:left}.ability-active-effects>header{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.ability-active-effects header>div{display:flex;gap:6px;flex-wrap:wrap}.ability-active-effects article{margin-top:12px;padding-top:12px;border-top:1px solid #c6af7320}.ability-active-effects article>div{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap}.ability-active-effects p{font:12px/1.7 Arial,sans-serif!important;text-align:left!important}.ability-active-effects small{display:block;font:11px/1.6 Arial,sans-serif}.ability-effect-pending{color:#d8bc81}.ability-active-effects article>button{margin-top:10px}
+
+/* Alinhamento dos cards de habilidades e do rodapé de uso. */
+.ficha-container.absoluto-dossier .habilidades-grid-cards{align-items:start}
+.ficha-container.absoluto-dossier .habilidades-grid-cards>.habilidade-expandivel{display:flex;flex-direction:column;align-self:start}
+.ficha-container.absoluto-dossier .habilidade-expandivel .habilidade-expandivel-cabecalho{align-items:stretch}
+.ficha-container.absoluto-dossier .habilidade-expandivel .habilidade-expandivel-topo{display:grid;grid-template-columns:minmax(0,1fr) auto 12px;grid-template-rows:auto 1fr;align-content:start;align-items:start;gap:12px 10px;min-height:146px;padding:18px 20px}
+.ficha-container.absoluto-dossier .habilidade-expandivel-topo>div{display:contents}
+.ficha-container.absoluto-dossier .habilidade-expandivel-topo>div>span{grid-column:1;grid-row:1;display:block;margin:0;align-self:center;font:9px/1.6 'Courier New',monospace;letter-spacing:1px;text-align:left}
+.ficha-container.absoluto-dossier .habilidade-expandivel-topo>div>h3{grid-column:1/-1;grid-row:2;min-width:0;margin:0;font:22px/1.3 Georgia,serif;text-align:left;overflow-wrap:break-word;word-break:normal}
+.ficha-container.absoluto-dossier .habilidade-expandivel-topo>strong{grid-column:2;grid-row:1;max-width:112px;margin:0;padding:4px 7px;font:9px/1.6 'Courier New',monospace;text-align:left;overflow-wrap:normal}
+.ficha-container.absoluto-dossier .habilidade-expandivel-topo>.abs-skill-chevron{grid-column:3;grid-row:1;align-self:center;margin:0;padding:0}
+.ficha-container.absoluto-dossier .habilidade-expandivel>.ability-use-controls{box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 12px;width:100%;margin:0;padding:12px 20px;text-align:left}
+.ficha-container.absoluto-dossier .habilidade-expandivel>.ability-use-controls>span{margin:0;font:11px/1.6 'Courier New',monospace;text-align:left}
+.ficha-container.absoluto-dossier .habilidade-expandivel>.ability-use-controls>button{justify-self:end;margin:0;white-space:nowrap}
+.ficha-container.absoluto-dossier .habilidade-expandivel>.ability-use-controls>small{grid-column:1/-1;margin:0;padding:0;text-align:left;line-height:1.6}
+.ficha-container.absoluto-dossier .ability-active-effects>header{align-items:center;text-align:left}
+.ficha-container.absoluto-dossier .ability-active-effects article>div{align-items:baseline;text-align:left}
+@media(max-width:600px){.ficha-container.absoluto-dossier .habilidade-expandivel .habilidade-expandivel-topo{padding:16px;min-height:136px}.ficha-container.absoluto-dossier .habilidade-expandivel>.ability-use-controls{padding:12px 16px}}
+
+.ficha-container.absoluto-dossier .habilidades-workspace{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start;margin-top:18px}
+.habilidades-workspace-cards{min-width:0}
+.habilidades-workspace-efeitos{min-width:0;position:sticky;top:20px}
+.ficha-container .habilidades-workspace-efeitos .ability-active-effects{box-sizing:border-box;width:100%;margin:0;max-height:calc(100dvh - 40px);overflow-y:auto;scrollbar-width:thin}
+.ficha-container .habilidades-workspace-efeitos .ability-active-effects>header{display:grid;gap:12px}
+.habilidades-workspace-efeitos .ability-active-effects header>div{display:flex;flex-wrap:wrap;gap:6px}
+.ficha-container .habilidades-workspace-efeitos .ability-active-effects article>div{display:grid;gap:5px}
+@media(max-width:1050px){.ficha-container.absoluto-dossier .habilidades-workspace{grid-template-columns:minmax(0,1fr) 290px;gap:16px}}
+@media(max-width:760px){.ficha-container.absoluto-dossier .habilidades-workspace{grid-template-columns:minmax(0,1fr)}.habilidades-workspace-efeitos{position:static}.ficha-container .habilidades-workspace-efeitos .ability-active-effects{max-height:none}}
+
+/* A descrição expandida sobrepõe a grade, sem alterar a altura da linha. */
+.ficha-container.absoluto-dossier .habilidades-workspace-cards .habilidade-expandivel{position:relative;overflow:visible!important}
+.ficha-container.absoluto-dossier .habilidades-workspace-cards .habilidade-expandivel.aberto{z-index:60}
+.ficha-container.absoluto-dossier .habilidades-workspace-cards .habilidade-expandivel .habilidade-expandivel-corpo{display:none;position:absolute;top:100%;left:-1px;right:-1px;width:auto;height:auto;min-height:0;max-height:min(420px,50dvh)!important;margin:0;padding:0!important;transform:none;transition:none;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#c6af7360 #10110f}
+.ficha-container.absoluto-dossier .habilidades-workspace-cards .habilidade-expandivel.aberto .habilidade-expandivel-corpo{display:block;opacity:1;padding:18px 20px!important;border:1px solid var(--abs-gold,#c6af73);border-top:1px solid #c6af7330;border-radius:0 0 4px 4px;background:#10110f;box-shadow:0 18px 30px #000b;z-index:1}
+
+/* Mantém o painel montado para animar tanto a entrada quanto a saída. */
+.ficha-container.absoluto-dossier .habilidades-workspace-cards .habilidade-expandivel{z-index:1;transition:border-color .2s,box-shadow .2s,transform .2s,z-index 0s .22s}
+.ficha-container.absoluto-dossier .habilidades-workspace-cards .habilidade-expandivel.aberto{z-index:60;transition-delay:0s}
+.ficha-container.absoluto-dossier .habilidades-workspace-cards .habilidade-expandivel .habilidade-expandivel-corpo{display:block;opacity:0;visibility:hidden;pointer-events:none;padding:18px 20px!important;border:1px solid var(--abs-gold,#c6af73);border-top:1px solid #c6af7330;border-radius:0 0 4px 4px;background:#10110f;box-shadow:0 18px 30px #000b;transform-origin:top center;transform:translateY(-6px) scaleY(.96);clip-path:inset(0 0 100% 0);transition:opacity .2s ease,transform .22s ease,clip-path .22s ease,visibility 0s .22s;z-index:1}
+.ficha-container.absoluto-dossier .habilidades-workspace-cards .habilidade-expandivel.aberto .habilidade-expandivel-corpo{visibility:visible;opacity:1;pointer-events:auto;transform:translateY(0) scaleY(1);clip-path:inset(0 0 0 0);transition-delay:0s}
+@media(prefers-reduced-motion:reduce){.ficha-container.absoluto-dossier .habilidades-workspace-cards .habilidade-expandivel .habilidade-expandivel-corpo{transition:none!important;transform:none}}
+
+.ficha-container.absoluto-dossier .rituais-workspace{margin-top:0}
+.rituais-workspace .rituais-topo{margin-top:0;text-align:left}
+.ficha-container .ability-active-effects .ability-effect-rito,.ficha-container .ability-active-effects .ability-effect-rito :is(strong,p,small){color:#fff}

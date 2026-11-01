@@ -1,4 +1,5 @@
 import RecriacaoRequests from '../components/jogador/RecriacaoRequests';
+import HopeWhispersEditor from '../components/absoluto/HopeWhispersEditor';
 import { isEspiralSheet, salvarFichaEspiral, unirFichasEspiral } from '../services/espiralApi';
 import NumberInput from '../components/ui/NumberInput';
 import { ehAbsolutoV1, REGIOES } from '../data/absolutoV1';
@@ -3619,6 +3620,9 @@ const DashboardMestre = () => {
                     </header>
 
                     {/* ATRIBUTOS */}
+                    <section className="mestre-modal-bloco full">
+                      <HopeWhispersEditor key={fichaSelecionada} messages={personagem.esperancaMensagens} onSave={messages=>salvarFichaSelecionada({esperancaMensagens:messages},'Mensagens de Esperança salvas.',null,true)}/>
+                    </section>
                     <section className="mestre-modal-bloco full">
                       <div className="mestre-modal-linha-topo">
                         <span>Atributos</span>

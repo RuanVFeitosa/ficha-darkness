@@ -40,8 +40,9 @@ function decide(current,body){
    const recalc=(old,max)=>({...old,max,atual:Math.max(0,Math.min(max,max-((Number(old?.max)||0)-(Number(old?.atual)||0))))});
    next.sanidade=recalc(current.sanidade,12+will*2+(Number(current.ajustesRecursosV1?.sanidade)||0));
    next.esperanca=recalc(current.esperanca,6+will+(Number(current.ajustesRecursosV1?.esperanca)||0));
-   const regions={cabeca:[3,1],pescoco:[2,1],torso:[8,2],abdomen:[6,1],bracoDireito:[4,1],bracoEsquerdo:[4,1],pernaDireita:[5,1],pernaEsquerda:[5,1]};
-   next.membros={...current.membros};for(const [key,[base,factor]] of Object.entries(regions))next.membros[key]=recalc(current.membros?.[key],base+fort*factor);
+   const regions={cabeca:[18,3],pescoco:[14,3],torso:[40,5],abdomen:[32,4],bracoDireito:[20,4],bracoEsquerdo:[20,4],pernaDireita:[24,4],pernaEsquerda:[24,4]};
+   next.membros={...current.membros};for(const [key,[base,factor]] of Object.entries(regions))next.membros[key]={...recalc(current.membros?.[key],base+fort*factor),...(current.membros?.[key]?.atual===0 ? {atual:0} : {})};
+   next.configuracaoAbsoluto={...next.configuracaoAbsoluto,integridadeFormula:2};
   }
   next.revisaoRecriacao=(Number(current.revisaoRecriacao)||0)+1;
  }
