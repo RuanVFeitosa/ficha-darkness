@@ -2,6 +2,8 @@ import { mediaStorage, externalizarImagens, r2Configurado } from "./mediaStorage
 import { supabase, supabaseConfigurado, supabaseObrigatorioAusente } from "./supabase";
 import { tipoAudioUpload } from "../utils/audioUpload";
 
+import { normalizeMechanics } from '../utils/specialMechanics';
+
 const colunaAusente = (error, column) => Boolean(error &&
   ["42703", "PGRST204"].includes(error.code) &&
   (String(error.message || "") + " " + String(error.details || "")).includes(column));
@@ -219,6 +221,7 @@ const normalizarCampanha = (campanha, cenas = [], membros = [], tokens = [], rol
   soundpadEstado: campanha.soundpad_estado || { ativos: {} },
   mapas3D: Array.isArray(campanha.mapas_3d) ? campanha.mapas_3d : [],
   clima3D: campanha.clima_3d || null,
+  mecanicasEspeciais: normalizeMechanics(campanha.mecanicas_especiais),
 });
 
 export const buscarCampanhaPorCodigo = async (codigo) => {
@@ -241,6 +244,7 @@ export const buscarCampanhaPorCodigo = async (codigo) => {
       url: await resolverImagemLocal(som.urlPersistida || som.url),
     })));
     const mapas3D = await resolverMapas3DLocais(demo.mapas3D || campanha.mapas_3d || []);
+    campanha.mecanicasEspeciais = normalizeMechanics(demo.mecanicasEspeciais);
     return { ...CAMPANHA_DEMO, ...campanha, modo: demo.modo, combateAtivo: Boolean(demo.combateAtivo), investigacaoAtiva: Boolean(demo.investigacaoAtiva), iniciativas: demo.iniciativas || {}, documentosInvestigacao, midiaAtivaId: demo.midiaAtivaId || null, cenas, membros: demo.membros || MEMBROS_DEMO, tokens, rolagens: demo.rolagens || CAMPANHA_DEMO.rolagens, inimigos: demo.inimigos || [], musicas: demo.musicas || [], musicaEstado: demo.musicaEstado || null, soundpad, soundpadEstado: demo.soundpadEstado || { ativos: {} }, mapas3D, clima3D: demo.clima3D || null, cenaAtiva: cenas.find((cena) => cena.id === demo.cenaAtivaId) || cenas[0] };
   }
 
@@ -467,6 +471,26 @@ export const ordenarCenasCampanha = async (campanhaId, cenas) => {
   const falha = resultados.find((resultado) => resultado.error);
   if (falha?.error) throw falha.error;
   return ordenadas;
+};
+
+export const salvarMecanicasCampanha = async (campanhaId, state, expectedRevision) => {
+  const next = normalizeMechanics(state);
+  if (next.revision !== expectedRevision + 1) throw new Error('Revisão de mecânica inválida.');
+  const conflict = () => Object.assign(new Error('A mecânica mudou em outra janela. Atualize o painel antes de tentar novamente.'), { code: 'MECHANIC_CONFLICT' });
+  if (!supabaseConfigurado || campanhaId === 'demo' || String(campanhaId).startsWith('demo-')) {
+    const demo = carregarDemo(campanhaId);
+    if (normalizeMechanics(demo.mecanicasEspeciais).revision !== expectedRevision) throw conflict();
+    salvarDemo({ ...demo, mecanicasEspeciais: next }, campanhaId);
+    return next;
+  }
+  const { data, error } = await supabase.from('campanhas')
+    .update({ mecanicas_especiais: next })
+    .eq('id', campanhaId).eq('mecanicas_especiais->>revision', String(expectedRevision))
+    .select('mecanicas_especiais').maybeSingle();
+  if (colunaAusente(error, 'mecanicas_especiais')) throw new Error('Aplique a migração mecanicas_especiais_campanha no Supabase para usar este sistema online.');
+  if (error) throw error;
+  if (!data) throw conflict();
+  return normalizeMechanics(data.mecanicas_especiais);
 };
 
 export const atualizarEstadoMusica = async (campanhaId, estado) => {

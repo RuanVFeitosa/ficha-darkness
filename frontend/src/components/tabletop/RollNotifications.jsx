@@ -1,6 +1,24 @@
 import { espiralDiceText } from '../../utils/espiralDice';
 import React,{useEffect,useRef,useState} from 'react';
 import { injurySeverity } from '../../utils/espiralInjuries';
+import '../../styles/RollNotifications.css';
+
+export function mechanicRolls(mechanics) {
+ const rolls=[];
+ for(const event of mechanics?.events || []) {
+  const revolt=event.revolt;
+  if(!revolt) continue;
+  for(const [front,plan] of Object.entries(revolt.plans || {})) {
+   const test=plan.groupTest || revolt.results?.[front]?.test;
+   if(test) rolls.push({id:`mechanic:${event.id}:${revolt.round}:${front}`,autor_nome:test.autor || event.nome || 'Revolta',expressao:test.titulo,resultado:test.exitos,detalhes:{...test,faces:6,versaoRegras:'1.0'}});
+  }
+  for(const [front,state] of Object.entries(revolt.fronts || {})) {
+   const result=state.finalTest, test=result?.test;
+   if(test) rolls.push({id:`mechanic:${event.id}:final:${front}:${JSON.stringify(test.dados)}`,autor_nome:result.author || 'Revolta',expressao:test.titulo,resultado:test.exitos,detalhes:{...test,faces:6,versaoRegras:'1.0'}});
+  }
+ }
+ return rolls;
+}
 export function notificationTitle(roll){
  const detail=roll.detalhes || {};
  if(detail.tipo==='dano') {
@@ -27,6 +45,7 @@ function FloatingRoll({roll}) {
  useEffect(() => {const timer=setTimeout(() => setRolling(false),1200);return () => clearTimeout(timer);},[]);
  const title=notificationTitle(roll);
  return <article className={`tt3-floating-roll ${rolling ? 'is-rolling' : 'is-revealed'}`} aria-label={`Rolagem de ${roll.autor_nome || 'Jogador'}`}>
+  <div className="tt3-roll-author">{roll.autor_nome || 'Jogador'}</div>
   <div className="tt3-floating-dice">{notificationDice(roll).map((die,index) => <div key={index} className={`tt3-floating-die${die.pressure ? ' is-pressure' : ''}`} style={{'--die-delay':`${index*55}ms`}} aria-label={rolling ? 'Dado rolando' : `d${die.sides}: ${die.value}`}>
    <svg viewBox="0 0 100 100" aria-hidden="true"><polygon points={die.sides===4 ? '50,7 95,88 5,88' : die.sides===6 ? '20,12 80,12 92,24 92,80 80,92 20,92 8,80 8,24' : '50,4 94,28 94,74 50,97 6,74 6,28'}/>{die.sides!==6 && die.sides!==4 && <path d="M50 4 24 70 76 70 50 4 M6 28 24 70 50 97 76 70 94 28"/>}</svg>
    <span aria-hidden="true">{rolling ? '?' : die.value}</span>
@@ -34,17 +53,18 @@ function FloatingRoll({roll}) {
   {!rolling && <h2 className={/falha|fracasso/i.test(title) ? 'is-failure' : /sucesso|crítico/i.test(title) ? 'is-success' : ''}>{title}</h2>}
  </article>;
 }
-export default function RollNotifications({rolls=[]}) {
+export default function RollNotifications({rolls=[],mechanics}) {
  const known=useRef(null),timers=useRef([]);
  const [recent,setRecent]=useState([]);
  useEffect(()=>{
-  if(!known.current){known.current=new Set(rolls.map(roll=>roll.id));return;}
-  const fresh=rolls.filter(roll=>!known.current.has(roll.id));
+  const visible=[...rolls,...mechanicRolls(mechanics)];
+  if(!known.current){known.current=new Set(visible.map(roll=>roll.id));return;}
+  const fresh=visible.filter(roll=>!known.current.has(roll.id));
   if(!fresh.length)return;
   fresh.forEach(roll=>known.current.add(roll.id));
   setRecent(previous=>[...fresh,...previous].slice(0,3));
   timers.current.push(setTimeout(()=>setRecent(previous=>previous.filter(roll=>!fresh.some(item=>item.id===roll.id))),7000));
- },[rolls]);
+ },[rolls,mechanics]);
  useEffect(()=>()=>timers.current.forEach(clearTimeout),[]);
  if(!recent.length)return null;
  return <aside className="tt3-roll-popups tt3-transparent-rolls" aria-label="Rolagens recentes" aria-live="polite">{recent.map(roll=><FloatingRoll key={roll.id} roll={roll}/>)}</aside>;

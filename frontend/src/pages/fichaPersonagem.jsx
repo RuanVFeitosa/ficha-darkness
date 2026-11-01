@@ -17,7 +17,7 @@ import NumberInput from '../components/ui/NumberInput';
 import { LIMITE_DADOS_ABSOLUTO, rolarDadosAbsoluto, converterTextoAbsoluto, normalizarFichaAbsoluto } from '../utils/absolutoModificadores';
 
 import AbsolutoDominio from '../components/absoluto/AbsolutoDominio';
-import { executarTesteDominio } from '../utils/absolutoRolagem';
+import { executarTesteAtributo, executarTesteDominio } from '../utils/absolutoRolagem';
 import { ehAbsolutoV1, DOMINIOS, REGIOES, limitar } from '../data/absolutoV1';
 import AdaptacaoEspiral from '../components/adaptacao/AdaptacaoEspiral';
 import { nomesPassivas, ativosParaPassiva, dadosAtivos } from '../data/absolutoAtivos';
@@ -471,6 +471,17 @@ const FichaPersonagem = () => {
   const [, setUltimoSave] = useState(null);
   const [carregado, setCarregado] = useState(false);
   const [seletorMesaAberto, setSeletorMesaAberto] = useState(false);
+  useEffect(() => {
+    if (!seletorMesaAberto) return;
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const fechar = event => { if (event.key === 'Escape') setSeletorMesaAberto(false); };
+    document.addEventListener('keydown', fechar);
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.removeEventListener('keydown', fechar);
+    };
+  }, [seletorMesaAberto]);
   const [menuFichaAberto, setMenuFichaAberto] = useState(false);
   const menuFichaGatilhoRef = useRef(null);
   const menuFichaPainelRef = useRef(null);
@@ -2882,14 +2893,17 @@ const FichaPersonagem = () => {
     }));
   };
 
-  const rolarDominioV1 = async (chave, anterior = null) => {
+  const rolarAtributoV1 = (chave, anterior = null) => rolarTesteV1(chave, anterior, true);
+  const rolarDominioV1 = (chave, anterior = null) => rolarTesteV1(chave, anterior, false);
+  const rolarTesteV1 = async (chave, anterior, atributo) => {
     try {
-      const { rolagem, personagem: atualizado } = executarTesteDominio(personagem, chave, { dt: dtTesteV1, vantagem: modificadorDadosRolagem, esforco: esforcoTesteV1, contraFonte: contraFonteMedo, repetir: anterior });
+      const executar = atributo ? executarTesteAtributo : executarTesteDominio;
+      const { rolagem, personagem: atualizado } = executar(personagem, chave, { dt: dtTesteV1, vantagem: modificadorDadosRolagem, esforco: esforcoTesteV1, contraFonte: contraFonteMedo, repetir: anterior });
       if (atualizado !== personagem) { revisaoRecursosRef.current += 1; setPersonagem(atualizado); }
-      setUltimoTesteV1(rolagem);
+      if (!atributo) setUltimoTesteV1(rolagem);
       abrirRolagemAnimada(rolagem);
       registrarRolagemMestre(rolagem);
-    } catch (error) { await alertarDialogo(error.message, { titulo: 'Teste de Domínio' }); }
+    } catch (error) { await alertarDialogo(error.message, { titulo: atributo ? 'Teste de Atributo' : 'Teste de Domínio' }); }
   };
 
   // Componente para cada habilidade passiva
@@ -6007,48 +6021,25 @@ const FichaPersonagem = () => {
     ),
 
     descricao: (
-      <div className="conteudo-aba personagem-aba">
-        <label className="personagem-label">Descrição</label>
-        <textarea
-          className="textarea-descricao"
-          placeholder="Descreva a aparência, personalidade e detalhes do personagem..."
-          rows="5"
-          value={personagem.descricao || ""}
-          onChange={(e) =>
-            setPersonagem((prev) => ({
-              ...prev,
-              descricao: e.target.value,
-            }))
-          }
-        />
-
-        <label className="personagem-label">Anotação</label>
-        <textarea
-          className="textarea-descricao"
-          placeholder="Anotações rápidas, lembretes e observações importantes..."
-          rows="5"
-          value={personagem.anotacao || ""}
-          onChange={(e) =>
-            setPersonagem((prev) => ({
-              ...prev,
-              anotacao: e.target.value,
-            }))
-          }
-        />
-
-        <label className="personagem-label">História</label>
-        <textarea
-          className="textarea-descricao"
-          placeholder="Escreva a história do personagem..."
-          rows="7"
-          value={personagem.historia || ""}
-          onChange={(e) =>
-            setPersonagem((prev) => ({
-              ...prev,
-              historia: e.target.value,
-            }))
-          }
-        />
+      <div className="conteudo-aba personagem-aba abs-character-dossier">
+        <header className="abs-character-heading">
+          <div><span className="abs-character-kicker">ARQUIVO PESSOAL / ABSOLUTO</span><h2>Dossiê do personagem</h2><p>A presença, as memórias e as marcas de quem você é.</p></div>
+          <span className="abs-character-signature">{personagem.nome || 'Sem nome'}</span>
+        </header>
+        <div className="abs-character-pages">
+          {[
+            { campo: 'descricao', nome: 'Descrição', legenda: 'Presença e personalidade', ajuda: 'Aparência, gestos, traços e detalhes que tornam seu personagem reconhecível.', placeholder: 'Como você é visto? O que sua presença revela — ou esconde?', numero: '01' },
+            { campo: 'anotacao', nome: 'Anotações', legenda: 'Registros de jornada', ajuda: 'Nomes, pistas, promessas e lembretes para a próxima sessão.', placeholder: 'O que você precisa lembrar quando a jornada continuar?', numero: '02' },
+            { campo: 'historia', nome: 'História', legenda: 'Origens e cicatrizes', ajuda: 'De onde você veio, o que perdeu e o que ainda faz você seguir em frente.', placeholder: 'Toda história deixa marcas. Registre aqui a sua...', numero: '03' },
+          ].map(({ campo, nome, legenda, ajuda, placeholder, numero }) => (
+            <section key={campo} className={`abs-character-page abs-character-page--${campo}`} aria-labelledby={`personagem-${campo}-label`}>
+              <header className="abs-character-page-heading"><span className="abs-character-page-number" aria-hidden="true">{numero}</span><div><span className="abs-character-kicker">{legenda}</span><label id={`personagem-${campo}-label`} htmlFor={`personagem-${campo}`}>{nome}</label></div></header>
+              <p id={`personagem-${campo}-help`} className="abs-character-help">{ajuda}</p>
+              <textarea id={`personagem-${campo}`} className="textarea-descricao" aria-describedby={`personagem-${campo}-help`} placeholder={placeholder} rows={campo === 'historia' ? 9 : 6} value={personagem[campo] || ''} onChange={e => setPersonagem(prev => ({ ...prev, [campo]: e.target.value }))}/>
+              <footer className="abs-character-page-footer"><span>{campo === 'historia' ? 'MEMÓRIAS & ORIGENS' : campo === 'anotacao' ? 'NOTAS DE CAMPO' : 'RETRATO ESCRITO'}</span><span>{(personagem[campo] || '').length.toLocaleString('pt-BR')} caracteres</span></footer>
+            </section>
+          ))}
+        </div>
       </div>
     ),
 
@@ -6324,20 +6315,24 @@ const FichaPersonagem = () => {
             )}
             {/* Coluna do Centro: Atributos em Linha */}
             <div className="atributoCompleto">
-              <div className="atributos-coluna">
+              <div className="atributos-coluna abs-attributes-panel">
+                <div className="abs-attributes-heading"><span>ATRIBUTOS</span><small>RESERVA DE DADOS</small></div>
                 <div className="atributos-linha">
                   <Atributo v1={ehAbsolutoV1(personagem)}
                     nome="FORÇA"
+                    onRoll={() => rolarAtributoV1('forca')}
                     valor={personagem.atributos.forca}
                     onChange={(valor) => atualizarAtributo("forca", valor)}
                   />
                   <Atributo v1={ehAbsolutoV1(personagem)}
                     nome="FORTITUDE"
+                    onRoll={() => rolarAtributoV1('fonitude')}
                     valor={personagem.atributos.fonitude}
                     onChange={(valor) => atualizarAtributo("fonitude", valor)}
                   />
                   <Atributo v1={ehAbsolutoV1(personagem)}
                     nome="INTELIGÊNCIA"
+                    onRoll={() => rolarAtributoV1('inteligencia')}
                     valor={personagem.atributos.inteligencia}
                     onChange={(valor) =>
                       atualizarAtributo("inteligencia", valor)
@@ -6345,11 +6340,13 @@ const FichaPersonagem = () => {
                   />
                   <Atributo v1={ehAbsolutoV1(personagem)}
                     nome="REFLEXOS"
+                    onRoll={() => rolarAtributoV1('reflexos')}
                     valor={personagem.atributos.reflexos}
                     onChange={(valor) => atualizarAtributo("reflexos", valor)}
                   />
                   <Atributo v1={ehAbsolutoV1(personagem)}
                     nome="VONTADE"
+                    onRoll={() => rolarAtributoV1('vontade')}
                     valor={personagem.atributos.vontade}
                     onChange={(valor) => atualizarAtributo("vontade", valor)}
                   />
@@ -6394,7 +6391,6 @@ const FichaPersonagem = () => {
                   </div></div><AbsolutoResources personagem={personagem} setPersonagem={atualizacao=>{revisaoRecursosRef.current+=1;setPersonagem(atualizacao);}} onSanity={atualizarSanidade} onHope={atualizarEsperanca} onSanityStep={ajustarSanidade} onHopeStep={ajustarEsperanca} showFear={ehAbsolutoV1(personagem)}/>
                   <div className="abs-level"><span>NÍVEL</span><strong>{personagem.nivel || 1}</strong></div></div>
         </div>
-        <div className="abs-masthead-bottom"><div><button type="button" onClick={abrirUpgradeNivel}>Evolução ↗</button><button type="button" onClick={abrirLoja}>Arsenal ↗</button><button type="button" onClick={()=>{window.location.href=montarUrlFicha(personagem,fichaId,"?upgrade=1&trilha=criacao");}}>Criar habilidade ↗</button></div></div>
       </header>
       {adaptacaoAberta && <AdaptacaoEspiral personagem={personagem} fichaId={fichaId} onClose={() => setAdaptacaoAberta(false)} onConcluir={sheet => { localStorage.setItem(`espiral:sheet:v1:${fichaId}`, JSON.stringify(sheet)); window.location.href=`/?sistema=espiral&ficha=${encodeURIComponent(fichaId)}`; }} />}
       <nav className="menu-ficha-flutuante ficha-drawer-menu" aria-label="Atalhos da ficha">
@@ -6452,13 +6448,16 @@ const FichaPersonagem = () => {
         </button>
       </nav>
 
-      {seletorMesaAberto && (
+      {seletorMesaAberto && createPortal(
         <div
           className="seletor-mesa-overlay"
+          style={{ '--cor-primaria': personagem.temaFicha?.primaria, '--cor-texto': personagem.temaFicha?.texto, '--cor-fundo': personagem.temaFicha?.fundo }}
           onClick={() => setSeletorMesaAberto(false)}
         >
           <section
             className="seletor-mesa-painel"
+            role="dialog"
+            aria-modal="true"
             aria-label="Escolher campanha"
             onClick={(event) => event.stopPropagation()}
           >
@@ -6470,6 +6469,7 @@ const FichaPersonagem = () => {
               <button
                 type="button"
                 title="Fechar"
+                autoFocus
                 onClick={() => setSeletorMesaAberto(false)}
               >
                 <Icon path={mdiClose} size={0.85} />
@@ -6496,11 +6496,11 @@ const FichaPersonagem = () => {
                   </button>
                 ))
               ) : (
-                <p>Esta ficha ainda nao foi adicionada a nenhuma campanha.</p>
+                <p>Esta ficha ainda não foi adicionada a nenhuma campanha.</p>
               )}
             </div>
           </section>
-        </div>
+        </div>, document.body
       )}
 
       <aside
@@ -6783,7 +6783,7 @@ const FichaPersonagem = () => {
                       <div className="resultado-rolagem"><span>Êxitos / DT {modalRolagem.dt}</span><strong>{modalRolagem.exitos}</strong></div>
                       <div className="bonus-finais"><span>Finais: {modalRolagem.finais}</span></div>
                       <div className="total-rolagem"><span>Resultado</span><strong>{modalRolagem.falhaCritica ? 'Falha crítica' : modalRolagem.critico ? 'Crítico' : modalRolagem.sucesso ? 'Sucesso' : 'Falha'}</strong></div>
-                      <button type="button" className="fechar-rolagem" disabled={modalRolagem.repetida || modalRolagem.esforco || modalRolagem.danoResolvido || personagem.esperanca.atual < 2} onClick={() => rolarDominioV1(modalRolagem.chaveDominio, modalRolagem)}>Última Tentativa · 2 Esperança</button>
+                      <button type="button" className="fechar-rolagem" disabled={modalRolagem.repetida || modalRolagem.esforco || modalRolagem.danoResolvido || personagem.esperanca.atual < 2} onClick={() => modalRolagem.chaveAtributo ? rolarAtributoV1(modalRolagem.chaveAtributo, modalRolagem) : rolarDominioV1(modalRolagem.chaveDominio, modalRolagem)}>Última Tentativa · 2 Esperança</button>
                     </> : modalRolagem.tipo === "dano" ? (
                       <div className="total-rolagem">
                         <span>Dano Total</span>
@@ -6942,7 +6942,7 @@ const Atributo = ({ nome, valor, especial = false, onRoll, v1 = false }) => {
   return (
     <div className={`atributoCompleto${especial ? " atributo-destino" : ""}${v1 && !especial ? " atributo-reserva-v1" : ""}`}>
       <div className="atributo-dado">
-        {v1 && !especial ? <AttributeDicePool name={nome} value={valor}/> : <Icon path={especial ? mdiDiceD20 : dado} size={2} />}
+        {v1 && !especial ? <button type="button" className="abs-attribute-roll" onClick={onRoll} aria-label={`Rolar ${nome}`} title={`Rolar ${nome} · Êxitos em 6`}><AttributeDicePool name={nome} value={valor} title={`Rolar ${nome} · Êxitos em 6`}/><span className="abs-attribute-count" aria-hidden="true">{Math.max(0, Math.min(20, Math.floor(Number(valor) || 0)))}<small>d6</small></span></button> : <Icon path={especial ? mdiDiceD20 : dado} size={2} />}
       </div>
 
       <div className="atributo-item">

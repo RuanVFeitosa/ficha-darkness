@@ -12994,6 +12994,7 @@ body {
 }
 
 .seletor-mesa-overlay {
+  box-sizing: border-box;
   position: fixed;
   z-index: 1000;
   inset: 0;
@@ -13002,9 +13003,12 @@ body {
   padding: 18px;
   background: rgba(0, 0, 0, 0.84);
   backdrop-filter: blur(7px);
+  overflow-y: auto;
+  font-family: 'Courier New', monospace;
 }
 
 .seletor-mesa-painel {
+  box-sizing: border-box;
   width: min(460px, 100%);
   max-height: min(620px, calc(100vh - 36px));
   display: grid;

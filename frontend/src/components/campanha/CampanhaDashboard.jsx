@@ -960,7 +960,7 @@ const CampanhaDashboard = () => {
             </div>
             <button type="button" onClick={adicionarMusica}>
               <Icon path={mdiPlaylistMusic} size={0.75} />
-              Adicionar musica
+              Adicionar música
             </button>
           </header>
           <div>
@@ -1014,7 +1014,7 @@ const CampanhaDashboard = () => {
                     />
                   </label>
                   <label>
-                    URL da musica
+                    Link do YouTube
                     <input
                       required
                       type="url"
@@ -1026,7 +1026,7 @@ const CampanhaDashboard = () => {
                     />
                   </label>
                   <label>
-                    URL da capa
+                    Capa personalizada
                     <input
                       type="url"
                       placeholder="Opcional: usa a miniatura do YouTube"
@@ -1037,11 +1037,11 @@ const CampanhaDashboard = () => {
                     />
                   </label>
                 </div>
-                <span>{String(indice + 1).padStart(2, "0")}</span>
+                <span className="campanha-musica-numero">FAIXA {String(indice + 1).padStart(2, "0")}</span>
                 <button
                   type="button"
                   onClick={() => removerMusica(musica.id)}
-                  title="Remover musica"
+                  title={`Remover ${musica.nome || 'música'}`}
                 >
                   <Icon path={mdiDeleteOutline} size={0.72} />
                 </button>
@@ -1050,15 +1050,16 @@ const CampanhaDashboard = () => {
             {!musicas.length && (
               <div className="campanha-playlist-vazia">
                 <Icon path={mdiPlaylistMusic} size={1.3} />
-                <strong>Nenhuma musica adicionada</strong>
+                <strong>A trilha da sua campanha começa aqui</strong>
+                <p>Adicione uma música para dar o tom à próxima sessão.</p>
                 <button type="button" onClick={adicionarMusica}>
-                  Adicionar primeira musica
+                  Adicionar primeira música
                 </button>
               </div>
             )}
           </div>
           <footer>
-            <span>{musicas.length} musica(s)</span>
+            <div className="campanha-playlist-resumo"><strong>{musicas.length} {musicas.length === 1 ? 'música na playlist' : 'músicas na playlist'}</strong><span>Arraste as faixas para ordenar. Salve para aplicar as alterações na campanha.</span></div>
             <button type="submit" disabled={salvando}>
               {salvando ? "Salvando..." : "Salvar playlist"}
             </button>

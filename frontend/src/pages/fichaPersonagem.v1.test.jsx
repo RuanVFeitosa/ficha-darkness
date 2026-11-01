@@ -8,6 +8,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Ficha, { estadoInicial } from './fichaPersonagem';
 import { buscarPersonagem, buscarArvoresHabilidades, salvarPersonagem } from '../services/personagemApi';
 import { criarBaseV1 } from '../data/absolutoV1';
+import { listarCampanhasDaFicha } from '../services/mesaApi';
 
 beforeEach(() => {
   localStorage.clear();
@@ -15,10 +16,57 @@ beforeEach(() => {
   window.matchMedia=jest.fn(() => ({matches:false}));
   jest.spyOn(console,'log').mockImplementation(() => {});
   buscarArvoresHabilidades.mockResolvedValue(null);
+  listarCampanhasDaFicha.mockResolvedValue([]);
   buscarPersonagem.mockResolvedValue({ ...estadoInicial, ...criarBaseV1({forca:1,fonitude:1,inteligencia:3,vontade:1,reflexos:1},{razao:2}), nome:'Lia', inventario:[], rituais:[] });
   salvarPersonagem.mockImplementation(async (id,p) => p);
 });
 afterEach(() => { jest.restoreAllMocks(); delete window.matchMedia; });
+
+test('Mapa abre fora do layout da ficha e fecha com Escape restaurando a rolagem', async () => {
+  const {container} = render(<Ficha/>);
+  fireEvent.click(await screen.findByRole('button',{name:'Abrir menu da ficha'}));
+  fireEvent.click(screen.getByRole('button',{name:'Mapa'}));
+  const dialog = await screen.findByRole('dialog',{name:'Escolher campanha'});
+  expect(container.contains(dialog)).toBe(false);
+  expect(dialog.parentElement.parentElement).toBe(document.body);
+  expect(document.body.style.overflow).toBe('hidden');
+  expect(await screen.findByText('Esta ficha ainda não foi adicionada a nenhuma campanha.')).toBeInTheDocument();
+  expect(listarCampanhasDaFicha).toHaveBeenCalledWith('teste-original');
+  fireEvent.keyDown(document,{key:'Escape'});
+  expect(screen.queryByRole('dialog',{name:'Escolher campanha'})).not.toBeInTheDocument();
+  expect(document.body.style.overflow).not.toBe('hidden');
+});
+
+test('dossiê preserva os textos existentes e salva edições dos três campos', async () => {
+  buscarPersonagem.mockResolvedValue({...estadoInicial,...criarBaseV1(),nome:'Lia',inventario:[],rituais:[],descricao:'Olhos atentos.',anotacao:'Encontrar a chave.',historia:'Veio do norte.'});
+  render(<Ficha/>);
+  fireEvent.click(await screen.findByRole('button',{name:'PERSONAGEM',exact:true}));
+  expect(screen.getByRole('heading',{name:'Dossiê do personagem'})).toBeInTheDocument();
+  for (const [nome, original] of [['Descrição','Olhos atentos.'],['Anotações','Encontrar a chave.'],['História','Veio do norte.']]) {
+    const campo = screen.getByRole('textbox',{name:nome});
+    expect(campo).toHaveValue(original);
+    fireEvent.change(campo,{target:{value:`${original} Novo registro.`}});
+  }
+  await waitFor(()=>expect(salvarPersonagem).toHaveBeenCalledWith('teste-original',expect.objectContaining({descricao:'Olhos atentos. Novo registro.',anotacao:'Encontrar a chave. Novo registro.',historia:'Veio do norte. Novo registro.'})),{timeout:3000});
+});
+
+test('atributos rolam diretamente sem Domínio e Última Tentativa repete o atributo', async () => {
+  jest.spyOn(Math,'random').mockReturnValue(.99);
+  render(<Ficha/>);
+  for (const nome of ['FORÇA','FORTITUDE','INTELIGÊNCIA','REFLEXOS','VONTADE']) {
+    expect(await screen.findByRole('button',{name:`Rolar ${nome}`})).toBeEnabled();
+  }
+  fireEvent.click(screen.getByRole('button',{name:'Rolar INTELIGÊNCIA'}));
+  expect(screen.getByRole('dialog',{name:'Rolagem: Inteligência'})).toBeInTheDocument();
+  expect(screen.getByText('Teste de Atributo')).toBeInTheDocument();
+  expect(screen.getByText('3d6 · Êxitos em 6 · DT 1')).toBeInTheDocument();
+  expect(document.body.querySelectorAll('.modal-rolagem .dado-rolagem')).toHaveLength(3);
+  const repetir = await screen.findByRole('button',{name:'Última Tentativa · 2 Esperança'},{timeout:2500});
+  fireEvent.click(repetir);
+  await waitFor(()=>expect(salvarPersonagem).toHaveBeenCalledWith('teste-original',expect.objectContaining({esperanca:expect.objectContaining({atual:5})})),{timeout:3000});
+  expect(screen.getByText('Teste de Atributo')).toBeInTheDocument();
+  await waitFor(()=>expect(screen.getByRole('button',{name:'Última Tentativa · 2 Esperança'})).toBeDisabled(),{timeout:2500});
+});
 
 test('ficha antiga abre em 1.0 sem botão e salva automaticamente com o original preservado', async () => {
   const antiga = {...estadoInicial, nome:'Lia antiga', atributos:{forca:30,fonitude:20,inteligencia:40,vontade:20,reflexos:10}, habilidadesCombate:{firmeza:3}, inventario:[], rituais:[]};

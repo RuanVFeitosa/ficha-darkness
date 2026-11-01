@@ -1,6 +1,38 @@
 import { registrarRolagem, salvarTokenCustom3D, salvarEstadoToken3D, obterEstadoToken3D, ativarCena, atualizarEstadoMusica, atualizarRevelacaoDocumentoInvestigacao, buscarCampanhaPorCodigo, criarCampanhaMesa, desvincularFicha, excluirCena, listarCampanhas, listarCampanhasDaFicha, moverToken, salvarCena, salvarClima3DCampanha, salvarEvidenciaInterativa, salvarMusicasCampanha, salvarMapas3DCampanha, validarArquivoImagem, vincularFicha } from "./mesaApi";
 
+import { salvarMecanicasCampanha } from './mesaApi';
+import { emptyMechanics, applyMechanicAction } from '../utils/specialMechanics';
+
 describe("biblioteca local da mesa", () => {
+  test('salva e reabre planos, Fôlego e resultados simultâneos da Revolta', async () => {
+    let state = emptyMechanics();
+    for (const action of [
+      { type: 'create', id: 'revolt', kind: 'revolt', config: { name: 'Brasília' } },
+      { type: 'start', id: 'revolt' },
+      ...['popular', 'communications', 'supplies'].map(front => ({ type: 'revoltPlan', id: 'revolt', front, plan: { type: 'regroup' } })),
+      { type: 'revoltLock', id: 'revolt' },
+    ]) {
+      const next = applyMechanicAction(state, action);
+      await salvarMecanicasCampanha('demo', next, state.revision);
+      state = next;
+    }
+    const reopened = (await buscarCampanhaPorCodigo('DARK26')).mecanicasEspeciais;
+    expect(reopened).toEqual(state);
+    expect(reopened.events[0].revolt.fronts.popular.breath).toBe(5);
+    expect(reopened.events[0].revolt.results.supplies.summary).toContain('Reorganizou');
+  });
+  test('mecânicas reabrem com o mesmo estado e recusam gravação de outra janela desatualizada', async () => {
+    const preparado = applyMechanicAction(emptyMechanics(), { type: 'create', kind: 'towerDefense', id: 'td', config: { health: 10 } });
+    await salvarMecanicasCampanha('demo', preparado, 0);
+    const listener = jest.fn();
+    window.addEventListener('darkness:campanha-demo', listener);
+    const ativo = applyMechanicAction(preparado, { type: 'start', id: 'td' });
+    await salvarMecanicasCampanha('demo', ativo, 1);
+    window.removeEventListener('darkness:campanha-demo', listener);
+    expect(listener).toHaveBeenCalled();
+    expect((await buscarCampanhaPorCodigo('DARK26')).mecanicasEspeciais).toEqual(ativo);
+    await expect(salvarMecanicasCampanha('demo', ativo, 1)).rejects.toMatchObject({ code: 'MECHANIC_CONFLICT' });
+  });
   test('texto UV criado no tabletop chega a outro leitor sem imagem enviada ao storage',async()=>{
     await salvarTokenCustom3D('demo','uv-text-map',{id:'text-direct',name:'A verdade será contada',uvText:'A verdade será contada',image:'',uvOnly:true,x:3,z:4,elevation:1},'mestre');
     const received=await buscarCampanhaPorCodigo('DARK26');

@@ -3,6 +3,23 @@ import {render,screen,act} from '@testing-library/react';
 import RollNotifications,{RollHistory,notificationDice,notificationTitle} from './RollNotifications';
 const roll={id:'new',autor_nome:'Victoria',expressao:'1d20',resultado:18};
 
+test('teste da Revolta aparece sobre a cena e não repete ao resolver a rodada',()=>{
+ jest.useFakeTimers();
+ const state={events:[{id:'revolta',revolt:{round:1,plans:{},fronts:{}}}]};
+ const {rerender}=render(<RollNotifications mechanics={state}/>);
+ const test={autor:'Lia',titulo:'Influência',dados:[6,2,6],exitos:2,sucesso:true};
+ const next={events:[{id:'revolta',revolt:{round:1,plans:{popular:{groupTest:test}},fronts:{}}}]};
+ rerender(<RollNotifications mechanics={next}/>);
+ expect(screen.getAllByLabelText('Dado rolando')).toHaveLength(3);
+ act(()=>jest.advanceTimersByTime(1200));
+ expect(screen.getByRole('heading',{name:'Sucesso'})).toBeInTheDocument();
+ rerender(<RollNotifications mechanics={{events:[{...next.events[0],revolt:{...next.events[0].revolt,results:{popular:{test}}}}]}}/>);
+ expect(screen.getAllByLabelText('Rolagem de Lia')).toHaveLength(1);
+ act(()=>jest.advanceTimersByTime(5800));
+ expect(screen.queryByLabelText('Rolagens recentes')).not.toBeInTheDocument();
+ jest.useRealTimers();
+});
+
 test.each([[0,'Sem lesão'],[3,'Lesão Superficial'],[6,'Lesão Moderada'],[9,'Lesão Grave'],[12,'Lesão Crítica'],[13,'Lesão Catastrófica / Fatal']])('dano %s mostra a lesão em vez de sucesso', (total,title)=>{
  expect(notificationTitle({...roll,resultado:total,detalhes:{tipo:'dano',sistema:'espiral',total,outcome:'Sucesso'}})).toBe(title);
 });

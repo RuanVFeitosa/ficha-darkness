@@ -1,0 +1,18 @@
+.tt3-roll-popups.tt3-transparent-rolls{position:absolute;inset:auto 12px 16%;width:auto;max-height:70%;overflow:hidden;display:flex;flex-direction:column;align-items:center;gap:24px;pointer-events:none;z-index:80}
+.tt3-transparent-rolls article.tt3-floating-roll{display:flex;flex-direction:column;gap:8px;align-items:center;padding:0;border:0;background:none;box-shadow:none;pointer-events:none;animation:tt3-floating-roll-fade 7s cubic-bezier(.22,1,.36,1) both}
+.tt3-transparent-rolls .tt3-floating-dice{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;max-width:min(720px,90vw);flex:none}
+.tt3-floating-die{position:relative;width:clamp(34px,4vw,50px);aspect-ratio:1;filter:drop-shadow(0 2px 4px #000);color:#fff3cf}
+.tt3-floating-die svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2}
+.tt3-floating-die svg path{opacity:.35;stroke-width:1}
+.tt3-floating-die span{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(15px,1.7vw,21px);font-weight:800;text-shadow:0 2px 4px #000}
+.tt3-floating-die.is-pressure{color:#ffb68d}
+.tt3-floating-roll.is-rolling .tt3-floating-die{animation:tt3-floating-tumble .38s ease-in-out infinite;animation-delay:var(--die-delay)}
+.tt3-transparent-rolls h2{margin:0;font:600 clamp(18px,2.1vw,27px) Georgia,serif;text-align:center;color:#fff;text-shadow:0 2px 6px #000,0 0 16px #000;animation:tt3-result-reveal .55s cubic-bezier(.22,1,.36,1) both}
+.tt3-transparent-rolls h2.is-success{color:#f3dda0}
+.tt3-transparent-rolls h2.is-failure{color:#f3aaaa}
+@keyframes tt3-floating-tumble{0%,100%{transform:translateY(0) rotate(-12deg) scale(.94)}50%{transform:translateY(-12px) rotate(18deg) scale(1.04)}}
+@media(prefers-reduced-motion:reduce){.tt3-transparent-rolls article.tt3-floating-roll,.tt3-transparent-rolls h2,.tt3-floating-roll.is-rolling .tt3-floating-die{animation:none}}
+
+@keyframes tt3-floating-roll-fade{0%{opacity:0;transform:translateY(10px)}9%{opacity:1;transform:translateY(0)}90%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-8px)}}
+.mesa-2d .tt3-roll-popups.tt3-transparent-rolls{position:fixed;top:50%;bottom:auto;transform:translateY(-50%);max-height:70vh}
+.tt3-transparent-rolls .tt3-roll-author{display:block;flex:none;color:#eee5d0;font:600 14px/1.4 Georgia,serif;text-align:center;text-shadow:0 2px 6px #000,0 0 16px #000}

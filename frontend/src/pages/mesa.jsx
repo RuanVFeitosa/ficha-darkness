@@ -1,4 +1,7 @@
+import RollNotifications from '../components/tabletop/RollNotifications';
 import MasterShield from '../components/tabletop/MasterShield';
+import { SpecialMechanicsBanner, SpecialMechanicsDialog } from '../components/tabletop/SpecialMechanics';
+import RevoltPlayerHUD, { hasActiveRevolt } from '../components/tabletop/RevoltPlayerHUD';
 import NumberInput from '../components/ui/NumberInput';
 import AnimatedScene from '../components/tabletop/AnimatedScene';
 import TabletopSceneEditor from '../components/tabletop/TabletopSceneEditor';
@@ -233,22 +236,6 @@ const eventoMudaApresentacao = (evento, campanha) => {
       (novo.midia_ativa_id || null) !== (campanha?.midiaAtivaId || null))
   );
 };
-const facesDaRolagem = (rolagem) => {
-  const detalhes = rolagem?.detalhes || {};
-  const facesDetalhes = Number(
-    detalhes.faces ||
-      detalhes.dano?.faces ||
-      detalhes.dadosDetalhados?.[0]?.faces,
-  );
-  if (facesDetalhes > 0) return facesDetalhes;
-  return (
-    Number(
-      String(rolagem?.expressao || detalhes.formula || "").match(
-        /d(\d+)/i,
-      )?.[1],
-    ) || 20
-  );
-};
 const corInterfaceDaImagem = (url) =>
   new Promise((resolve, reject) => {
     if (!url) {
@@ -311,6 +298,7 @@ const corInterfaceDaImagem = (url) =>
   });
 
 const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
+  const [mechanicsOpen, setMechanicsOpen] = useState(false);
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const codigo = (params.get("campanha") || "DARK26").toUpperCase();
   const mestre = params.get("papel") === "mestre";
@@ -397,8 +385,6 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
   const [subAbaNpcs, setSubAbaNpcs] = useState("inimigos");
   const [pastasNpcsFechadas, setPastasNpcsFechadas] = useState({});
   const [pastasCenasFechadas, setPastasCenasFechadas] = useState({});
-  const [rolagensPopup, setRolagensPopup] = useState([]);
-  const rolagensConhecidasRef = useRef(null);
   const [corCena, setCorCena] = useState("");
   const [salvandoCombate, setSalvandoCombate] = useState(false);
   const [salvandoInvestigacao, setSalvandoInvestigacao] = useState(false);
@@ -820,21 +806,6 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
     return () => window.removeEventListener("message", receberRolagem);
   }, [campanha?.id, mestre]);
 
-  useEffect(() => {
-    const rolagens = campanha?.rolagens || [];
-    if (!rolagensConhecidasRef.current) {
-      rolagensConhecidasRef.current = new Set(rolagens.map((rolagem) => rolagem.id));
-      return;
-    }
-    const novas = rolagens.filter((rolagem) => !rolagensConhecidasRef.current.has(rolagem.id));
-    if (!novas.length) return;
-    novas.forEach((rolagem) => rolagensConhecidasRef.current.add(rolagem.id));
-    setRolagensPopup((atuais) => [...novas.slice(0, 3), ...atuais].slice(0, 3));
-    const timer = window.setTimeout(() => {
-      setRolagensPopup((atuais) => atuais.filter((rolagem) => !novas.some((nova) => nova.id === rolagem.id)));
-    }, 7000);
-    return () => window.clearTimeout(timer);
-  }, [campanha?.rolagens]);
   const adicionarFicha = async () => {
     const registro = fichasDisponiveis.find(
       (item) => item.fichaId === fichaParaVincular,
@@ -2450,6 +2421,9 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
           : personagemJogador?.temaFicha?.borda || "rgba(212,175,55,.35)",
       }}
     >
+      {!embedded && (mestre || !hasActiveRevolt(campanha.mecanicasEspeciais)) && <SpecialMechanicsBanner state={campanha.mecanicasEspeciais} onOpen={() => setMechanicsOpen(true)}/>}
+      {!embedded && !mestre && !mechanicsOpen && <RevoltPlayerHUD campaign={campanha} playerId={fichaJogadorId} onOpen={() => setMechanicsOpen(true)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))}/>}
+      {mechanicsOpen && <SpecialMechanicsDialog campaign={campanha} master={mestre} playerId={fichaJogadorId} onClose={() => setMechanicsOpen(false)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))}/>}
       <div className={`mesa-transicao ${transicao ? "ativa" : ""}`}>
         <img className="mesa-transicao-simbolo" src="/simbolo-darkness.png" alt=""/>
         <span>
@@ -2473,6 +2447,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
           <i />
           {supabaseConfigurado ? "Ao vivo" : "Demonstracao"}
         </div>
+        <button type="button" className="mesa-cenas-botao" onClick={() => setMechanicsOpen(true)}>Mecânicas especiais</button>
         {mestre && (
           <div className="mesa-ferramentas-mestre">
             <button
@@ -4598,23 +4573,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
           />
         </section>
       )}
-{rolagensPopup.length > 0 && (
-        <aside className="mesa-rolagens-popup" aria-live="polite" aria-label="Rolagens recentes">
-          {rolagensPopup.map((rolagem) => {
-            const faces = facesDaRolagem(rolagem);
-            return (
-              <article key={rolagem.id}>
-                <div>
-                  <span>{rolagem.autor_nome || "Rolagem"}</span>
-                  <small>{rolagem.expressao}</small>
-                </div>
-                <b className={`mesa-resultado-dado d${faces}`}><i>{rolagem.resultado}</i></b>
-                <button type="button" onClick={() => setRolagensPopup((atuais) => atuais.filter((item) => item.id !== rolagem.id))} aria-label="Fechar rolagem">×</button>
-              </article>
-            );
-          })}
-        </aside>
-      )}
+{!embedded && <RollNotifications key={campanha.id} rolls={campanha.rolagens || []} mechanics={campanha.mecanicasEspeciais}/>}
 
       {editorAberto && <TabletopSceneEditor key={editando.id || 'nova'} editando={editando} setEditando={setEditando} arquivos={arquivos} campanha={campanha} nomesPastasCenas={nomesPastasCenas} selecionarArquivosCena={selecionarArquivosCena} alternarJogadorCena={alternarJogadorCena} removerMidiaExistente={removerMidiaExistente} removerArquivoPendente={removerArquivoPendente} atualizarMapaExistente={atualizarMapaExistente} atualizarMapaPendente={atualizarMapaPendente} confirmarCena={confirmarCena} salvando={salvando} erro={erro} onClose={()=>setEditorAberto(false)}/>}
     </main>

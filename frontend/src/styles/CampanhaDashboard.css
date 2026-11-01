@@ -87,3 +87,48 @@
 .campanha-midia-linha.mapa-3d { grid-template-columns:minmax(140px,1fr) minmax(110px,.6fr) 34px }
 .campanha-midia-linha.mapa-3d>label,.campanha-midia-linha.mapa-3d>input:not(:first-child) { display:none }
 .campanha-mapa3d-vinculado { align-self:stretch; display:flex; align-items:center; padding:0 10px; border:1px solid rgba(120,166,173,.28); background:rgba(80,137,146,.08); color:#8fb3b8; font-size:8px; text-transform:uppercase }
+
+/* Campaign soundtrack editor */
+.campanha-playlist-editor { gap:22px; padding:26px 4px; }
+.campanha-playlist-editor>header { padding-bottom:22px; align-items:center; }
+.campanha-playlist-editor>header span { color:#bca776; font-size:9px; letter-spacing:.14em; }
+.campanha-playlist-editor h3 { margin:8px 0; font:normal 32px/1.2 Georgia,serif; }
+.campanha-playlist-editor p { max-width:540px; font:12px/1.7 Arial,sans-serif; color:#a5a295; }
+.campanha-playlist-editor>header button,.campanha-playlist-editor>footer button { min-height:42px; padding:10px 18px; flex-shrink:0; border-radius:3px; font-size:10px; }
+.campanha-playlist-editor>div { gap:14px; }
+.campanha-playlist-editor article { position:relative; grid-template-columns:24px 124px minmax(0,1fr) 36px; gap:18px; padding:22px 18px; border-color:#c8b17a30; border-radius:5px; background:linear-gradient(110deg,#c8b17a08,transparent 70%),#0c0d0c; }
+.campanha-playlist-editor .campanha-musica-capa { width:124px; aspect-ratio:1; border-color:#c8b17a30; border-radius:3px; background:#151712; color:#bca776; }
+.campanha-playlist-editor .campanha-musica-capa img { display:block; }
+.campanha-playlist-editor .campanha-musica-campos { grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; padding-top:22px; }
+.campanha-playlist-editor .campanha-musica-campos label:first-child { grid-column:1/-1; }
+.campanha-playlist-editor .campanha-musica-campos label { gap:7px; color:#aaa694; font:9px/1.5 'Courier New',monospace; letter-spacing:.07em; }
+.campanha-playlist-editor .campanha-musica-campos input { box-sizing:border-box; height:40px; padding:8px 12px; font-size:12px; border-color:#c8b17a30; border-radius:3px; }
+.campanha-playlist-editor .campanha-musica-campos label:first-child input { font-size:14px; }
+.campanha-playlist-editor article>.campanha-musica-numero { position:absolute; top:18px; left:202px; display:block; color:#bca776; font:9px/1.4 'Courier New',monospace; letter-spacing:.12em; }
+.campanha-playlist-editor article>button:not(.campanha-arrastar) { min-height:36px; border-color:#c68a822b; border-radius:3px; align-self:center; }
+.campanha-playlist-editor article>button:not(.campanha-arrastar):hover { background:#c68a8218; border-color:#c68a82; }
+.campanha-playlist-editor .campanha-arrastar { width:24px!important; }
+.campanha-playlist-editor :is(button,input):focus-visible { outline:2px solid #d0bc91; outline-offset:3px; }
+.campanha-playlist-editor>footer { padding:18px 0 0; border-top:1px solid #c8b17a30; }
+.campanha-playlist-resumo { display:grid; gap:7px; }
+.campanha-playlist-resumo strong { color:#d7c9a7; font:12px/1.5 'Courier New',monospace; font-weight:normal; }
+.campanha-playlist-resumo span { color:#8e9183; font:11px/1.6 Arial,sans-serif; }
+.campanha-playlist-editor .campanha-playlist-vazia { min-height:300px; padding:32px 20px; border:1px dashed #c8b17a40; border-radius:5px; background:#c8b17a05; text-align:center; }
+.campanha-playlist-vazia strong { font:normal 22px/1.4 Georgia,serif; }
+@media(max-width:1100px) {
+  .campanha-playlist-editor article { grid-template-columns:22px 96px minmax(0,1fr) 36px; gap:14px; }
+  .campanha-playlist-editor .campanha-musica-capa { width:96px; }
+  .campanha-playlist-editor article>.campanha-musica-numero { left:164px; }
+  .campanha-playlist-editor .campanha-musica-campos { grid-template-columns:minmax(0,1fr); }
+}
+@media(max-width:600px) {
+  .campanha-playlist-editor>header { align-items:flex-start; }
+  .campanha-playlist-editor article { grid-template-columns:24px minmax(0,1fr) 36px; gap:14px; padding:16px; }
+  .campanha-playlist-editor .campanha-musica-capa { grid-column:2; grid-row:1; width:80px; }
+  .campanha-playlist-editor .campanha-arrastar { grid-column:1; grid-row:1; }
+  .campanha-playlist-editor article>button:not(.campanha-arrastar) { grid-column:3; grid-row:1; align-self:start; }
+  .campanha-playlist-editor article>.campanha-musica-numero { left:auto; right:16px; top:76px; font-size:8px; }
+  .campanha-playlist-editor .campanha-musica-campos { grid-column:1/-1; padding-top:0; }
+  .campanha-playlist-editor .campanha-musica-campos input { font-size:16px; }
+  .campanha-playlist-editor>footer { align-items:stretch; flex-direction:column; }
+}

@@ -1,4 +1,6 @@
 import useTabletopTokenSync from '../components/tabletop/useTabletopTokenSync';
+import { SpecialMechanicsBanner, SpecialMechanicsDialog } from '../components/tabletop/SpecialMechanics';
+import RevoltPlayerHUD, { hasActiveRevolt } from '../components/tabletop/RevoltPlayerHUD';
 import {sharedCustomToken} from '../utils/sharedCustomToken';
 import PlayerUVControls from '../components/tabletop/PlayerUVControls';
 import {tokenFlashlight,playerFlashlightPatch,flashlightModeActive,toggleFlashlightMode} from '../utils/flashlightAccess';
@@ -939,6 +941,7 @@ export class SceneBoundary extends Component {
   const tokenFileRef=useRef(null);
   const [hudPanel,setHudPanel]=useState(null);
   const [sessionOpen,setSessionOpen]=useState(false);
+  const [mechanicsOpen,setMechanicsOpen]=useState(false);
   const [playerCameraDistance,setPlayerCameraDistance]=useState(()=>{try{return normalizePlayerDistance(JSON.parse(localStorage.getItem(PLAYER_CAMERA_DISTANCE_KEY)||'1.5'));}catch{return 1.5;}});
   useEffect(()=>{if(!mestre)localStorage.setItem(PLAYER_CAMERA_DISTANCE_KEY,JSON.stringify(playerCameraDistance));},[playerCameraDistance,mestre]);
   const [cameraMotion,setCameraMotion]=useState(()=>{try{return normalizeCameraMotion(JSON.parse(localStorage.getItem(CAMERA_MOTION_KEY)||'null'));}catch{return normalizeCameraMotion(null);}});
@@ -1120,6 +1123,7 @@ export class SceneBoundary extends Component {
     const current=campaignRef.current;
     const row=event?.table === "campanhas" ? event.new : null;
     const demoState=event?.detail?.estado || null;
+    if (row?.mecanicas_especiais || demoState?.mecanicasEspeciais) setCampaign(previous => previous ? { ...previous, mecanicasEspeciais: row?.mecanicas_especiais || demoState.mecanicasEspeciais } : previous);
     const realtimeState=row ? {
       mode:row.modo,
       sceneId:row.cena_ativa_id,
@@ -1376,6 +1380,7 @@ export class SceneBoundary extends Component {
     setNotice("Token removido do tabletop.");
   };
   const toggleHudPanel = (panel) => {
+    if (panel === 'mechanics') { setMechanicsOpen(value => !value); setHudPanel(null); setSessionOpen(false); return; }
     if(!mestre && ["scene","scenes","audio","soundpad"].includes(panel)) return;
     if(["audio","evidence","initiative","session","soundpad","participants","npcs","scenes","combat","investigation","dashboard","shop"].includes(panel) || (panel==="notes" && mestre)) {
       setSessionTool(panel);setSessionRequest(value => value+1);setSessionOpen(current => sessionTool===panel ? !current : true);setHudPanel(null);setTokenPanelOpen(false);return;
@@ -1553,6 +1558,9 @@ export class SceneBoundary extends Component {
 
       {mobile && !hudHidden && <button type="button" className="tt3-mobile-menu-button" aria-label="Ferramentas" aria-expanded={mobileMenu} onClick={() => setMobileMenu(value => !value)}>☰</button>}
       {mobile && !hudHidden && !staticScene && <MobileTabletopControls enabled={!hudPanel && !tokenPanelOpen && !sessionOpen} onMoveStart={() => {if(mestre) setMasterFocusId(null);}}/>}
+      {(mestre || !hasActiveRevolt(campaign?.mecanicasEspeciais)) && <SpecialMechanicsBanner state={campaign?.mecanicasEspeciais} onOpen={() => setMechanicsOpen(true)}/>}
+      {!mestre && !mechanicsOpen && <RevoltPlayerHUD campaign={campaign} playerId={routeParams.get('sistema')==='espiral' ? `espiral:${playerSheetId}` : playerSheetId} onOpen={() => setMechanicsOpen(true)} onState={state => setCampaign(current => ({ ...current, mecanicasEspeciais: state }))}/>}
+      {mechanicsOpen && campaign && <SpecialMechanicsDialog campaign={campaign} master={mestre} playerId={routeParams.get("sistema")==="espiral" ? `espiral:${playerSheetId}` : playerSheetId} onClose={() => setMechanicsOpen(false)} onState={state => setCampaign(current => ({ ...current, mecanicasEspeciais: state }))}/>}
       <nav className="tt3-command-rail" aria-label={mestre ? "Ferramentas do mestre" : "Ferramentas do jogador"}>
         {(mestre ? [
           ["scene","Cena",activeSceneLabel],
@@ -1562,6 +1570,7 @@ export class SceneBoundary extends Component {
           ["investigation","Investigação",""],
           ["dashboard","Dashboard",""],
           ["shield","Escudo do mestre","Consulta"],
+          ["mechanics","Mecânicas especiais",""],
           ["weather","Clima",weather.preset==="custom" ? "Livre" : weather.label],
           ["background","Fundo",activeBackgroundUrl ? "Ativo" : "—"],
           ["dice","Dados","D20"],
@@ -1574,6 +1583,7 @@ export class SceneBoundary extends Component {
           ["notes","Notas",notes ? "•" : ""],
         ] : [
           ["sheet","Ficha",""],
+          ["mechanics","Mecânicas especiais",""],
           ["flashlight","Lanterna",""],
           ["dice","Dados","D20"],
           ["initiative","Iniciativa",""],
@@ -1606,7 +1616,7 @@ export class SceneBoundary extends Component {
       </div>
 
       {!mestre && !staticScene && <button type="button" className="tt3-player-flashlight tt3-player-uv" aria-label="Lanterna UV" title={sheetTokenTransforms[flashlightPerson?.id]?.uvPermitida===false ? 'Modo UV bloqueado pelo mestre' : 'Ligar ou apagar lanterna UV'} disabled={!flashlightPerson || sheetTokenTransforms[flashlightPerson?.id]?.uvPermitida===false} aria-pressed={Boolean(flashlightPerson?.lanterna?.ativa && flashlightPerson?.lanterna?.modo==='uv')} onClick={()=>changeFlashlight(toggleFlashlightMode(normalizarLanterna(flashlightPerson?.lanterna),'uv'))}> <svg viewBox="0 0 32 32" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><g transform="rotate(-35 16 16)"><path d="M12 13h8v14h-8zM10 6h12v5l-2 2h-8l-2-2z"/><path d="M10 6h12M14 18h4"/>{(flashlightPerson?.lanterna?.ativa && flashlightPerson?.lanterna?.modo==='uv') && <path d="M16 1v2M9 1l2 2M23 1l-2 2"/>}</g>{!(flashlightPerson?.lanterna?.ativa && flashlightPerson?.lanterna?.modo==='uv') && <path d="M5 27L27 5"/>}</svg></button>}
-      {campaign && <RollNotifications key={campaign.id} rolls={campaign.rolagens || []} mestre={mestre}/>}
+      {campaign && <RollNotifications key={campaign.id} rolls={campaign.rolagens || []} mechanics={campaign.mecanicasEspeciais} mestre={mestre}/>}
       <div className="tt3-toast" role="status"><span>{notice}</span><small>{mestre && "Ctrl + roda: velocidade · Shift + roda: inclinação lateral · "}{view==="firstPerson" ? (mestre ? "Botão esquerdo + arrastar: olhar ao redor · visão do personagem selecionado" : "Botão esquerdo + arrastar: olhar ao redor · WASD: mover seu personagem") : tacticalMode && !staticScene ? (mestre ? "Arraste os tokens para mover · arraste o mapa para navegar · roda: zoom" : "Arraste seu personagem ou use WASD · arraste o mapa para navegar · roda: zoom") : mestre ? "Botão direito + arrastar: olhar sem sair do lugar · botão esquerdo: orbitar · WASD: mover · Shift + arrastar: deslocar · roda: zoom · Q/E: descer/subir" : "WASD: mover seu personagem · botão esquerdo: orbitar · roda: aproximar"}</small></div>
 
       {hudPanel && <aside className={`tt3-hud-drawer ${hudPanel==="shield"?"tt3-master-shield-drawer":""} ${hudPanel==="sheet" && embeddedEspiralId ? "tt3-sheet-drawer" : ""}`} aria-label="Painel de ferramentas">
