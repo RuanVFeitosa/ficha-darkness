@@ -22,9 +22,9 @@
 .special-mechanics .rv-editor :is(input,select):focus{border-color:var(--rv-accent);outline:2px solid color-mix(in srgb,var(--rv-accent) 15%,transparent);outline-offset:2px}
 .rv-roster-heading{display:flex;align-items:center;justify-content:space-between;gap:14px}.rv-roster-heading>div{display:grid;gap:4px;flex-shrink:0}.rv-roster-heading strong{color:#d1d5ca;font:12px Arial,sans-serif}.rv-roster-heading small{color:#6f7b69;font:10px Arial,sans-serif}.special-mechanics .rv-roster-heading input{max-width:210px;min-width:0;min-height:34px;padding:7px 10px}
 .rv-roster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:280px;overflow:auto;scrollbar-width:thin;scrollbar-color:#9a8e6250 transparent;padding:2px}
-.special-mechanics .rv-editor .rv-roster>label{display:flex;align-items:center;gap:10px;min-width:0;margin:0;padding:10px;border:1px solid #ffffff0d;border-radius:6px;background:#ffffff02;cursor:pointer}
+.special-mechanics .rv-editor .rv-roster>label{position:relative;display:flex;align-items:center;gap:10px;min-width:0;margin:0;padding:10px;border:1px solid #ffffff0d;border-radius:6px;background:#ffffff02;cursor:pointer}
 .special-mechanics .rv-editor .rv-roster>label.is-assigned{border-color:color-mix(in srgb,var(--rv-accent) 40%,transparent);background:color-mix(in srgb,var(--rv-accent) 7%,transparent)}
-.rv-roster input[type=checkbox]{appearance:none;position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}.rv-roster label:has(input:focus-visible){outline:2px solid var(--rv-accent);outline-offset:1px}
+.rv-roster input[type=checkbox]{appearance:none;position:absolute;top:50%;left:10px;width:1px;height:1px;min-height:0;margin:0;padding:0;opacity:0;overflow:hidden}.rv-roster label:has(input:focus-visible){outline:2px solid var(--rv-accent);outline-offset:1px}
 .rv-member-avatar{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:7px;border:1px solid #ffffff0c;background:#ffffff05;color:#929c88;font:16px Georgia,serif}
 .is-assigned .rv-member-avatar{color:var(--rv-accent);background:color-mix(in srgb,var(--rv-accent) 10%,transparent)}
 .rv-member-name{min-width:0;flex:1;color:#c5cbbd;font-size:12px;overflow-wrap:anywhere}.rv-member-name small{display:block;margin-top:3px;color:#697662;font:9px/1.4 Arial,sans-serif}
