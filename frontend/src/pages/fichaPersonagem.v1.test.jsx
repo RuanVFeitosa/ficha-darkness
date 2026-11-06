@@ -1,14 +1,14 @@
 jest.mock('react-markdown', () => ({ __esModule:true, default:({children}) => <div>{children}</div> }));
 jest.mock('remark-gfm', () => ({ __esModule:true, default:() => {} }));
 jest.mock('../services/personagemApi', () => ({ buscarPersonagem:jest.fn(), buscarArvoresHabilidades:jest.fn(), salvarPersonagem:jest.fn() }));
-jest.mock('../services/mesaApi', () => ({ listarCampanhasDaFicha:jest.fn().mockResolvedValue([]), registrarRolagem:jest.fn() }));
+jest.mock('../services/mesaApi', () => ({ listarCampanhasDaFicha:jest.fn().mockResolvedValue([]), registrarRolagem:jest.fn(), buscarCampanhaPorCodigo:jest.fn(), ouvirCampanha:jest.fn().mockReturnValue(()=>{}) }));
 jest.mock('../components/jogador/PlayerPageLink', () => ({ __esModule:true, default:({children}) => <a href="?jogador=teste">{children}</a> }));
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import Ficha, { estadoInicial } from './fichaPersonagem';
 import { buscarPersonagem, buscarArvoresHabilidades, salvarPersonagem } from '../services/personagemApi';
 import { criarBaseV1 } from '../data/absolutoV1';
-import { listarCampanhasDaFicha } from '../services/mesaApi';
+import { buscarCampanhaPorCodigo, listarCampanhasDaFicha } from '../services/mesaApi';
 
 beforeEach(() => {
   localStorage.clear();
@@ -21,6 +21,63 @@ beforeEach(() => {
   salvarPersonagem.mockImplementation(async (id,p) => p);
 });
 afterEach(() => { jest.restoreAllMocks(); delete window.matchMedia; });
+
+test.each([[2,2,3,5,15],[3,3,4,0,5],[5,4,5,3,10],[0,2,3,1,5],[1,2,3,2,5],[4,3,4,4,10]])('Defesa usa Mobilidade %s e exibe base %s e Esquiva %s automaticamente', async (mobilidade, base, esquiva, vigor, bloqueio) => {
+  buscarPersonagem.mockResolvedValue({...estadoInicial,...criarBaseV1(undefined,{mobilidade,vigor}),defesaGeral:5,inventario:[],rituais:[]});
+  render(<Ficha/>);
+  await screen.findByRole('button',{name:'Rolar Mobilidade'});
+  const defesa = screen.getByLabelText('Defesa Base');
+  expect(defesa).toHaveValue(String(base));
+  expect(defesa).toHaveAttribute('readonly');
+  expect(screen.getByLabelText('Defesa com Esquiva')).toHaveValue(String(esquiva));
+  expect(screen.getByLabelText('Defesa com Esquiva')).toHaveAttribute('readonly');
+  expect(screen.getByLabelText('Bloqueio')).toHaveValue(String(bloqueio));
+  expect(screen.getByLabelText('Bloqueio')).toHaveAttribute('readonly');
+  expect(screen.queryByText(/Proteção reduz/)).not.toBeInTheDocument();
+});
+
+test.each([[5,2],[1,0],[10,7]])('botão de dano %s desconta %s com três pontos de proteção regional', async (dano, perda) => {
+  const base=criarBaseV1();
+  base.membros.torso.defesaAdicional=3;
+  buscarPersonagem.mockResolvedValue({...estadoInicial,...base,inventario:[],rituais:[]});
+  render(<Ficha/>);
+  await screen.findByRole('button',{name:'Rolar Mobilidade'});
+  fireEvent.click(screen.getByRole('button',{name:'CORPO',exact:true}));
+  const integridade=screen.getByLabelText('Integridade atual de Tórax');
+  const inicial=Number(integridade.value);
+  fireEvent.click(screen.getByRole('button',{name:`Ajustar -${dano} de Integridade`}));
+  expect(integridade).toHaveValue(inicial-perda);
+});
+
+test.each([[0,3],[1,3],[2,3],[3,2]])('Medo %s aplica automaticamente reserva de %s dados no Domínio',async(medo,dados)=>{
+  buscarPersonagem.mockResolvedValue({...estadoInicial,...criarBaseV1({inteligencia:3},{razao:2}),medo,nome:'Lia',inventario:[],rituais:[]});
+  const {container}=render(<Ficha/>);
+  await screen.findByRole('button',{name:'Rolar Razão'});
+  expect(screen.queryByRole('checkbox',{name:'Contra a fonte do Medo'})).not.toBeInTheDocument();
+  if(medo>=1) expect(container.querySelector('.medo-barra')).toHaveTextContent('Ajuda de aliados indisponível.');
+  else expect(screen.queryByText('Ajuda de aliados indisponível.')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Rolar Razão'}));
+  expect(screen.getByText(`${dados}d6 · Domínio 2 · DT 1`)).toBeInTheDocument();
+});
+
+test('Medo VI bloqueia ajuda e Esforço, remove bônus de Esquiva e cobra enfrentamento', async () => {
+  const base={...criarBaseV1(undefined,{razao:2,mobilidade:5}),medo:6,nome:'Lia'};
+  buscarPersonagem.mockResolvedValue({...estadoInicial,...base,inventario:[],rituais:[]});
+  render(<Ficha/>);
+  await screen.findByRole('button',{name:'Rolar Mobilidade'});
+  expect(screen.queryByRole('checkbox',{name:'Contra a fonte do Medo'})).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Dados por ajuda de aliados')).not.toBeInTheDocument();
+  expect(screen.getByText('Ajuda de aliados indisponível.')).toBeInTheDocument();
+  expect(screen.getByRole('checkbox',{name:/Esforço ·/})).toBeDisabled();
+  expect(screen.getByLabelText('Defesa com Esquiva')).toHaveValue('4');
+  fireEvent.click(screen.getByRole('button',{name:/Enfrentar o Medo/}));
+  expect(screen.getByLabelText('Medo atual')).toHaveValue(2);
+  expect(screen.getByLabelText('Esperança atual')).toHaveValue(base.esperanca.atual-5);
+  expect(screen.getByLabelText('Esperança atual')).toBeEnabled();
+  expect(document.querySelector('.abs-hope-chains')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Rolar Razão'}));
+  await waitFor(()=>expect(salvarPersonagem).toHaveBeenCalledWith('teste-original',expect.objectContaining({esperanca:expect.objectContaining({atual:base.esperanca.atual-5})})),{timeout:3000});
+});
 
 test('Mapa abre fora do layout da ficha e fecha com Escape restaurando a rolagem', async () => {
   const {container} = render(<Ficha/>);
@@ -163,4 +220,16 @@ test.each(['cabeca','torso'])('Estado Crítico é ativado e salvo automaticament
  expect(container.querySelector('.portrait-condition')).toHaveClass('envenenado');
  expect(container.querySelector('.portrait-condition')).not.toHaveClass('surto-adrenalina');
  await waitFor(()=>expect(salvarPersonagem).toHaveBeenCalledWith('teste-original',expect.objectContaining({condicoesAtivas:expect.arrayContaining(['estado-critico','envenenado'])})),{timeout:3000});
+});
+
+test('teste Absoluto usa a defesa escolhida pelo mestre ao abrir a ficha pela mesa',async()=>{
+ window.history.replaceState({},'', '/?sistema=darkness&ficha=teste-original&campanhaTeste=CODE');
+ buscarCampanhaPorCodigo.mockResolvedValue({id:'camp',combateAtivo:true,cenaAtiva:{dificuldades:{ambiente:1,combateInimigoId:'a'}},inimigos:[{id:'a',defesa:3}]});
+ jest.spyOn(Math,'random').mockReturnValue(.99);
+ render(<Ficha/>);
+ await screen.findByRole('button',{name:'Rolar INTELIGÊNCIA'});
+ await screen.findByText(/Dificuldade definida pelo mestre/);
+ expect(screen.queryByLabelText('DT do teste')).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Rolar INTELIGÊNCIA'}));
+ expect(await screen.findByText('3d6 · Êxitos em 6 · DT 3')).toBeInTheDocument();
 });

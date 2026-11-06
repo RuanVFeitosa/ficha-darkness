@@ -1,4 +1,54 @@
 /* Loaded after the sheet and inventory styles so breakpoints override desktop composition. */
+/* Compact tabletop presentation: keep live controls, leave the scene visible. */
+@media (max-width:1100px) and (pointer:coarse) {
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-topbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-height:0; padding:8px 12px; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-brand { flex:1 1 150px; min-width:0; gap:0; margin:0; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-brand > .es-mark,
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-brand > span:not(.es-brand-caption),
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-save,
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-breadcrumb,
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-hero > .es-hero-art { display:none; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-brand-caption { display:block; padding:0; margin:0; border:0; white-space:normal; overflow-wrap:anywhere; font-size:11px; line-height:1.5; letter-spacing:.03em; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-top-actions { gap:4px; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-top-actions .es-icon-button { width:36px; height:36px; min-height:36px; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-main { padding:10px 12px; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-hero { grid-template-columns:minmax(0,1fr); gap:12px; min-height:0; padding:0 0 12px; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-hero-vitals { grid-column:1; grid-row:1; width:100%; margin:0; gap:6px; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-attribute-rail { grid-column:1; grid-row:2; width:100%; padding:0; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-rail-attributes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-rail-attribute { min-height:64px; padding:8px; grid-template-columns:minmax(0,1fr) 68px; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-rail-name { font-size:12px; letter-spacing:0; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-rail-detail { font-size:10px; overflow-wrap:anywhere; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-hero .es-edit { position:static; grid-column:1; grid-row:3; margin:0; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .hero-dots { grid-template-columns:72px repeat(10,minmax(0,1fr)); gap:4px; padding-block:8px; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .hero-dots > span { grid-column:1; font-size:9px; letter-spacing:1px; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .hero-dots button:first-of-type { grid-column:auto; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-tabs { margin-bottom:12px; }
+ .tt3-mobile .tt3-embedded-sheet .espiral-app .es-tabs button { font-size:11px; padding:8px 4px; }
+}
+/* Embedded sheets respond to the panel's width, including desktop side panels. */
+@container tabletop-sheet (max-width: 760px) {
+ .tt3-embedded-sheet .espiral-app .es-hero { grid-template-columns:150px minmax(0,1fr); gap:16px; min-height:0; }
+ .tt3-embedded-sheet .espiral-app .es-hero > .es-hero-art { grid-column:1; grid-row:1; inset:auto; opacity:1; margin:0; }
+ .tt3-embedded-sheet .espiral-app .es-hero-vitals { grid-column:2; grid-row:1; width:100%; margin:0; align-self:center; }
+ .tt3-embedded-sheet .espiral-app .es-attribute-rail { grid-column:1/-1; grid-row:2; width:100%; padding:0; }
+ .tt3-embedded-sheet .espiral-app .es-rail-attributes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .tt3-embedded-sheet .espiral-app .es-hero .es-edit { position:static; grid-column:1/-1; grid-row:3; justify-self:end; }
+ .tt3-embedded-sheet .espiral-app .es-sidebar,
+ .tt3-embedded-sheet .espiral-app .es-injury-workspace,
+ .tt3-embedded-sheet .espiral-app .es-resources { grid-template-columns:minmax(0,1fr); }
+ .tt3-embedded-sheet .espiral-app .es-tabs { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); min-width:0; gap:0; }
+ .tt3-embedded-sheet .espiral-app .es-tabs button { min-width:0; white-space:normal; overflow-wrap:anywhere; }
+}
+@container tabletop-sheet (max-width: 480px) {
+ .tt3-embedded-sheet .espiral-app .es-hero { grid-template-columns:minmax(0,1fr); gap:14px; }
+ .tt3-embedded-sheet .espiral-app .es-hero-vitals { grid-column:1; grid-row:2; }
+ .tt3-embedded-sheet .espiral-app .es-attribute-rail { grid-row:3; }
+ .tt3-embedded-sheet .espiral-app .es-hero .es-edit { grid-row:4; }
+ .tt3-embedded-sheet .espiral-app .hero-dots { grid-template-columns:76px repeat(10,minmax(0,1fr)); gap:3px; }
+ .tt3-embedded-sheet .espiral-app .hero-dots > span { grid-column:1; }
+ .tt3-embedded-sheet .espiral-app .hero-dots button:first-of-type { grid-column:auto; }
+}
 .es-integrity-status { display: grid; grid-template-columns: minmax(0, 1fr); align-items: center; gap: 16px; }
 .es-integrity-status.is-critical { grid-template-columns: minmax(0, 1fr) auto; }
 .es-survival-failures { display: grid; grid-template-columns: auto 34px; gap: 5px 8px; padding-left: 14px; border-left: 1px solid #793333; color: #e88f8f; }

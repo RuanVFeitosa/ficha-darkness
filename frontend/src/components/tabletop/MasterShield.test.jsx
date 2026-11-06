@@ -2,20 +2,60 @@ import React from 'react';
 import {render,screen,fireEvent,within} from '@testing-library/react';
 import MasterShield from './MasterShield';
 beforeEach(()=>localStorage.clear());
-test('consulta os dois sistemas, busca sem acentos e mantém favoritos',()=>{
- const {unmount}=render(<MasterShield campaignId="mesa-a"/>);
- expect(screen.getByText('Modificadores e limite de dados')).toBeInTheDocument();
- fireEvent.change(screen.getByLabelText('Buscar no escudo do mestre'),{target:{value:'sanidade'}});
- expect(screen.getByText('Sanidade e colapso')).toBeInTheDocument();
- fireEvent.click(screen.getByRole('button',{name:'Favoritar Sanidade e colapso'}));
- fireEvent.click(screen.getByRole('button',{name:'Mostrar somente favoritos'}));
- expect(screen.getByText('1 referências')).toBeInTheDocument();
- unmount();render(<MasterShield campaignId="mesa-a"/>);
- expect(screen.getByRole('button',{name:'Favoritar Sanidade e colapso'})).toHaveAttribute('aria-pressed','true');
- fireEvent.click(screen.getByRole('button',{name:'ESPIRAL'}));
- fireEvent.change(screen.getByLabelText('Buscar no escudo do mestre'),{target:{value:'pressao'}});
- expect(screen.getByText('Pressão, Abalo, Crise e Ruptura')).toBeInTheDocument();
+test('recebe ferramentas do 3D sem duplicar Cenas e mantém cada ferramenta no escudo',()=>{
+ render(<MasterShield extraTools={[['tokens','Tokens'],['weather','Clima'],['background','Fundo'],['dice','Dados'],['flashlight','Lanterna']]} renderTool={tool=><p>Ferramenta {tool}</p>}/>);
+ const navigation=screen.getByRole('navigation',{name:'Áreas do escudo'});
+ expect(within(navigation).getAllByRole('button',{name:'Cenas',exact:true})).toHaveLength(1);
+ expect(within(navigation).queryByRole('button',{name:'Biblioteca'})).not.toBeInTheDocument();
+ fireEvent.click(within(navigation).getByRole('button',{name:'Tokens'}));
+ expect(screen.getByText('Ferramenta tokens')).toBeVisible();
+ fireEvent.click(within(navigation).getByRole('button',{name:'Clima'}));
+ expect(screen.getByText('Ferramenta weather')).toBeVisible();
 });
+
+test('master tools have icons and preserve their content while changing sections',()=>{
+ const renderTool=tool=><label>{tool}<input aria-label={`Rascunho ${tool}`}/></label>;
+ render(<MasterShield renderTool={renderTool}/>);
+ const navigation=screen.getByRole('navigation',{name:'Áreas do escudo'});
+ expect(within(navigation).queryByRole('button',{name:'Combate',exact:true})).not.toBeInTheDocument();
+ expect(within(navigation).queryByRole('button',{name:'Investigação',exact:true})).not.toBeInTheDocument();
+ expect(screen.getByRole('textbox',{name:'Rascunho sessionModes'})).toBeInTheDocument();
+ for(const label of ['Dashboard','Cenas','Anotações','Música','Soundpad']) {
+  expect(within(navigation).getByRole('button',{name:label,exact:true}).querySelector('svg')).not.toBeNull();
+ }
+ fireEvent.click(within(navigation).getByRole('button',{name:'Anotações',exact:true}));
+ fireEvent.change(screen.getByRole('textbox',{name:'Rascunho notes'}),{target:{value:'Pista da sessão'}});
+ fireEvent.click(within(navigation).getByRole('button',{name:'Soundpad',exact:true}));
+ expect(screen.getByRole('textbox',{name:'Rascunho soundpad'})).toBeInTheDocument();
+ expect(screen.queryByRole('textbox',{name:'Rascunho notes'})).not.toBeInTheDocument();
+ fireEvent.click(within(navigation).getByRole('button',{name:'Anotações',exact:true}));
+ expect(screen.getByRole('textbox',{name:'Rascunho notes'})).toHaveValue('Pista da sessão');
+});
+
+test('Documentos abre no escudo e mantém o rascunho ao alternar para a cena',()=>{
+ render(<MasterShield scene={{nome:'Arquivo'}} documents={<label>Nome da evidência<input aria-label="Nome da evidência"/></label>}/>);
+ expect(screen.queryByRole('textbox',{name:'Nome da evidência'})).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Documentos',exact:true}));
+ fireEvent.change(screen.getByRole('textbox',{name:'Nome da evidência'}),{target:{value:'Carta encontrada'}});
+ expect(screen.queryByRole('region',{name:'Inimigos e NPCs'})).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Cena e participantes'}));
+ expect(screen.getByRole('region',{name:'Inimigos e NPCs'})).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Documentos',exact:true}));
+ expect(screen.getByRole('textbox',{name:'Nome da evidência'})).toHaveValue('Carta encontrada');
+});
+
+test('scene difficulty can be edited inside the shield while enemy defense stays automatic',()=>{
+ const save=jest.fn();
+ render(<MasterShield campaignSystem="espiral" scene={{nome:'Teste 3',dificuldades:{ambiente:4,combateAmbiente:8,conflitos:6}}} enemies={[{id:'a',nome:'Ameaça',defesa:12}]} onSaveDifficulty={save}/>);
+ const panel=screen.getByRole('region',{name:'Dificuldades da cena'});
+ const input=within(panel).getByLabelText('Dificuldade de Ambiente da cena');
+ fireEvent.change(input,{target:{value:'7'}});fireEvent.blur(input);
+ expect(save).toHaveBeenCalledWith({ambiente:7});
+ expect(within(panel).getAllByRole('spinbutton')).toHaveLength(3);
+ expect(within(panel).getByText('Ameaça')).toBeInTheDocument();
+ expect(within(panel).getByText('12')).toBeInTheDocument();
+});
+
 test('calcula lesão e testa as margens de ESPIRAL usando as regras da ficha',()=>{
  render(<MasterShield/>);fireEvent.click(screen.getByRole('button',{name:'ESPIRAL'}));
  fireEvent.click(screen.getByText('Resolver um teste'));
@@ -43,4 +83,26 @@ test('Absoluto resolve Êxitos e Crítico sem usar a regra de margem do ESPIRAL'
  fireEvent.change(screen.getByLabelText('Dificuldade da consulta'),{target:{value:'2'}});
  fireEvent.change(screen.getByLabelText('Resultados dos dados'),{target:{value:'6, 6'}});
  expect(screen.getByLabelText('Resolução da consulta')).toHaveTextContent('Crítico · 2 Êxitos · 2 Finais');
+});
+
+test('campaign system overrides the browser preference',()=>{
+ localStorage.setItem('darkness:master-shield:system',JSON.stringify('absoluto'));
+ render(<MasterShield campaignSystem="espiral"/>);
+ expect(screen.queryByRole('navigation',{name:'Sistema do escudo'})).not.toBeInTheDocument();
+ expect(screen.getByText(/Maior dado/)).toBeInTheDocument();
+ expect(screen.queryByText('Modificadores e limite de dados')).not.toBeInTheDocument();
+});
+test('Absoluto limits scene DT and displays quick references',()=>{
+ const save=jest.fn();
+ render(<MasterShield campaignSystem="absoluto" scene={{nome:'Cena',dificuldades:{ambiente:2}}} onSaveDifficulty={save}/>);
+ const panel=screen.getByRole('region',{name:'Dificuldades da cena'});
+ const input=within(panel).getByLabelText('Dificuldade de Ambiente da cena');
+ expect(input).toHaveAttribute('min','1');expect(input).toHaveAttribute('max','5');
+ fireEvent.change(input,{target:{value:'9'}});fireEvent.blur(input);
+ expect(save).toHaveBeenLastCalledWith({ambiente:5});
+ fireEvent.change(input,{target:{value:'0'}});fireEvent.blur(input);
+ expect(save).toHaveBeenLastCalledWith({ambiente:1});
+ const references=screen.getByRole('complementary',{name:'Referências rápidas'});
+ expect(within(references).getByText('Atributos')).toBeInTheDocument();
+ expect(within(references).getByText('Domínios')).toBeInTheDocument();
 });

@@ -1,6 +1,7 @@
 import React,{useState} from 'react';
 import {REGIOES} from '../../data/absolutoV1';
 import NumberInput from '../ui/NumberInput';
+import {protecaoRegional} from '../../utils/absolutoProtecao';
 import '../../styles/AbsolutoBody.css';
 
 const anatomy={
@@ -21,6 +22,7 @@ export default function AbsolutoBody({members,onChange,onMaxChange,onDamage,onDe
  const [selected,setSelected]=useState('torso');const [amount,setAmount]=useState(1);
  const member=members[selected] || {atual:0,max:1,defesa:0},region=REGIOES[selected],status=bodyRegionState(member);
  const defenses=defensesFor(selected);
+ const protection=protecaoRegional(member,defenses);
  return <section className="abs-body" aria-label="Integridade regional do Absoluto">
   <header className="abs-body-heading"><div><span>ANATOMIA / ABSOLUTO</span><h3>O corpo guarda as marcas.</h3><p>Selecione uma região para cuidar da sua Integridade.</p></div><strong>{Object.values(members).filter(item=>item.atual>0).length}<small>/ 8 funcionais</small></strong></header>
   <div className="abs-body-workspace">
@@ -44,9 +46,13 @@ export default function AbsolutoBody({members,onChange,onMaxChange,onDamage,onDe
    <div className={`abs-body-detail is-${status.key}`}>
     <span className="abs-body-kicker">REGIÃO SELECIONADA</span><h4>{region.nome}</h4><span className="abs-body-state"><i/>{status.label}</span>
     <div className="abs-body-integrity"><label>Integridade atual<NumberInput aria-label={`Integridade atual de ${region.nome}`} min="0" max={member.max} value={member.atual} onChange={event=>onChange(selected,event.target.value)}/></label><span>/</span><label>Máxima<NumberInput aria-label={`Integridade máxima de ${region.nome}`} min="1" value={member.max} onChange={event=>onMaxChange(selected,event.target.value)}/></label></div>
-    <div className="abs-body-adjustments" aria-label="Ajuste direto de Integridade">{[-10,-5,-1,1,5,10].map(delta=><button type="button" key={delta} onClick={()=>onChange(selected,Math.max(0,Math.min(member.max,Number(member.atual)+delta)))} aria-label={`Ajustar ${delta>0?'+':''}${delta} de Integridade`}>{delta>0?'+':''}{delta}</button>)}</div>
+    <div className="abs-body-adjustments" aria-label="Ajuste de Integridade">{[-10,-5,-1,1,5,10].map(delta=><button type="button" key={delta} onClick={()=>delta<0 ? onDamage(selected,-delta) : onChange(selected,Math.min(member.max,Number(member.atual)+delta))} aria-label={`Ajustar ${delta>0?'+':''}${delta} de Integridade`}>{delta>0?'+':''}{delta}</button>)}</div>
     <form className="abs-body-damage" onSubmit={event=>{event.preventDefault();if(amount>0)onDamage(selected,amount);}}><label>Dano recebido<NumberInput aria-label="Dano recebido na região" min="1" value={amount} onChange={event=>setAmount(Math.max(1,Number(event.target.value)||1))}/></label><button type="submit">Aplicar dano</button><small>Aplica a defesa e as resistências do tipo de dano selecionado.</small></form>
-    <label className="abs-body-defense">Defesa regional<NumberInput aria-label={`Defesa de ${region.nome}`} min="0" value={member.defesa || 0} onChange={event=>onDefenseChange(selected,event.target.value)}/></label>
+    <div className="abs-body-defenses">
+     <label className="abs-body-defense">Defesa por Equipamento<input type="number" aria-label={`Defesa por Equipamento de ${region.nome}`} value={protection.equipamento} readOnly /></label>
+     <label className="abs-body-defense">Defesas Adicionais<NumberInput aria-label={`Defesas Adicionais de ${region.nome}`} min="0" value={protection.adicionais} onChange={event=>onDefenseChange(selected,event.target.value)}/></label>
+     <label className="abs-body-defense">Defesa Total<input type="number" aria-label={`Defesa Total de ${region.nome}`} value={protection.total} readOnly /></label>
+    </div>
     <section className="abs-body-equipment"><span>PROTEÇÃO EQUIPADA</span>{defenses.length ? defenses.map((defense,index)=><button type="button" key={defense.id || index} onClick={()=>onInspectDefense?.(defense,-1)}>{defense.nome} ↗</button>) : <p>Esta região não está protegida.</p>}</section>
     <small className="abs-body-thresholds">Estável: acima de 50% · Machucado: até 50% · Crítico: até 10% · Não Funcional: 0.</small>
    </div>

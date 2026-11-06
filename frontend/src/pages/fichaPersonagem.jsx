@@ -1,3 +1,7 @@
+import useAbsolutoSceneDifficulty from '../hooks/useAbsolutoSceneDifficulty';
+import BodyProtectionSummary from '../components/absoluto/BodyProtectionSummary';
+import {protecaoRegional} from '../utils/absolutoProtecao';
+import {efeitosMedo} from '../utils/absolutoMedo';
 import HopeVoid from '../components/absoluto/HopeVoid';
 import RitoCracks from '../components/absoluto/RitoCracks';
 import { converterCustoUso, custoUsoRito } from '../data/absolutoCustos';
@@ -18,7 +22,7 @@ import { LIMITE_DADOS_ABSOLUTO, rolarDadosAbsoluto, converterTextoAbsoluto, norm
 
 import AbsolutoDominio from '../components/absoluto/AbsolutoDominio';
 import { executarTesteAtributo, executarTesteDominio } from '../utils/absolutoRolagem';
-import { ehAbsolutoV1, DOMINIOS, REGIOES, limitar } from '../data/absolutoV1';
+import { ehAbsolutoV1, DOMINIOS, REGIOES, limitar, defesaPersonagem, bloqueioPersonagem } from '../data/absolutoV1';
 import AdaptacaoEspiral from '../components/adaptacao/AdaptacaoEspiral';
 import { nomesPassivas, ativosParaPassiva, dadosAtivos } from '../data/absolutoAtivos';
 import AbilityEditDialog from '../components/habilidades/AbilityEditDialog';
@@ -603,9 +607,12 @@ const FichaPersonagem = () => {
       animacaoRolagemRef.current = null;
     }, 1200);
   };
-  const [dtTesteV1, setDtTesteV1] = useState(1);
+  const codigoCampanhaTeste = new URLSearchParams(window.location.search).get('campanhaTeste');
+  const {difficulty: dificuldadeMesa, error: erroDificuldadeMesa, loading: carregandoDificuldadeMesa} = useAbsolutoSceneDifficulty(codigoCampanhaTeste);
+  const dtEfetivaV1 = dificuldadeMesa ? limitar(dificuldadeMesa.value, 1, 5) : 1;
   const [esforcoTesteV1, setEsforcoTesteV1] = useState(false);
-  const [contraFonteMedo, setContraFonteMedo] = useState(false);
+  const contraFonteMedo = Number(personagem.medo) >= 3;
+  const [acaoMedo, setAcaoMedo] = useState('');
   const [ultimoTesteV1, setUltimoTesteV1] = useState(null);
   useState(false);
   useState("normal");
@@ -626,6 +633,10 @@ const FichaPersonagem = () => {
   const ignorarProximoSalvamentoRef = useRef(false);
   // Impede que uma resposta solicitada antes de uma alteração restaure recursos antigos.
   const revisaoRecursosRef = useRef(0);
+  useEffect(()=>{
+    if(!personagem.ultimaNovaCena) return;
+    setAcaoMedo('');setEsforcoTesteV1(false);setUltimoTesteV1(null);setModificadorDadosRolagem(0);
+  },[personagem.ultimaNovaCena]);
   useState(null);
   useState({
     nome: "",
@@ -1239,7 +1250,7 @@ const FichaPersonagem = () => {
     setPersonagem((prev) => {
       const dadosMembro = prev.membros[membro];
 
-      const defesa = parseInt(dadosMembro.defesa) || 0;
+      const defesa = ehAbsolutoV1(prev) ? protecaoRegional(dadosMembro, defesasDoMembro(membro)).total : parseInt(dadosMembro.defesa) || 0;
       const reducaoResistencia = (prev.resistenciasDano || [])
         .filter(
           (resistencia) =>
@@ -1286,7 +1297,10 @@ const FichaPersonagem = () => {
         ...prev.membros,
         [membro]: {
           ...prev.membros[membro],
-          defesa: Math.max(0, parseInt(valor) || 0),
+          ...(ehAbsolutoV1(prev) ? {
+            defesaAdicional: Math.max(0, parseInt(valor) || 0),
+            defesa: protecaoRegional({defesaAdicional: valor}, defesasDoMembro(membro)).total,
+          } : {defesa: Math.max(0, parseInt(valor) || 0)}),
         },
       },
     }));
@@ -2897,8 +2911,10 @@ const FichaPersonagem = () => {
   const rolarDominioV1 = (chave, anterior = null) => rolarTesteV1(chave, anterior, false);
   const rolarTesteV1 = async (chave, anterior, atributo) => {
     try {
+      if (codigoCampanhaTeste && (erroDificuldadeMesa || carregandoDificuldadeMesa)) throw new Error(erroDificuldadeMesa || 'Aguarde a dificuldade da mesa carregar.');
       const executar = atributo ? executarTesteAtributo : executarTesteDominio;
-      const { rolagem, personagem: atualizado } = executar(personagem, chave, { dt: dtTesteV1, vantagem: modificadorDadosRolagem, esforco: esforcoTesteV1, contraFonte: contraFonteMedo, repetir: anterior });
+      const { rolagem, personagem: atualizado } = executar(personagem, chave, { dt: dtEfetivaV1, vantagem: modificadorDadosRolagem, acaoMedo, esforco: esforcoTesteV1 && !efeitosMedo(personagem,contraFonteMedo).semEsforco, contraFonte: contraFonteMedo, repetir: anterior });
+      if (efeitosMedo(personagem,contraFonteMedo).colapso) setAcaoMedo('');
       if (atualizado !== personagem) { revisaoRecursosRef.current += 1; setPersonagem(atualizado); }
       if (!atributo) setUltimoTesteV1(rolagem);
       abrirRolagemAnimada(rolagem);
@@ -3512,14 +3528,13 @@ const FichaPersonagem = () => {
         </div>
 
         {ehAbsolutoV1(personagem) && <div className="controle-dados-pre-rolagem">
-          <label>DT / Defesa <NumberInput type="number" aria-label="DT do teste" min="1" max="5" value={dtTesteV1} onChange={e => setDtTesteV1(limitar(e.target.value, 1, 5))} /></label>
-          <label><input type="checkbox" checked={esforcoTesteV1} onChange={e => setEsforcoTesteV1(e.target.checked)} /> Esforço · 1 Esperança / +1D</label>
-          <label><input type="checkbox" checked={contraFonteMedo} onChange={e => setContraFonteMedo(e.target.checked)} /> Contra a fonte do Medo</label>
+          {dificuldadeMesa && <small>Dificuldade definida pelo mestre · {dificuldadeMesa.category}</small>}{erroDificuldadeMesa && <small role="alert">{erroDificuldadeMesa}</small>}
+          <label><input type="checkbox" checked={esforcoTesteV1 && !efeitosMedo(personagem,contraFonteMedo).semEsforco} disabled={efeitosMedo(personagem,contraFonteMedo).semEsforco} onChange={e => setEsforcoTesteV1(e.target.checked)} /> Esforço · 1 Esperança / +1D</label>
         </div>}
         </div>
         <div className="ativos-layout">
           <div className="lista-ativos">
-            {ehAbsolutoV1(personagem) ? Object.keys(DOMINIOS).map(chave => <AbsolutoDominio key={chave} chave={chave} personagem={personagem} onRoll={rolarDominioV1} vantagem={modificadorDadosRolagem} esforco={esforcoTesteV1} contraFonte={contraFonteMedo} />) : <>
+            {ehAbsolutoV1(personagem) ? Object.keys(DOMINIOS).map(chave => <AbsolutoDominio key={chave} chave={chave} personagem={personagem} onRoll={rolarDominioV1} vantagem={modificadorDadosRolagem} esforco={esforcoTesteV1 && !efeitosMedo(personagem,contraFonteMedo).semEsforco} contraFonte={contraFonteMedo} />) : <>
 
             <Ativo nome="Razão" chave="razao" atributoBase="inteligencia" />
             <Ativo
@@ -3548,13 +3563,13 @@ const FichaPersonagem = () => {
         </div>
         <div className="abs-combat-side">
           <aside className="defesa-painel">
-            <div className="defesa-linha-principal">
+            <div className={`defesa-linha-principal${ehAbsolutoV1(personagem) ? ' abs-player-defense' : ''}`}>
               <div className="defesa-topo">
                 <div className="defesa-box defesa-base-box">
                   <h3 className="defesa-titulo">Defesa Base</h3>
 
                   <div className="escudo-defesa">
-                    <input inputMode="numeric" aria-label="Defesa Base" value={ehAbsolutoV1(personagem) ? limitar(personagem.defesaGeral || 2, 1, 5) : defesaBase} readOnly={!ehAbsolutoV1(personagem)} onChange={e => setPersonagem(p => ({ ...p, defesaGeral: limitar(e.target.value, 1, 5) }))} />
+                    <input inputMode="numeric" aria-label="Defesa Base" value={ehAbsolutoV1(personagem) ? defesaPersonagem(personagem) : defesaBase} readOnly />
                   </div>
                 </div>
 
@@ -3592,11 +3607,15 @@ const FichaPersonagem = () => {
                   <input type="text" value={esquiva} readOnly />
                 </label>
               </div>}
-              {ehAbsolutoV1(personagem) && <small>Êxitos necessários para atingir.</small>}
+              {ehAbsolutoV1(personagem) && <div className="abs-player-defense-reactions">
+                <label className="abs-player-defense-evasion"><span>Esquiva</span><input aria-label="Defesa com Esquiva" value={defesaPersonagem(personagem, true, contraFonteMedo)} readOnly /></label>
+                <label className="abs-player-defense-evasion"><span>Bloqueio</span><input aria-label="Bloqueio" value={bloqueioPersonagem(personagem)} readOnly /><small className="abs-block-damage-note">Reduz dano</small></label>
+              </div>}
             </div>
 
             <div className="defesa-campos">
-              {(personagem.resistenciasDano || []).length > 0 && (
+              {ehAbsolutoV1(personagem) && <BodyProtectionSummary members={personagem.membros} defensesFor={defesasDoMembro}/>}
+              {!ehAbsolutoV1(personagem) && (personagem.resistenciasDano || []).length > 0 && (
                 <div className="defesa-resistencias-cards">
                   <span>RESISTÊNCIAS ATIVAS</span>
                   <div>
@@ -6388,7 +6407,7 @@ const FichaPersonagem = () => {
                     <div className="profile-overlay"></div></div>{Number(personagem.medo)>0 && <RitoCracks portrait medo={personagem.medo}/>}
                     <SanityStatic resource={personagem.sanidade} portrait/>
                     <SanityZeroSymbol resource={personagem.sanidade} hopeResource={personagem.esperanca} membros={personagem.membros}/><HopeVoid resource={personagem.esperanca} portrait/>
-                  </div></div><AbsolutoResources personagem={personagem} setPersonagem={atualizacao=>{revisaoRecursosRef.current+=1;setPersonagem(atualizacao);}} onSanity={atualizarSanidade} onHope={atualizarEsperanca} onSanityStep={ajustarSanidade} onHopeStep={ajustarEsperanca} showFear={ehAbsolutoV1(personagem)}/>
+                  </div></div><AbsolutoResources acaoMedo={acaoMedo} onAcaoMedo={setAcaoMedo} personagem={personagem} setPersonagem={atualizacao=>{revisaoRecursosRef.current+=1;setPersonagem(atualizacao);}} onSanity={atualizarSanidade} onHope={atualizarEsperanca} onSanityStep={ajustarSanidade} onHopeStep={ajustarEsperanca} showFear={ehAbsolutoV1(personagem)}/>
                   <div className="abs-level"><span>NÍVEL</span><strong>{personagem.nivel || 1}</strong></div></div>
         </div>
       </header>

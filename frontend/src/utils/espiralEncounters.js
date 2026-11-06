@@ -1,6 +1,16 @@
 import { ATTRIBUTES, RESOURCES, freshSheet, integrityMax, resolveRoll } from '../data/espiral';
 
 export const ESPIRAL_ENCOUNTERS_KEY = 'espiral:encounters:v1';
+export const ESPIRAL_ENCOUNTERS_CHANGED = 'espiral:encounters-changed';
+
+export function espiralEncounterForTabletop(record) {
+  const sheet = normalizeEspiralEncounter(record);
+  return { ...sheet, id: `espiral:${sheet.id}`, nome: sheet.name, pasta: sheet.folder,
+    fotoPerfil: sheet.profileImage, defesa: sheet.attributes.sentido + 2,
+    sanidade: { atual: sheet.sanity, max: 10 },
+    integridade: { atual: sheet.integrity, max: integrityMax(sheet.attributes.pulso) },
+  };
+}
 const bounded = (value, min, max) => Math.min(max, Math.max(min, Number.isFinite(Number(value)) ? Number(value) : min));
 
 export function createEspiralEncounter(type, id) {
@@ -39,6 +49,7 @@ export function writeEspiralEncounter(storage, record) {
   const exists = records.some(item => item.id === record.id);
   const next = exists ? records.map(item => item.id === record.id ? normalized : item) : [...records, normalized];
   storage.setItem(ESPIRAL_ENCOUNTERS_KEY, JSON.stringify({ version: 1, records: next }));
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(ESPIRAL_ENCOUNTERS_CHANGED));
   return next;
 }
 

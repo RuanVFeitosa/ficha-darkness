@@ -1,0 +1,13 @@
+# Only runtime source and dependency manifests belong in the backend image.
+**
+!package.json
+!package-lock.json
+!frontend/
+!frontend/package.json
+!backend/
+!backend/**
+backend/node_modules/
+backend/data/
+backend/.env*
+backend/**/*.test.*
+backend/**/*.log

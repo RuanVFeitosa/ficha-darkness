@@ -1,0 +1,55 @@
+/* Full-image portrait tabs, with the system emblem behind the ribbon. */
+.mesa-shell.player-initiative-bar {
+ position:absolute; top:145px; left:12px; transform:none;
+ display:block; isolation:isolate; width:110px; max-width:110px;
+ height:auto; min-height:0; max-height:calc(100dvh - 245px);
+ margin:0; padding:4px; box-sizing:border-box; z-index:21;
+ border:0; border-radius:0; background:transparent; box-shadow:none;
+ overflow-y:auto; scrollbar-width:thin; scrollbar-color:#69787366 transparent;
+}
+.mesa-shell.player-initiative-bar::before {
+ content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
+ background:var(--initiative-system-symbol) center/100% auto repeat-y;
+ opacity:.22;
+}
+.mesa-shell.player-initiative-bar[data-system="espiral"]::before {
+ background:repeating-radial-gradient(ellipse at 20% 30%,transparent 0 9px,#81c9c588 10px 11px,transparent 12px 20px);
+ opacity:.25;
+}
+.mesa-shell.player-initiative-bar .initiative-cards { padding:2px; }
+.mesa-shell.player-initiative-bar .initiative-order-track { flex:0 1 auto; flex-direction:column; align-items:flex-start; gap:7px; width:100%; padding:0; overflow:visible; }
+.mesa-shell.player-initiative-bar .initiative-order-track .initiative-card {
+ flex:0 0 52px; width:88px; height:52px;
+ border-radius:1px 10px 1px 1px; border-width:1px; border-left-width:3px;
+ background:#101716; box-shadow:0 2px 5px #0006;
+}
+.mesa-shell.player-initiative-bar .initiative-card-portrait { font-size:17px; }
+.mesa-shell.player-initiative-bar .initiative-card-portrait img { object-position:center 25%; }
+.mesa-shell.player-initiative-bar .initiative-order-track .initiative-card-name { padding:8px 3px 2px 27px; font-size:8px; text-align:right; }
+.mesa-shell.player-initiative-bar .initiative-order-track .initiative-card .initiative-card-value {
+ top:2px; left:2px; width:25px; min-width:25px; max-width:25px;
+ height:23px; min-height:23px; padding:0!important;
+ font-size:12px!important; line-height:21px!important;
+}
+.mesa-shell.player-initiative-bar .initiative-order-track .initiative-card.is-current-turn {
+ width:100%; border-color:#f1d597; box-shadow:0 0 12px #e4bc5b66;
+}
+.mesa-shell.player-initiative-bar .initiative-card.is-current-turn::after { right:3px; top:2px; font-size:8px; }
+@media(max-width:760px) { .mesa-shell.player-initiative-bar { left:6px; top:125px; max-height:calc(100dvh - 220px); } }
+/* One oversized emblem, half outside the viewport, behind the portrait tabs. */
+.mesa-shell.player-initiative-bar::before { content:none; }
+.mesa-shell.player-initiative-bar .player-initiative-backdrop {
+ position:fixed; left:0; top:50%; transform:translate(-50%,-50%);
+ width:min(580px,78dvh); height:min(580px,78dvh);
+ z-index:-1; pointer-events:none; color:#cdb57e; opacity:.22;
+}
+.mesa-shell.player-initiative-bar[data-system="espiral"] .player-initiative-backdrop { color:#81c9c5; }
+.mesa-shell.player-initiative-bar .player-initiative-backdrop img,
+.mesa-shell.player-initiative-bar .player-initiative-backdrop svg { display:block; width:100%; height:100%; object-fit:contain; }
+.mesa-shell.player-initiative-bar { max-height:calc(100dvh - 205px); scrollbar-width:thin; }
+.mesa-shell.player-initiative-bar .player-initiative-toggle { display:flex; align-items:center; gap:4px; width:100%; margin:0 0 7px; padding:6px 4px; border:1px solid #bbcea82b; border-radius:5px; color:#d8dac0; background:#0a1418ed; font:8px monospace; cursor:pointer; }
+.mesa-shell.player-initiative-bar .player-initiative-toggle small { display:grid; place-items:center; min-width:14px; height:14px; border-radius:3px; background:#ffffff0c; color:#d3c18b; font-size:8px; }
+.mesa-shell.player-initiative-bar .player-initiative-toggle b { margin-left:auto; font-size:11px; }
+.mesa-shell.player-initiative-bar .player-initiative-toggle:focus-visible { outline:2px solid #dfc485; outline-offset:-2px; }
+.mesa-shell.player-initiative-bar[data-minimized=true] > .initiative-cards { display:none; }
+.mesa-shell.player-initiative-bar[data-minimized=true] > .player-initiative-backdrop { visibility:hidden; }

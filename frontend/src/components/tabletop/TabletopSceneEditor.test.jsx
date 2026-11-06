@@ -38,3 +38,14 @@ test('atalho Animar abre a imagem escolhida e altera só sua configuração',()=
  expect(save.mock.calls[0][0].imagensCena[0].animation).toBeUndefined();
  expect(save.mock.calls[0][0].imagensCena[1].animation.enabled).toBe(true);
 });
+
+test('a aba de cutscene abre uma página separada preservando a cena de origem',()=>{
+ mount();
+ fireEvent.click(screen.getByRole('tab',{name:'Cutscene'}));
+ const link=screen.getByRole('link',{name:'Abrir editor de cutscenes ↗'});
+ const url=new URL(link.getAttribute('href'),'http://localhost');
+ expect(url.searchParams.get('cutscene')).toBe('1');
+ expect(url.searchParams.get('cena')).toBe('scene1');
+ expect(url.searchParams.get('retorno')).toBe('2d');
+ expect(screen.queryByRole('region',{name:'Criador de cutscenes'})).not.toBeInTheDocument();
+});

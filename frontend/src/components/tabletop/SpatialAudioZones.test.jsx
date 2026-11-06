@@ -1,0 +1,28 @@
+import React from 'react';
+import {render} from '@testing-library/react';
+import {useFrame} from '@react-three/fiber';
+import SpatialAudioZones from './SpatialAudioZones';
+import {resolveCameraObstruction} from '../../utils/tabletopCollision';
+const mockScene={updateMatrixWorld:jest.fn()};
+jest.mock('@react-three/fiber',()=>({useFrame:jest.fn(),useThree:()=>({scene:mockScene,camera:{position:{toArray:()=>[0,1,0]},quaternion:{},getWorldDirection:vector=>{vector.values=[0,0,-1];return vector;}}})}));
+jest.mock('three',()=>({Vector3:class{constructor(...values){this.values=values;}applyQuaternion(){return this;}toArray(){return this.values;}}}));
+jest.mock('../../utils/tabletopCollision',()=>({mapCollisionMeshes:()=>[],collisionSignature:()=>'',createTokenCollisionWorld:()=>({}),resolveCameraObstruction:jest.fn()}));
+const parameter=()=>({value:0,setTargetAtTime:jest.fn()});
+const node=()=>({connect:jest.fn(destination=>destination),disconnect:jest.fn()});
+test('audio waits for activation, muffles obstacles and releases media resources',()=>{
+ const media={play:jest.fn().mockResolvedValue(),pause:jest.fn(),load:jest.fn(),addEventListener:jest.fn(),removeEventListener:jest.fn(),removeAttribute:jest.fn()};
+ const previous=global.Audio;global.Audio=jest.fn(()=>media);
+ const gain={...node(),gain:parameter()},filter={...node(),frequency:parameter()},panner={...node(),positionX:parameter(),positionY:parameter(),positionZ:parameter()},source=node();
+ const context={currentTime:0,destination:{},listener:{setPosition:jest.fn(),setOrientation:jest.fn()},createMediaElementSource:jest.fn(()=>source),createPanner:()=>panner,createBiquadFilter:()=>filter,createGain:()=>gain};
+ const zones=[{id:'door-sound',url:'https://example.com/sound.mp3',name:'Sussurros',x:0,y:1,z:1,radius:5,volume:.5}];
+ const {rerender,unmount}=render(<SpatialAudioZones zones={zones}/>);
+ expect(media.play).not.toHaveBeenCalled();
+ rerender(<SpatialAudioZones zones={zones} context={context}/>);
+ expect(media.play).toHaveBeenCalledTimes(1);
+ resolveCameraObstruction.mockReturnValue({fraction:.4});
+ useFrame.mock.calls[useFrame.mock.calls.length-1][0]({},.2);
+ expect(filter.frequency.setTargetAtTime).toHaveBeenCalledWith(650,0,.18);
+ expect(gain.gain.setTargetAtTime.mock.calls[0][0]).toBeCloseTo(.0704);
+ unmount();expect(media.pause).toHaveBeenCalled();expect(source.disconnect).toHaveBeenCalled();expect(filter.disconnect).toHaveBeenCalled();
+ global.Audio=previous;
+});

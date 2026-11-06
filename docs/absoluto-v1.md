@@ -1,5 +1,11 @@
 # Absoluto 1.0 no Darkness
 
+O escudo do mestre nas mesas 2D e 3D oferece Nova Cena para todas as fichas vinculadas. A ação zera Medo, bônus e bloqueio de Proteger-se, Ruptura e o marcador de recompensa por cena; também limpa os ajustes locais da próxima rolagem nas fichas abertas. Mantém os valores atuais de Integridade, Sanidade e Esperança, bem como habilidades, Ritos, efeitos ativados pelos jogadores e seus registros de uso. Não renova limites de sessão.
+
+As consequências do Medo são cumulativas e se aplicam contra a fonte: I impede vantagens por ajuda de aliados; II mantém I; III remove 1 dado apenas dos testes de Domínio; IV impede Esforço; V remove o bônus de Esquiva sem alterar a Defesa Base; VI exige escolher fugir, buscar abrigo ou proteger-se no início do turno. Clicar em Enfrentar o Medo em VI gasta imediatamente 5 Esperança e reduz o Medo para II, liberando os controles de Esperança e removendo as correntes. Sem 5 Esperança, a escolha fica indisponível. O custo não é cobrado novamente nas rolagens. A escolha narrativa do turno fica com o jogador; a ficha controla a escolha e o custo ao rolar contra a fonte. A ajuda de aliados é informada separadamente dos outros ajustes de dados. A Ruptura existente ao chegar a VI continua aplicável.
+
+A Defesa base de todos os jogadores é 2 Êxitos e aumenta pela Mobilidade: 0–2 → 2, 3–4 → 3, 5 → 4. Todas as classes têm acesso às reações básicas de Esquiva (+1 Defesa temporária, podendo alcançar 5) e Bloqueio (Proteção com equipamento adequado, reduz dano conforme o Vigor: 0–2 → 5, 3–4 → 10, 5 → 15). A ficha exibe Defesa Base, Esquiva e Bloqueio automaticamente. Reflexos define a quantidade de dados dos testes. Defesa evita acertos, Proteção reduz dano sem aumentar a Defesa e Integridade permite suportar ferimentos.
+
 Base: Protocolo Absoluto v1.0, acrescido dos esclarecimentos do autor nesta conversa.
 
 ## Regras consolidadas

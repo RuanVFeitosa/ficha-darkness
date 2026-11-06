@@ -50,3 +50,7 @@
 .mestre-modal-personagem .medo-barra .medo-painel{box-sizing:border-box;left:0;max-width:min(400px,calc(100vw - 56px));background:#10120f}
 @media(max-width:550px){.mestre-modal-personagem .medo-barra .abs-fear-seals{gap:5px}.mestre-modal-personagem .medo-barra .abs-fear-seals>button{height:58px}.mestre-modal-personagem .medo-barra .abs-fear-seals svg{width:32px;height:42px}.mestre-modal-personagem .medo-barra .medo-resumo-extra{font-size:9px}}
 
+
+.abs-fear-help-note{display:block;margin:8px 0;color:#b5a67e;font:10px/1.5 Arial,sans-serif}.abs-fear-collapse{display:grid;gap:6px;margin:10px 0;color:#b5a67e;font:11px/1.5 Arial,sans-serif}.abs-fear-collapse select{width:100%;min-width:0;padding:8px;border:1px solid #c8b17a40;border-radius:4px;background:#090b08;color:#e0d6ba;font:11px Arial,sans-serif}
+
+.abs-fear-collapse-trigger{display:block;width:100%;margin:10px 0;padding:10px;border:1px solid #c8b17a50;border-radius:4px;background:#c8b17a08;color:#d8c69c;font:11px/1.5 Arial,sans-serif;cursor:pointer}

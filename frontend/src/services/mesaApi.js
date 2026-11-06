@@ -1,8 +1,13 @@
+import { readLocalCampaign, writeLocalCampaign, removeLocalCampaign, listenLocalCampaign } from './localCampaignStorage';
 import { mediaStorage, externalizarImagens, r2Configurado } from "./mediaStorage";
 import { supabase, supabaseConfigurado, supabaseObrigatorioAusente } from "./supabase";
 import { tipoAudioUpload } from "../utils/audioUpload";
+import {readLocalTokenStates,writeLocalTokenState,listenLocalTokens} from './localTokenSync';
+import {mergeDoorStates} from '../utils/tabletopTokenState';
 
 import { normalizeMechanics } from '../utils/specialMechanics';
+import {specialSceneMime} from '../utils/specialSceneMedia';
+import {mapCutsceneSources,persistCutsceneSources} from '../utils/cutscene';
 
 const colunaAusente = (error, column) => Boolean(error &&
   ["42703", "PGRST204"].includes(error.code) &&
@@ -24,18 +29,20 @@ const TOKENS_DEMO = [
   { id: "demo-t2", ficha_id: "helena", nome: "Helena", x: 46, y: 46 },
 ];
 const chaveDemo = (campanhaId = "demo") => campanhaId === "demo" ? DEMO_STORAGE_KEY : `${DEMO_STORAGE_KEY}:${campanhaId}`;
-const carregarDemo = (campanhaId = "demo") => {
+const carregarDemo = async (campanhaId = "demo") => {
   try {
-    const salvo = JSON.parse(localStorage.getItem(chaveDemo(campanhaId)));
+    const salvo = await readLocalCampaign(chaveDemo(campanhaId));
     if (salvo && Array.isArray(salvo.cenas)) return salvo;
-  } catch {}
+  } catch (error) {
+    if (!(error instanceof SyntaxError)) throw error;
+  }
   if (campanhaId === "demo") {
     return { cenas: CENAS_DEMO_PADRAO, cenaAtivaId: CENAS_DEMO_PADRAO[0].id, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: MEMBROS_DEMO, tokens: TOKENS_DEMO };
   }
   return { cenas: [], cenaAtivaId: null, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: [], tokens: [], mapas3D: [] };
 };
-const salvarDemo = (estado, campanhaId = "demo") => {
-  localStorage.setItem(chaveDemo(campanhaId), JSON.stringify(estado));
+const salvarDemo = async (estado, campanhaId = "demo") => {
+  await writeLocalCampaign(chaveDemo(campanhaId), estado);
   window.dispatchEvent(new CustomEvent("darkness:campanha-demo", { detail: { campanhaId, estado } }));
 };
 
@@ -141,7 +148,7 @@ const normalizarMidiasCena = (cena = {}) => {
         : [],
     dificuldades: cena.dificuldades || {ambiente:4,combateAmbiente:4,conflitos:4},
     lojaDisponivel: Boolean(cena.loja_disponivel ?? cena.lojaDisponivel),
-    cenaEspecial: cena.cena_especial || cena.cenaEspecial || null,
+    cenaEspecial: Object.prototype.hasOwnProperty.call(cena,'cenaEspecial') ? cena.cenaEspecial : (cena.cena_especial || null),
     imagensCena: imagens.length ? imagens : imagemAntiga ? [{ id: `cena-${cena.id || "nova"}-1`, nome: "Cena principal", url: imagemAntiga }] : [],
     mapasBatalha: mapas.length ? mapas : mapaAntigo ? [{ id: `mapa-${cena.id || "nova"}-1`, nome: "Mapa principal", url: mapaAntigo, larguraGrade: cena.largura_grade || cena.larguraGrade || 12, alturaGrade: cena.altura_grade || cena.alturaGrade || 8 }] : [],
   };
@@ -154,7 +161,7 @@ const resolverMidiasLocais = async (cena) => {
     resolverImagemLocal(normalizada.cenaEspecial?.midiaUrl),
     resolverImagemLocal(normalizada.cenaEspecial?.audioUrl),
   ]);
-  return { ...normalizada, imagensCena, mapasBatalha, cenaEspecial: normalizada.cenaEspecial ? { ...normalizada.cenaEspecial, midiaUrlPersistida: normalizada.cenaEspecial.midiaUrl, audioUrlPersistida: normalizada.cenaEspecial.audioUrl, midiaUrl: midiaEspecialUrl, audioUrl: audioEspecialUrl } : null };
+  return { ...normalizada, imagensCena, mapasBatalha, cenaEspecial: normalizada.cenaEspecial ? { ...normalizada.cenaEspecial, cutscene:await mapCutsceneSources(normalizada.cenaEspecial.cutscene,resolverImagemLocal), midiaUrlPersistida: normalizada.cenaEspecial.midiaUrl, audioUrlPersistida: normalizada.cenaEspecial.audioUrl, midiaUrl: midiaEspecialUrl, audioUrl: audioEspecialUrl } : null };
 };
 const urlPersistivel = (urlAtual, urlPersistida) =>
   String(urlAtual || "").startsWith("blob:") ? (urlPersistida || urlAtual) : urlAtual;
@@ -192,6 +199,7 @@ const normalizarCampanha = (campanha, cenas = [], membros = [], tokens = [], rol
   midiaAtivaId: campanha.midia_ativa_id || null,
   modo: campanha.modo || "cena",
   combateAtivo: Boolean(campanha.combate_ativo),
+  turnoCombate: campanha.turno_combate || null,
   investigacaoAtiva: Boolean(campanha.investigacao_ativa),
   iniciativas: Object.fromEntries((iniciativas || []).map((item) => [item.ficha_id, Number(item.valor) || 0])),
   documentosInvestigacao: (documentosInvestigacao || []).map((item) => ({
@@ -230,9 +238,9 @@ export const buscarCampanhaPorCodigo = async (codigo) => {
   if (!supabaseConfigurado) {
     const campanha = listarCampanhasDemo().find((item) => item.codigo === codigoNormalizado);
     if (!campanha) return null;
-    const demo = carregarDemo(campanha.id);
+    const demo = await carregarDemo(campanha.id);
     const cenas = await Promise.all(demo.cenas.map(resolverMidiasLocais));
-    const tokens = aplicarPosicaoDoMapa(demo.tokens || TOKENS_DEMO, { cena_ativa_id: demo.cenaAtivaId, midia_ativa_id: demo.midiaAtivaId });
+    const tokens = aplicarPosicaoDoMapa(await readLocalTokenStates(campanha.id,demo.tokens || TOKENS_DEMO), { cena_ativa_id: demo.cenaAtivaId, midia_ativa_id: demo.midiaAtivaId });
     const documentosInvestigacao = await Promise.all((demo.documentosInvestigacao || []).map(async (documento) => ({
       ...documento,
       urlPersistida: documento.urlPersistida || documento.url,
@@ -244,8 +252,10 @@ export const buscarCampanhaPorCodigo = async (codigo) => {
       url: await resolverImagemLocal(som.urlPersistida || som.url),
     })));
     const mapas3D = await resolverMapas3DLocais(demo.mapas3D || campanha.mapas_3d || []);
+    const doorRecords=await readLocalTokenStates(campanha.id,mapas3D.map(map=>({id:`map3d:${map.id}`})));
+    mapas3D.forEach((map,index)=>{map.doorStates=mergeDoorStates(map.doorStates,doorRecords[index]?.posicoes?.doors);});
     campanha.mecanicasEspeciais = normalizeMechanics(demo.mecanicasEspeciais);
-    return { ...CAMPANHA_DEMO, ...campanha, modo: demo.modo, combateAtivo: Boolean(demo.combateAtivo), investigacaoAtiva: Boolean(demo.investigacaoAtiva), iniciativas: demo.iniciativas || {}, documentosInvestigacao, midiaAtivaId: demo.midiaAtivaId || null, cenas, membros: demo.membros || MEMBROS_DEMO, tokens, rolagens: demo.rolagens || CAMPANHA_DEMO.rolagens, inimigos: demo.inimigos || [], musicas: demo.musicas || [], musicaEstado: demo.musicaEstado || null, soundpad, soundpadEstado: demo.soundpadEstado || { ativos: {} }, mapas3D, clima3D: demo.clima3D || null, cenaAtiva: cenas.find((cena) => cena.id === demo.cenaAtivaId) || cenas[0] };
+    return { ...CAMPANHA_DEMO, ...campanha, modo: demo.modo, combateAtivo: Boolean(demo.combateAtivo), turnoCombate: demo.turnoCombate || null, investigacaoAtiva: Boolean(demo.investigacaoAtiva), iniciativas: demo.iniciativas || {}, documentosInvestigacao, midiaAtivaId: demo.midiaAtivaId || null, cenas, membros: demo.membros || MEMBROS_DEMO, tokens, rolagens: demo.rolagens || CAMPANHA_DEMO.rolagens, inimigos: demo.inimigos || [], musicas: demo.musicas || [], musicaEstado: demo.musicaEstado || null, soundpad, soundpadEstado: demo.soundpadEstado || { ativos: {} }, mapas3D, clima3D: demo.clima3D || null, cenaAtiva: cenas.find((cena) => cena.id === demo.cenaAtivaId) || cenas[0] };
   }
 
   const { data: campanha, error } = await supabase
@@ -308,19 +318,21 @@ export const listarCampanhasDaFicha = async (fichaId) => {
   return Promise.all((campanhas || []).map((campanha) => buscarCampanhaPorCodigo(campanha.codigo)));
 };
 
-export const criarCampanhaMesa = async (nome, tabletopTipo = "2d") => {
+export const criarCampanhaMesa = async (nome, tabletopTipo = "2d", sistema = "absoluto") => {
+  if (!['absoluto', 'espiral'].includes(sistema)) throw new Error('Sistema de campanha inválido.');
   const tabletop_tipo = tabletopTipo === "3d" ? "3d" : "2d";
   const codigo = `${String(nome || "CAMP").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 4).toUpperCase().padEnd(4, "X")}${Math.floor(10 + Math.random() * 90)}`;
   if (!supabaseConfigurado) {
     const campanhas = listarCampanhasDemo();
-    const campanha = { id: `demo-${Date.now()}`, codigo, nome: String(nome).trim(), modo: "cena", tabletop_tipo, criado_em: new Date().toISOString() };
+    const campanha = { id: `demo-${Date.now()}`, codigo, nome: String(nome).trim(), sistema, modo: "cena", tabletop_tipo, criado_em: new Date().toISOString() };
     salvarCampanhasDemo([campanha, ...campanhas]);
-    salvarDemo({ cenas: [], cenaAtivaId: null, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: [], tokens: [], mapas3D: [] }, campanha.id);
+    await salvarDemo({ cenas: [], cenaAtivaId: null, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: [], tokens: [], mapas3D: [] }, campanha.id);
     return campanha;
   }
   const { data: { user } } = await supabase.auth.getUser();
-  const payload = { nome: String(nome).trim(), codigo, mestre_id: user?.id || null, tabletop_tipo };
+  const payload = { nome: String(nome).trim(), codigo, mestre_id: user?.id || null, tabletop_tipo, sistema };
   let { data, error } = await supabase.from("campanhas").insert(payload).select().single();
+  if (colunaAusente(error, 'sistema')) throw new Error('Aplique a migração de sistema da campanha no Supabase.');
   if (colunaAusente(error, "tabletop_tipo")) {
     if (tabletop_tipo === "3d") throw new Error("Aplique a migração 034 no Supabase antes de criar campanhas 3D.");
     delete payload.tabletop_tipo;
@@ -330,10 +342,29 @@ export const criarCampanhaMesa = async (nome, tabletopTipo = "2d") => {
   return data;
 };
 
+export const salvarSistemaCampanha = async (campanhaId, sistema) => {
+  if (!['absoluto', 'espiral'].includes(sistema)) throw new Error('Sistema de campanha inválido.');
+  if (!supabaseConfigurado) {
+    const campanhas = listarCampanhasDemo();
+    const atual = campanhas.find(item => item.id === campanhaId);
+    if (!atual) throw new Error('Campanha não encontrada.');
+    const estado = await carregarDemo(campanhaId);
+    if ((estado.membros || []).some(m => String(m.ficha_id).startsWith('espiral:') !== (sistema === 'espiral'))) throw new Error('Desvincule as fichas de outro sistema antes de alterar o sistema da campanha.');
+    const campanha = {...atual, sistema};
+    salvarCampanhasDemo(campanhas.map(item => item.id === campanhaId ? campanha : item));
+    await salvarDemo(estado, campanhaId);
+    return campanha;
+  }
+  const {data, error} = await supabase.from('campanhas').update({sistema}).eq('id', campanhaId).select().single();
+  if (colunaAusente(error, 'sistema')) throw new Error('Aplique a migração de sistema da campanha no Supabase.');
+  if (error) throw error;
+  return data;
+};
+
 export const excluirCampanhaMesa = async (campanhaId) => {
   if (!supabaseConfigurado) {
     salvarCampanhasDemo(listarCampanhasDemo().filter((item) => item.id !== campanhaId));
-    localStorage.removeItem(chaveDemo(campanhaId));
+    await removeLocalCampaign(chaveDemo(campanhaId));
     return;
   }
   const { error } = await supabase.from("campanhas").delete().eq("id", campanhaId);
@@ -342,25 +373,43 @@ export const excluirCampanhaMesa = async (campanhaId) => {
 
 export const atualizarModoCampanha = async (campanhaId, modo) => {
   if (!supabaseConfigurado || campanhaId === "demo") {
-    const demo = carregarDemo(campanhaId); salvarDemo({ ...demo, modo }, campanhaId); return;
+    const demo = await carregarDemo(campanhaId); await salvarDemo({ ...demo, modo }, campanhaId); return;
   }
   const { error } = await supabase.from("campanhas").update({ modo }).eq("id", campanhaId);
   if (error) throw error;
 };
 
+export const salvarTurnoCombate = async (campanhaId, turno, expectedRevision=0) => {
+  if (!supabaseConfigurado || campanhaId === 'demo' || String(campanhaId).startsWith('demo-')) {
+    const demo=await carregarDemo(campanhaId);
+    if(!demo.combateAtivo) throw new Error('O combate não está ativo.');
+    if((demo.turnoCombate?.revision || 0)!==expectedRevision) throw new Error('O turno foi atualizado em outra tela. Atualize e tente novamente.');
+    await salvarDemo({...demo,turnoCombate:turno},campanhaId);
+    return turno;
+  }
+  let query=supabase.from('campanhas').update({turno_combate:turno}).eq('id',campanhaId).eq('combate_ativo',true);
+  query=expectedRevision ? query.eq('turno_combate->>revision',String(expectedRevision)) : query.is('turno_combate',null);
+  const {data,error}=await query.select('turno_combate').maybeSingle();
+  if(colunaAusente(error,'turno_combate')) throw new Error('Aplique a migração turnos_combate_campanha no Supabase para controlar os turnos online.');
+  if(error) throw error;
+  if(!data) throw new Error('O combate ou o turno mudou em outra tela. Atualize e tente novamente.');
+  return data.turno_combate;
+};
+
 export const atualizarModoCombate = async (campanhaId, ativo, limparIniciativas = false) => {
   const combateAtivo = Boolean(ativo);
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({
+    const demo = await carregarDemo(campanhaId);
+    await salvarDemo({
       ...demo,
       combateAtivo,
+      turnoCombate: null,
       investigacaoAtiva: combateAtivo ? false : Boolean(demo.investigacaoAtiva),
       iniciativas: limparIniciativas ? {} : (demo.iniciativas || {}),
     }, campanhaId);
     return;
   }
-  const payload = { combate_ativo: combateAtivo };
+  const payload = { combate_ativo: combateAtivo, turno_combate: null };
   if (combateAtivo) payload.investigacao_ativa = false;
   const { error } = await supabase.from("campanhas").update(payload).eq("id", campanhaId);
   if (error) throw error;
@@ -373,16 +422,17 @@ export const atualizarModoCombate = async (campanhaId, ativo, limparIniciativas 
 export const atualizarModoInvestigacao = async (campanhaId, ativo, limparIniciativas = false) => {
   const investigacaoAtiva = Boolean(ativo);
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({
+    const demo = await carregarDemo(campanhaId);
+    await salvarDemo({
       ...demo,
       investigacaoAtiva,
+      turnoCombate: null,
       combateAtivo: investigacaoAtiva ? false : Boolean(demo.combateAtivo),
       iniciativas: limparIniciativas ? {} : (demo.iniciativas || {}),
     }, campanhaId);
     return;
   }
-  const payload = { investigacao_ativa: investigacaoAtiva };
+  const payload = { investigacao_ativa: investigacaoAtiva, turno_combate: null };
   if (investigacaoAtiva) payload.combate_ativo = false;
   const { error } = await supabase.from("campanhas").update(payload).eq("id", campanhaId);
   if (error) throw error;
@@ -398,8 +448,8 @@ export const definirIniciativa = async (campanhaId, fichaId, valor, nome = "") =
   const iniciativa = Math.max(0, Number(valor) || 0);
 
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({
+    const demo = await carregarDemo(campanhaId);
+    await salvarDemo({
       ...demo,
       iniciativas: { ...(demo.iniciativas || {}), [ficha]: iniciativa },
     }, campanhaId);
@@ -419,10 +469,10 @@ export const removerIniciativa = async (campanhaId, fichaId) => {
   const ficha = String(fichaId || "").trim();
   if (!ficha) return;
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     const iniciativas = { ...(demo.iniciativas || {}) };
     delete iniciativas[ficha];
-    salvarDemo({ ...demo, iniciativas }, campanhaId);
+    await salvarDemo({ ...demo, iniciativas }, campanhaId);
     return;
   }
   const { error } = await supabase.from("iniciativas_campanha").delete().eq("campanha_id", campanhaId).eq("ficha_id", ficha);
@@ -431,7 +481,7 @@ export const removerIniciativa = async (campanhaId, fichaId) => {
 
 export const ativarCena = async (campanhaId, cenaId, modo = "cena", midiaId = null) => {
   if (!supabaseConfigurado || campanhaId === "demo") {
-    const demo = carregarDemo(campanhaId); salvarDemo({ ...demo, cenaAtivaId: cenaId, modo, midiaAtivaId: midiaId }, campanhaId); return;
+    const demo = await carregarDemo(campanhaId); await salvarDemo({ ...demo, cenaAtivaId: cenaId, modo, midiaAtivaId: midiaId }, campanhaId); return;
   }
   const { error } = await supabase.from("campanhas").update({ cena_ativa_id: cenaId, modo, midia_ativa_id: midiaId }).eq("id", campanhaId);
   if (error) throw error;
@@ -445,8 +495,8 @@ export const salvarMusicasCampanha = async (campanhaId, musicas) => {
     capa: String(musica.capa || "").trim(),
   })).filter((musica) => musica.url);
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({ ...demo, musicas: normalizadas }, campanhaId);
+    const demo = await carregarDemo(campanhaId);
+    await salvarDemo({ ...demo, musicas: normalizadas }, campanhaId);
     return normalizadas;
   }
   const { error } = await supabase.from("campanhas").update({ musicas: normalizadas }).eq("id", campanhaId);
@@ -457,12 +507,12 @@ export const salvarMusicasCampanha = async (campanhaId, musicas) => {
 export const ordenarCenasCampanha = async (campanhaId, cenas) => {
   const ordenadas = (cenas || []).map((cena, ordem) => ({ ...cena, ordem }));
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     const ordens = new Map(ordenadas.map((cena) => [cena.id, cena.ordem]));
     const atualizadas = (demo.cenas || [])
       .map((cena) => ({ ...cena, ordem: ordens.get(cena.id) ?? cena.ordem ?? 0 }))
       .sort((a, b) => a.ordem - b.ordem);
-    salvarDemo({ ...demo, cenas: atualizadas }, campanhaId);
+    await salvarDemo({ ...demo, cenas: atualizadas }, campanhaId);
     return atualizadas;
   }
   const resultados = await Promise.all(
@@ -478,9 +528,9 @@ export const salvarMecanicasCampanha = async (campanhaId, state, expectedRevisio
   if (next.revision !== expectedRevision + 1) throw new Error('Revisão de mecânica inválida.');
   const conflict = () => Object.assign(new Error('A mecânica mudou em outra janela. Atualize o painel antes de tentar novamente.'), { code: 'MECHANIC_CONFLICT' });
   if (!supabaseConfigurado || campanhaId === 'demo' || String(campanhaId).startsWith('demo-')) {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     if (normalizeMechanics(demo.mecanicasEspeciais).revision !== expectedRevision) throw conflict();
-    salvarDemo({ ...demo, mecanicasEspeciais: next }, campanhaId);
+    await salvarDemo({ ...demo, mecanicasEspeciais: next }, campanhaId);
     return next;
   }
   const { data, error } = await supabase.from('campanhas')
@@ -496,8 +546,8 @@ export const salvarMecanicasCampanha = async (campanhaId, state, expectedRevisio
 export const atualizarEstadoMusica = async (campanhaId, estado) => {
   const musicaEstado = { ...estado, atualizadoEm: new Date().toISOString() };
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({ ...demo, musicaEstado }, campanhaId);
+    const demo = await carregarDemo(campanhaId);
+    await salvarDemo({ ...demo, musicaEstado }, campanhaId);
     return musicaEstado;
   }
   const { error } = await supabase.from("campanhas").update({ musica_estado: musicaEstado }).eq("id", campanhaId);
@@ -513,7 +563,7 @@ export const salvarSoundpadCampanha = async (campanhaId, sons) => {
     ordem,
   }));
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId); salvarDemo({ ...demo, soundpad }, campanhaId); return soundpad;
+    const demo = await carregarDemo(campanhaId); await salvarDemo({ ...demo, soundpad }, campanhaId); return soundpad;
   }
   const { error } = await supabase.from("campanhas").update({ soundpad }).eq("id", campanhaId);
   if (error) throw error;
@@ -533,8 +583,8 @@ export const salvarMapas3DCampanha = async (campanhaId, mapas) => {
     })),
   }));
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({ ...demo, mapas3D }, campanhaId);
+    const demo = await carregarDemo(campanhaId);
+    await salvarDemo({ ...demo, mapas3D }, campanhaId);
     return mapas3D;
   }
   const { error } = await supabase.from("campanhas").update({ mapas_3d: mapas3D }).eq("id", campanhaId);
@@ -542,11 +592,27 @@ export const salvarMapas3DCampanha = async (campanhaId, mapas) => {
   return mapas3D;
 };
 
+export const salvarPorta3DCampanha = async (campanhaId,mapaId,portaId,open) => {
+  const patch={[portaId]:{open:Boolean(open),interactive:true,revision:Date.now()}};
+  if(!supabaseConfigurado || campanhaId==='demo' || String(campanhaId).startsWith('demo-')) {
+    await writeLocalTokenState(campanhaId,{id:`map3d:${mapaId}`,ficha_id:`map3d:${mapaId}`},'doors',patch);
+    return patch;
+  }
+  const {data,error}=await supabase.from('campanhas').select('mapas_3d').eq('id',campanhaId).single();
+  if(error) throw error;
+  const mapas=data.mapas_3d || [];
+  if(!mapas.some(map=>map.id===mapaId)) throw new Error('Mapa não encontrado na campanha.');
+  const updated=mapas.map(map=>map.id===mapaId ? {...map,doorStates:mergeDoorStates(map.doorStates,patch)} : map);
+  const {error:writeError}=await supabase.from('campanhas').update({mapas_3d:updated}).eq('id',campanhaId);
+  if(writeError) throw writeError;
+  return patch;
+};
+
 export const salvarClima3DCampanha = async (campanhaId, clima) => {
   const clima3D = { ...(clima || {}), atualizadoEm: new Date().toISOString() };
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({ ...demo, clima3D }, campanhaId);
+    const demo = await carregarDemo(campanhaId);
+    await salvarDemo({ ...demo, clima3D }, campanhaId);
     return clima3D;
   }
   const { error } = await supabase.from("campanhas").update({ clima_3d: clima3D }).eq("id", campanhaId);
@@ -617,7 +683,7 @@ export const enviarModelo3DMapa = async (campanhaId, arquivos, onProgress) => {
 export const atualizarEstadoSoundpad = async (campanhaId, estado) => {
   const soundpadEstado = { ...(estado || {}), atualizadoEm: new Date().toISOString() };
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId); salvarDemo({ ...demo, soundpadEstado }, campanhaId); return soundpadEstado;
+    const demo = await carregarDemo(campanhaId); await salvarDemo({ ...demo, soundpadEstado }, campanhaId); return soundpadEstado;
   }
   const { error } = await supabase.from("campanhas").update({ soundpad_estado: soundpadEstado }).eq("id", campanhaId);
   if (error) throw error;
@@ -627,7 +693,7 @@ export const atualizarEstadoSoundpad = async (campanhaId, estado) => {
 export const salvarCena = async (campanhaId, cena) => {
   const normalizada = normalizarMidiasCena(cena);
   if (!supabaseConfigurado || campanhaId === "demo") {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     const id = cena.id || `cena-${Date.now()}`;
     const nova = {
       ...normalizada,
@@ -635,6 +701,7 @@ export const salvarCena = async (campanhaId, cena) => {
       mapasBatalha: normalizada.mapasBatalha.map((midia) => ({ ...midia, url: String(midia.url || "").startsWith("local-image://") ? midia.url : (midia.urlPersistida || midia.url) })),
       cenaEspecial: normalizada.cenaEspecial ? {
         ...normalizada.cenaEspecial,
+        cutscene:persistCutsceneSources(normalizada.cenaEspecial.cutscene),
         midiaUrl: urlPersistivel(normalizada.cenaEspecial.midiaUrl, normalizada.cenaEspecial.midiaUrlPersistida),
         audioUrl: urlPersistivel(normalizada.cenaEspecial.audioUrl, normalizada.cenaEspecial.audioUrlPersistida),
       } : null,
@@ -642,7 +709,7 @@ export const salvarCena = async (campanhaId, cena) => {
       ordem: cena.ordem ?? demo.cenas.length,
     };
     const cenas = demo.cenas.some((item) => item.id === id) ? demo.cenas.map((item) => item.id === id ? nova : item) : [...demo.cenas, nova];
-    salvarDemo({ ...demo, cenas }, campanhaId); return nova;
+    await salvarDemo({ ...demo, cenas }, campanhaId); return nova;
   }
   const imagensPersistidas = await Promise.all(normalizada.imagensCena.map(async ({ urlPersistida, ...midia }) => ({
     ...midia,
@@ -671,9 +738,10 @@ export const salvarCena = async (campanhaId, cena) => {
       : [...new Set((cena.jogadoresVisiveis || cena.jogadores_visiveis || []).map(String))],
     cena_especial: cena.cenaEspecial ? {
       ...cena.cenaEspecial,
+      cutscene:cena.cenaEspecial.cutscene ? await externalizarImagens(persistCutsceneSources(cena.cenaEspecial.cutscene)) : undefined,
       midiaUrl: urlPersistivel(cena.cenaEspecial.midiaUrl, cena.cenaEspecial.midiaUrlPersistida),
       audioUrl: urlPersistivel(cena.cenaEspecial.audioUrl, cena.cenaEspecial.audioUrlPersistida),
-    } : (cena.cena_especial || null),
+    } : (Object.prototype.hasOwnProperty.call(cena,'cenaEspecial') ? null : (cena.cena_especial || null)),
   };
   let { data, error } = await supabase.from("cenas").upsert(payload).select().single();
 
@@ -697,29 +765,29 @@ export const salvarCena = async (campanhaId, cena) => {
 
 export const excluirCena = async (campanhaId, cenaId) => {
   if (!supabaseConfigurado || campanhaId === "demo") {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     const cenas = demo.cenas.filter((item) => item.id !== cenaId);
-    salvarDemo({ ...demo, cenas, cenaAtivaId: demo.cenaAtivaId === cenaId ? cenas[0]?.id : demo.cenaAtivaId }, campanhaId); return;
+    await salvarDemo({ ...demo, cenas, cenaAtivaId: demo.cenaAtivaId === cenaId ? cenas[0]?.id : demo.cenaAtivaId }, campanhaId); return;
   }
   const { error } = await supabase.from("cenas").delete().eq("id", cenaId).eq("campanha_id", campanhaId);
   if (error) throw error;
 };
 
 export const LIMITES_UPLOAD_IMAGEM = {
-  cena: { bytes: 2 * 1024 * 1024, rotulo: "2 MB" },
-  mapa: { bytes: 5 * 1024 * 1024, rotulo: "5 MB" },
+  cena: { bytes: 25 * 1024 * 1024, rotulo: "25 MB" },
+  mapa: { bytes: 25 * 1024 * 1024, rotulo: "25 MB" },
   especial: { bytes: 25 * 1024 * 1024, rotulo: "25 MB" },
   audio: { bytes: 20 * 1024 * 1024, rotulo: "20 MB" },
 };
 const TIPOS_IMAGEM_PERMITIDOS = new Set(["image/webp", "image/jpeg", "image/png", "image/avif"]);
-const TIPOS_ESPECIAIS_PERMITIDOS = new Set([...TIPOS_IMAGEM_PERMITIDOS, "image/gif", "video/mp4", "video/webm"]);
+const TIPOS_ESPECIAIS_PERMITIDOS = new Set([...TIPOS_IMAGEM_PERMITIDOS, "image/gif", "image/apng", "image/bmp", "image/x-icon", "video/mp4", "video/webm"]);
 
 export const validarArquivoImagem = (arquivo, tipo = "cena") => {
   if (!arquivo) return null;
   const limite = LIMITES_UPLOAD_IMAGEM[tipo] || LIMITES_UPLOAD_IMAGEM.cena;
-  const tipos = tipo === "especial" ? TIPOS_ESPECIAIS_PERMITIDOS : TIPOS_IMAGEM_PERMITIDOS;
-  if (tipo === "audio" ? !tipoAudioUpload(arquivo) : !tipos.has(arquivo.type)) {
-    if (tipo === "especial") throw new Error("Formato nao permitido. Use GIF, MP4, WebM, WebP, JPEG, PNG ou AVIF.");
+  const tipos = TIPOS_ESPECIAIS_PERMITIDOS;
+  if (tipo === "audio" ? !tipoAudioUpload(arquivo) : !tipos.has(specialSceneMime(arquivo))) {
+    if (tipo !== "audio") throw new Error("Formato nao permitido. Use GIF, PNG, APNG, JPEG, WebP, AVIF, BMP, ICO, MP4 ou WebM.");
     if (tipo === "audio") throw new Error("Formato de audio nao permitido. Use MP3, OGG, Opus, WAV, WebM, M4A, MP4, AAC ou FLAC.");
     throw new Error("Formato nao permitido. Use WebP, JPEG, PNG ou AVIF.");
   }
@@ -733,6 +801,9 @@ export const validarArquivoImagem = (arquivo, tipo = "cena") => {
 export const enviarImagemCena = async (campanhaId, arquivo, tipo) => {
   if (!arquivo) return null;
   validarArquivoImagem(arquivo, tipo);
+  if (tipo !== "audio" && arquivo.type !== specialSceneMime(arquivo)) {
+    arquivo = new File([arquivo], arquivo.name, {type:specialSceneMime(arquivo),lastModified:arquivo.lastModified});
+  }
   if (!supabaseConfigurado || campanhaId === "demo") {
     if (typeof indexedDB !== "undefined") {
       const chave = `${campanhaId}-${tipo}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -746,10 +817,17 @@ export const enviarImagemCena = async (campanhaId, arquivo, tipo) => {
   const { error } = await mediaStorage.from("mapas").upload(caminho, arquivo, {
     upsert: false,
     ...(tipo === "audio" ? { contentType: tipoAudioUpload(arquivo) } : {}),
+    ...(tipo !== "audio" ? { contentType: specialSceneMime(arquivo) } : {}),
   });
   if (error) throw error;
   return mediaStorage.from("mapas").getPublicUrl(caminho).data.publicUrl;
 };
+
+export const enviarMidiaCutscene = async (campanhaId, arquivo, tipo) => {
+  const srcPersistida=await enviarImagemCena(campanhaId,arquivo,tipo);
+  return {src:await resolverImagemLocal(srcPersistida),srcPersistida};
+};
+export const resolverProjetoCutscene = project => mapCutsceneSources(project,resolverImagemLocal);
 
 export const LIMITE_DOCUMENTO_INVESTIGACAO = { bytes: 12 * 1024 * 1024, rotulo: "12 MB" };
 const TIPOS_DOCUMENTO_INVESTIGACAO = new Set([
@@ -784,7 +862,7 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
     : [...new Set((metadados.jogadoresVisiveis || []).map((id) => String(id || "").trim()).filter(Boolean))];
 
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     let url = "";
     if (typeof indexedDB !== "undefined") {
       const chave = `${campanhaId}-investigacao-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -817,7 +895,7 @@ export const salvarDocumentoInvestigacao = async (campanhaId, arquivo, metadados
       criado_em: new Date().toISOString(),
       criadoEm: new Date().toISOString(),
     };
-    salvarDemo({
+    await salvarDemo({
       ...demo,
       documentosInvestigacao: [documento, ...(demo.documentosInvestigacao || [])],
     }, campanhaId);
@@ -963,7 +1041,7 @@ const prepararImagensConteudoComputador = async (campanhaId, documentoId, conten
 
 export const lerConteudoComputador = async (campanhaId, documentoId) => {
   if (!supabaseConfigurado || String(campanhaId).startsWith("demo")) {
-    return carregarDemo(campanhaId).documentosInvestigacao?.find(
+    return (await carregarDemo(campanhaId)).documentosInvestigacao?.find(
       (d) => String(d.id) === String(documentoId),
     )?.conteudo_interativo ?? null;
   }
@@ -997,8 +1075,8 @@ export const salvarConteudoComputador = async (
     throw new Error("Conteúdo do PC inválido.");
   }
   if (!supabaseConfigurado || String(campanhaId).startsWith("demo")) {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({
+    const demo = await carregarDemo(campanhaId);
+    await salvarDemo({
       ...demo,
       documentosInvestigacao: (demo.documentosInvestigacao || []).map((d) =>
         String(d.id) === String(documentoId) ? { ...d, conteudo_interativo: content } : d,
@@ -1133,13 +1211,13 @@ export const salvarEvidenciaInterativa = async (campanhaId, metadados = {}) => {
   };
 
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     const documento = {
       ...registro,
       id: `interativo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       criado_em: new Date().toISOString(),
     };
-    salvarDemo({
+    await salvarDemo({
       ...demo,
       documentosInvestigacao: [documento, ...(demo.documentosInvestigacao || [])],
     }, campanhaId);
@@ -1189,7 +1267,7 @@ export const atualizarVisibilidadeDocumentoInvestigacao = async (
   }
 
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     let atualizado = null;
     const documentos = (demo.documentosInvestigacao || []).map((item) => {
       if (String(item.id) !== String(documentoId)) return item;
@@ -1203,7 +1281,7 @@ export const atualizarVisibilidadeDocumentoInvestigacao = async (
       return atualizado;
     });
     if (!atualizado) throw new Error("Documento nao encontrado.");
-    salvarDemo({ ...demo, documentosInvestigacao: documentos }, campanhaId);
+    await salvarDemo({ ...demo, documentosInvestigacao: documentos }, campanhaId);
     return atualizado;
   }
 
@@ -1243,7 +1321,7 @@ export const atualizarRevelacaoDocumentoInvestigacao = async (
 
   const valor = revelada !== false;
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     let atualizado = null;
     const documentos = (demo.documentosInvestigacao || []).map((item) => {
       if (String(item.id) !== String(documentoId)) return item;
@@ -1251,7 +1329,7 @@ export const atualizarRevelacaoDocumentoInvestigacao = async (
       return atualizado;
     });
     if (!atualizado) throw new Error("Documento nao encontrado.");
-    salvarDemo({ ...demo, documentosInvestigacao: documentos }, campanhaId);
+    await salvarDemo({ ...demo, documentosInvestigacao: documentos }, campanhaId);
     return atualizado;
   }
 
@@ -1283,8 +1361,8 @@ export const excluirDocumentoInvestigacao = async (campanhaId, documento) => {
   if (!id) return;
 
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({
+    const demo = await carregarDemo(campanhaId);
+    await salvarDemo({
       ...demo,
       documentosInvestigacao: (demo.documentosInvestigacao || []).filter((item) => item.id !== id),
     }, campanhaId);
@@ -1321,9 +1399,9 @@ export const excluirDocumentoInvestigacao = async (campanhaId, documento) => {
 
 export const moverToken = async (tokenId, x, y, mapaChave = "mapa-principal") => {
   if (!supabaseConfigurado || String(tokenId).startsWith("demo")) {
-    const campanhaId = listarCampanhasDemo().find((campanha) => (carregarDemo(campanha.id).tokens || []).some((token) => token.id === tokenId))?.id || "demo";
-    const estado = carregarDemo(campanhaId);
-    salvarDemo({ ...estado, tokens: (estado.tokens || TOKENS_DEMO).map((token) => token.id === tokenId ? { ...token, x, y, posicoes: { ...(token.posicoes || {}), [mapaChave]: { x, y } } } : token) }, campanhaId);
+    const campanhaId = (await Promise.all(listarCampanhasDemo().map(async campanha => ({id:campanha.id, estado:await carregarDemo(campanha.id)})))).find(({estado}) => (estado.tokens || []).some(token => token.id === tokenId))?.id || "demo";
+    const estado = await carregarDemo(campanhaId);
+    await salvarDemo({ ...estado, tokens: (estado.tokens || TOKENS_DEMO).map((token) => token.id === tokenId ? { ...token, x, y, posicoes: { ...(token.posicoes || {}), [mapaChave]: { x, y } } } : token) }, campanhaId);
     return;
   }
   const { data, error } = await supabase.rpc("mover_token_tabletop", {
@@ -1369,10 +1447,13 @@ const atualizarEstadoTokenMapa = async (tokenId, mapaChave, mudanca) => {
   const chaveEstado = chaveEstadoTokenMapa(mapaChave);
 
   if (!supabaseConfigurado || String(tokenId).startsWith("demo")) {
-    const campanhaId = listarCampanhasDemo().find((campanha) =>
-      (carregarDemo(campanha.id).tokens || []).some((token) => token.id === tokenId)
-    )?.id || "demo";
-    const estado = carregarDemo(campanhaId);
+    const campanhaId = (await Promise.all(listarCampanhasDemo().map(async campanha => ({id:campanha.id, estado:await carregarDemo(campanha.id)})))).find(({estado}) => (estado.tokens || []).some(token => token.id === tokenId))?.id || "demo";
+    const estado = await carregarDemo(campanhaId);
+    if(mapaChave.startsWith('tabletop3d:')) {
+      const token=(estado.tokens || TOKENS_DEMO).find(item=>item.id===tokenId);
+      if(!token) throw new Error('Token não encontrado nesta campanha.');
+      return writeLocalTokenState(campanhaId,token,chaveEstado,mudanca);
+    }
     let atualizado = null;
     const tokens = (estado.tokens || TOKENS_DEMO).map((token) => {
       if (token.id !== tokenId) return token;
@@ -1386,7 +1467,7 @@ const atualizarEstadoTokenMapa = async (tokenId, mapaChave, mudanca) => {
       };
       return atualizado;
     });
-    salvarDemo({ ...estado, tokens }, campanhaId);
+    await salvarDemo({ ...estado, tokens }, campanhaId);
     return atualizado;
   }
 
@@ -1398,7 +1479,6 @@ const atualizarEstadoTokenMapa = async (tokenId, mapaChave, mudanca) => {
   if (erroConsulta) throw erroConsulta;
 
   const estadoAtual = tokenAtual.posicoes?.[chaveEstado] || {};
-  mudanca = await externalizarImagens({ ...estadoAtual, ...mudanca });
   const { data, error } = await supabase
     .from("tokens_mapa")
     .update({
@@ -1454,8 +1534,8 @@ export const registrarRolagem = async (campanhaId, autorNome, rolagem) => {
   };
 
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({ ...demo, rolagens: [registro, ...(demo.rolagens || [])].slice(0, 30) }, campanhaId);
+    const demo = await carregarDemo(campanhaId);
+    await salvarDemo({ ...demo, rolagens: [registro, ...(demo.rolagens || [])].slice(0, 30) }, campanhaId);
     return registro;
   }
 
@@ -1467,6 +1547,10 @@ export const registrarRolagem = async (campanhaId, autorNome, rolagem) => {
 };
 
 export const vincularFicha = async (campanhaId, fichaId, personagem) => {
+  if (!supabaseConfigurado || campanhaId === 'demo') {
+    const campanha = listarCampanhasDemo().find(item => item.id === campanhaId);
+    if (campanha?.sistema && (String(fichaId).startsWith('espiral:') !== (campanha.sistema === 'espiral'))) throw new Error('Esta ficha pertence a outro sistema.');
+  }
   const nome = personagem?.nome || fichaId;
   const hashFicha = Array.from(String(fichaId)).reduce(
     (total, caractere) => ((total * 31) + caractere.charCodeAt(0)) >>> 0,
@@ -1477,12 +1561,12 @@ export const vincularFicha = async (campanhaId, fichaId, personagem) => {
     y: 24 + (Math.floor(hashFicha / 5) % 4) * 17,
   };
   if (!supabaseConfigurado || campanhaId === "demo") {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     const membroExistente = demo.membros?.find((item) => item.ficha_id === fichaId);
     const tokenExistente = demo.tokens?.some((item) => item.ficha_id === fichaId);
     const membro = membroExistente || { id: `demo-m-${Date.now()}-${fichaId}`, ficha_id: fichaId, nome, papel: "jogador" };
     const token = { id: `demo-t-${Date.now()}-${fichaId}`, ficha_id: fichaId, nome, ...posicaoToken };
-    salvarDemo({
+    await salvarDemo({
       ...demo,
       membros: membroExistente ? demo.membros : [...(demo.membros || []), membro],
       tokens: tokenExistente ? demo.tokens : [...(demo.tokens || []), token],
@@ -1512,12 +1596,12 @@ export const vincularFicha = async (campanhaId, fichaId, personagem) => {
 export const posicionarFichaNoMapa = async (campanhaId, fichaId, personagem, x, y, mapaChave = "mapa-principal") => {
   await vincularFicha(campanhaId, fichaId, personagem);
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     const token = (demo.tokens || []).find((item) => item.ficha_id === fichaId);
     if (!token) throw new Error("Nao foi possivel criar o token desta ficha.");
     const chaveEstado = chaveEstadoTokenMapa(mapaChave);
     const atualizado = { ...token, x, y, oculto: false, removido: false, posicoes: { ...(token.posicoes || {}), [mapaChave]: { x, y }, [chaveEstado]: { oculto: false, removido: false }, [CHAVE_ESTADO_GLOBAL_TOKEN]: { ...(token.posicoes?.[CHAVE_ESTADO_GLOBAL_TOKEN] || {}), removido: false } } };
-    salvarDemo({ ...demo, tokens: demo.tokens.map((item) => item.id === token.id ? atualizado : item) }, campanhaId);
+    await salvarDemo({ ...demo, tokens: demo.tokens.map((item) => item.id === token.id ? atualizado : item) }, campanhaId);
     return atualizado;
   }
   const { data: token, error: erroToken } = await supabase.from("tokens_mapa").select("*").eq("campanha_id", campanhaId).eq("ficha_id", fichaId).maybeSingle();
@@ -1536,12 +1620,12 @@ export const posicionarInimigoNoMapa = async (campanhaId, inimigo, x, y, mapaCha
   const imagemUrl = inimigo?.fotoPerfil || inimigo?.imagem || inimigo?.imagem_url || "/OAbsoluto.webp";
 
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     const existente = (demo.tokens || []).find((item) => item.ficha_id === fichaId);
     const token = existente
       ? { ...existente, nome, imagem_url: imagemUrl, x, y, oculto: false, removido: false, posicoes: { ...(existente.posicoes || {}), [mapaChave]: { x, y }, [chaveEstadoTokenMapa(mapaChave)]: { oculto: false, removido: false }, [CHAVE_ESTADO_GLOBAL_TOKEN]: { ...(existente.posicoes?.[CHAVE_ESTADO_GLOBAL_TOKEN] || {}), removido: false } } }
       : { id: `demo-token-inimigo-${Date.now()}-${referencia}`, ficha_id: fichaId, nome, imagem_url: imagemUrl, x, y, oculto: false, removido: false, posicoes: { [mapaChave]: { x, y }, [chaveEstadoTokenMapa(mapaChave)]: { oculto: false, removido: false }, [CHAVE_ESTADO_GLOBAL_TOKEN]: { removido: false } } };
-    salvarDemo({
+    await salvarDemo({
       ...demo,
       tokens: existente
         ? demo.tokens.map((item) => item.id === existente.id ? token : item)
@@ -1573,8 +1657,8 @@ export const posicionarInimigoNoMapa = async (campanhaId, inimigo, x, y, mapaCha
 
 export const desvincularFicha = async (campanhaId, fichaId) => {
   if (!supabaseConfigurado || campanhaId === "demo") {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({ ...demo, membros: (demo.membros || []).filter((item) => item.ficha_id !== fichaId), tokens: (demo.tokens || []).filter((item) => item.ficha_id !== fichaId) }, campanhaId);
+    const demo = await carregarDemo(campanhaId);
+    await salvarDemo({ ...demo, membros: (demo.membros || []).filter((item) => item.ficha_id !== fichaId), tokens: (demo.tokens || []).filter((item) => item.ficha_id !== fichaId) }, campanhaId);
     return;
   }
   const [{ error: membroError }, { error: tokenError }] = await Promise.all([
@@ -1587,10 +1671,10 @@ export const desvincularFicha = async (campanhaId, fichaId) => {
 export const vincularInimigo = async (campanhaId, inimigo) => {
   const referencia = String(inimigo.id || inimigo.fichaId);
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     if ((demo.inimigos || []).some((item) => String(item.inimigo_ref || item.id) === referencia)) return;
     const registro = { ...inimigo, id: `inimigo-mesa-${Date.now()}`, inimigo_ref: referencia };
-    salvarDemo({ ...demo, inimigos: [...(demo.inimigos || []), registro] }, campanhaId);
+    await salvarDemo({ ...demo, inimigos: [...(demo.inimigos || []), registro] }, campanhaId);
     return registro;
   }
   const { data, error } = await supabase.from("inimigos_campanha").insert({ campanha_id: campanhaId, inimigo_ref: referencia, nome: inimigo.nome || "Inimigo", dados: inimigo }).select().single();
@@ -1599,13 +1683,24 @@ export const vincularInimigo = async (campanhaId, inimigo) => {
 };
 
 export const desvincularInimigo = async (campanhaId, inimigoId) => {
-  if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
-    salvarDemo({ ...demo, inimigos: (demo.inimigos || []).filter((item) => item.id !== inimigoId) }, campanhaId);
+  const matches=key=>key===`npc:${inimigoId}` || key.startsWith(`inimigo:${inimigoId}:`);
+  if (!supabaseConfigurado || campanhaId === 'demo' || String(campanhaId).startsWith('demo-')) {
+    const demo=await carregarDemo(campanhaId);
+    const enemy=(demo.inimigos || []).find(item=>item.id===inimigoId);
+    const refs=new Set([`inimigo:${inimigoId}`,`inimigo:${enemy?.inimigo_ref || inimigoId}`]);
+    await salvarDemo({...demo,inimigos:(demo.inimigos || []).filter(item=>item.id!==inimigoId),tokens:(demo.tokens || []).filter(item=>!refs.has(item.ficha_id)),iniciativas:Object.fromEntries(Object.entries(demo.iniciativas || {}).filter(([key])=>!matches(key)))},campanhaId);
     return;
   }
-  const { error } = await supabase.from("inimigos_campanha").delete().eq("id", inimigoId).eq("campanha_id", campanhaId);
-  if (error) throw error;
+  const {data:enemy,error:readError}=await supabase.from('inimigos_campanha').select('inimigo_ref').eq('id',inimigoId).eq('campanha_id',campanhaId).maybeSingle();
+  if(readError)throw readError;
+  const {data:turns,error:turnError}=await supabase.from('iniciativas_campanha').select('ficha_id').eq('campanha_id',campanhaId);
+  if(turnError)throw turnError;
+  const keys=(turns || []).map(item=>item.ficha_id).filter(matches);
+  if(keys.length){const {error}=await supabase.from('iniciativas_campanha').delete().eq('campanha_id',campanhaId).in('ficha_id',keys);if(error)throw error;}
+  const {error:tokenError}=await supabase.from('tokens_mapa').delete().eq('campanha_id',campanhaId).in('ficha_id',[`inimigo:${inimigoId}`,`inimigo:${enemy?.inimigo_ref || inimigoId}`]);
+  if(tokenError)throw tokenError;
+  const {error}=await supabase.from('inimigos_campanha').delete().eq('id',inimigoId).eq('campanha_id',campanhaId);
+  if(error)throw error;
 };
 
 export const atualizarInimigoCampanha = async (campanhaId, inimigo) => {
@@ -1616,9 +1711,9 @@ export const atualizarInimigoCampanha = async (campanhaId, inimigo) => {
     id: inimigo_ref || dados?.id || conteudo.fichaId,
   };
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
-    const demo = carregarDemo(campanhaId);
+    const demo = await carregarDemo(campanhaId);
     const atualizado = { ...inimigo, dados: novosDados };
-    salvarDemo({
+    await salvarDemo({
       ...demo,
       inimigos: (demo.inimigos || []).map((item) => item.id === id ? atualizado : item),
     }, campanhaId);
@@ -1640,13 +1735,17 @@ let campanhaListenerId = 0;
 export const ouvirCampanha = (campanhaId, aoMudar) => {
   if (!supabaseConfigurado || campanhaId === "demo" || String(campanhaId).startsWith("demo-")) {
     const chave = chaveDemo(campanhaId);
-    const aoAlterarStorage = (event) => { if (event.key === chave) aoMudar(event); };
+    const aoAlterarStorage = (event) => { if (event.key === chave || event.key === chave + ':revision' || event.key?.startsWith('darkness_token_sync:')) aoMudar(event); };
     const aoAlterarLocal = (event) => { if (event.detail?.campanhaId === campanhaId) aoMudar(event); };
     window.addEventListener("storage", aoAlterarStorage);
     window.addEventListener("darkness:campanha-demo", aoAlterarLocal);
+    const stopTokens=listenLocalTokens(campanhaId,aoMudar);
+    const stopCampaign=listenLocalCampaign(chave,aoMudar);
     return () => {
       window.removeEventListener("storage", aoAlterarStorage);
       window.removeEventListener("darkness:campanha-demo", aoAlterarLocal);
+      stopTokens();
+      stopCampaign();
     };
   }
   const canal = supabase
@@ -1696,7 +1795,7 @@ export const salvarTokenCustom3D = async (campanhaId, mapaId, token, origin) => 
   const member=await vincularFicha(campanhaId,fichaId,{nome:token.name});
   let shared;
   if(!supabaseConfigurado || String(campanhaId).startsWith('demo')) {
-    shared=(carregarDemo(campanhaId).tokens || []).find(item => item.ficha_id===fichaId);
+    shared=((await carregarDemo(campanhaId)).tokens || []).find(item => item.ficha_id===fichaId);
   } else {
     const {data,error}=await supabase.from('tokens_mapa').select('*').eq('campanha_id',campanhaId).eq('ficha_id',member.ficha_id).single();
     if(error) throw error;

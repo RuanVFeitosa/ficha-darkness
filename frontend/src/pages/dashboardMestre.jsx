@@ -588,7 +588,7 @@ const DashboardMestre = () => {
   const [novoItemLoja, setNovoItemLoja] = useState(itemLojaVazio);
   const [categoriaLojaAtiva, setCategoriaLojaAtiva] = useState("armas-fogo");
   useState("perfil");
-  const [aba, setAba] = useState(() => new URLSearchParams(window.location.search).get("aba")==="animacoes" ? "animacoes" : "fichas");
+  const [aba, setAba] = useState(() => ["animacoes","campanha"].includes(new URLSearchParams(window.location.search).get("aba")) ? new URLSearchParams(window.location.search).get("aba") : "fichas");
   const [sistemaAtivo, setSistemaAtivo] = useState(() => {
     try { return localStorage.getItem("darkness_dashboard_sistema") === "espiral" ? "espiral" : "darkness"; }
     catch { return "darkness"; }
@@ -3428,7 +3428,7 @@ const DashboardMestre = () => {
                 <small>{fichasDaSubAba.length} ficha(s)</small>
               </div>
 
-              <div className="mestre-dashboard-cards">
+              <div className="mestre-dashboard-cards ad-agent-card-grid">
                   {fichasExibidas.length > 0 ? (
                     fichasExibidas.map((ficha) => (
                       <DashboardFichaCard

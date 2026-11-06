@@ -4,11 +4,14 @@ import {uvTextImage} from '../../utils/uvLight';
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as THREE from "three";
+import {prepareTabletopMaterials} from '../../utils/tabletopMaterials';
+import {prepareSceneDoors,applyDoorStates,doorStateKey,closedDoorBounds,doorNodeId} from '../../utils/tabletopDoors';
 import "../../styles/MapEditor3D.css";
 
 export const MAP_STORAGE_KEY = "darkness_tabletop_3d_map_v1";
 const POLY_API = "https://api.polyhaven.com";
 const EMPTY_DEPENDENCIES = {};
+const EMPTY_DOOR_STATES = {};
 const PBR_TEXTURES = {
   "floor-grass": "grass_ground",
   "floor-grass-dark": "withered_grass",
@@ -112,7 +115,7 @@ export function loadSavedMap() {
   }
 }
 
-export function PrimitiveAsset({ kind }) {
+export function PrimitiveAsset({ kind,doorOpen=false }) {
   const material = <meshStandardMaterial color="#765d48" roughness={0.82} />;
   if (kind?.startsWith("floor-")) {
     const colors = {
@@ -137,7 +140,7 @@ export function PrimitiveAsset({ kind }) {
   if (kind === "doorway" || kind === "door-modern") return <group>
     {[-.85,.85].map((x) => <mesh key={x} position={[x,1,0]} castShadow><boxGeometry args={[.3,2,.22]}/><meshStandardMaterial color="#6f7270" roughness={.8}/></mesh>)}
     <mesh position={[0,1.9,0]} castShadow><boxGeometry args={[2,.22,.22]}/><meshStandardMaterial color="#6f7270" roughness={.8}/></mesh>
-    {kind === "door-modern" && <mesh position={[0,.95,.02]} castShadow><boxGeometry args={[1.52,1.78,.12]}/><PbrMaterial slug={PBR_TEXTURES[kind]} repeat={[1,2]} fallback="#47372d"/></mesh>}
+    {kind === "door-modern" && <group userData={{tabletopDoorId:'leaf'}} position={[-.76,.95,.02]} rotation={[0,doorOpen ? -Math.PI/2 : 0,0]}><mesh position={[.76,0,0]} castShadow><boxGeometry args={[1.52,1.78,.12]}/><PbrMaterial slug={PBR_TEXTURES[kind]} repeat={[1,2]} fallback="#47372d"/></mesh></group>}
   </group>;
   if (kind === "wall") return <mesh position={[0,0.65,0]} castShadow receiveShadow><boxGeometry args={[1.8,1.3,0.16]}/>{material}</mesh>;
   if (kind === "crate") return <mesh position={[0,0.38,0]} castShadow receiveShadow><boxGeometry args={[0.75,0.75,0.75]}/>{material}</mesh>;
@@ -146,10 +149,11 @@ export function PrimitiveAsset({ kind }) {
   return <group><mesh position={[0,0.62,0]} castShadow><cylinderGeometry args={[0.05,0.07,1.2,12]}/><meshStandardMaterial color="#343b3d"/></mesh><mesh position={[0,1.25,0]}><sphereGeometry args={[0.18,16,12]}/><meshStandardMaterial color="#ffe0a0" emissive="#ffb85c" emissiveIntensity={2}/></mesh><pointLight position={[0,1.25,0]} color="#ffbf74" intensity={5} distance={4}/></group>;
 }
 
-export function RemoteAsset({ file, dependencies, modelRole }) {
+export function RemoteAsset({ file, dependencies, modelRole,instanceId,doorStates=EMPTY_DOOR_STATES }) {
   const url = file;
   const [loadedScene, setLoadedScene] = useState(null);
   const [failed, setFailed] = useState(false);
+  const identifiedDoors=JSON.stringify(Object.keys(doorStates).filter(key=>key.startsWith(`${instanceId}:`) && doorStates[key]?.interactive).map(key=>key.slice(`${instanceId}:`.length)).sort());
   useEffect(() => {
     let active = true;
     setLoadedScene(null);
@@ -162,12 +166,19 @@ export function RemoteAsset({ file, dependencies, modelRole }) {
       return match?.[1] || requestedUrl;
     });
     const loader = new GLTFLoader(manager);
-    loader.load(url, (gltf) => active && setLoadedScene(gltf.scene), undefined, () => active && setFailed(true));
+    loader.load(url, (gltf) => {
+      gltf.scene.userData.tabletopModelSource=gltf.asset?.extras?.source || '';
+      if(active) setLoadedScene(gltf.scene);
+    }, undefined, () => active && setFailed(true));
     return () => { active = false; };
   }, [dependencies, url]);
   const normalized = useMemo(() => {
     if (!loadedScene) return null;
-    const scene = loadedScene.clone(true);
+    const scene = new THREE.Group();
+    scene.userData.tabletopDoorRoot=true;
+    scene.add(loadedScene.clone(true));
+    scene.userData.tabletopModelSource=loadedScene.userData.tabletopModelSource;
+    const disposeMaterials=prepareTabletopMaterials(scene);
     scene.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = true;
@@ -180,16 +191,23 @@ export function RemoteAsset({ file, dependencies, modelRole }) {
     const largest = Math.max(size.x, size.y, size.z, 0.01);
     return {
       scene,
+      disposeMaterials,
+      doors:prepareSceneDoors(scene,JSON.parse(identifiedDoors)),
       scale: (modelRole === "map" ? 12 : 1.35) / largest,
       offset: [-center.x, -bounds.min.y, -center.z],
     };
-  }, [loadedScene, modelRole]);
+  }, [loadedScene, modelRole,identifiedDoors]);
+  useEffect(()=>()=>normalized?.disposeMaterials(),[normalized]);
+  useEffect(()=>{window.dispatchEvent(new Event('darkness:map-collision-changed'));},[normalized]);
+  useEffect(()=>{
+    if(normalized && applyDoorStates(normalized.doors,instanceId,doorStates)) window.dispatchEvent(new Event('darkness:map-collision-changed'));
+  },[normalized,instanceId,doorStates]);
   if (!normalized) return <LoadingAsset failed={failed}/>;
   return <group scale={normalized.scale}><primitive object={normalized.scene} position={normalized.offset}/></group>;
 }
 
 function LoadingAsset({ failed = false }) {
-  return <mesh position={[0,0.32,0]} castShadow><boxGeometry args={[0.55,0.55,0.55]}/><meshStandardMaterial color={failed ? "#9b4c47" : "#756b5d"} wireframe/></mesh>;
+  return <mesh userData={{mapCollision:false,mapCollisionPending:true}} position={[0,0.32,0]} castShadow><boxGeometry args={[0.55,0.55,0.55]}/><meshStandardMaterial color={failed ? "#9b4c47" : "#756b5d"} wireframe/></mesh>;
 }
 
 function AnnotationAsset({asset}){
@@ -202,27 +220,48 @@ function AnnotationAsset({asset}){
  if(!texture)return null;
  return <mesh><planeGeometry args={[2,1]}/><meshBasicMaterial map={texture} transparent alphaTest={.05} depthWrite={false} side={THREE.DoubleSide} toneMapped={false}/></mesh>;
 }
-export function AssetModel({ asset }) {
+export function AssetModel({ asset,instanceId,doorStates=EMPTY_DOOR_STATES }) {
   if (!asset) return null;
   if(asset.kind==='annotation')return <AnnotationAsset asset={asset}/>;
   return asset.kind
-    ? <PrimitiveAsset kind={asset.kind}/>
-    : <RemoteAsset file={asset.fileUrl || asset.file} dependencies={asset.dependencies} modelRole={asset.modelRole}/>;
+    ? <PrimitiveAsset kind={asset.kind} doorOpen={Boolean(doorStates[doorStateKey(instanceId)]?.open)}/>
+    : <RemoteAsset file={asset.fileUrl || asset.file} dependencies={asset.dependencies} modelRole={asset.modelRole} instanceId={instanceId} doorStates={doorStates}/>;
 }
 
-function PlacedAsset({item,selectedId,onSelect,onSurfaceClick,revealUV}){
+function PlacedAsset({item,selectedId,onSelect,onSurfaceClick,revealUV,doorStates,onToggleDoor,identifyDoors}){
  const ref=useRef();
  useUVReveal(ref,Boolean(item.uvOnly),revealUV,item.asset?.kind==='annotation' ? 0 : .5);
- return <group ref={ref} visible={!item.uvOnly || revealUV} userData={{tokenInteraction:Boolean(item.uvOnly)}} position={[item.x,(Number(item.y)||0)+.01,item.z]} rotation={[(Number(item.tilt)||0)*Math.PI/180,item.rotation || 0,0]} scale={item.scale || 1} onClick={event=>{
+ useEffect(()=>{window.dispatchEvent(new Event('darkness:map-collision-changed'));},[doorStates]);
+ return <group ref={ref} visible={!item.uvOnly || revealUV} userData={{tabletopInstanceId:item.instanceId,tabletopClue:item.asset?.kind==='annotation' ? {title:item.asset.name || 'Pista',text:item.asset.text || ''} : null,tokenInteraction:Boolean(item.uvOnly),mapCollision:item.collision!==false && !item.uvOnly && item.asset?.kind!=='annotation'}} position={[item.x,(Number(item.y)||0)+.01,item.z]} rotation={[(Number(item.tilt)||0)*Math.PI/180,item.rotation || 0,0]} scale={item.scale || 1} onClick={event=>{
    if(ref.current?.visible===false)return;
+   if(event.delta>4) return;
+   if(onToggleDoor) {
+     let node=event.object;
+     while(node && node!==ref.current) {
+       if(node.userData?.tabletopDoorId) {event.stopPropagation();onToggleDoor(doorStateKey(item.instanceId,node.userData.tabletopDoorId),closedDoorBounds(node),identifyDoors);return;}
+       node=node.parent;
+     }
+     if(identifyDoors) {
+       let root=event.object;
+       while(root && !root.userData?.tabletopDoorRoot) root=root.parent;
+       if(root) {
+         event.stopPropagation();
+         const part=new THREE.Box3().setFromObject(event.object),whole=new THREE.Box3().setFromObject(root);
+         const size=part.getSize(new THREE.Vector3()),total=whole.getSize(new THREE.Vector3());
+         const merged=item.asset?.modelRole==='map' && Math.max(size.x,size.y,size.z)>=Math.max(total.x,total.y,total.z)*.75;
+         onToggleDoor(merged ? null : doorStateKey(item.instanceId,doorNodeId(event.object,root)),null,true);
+         return;
+       }
+     }
+   }
    event.stopPropagation();if(onSurfaceClick)onSurfaceClick(event);else onSelect?.(item.instanceId);
  }}>
-  <AssetModel asset={item.asset}/>
-  {selectedId===item.instanceId && <mesh rotation={[-Math.PI/2,0,0]} position={[0,.025,0]}><ringGeometry args={[.68,.75,40]}/><meshBasicMaterial color="#ffe09b" transparent opacity={.95}/></mesh>}
+  <AssetModel asset={item.asset} instanceId={item.instanceId} doorStates={doorStates}/>
+  {selectedId===item.instanceId && <mesh userData={{mapCollision:false}} rotation={[-Math.PI/2,0,0]} position={[0,.025,0]}><ringGeometry args={[.68,.75,40]}/><meshBasicMaterial color="#ffe09b" transparent opacity={.95}/></mesh>}
  </group>;
 }
-export function PlacedAssets({items,selectedId,onSelect,onSurfaceClick,revealUV=true}){
- return items.map(item=><PlacedAsset key={item.instanceId} item={item} selectedId={selectedId} onSelect={onSelect} onSurfaceClick={onSurfaceClick} revealUV={revealUV}/>);
+export function PlacedAssets({items,selectedId,onSelect,onSurfaceClick,revealUV=true,doorStates=EMPTY_DOOR_STATES,onToggleDoor,identifyDoors=false}){
+ return items.map(item=><PlacedAsset key={item.instanceId} item={item} selectedId={selectedId} onSelect={onSelect} onSurfaceClick={onSurfaceClick} revealUV={revealUV} doorStates={doorStates} onToggleDoor={onToggleDoor} identifyDoors={identifyDoors}/>);
 }
 
 const normalize = (value) => String(value || "").toLocaleLowerCase("pt-BR");
@@ -405,6 +444,7 @@ export default function MapEditor3D({
     {selected && <section className="tt3-selection">
       <div><span>OBJETO SELECIONADO</span><strong>{selected.asset.name}</strong></div>
       <div className="tt3-position-fields">{[['x','Posição X'],['y','Altura Y'],['z','Posição Z']].map(([key,label])=><label key={key}>{label}<input aria-label={label} type="number" step="0.25" value={selected[key] ?? 0} onChange={event=>{if(event.target.value!=='' && Number.isFinite(Number(event.target.value)))onUpdate({[key]:Number(event.target.value)});}}/></label>)}</div>
+      <label className="tt3-editor-uv"><input type="checkbox" checked={selected.collision!==false} onChange={event=>onUpdate({collision:event.target.checked})}/> Colis?o com jogadores</label>
       <label className="tt3-editor-uv"><input type="checkbox" checked={Boolean(selected.uvOnly)} onChange={event=>onUpdate({uvOnly:event.target.checked})}/> Revelar somente com lanterna UV</label>
       <label className="tt3-range">Inclinação em graus<input type="number" aria-label="Inclinação do objeto" min="-180" max="180" step="1" value={selected.tilt || 0} onChange={event=>onUpdate({tilt:Number(event.target.value)||0})}/></label>
       {selected.asset.kind==='annotation' && <label className="tt3-annotation-text">Texto da pista<textarea aria-label="Editar texto da pista UV" maxLength={240} defaultValue={selected.asset.text || ''} key={selected.instanceId} onBlur={event=>{const text=event.target.value.trim();if(text && text!==selected.asset.text)onUpdate({asset:{...selected.asset,name:text,text,image:uvTextImage(text)}});}}/></label>}

@@ -1,0 +1,85 @@
+import React from 'react';
+import {render,screen,fireEvent,waitFor} from '@testing-library/react';
+import InitiativeCards from './InitiativeCards';
+
+const candidates=[{id:'guard',nome:'Guarda',tipo:'inimigo'},{id:'ally',nome:'Aliada',tipo:'npc'}];
+test('mestre altera integridade e sanidade e consulta ataques no resumo',async()=>{
+ const enemy={id:'guard',nome:'Guarda',sanidade:{atual:10,max:10},membros:{cabeca:{atual:20,max:30}},ataques:[{nome:'Garra',dano:'2d6'}],habilidades:[{nome:'Regeneração',descricao:'Recupera integridade'}]};
+ const onSaveEnemy=jest.fn().mockResolvedValue(enemy);
+ render(<InitiativeCards master entries={[{chave:'inimigo:guard:1',tipo:'inimigo',nome:'Guarda',inimigo:enemy}]} onSaveEnemy={onSaveEnemy}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Ver resumo de Guarda'}));
+ fireEvent.change(screen.getByLabelText('Alterar Cabeça'),{target:{value:'12'}});
+ fireEvent.blur(screen.getByLabelText('Alterar Cabeça'));
+ await waitFor(()=>expect(onSaveEnemy).toHaveBeenCalledWith(expect.objectContaining({membros:{cabeca:{atual:12,max:30}}})));
+ await waitFor(()=>expect(screen.getByLabelText('Alterar Sanidade')).not.toBeDisabled());
+ fireEvent.change(screen.getByLabelText('Alterar Sanidade'),{target:{value:'5'}});
+ fireEvent.blur(screen.getByLabelText('Alterar Sanidade'));
+ await waitFor(()=>expect(onSaveEnemy).toHaveBeenCalledWith(expect.objectContaining({sanidade:{atual:5,max:10}})));
+ await waitFor(()=>expect(screen.getByLabelText('Alterar Sanidade')).not.toBeDisabled());
+ expect(screen.getByText('Garra')).toBeInTheDocument();
+ expect(screen.getByText('Regeneração')).toBeInTheDocument();
+});
+test.each(['npc','inimigo','boss'])('resumo de %s usa a mesma área das fichas de jogadores',tipo=>{
+ const entries=[{chave:'a',tipo:'jogador',nome:'Ellie',personagem:{nome:'Ellie'}},{chave:'b',tipo,nome:'Guarda',inimigo:{nome:'Guarda',nivel:2,defesa:4,sanidade:{atual:10,max:10},membros:{cabeca:{atual:20,max:30}},atributos:{forca:3}}}];
+ const onOpen=jest.fn();
+ const {container}=render(<InitiativeCards entries={entries} onOpen={onOpen}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Ver resumo de Ellie'}));
+ fireEvent.click(screen.getByRole('button',{name:'Ver resumo de Guarda'}));
+ expect(screen.queryByRole('region',{name:'Resumo da ficha de Ellie'})).not.toBeInTheDocument();
+ const summary=screen.getByRole('region',{name:'Resumo da ficha de Guarda'});
+ expect(container).toContainElement(summary);
+ expect(summary).toHaveTextContent('Defesa · 4');
+ expect(summary).toHaveTextContent('20 / 30');
+ expect(summary).toHaveTextContent('Força');
+ expect(onOpen).not.toHaveBeenCalled();
+ expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+});
+test('abre o resumo abaixo da iniciativa dentro do painel, sem janela modal',()=>{
+ const entry={chave:'ellie',tipo:'jogador',nome:'Ellie',valor:7,personagem:{nome:'Ellie',atributos:{forca:3},sanidade:{atual:14,max:14}},membro:{ficha_id:'ellie',nome:'Ellie'}};
+ const {container}=render(<InitiativeCards entries={[entry]}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Ver resumo de Ellie'}));
+ const summary=screen.getByRole('region',{name:'Resumo da ficha de Ellie'});
+ expect(container).toContainElement(summary);
+ expect(summary).toHaveTextContent('Força');
+ expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Fechar resumo'}));
+ expect(screen.queryByRole('region',{name:'Resumo da ficha de Ellie'})).not.toBeInTheDocument();
+});
+test.each(['inimigo','boss','npc'])('mestre edita iniciativa de %s pela chave do turno',tipo=>{
+ const onEntryChange=jest.fn(),onEntryConfirm=jest.fn();
+ const entry={chave:`${tipo}:guard:turno-2`,tipo,nome:'Guarda',valor:5};
+ const props={entries:[entry],master:true,onEntryChange,onEntryConfirm};
+ const {rerender}=render(<InitiativeCards {...props}/>);
+ const input=screen.getByRole('textbox',{name:'Iniciativa de Guarda'});
+ fireEvent.change(input,{target:{value:'12'}});
+ expect(onEntryChange).toHaveBeenCalledWith(entry.chave,'12');
+ rerender(<InitiativeCards {...props} drafts={{[entry.chave]:'12'}}/>);
+ expect(input).toHaveValue('12');
+ input.focus();
+ fireEvent.keyDown(input,{key:'Enter'});
+ expect(onEntryConfirm).toHaveBeenCalledTimes(1);
+ expect(onEntryConfirm).toHaveBeenCalledWith(entry.chave,'Guarda');
+});
+test('cadastro mostra foto e permite adicionar vários turnos de boss',async()=>{
+ const boss={id:'guard',nome:'Guarda',tipo:'inimigo',fotoPerfil:'/guard.png',bossIniciativa:true};
+ const onAdd=jest.fn().mockResolvedValue(undefined),onRemove=jest.fn();
+ const entries=[{chave:'inimigo:guard:1',tipo:'boss',nome:'Guarda',valor:5,inimigo:boss},{chave:'inimigo:guard:2',tipo:'boss',nome:'Guarda',valor:3,inimigo:boss}];
+ render(<InitiativeCards entries={entries} master candidates={[boss]} onAdd={onAdd} onEntryChange={jest.fn()} onEntryConfirm={jest.fn()} onRemove={onRemove}/>);
+ expect(screen.getByRole('img',{name:'Guarda'})).toHaveAttribute('src','/guard.png');
+ expect(screen.getByLabelText('Turno 1 de Guarda')).toHaveValue('5');
+ expect(screen.getByLabelText('Turno 2 de Guarda')).toHaveValue('3');
+ fireEvent.change(screen.getByLabelText('Nova iniciativa de Guarda'),{target:{value:'0'}});
+ fireEvent.click(screen.getByRole('button',{name:'Adicionar iniciativa de Guarda'}));
+ await waitFor(()=>expect(onAdd).toHaveBeenCalledWith(boss,0,'boss'));
+ await waitFor(()=>expect(screen.getByLabelText('Nova iniciativa de Guarda')).toHaveValue(null));
+ fireEvent.click(screen.getByRole('button',{name:'Remover turno 2 de Guarda'}));
+ await waitFor(()=>expect(onRemove).toHaveBeenCalledWith('inimigo:guard:2'));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Remover turno 2 de Guarda'})).not.toBeDisabled());
+});
+test('jogadores veem categorias e símbolo de boss sem o controle de inclusão',()=>{
+ const {container}=render(<InitiativeCards system="espiral" entries={[{chave:'boss',tipo:'boss',nome:'Chefe',valor:8},{chave:'npc',tipo:'npc',nome:'Aliada',valor:2}]} onAdd={jest.fn()}/>);
+ expect(screen.queryByRole('group',{name:'Adicionar iniciativa'})).not.toBeInTheDocument();
+ expect(container.querySelector('[data-kind="boss"] .initiative-boss-symbol svg')).toBeInTheDocument();
+ expect(container.querySelector('[data-kind="npc"]')).toHaveTextContent('Aliada');
+ expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+});

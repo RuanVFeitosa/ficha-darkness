@@ -1,4 +1,6 @@
 import {REGRAS_ABSOLUTO} from './absolutoRegras';
+import {ATTRIBUTES,RESOURCES,GRADES} from './espiral';
+import {ATRIBUTOS_ABSOLUTO,DOMINIOS} from './absolutoV1';
 export const SHIELD_CATEGORIES=['Todas','Testes','Combate','Recursos','Condução'];
 export const normalizeShieldSearch=text=>String(text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const espiral=[
@@ -13,14 +15,18 @@ const espiral=[
  ['Sanidade, Esperança e resistências','Recursos','Sanidade zero provoca Ruptura imediata e Controle Mental recebe +1d6 de Pressão. Controle Mental e Propósito começam em Grau I, fora dos 10 pontos de Recursos convencionais. O gasto de Esperança de cada habilidade está na própria descrição; os custos não são bônus de rolagem.'],
  ['Vertentes e habilidades','Recursos','A Vertente define uma habilidade com até três níveis. Consulte a descrição de cada nível para frequência e efeitos. Habilidades adquiridas e aprimoramentos consomem os Pontos de Evolução concedidos pelo mestre. Bônus temporários têm usos limitados e não alteram permanentemente o Grau do Recurso.'],
 ];
-const conduction=[
- ['Antes de pedir os dados','Condução','Confirme a intenção, o método, o risco e o que está em jogo. Escolha Atributo, Domínio ou Recurso e dificuldade apropriados. Declare o custo ou consequência possível antes da rolagem. Se não há risco ou incerteza relevante, avance a narrativa.'],
- ['Consequências que movimentam a cena','Condução','Use perda de tempo, exposição, separação do grupo, desgaste de equipamento, gasto de recursos ou chegada de uma ameaça. Preserve o resultado obtido e faça a consequência nascer da ação e do contexto. Estas são sugestões de condução, não penalidades automáticas.'],
- ['Investigação sem travar a sessão','Condução','Diferencie pistas essenciais de vantagens adicionais. Uma complicação pode mudar o custo, o tempo ou o perigo para conseguir a informação. Registre nomes, lugares e perguntas em aberto; deixe claro qual informação é fato e qual ainda é hipótese.'],
- ['Pausa, limites e retomada','Condução','Qualquer participante pode pedir uma pausa. Ajuste ou pule conteúdo desconfortável sem exigir justificativas. Ao retomar, resuma a situação, confirme onde estão os personagens e devolva a decisão aos jogadores.'],
-];
 export function masterShieldEntries(system){
  const rules=system==='espiral'?espiral.map(([titulo,categoria,texto],i)=>({id:`espiral-${i}`,titulo,categoria,texto,fonte:'Regras implementadas na ficha ESPIRAL'}))
  : REGRAS_ABSOLUTO.map((rule,i)=>({...rule,id:`absoluto-${i}`,categoria:/Combate|Integridade|Finais|Equipamentos|Ritos|horror/.test(rule.titulo)?'Combate':/Sanidade|Esperança|Medo|Memento|evolução|existência/.test(rule.titulo)?'Recursos':'Testes',fonte:rule.paginas.includes('autor')?rule.paginas:`Protocolo Absoluto · ${rule.paginas}`}));
- return [...rules,...conduction.map(([titulo,categoria,texto],i)=>({id:`conducao-${i}`,titulo,categoria,texto,fonte:'Sugestão para conduzir a mesa'}))];
+ const removed=new Set(['dominio','dificuldade da cena e do combate','integridade e sobrevivencia','vertentes e habilidades']);
+ const references=system==='espiral' ? [
+  {id:'espiral-atributos',titulo:'Atributos',categoria:'Testes',texto:Object.values(ATTRIBUTES).map(attribute=>`${attribute.name} — ${attribute.hint}.\n${attribute.stages.map((stage,i)=>`${i+1}: ${stage} (d${i*2+4})`).join(' · ')}`).join('\n\n'),fonte:'Atributos da ficha ESPIRAL'},
+  {id:'espiral-recursos',titulo:'Recursos',categoria:'Recursos',texto:`${RESOURCES.join(' · ')}\n\n${GRADES.map((grade,i)=>`Grau ${i}: ${grade}`).join('\n')}\n\nReserva: 1 dado + Grau do Recurso. O Atributo define as faces dos dados.`,fonte:'Recursos da ficha ESPIRAL'},
+ ] : [
+  {id:'absoluto-atributos',titulo:'Atributos',categoria:'Testes',texto:Object.values(ATRIBUTOS_ABSOLUTO).join(' · '),fonte:'Protocolo Absoluto 1.0'},
+  {id:'absoluto-dominios',titulo:'Domínios',categoria:'Recursos',texto:Object.values(DOMINIOS).map(domain=>`${domain.nome} (${ATRIBUTOS_ABSOLUTO[domain.atributo]}) — ${domain.descricao}`).join('\n\n'),fonte:'Protocolo Absoluto 1.0'},
+ ];
+ const removedAbsoluto=new Set(['a existencia humana','atributos e dominios','integridade regional','combate narrativo e dano','arquetipos, classes e evolucao','memento mori','equipamentos, criacao e maleta','o horror, criaturas e condicoes']);
+ const selected=rules.filter(rule=>!(system==='espiral'?removed:removedAbsoluto).has(normalizeShieldSearch(rule.titulo)));
+ return [...references,...selected];
 }

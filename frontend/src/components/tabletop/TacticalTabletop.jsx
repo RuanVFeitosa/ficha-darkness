@@ -37,7 +37,7 @@ function TokenImage({url,animation,id}) {
  if(config.closedImage && (!config.image || config.image===url)) return <BlinkMaterial texture={texture} config={config} blink={blink}/>;
  return <meshBasicMaterial map={texture} transparent depthTest={false} toneMapped={false}/>;
 }
-function TacticalToken({token,selected,canMove,onSelect,onDragStart,onMove,onDragEnd}) {
+function TacticalToken({token,selected,canMove,onSelect,onDragStart,onMove,onDragEnd,constrainMove}) {
  const ref=useRef(),drag=useRef(null),art=useRef(null),reduced=useReducedTokenMotion();
  const animation=useMemo(() => normalizeTokenAnimation(token.animation && (!token.animation.image || token.animation.image===token.image) ? token.animation : {enabled:false}),[token.animation,token.image]);
  useFrame(({clock}) => {if(!art.current) return;const motion=tokenAnimationFrame(clock.elapsedTime,animation,token.id,reduced);art.current.scale.set(motion.scaleX,motion.scaleY,1);art.current.rotation.z=-(Number(token.rotacao)||0)*Math.PI/180+motion.rotation;});
@@ -56,8 +56,10 @@ function TacticalToken({token,selected,canMove,onSelect,onDragStart,onMove,onDra
   if(drag.current?.pointer!==event.pointerId) return;
   event.stopPropagation();
   if(!event.ray.intersectPlane(plane,hit)) return;
-  const position=[hit.x+drag.current.offset[0],hit.z+drag.current.offset[1]];
-  drag.current.position=position;ref.current.position.set(position[0],token.elevation || 0,position[1]);
+  const destination=[hit.x+drag.current.offset[0],hit.z+drag.current.offset[1]];
+  const resolved=constrainMove?.(destination);
+  const position=resolved?.position || destination;
+  drag.current.position=position;ref.current.position.set(position[0],resolved?.elevation ?? (token.elevation || 0),position[1]);
  };
  const end=event => {
   if(drag.current?.pointer!==event.pointerId) return;
@@ -70,7 +72,7 @@ function TacticalToken({token,selected,canMove,onSelect,onDragStart,onMove,onDra
   <mesh ref={art} renderOrder={1002} rotation={[0,0,-(Number(token.rotacao)||0)*Math.PI/180]}><circleGeometry args={[0.22,40]}/>{token.image ? <TokenImage url={token.image} animation={token.animation} id={token.id}/> : <meshBasicMaterial color={token.color || '#aaa'} depthTest={false}/>}</mesh>
  </group>;
 }
-export default function TacticalTabletop({assets,tokens,mapKey,center,locked,mestre,cameraSpeed=1,playerTokenId,navigation,onFloor,onSelect,onMove,onDragStart,onDragEnd}) {
+export default function TacticalTabletop({assets,tokens,mapKey,center,locked,mestre,cameraSpeed=1,playerTokenId,navigation,onFloor,onSelect,onMove,onDragStart,onDragEnd,constrainMove,doorStates,onToggleDoor}) {
  return <div className="tt3-tactical-map" aria-label="Mapa tático 2D">
   <Canvas dpr={1} gl={parameters => createTabletopRenderer(parameters,THREE.WebGLRenderer)} orthographic camera={{position:[center[0],100,center[1]+0.001],zoom:65,near:0.01,far:2000}}>
    <TabletopResolutionLimit/>
@@ -79,8 +81,8 @@ export default function TacticalTabletop({assets,tokens,mapKey,center,locked,mes
    <TacticalControls mestre={mestre} cameraSpeed={cameraSpeed} key={mapKey} center={center} locked={locked}/>{navigation}
    <gridHelper args={[2000,2000,'#53636b','#28343a']}/>
    <mesh rotation={[-Math.PI/2,0,0]} position={[0,-0.02,0]} onClick={onFloor}><planeGeometry args={[2000,2000]}/><meshBasicMaterial transparent opacity={0} depthWrite={false} side={THREE.DoubleSide}/></mesh>
-   <Suspense fallback={null}><PlacedAssets revealUV={mestre} items={assets.filter(item=>mestre || !item.uvOnly)} selectedId={null} onSelect={() => {}} onSurfaceClick={onFloor}/></Suspense>
-   {tokens.map(token => <Suspense key={token.id} fallback={null}><TacticalToken token={token} selected={token.selected} canMove={canMoveTacticalToken(token,mestre,playerTokenId)} onSelect={() => onSelect(token)} onMove={position => onMove(token,position)} onDragStart={onDragStart} onDragEnd={onDragEnd}/></Suspense>)}
+   <Suspense fallback={null}><PlacedAssets revealUV={mestre} items={assets.filter(item=>mestre || !item.uvOnly)} selectedId={null} onSelect={() => {}} onSurfaceClick={onFloor} doorStates={doorStates} onToggleDoor={onToggleDoor}/></Suspense>
+   {tokens.map(token => <Suspense key={token.id} fallback={null}><TacticalToken token={token} selected={token.selected} canMove={canMoveTacticalToken(token,mestre,playerTokenId)} constrainMove={position => constrainMove?.(token,position)} onSelect={() => onSelect(token)} onMove={position => onMove(token,position)} onDragStart={onDragStart} onDragEnd={onDragEnd}/></Suspense>)}
   </Canvas>
  </div>;
 }

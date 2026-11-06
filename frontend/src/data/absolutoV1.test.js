@@ -1,4 +1,10 @@
-import { criarBaseV1, resolverTeste, quantidadeDados, custoAtributos, custoDominios, alterarMedo, descansar, recalcularBases, proporMigracaoV1, evoluirV1, rolarDanoV1 } from './absolutoV1';
+import { criarBaseV1, resolverTeste, quantidadeDados, custoAtributos, custoDominios, alterarMedo, descansar, recalcularBases, proporMigracaoV1, evoluirV1, rolarDanoV1, defesaPersonagem } from './absolutoV1';
+
+test.each([[0,2],[1,2],[2,2],[3,3],[4,3],[5,4]])('Mobilidade %s define Defesa %s independentemente de Reflexos e proteção', (mobilidade, defesa) => {
+  const personagem = {dominios:{mobilidade},atributos:{reflexos:5},defesaGeral:5,bonusDefesa:10};
+  expect(defesaPersonagem(personagem)).toBe(defesa);
+  expect(defesaPersonagem(personagem,true)).toBe(defesa+1);
+});
 
 test.each([
   [0, [1,2,3,4,6], 1], [1, [4,4,5,5,6], 3],

@@ -35,7 +35,25 @@
 .espiral-dashboard .ee-empty h3 { font: 28px Georgia,serif; color: var(--ed-ink); }
 .espiral-dashboard .ee-empty p { font: 13px/1.7 Arial,sans-serif; }
 .espiral-dashboard .ee-overlay { position: fixed; inset: 0; z-index: 1200; padding: 30px; background: #000000b0; backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: start; overflow-y: auto; }
-.espiral-dashboard .ee-sheet { background: var(--ed-paper,#050505); padding: 28px; width: min(960px,100%); box-sizing: border-box; color: var(--ed-ink); box-shadow: 0 24px 80px #0004; }
+.espiral-dashboard .ee-sheet { background: var(--ed-paper,#050505); padding: 28px; width: min(1080px,100%); box-sizing: border-box; color: var(--ed-ink); box-shadow: 0 24px 80px #0004; display: flex; flex-direction: column; max-height: calc(100dvh - 60px); border: 1px solid var(--ed-line); }
+.espiral-dashboard .ee-sheet-content { overflow-y: auto; min-height: 0; padding: 0 12px 12px 0; scrollbar-width: thin; }
+.espiral-dashboard .ee-sheet > :is(header,nav,footer,.ee-notice) { flex-shrink: 0; }
+.espiral-dashboard .ee-sheet .ee-sheet-footer { margin-top: 16px; }
+.espiral-dashboard .ee-identity { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.espiral-dashboard .ee-media { display: flex; gap: 16px; padding: 18px; border: 1px solid var(--ed-line); background: #101110; min-width: 0; }
+.espiral-dashboard .ee-media-preview { width: 110px; height: 140px; flex-shrink: 0; display: grid; place-items: center; overflow: hidden; background: #050505; border: 1px solid var(--ed-line); }
+.espiral-dashboard .ee-media-preview img { width: 100%; height: 100%; object-fit: cover; }
+.espiral-dashboard .ee-token-preview img { object-fit: contain; padding: 8px; box-sizing: border-box; }
+.espiral-dashboard .ee-media-preview > span { font: 54px Georgia,serif; color: var(--ed-muted); }
+.espiral-dashboard .ee-media-controls { min-width: 0; }
+.espiral-dashboard .ee-media-controls h3 { font-size: 21px; margin: 0 0 8px; }
+.espiral-dashboard .ee-media-controls p { color: var(--ed-muted); font: 12px/1.6 Arial,sans-serif; margin: 0 0 12px; }
+.espiral-dashboard .ee-media-controls button { background: transparent; border: 0; color: var(--ed-muted); padding: 8px 0; cursor: pointer; font: 11px Arial,sans-serif; }
+.espiral-dashboard .ee-media-controls .ee-upload { color: var(--ed-ink); font-size: 11px; }
+.mestre-page.espiral-dashboard .ee-upload input { padding: 7px; font-size: 10px; cursor: pointer; }
+.espiral-dashboard .ee-sheet button:disabled { opacity: .5; cursor: wait; }
+@media(max-width:800px) { .espiral-dashboard .ee-identity { grid-template-columns: 1fr; } }
+@media(max-width:600px) { .espiral-dashboard .ee-sheet { max-height: calc(100dvh - 24px); }.espiral-dashboard .ee-sheet-content { padding-right: 4px; }.espiral-dashboard .ee-media { padding: 12px; gap: 12px; }.espiral-dashboard .ee-media-preview { width: 80px; height: 120px; } }
 .espiral-dashboard .ee-sheet-header { display: flex; justify-content: space-between; align-items: start; border-bottom: 1px solid var(--ed-line); padding-bottom: 20px; margin-bottom: 20px; }
 .espiral-dashboard .ee-sheet-header h2 { font: 36px Georgia,serif; margin: 10px 0; color: var(--ed-ink); overflow-wrap: anywhere; }
 .espiral-dashboard .ee-sheet-header p { font: 12px Arial,sans-serif; color: var(--ed-muted); }

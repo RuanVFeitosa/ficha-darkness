@@ -1,9 +1,37 @@
+import {salvarTurnoCombate,atualizarModoCombate} from './mesaApi';
 import { registrarRolagem, salvarTokenCustom3D, salvarEstadoToken3D, obterEstadoToken3D, ativarCena, atualizarEstadoMusica, atualizarRevelacaoDocumentoInvestigacao, buscarCampanhaPorCodigo, criarCampanhaMesa, desvincularFicha, excluirCena, listarCampanhas, listarCampanhasDaFicha, moverToken, salvarCena, salvarClima3DCampanha, salvarEvidenciaInterativa, salvarMusicasCampanha, salvarMapas3DCampanha, validarArquivoImagem, vincularFicha } from "./mesaApi";
 
 import { salvarMecanicasCampanha } from './mesaApi';
 import { emptyMechanics, applyMechanicAction } from '../utils/specialMechanics';
+import {salvarPorta3DCampanha,ouvirCampanha} from './mesaApi';
 
 describe("biblioteca local da mesa", () => {
+  test('persiste turno, rejeita revisão antiga e limpa ao encerrar combate',async()=>{
+    await atualizarModoCombate('demo',true);
+    const turn={chave:'ellie',rodada:1,estado:'ativo',ordem:['ellie'],revision:1};
+    await salvarTurnoCombate('demo',turn,0);
+    expect((await buscarCampanhaPorCodigo('DARK26')).turnoCombate).toEqual(turn);
+    await expect(salvarTurnoCombate('demo',turn,0)).rejects.toThrow('outra tela');
+    await atualizarModoCombate('demo',false);
+    expect((await buscarCampanhaPorCodigo('DARK26')).turnoCombate).toBeNull();
+  });
+  test('abrir e fechar portas sincroniza o estado sem regravar o mapa nem criar participantes',async()=>{
+    localStorage.clear();
+    await salvarMapas3DCampanha('demo',[{id:'house',nome:'Casa',atualizadoEm:'map-version',assets:[{instanceId:'door',asset:{kind:'door-modern'}}]}]);
+    const before=localStorage.getItem('darkness_mesa_demo');
+    const change=jest.fn(),stop=ouvirCampanha('demo',change);
+    await salvarPorta3DCampanha('demo','house','door:leaf',true);
+    expect(localStorage.getItem('darkness_mesa_demo')).toBe(before);
+    let read=await buscarCampanhaPorCodigo('DARK26');
+    expect(read.mapas3D[0].doorStates['door:leaf'].open).toBe(true);
+    expect(read.mapas3D[0].atualizadoEm).toBe('map-version');
+    expect(read.tokens.some(token=>String(token.ficha_id).startsWith('map3d:'))).toBe(false);
+    expect(change).toHaveBeenCalledWith(expect.objectContaining({table:'mapas3d_portas',mapId:'house'}));
+    await salvarPorta3DCampanha('demo','house','door:leaf',false);
+    read=await buscarCampanhaPorCodigo('DARK26');
+    expect(read.mapas3D[0].doorStates['door:leaf'].open).toBe(false);
+    stop();
+  });
   test('salva e reabre planos, Fôlego e resultados simultâneos da Revolta', async () => {
     let state = emptyMechanics();
     for (const action of [
@@ -61,8 +89,8 @@ describe("biblioteca local da mesa", () => {
     expect(campanha.cenaAtiva.imagensCena[1].animation).toBeUndefined();
   });
   test("limita o tamanho das cenas e mapas antes do upload", () => {
-    expect(() => validarArquivoImagem(new File([new Uint8Array(2 * 1024 * 1024 + 1)], "cena.webp", { type: "image/webp" }), "cena")).toThrow("2 MB");
-    expect(() => validarArquivoImagem(new File([new Uint8Array(5 * 1024 * 1024 + 1)], "mapa.webp", { type: "image/webp" }), "mapa")).toThrow("5 MB");
+    expect(() => validarArquivoImagem(new File([new Uint8Array(25 * 1024 * 1024 + 1)], "cena.webp", { type: "image/webp" }), "cena")).toThrow("25 MB");
+    expect(() => validarArquivoImagem(new File([new Uint8Array(25 * 1024 * 1024 + 1)], "mapa.webp", { type: "image/webp" }), "mapa")).toThrow("25 MB");
     expect(() => validarArquivoImagem(new File(["svg"], "cena.svg", { type: "image/svg+xml" }), "cena")).toThrow("Formato nao permitido");
   });
   beforeEach(() => localStorage.clear());
@@ -319,4 +347,24 @@ test("agrupa posições pendentes sem perder ajustes do token", async () => {
  ]);
  const refreshed=await buscarCampanhaPorCodigo("DARK26");
  expect(obterEstadoToken3D(refreshed.tokens.find(item => item.id===token.id),"fluido")).toEqual(expect.objectContaining({x:4,z:4,scale:0.5}));
+});
+
+test('camera motion settings persist and are included in campaign updates',async()=>{
+ localStorage.clear();
+ const change=jest.fn(),stop=ouvirCampanha('demo',change);
+ const cameraMotion={intensity:2,speed:.75,pitch:0,roll:3};
+ await salvarClima3DCampanha('demo',{preset:'noite',cameraMotion});
+ const campaign=await buscarCampanhaPorCodigo('DARK26');
+ expect(campaign.clima3D.cameraMotion).toEqual(cameraMotion);
+ expect(change).toHaveBeenCalled();
+ const update=change.mock.calls.find(([event])=>event.detail?.estado?.clima3D?.cameraMotion);
+ expect(update[0].detail.estado.clima3D.cameraMotion).toEqual(cameraMotion);
+ stop();
+});
+
+test('exploration config survives saving and reloading the campaign map',async()=>{
+ localStorage.clear();
+ const exploration={visibility:{letter:{audience:['espiral:123']},monster:{hidden:true}},audioZones:[{id:'wind',url:'https://example.com/wind.mp3',x:1,y:2,z:3,radius:5,volume:.5}]};
+ await salvarMapas3DCampanha('demo',[{id:'exploration-map',nome:'Casa',assets:[],exploration}]);
+ expect((await buscarCampanhaPorCodigo('DARK26')).mapas3D[0].exploration).toEqual(exploration);
 });

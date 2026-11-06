@@ -6,3 +6,10 @@ export function suavizarPosicaoToken(current, destination, delta) {
   const factor=1-Math.exp(-Math.min(Math.max(delta,0),0.1)*14);
   return [current[0]+dx*factor,current[1]+dz*factor];
 }
+
+export function suavizarPoseToken(current,destination,delta) {
+  const distance=Math.hypot(...destination.map((value,i)=>value-current[i]));
+  if(distance>12 || distance<0.001) return [...destination];
+  const factor=1-Math.exp(-Math.min(Math.max(delta,0),0.1)*14);
+  return current.map((value,i)=>value+(destination[i]-value)*factor);
+}

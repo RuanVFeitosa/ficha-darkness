@@ -1,0 +1,76 @@
+.mesa-shell .participant-dossiers { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr)); gap:16px; padding:12px; align-items:start; }
+.mesa-shell .participant-dossier { min-width:0; max-width:420px; border:1px solid #b5aa8244; border-radius:4px; background:#090b0c; color:#eee9dc; overflow:hidden; font:11px/1.5 monospace; }
+.mesa-shell .participant-dossier-identity { position:relative; isolation:isolate; min-height:230px; padding:20px 16px 12px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box; }
+.mesa-shell .participant-dossier-photo { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 25%; z-index:-2; }
+.mesa-shell .participant-dossier-identity::after { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,#070a0bd9,transparent 95%),linear-gradient(0deg,#090b0c,transparent 80%); }
+.mesa-shell .participant-dossier-bio small { color:#e4c873; font-size:9px; text-transform:uppercase; letter-spacing:.08em; }
+.mesa-shell .participant-dossier-bio h3 { font:600 26px/1.2 Georgia,serif; color:#fff6de; margin:8px 0; }
+.mesa-shell .participant-dossier-bio p { margin:4px 0 8px; color:#eee9dc; font:10px/1.5 monospace; }
+.mesa-shell .participant-dossier-identity dl { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:12px 0 0; gap:0 10px; }
+.mesa-shell .participant-dossier-identity dl > div { display:block; padding:7px 0; border-top:1px solid #fff3; }
+.mesa-shell .participant-dossier-identity dt { color:#e7d6a4; font:8px/1.4 monospace; text-transform:uppercase; }
+.mesa-shell .participant-dossier-identity dd { margin:3px 0 0; font:23px/1.2 Georgia,serif; color:#fff5dc; }
+.mesa-shell .participant-dossier-body { margin:0 16px; padding:12px 0; border-top:1px solid #ffffff30; }
+.mesa-shell .participant-dossier-body h4 { margin:0 0 12px; color:#d6c99e; font:9px monospace; letter-spacing:.1em; text-transform:uppercase; }
+.mesa-shell .participant-dossier-body > div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.mesa-shell .participant-dossier-resource > div { display:flex; justify-content:space-between; gap:5px; font-size:9px; color:#eee9dc; }
+.mesa-shell .participant-dossier-resource i { display:block; height:6px; background:#252a2d; margin-top:5px; }
+.mesa-shell .participant-dossier-resource em { display:block; height:100%; background:#69aaff; }
+.mesa-shell .participant-dossier-resource.body em { background:#e44a58; }
+.mesa-shell .participant-dossier-resource.hope em { background:#e8bb3b; }
+.mesa-shell .participant-dossier-mental { display:grid; gap:12px; margin:0 16px; padding:14px 0; border-top:1px solid #ffffff30; }
+.mesa-shell .participant-dossier footer { margin:0 16px; padding:12px 0; border-top:1px solid #ffffff30; }
+.mesa-shell .participant-dossier footer button { border:0; background:none; color:#e4c873; padding:0; font:10px monospace; cursor:pointer; }
+.mesa-shell button.initiative-card-portrait { border:0; border-radius:0; padding:0; margin:0; cursor:pointer; font-family:inherit; }
+.mesa-shell button.initiative-card-portrait:focus-visible { outline:2px solid #e4c873; outline-offset:-3px; }
+.mesa-shell.participant-summary-dialog { position:fixed; inset:0; width:min(440px,calc(100vw - 24px)); max-width:440px; height:fit-content; min-height:0; max-height:calc(100dvh - 32px); margin:auto; padding:0; border:1px solid #9e916c; border-radius:6px; background:#090b0c; color:#eee9dc; overflow:auto; z-index:1000; }
+.mesa-shell.participant-summary-dialog:not([open]) { display:none; }
+.participant-summary-dialog::backdrop { background:#000b; backdrop-filter:blur(4px); }
+.participant-summary-content { position:relative; }
+.mesa-shell .participant-summary-close { position:absolute; top:8px; right:8px; z-index:2; width:30px; height:30px; padding:0; border:1px solid #d6c99e66; border-radius:4px; background:#080e10db; color:#fff0c4; font-size:22px; cursor:pointer; }
+.mesa-shell.participant-summary-dialog .participant-dossiers { display:block; padding:0; }
+.mesa-shell.participant-summary-dialog .participant-dossier { max-width:none; border:0; }
+.mesa-shell .participant-summary-inline { order:3; flex:1 0 100%; width:100%; min-width:0; margin-top:10px; }
+.mesa-shell .participant-summary-inline .participant-summary-content { width:min(100%,420px); border:1px solid #9e916c66; border-radius:5px; overflow:hidden; }
+.mesa-shell .participant-summary-inline .participant-dossiers { display:block; padding:0; }
+.mesa-shell .participant-summary-inline .participant-dossier { max-width:none; border:0; }
+.mesa-shell.player-initiative-bar:has(.participant-summary-inline) { width:min(340px,calc(100vw - 24px)); max-width:340px; }
+.mesa-shell.player-initiative-bar:has(.participant-summary-inline) .initiative-order-track { align-items:flex-start; }
+.mesa-shell.player-initiative-bar:has(.participant-summary-inline) .initiative-card.is-current-turn { width:100px; }
+/* The summary belongs to the portrait column, not the full roster row. */
+.mesa-shell .initiative-primary { flex:1 1 420px; min-width:0; max-width:100%; }
+.mesa-shell .initiative-primary .initiative-order-track { width:100%; box-sizing:border-box; }
+.mesa-shell .initiative-primary .participant-summary-inline { margin-top:8px; width:100%; }
+.mesa-shell .initiative-primary .participant-summary-content { width:100%; max-width:760px; }
+.mesa-shell .participant-summary-inline .participant-dossier {
+ position:relative; isolation:isolate; display:grid; grid-template-columns:150px minmax(0,1fr);
+ grid-template-rows:auto auto; gap:0 14px; padding:12px; box-sizing:border-box;
+}
+.mesa-shell .participant-summary-inline .participant-dossier-identity {
+ position:static; isolation:auto; grid-column:1; grid-row:1 / 3; min-height:0; padding:0 10px 0 0; border-right:1px solid #d6c99e44; justify-content:flex-start;
+}
+.mesa-shell .participant-summary-inline .participant-dossier-photo { object-position:center 30%; }
+.mesa-shell .participant-summary-inline .participant-dossier-identity::after { background:linear-gradient(90deg,#080b0be6,#080b0bb3),linear-gradient(0deg,#080b0b88,transparent); }
+.mesa-shell .participant-summary-inline .participant-dossier-bio h3 { font-size:21px; margin:6px 0; }
+.mesa-shell .participant-summary-inline .participant-dossier-bio small { font-size:8px; }
+.mesa-shell .participant-summary-inline .participant-dossier-bio p { font-size:9px; margin:4px 0; }
+.mesa-shell .participant-summary-inline .participant-dossier-identity dl { grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 8px; margin-top:12px; }
+.mesa-shell .participant-summary-inline .participant-dossier-identity dl > div { padding:5px 0; }
+.mesa-shell .participant-summary-inline .participant-dossier-identity dd { font-size:18px; }
+.mesa-shell .participant-summary-inline .participant-dossier-body { grid-column:2; grid-row:1; margin:0; padding:0 0 10px; border-top:0; }
+.mesa-shell .participant-summary-inline .participant-dossier-body h4 { margin:0 26px 9px 0; font-size:8px; }
+.mesa-shell .participant-summary-inline .participant-dossier-body > div { gap:7px 10px; }
+.mesa-shell .participant-summary-inline .participant-dossier-resource > div { font-size:8px; }
+.mesa-shell .participant-summary-inline .participant-dossier-resource i { height:5px; margin-top:3px; }
+.mesa-shell .participant-summary-inline .participant-dossier-mental { grid-column:2; grid-row:2; gap:8px; margin:0; padding:9px 0 0; align-self:end; }
+.mesa-shell.player-initiative-bar .initiative-primary { flex:0 1 auto; width:100%; }
+@media(max-width:600px) {
+ .mesa-shell .participant-summary-inline .participant-dossier { grid-template-columns:100px minmax(0,1fr); padding:9px; gap:0 9px; }
+ .mesa-shell .participant-summary-inline .participant-dossier-body > div { grid-template-columns:1fr; }
+}
+.mesa-shell .participant-dossier-resource input { width:44px; min-width:0; height:23px; margin:0; padding:2px!important; box-sizing:border-box; border:1px solid #9e916c77; border-radius:3px; background:#080e10; color:#fff2c9; text-align:center; font:10px monospace; }
+.mesa-shell .participant-dossier-actions { grid-column:1 / -1; padding:10px 0 0; margin-top:10px; border-top:1px solid #ffffff30; }
+.mesa-shell .participant-dossier-actions h4 { margin:0 0 6px; font:9px monospace; text-transform:uppercase; color:#d6c99e; }
+.mesa-shell .participant-dossier-actions details { padding:6px 0; border-top:1px solid #ffffff12; }
+.mesa-shell .participant-dossier-actions summary { cursor:pointer; color:#e9dec3; font:10px/1.5 monospace; }
+.mesa-shell .participant-dossier-actions p { margin:5px 0; font:10px/1.5 monospace; white-space:pre-wrap; }

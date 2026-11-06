@@ -16,10 +16,22 @@ test('as oito regiões mostram suas reservas e selecionam os controles corretos'
  fireEvent.keyDown(head,{key:'Enter'});
  expect(head).toHaveAttribute('aria-pressed','true');
  expect(screen.getByLabelText('Integridade atual de Cabeça')).toHaveValue(24);
- fireEvent.click(screen.getByRole('button',{name:'Ajustar -5 de Integridade'}));expect(onChange).toHaveBeenLastCalledWith('cabeca',19);
+ fireEvent.click(screen.getByRole('button',{name:'Ajustar -5 de Integridade'}));expect(onDamage).toHaveBeenLastCalledWith('cabeca',5);
  fireEvent.change(screen.getByLabelText('Dano recebido na região'),{target:{value:'12'}});
  fireEvent.click(screen.getByRole('button',{name:'Aplicar dano'}));expect(onDamage).toHaveBeenLastCalledWith('cabeca',12);
- fireEvent.change(screen.getByLabelText('Defesa de Cabeça'),{target:{value:'3'}});expect(onDefenseChange).toHaveBeenCalledWith('cabeca','3');
+ fireEvent.change(screen.getByLabelText('Defesas Adicionais de Cabeça'),{target:{value:'3'}});expect(onDefenseChange).toHaveBeenCalledWith('cabeca','3');
  fireEvent.change(screen.getByLabelText('Integridade máxima de Cabeça'),{target:{value:'30'}});expect(onMaxChange).toHaveBeenCalledWith('cabeca','30');
  fireEvent.click(screen.getByRole('button',{name:'Capacete ↗'}));expect(onInspectDefense).toHaveBeenCalledWith(armor,-1);
+});
+
+test('separa equipamento somente leitura, adicionais editáveis e soma total',()=>{
+ const members=integridadeInicial(2);members.torso={...members.torso,defesa:3,defesaAdicional:2};
+ const {rerender}=render(<AbsolutoBody members={members} defensesFor={()=>[{nome:'Colete',defesaBonus:3}]} />);
+ expect(screen.getByLabelText('Defesa por Equipamento de Tórax')).toHaveValue(3);
+ expect(screen.getByLabelText('Defesa por Equipamento de Tórax')).toHaveAttribute('readonly');
+ expect(screen.getByLabelText('Defesas Adicionais de Tórax')).toHaveValue(2);
+ expect(screen.getByLabelText('Defesa Total de Tórax')).toHaveValue(5);
+ expect(screen.getByLabelText('Defesa Total de Tórax')).toHaveAttribute('readonly');
+ rerender(<AbsolutoBody members={members} defensesFor={()=>[]} />);
+ expect(screen.getByLabelText('Defesa Total de Tórax')).toHaveValue(2);
 });

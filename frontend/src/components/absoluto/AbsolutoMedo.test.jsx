@@ -17,11 +17,11 @@ test('a barra permite alcançar VI e permanecer nele sem bloqueio por cena', () 
   expect(screen.getByLabelText('Medo atual')).toHaveValue(6);
   expect(screen.getByLabelText('Sanidade')).toHaveTextContent('9');
   fireEvent.click(screen.getByRole('button',{name:'Nova cena'}));
+  expect(screen.getByLabelText('Medo atual')).toHaveValue(0);
   fireEvent.click(screen.getByRole('button',{name:'Aumentar Medo'}));
-  expect(screen.getByLabelText('Medo atual')).toHaveValue(6);
+  expect(screen.getByLabelText('Medo atual')).toHaveValue(1);
   expect(screen.getByLabelText('Sanidade')).toHaveTextContent('9');
-  fireEvent.click(screen.getByRole('button',{name:'Diminuir Medo'}));
-  fireEvent.click(screen.getByRole('button',{name:'Aumentar Medo'}));
+  fireEvent.click(screen.getByRole('button',{name:'Definir Medo em 6'}));
   expect(screen.getByLabelText('Medo atual')).toHaveValue(6);
   expect(screen.getByLabelText('Sanidade')).toHaveTextContent('4');
 });

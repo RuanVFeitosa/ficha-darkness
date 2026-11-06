@@ -414,4 +414,18 @@
 .ficha-container.absoluto-dossier .abs-attributes-panel .destino-rolar-btn{min-width:100px;min-height:34px;padding:7px 10px;border:1px solid #c8b17a70;border-radius:3px;background:#c8b17a14;color:#e2c98c;font:600 10px/1.4 'Courier New',monospace;letter-spacing:.06em;box-shadow:none;transition:background .18s ease,border-color .18s ease}
 .ficha-container.absoluto-dossier .abs-attributes-panel .destino-rolar-btn:hover{background:#c8b17a2b;border-color:#d9c384;transform:none}
 .abs-attributes-panel .destino-rolar-btn:focus-visible{outline:2px solid #e2c98c;outline-offset:3px}
+
+/* Compact player defense with shield. */
+.ficha-container.absoluto-dossier .abs-combat .abs-player-defense{display:flex;flex-direction:row;align-items:flex-start;justify-content:center;flex-wrap:wrap;width:100%;gap:18px}
+.ficha-container.absoluto-dossier .abs-player-defense .defesa-base-box{display:flex;flex-direction:column;align-items:center;gap:6px}
+.ficha-container.absoluto-dossier .abs-player-defense .defesa-titulo{font:10px 'Courier New',monospace;white-space:nowrap;letter-spacing:1px;text-align:center}
+.ficha-container.absoluto-dossier .abs-player-defense .escudo-defesa{width:64px;height:72px;border:0;border-radius:0;background:center/contain no-repeat url("data:image/svg+xml,%3Csvg width='80' height='92' viewBox='0 0 80 92' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 4L72 16V42C72 64 58 80 40 88C22 80 8 64 8 42V16L40 4Z' stroke='%23c8b17a' stroke-width='3' fill='none'/%3E%3C/svg%3E")}
+.abs-player-defense-reactions{display:contents}
+.ficha-container.absoluto-dossier .abs-player-defense>.defesa-topo{order:2}
+.abs-player-defense-reactions>.abs-player-defense-evasion:first-child{order:1}
+.abs-player-defense-reactions>.abs-player-defense-evasion:last-child{order:3}
+.ficha-container.absoluto-dossier .abs-block-damage-note{font:10px/1.3 Arial,sans-serif;color:#a89e85;letter-spacing:normal;text-transform:none;white-space:nowrap}
+.ficha-container.absoluto-dossier .abs-player-defense-evasion{display:grid;grid-template-rows:12px 72px 13px;justify-items:center;align-items:center;gap:6px;margin:0;color:#b5a67e;font:9px 'Courier New',monospace;letter-spacing:.6px;text-transform:uppercase}
+.ficha-container.absoluto-dossier .abs-player-defense .defesa-titulo{height:12px;line-height:12px}
+.ficha-container.absoluto-dossier .abs-player-defense-evasion input{width:36px;height:32px;padding:0;text-align:center;border:1px solid #c8b17a40;border-radius:4px;background:transparent;color:var(--abs-ink);font:18px Georgia,serif;box-shadow:none}
 @media(max-width:360px){.ficha-container.absoluto-dossier .abs-attributes-panel .atributos-linha>.atributoCompleto{padding:9px 8px;gap:6px}.ficha-container.absoluto-dossier .abs-attributes-panel .atributo-reserva-v1 .atributo-dado{gap:6px}.ficha-container.absoluto-dossier .abs-attributes-panel .abs-attribute-dice{max-width:88px;gap:2px}.ficha-container.absoluto-dossier .abs-attributes-panel .abs-attribute-dice svg{width:16px!important;height:16px!important}}

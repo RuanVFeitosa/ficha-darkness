@@ -1,4 +1,5 @@
 import { LIMITE_DADOS_ABSOLUTO, rolarDadosAbsoluto } from '../utils/absolutoModificadores';
+import {efeitosMedo} from '../utils/absolutoMedo';
 // Protocolo Absoluto 1.0, páginas 10–23 e 113–118.
 // Regras incompletas do manuscrito são configuradas pela mesa, nunca inferidas.
 export const VERSAO_ABSOLUTO = '1.0';
@@ -30,6 +31,16 @@ export const REGIOES = {
 export const ESCALA_DOMINIO = ['Inexperiente', 'Treinado', 'Especialista', 'Mestre', 'Excepcional', 'Absoluto'];
 export const EXITO_DOMINIO = ['Apenas 6', '5 e 6', '5 e 6; um único 4 adicional', '4, 5 e 6', '4, 5 e 6; um único 3 adicional', '3, 4, 5 e 6'];
 export const limitar = (valor, min = 0, max = 5) => Math.min(max, Math.max(min, Math.trunc(Number(valor) || 0)));
+export const defesaPersonagem = (personagem, esquivando = false, contraFonte = false) => {
+  const mobilidade = limitar(personagem?.dominios?.mobilidade);
+  const base = mobilidade === 5 ? 4 : mobilidade >= 3 ? 3 : 2;
+  const bonusProtecao = Number(personagem.medo)>2 ? limitar(personagem.bonusEsquivaMedo,0,3) : 0;
+  return base + (esquivando && (bonusProtecao>0 || !efeitosMedo(personagem,contraFonte).semEsquiva) ? 1 : 0) + (esquivando ? bonusProtecao : 0);
+};
+export const bloqueioPersonagem = personagem => {
+  const vigor = limitar(personagem?.dominios?.vigor);
+  return vigor === 5 ? 15 : vigor >= 3 ? 10 : 5;
+};
 export const atributosIniciais = () => Object.fromEntries(Object.keys(ATRIBUTOS_ABSOLUTO).map(k => [k, 1]));
 export const dominiosIniciais = () => Object.fromEntries(Object.keys(DOMINIOS).map(k => [k, 0]));
 export const custoAtributo = valor => [0, 0, 10, 25, 50, 80][limitar(valor)];
@@ -109,11 +120,11 @@ export function alterarMedo(personagem, variacao) {
     ...personagem, medo: 6, rupturaNaCena: true,
     sanidade: { ...personagem.sanidade, atual: Math.max(0, personagem.sanidade.atual - 5) },
   };
-  return { ...personagem, medo };
+  return { ...personagem, medo, ...(medo<=2 ? {bonusEsquivaMedo:0} : {}) };
 }
 
 export function descansar(personagem) {
-  return { ...personagem, medo: 0, esperanca: { ...personagem.esperanca, atual: Math.min(personagem.esperanca.max, personagem.esperanca.atual + 2) } };
+  return { ...personagem, medo: 0, bonusEsquivaMedo:0, esperanca: { ...personagem.esperanca, atual: Math.min(personagem.esperanca.max, personagem.esperanca.atual + 2) } };
 }
 
 export function recalcularBases(personagem, atributos) {

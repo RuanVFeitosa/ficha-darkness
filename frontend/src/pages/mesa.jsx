@@ -1,3 +1,12 @@
+import InlineInitiative from '../components/tabletop/InlineInitiative';
+import ParticipantDossiers from '../components/tabletop/ParticipantDossiers';
+import {nextCombatTurn} from '../utils/combatTurn';
+import CombatTurnControls from '../components/tabletop/CombatTurnControls';
+import {initiativeOrder} from '../utils/initiativeOrder';
+import PlayerInitiativeBar from '../components/tabletop/PlayerInitiativeBar';
+import InitiativeCards from '../components/tabletop/InitiativeCards';
+import {specialSceneMediaType} from '../utils/specialSceneMedia';
+import {SpecialSceneMedia} from '../components/tabletop/SpecialScene';
 import RollNotifications from '../components/tabletop/RollNotifications';
 import MasterShield from '../components/tabletop/MasterShield';
 import { SpecialMechanicsBanner, SpecialMechanicsDialog } from '../components/tabletop/SpecialMechanics';
@@ -6,8 +15,11 @@ import NumberInput from '../components/ui/NumberInput';
 import AnimatedScene from '../components/tabletop/AnimatedScene';
 import TabletopSceneEditor from '../components/tabletop/TabletopSceneEditor';
 import AnimatedTokenImage from '../components/tokens/AnimatedTokenImage';
+import EspiralEncounterViewer from '../components/espiral/EspiralEncounterViewer';
+import { readEspiralEncounters, espiralEncounterForTabletop, ESPIRAL_ENCOUNTERS_CHANGED } from '../utils/espiralEncounters';
 import EvidenceImageViewer from "../components/campanha/EvidenceImageViewer";
 import { ACEITAR_AUDIO } from "../utils/audioUpload";
+import {createPortal} from "react-dom";
 import React, {
   useCallback,
   useEffect,
@@ -19,8 +31,8 @@ import Icon from "@mdi/react";
 import ReprodutorCassete from "../components/midia/ReprodutorCassete";
 import ComputadorModerno from "../components/ui/ComputadorModerno";
 import { confirmarDialogo } from "../components/ui/DialogoGlobal";
-import { mdiAccountPlusOutline, mdiArrowLeft, mdiChevronDown, mdiChevronRight, mdiClose, mdiDeleteOutline, mdiFileDocumentMultipleOutline, mdiFolderOutline, mdiFitToScreenOutline, mdiFlashlight, mdiFlashlightOff, mdiImageOutline, mdiLightbulbOnOutline, mdiMagnify, mdiMagnifyMinusOutline, mdiMagnifyPlusOutline, mdiMapOutline, mdiMusicBoxMultipleOutline, mdiNotebookEditOutline, mdiPencilOutline, mdiPlay, mdiPlus, mdiRefresh, mdiRotateRight, mdiShieldCrownOutline, mdiSwordCross, mdiStoreOutline, mdiViewDashboardOutline, mdiUploadOutline } from "@mdi/js";
-import { ativarCena, atualizarEstadoMusica, atualizarEstadoSoundpad, atualizarInimigoCampanha, atualizarModoCampanha, atualizarModoCombate, atualizarModoInvestigacao, atualizarRevelacaoDocumentoInvestigacao, atualizarVisibilidadeDocumentoInvestigacao, buscarCampanhaPorCodigo, definirIniciativa, definirRotacaoToken, definirTamanhoToken, chavePosicaoMapa, configurarLanternaToken, definirVisibilidadeToken, desvincularInimigo, enviarImagemCena, excluirCena, excluirDocumentoInvestigacao, moverToken, ouvirCampanha, posicionarFichaNoMapa, posicionarInimigoNoMapa, registrarRolagem, removerIniciativa, removerTokenDoMapa, salvarCena, salvarDocumentoInvestigacao, salvarEvidenciaInterativa, validarArquivoImagem, validarArquivoInvestigacao, vincularFicha, vincularInimigo } from "../services/mesaApi";
+import { mdiAccountPlusOutline, mdiArrowLeft, mdiChevronDown, mdiChevronRight, mdiClose, mdiDeleteOutline, mdiFileDocumentMultipleOutline, mdiFolderOutline, mdiFitToScreenOutline, mdiFlashlight, mdiFlashlightOff, mdiImageOutline, mdiLightbulbOnOutline, mdiMagnify, mdiMagnifyMinusOutline, mdiMagnifyPlusOutline, mdiMapOutline, mdiMusicBoxMultipleOutline, mdiPencilOutline, mdiPlay, mdiPlus, mdiRefresh, mdiRotateRight, mdiShieldCrownOutline, mdiStoreOutline, mdiViewDashboardOutline, mdiUploadOutline } from "@mdi/js";
+import { salvarTurnoCombate, ativarCena, atualizarEstadoMusica, atualizarEstadoSoundpad, atualizarInimigoCampanha, atualizarModoCampanha, atualizarModoCombate, atualizarModoInvestigacao, atualizarRevelacaoDocumentoInvestigacao, atualizarVisibilidadeDocumentoInvestigacao, buscarCampanhaPorCodigo, definirIniciativa, definirRotacaoToken, definirTamanhoToken, chavePosicaoMapa, configurarLanternaToken, definirVisibilidadeToken, desvincularInimigo, enviarImagemCena, excluirCena, excluirDocumentoInvestigacao, moverToken, ouvirCampanha, posicionarFichaNoMapa, posicionarInimigoNoMapa, registrarRolagem, removerIniciativa, removerTokenDoMapa, salvarCena, salvarDocumentoInvestigacao, salvarEvidenciaInterativa, validarArquivoImagem, validarArquivoInvestigacao, vincularFicha, vincularInimigo } from "../services/mesaApi";
 import {
   ouvirPersonagens,
 } from "../services/personagemApi";
@@ -297,7 +309,9 @@ const corInterfaceDaImagem = (url) =>
     imagem.src = url;
   });
 
-const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
+const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId="",documentsOnly=false,shieldTool=""}) => {
+  const turnBusyRef=useRef(false);
+  const [turnBusy,setTurnBusy]=useState(false);
   const [mechanicsOpen, setMechanicsOpen] = useState(false);
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const codigo = (params.get("campanha") || "DARK26").toUpperCase();
@@ -333,6 +347,8 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
   const [arquivos, setArquivos] = useState({ cena: [], mapa: [], especial: [], audio: [] });
   const [salvando, setSalvando] = useState(false);
   const [transicao, setTransicao] = useState(false);
+  const playerSceneTransition=useRef({revision:0,timer:null,disposed:false});
+  useEffect(()=>{playerSceneTransition.current.disposed=false;return ()=>{playerSceneTransition.current.disposed=true;playerSceneTransition.current.revision+=1;clearTimeout(playerSceneTransition.current.timer);};},[]);
   const [escudoAberto,setEscudoAberto]=useState(false);
   const audioCenaEspecialRef = useRef(null);
   const [audioEspecialPronto, setAudioEspecialPronto] = useState(false);
@@ -427,7 +443,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
     ) setAplicativoMesaAberto(null);
   }, [aplicativoMesaAberto, cenaAtivaVisivel?.lojaDisponivel, mestre]);
   const modoIniciativaAtivo = Boolean(
-    campanha?.combateAtivo || campanha?.investigacaoAtiva || (embedded && requestedTool === "initiative"),
+    campanha?.combateAtivo || campanha?.investigacaoAtiva,
   );
   // Forca uma remontagem limpa da lateral quando o tipo de modo muda.
   // Isso evita que a arvore anterior de Participantes permaneça visualmente
@@ -475,6 +491,19 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
     try {
       setErro("");
       const dados = await buscarCampanhaPorCodigo(codigo);
+      if(!mestre && !embedded && dados && campanhaRef.current) {
+        const previous=campanhaRef.current;
+        const changed=previous.cenaAtiva?.id!==dados.cenaAtiva?.id || previous.modo!==dados.modo || (previous.midiaAtivaId || null)!==(dados.midiaAtivaId || null);
+        if(changed) {
+          const state=playerSceneTransition.current;
+          const revision=++state.revision;
+          clearTimeout(state.timer);
+          setTransicao(true);
+          await new Promise(resolve=>setTimeout(resolve,360));
+          if(state.disposed || revision!==state.revision)return;
+          state.timer=setTimeout(()=>setTransicao(false),700);
+        }
+      }
       setCampanha((atual) => {
         if (!dados || !atual) return dados;
         const protegidos = new Map(
@@ -511,7 +540,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
     } finally {
       setCarregando(false);
     }
-  }, [codigo]);
+  }, [codigo,mestre,embedded]);
 
   useEffect(() => {
     carregar();
@@ -636,7 +665,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
               });
               return;
             }
-            if (!eventoMudaApresentacao(evento, campanhaRef.current)) {
+            if (!mestre || !eventoMudaApresentacao(evento, campanhaRef.current)) {
               carregar();
               return;
             }
@@ -645,7 +674,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
             setTimeout(() => setTransicao(false), 1000);
           })
         : undefined,
-    [campanha?.id, carregar],
+    [campanha?.id, carregar,mestre],
   );
   useEffect(() => {
     const url = urlCena(
@@ -684,7 +713,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
   useEffect(() => {
     if (campanha?.modo !== "mapa") return undefined;
     const url = urlCena(cenaAtivaVisivel, "mapa", campanha?.midiaAtivaId);
-    if (!url) return undefined;
+    if (!url || specialSceneMediaType({url}) === "video") return undefined;
     let ativo = true;
     const imagem = new Image();
     imagem.onload = () => {
@@ -725,6 +754,8 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
   },[carregarFichas]);
   useEffect(() => {
     if (!mestre) return;
+    const refresh = () => {
+    const records = [];
     try {
       const inimigos = (
         JSON.parse(localStorage.getItem("darkness_inimigos")) || []
@@ -732,10 +763,20 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
       const npcs = (
         JSON.parse(localStorage.getItem("darkness_npcs")) || []
       ).map((item) => ({ ...item, tipo: "npc" }));
-      setCatalogoInimigos([...inimigos, ...npcs]);
-    } catch {
-      setCatalogoInimigos([]);
-    }
+      records.push(...inimigos, ...npcs);
+    } catch {}
+    try { records.push(...readEspiralEncounters(localStorage).map(espiralEncounterForTabletop)); } catch {}
+    setCatalogoInimigos(records);
+    };
+    refresh();
+    window.addEventListener('storage', refresh);
+    window.addEventListener('focus', refresh);
+    window.addEventListener(ESPIRAL_ENCOUNTERS_CHANGED, refresh);
+    return () => {
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener(ESPIRAL_ENCOUNTERS_CHANGED, refresh);
+    };
   }, [mestre]);
   useEffect(() => {
     const fichasIds = (campanha?.membros || [])
@@ -821,9 +862,15 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
       (item) => String(item.id || item.fichaId) === inimigoParaAdicionar,
     );
     if (!inimigo) return;
-    await vincularInimigo(campanha.id, inimigo);
-    setInimigoParaAdicionar("");
-    await carregar();
+    try {
+      await vincularInimigo(campanha.id, inimigo);
+      setInimigoParaAdicionar("");
+      await carregar();
+    } catch (error) {
+      setErro(error.name === 'QuotaExceededError'
+        ? 'O armazenamento deste dispositivo está cheio. Não foi possível adicionar o encontro; a campanha anterior foi preservada.'
+        : error.message || 'Não foi possível adicionar o encontro à campanha.');
+    }
   };
   const removerInimigo = async (inimigo) => {
     if (
@@ -836,6 +883,12 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
     await desvincularInimigo(campanha.id, inimigo.id);
     setInimigoAberto(null);
     await carregar();
+  };
+  const colocarInimigo3D = async (inimigo) => {
+    try {
+      await posicionarInimigoNoMapa(campanha.id, { ...inimigo, fotoPerfil: inimigo.tabletopTokenImage || inimigo.fotoPerfil }, 50, 50, tabletopMapId || 'mapa-principal');
+      await carregar();
+    } catch (error) { setErro(error.message || 'Não foi possível colocar o encontro no mapa 3D.'); }
   };
   const salvarVitalInimigo = async (inimigoAtualizado) => {
     setInimigoAberto(inimigoAtualizado);
@@ -890,6 +943,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
       setCampanha((atual) => ({
         ...atual,
         combateAtivo: novoEstado,
+        turnoCombate: null,
         investigacaoAtiva: novoEstado ? false : Boolean(atual.investigacaoAtiva),
         iniciativas: novoEstado && !embedded ? {} : atual.iniciativas || {},
       }));
@@ -912,6 +966,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
       setCampanha((atual) => ({
         ...atual,
         investigacaoAtiva: novoEstado,
+        turnoCombate: null,
         combateAtivo: novoEstado ? false : Boolean(atual.combateAtivo),
         iniciativas: novoEstado ? {} : atual.iniciativas || {},
       }));
@@ -1302,6 +1357,18 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
     }
   };
 
+  const adicionarIniciativaNoPainel = async (inimigo, valor, tipo) => {
+    if(!mestre || !modoIniciativaAtivo || !campanha?.id || !Number.isInteger(valor) || valor<0) return;
+    let registro=inimigo;
+    if(tipo!=='npc' && Boolean(inimigo.bossIniciativa || inimigo.dados?.bossIniciativa)!==(tipo==='boss')) {
+      registro=await atualizarInimigoCampanha(campanha.id,{...inimigo,bossIniciativa:tipo==='boss'});
+      setCampanha(atual=>({...atual,inimigos:(atual.inimigos || []).map(item=>item.id===registro.id?registro:item)}));
+    }
+    const chave=tipo==='npc' ? chaveIniciativaNpc(registro) : prefixoIniciativaInimigo(registro)+Date.now()+'-'+Math.random().toString(36).slice(2,6);
+    await definirIniciativa(campanha.id,chave,valor,registro.nome || 'Personagem');
+    setCampanha(atual=>({...atual,iniciativas:{...(atual.iniciativas || {}),[chave]:valor}}));
+  };
+
   const apresentar = async (cena, modo, midia = null) => {
     setTransicao(true);
     await ativarCena(campanha.id, cena.id, modo, midia?.id || null);
@@ -1386,6 +1453,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
           arquivos.cena.map(async (item) => ({
             id: item.id,
             nome: item.nome || item.arquivo.name,
+            tipoMidia: specialSceneMediaType({file:item.arquivo}),
             url: await enviarImagemCena(campanha.id, item.arquivo, "cena"),
           })),
         ),
@@ -1393,6 +1461,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
           arquivos.mapa.map(async (item) => ({
             id: item.id,
             nome: item.nome || item.arquivo.name,
+            tipoMidia: specialSceneMediaType({file:item.arquivo}),
             url: await enviarImagemCena(campanha.id, item.arquivo, "mapa"),
             larguraGrade: Number(
               item.larguraGrade || editando.larguraGrade || 12,
@@ -1437,7 +1506,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
           ...editando.cenaEspecial,
           midiaUrl: midiaEspecialUrl || editando.cenaEspecial.midiaUrl || "",
           audioUrl: audioEspecialUrl || editando.cenaEspecial.audioUrl || "",
-          tipoMidia: arquivos.especial[0]?.arquivo?.type?.startsWith("video/") ? "video" : (editando.cenaEspecial.tipoMidia || "imagem"),
+          tipoMidia: editando.cenaEspecial.cutscene ? "cutscene" : specialSceneMediaType({file:arquivos.especial[0]?.arquivo,url:editando.cenaEspecial.midiaUrl,fallback:editando.cenaEspecial.tipoMidia || "imagem"}),
           atrasoAudio: Math.max(0, Number(editando.cenaEspecial.atrasoAudio) || 0),
         } : null,
       });
@@ -1455,6 +1524,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
     if (!selecionados.length) return;
     try {
       selecionados.forEach((arquivo) => validarArquivoImagem(arquivo, tipo));
+      if(tipo==="especial")setEditando(current=>({...current,cenaEspecial:{...current.cenaEspecial,cutscene:undefined,tipoMidia:specialSceneMediaType({file:selecionados[0]})}}));
       setErro("");
       setArquivos((atuais) => ({
         ...atuais,
@@ -2093,12 +2163,35 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
       </main>
     );
 
+  const adicionarParticipanteEscudo = async (record) => {
+    await vincularInimigo(campanha.id,record);
+    await carregar();
+  };
+  const salvarParticipanteEscudo = async (record) => {
+    const saved = await atualizarInimigoCampanha(campanha.id, record);
+    setCampanha(current => ({...current, inimigos:(current.inimigos || []).map(item=>item.id===saved.id ? saved:item)}));
+    setInimigoAberto(current=>current?.id===saved.id ? saved:current);
+    return saved;
+  };
+  const salvarDificuldadeCena = async (patch) => {
+    if (!mestre || !campanha?.cenaAtiva) return;
+    const cena = {...campanha.cenaAtiva, dificuldades: {ambiente:4, combateAmbiente:4, conflitos:4, ...campanha.cenaAtiva.dificuldades, ...patch}};
+    try {
+      await salvarCena(campanha.id, cena);
+      setCampanha(atual => ({...atual, cenaAtiva: atual.cenaAtiva?.id === cena.id ? cena : atual.cenaAtiva, cenas: (atual.cenas || []).map(item => item.id === cena.id ? cena : item)}));
+    } catch (error) {
+      setErro(error.message || "Não foi possível salvar a dificuldade da cena.");
+    }
+  };
+
   const cena = cenaAtivaVisivel;
+  const palcoUrl = urlCena(cena, campanha.modo, campanha.midiaAtivaId);
   const mediaAnimada = campanha?.modo === "cena" ? (cena?.imagensCena || []).find(m=>m.id===campanha.midiaAtivaId) || cena?.imagensCena?.[0] : null;
   const midiaAtiva =
     midiasDaCena(cena, campanha.modo).find(
       (item) => item.id === campanha.midiaAtivaId,
     ) || midiasDaCena(cena, campanha.modo)[0];
+  const palcoVideo = specialSceneMediaType({url:palcoUrl,fallback:midiaAtiva?.tipoMidia}) === 'video';
   const colunas =
     midiaAtiva?.larguraGrade || cena?.largura_grade || cena?.larguraGrade || 12;
   const linhas =
@@ -2165,73 +2258,18 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
     ? "Iniciativa"
     : "Participantes";
 
-  const inimigosPorId = new Map(
-    (campanha.inimigos || []).map((item) => [String(item.id), item]),
-  );
+  const ordemCombate = modoIniciativaAtivo ? initiativeOrder(campanha,personagens) : [];
 
-  const ordemCombate = (() => {
-    if (!modoIniciativaAtivo) return [];
-    const entradas = (campanha.membros || []).map((membro, indice) => {
-      const personagem = personagens[membro.ficha_id];
-      return {
-        chave: membro.ficha_id,
-        tipo: "jogador",
-        valor: campanha.iniciativas?.[membro.ficha_id],
-        nome: personagem?.nome || membro.nome,
-        subtitulo: personagem
-          ? `Nivel ${personagem.nivel || 1} · ${personagem.classe || "Sem classe"}`
-          : membro.papel,
-        foto: personagem?.fotoPerfil,
-        membro,
-        personagem,
-        ordemOriginal: indice,
-      };
-    });
-
-    Object.entries(campanha.iniciativas || {}).forEach(([chave, valor]) => {
-      if (chave.startsWith("npc:")) {
-        const id = chave.slice(4);
-        const npc = inimigosPorId.get(id);
-        if (!npc) return;
-        entradas.push({
-          chave,
-          tipo: "npc",
-          valor,
-          nome: npc.nome || "NPC",
-          subtitulo: `Nivel ${npc.nivel || 1} · ${npc.classe || "NPC"}`,
-          foto: npc.fotoPerfil,
-          inimigo: npc,
-          ordemOriginal: 10000,
-        });
-      } else if (chave.startsWith("inimigo:")) {
-        const resto = chave.slice("inimigo:".length);
-        const separador = resto.lastIndexOf(":");
-        const id = separador >= 0 ? resto.slice(0, separador) : resto;
-        const inimigo = inimigosPorId.get(id);
-        if (!inimigo) return;
-        entradas.push({
-          chave,
-          tipo: "inimigo",
-          valor,
-          nome: inimigo.nome || "Inimigo",
-          subtitulo: `Nivel ${inimigo.nivel || 1} · ${inimigo.classe || "Inimigo"}`,
-          foto: inimigo.fotoPerfil,
-          inimigo,
-          ordemOriginal: 20000,
-        });
-      }
-    });
-
-    return entradas.sort((a, b) => {
-      const temA = a.valor != null;
-      const temB = b.valor != null;
-      if (temA && !temB) return -1;
-      if (!temA && temB) return 1;
-      if (temA && temB && Number(b.valor) !== Number(a.valor))
-        return Number(b.valor) - Number(a.valor);
-      return a.ordemOriginal - b.ordemOriginal;
-    });
-  })();
+  const controlarTurno = async (action,target) => {
+    if(!mestre || !campanha?.combateAtivo || turnBusyRef.current) return;
+    turnBusyRef.current=true;setTurnBusy(true);
+    try {
+      const next=nextCombatTurn(campanha.turnoCombate,ordemCombate,action,target);
+      const saved=await salvarTurnoCombate(campanha.id,next,campanha.turnoCombate?.revision || 0);
+      setCampanha(current=>({...current,turnoCombate:saved}));
+    } catch(error) {setErro(error.message || 'Não foi possível atualizar o turno.');}
+    finally {turnBusyRef.current=false;setTurnBusy(false);}
+  };
 
   const agruparPorPastaNpc = (itens) => {
     const grupos = new Map();
@@ -2289,8 +2327,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
     setPastasNpcsFechadas((atual) => ({ ...atual, [chave]: !atual[chave] }));
   };
 
-  const renderizarCenaBiblioteca = (item) => {
-    const selecionada = item.id === cena?.id;
+  const renderMidiasCenaBiblioteca = (item) => {
     const midias = [
       ...(item.imagensCena || []).map((midia) => ({
         ...midia,
@@ -2306,53 +2343,8 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
     const primeiraDoModo = midias.find(
       (midia) => midia.tipo === campanha.modo,
     )?.id;
-    return (
-      <React.Fragment key={item.id}>
-        <article
-          className={selecionada ? "selecionado" : ""}
-          style={{
-            backgroundImage: `url(${urlCena(item, "cena") || urlCena(item, "mapa")})`,
-          }}
-        >
-          <div className="biblioteca-item-conteudo">
-            <span>{selecionada ? "No ar" : "Cena salva"}</span>
-            <strong>{item.nome}</strong>
-            <small>
-              {item.visualizarTodos === false
-                ? `${item.jogadoresVisiveis?.length || 0} jogador(es) podem ver`
-                : urlCena(item, "mapa") ? "Mapa preparado" : "Sem mapa"}
-            </small>
-          </div>
-          <div className="biblioteca-item-acoes">
-            <button
-              onClick={() => apresentar(item, "cena")}
-              title="Exibir cena"
-            >
-              <Icon path={mdiPlay} size={0.72} />
-            </button>
-            {urlCena(item, "mapa") && (
-              <button
-                onClick={() => apresentar(item, "mapa")}
-                title="Abrir mapa"
-              >
-                <Icon path={mdiMapOutline} size={0.72} />
-              </button>
-            )}
-            {item.cenaEspecial?.ativo && item.cenaEspecial?.midiaUrl && (
-              <button onClick={() => apresentar(item, "especial")} title="Exibir cena especial">
-                <Icon path={mdiMusicBoxMultipleOutline} size={0.72} />
-              </button>
-            )}
-            <button onClick={() => abrirEditor(item)} title="Editar">
-              <Icon path={mdiPencilOutline} size={0.72} />
-            </button>
-            <button onClick={() => removerCena(item)} title="Excluir">
-              <Icon path={mdiDeleteOutline} size={0.72} />
-            </button>
-          </div>
-        </article>
-        {selecionada && midias.length > 0 && (
-          <section
+    return midias.length ? (
+<section
             className={`biblioteca-midias-ativas ${midiasRecolhidas ? "recolhida" : ""}`}
           >
             <button
@@ -2401,1031 +2393,62 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
               </div>
             )}
           </section>
-        )}
-      </React.Fragment>
+    ) : <p>Nenhuma imagem ou mapa nesta cena.</p>;
+  };
+  const renderizarCenaBiblioteca = (item, showFolder=false) => {
+    const selecionada = item.id === cena?.id;
+    return (
+      <div className="biblioteca-scene-card" key={item.id}>
+        {showFolder && <div className="biblioteca-scene-folder"><Icon path={mdiFolderOutline} size={0.6}/><span>{item.pasta || 'Sem pasta'}</span></div>}
+        <article
+          className={selecionada ? "selecionado" : ""}
+          style={{
+            backgroundImage: `url(${urlCena(item, "cena") || urlCena(item, "mapa")})`,
+          }}
+        >
+          <div className="biblioteca-item-conteudo">
+            <span>{selecionada ? "No ar" : "Cena salva"}</span>
+            <strong>{item.nome}</strong>
+            <small>
+              {item.visualizarTodos === false
+                ? `${item.jogadoresVisiveis?.length || 0} jogador(es) podem ver`
+                : urlCena(item, "mapa") ? "Mapa preparado" : "Sem mapa"}
+            </small>
+          </div>
+          <div className="biblioteca-item-acoes">
+            <button
+              onClick={() => apresentar(item, "cena")}
+              title="Exibir cena"
+            >
+              <Icon path={mdiPlay} size={0.72} />
+            </button>
+            {urlCena(item, "mapa") && (
+              <button
+                onClick={() => apresentar(item, "mapa")}
+                title="Abrir mapa"
+              >
+                <Icon path={mdiMapOutline} size={0.72} />
+              </button>
+            )}
+            {item.cenaEspecial?.ativo && item.cenaEspecial?.midiaUrl && (
+              <button onClick={() => apresentar(item, "especial")} title="Exibir cena especial">
+                <Icon path={mdiMusicBoxMultipleOutline} size={0.72} />
+              </button>
+            )}
+            <button onClick={() => abrirEditor(item)} title="Editar">
+              <Icon path={mdiPencilOutline} size={0.72} />
+            </button>
+            <button onClick={() => removerCena(item)} title="Excluir">
+              <Icon path={mdiDeleteOutline} size={0.72} />
+            </button>
+          </div>
+        </article>
+        {!showFolder && selecionada && renderMidiasCenaBiblioteca(item)}
+      </div>
     );
   };
-  return (
-    <main
-      data-document-open={embedded && Boolean(documentoAberto) ? "true" : undefined}
-      className={`mesa-shell ${embedded ? "mesa-embedded" : "mesa-2d"} ${focoVisual ? 'mesa-foco-visual' : ''} ${mestre ? "visao-mestre" : "visao-jogador"} ${!mestre && abaLateralJogador === "ficha" ? "jogador-ficha-ativa" : ""} ${!(mestre ? abaLateralMestre : abaLateralJogador) ? "painel-lateral-fechado" : ""} modo-atual-${campanha.modo} ${bibliotecaAberta ? "com-biblioteca" : ""}`}
-      style={{
-        "--mesa-acento":
-          corCena || personagemJogador?.temaFicha?.primaria || "#d4af37",
-        "--mesa-secundaria":
-          corCena || personagemJogador?.temaFicha?.secundaria || "#8b4513",
-        "--mesa-texto": personagemJogador?.temaFicha?.texto || "#fff8ea",
-        "--mesa-fundo": personagemJogador?.temaFicha?.fundo || "#080808",
-        "--mesa-borda": corCena
-          ? `color-mix(in srgb,${corCena} 45%,transparent)`
-          : personagemJogador?.temaFicha?.borda || "rgba(212,175,55,.35)",
-      }}
-    >
-      {!embedded && (mestre || !hasActiveRevolt(campanha.mecanicasEspeciais)) && <SpecialMechanicsBanner state={campanha.mecanicasEspeciais} onOpen={() => setMechanicsOpen(true)}/>}
-      {!embedded && !mestre && !mechanicsOpen && <RevoltPlayerHUD campaign={campanha} playerId={fichaJogadorId} onOpen={() => setMechanicsOpen(true)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))}/>}
-      {mechanicsOpen && <SpecialMechanicsDialog campaign={campanha} master={mestre} playerId={fichaJogadorId} onClose={() => setMechanicsOpen(false)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))}/>}
-      <div className={`mesa-transicao ${transicao ? "ativa" : ""}`}>
-        <img className="mesa-transicao-simbolo" src="/simbolo-darkness.png" alt=""/>
-        <span>
-          {campanha.modo === "especial" ? "Iniciando cena especial" : campanha.modo === "mapa" ? "Preparando o mapa" : "Voltando a cena"}
-        </span>
-      </div>
-
-      {embedded && mestre && ['initiative','investigation'].includes(requestedTool) && <div className="tt3-session-mode"><p>{requestedTool==='initiative' ? 'Organize os turnos e acompanhe os participantes.' : 'Acompanhe a investigação e a iniciativa.'}</p><button type="button" className="tt3-primary" disabled={salvandoCombate || salvandoInvestigacao} onClick={requestedTool==='initiative' ? alternarModoCombate : alternarModoInvestigacao}>{requestedTool==='initiative' ? (campanha.combateAtivo ? 'Encerrar combate' : 'Iniciar combate') : (campanha.investigacaoAtiva ? 'Encerrar investigação' : 'Iniciar investigação')}</button></div>}
-<header className="mesa-topo">
-        <a
-          href={urlRetorno}
-          title={mestre ? "Voltar ao dashboard" : "Voltar para a ficha"}
-        >
-          <Icon path={mdiArrowLeft} size={0.9} />
-        </a>
-        <div>
-          <span>Campanha {campanha.codigo}</span>
-          <strong>{campanha.nome}</strong>
-        </div>
-        <div className="mesa-status">
-          <i />
-          {supabaseConfigurado ? "Ao vivo" : "Demonstracao"}
-        </div>
-        <button type="button" className="mesa-cenas-botao" onClick={() => setMechanicsOpen(true)}>Mecânicas especiais</button>
-        {mestre && (
-          <div className="mesa-ferramentas-mestre">
-            <button
-              className={`mesa-cenas-botao ${aplicativoMesaAberto === "dashboard" ? "ativo" : ""}`}
-              onClick={() => setAplicativoMesaAberto((atual) => atual === "dashboard" ? null : "dashboard")}
-              title="Abrir dashboard dentro do tabletop"
-            >
-              <Icon path={mdiViewDashboardOutline} size={0.78} />
-              Dashboard
-            </button>
-            <button
-              className={`mesa-cenas-botao ${bibliotecaAberta ? "ativo" : ""}`}
-              title="Cenas e mapas"
-              onClick={() => {
-                setBibliotecaAberta((valor) => !valor);
-                setAnotacoesAbertas(false);
-                setMusicaAberta(false);
-                setSoundpadAberto(false);
-              }}
-            >
-              <Icon path={mdiImageOutline} size={0.78} />
-              Cenas
-            </button>
-            <button
-              className={`mesa-cenas-botao ${anotacoesAbertas ? "ativo" : ""}`}
-              title="Anotações da campanha"
-              onClick={() => {
-                setAnotacoesAbertas((valor) => !valor);
-                setBibliotecaAberta(false);
-                setMusicaAberta(false);
-                setSoundpadAberto(false);
-              }}
-            >
-              <Icon path={mdiNotebookEditOutline} size={0.78} />
-              Anotacoes
-            </button>
-            <button
-              className={`mesa-cenas-botao ${musicaAberta ? "ativo" : ""}`}
-              title="Música"
-              onClick={() => {
-                setMusicaAberta((valor) => !valor);
-                setBibliotecaAberta(false);
-                setAnotacoesAbertas(false);
-                setSoundpadAberto(false);
-              }}
-            >
-              <Icon path={mdiMusicBoxMultipleOutline} size={0.78} />
-              Musica
-            </button>
-            <button
-              className={`mesa-cenas-botao ${soundpadAberto ? "ativo" : ""}`}
-              title="Soundpad"
-              onClick={() => {
-                setSoundpadAberto((valor) => !valor);
-                setMusicaAberta(false);
-                setBibliotecaAberta(false);
-                setAnotacoesAbertas(false);
-              }}
-            >
-              <Icon path={mdiMusicBoxMultipleOutline} size={0.78} />
-              Soundpad
-            </button>
-            <button
-              className={`mesa-cenas-botao mesa-combate-botao ${campanha.combateAtivo ? "ativo" : ""}`}
-              onClick={alternarModoCombate}
-              disabled={salvandoCombate || salvandoInvestigacao}
-              title={
-                campanha.combateAtivo ? "Encerrar combate" : "Iniciar combate"
-              }
-            >
-              <Icon path={mdiSwordCross} size={0.78} />
-              {campanha.combateAtivo ? "Encerrar" : "Combate"}
-            </button>
-            <button
-              className={`mesa-cenas-botao mesa-investigacao-botao ${campanha.investigacaoAtiva ? "ativo" : ""}`}
-              onClick={alternarModoInvestigacao}
-              disabled={salvandoInvestigacao || salvandoCombate}
-              title={
-                campanha.investigacaoAtiva
-                  ? "Encerrar modo investigacao"
-                  : "Iniciar modo investigacao"
-              }
-            >
-              <Icon path={mdiMagnify} size={0.78} />
-              {campanha.investigacaoAtiva ? "Encerrar" : "Investigacao"}
-            </button>
-            {campanha.modo === "mapa" && (
-              <button
-                className={`mesa-cenas-botao ${editorIluminacaoAberto ? "ativo" : ""}`}
-                onClick={() => {
-                  setEditorIluminacaoAberto((aberto) => !aberto);
-                  if (!mapaAtualIluminacao?.iluminacao) {
-                    setConfiguracaoIluminacao({
-                      paredes: [],
-                      portas: [],
-                      luzes: [],
-                      escuridao: 0.82,
-                      periodo: "dia",
-                    });
-                  }
-                }}
-                disabled={!mapaAtualIluminacao}
-                title="Editar paredes, luzes e visao"
-              >
-                <Icon path={mdiLightbulbOnOutline} size={0.78} />
-                Iluminacao
-              </button>
-            )}
-            <div className="mesa-modos" aria-label="Modo da mesa">
-              <button
-                className={campanha.modo === "cena" ? "ativo" : ""}
-                onClick={() => trocarModo("cena")}
-                title="Exibir cena"
-              >
-                <Icon path={mdiImageOutline} size={0.82} />
-              </button>
-              <button
-                className={campanha.modo === "mapa" ? "ativo" : ""}
-                onClick={() => trocarModo("mapa")}
-                title="Exibir mapa"
-              >
-                <Icon path={mdiMapOutline} size={0.82} />
-              </button>
-            </div>
-          </div>
-        )}
-        {!mestre && cena?.lojaDisponivel && (
-          <div className="mesa-ferramentas-jogador">
-            <button
-              className={`mesa-cenas-botao ${aplicativoMesaAberto === "loja" ? "ativo" : ""}`}
-              onClick={() => setAplicativoMesaAberto((atual) => atual === "loja" ? null : "loja")}
-              title="Abrir loja desta cena"
-            >
-              <Icon path={mdiStoreOutline} size={0.78} />
-              Loja
-            </button>
-          </div>
-        )}
-        <button
-          type="button"
-          className="mesa-cenas-botao mesa-3d-botao"
-          onClick={() => {
-            setSenha3D("");
-            setErroSenha3D("");
-            setSenha3DAberta(true);
-          }}
-          title="Abrir mapa 3D experimental"
-        >
-          Experimental
-        </button>
-        <button className="mesa-atualizar" onClick={carregar} title="Atualizar">
-          <Icon path={mdiRefresh} size={0.82} />
-        </button>
-      </header>
-      {!embedded && <>
-        <div className="mesa-contexto-visual" aria-label="Cena atual">
-          <Icon path={campanha.modo === 'mapa' ? mdiMapOutline : mdiImageOutline} size={0.85} aria-hidden="true" />
-          <div><span>{campanha.modo === 'mapa' ? 'Mapa de batalha' : campanha.modo === 'especial' ? 'Cena especial' : 'Cena narrativa'}</span><strong>{cena?.nome || campanha.nome}</strong></div>
-          {campanha.combateAtivo && <b>Combate</b>}
-        </div>
-        {<button type="button" className="mesa-foco-botao" aria-pressed={focoVisual} aria-label={focoVisual ? 'Mostrar interface' : 'Focar no mapa e cena'} title={focoVisual ? 'Mostrar interface' : 'Focar no mapa e cena'} onClick={() => setFocoVisual(value => !value)}><Icon path={focoVisual ? mdiViewDashboardOutline : mdiFitToScreenOutline} size={0.9} aria-hidden="true" /><span>{focoVisual ? 'Mostrar interface' : 'Foco'}</span></button>}
-        {(mestre ? abaLateralMestre : abaLateralJogador) && <button type="button" className="mesa-fechar-painel" aria-label="Recolher painel lateral" title="Recolher painel lateral" onClick={() => mestre ? setAbaLateralMestre('') : setAbaLateralJogador('')}><Icon path={mdiClose} size={0.8} /></button>}
-      </>}
-      {senha3DAberta && (
-        <div
-          className="mesa-3d-senha-overlay"
-          onClick={() => setSenha3DAberta(false)}
-        >
-          <form
-            className="mesa-3d-senha-painel"
-            aria-label="Senha do mapa 3D experimental"
-            onClick={(evento) => evento.stopPropagation()}
-            onSubmit={(evento) => {
-              evento.preventDefault();
-              if (senha3D !== SENHA_MESTRE) {
-                setErroSenha3D("Senha incorreta.");
-                setSenha3D("");
-                return;
-              }
-              sessionStorage.setItem(TABLETOP_3D_AUTH_KEY, "true");
-              const destino = new URLSearchParams(window.location.search);
-              destino.set("tabletop3d", "1");
-              window.location.href = `?${destino.toString()}`;
-            }}
-          >
-            <header>
-              <Icon path={mdiMapOutline} size={1} />
-              <div>
-                <span>Acesso restrito</span>
-                <h2>Mapa 3D Experimental</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSenha3DAberta(false)}
-                title="Fechar"
-              >
-                <Icon path={mdiClose} size={0.8} />
-              </button>
-            </header>
-            <label htmlFor="senha-tabletop-3d">Senha do mestre</label>
-            <input
-              id="senha-tabletop-3d"
-              type="password"
-              inputMode="numeric"
-              autoComplete="off"
-              autoFocus
-              maxLength={SENHA_MESTRE.length}
-              value={senha3D}
-              onChange={(evento) => {
-                setSenha3D(evento.target.value.replace(/\D/g, ""));
-                setErroSenha3D("");
-              }}
-            />
-            {erroSenha3D && <p role="alert">{erroSenha3D}</p>}
-            <button type="submit" className="mesa-3d-senha-confirmar">
-              Desbloquear 3D
-            </button>
-          </form>
-        </div>
-      )}
-      {mestre && bibliotecaAberta && (
-        <aside className="mesa-biblioteca">
-          <div className="biblioteca-cabecalho">
-            <div>
-              <span>Direcao da sessao</span>
-              <h2>Cenas e mapas</h2>
-            </div>
-            <button onClick={() => abrirEditor()} title="Nova cena">
-              <Icon path={mdiPlus} size={0.9} />
-            </button>
-          </div>
-          <div className="biblioteca-fichas">
-            <span>Fichas da campanha</span>
-            <div>
-              <select
-                value={fichaParaVincular}
-                onChange={(e) => setFichaParaVincular(e.target.value)}
-              >
-                <option value="">Selecionar ficha...</option>
-                {fichasDisponiveis
-                  .filter(
-                    (item) =>
-                      !campanha.membros.some(
-                        (membro) => membro.ficha_id === item.fichaId,
-                      ),
-                  )
-                  .map((item) => (
-                    <option key={item.fichaId} value={item.fichaId}>
-                      {item.personagem?.nome || item.fichaId}
-                    </option>
-                  ))}
-              </select>
-              <button
-                onClick={adicionarFicha}
-                disabled={!fichaParaVincular}
-                title="Vincular ficha"
-              >
-                <Icon path={mdiAccountPlusOutline} size={0.78} />
-              </button>
-            </div>
-            {erroFichas && (
-              <div className="biblioteca-fichas-erro">
-                <span>{erroFichas}</span>
-                <button onClick={carregarFichas}>Tentar novamente</button>
-              </div>
-            )}
-            {!erroFichas && fichasDisponiveis.length === 0 && (
-              <small>Nenhuma ficha cadastrada foi encontrada.</small>
-            )}
-          </div>
-          <div className="biblioteca-lista biblioteca-cenas-organizadas">
-            {gruposCenas.map(([pasta, cenas]) => {
-              const fechada = Boolean(pastasCenasFechadas[pasta]);
-              return (
-                <section className="biblioteca-pasta-cenas" key={pasta}>
-                  <button type="button" className="biblioteca-pasta-cabecalho" onClick={() => alternarPastaCena(pasta)} aria-expanded={!fechada}>
-                    <Icon path={fechada ? mdiChevronRight : mdiChevronDown} size={0.68} />
-                    <Icon path={mdiFolderOutline} size={0.74} />
-                    <strong>{pasta}</strong>
-                    <span>{cenas.length}</span>
-                  </button>
-                  {!fechada && cenas.map(renderizarCenaBiblioteca)}
-                </section>
-              );
-            })}
-          </div>
-        </aside>
-      )}
-      {mestre && anotacoesAbertas && (
-        <aside className="mesa-anotacoes-painel">
-          <header>
-            <div>
-              <span>Arquivo do mestre</span>
-              <strong>Anotacoes da campanha</strong>
-            </div>
-            <button
-              onClick={() => setAnotacoesAbertas(false)}
-              title="Fechar anotacoes"
-            >
-              <Icon path={mdiClose} size={0.85} />
-            </button>
-          </header>
-          <AnotacoesCampanha campanhaId={campanha.id} />
-        </aside>
-      )}
-      {mestre && (
-        <aside
-          className={`mesa-musica-painel ${musicaAberta ? "aberto" : "fechado"}`}
-          aria-hidden={!musicaAberta}
-        >
-          <header>
-            <div>
-              <span>Trilha da sessao</span>
-              <strong>Playlist da campanha</strong>
-            </div>
-            <button
-              onClick={() => setMusicaAberta(false)}
-              title="Fechar musica"
-            >
-              <Icon path={mdiClose} size={0.85} />
-            </button>
-          </header>
-          <MusicaTabletop
-            campanhaId={campanha.id}
-            musicasCampanha={campanha.musicas || []}
-            estadoRemoto={campanha.musicaEstado}
-            aoAlterarEstado={(estado) =>
-              atualizarEstadoMusica(campanha.id, estado)
-            }
-          />
-        </aside>
-      )}
-      {!mestre && campanha.musicas?.length > 0 && (
-        <aside className="mesa-musica-ouvinte">
-          <MusicaTabletop
-            campanhaId={campanha.id}
-            musicasCampanha={campanha.musicas}
-            estadoRemoto={campanha.musicaEstado}
-            controlavel={false}
-          />
-        </aside>
-      )}
-      {mestre && (
-        <aside className={`mesa-soundpad-painel ${soundpadAberto ? "aberto" : "fechado"}`} aria-hidden={!soundpadAberto}>
-          <header><div><span>Efeitos rapidos</span><strong>Soundpad da campanha</strong></div><button onClick={() => setSoundpadAberto(false)} title="Fechar soundpad"><Icon path={mdiClose} size={0.85} /></button></header>
-          <SoundpadTabletop sons={campanha.soundpad || []} estadoRemoto={campanha.soundpadEstado} aoAlterarEstado={(estado) => atualizarEstadoSoundpad(campanha.id, estado)} />
-        </aside>
-      )}
-      {!mestre && campanha.soundpad?.length > 0 && (
-        <SoundpadTabletop sons={campanha.soundpad} estadoRemoto={campanha.soundpadEstado} controlavel={false} />
-      )}
-
-      {campanha.modo === "especial" && cena?.cenaEspecial?.midiaUrl && (
-        <section className={`cena-especial cena-especial-${cena.cenaEspecial.transicao || "cinema"}`} aria-label={`Cena especial: ${cena.nome}`}>
-          {cena.cenaEspecial.tipoMidia === "video" ? (
-            <video src={cena.cenaEspecial.midiaUrl} autoPlay loop={cena.cenaEspecial.loop !== false} muted playsInline />
-          ) : (
-            <img src={cena.cenaEspecial.midiaUrl} alt={cena.nome} />
-          )}
-          <div className="cena-especial-vinheta" />
-          {cena.cenaEspecial.exibirTitulo !== false && (
-            <div className="cena-especial-titulo"><span>{cena.descricao}</span><strong>{cena.nome}</strong></div>
-          )}
-          {audioEspecialPronto && extrairYoutubeId(cena.cenaEspecial.audioUrl) ? (
-            <iframe
-              className="cena-especial-youtube"
-              title="Musica da cena especial"
-              src={`https://www.youtube.com/embed/${extrairYoutubeId(cena.cenaEspecial.audioUrl)}?autoplay=1&controls=0&loop=${cena.cenaEspecial.loopAudio !== false ? 1 : 0}&playlist=${extrairYoutubeId(cena.cenaEspecial.audioUrl)}&playsinline=1&rel=0`}
-              allow="autoplay; encrypted-media"
-              referrerPolicy="strict-origin-when-cross-origin"
-            />
-          ) : audioEspecialPronto && cena.cenaEspecial.audioUrl ? <audio ref={audioCenaEspecialRef} src={cena.cenaEspecial.audioUrl} loop={cena.cenaEspecial.loopAudio !== false} autoPlay preload="auto" /> : null}
-          {mestre && <button className="cena-especial-sair" onClick={() => trocarModo("cena")}><Icon path={mdiClose} size={0.8} />Encerrar</button>}
-        </section>
-      )}
-
-      <section className={`mesa-palco modo-${campanha.modo} ${cenaRestrita ? "cena-restrita" : ""}`}>
-        {cenaRestrita && (
-          <div className="mesa-cena-restrita" role="status">
-            <span>Cena reservada</span>
-            <strong>Aguarde as próximas instruções do mestre</strong>
-          </div>
-        )}
-        <div
-          className={`mesa-imagem ${tokenArrastando ? "arrastando-token" : ""} ${mapaArrastando ? "arrastando-mapa" : ""}`}
-          style={{
-            backgroundImage: `url(${urlCena(cena, campanha.modo, campanha.midiaAtivaId)})`,
-            "--mapa-proporcao": proporcaoMapa.largura / proporcaoMapa.altura,
-            "--mapa-proporcao-inversa":
-              proporcaoMapa.altura / proporcaoMapa.largura,
-            transform:
-              campanha.modo === "mapa"
-                ? `translate(${panMapa.x}px, ${panMapa.y}px) scale(${zoomMapa})`
-                : "none",
-          }}
-          onWheel={(event) => {
-            if (campanha.modo !== "mapa") return;
-            event.preventDefault();
-            setZoomMapa((zoom) =>
-              Math.max(
-                0.5,
-                Math.min(
-                  3,
-                  Number((zoom + (event.deltaY < 0 ? 0.1 : -0.1)).toFixed(2)),
-                ),
-              ),
-            );
-          }}
-          onDragOver={(event) => {
-            if (mestre && campanha.modo === "mapa") {
-              event.preventDefault();
-              event.dataTransfer.dropEffect = "copy";
-            }
-          }}
-          onDrop={soltarFichaNoMapa}
-          onPointerDown={iniciarPanMapa}
-          onPointerDownCapture={(event) => {
-            if (campanha.modo === "mapa" && mestre && editorIluminacaoAberto &&
-                (event.button === 1 || event.button === 2)) {
-              event.stopPropagation();
-              iniciarPanMapa(event);
-            }
-          }}
-          onContextMenu={(event) => {
-            if (campanha.modo === "mapa" && mestre && editorIluminacaoAberto)
-              event.preventDefault();
-          }}
-          onPointerMove={(event) => {
-            if (tokenGirando) {
-              girarToken(event);
-              return;
-            }
-            const usandoPinca = moverPanMapa(event);
-            if (!usandoPinca) arrastarToken(event);
-          }}
-          onPointerUp={(event) => {
-            if (tokenGirando) {
-              finalizarRotacaoToken(event);
-              return;
-            }
-            const usandoPinca = finalizarPanMapa(event);
-            if (tokenArrastando && !usandoPinca) soltarToken(event);
-          }}
-          onPointerCancel={(event) => {
-            setTokenArrastando(null);
-            if (tokenGirando) finalizarRotacaoToken(event);
-            finalizarPanMapa(event);
-          }}
-          onPointerLeave={(event) => tokenArrastando && soltarToken(event)}
-        >
-          {mediaAnimada?.animation?.enabled && <AnimatedScene media={mediaAnimada} id={`${cena.id}:${mediaAnimada.id}`} alt={mediaAnimada.nome || cena.nome}/> }
-          {cena && campanha.modo === "mapa" && mapaAtualIluminacao?.exibirGrade !== false && (
-            <div
-              className="mesa-grade"
-              style={{ backgroundSize: `${100 / colunas}% ${100 / linhas}%` }}
-            />
-          )}
-          {cena && campanha.modo === "mapa" && configuracaoIluminacao && (
-            <MapLightingLayer
-              key={chaveMapaIluminacao}
-              mapaUrl={mapaAtualIluminacao?.url}
-              configuracao={configuracaoIluminacao}
-              luzesTokens={luzesDosTokens}
-              observadores={mestre ? null : observadoresJogador}
-              editando={mestre && editorIluminacaoAberto}
-              aoAlterar={alterarConfiguracaoIluminacao}
-              salvando={salvandoIluminacao}
-            />
-          )}
-          {cena && campanha.modo === "mapa" &&
-            campanha.tokens
-              .filter((token) => {
-                const estado = estadoTokenNoMapa(token);
-                if (estado.removido) return false;
-                if (!mestre && estado.oculto) return false;
-                if (!tokenVisivelParaJogador({ ...token, ...estado }))
-                  return false;
-                return true;
-              })
-              .map((token) => {
-                const estado = estadoTokenNoMapa(token);
-                const tokenVisual = { ...token, ...estado };
-                return (
-                  <React.Fragment key={token.id}>
-                    <button
-                      className={`mesa-token ${podeMoverToken(tokenVisual) ? "movivel" : "bloqueado"} ${tokenArrastando === token.id ? "arrastando" : ""} ${tokenGirando === token.id ? "girando" : ""}`}
-                      style={{
-                        left: `${tokenVisual.x}%`,
-                        top: `${tokenVisual.y}%`,
-                        width: `${46 * (Number(tokenVisual.tamanho) || 1)}px`,
-                        rotate: `${Number(tokenVisual.rotacao) || 0}rad`,
-                        ...estiloBordaToken(personagens[tokenVisual.ficha_id]?.coresToken),
-                        ...(mestre && tokenVisual.oculto
-                          ? {
-                              opacity: 0.38,
-                              filter: "grayscale(.8)",
-                              outline: "2px dashed rgba(255,255,255,.65)",
-                            }
-                          : {}),
-                      }}
-                      title={
-                        mestre
-                          ? `${tokenVisual.nome} — clique direito para opcoes`
-                          : podeMoverToken(tokenVisual)
-                            ? `Mover ${tokenVisual.nome}`
-                            : tokenVisual.nome
-                      }
-                      onContextMenu={(event) => {
-                        if (
-                          !mestre &&
-                          String(tokenVisual.ficha_id) !== String(fichaJogadorId)
-                        ) return;
-                        event.preventDefault();
-                        event.stopPropagation();
-                        setMenuTokenAberto((atual) =>
-                          atual === token.id ? null : token.id,
-                        );
-                      }}
-                      onPointerDown={(event) => {
-                        if (!podeMoverToken(tokenVisual)) return;
-                        event.preventDefault();
-                        event.currentTarget.setPointerCapture?.(
-                          event.pointerId,
-                        );
-                        setMenuTokenAberto(null);
-                        movimentoTokenRef.current = null;
-                        setTokenArrastando(token.id);
-                      }}
-                    >
-                      {tokenVisual.imagem_url ||
-                      personagens[tokenVisual.ficha_id]?.fotoPerfil ? (
-                        <AnimatedTokenImage animation={personagens[tokenVisual.ficha_id]?.profileTokenAnimation}
-                          src={
-                            personagens[tokenVisual.ficha_id]?.fotoPerfil ||
-                            tokenVisual.imagem_url
-                          }
-                          alt=""
-                          draggable="false"
-                        />
-                      ) : (
-                        tokenVisual.nome?.slice(0, 2)
-                      )}
-                      {mestre && tokenVisual.lanterna?.ativa && (
-                        <span
-                          className="mesa-token-direcao"
-                        />
-                      )}
-                    </button>
-                    {podeMoverToken(tokenVisual) && !editorIluminacaoAberto && (
-                      <button
-                        type="button"
-                        className={`mesa-token-rotacao ${tokenGirando === token.id ? "girando" : ""}`}
-                        style={{
-                          left: `${tokenVisual.x}%`,
-                          top: `${tokenVisual.y}%`,
-                          transform: `translate(calc(-50% + ${Math.cos(Number(tokenVisual.rotacao) || 0) * (23 * (Number(tokenVisual.tamanho) || 1) + 11)}px), calc(-50% + ${Math.sin(Number(tokenVisual.rotacao) || 0) * (23 * (Number(tokenVisual.tamanho) || 1) + 11)}px))`,
-                        }}
-                        title={`Girar ${tokenVisual.nome}`}
-                        aria-label={`Girar ${tokenVisual.nome}`}
-                        onPointerDown={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          event.currentTarget.setPointerCapture?.(event.pointerId);
-                          setTokenArrastando(null);
-                          setTokenGirando(token.id);
-                        }}
-                      >
-                        <Icon path={mdiRotateRight} size={0.6} />
-                      </button>
-                    )}
-                    {!mestre &&
-                      podeMoverToken(tokenVisual) &&
-                      !editorIluminacaoAberto && (
-                        <button
-                          type="button"
-                          className={`mesa-token-lanterna-toggle ${tokenVisual.lanterna?.ativa ? "ativa" : ""}`}
-                          style={{
-                            left: `${tokenVisual.x}%`,
-                            top: `${tokenVisual.y}%`,
-                          }}
-                          title={
-                            tokenVisual.lanterna?.ativa
-                              ? "Desligar lanterna"
-                              : "Ligar lanterna"
-                          }
-                          aria-label={
-                            tokenVisual.lanterna?.ativa
-                              ? "Desligar lanterna"
-                              : "Ligar lanterna"
-                          }
-                          onPointerDown={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                          }}
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            atualizarLanternaToken(tokenVisual, {
-                              ativa: !tokenVisual.lanterna?.ativa,
-                            });
-                          }}
-                        >
-                          <Icon
-                            path={
-                              tokenVisual.lanterna?.ativa
-                                ? mdiFlashlight
-                                : mdiFlashlightOff
-                            }
-                            size={0.62}
-                          />
-                        </button>
-                      )}
-                    {(mestre || String(tokenVisual.ficha_id) === String(fichaJogadorId)) && menuTokenAberto === token.id && (
-                      <div
-                        role="menu"
-                        aria-label={`Opcoes do token ${tokenVisual.nome || "token"}`}
-                        onPointerDown={(event) => event.stopPropagation()}
-                        onContextMenu={(event) => event.preventDefault()}
-                        style={{
-                          position: "absolute",
-                          left: `${tokenVisual.x}%`,
-                          top: `${tokenVisual.y}%`,
-                          transform: "translate(28px, 18px)",
-                          zIndex: 80,
-                          minWidth: 150,
-                          padding: 6,
-                          border: "1px solid rgba(255,255,255,.22)",
-                          borderRadius: 8,
-                          background: "rgba(8,8,8,.96)",
-                          boxShadow: "0 10px 28px rgba(0,0,0,.45)",
-                          display: "grid",
-                          gap: 4,
-                        }}
-                      >
-                        <button
-                          type="button"
-                          role="menuitem"
-                          hidden={!mestre}
-                          onClick={() => alternarVisibilidadeToken(tokenVisual)}
-                          style={{
-                            padding: "8px 10px",
-                            textAlign: "left",
-                            border: 0,
-                            borderRadius: 5,
-                            background: "rgba(255,255,255,.07)",
-                            color: "inherit",
-                            cursor: "pointer",
-                          }}
-                        >
-                          {tokenVisual.oculto
-                            ? "Mostrar token"
-                            : "Ocultar token"}
-                        </button>
-                        <div className="mesa-token-tamanho-controles">
-                          <span>Tamanho <b>{Math.round((Number(tokenVisual.tamanho) || 1) * 100)}%</b></span>
-                          <div>
-                            <button type="button" onClick={() => alterarTamanhoToken(tokenVisual, (Number(tokenVisual.tamanho) || 1) - 0.25)} disabled={(Number(tokenVisual.tamanho) || 1) <= 0.5} title="Diminuir token">−</button>
-                            <button type="button" onClick={() => alterarTamanhoToken(tokenVisual, 1)} title="Restaurar tamanho">1:1</button>
-                            <button type="button" onClick={() => alterarTamanhoToken(tokenVisual, (Number(tokenVisual.tamanho) || 1) + 0.25)} disabled={(Number(tokenVisual.tamanho) || 1) >= 3} title="Aumentar token">+</button>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          hidden={!mestre}
-                          onClick={() =>
-                            atualizarLanternaToken(tokenVisual, {
-                              ativa: !tokenVisual.lanterna?.ativa,
-                            })
-                          }
-                          style={{
-                            padding: "8px 10px",
-                            textAlign: "left",
-                            border: "1px solid rgba(244,199,107,.18)",
-                            borderRadius: 5,
-                            background: tokenVisual.lanterna?.ativa
-                              ? "rgba(244,199,107,.2)"
-                              : "rgba(255,255,255,.07)",
-                            color: tokenVisual.lanterna?.ativa
-                              ? "#ffe3a0"
-                              : "inherit",
-                            cursor: "pointer",
-                          }}
-                        >
-                          {tokenVisual.lanterna?.ativa
-                            ? "Apagar lanterna"
-                            : "Acender lanterna"}
-                        </button>
-                        {mestre && tokenVisual.lanterna?.ativa && (
-                          <div className="mesa-token-lanterna-controles">
-                            <label className="mesa-token-lanterna-alcance">
-                              <span>
-                                Alcance
-                                <b>{Number(tokenVisual.lanterna?.alcance) || 18}</b>
-                              </span>
-                              <input
-                                type="range"
-                                min="4"
-                                max="60"
-                                step="1"
-                                value={Number(tokenVisual.lanterna?.alcance) || 18}
-                                onChange={(event) =>
-                                  atualizarLanternaToken(tokenVisual, {
-                                    alcance: Number(event.target.value),
-                                  })
-                                }
-                              />
-                            </label>
-                            <label className="mesa-token-lanterna-alcance">
-                              <span>
-                                Abertura
-                                <b>{Number(tokenVisual.lanterna?.abertura) || 70}°</b>
-                              </span>
-                              <input
-                                type="range"
-                                min="20"
-                                max="140"
-                                step="5"
-                                value={Number(tokenVisual.lanterna?.abertura) || 70}
-                                onChange={(event) =>
-                                  atualizarLanternaToken(tokenVisual, {
-                                    abertura: Number(event.target.value),
-                                  })
-                                }
-                              />
-                            </label>
-                          </div>
-                        )}
-                        <button
-                          type="button"
-                          role="menuitem"
-                          hidden={!mestre}
-                          onClick={() => removerTokenAtualDoMapa(tokenVisual)}
-                          style={{
-                            padding: "8px 10px",
-                            textAlign: "left",
-                            border: 0,
-                            borderRadius: 5,
-                            background: "rgba(180,35,35,.18)",
-                            color: "#ffb4b4",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Remover do mapa
-                        </button>
-                      </div>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-        </div>
-        {campanha.modo === "mapa" && (
-          <div className="mesa-zoom-controles">
-            <button
-              type="button"
-              onClick={() =>
-                setZoomMapa((zoom) =>
-                  Math.max(0.5, Number((zoom - 0.2).toFixed(2))),
-                )
-              }
-              title="Diminuir zoom"
-            >
-              <Icon path={mdiMagnifyMinusOutline} size={0.82} />
-            </button>
-            <span>{Math.round(zoomMapa * 100)}%</span>
-            <button
-              type="button"
-              onClick={() =>
-                setZoomMapa((zoom) =>
-                  Math.min(3, Number((zoom + 0.2).toFixed(2))),
-                )
-              }
-              title="Aumentar zoom"
-            >
-              <Icon path={mdiMagnifyPlusOutline} size={0.82} />
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setZoomMapa(1);
-                setPanMapa({ x: 0, y: 0 });
-              }}
-              title="Restaurar zoom e posicao"
-            >
-              <Icon path={mdiFitToScreenOutline} size={0.82} />
-            </button>
-          </div>
-        )}
-      </section>
-      {mestre&&escudoAberto&&<aside className="mesa-master-shield-panel" aria-label="Escudo do mestre" onKeyDown={event=>{if(event.key==="Escape")setEscudoAberto(false);}}><header><strong>Consulta privada</strong><button type="button" onClick={()=>setEscudoAberto(false)} aria-label="Fechar escudo do mestre">Fechar ×</button></header><MasterShield campaignId={campanha.id} scene={campanha.cenaAtiva} combat={campanha.combateAtivo}/></aside>}
-      {mestre && (
-        <nav
-          className={`mesa-lateral-navegacao ${campanha.investigacaoAtiva || documentosDisponiveis.length ? "com-documentos" : ""}`}
-          aria-label="Conteudo da lateral"
-        ><button type="button" className={escudoAberto?"ativo":""} aria-pressed={escudoAberto} onClick={()=>setEscudoAberto(!escudoAberto)}>Escudo do mestre</button>
-          <button
-            className={abaLateralMestre === "participantes" ? "ativo" : ""}
-            onClick={() => {
-              setAbaLateralMestre((aba) =>
-                aba === "participantes" ? "" : "participantes",
-              );
-              setInimigoAberto(null);
-            }}
-          >
-            {tituloParticipantes} <b>{modoIniciativaAtivo ? ordemCombate.length : campanha.membros.length}</b>
-          </button>
-          {(campanha.investigacaoAtiva || documentosDisponiveis.length > 0) && (
-            <button
-              className={abaLateralMestre === "documentos" ? "ativo" : ""}
-              onClick={() => {
-                setAbaLateralMestre((aba) =>
-                  aba === "documentos" ? "" : "documentos",
-                );
-                setInimigoAberto(null);
-              }}
-            >
-              Documentos <b>{documentosDisponiveis.length}</b>
-            </button>
-          )}
-          <button
-            className={abaLateralMestre === "inimigos" ? "ativo" : ""}
-            onClick={() =>
-              setAbaLateralMestre((aba) =>
-                aba === "inimigos" ? "" : "inimigos",
-              )
-            }
-          >
-            NPCs <b>{campanha.inimigos?.length || 0}</b>
-          </button>
-        </nav>
-      )}
-      {!mestre && (
-        <nav
-          className={`mesa-lateral-navegacao mesa-jogador-navegacao ${mostrarDocumentosJogador ? "com-documentos" : ""}`}
-          aria-label="Conteudo do jogador"
-        >
-          <button
-            className={abaLateralJogador === "participantes" ? "ativo" : ""}
-            onClick={() =>
-              setAbaLateralJogador((aba) =>
-                aba === "participantes" ? "" : "participantes",
-              )
-            }
-          >
-            {tituloParticipantes} <b>{modoIniciativaAtivo ? ordemCombate.length : campanha.membros.length}</b>
-          </button>
-          {mostrarDocumentosJogador && (
-            <button
-              className={abaLateralJogador === "documentos" ? "ativo" : ""}
-              onClick={() =>
-                setAbaLateralJogador((aba) =>
-                  aba === "documentos" ? "" : "documentos",
-                )
-              }
-            >
-              Documentos <b>{documentosVisiveisJogador.length}</b>
-            </button>
-          )}
-          <button
-            className={abaLateralJogador === "ficha" ? "ativo" : ""}
-            onClick={() =>
-              setAbaLateralJogador((aba) => (aba === "ficha" ? "" : "ficha"))
-            }
-          >
-            Ficha
-          </button>
-        </nav>
-      )}
-      {!mestre && abaLateralJogador === "participantes" && (
-        <aside
-          key={`jogador-participantes-${chavePainelParticipantes}`}
-          className="mesa-jogador-participantes"
-        >
-          <div className="mesa-lateral-titulo">
-            <Icon path={mdiShieldCrownOutline} size={0.8} />
-            <span>{tituloParticipantes}</span>
-            <b>{modoIniciativaAtivo ? ordemCombate.length : campanha.membros.length}</b>
-          </div>
-          <div className="mesa-membros">
-            {modoIniciativaAtivo ? (
-              ordemCombate.length ? (
-                ordemCombate.map((entrada) => (
-                  <div
-                    className={`mesa-jogador-participante combatente-iniciativa ${entrada.tipo === "jogador" ? classesCondicoesMesa(entrada.personagem) : "combatente-npc"} ${entrada.tipo === "jogador" && entrada.membro?.ficha_id === fichaJogadorId ? "eu" : ""}`}
-                    key={entrada.chave}
-                  >
-                    <span>
-                      {entrada.foto ? (
-                        <img src={entrada.foto} alt="" />
-                      ) : (
-                        entrada.nome?.slice(0, 2)
-                      )}
-                      <em className={`participante-iniciativa ${entrada.valor == null ? "aguardando" : ""}`}>
-                        {entrada.valor ?? "—"}
-                      </em>
-                    </span>
-                    <div>
-                      <strong>{entrada.nome}</strong>
-                      <small>{entrada.subtitulo}</small>
-                      {entrada.tipo === "jogador" && (
-                        <>
-                          <ResumoCondicoesParticipante personagem={entrada.personagem} />
-                          {recursosParticipante(entrada.personagem).length > 0 && (
-                            <div className="membro-recursos">
-                              {recursosParticipante(entrada.personagem).map((recurso) => (
-                                <div
-                                  className={`membro-recurso ${classeRecursoParticipante(recurso)}`}
-                                  key={recurso.id}
-                                >
-                                  <span>{recurso.nome}</span>
-                                  <i>
-                                    <em style={{ width: `${percentualRecurso(recurso.valor)}%` }} />
-                                  </i>
-                                  <b>{recurso.valor?.atual || 0}/{recurso.valor?.max || 0}</b>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>Nenhuma iniciativa definida.</p>
-              )
-            ) : campanha.membros.length ? (
-              membrosOrdenados.map((membro) => {
-                const personagem = personagens[membro.ficha_id];
-                const recursos = recursosParticipante(personagem);
-                return (
-                  <div
-                    className={`mesa-jogador-participante ${membro.ficha_id === fichaJogadorId ? "eu" : ""} ${classesCondicoesMesa(personagem)}`}
-                    key={membro.id}
-                  >
-                    <span>
-                      {personagem?.fotoPerfil ? (
-                        <img src={personagem.fotoPerfil} alt="" />
-                      ) : (
-                        membro.nome?.slice(0, 2)
-                      )}
-                    </span>
-                    <div>
-                      <strong>{personagem?.nome || membro.nome}</strong>
-                      <small>
-                        {personagem
-                          ? `Nivel ${personagem.nivel || 1} · ${personagem.classe || "Sem classe"}`
-                          : membro.papel}
-                      </small>
-                      <ResumoCondicoesParticipante personagem={personagem} />
-                      {recursos.length > 0 && (
-                        <div className="membro-recursos">
-                          {recursos.map((recurso) => (
-                            <div
-                              className={`membro-recurso ${classeRecursoParticipante(recurso)}`}
-                              key={recurso.id}
-                            >
-                              <span>{recurso.nome}</span>
-                              <i>
-                                <em style={{ width: `${percentualRecurso(recurso.valor)}%` }} />
-                              </i>
-                              <b>{recurso.valor?.atual || 0}/{recurso.valor?.max || 0}</b>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p>Nenhuma ficha vinculada ainda.</p>
-            )}
-          </div>
-        </aside>
-      )}
-      {mestre && abaLateralMestre === "documentos" && (
-        <aside className="mesa-documentos-painel">
+  const renderDocumentosMestre = () => (
+<aside className="mesa-documentos-painel">
           <div className="mesa-lateral-titulo">
             <Icon path={mdiFileDocumentMultipleOutline} size={0.8} />
             <span>Visualizador de documentos</span>
@@ -3796,7 +2819,933 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
             )}
           </div>
         </aside>
+  );
+  const renderVisualizadorDocumento = () => documentoAberto ? createPortal((<div className="mesa-shell shield-document-viewer-host">
+<div className="documento-visualizador-fundo">
+          <section
+            className={`documento-visualizador ${documentoAberto.categoria === "interativa" ? "interativo" : ""}`}
+            role="dialog"
+            aria-label={`Visualizador de ${nomeDocumentoExibicao(documentoAberto)}`}
+          >
+            <header>
+              <div>
+                <small>{documentoAberto.categoria === "interativa" ? "Evidencia interativa" : documentoAberto.categoria === "item" ? "Item" : "Evidencia"}</small>
+                <strong>{nomeDocumentoExibicao(documentoAberto)}</strong>
+              </div>
+              {mestre && documentoAberto.categoria === "interativa" && !String(documentoAberto.mimeType || documentoAberto.mime_type).includes("cassete") && (
+                <nav className="evidencia-interativa-abas" aria-label="Visualizacao da evidencia interativa">
+                  <button
+                    type="button"
+                    className={abaEvidenciaInterativa === "terminal" ? "ativo" : ""}
+                    onClick={() => setAbaEvidenciaInterativa("terminal")}
+                  >
+                    {String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc") ? "Computador" : "Terminal"}
+                  </button>
+                  <button
+                    type="button"
+                    className={abaEvidenciaInterativa === "conteudo" ? "ativo" : ""}
+                    onClick={() => setAbaEvidenciaInterativa("conteudo")}
+                  >
+                    Conteudo
+                  </button>
+                </nav>
+              )}
+              <button
+                type="button"
+                onClick={() => setDocumentoAberto(null)}
+                title="Fechar documento"
+              >
+                <Icon path={mdiClose} size={0.82} />
+              </button>
+            </header>
+            <div className="documento-visualizador-conteudo">
+              {String(documentoAberto.mimeType || documentoAberto.mime_type).includes("cassete") ? (
+                <ReprodutorCassete key={documentoAberto.id} documento={documentoAberto} />
+              ) : String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc") ? (
+                <ComputadorModerno key={`${documentoAberto.id}-${abaEvidenciaInterativa}`} campanhaId={campanha.id} documento={documentoAberto} admin={mestre && abaEvidenciaInterativa === "conteudo"} />
+              ) : documentoAberto.categoria === "interativa" ? (
+                <iframe
+                  className="evidencia-interativa-frame"
+                  title={documentoAberto.nome || "Computador interativo"}
+                  src={
+                    String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc")
+                      ? `/interactive/modern-pc/index.html${mestre && abaEvidenciaInterativa === "conteudo" ? "?admin=1" : ""}`
+                      : mestre && abaEvidenciaInterativa === "conteudo"
+                        ? "/interactive/ms-dos/index.html#/admin-secreto-123"
+                        : documentoAberto.url || "/interactive/ms-dos/index.html"
+                  }
+                  allow="autoplay"
+                />
+              ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "").startsWith("image/") ? (
+                <EvidenceImageViewer key={documentoAberto.id} src={documentoAberto.url} alt={documentoAberto.nome || "Evidência"} />
+              ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "") === "application/pdf" ? (
+                <iframe
+                  title={documentoAberto.nome || "Documento PDF"}
+                  src={documentoAberto.url}
+                />
+              ) : (
+                <div className="documento-sem-preview">
+                  <Icon path={mdiFileDocumentMultipleOutline} size={2} />
+                  <strong>Visualizacao indisponivel</strong>
+                  <p>Este arquivo nao possui uma visualizacao integrada.</p>
+                </div>
+              )}
+            </div>
+            {documentoAberto.descricao && (
+              <p className="documento-visualizador-descricao">
+                {documentoAberto.descricao}
+              </p>
+            )}
+          </section>
+        </div>
+  </div>), document.body) : null;
+  const renderShieldScenes = (flat=false) => (
+<aside className={`mesa-biblioteca ${flat ? "shield-scenes-layout" : ""}`}>
+          <div className="biblioteca-cabecalho">
+            <div>
+              <span>Direcao da sessao</span>
+              <h2>Cenas e mapas</h2>
+            </div>
+          {flat && <aside className="shield-scene-media" aria-label="Mídias da cena atual"><h3>{cena?.nome || 'Cena atual'}</h3>{cena ? renderMidiasCenaBiblioteca(cena) : <p>Selecione uma cena para consultar suas imagens e mapas.</p>}</aside>}
+            <button onClick={() => abrirEditor()} title="Nova cena">
+              <Icon path={mdiPlus} size={0.9} />
+            </button>
+          </div>
+          {!flat && <div className="biblioteca-fichas">
+            <span>Fichas da campanha</span>
+            <div>
+              <select
+                value={fichaParaVincular}
+                onChange={(e) => setFichaParaVincular(e.target.value)}
+              >
+                <option value="">Selecionar ficha...</option>
+                {fichasDisponiveis
+                  .filter(
+                    (item) =>
+                      !campanha.membros.some(
+                        (membro) => membro.ficha_id === item.fichaId,
+                      ),
+                  )
+                  .map((item) => (
+                    <option key={item.fichaId} value={item.fichaId}>
+                      {item.personagem?.nome || item.fichaId}
+                    </option>
+                  ))}
+              </select>
+              <button
+                onClick={adicionarFicha}
+                disabled={!fichaParaVincular}
+                title="Vincular ficha"
+              >
+                <Icon path={mdiAccountPlusOutline} size={0.78} />
+              </button>
+            </div>
+            {erroFichas && (
+              <div className="biblioteca-fichas-erro">
+                <span>{erroFichas}</span>
+                <button onClick={carregarFichas}>Tentar novamente</button>
+              </div>
+            )}
+            {!erroFichas && fichasDisponiveis.length === 0 && (
+              <small>Nenhuma ficha cadastrada foi encontrada.</small>
+            )}
+          </div>}
+          <div className={`biblioteca-lista biblioteca-cenas-organizadas ${flat ? "biblioteca-cenas-grid" : ""}`}>
+            {flat ? gruposCenas.flatMap(([,cenas])=>cenas.map(item=>renderizarCenaBiblioteca(item,true))) : gruposCenas.map(([pasta, cenas]) => {
+              const fechada = Boolean(pastasCenasFechadas[pasta]);
+              return (
+                <section className="biblioteca-pasta-cenas" key={pasta}>
+                  <button type="button" className="biblioteca-pasta-cabecalho" onClick={() => alternarPastaCena(pasta)} aria-expanded={!fechada}>
+                    <Icon path={fechada ? mdiChevronRight : mdiChevronDown} size={0.68} />
+                    <Icon path={mdiFolderOutline} size={0.74} />
+                    <strong>{pasta}</strong>
+                    <span>{cenas.length}</span>
+                  </button>
+                  {!fechada && cenas.map(item=>renderizarCenaBiblioteca(item))}
+                </section>
+              );
+            })}
+          </div>
+        </aside>
+  );
+  const renderShieldParticipants = (integrated=false) => (
+<section
+          key={`mestre-participantes-${chavePainelParticipantes}`}
+          className={integrated ? "shield-session-participants" : "mesa-lateral"}
+        >
+          <>
+            <div className="mesa-lateral-titulo">
+              <Icon path={mdiShieldCrownOutline} size={0.8} />
+              <span>{tituloParticipantes}</span>
+              <b>{modoIniciativaAtivo ? ordemCombate.length : campanha.membros.length}</b>
+            </div>
+            {campanha.combateAtivo && <CombatTurnControls entries={ordemCombate} turn={campanha.turnoCombate} busy={turnBusy} onAction={controlarTurno}/>}
+            <div className="mesa-membros">
+              {modoIniciativaAtivo ? (
+                <InitiativeCards turn={campanha.combateAtivo?campanha.turnoCombate:null} entries={ordemCombate} master onSaveEnemy={salvarParticipanteEscudo} candidates={campanha.inimigos || []} onAdd={integrated ? undefined : adicionarIniciativaNoPainel} system={campanha.sistema} drafts={iniciativasRascunho} onChange={alterarRascunhoIniciativa} onConfirm={confirmarIniciativaMestre} onEntryChange={alterarRascunhoIniciativaPorChave} onEntryConfirm={confirmarIniciativaPorChave} onRemove={removerIniciativaPorChave} onOpen={entrada=>{
+                  if(entrada.tipo==='jogador') setFichaAberta({membro:entrada.membro,personagem:entrada.personagem});
+                  else if(entrada.inimigo) {setAbaLateralMestre('inimigos');setSubAbaNpcs(entrada.tipo==='npc'?'npcs':'inimigos');setInimigoAberto(entrada.inimigo);}
+                }}/>
+              ) : (
+                <>
+                  {campanha.membros.length ? (
+                <ParticipantDossiers members={membrosOrdenados} characters={personagens} master onOpen={(membro,personagem)=>setFichaAberta({membro,personagem})}/>
+              ) : (
+                <p>Nenhuma ficha vinculada ainda.</p>
+                  )}
+                </>
+              )}
+            </div>
+          </>
+        </section>
+  );
+  const renderShieldSceneEditor = () => editorAberto ? createPortal(<div className="mesa-shell shield-scene-editor-host"> <TabletopSceneEditor key={editando.id || 'nova'} editando={editando} setEditando={setEditando} arquivos={arquivos} campanha={campanha} nomesPastasCenas={nomesPastasCenas} selecionarArquivosCena={selecionarArquivosCena} alternarJogadorCena={alternarJogadorCena} removerMidiaExistente={removerMidiaExistente} removerArquivoPendente={removerArquivoPendente} atualizarMapaExistente={atualizarMapaExistente} atualizarMapaPendente={atualizarMapaPendente} confirmarCena={confirmarCena} salvando={salvando} erro={erro} onClose={()=>setEditorAberto(false)}/></div>,document.body) : null;
+  const renderShieldTool = (tool) => {
+    if(tool==='scenes') return renderShieldScenes(true);
+    if(tool==='notes') return <AnotacoesCampanha campanhaId={campanha.id}/>;
+    if(tool==='audio') return <MusicaTabletop campanhaId={campanha.id} musicasCampanha={campanha.musicas || []} estadoRemoto={campanha.musicaEstado} aoAlterarEstado={estado=>atualizarEstadoMusica(campanha.id,estado)}/>;
+    if(tool==='soundpad') return <SoundpadTabletop sons={campanha.soundpad || []} estadoRemoto={campanha.soundpadEstado} aoAlterarEstado={estado=>atualizarEstadoSoundpad(campanha.id,estado)}/>;
+    if(tool==='players') return <ParticipantDossiers members={membrosOrdenados} characters={personagens} master/>;
+    if(tool==='dashboard') return <iframe className="shield-dashboard-frame" title="Dashboard do mestre" src="/?mestre=1&embutido=1"/>;
+    if(tool.startsWith('enemyInitiative:')) {
+      const record=(campanha.inimigos || []).find(item=>String(item.id)===tool.slice('enemyInitiative:'.length));
+      if(!modoIniciativaAtivo || !record) return null;
+      const turns=ordemCombate.filter(entry=>String(entry.inimigo?.id)===String(record.id));
+      return <InlineInitiative record={record} turns={turns} drafts={iniciativasRascunho} onChange={alterarRascunhoIniciativaPorChave} onConfirm={confirmarIniciativaPorChave} onAdd={adicionarIniciativaNoPainel}/>;
+    }
+    if(tool==='sessionModes') return <div className="shield-session-mode-buttons"><button type="button" disabled={salvandoCombate || salvandoInvestigacao} onClick={alternarModoCombate}>{campanha.combateAtivo?'Encerrar combate':'Iniciar combate'}</button><button type="button" disabled={salvandoCombate || salvandoInvestigacao} onClick={alternarModoInvestigacao}>{campanha.investigacaoAtiva?'Encerrar investigação':'Iniciar investigação'}</button></div>;
+    if(tool==='initiative') return (campanha.combateAtivo || campanha.investigacaoAtiva) ? renderShieldParticipants(true) : null;
+    if(tool==='combat' || tool==='investigation') return <><button type="button" disabled={salvandoCombate || salvandoInvestigacao} onClick={tool==='combat'?alternarModoCombate:alternarModoInvestigacao}>{tool==='combat' ? (campanha.combateAtivo?'Encerrar combate':'Iniciar combate'):(campanha.investigacaoAtiva?'Encerrar investigação':'Iniciar investigação')}</button></>;
+    if(tool==='lighting') return mapaAtualIluminacao ? <div className="shield-lighting-map"><img src={mapaAtualIluminacao.url} alt="Mapa para editar iluminação"/><MapLightingLayer key={chaveMapaIluminacao} mapaUrl={mapaAtualIluminacao.url} configuracao={configuracaoIluminacao} luzesTokens={luzesDosTokens} observadores={null} editando aoAlterar={alterarConfiguracaoIluminacao} salvando={salvandoIluminacao}/></div> : <p>Selecione um mapa de batalha na aba Cenas para configurar a iluminação.</p>;
+    return null;
+  };
+  if(shieldTool) return mestre ? <div className="mesa-shell visao-mestre shield-tools-host">{erro && <p role="alert">{erro}</p>}{renderShieldTool(shieldTool)}{renderShieldSceneEditor()}</div> : <p>Ferramentas disponíveis apenas para o mestre.</p>;
+  if (documentsOnly) return mestre ? <div className="mesa-shell visao-mestre shield-documents-host">{erro && <p role="alert">{erro}</p>}{renderDocumentosMestre()}{renderVisualizadorDocumento()}</div> : <p>Documentos disponíveis apenas para o mestre.</p>;
+
+  return (
+    <main
+      data-document-open={embedded && Boolean(documentoAberto) ? "true" : undefined}
+      className={`mesa-shell ${embedded ? "mesa-embedded" : "mesa-2d"} ${!embedded && mestre && escudoAberto ? "mesa-escudo-aberto" : ""} ${focoVisual ? 'mesa-foco-visual' : ''} ${mestre ? "visao-mestre" : "visao-jogador"} ${!mestre && abaLateralJogador === "ficha" ? "jogador-ficha-ativa" : ""} ${!(mestre ? abaLateralMestre : abaLateralJogador) ? "painel-lateral-fechado" : ""} modo-atual-${campanha.modo} ${bibliotecaAberta ? "com-biblioteca" : ""}`}
+      style={{
+        "--mesa-acento":
+          corCena || personagemJogador?.temaFicha?.primaria || "#d4af37",
+        "--mesa-secundaria":
+          corCena || personagemJogador?.temaFicha?.secundaria || "#8b4513",
+        "--mesa-texto": personagemJogador?.temaFicha?.texto || "#fff8ea",
+        "--mesa-fundo": personagemJogador?.temaFicha?.fundo || "#080808",
+        "--mesa-borda": corCena
+          ? `color-mix(in srgb,${corCena} 45%,transparent)`
+          : personagemJogador?.temaFicha?.borda || "rgba(212,175,55,.35)",
+      }}
+    >
+      {!embedded && (mestre || !hasActiveRevolt(campanha.mecanicasEspeciais)) && <SpecialMechanicsBanner state={campanha.mecanicasEspeciais} onOpen={() => setMechanicsOpen(true)}/>}
+      {!embedded && !mestre && !mechanicsOpen && <RevoltPlayerHUD campaign={campanha} playerId={fichaJogadorId} onOpen={() => setMechanicsOpen(true)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))}/>}
+      {mechanicsOpen && <SpecialMechanicsDialog campaign={campanha} master={mestre} playerId={fichaJogadorId} onClose={() => setMechanicsOpen(false)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))}/>}
+      <div className={`mesa-transicao ${transicao ? "ativa" : ""}`}>
+        <img className="mesa-transicao-simbolo" src="/simbolo-darkness.png" alt=""/>
+        <span>
+          {campanha.modo === "especial" ? "Iniciando cena especial" : campanha.modo === "mapa" ? "Preparando o mapa" : "Voltando a cena"}
+        </span>
+      </div>
+
+      {embedded && mestre && ['initiative','investigation'].includes(requestedTool) && <div className="tt3-session-mode"><p>{requestedTool==='initiative' ? 'Organize os turnos e acompanhe os participantes.' : 'Acompanhe a investigação e a iniciativa.'}</p><button type="button" className="tt3-primary" disabled={salvandoCombate || salvandoInvestigacao} onClick={requestedTool==='initiative' ? alternarModoCombate : alternarModoInvestigacao}>{requestedTool==='initiative' ? (campanha.combateAtivo ? 'Encerrar combate' : 'Iniciar combate') : (campanha.investigacaoAtiva ? 'Encerrar investigação' : 'Iniciar investigação')}</button></div>}
+<header className="mesa-topo">
+        <a
+          href={urlRetorno}
+          title={mestre ? "Voltar ao dashboard" : "Voltar para a ficha"}
+        >
+          <Icon path={mdiArrowLeft} size={0.9} />
+        </a>
+        <div>
+          <span>Campanha {campanha.codigo}</span>
+          <strong>{campanha.nome}</strong>
+        </div>
+        <div className="mesa-status">
+          <i />
+          {supabaseConfigurado ? "Ao vivo" : "Demonstracao"}
+        </div>
+        <button type="button" className="mesa-cenas-botao" onClick={() => setMechanicsOpen(true)}>Mecânicas especiais</button>
+        {mestre && (
+          <div className="mesa-ferramentas-mestre">
+            <button type="button" className={`mesa-cenas-botao mesa-escudo-topo ${escudoAberto?'ativo':''}`} aria-pressed={escudoAberto} onClick={()=>{setEscudoAberto(aberto=>!aberto);setAbaLateralMestre('');setInimigoAberto(null);}} title="Abrir escudo do mestre"><Icon path={mdiShieldCrownOutline} size={0.85}/>Escudo do mestre</button>
+            {campanha.modo === "mapa" && (
+              <button
+                className={`mesa-cenas-botao ${editorIluminacaoAberto ? "ativo" : ""}`}
+                onClick={() => {
+                  setEditorIluminacaoAberto((aberto) => !aberto);
+                  if (!mapaAtualIluminacao?.iluminacao) {
+                    setConfiguracaoIluminacao({
+                      paredes: [],
+                      portas: [],
+                      luzes: [],
+                      escuridao: 0.82,
+                      periodo: "dia",
+                    });
+                  }
+                }}
+                disabled={!mapaAtualIluminacao}
+                title="Editar paredes, luzes e visao"
+              >
+                <Icon path={mdiLightbulbOnOutline} size={0.78} />
+                Iluminacao
+              </button>
+            )}
+            <div className="mesa-modos" aria-label="Modo da mesa">
+              <button
+                className={campanha.modo === "cena" ? "ativo" : ""}
+                onClick={() => trocarModo("cena")}
+                title="Exibir cena"
+              >
+                <Icon path={mdiImageOutline} size={0.82} />
+              </button>
+              <button
+                className={campanha.modo === "mapa" ? "ativo" : ""}
+                onClick={() => trocarModo("mapa")}
+                title="Exibir mapa"
+              >
+                <Icon path={mdiMapOutline} size={0.82} />
+              </button>
+            </div>
+          </div>
+        )}
+        {!mestre && cena?.lojaDisponivel && (
+          <div className="mesa-ferramentas-jogador">
+            <button
+              className={`mesa-cenas-botao ${aplicativoMesaAberto === "loja" ? "ativo" : ""}`}
+              onClick={() => setAplicativoMesaAberto((atual) => atual === "loja" ? null : "loja")}
+              title="Abrir loja desta cena"
+            >
+              <Icon path={mdiStoreOutline} size={0.78} />
+              Loja
+            </button>
+          </div>
+        )}
+        <button
+          type="button"
+          className="mesa-cenas-botao mesa-3d-botao"
+          onClick={() => {
+            setSenha3D("");
+            setErroSenha3D("");
+            setSenha3DAberta(true);
+          }}
+          title="Abrir mapa 3D experimental"
+        >
+          Experimental
+        </button>
+        <button className="mesa-atualizar" onClick={carregar} title="Atualizar">
+          <Icon path={mdiRefresh} size={0.82} />
+        </button>
+      </header>
+      {!embedded && <>
+        <div className="mesa-contexto-visual" aria-label="Cena atual">
+          <Icon path={campanha.modo === 'mapa' ? mdiMapOutline : mdiImageOutline} size={0.85} aria-hidden="true" />
+          <div><span>{campanha.modo === 'mapa' ? 'Mapa de batalha' : campanha.modo === 'especial' ? 'Cena especial' : 'Cena narrativa'}</span><strong>{cena?.nome || campanha.nome}</strong></div>
+          {campanha.combateAtivo && <b>Combate</b>}
+        </div>
+        {<button type="button" className="mesa-foco-botao" aria-pressed={focoVisual} aria-label={focoVisual ? 'Mostrar interface' : 'Focar no mapa e cena'} title={focoVisual ? 'Mostrar interface' : 'Focar no mapa e cena'} onClick={() => setFocoVisual(value => !value)}><Icon path={focoVisual ? mdiViewDashboardOutline : mdiFitToScreenOutline} size={0.9} aria-hidden="true" /><span>{focoVisual ? 'Mostrar interface' : 'Foco'}</span></button>}
+        {(mestre ? abaLateralMestre : abaLateralJogador) && <button type="button" className="mesa-fechar-painel" aria-label="Recolher painel lateral" title="Recolher painel lateral" onClick={() => mestre ? setAbaLateralMestre('') : setAbaLateralJogador('')}><Icon path={mdiClose} size={0.8} /></button>}
+      </>}
+      {senha3DAberta && (
+        <div
+          className="mesa-3d-senha-overlay"
+          onClick={() => setSenha3DAberta(false)}
+        >
+          <form
+            className="mesa-3d-senha-painel"
+            aria-label="Senha do mapa 3D experimental"
+            onClick={(evento) => evento.stopPropagation()}
+            onSubmit={(evento) => {
+              evento.preventDefault();
+              if (senha3D !== SENHA_MESTRE) {
+                setErroSenha3D("Senha incorreta.");
+                setSenha3D("");
+                return;
+              }
+              sessionStorage.setItem(TABLETOP_3D_AUTH_KEY, "true");
+              const destino = new URLSearchParams(window.location.search);
+              destino.set("tabletop3d", "1");
+              window.location.href = `?${destino.toString()}`;
+            }}
+          >
+            <header>
+              <Icon path={mdiMapOutline} size={1} />
+              <div>
+                <span>Acesso restrito</span>
+                <h2>Mapa 3D Experimental</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSenha3DAberta(false)}
+                title="Fechar"
+              >
+                <Icon path={mdiClose} size={0.8} />
+              </button>
+            </header>
+            <label htmlFor="senha-tabletop-3d">Senha do mestre</label>
+            <input
+              id="senha-tabletop-3d"
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              autoFocus
+              maxLength={SENHA_MESTRE.length}
+              value={senha3D}
+              onChange={(evento) => {
+                setSenha3D(evento.target.value.replace(/\D/g, ""));
+                setErroSenha3D("");
+              }}
+            />
+            {erroSenha3D && <p role="alert">{erroSenha3D}</p>}
+            <button type="submit" className="mesa-3d-senha-confirmar">
+              Desbloquear 3D
+            </button>
+          </form>
+        </div>
       )}
+      {mestre && bibliotecaAberta && !escudoAberto && renderShieldScenes()}
+      {mestre && !escudoAberto && anotacoesAbertas && (
+        <aside className="mesa-anotacoes-painel">
+          <header>
+            <div>
+              <span>Arquivo do mestre</span>
+              <strong>Anotacoes da campanha</strong>
+            </div>
+            <button
+              onClick={() => setAnotacoesAbertas(false)}
+              title="Fechar anotacoes"
+            >
+              <Icon path={mdiClose} size={0.85} />
+            </button>
+          </header>
+          <AnotacoesCampanha campanhaId={campanha.id} />
+        </aside>
+      )}
+      {mestre && !escudoAberto && (
+        <aside
+          className={`mesa-musica-painel ${musicaAberta ? "aberto" : "fechado"}`}
+          aria-hidden={!musicaAberta}
+        >
+          <header>
+            <div>
+              <span>Trilha da sessao</span>
+              <strong>Playlist da campanha</strong>
+            </div>
+            <button
+              onClick={() => setMusicaAberta(false)}
+              title="Fechar musica"
+            >
+              <Icon path={mdiClose} size={0.85} />
+            </button>
+          </header>
+          <MusicaTabletop
+            campanhaId={campanha.id}
+            musicasCampanha={campanha.musicas || []}
+            estadoRemoto={campanha.musicaEstado}
+            aoAlterarEstado={(estado) =>
+              atualizarEstadoMusica(campanha.id, estado)
+            }
+          />
+        </aside>
+      )}
+      {!mestre && campanha.musicas?.length > 0 && (
+        <aside className="mesa-musica-ouvinte">
+          <MusicaTabletop
+            campanhaId={campanha.id}
+            musicasCampanha={campanha.musicas}
+            estadoRemoto={campanha.musicaEstado}
+            controlavel={false}
+          />
+        </aside>
+      )}
+      {mestre && !escudoAberto && (
+        <aside className={`mesa-soundpad-painel ${soundpadAberto ? "aberto" : "fechado"}`} aria-hidden={!soundpadAberto}>
+          <header><div><span>Efeitos rapidos</span><strong>Soundpad da campanha</strong></div><button onClick={() => setSoundpadAberto(false)} title="Fechar soundpad"><Icon path={mdiClose} size={0.85} /></button></header>
+          <SoundpadTabletop sons={campanha.soundpad || []} estadoRemoto={campanha.soundpadEstado} aoAlterarEstado={(estado) => atualizarEstadoSoundpad(campanha.id, estado)} />
+        </aside>
+      )}
+      {!mestre && campanha.soundpad?.length > 0 && (
+        <SoundpadTabletop sons={campanha.soundpad} estadoRemoto={campanha.soundpadEstado} controlavel={false} />
+      )}
+
+      {!embedded && campanha.modo === "especial" && cena?.cenaEspecial?.midiaUrl && (
+        <section className={`cena-especial cena-especial-${cena.cenaEspecial.transicao || "cinema"}`} aria-label={`Cena especial: ${cena.nome}`}>
+          <SpecialSceneMedia special={cena.cenaEspecial} name={cena.nome}/>
+          <div className="cena-especial-vinheta" />
+          {!cena.cenaEspecial.cutscene && cena.cenaEspecial.exibirTitulo !== false && (
+            <div className="cena-especial-titulo"><span>{cena.descricao}</span><strong>{cena.nome}</strong></div>
+          )}
+          {!cena.cenaEspecial.cutscene && audioEspecialPronto && extrairYoutubeId(cena.cenaEspecial.audioUrl) ? (
+            <iframe
+              className="cena-especial-youtube"
+              title="Musica da cena especial"
+              src={`https://www.youtube.com/embed/${extrairYoutubeId(cena.cenaEspecial.audioUrl)}?autoplay=1&controls=0&loop=${cena.cenaEspecial.loopAudio !== false ? 1 : 0}&playlist=${extrairYoutubeId(cena.cenaEspecial.audioUrl)}&playsinline=1&rel=0`}
+              allow="autoplay; encrypted-media"
+              referrerPolicy="strict-origin-when-cross-origin"
+            />
+          ) : !cena.cenaEspecial.cutscene && audioEspecialPronto && cena.cenaEspecial.audioUrl ? <audio ref={audioCenaEspecialRef} src={cena.cenaEspecial.audioUrl} loop={cena.cenaEspecial.loopAudio !== false} autoPlay preload="auto" /> : null}
+          {mestre && <button className="cena-especial-sair" onClick={() => trocarModo("cena")}><Icon path={mdiClose} size={0.8} />Encerrar</button>}
+        </section>
+      )}
+
+      {!embedded && !mestre && <PlayerInitiativeBar campaign={campanha} entries={ordemCombate}/>}
+      <section className={`mesa-palco modo-${campanha.modo} ${cenaRestrita ? "cena-restrita" : ""}`}>
+        {cenaRestrita && (
+          <div className="mesa-cena-restrita" role="status">
+            <span>Cena reservada</span>
+            <strong>Aguarde as próximas instruções do mestre</strong>
+          </div>
+        )}
+        <div
+          className={`mesa-imagem ${tokenArrastando ? "arrastando-token" : ""} ${mapaArrastando ? "arrastando-mapa" : ""}`}
+          style={{
+            backgroundImage: palcoVideo ? "none" : `url(${palcoUrl})`,
+            "--mapa-proporcao": proporcaoMapa.largura / proporcaoMapa.altura,
+            "--mapa-proporcao-inversa":
+              proporcaoMapa.altura / proporcaoMapa.largura,
+            transform:
+              campanha.modo === "mapa"
+                ? `translate(${panMapa.x}px, ${panMapa.y}px) scale(${zoomMapa})`
+                : "none",
+          }}
+          onWheel={(event) => {
+            if (campanha.modo !== "mapa") return;
+            event.preventDefault();
+            setZoomMapa((zoom) =>
+              Math.max(
+                0.5,
+                Math.min(
+                  3,
+                  Number((zoom + (event.deltaY < 0 ? 0.1 : -0.1)).toFixed(2)),
+                ),
+              ),
+            );
+          }}
+          onDragOver={(event) => {
+            if (mestre && campanha.modo === "mapa") {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "copy";
+            }
+          }}
+          onDrop={soltarFichaNoMapa}
+          onPointerDown={iniciarPanMapa}
+          onPointerDownCapture={(event) => {
+            if (campanha.modo === "mapa" && mestre && editorIluminacaoAberto &&
+                (event.button === 1 || event.button === 2)) {
+              event.stopPropagation();
+              iniciarPanMapa(event);
+            }
+          }}
+          onContextMenu={(event) => {
+            if (campanha.modo === "mapa" && mestre && editorIluminacaoAberto)
+              event.preventDefault();
+          }}
+          onPointerMove={(event) => {
+            if (tokenGirando) {
+              girarToken(event);
+              return;
+            }
+            const usandoPinca = moverPanMapa(event);
+            if (!usandoPinca) arrastarToken(event);
+          }}
+          onPointerUp={(event) => {
+            if (tokenGirando) {
+              finalizarRotacaoToken(event);
+              return;
+            }
+            const usandoPinca = finalizarPanMapa(event);
+            if (tokenArrastando && !usandoPinca) soltarToken(event);
+          }}
+          onPointerCancel={(event) => {
+            setTokenArrastando(null);
+            if (tokenGirando) finalizarRotacaoToken(event);
+            finalizarPanMapa(event);
+          }}
+          onPointerLeave={(event) => tokenArrastando && soltarToken(event)}
+        >
+          {palcoVideo && <video key={palcoUrl} src={palcoUrl} autoPlay muted loop playsInline aria-label={cena?.nome || 'Cena'} onLoadedMetadata={e => {if(campanha.modo==='mapa') setProporcaoMapa({largura:e.currentTarget.videoWidth || 1,altura:e.currentTarget.videoHeight || 1});}} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:campanha.modo==='mapa'?'fill':'contain',pointerEvents:'none'}}/>}
+          {!palcoVideo && mediaAnimada?.animation?.enabled && <AnimatedScene media={mediaAnimada} id={`${cena.id}:${mediaAnimada.id}`} alt={mediaAnimada.nome || cena.nome}/> }
+          {cena && campanha.modo === "mapa" && mapaAtualIluminacao?.exibirGrade !== false && (
+            <div
+              className="mesa-grade"
+              style={{ backgroundSize: `${100 / colunas}% ${100 / linhas}%` }}
+            />
+          )}
+          {cena && campanha.modo === "mapa" && configuracaoIluminacao && (
+            <MapLightingLayer
+              key={chaveMapaIluminacao}
+              mapaUrl={mapaAtualIluminacao?.url}
+              configuracao={configuracaoIluminacao}
+              luzesTokens={luzesDosTokens}
+              observadores={mestre ? null : observadoresJogador}
+              editando={mestre && editorIluminacaoAberto}
+              aoAlterar={alterarConfiguracaoIluminacao}
+              salvando={salvandoIluminacao}
+            />
+          )}
+          {cena && campanha.modo === "mapa" &&
+            campanha.tokens
+              .filter((token) => {
+                const estado = estadoTokenNoMapa(token);
+                if (estado.removido) return false;
+                if (!mestre && estado.oculto) return false;
+                if (!tokenVisivelParaJogador({ ...token, ...estado }))
+                  return false;
+                return true;
+              })
+              .map((token) => {
+                const estado = estadoTokenNoMapa(token);
+                const tokenVisual = { ...token, ...estado };
+                return (
+                  <React.Fragment key={token.id}>
+                    <button
+                      className={`mesa-token ${podeMoverToken(tokenVisual) ? "movivel" : "bloqueado"} ${tokenArrastando === token.id ? "arrastando" : ""} ${tokenGirando === token.id ? "girando" : ""}`}
+                      style={{
+                        left: `${tokenVisual.x}%`,
+                        top: `${tokenVisual.y}%`,
+                        width: `${46 * (Number(tokenVisual.tamanho) || 1)}px`,
+                        rotate: `${Number(tokenVisual.rotacao) || 0}rad`,
+                        ...estiloBordaToken(personagens[tokenVisual.ficha_id]?.coresToken),
+                        ...(mestre && tokenVisual.oculto
+                          ? {
+                              opacity: 0.38,
+                              filter: "grayscale(.8)",
+                              outline: "2px dashed rgba(255,255,255,.65)",
+                            }
+                          : {}),
+                      }}
+                      title={
+                        mestre
+                          ? `${tokenVisual.nome} — clique direito para opcoes`
+                          : podeMoverToken(tokenVisual)
+                            ? `Mover ${tokenVisual.nome}`
+                            : tokenVisual.nome
+                      }
+                      onContextMenu={(event) => {
+                        if (
+                          !mestre &&
+                          String(tokenVisual.ficha_id) !== String(fichaJogadorId)
+                        ) return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setMenuTokenAberto((atual) =>
+                          atual === token.id ? null : token.id,
+                        );
+                      }}
+                      onPointerDown={(event) => {
+                        if (!podeMoverToken(tokenVisual)) return;
+                        event.preventDefault();
+                        event.currentTarget.setPointerCapture?.(
+                          event.pointerId,
+                        );
+                        setMenuTokenAberto(null);
+                        movimentoTokenRef.current = null;
+                        setTokenArrastando(token.id);
+                      }}
+                    >
+                      {tokenVisual.imagem_url ||
+                      personagens[tokenVisual.ficha_id]?.fotoPerfil ? (
+                        <AnimatedTokenImage animation={personagens[tokenVisual.ficha_id]?.profileTokenAnimation}
+                          src={
+                            personagens[tokenVisual.ficha_id]?.fotoPerfil ||
+                            tokenVisual.imagem_url
+                          }
+                          alt=""
+                          draggable="false"
+                        />
+                      ) : (
+                        tokenVisual.nome?.slice(0, 2)
+                      )}
+                      {mestre && tokenVisual.lanterna?.ativa && (
+                        <span
+                          className="mesa-token-direcao"
+                        />
+                      )}
+                    </button>
+                    {podeMoverToken(tokenVisual) && !editorIluminacaoAberto && (
+                      <button
+                        type="button"
+                        className={`mesa-token-rotacao ${tokenGirando === token.id ? "girando" : ""}`}
+                        style={{
+                          left: `${tokenVisual.x}%`,
+                          top: `${tokenVisual.y}%`,
+                          transform: `translate(calc(-50% + ${Math.cos(Number(tokenVisual.rotacao) || 0) * (23 * (Number(tokenVisual.tamanho) || 1) + 11)}px), calc(-50% + ${Math.sin(Number(tokenVisual.rotacao) || 0) * (23 * (Number(tokenVisual.tamanho) || 1) + 11)}px))`,
+                        }}
+                        title={`Girar ${tokenVisual.nome}`}
+                        aria-label={`Girar ${tokenVisual.nome}`}
+                        onPointerDown={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          event.currentTarget.setPointerCapture?.(event.pointerId);
+                          setTokenArrastando(null);
+                          setTokenGirando(token.id);
+                        }}
+                      >
+                        <Icon path={mdiRotateRight} size={0.6} />
+                      </button>
+                    )}
+                    {!mestre &&
+                      podeMoverToken(tokenVisual) &&
+                      !editorIluminacaoAberto && (
+                        <button
+                          type="button"
+                          className={`mesa-token-lanterna-toggle ${tokenVisual.lanterna?.ativa ? "ativa" : ""}`}
+                          style={{
+                            left: `${tokenVisual.x}%`,
+                            top: `${tokenVisual.y}%`,
+                          }}
+                          title={
+                            tokenVisual.lanterna?.ativa
+                              ? "Desligar lanterna"
+                              : "Ligar lanterna"
+                          }
+                          aria-label={
+                            tokenVisual.lanterna?.ativa
+                              ? "Desligar lanterna"
+                              : "Ligar lanterna"
+                          }
+                          onPointerDown={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                          }}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            atualizarLanternaToken(tokenVisual, {
+                              ativa: !tokenVisual.lanterna?.ativa,
+                            });
+                          }}
+                        >
+                          <Icon
+                            path={
+                              tokenVisual.lanterna?.ativa
+                                ? mdiFlashlight
+                                : mdiFlashlightOff
+                            }
+                            size={0.62}
+                          />
+                        </button>
+                      )}
+                    {(mestre || String(tokenVisual.ficha_id) === String(fichaJogadorId)) && menuTokenAberto === token.id && (
+                      <div
+                        role="menu"
+                        aria-label={`Opcoes do token ${tokenVisual.nome || "token"}`}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onContextMenu={(event) => event.preventDefault()}
+                        style={{
+                          position: "absolute",
+                          left: `${tokenVisual.x}%`,
+                          top: `${tokenVisual.y}%`,
+                          transform: "translate(28px, 18px)",
+                          zIndex: 80,
+                          minWidth: 150,
+                          padding: 6,
+                          border: "1px solid rgba(255,255,255,.22)",
+                          borderRadius: 8,
+                          background: "rgba(8,8,8,.96)",
+                          boxShadow: "0 10px 28px rgba(0,0,0,.45)",
+                          display: "grid",
+                          gap: 4,
+                        }}
+                      >
+                        <button
+                          type="button"
+                          role="menuitem"
+                          hidden={!mestre}
+                          onClick={() => alternarVisibilidadeToken(tokenVisual)}
+                          style={{
+                            padding: "8px 10px",
+                            textAlign: "left",
+                            border: 0,
+                            borderRadius: 5,
+                            background: "rgba(255,255,255,.07)",
+                            color: "inherit",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {tokenVisual.oculto
+                            ? "Mostrar token"
+                            : "Ocultar token"}
+                        </button>
+                        <div className="mesa-token-tamanho-controles">
+                          <span>Tamanho <b>{Math.round((Number(tokenVisual.tamanho) || 1) * 100)}%</b></span>
+                          <div>
+                            <button type="button" onClick={() => alterarTamanhoToken(tokenVisual, (Number(tokenVisual.tamanho) || 1) - 0.25)} disabled={(Number(tokenVisual.tamanho) || 1) <= 0.5} title="Diminuir token">−</button>
+                            <button type="button" onClick={() => alterarTamanhoToken(tokenVisual, 1)} title="Restaurar tamanho">1:1</button>
+                            <button type="button" onClick={() => alterarTamanhoToken(tokenVisual, (Number(tokenVisual.tamanho) || 1) + 0.25)} disabled={(Number(tokenVisual.tamanho) || 1) >= 3} title="Aumentar token">+</button>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          hidden={!mestre}
+                          onClick={() =>
+                            atualizarLanternaToken(tokenVisual, {
+                              ativa: !tokenVisual.lanterna?.ativa,
+                            })
+                          }
+                          style={{
+                            padding: "8px 10px",
+                            textAlign: "left",
+                            border: "1px solid rgba(244,199,107,.18)",
+                            borderRadius: 5,
+                            background: tokenVisual.lanterna?.ativa
+                              ? "rgba(244,199,107,.2)"
+                              : "rgba(255,255,255,.07)",
+                            color: tokenVisual.lanterna?.ativa
+                              ? "#ffe3a0"
+                              : "inherit",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {tokenVisual.lanterna?.ativa
+                            ? "Apagar lanterna"
+                            : "Acender lanterna"}
+                        </button>
+                        {mestre && tokenVisual.lanterna?.ativa && (
+                          <div className="mesa-token-lanterna-controles">
+                            <label className="mesa-token-lanterna-alcance">
+                              <span>
+                                Alcance
+                                <b>{Number(tokenVisual.lanterna?.alcance) || 18}</b>
+                              </span>
+                              <input
+                                type="range"
+                                min="4"
+                                max="60"
+                                step="1"
+                                value={Number(tokenVisual.lanterna?.alcance) || 18}
+                                onChange={(event) =>
+                                  atualizarLanternaToken(tokenVisual, {
+                                    alcance: Number(event.target.value),
+                                  })
+                                }
+                              />
+                            </label>
+                            <label className="mesa-token-lanterna-alcance">
+                              <span>
+                                Abertura
+                                <b>{Number(tokenVisual.lanterna?.abertura) || 70}°</b>
+                              </span>
+                              <input
+                                type="range"
+                                min="20"
+                                max="140"
+                                step="5"
+                                value={Number(tokenVisual.lanterna?.abertura) || 70}
+                                onChange={(event) =>
+                                  atualizarLanternaToken(tokenVisual, {
+                                    abertura: Number(event.target.value),
+                                  })
+                                }
+                              />
+                            </label>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          role="menuitem"
+                          hidden={!mestre}
+                          onClick={() => removerTokenAtualDoMapa(tokenVisual)}
+                          style={{
+                            padding: "8px 10px",
+                            textAlign: "left",
+                            border: 0,
+                            borderRadius: 5,
+                            background: "rgba(180,35,35,.18)",
+                            color: "#ffb4b4",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Remover do mapa
+                        </button>
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+        </div>
+        {campanha.modo === "mapa" && (
+          <div className="mesa-zoom-controles">
+            <button
+              type="button"
+              onClick={() =>
+                setZoomMapa((zoom) =>
+                  Math.max(0.5, Number((zoom - 0.2).toFixed(2))),
+                )
+              }
+              title="Diminuir zoom"
+            >
+              <Icon path={mdiMagnifyMinusOutline} size={0.82} />
+            </button>
+            <span>{Math.round(zoomMapa * 100)}%</span>
+            <button
+              type="button"
+              onClick={() =>
+                setZoomMapa((zoom) =>
+                  Math.min(3, Number((zoom + 0.2).toFixed(2))),
+                )
+              }
+              title="Aumentar zoom"
+            >
+              <Icon path={mdiMagnifyPlusOutline} size={0.82} />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setZoomMapa(1);
+                setPanMapa({ x: 0, y: 0 });
+              }}
+              title="Restaurar zoom e posicao"
+            >
+              <Icon path={mdiFitToScreenOutline} size={0.82} />
+            </button>
+          </div>
+        )}
+      </section>
+      {mestre&&escudoAberto&&<aside className="mesa-master-shield-panel" aria-label="Escudo do mestre" onKeyDown={event=>{if(event.key==="Escape")setEscudoAberto(false);}}><header><strong>Consulta privada</strong><button type="button" onClick={()=>setEscudoAberto(false)} aria-label="Fechar escudo do mestre">Fechar ×</button></header><MasterShield members={campanha.membros || []} campaignSystem={campanha.sistema || "absoluto"} campaignId={campanha.id} scene={campanha.cenaAtiva} combat={campanha.combateAtivo} investigation={campanha.investigacaoAtiva} enemies={campanha.inimigos || []} onSaveDifficulty={salvarDificuldadeCena} onSaveEnemy={salvarParticipanteEscudo} onAddEnemy={adicionarParticipanteEscudo} onRemoveEnemy={removerInimigo} documents={renderDocumentosMestre()} renderTool={renderShieldTool}/></aside>}
+      {!mestre && (
+        <nav
+          className={`mesa-lateral-navegacao mesa-jogador-navegacao ${mostrarDocumentosJogador ? "com-documentos" : ""}`}
+          aria-label="Conteudo do jogador"
+        >
+          
+          {mostrarDocumentosJogador && (
+            <button className={abaLateralJogador === 'documentos' ? 'ativo' : ''} onClick={()=>setAbaLateralJogador(aba=>aba==='documentos'?'':'documentos')}>
+              <Icon path={mdiFileDocumentMultipleOutline} size={0.85}/><span>Documentos</span> <b>{documentosVisiveisJogador.length}</b>
+            </button>
+          )}
+          <button
+            className={abaLateralJogador === "ficha" ? "ativo" : ""}
+            onClick={() =>
+              setAbaLateralJogador((aba) => (aba === "ficha" ? "" : "ficha"))
+            }
+          >
+            <Icon path={mdiViewDashboardOutline} size={0.85}/><span>Minha ficha</span>
+          </button>
+        </nav>
+      )}
+      {!mestre && abaLateralJogador === "participantes" && (
+        <aside
+          key={`jogador-participantes-${chavePainelParticipantes}`}
+          className="mesa-jogador-participantes"
+        >
+          <div className="mesa-lateral-titulo">
+            <Icon path={mdiShieldCrownOutline} size={0.8} />
+            <span>{tituloParticipantes}</span>
+            <b>{modoIniciativaAtivo ? ordemCombate.length : campanha.membros.length}</b>
+          </div>
+          <div className="mesa-membros">
+            {modoIniciativaAtivo ? (
+              <InitiativeCards entries={ordemCombate} system={campanha.sistema}/>
+            ) : campanha.membros.length ? (
+              <ParticipantDossiers members={membrosOrdenados} characters={personagens}/>
+            ) : (
+              <p>Nenhuma ficha vinculada ainda.</p>
+            )}
+          </div>
+        </aside>
+      )}
+      {mestre && !escudoAberto && abaLateralMestre === "documentos" && renderDocumentosMestre()}
       {!mestre && abaLateralJogador === "documentos" && (
         <aside className="mesa-documentos-painel mesa-documentos-jogador">
           <div className="mesa-lateral-titulo">
@@ -3863,7 +3812,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
           </header>
           <iframe
             title={`Ficha de ${personagemJogador.nome}`}
-            src={membroJogador.ficha_id.startsWith("espiral:") ? `/?sistema=espiral&ficha=${encodeURIComponent(membroJogador.ficha_id.slice("espiral:".length))}&embed=mesa` : `/?sistema=darkness&ficha=${encodeURIComponent(personagemJogador.nome || membroJogador.ficha_id)}&senha=${encodeURIComponent(membroJogador.ficha_id)}&embed=mesa`}
+            src={membroJogador.ficha_id.startsWith("espiral:") ? `/?sistema=espiral&ficha=${encodeURIComponent(membroJogador.ficha_id.slice("espiral:".length))}&embed=mesa` : `/?sistema=darkness&ficha=${encodeURIComponent(personagemJogador.nome || membroJogador.ficha_id)}&senha=${encodeURIComponent(membroJogador.ficha_id)}&embed=mesa&campanhaTeste=${encodeURIComponent(campanha.codigo)}`}
           />
         </section>
       )}
@@ -3943,6 +3892,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
                   <Icon path={mdiDeleteOutline} size={0.7} />
                 </button>
               </header>
+              {(inimigoAberto.sistema || inimigoAberto.dados?.sistema) === 'espiral' ? <EspiralEncounterViewer record={inimigoAberto} onChange={salvarVitalInimigo} /> : <>
               <div className="mesa-inimigo-identidade">
                 {inimigoAberto.fotoPerfil ? (
                   <img src={inimigoAberto.fotoPerfil} alt="" />
@@ -4034,6 +3984,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
                   )}
                 </div>
               </section>
+              </>}
             </div>
           ) : (
             <>
@@ -4095,6 +4046,9 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
                         {!fechada && (
                           <div className="mesa-inimigo-pasta-itens">
                             {itens.map((inimigo) => {
+                              const tokenNoMapa = (campanha.tokens || []).find(token =>
+                                token.ficha_id === `inimigo:${inimigo.inimigo_ref || inimigo.id}` && !token.removido,
+                              );
                               const ehNpc = (inimigo.tipo || inimigo.dados?.tipo) === "npc";
                               const chaveNpc = chaveIniciativaNpc(inimigo);
                               const prefixo = prefixoIniciativaInimigo(inimigo);
@@ -4133,6 +4087,8 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
                                     </div>
                                   </button>
 
+                                  {embedded && <button type="button" onClick={() => colocarInimigo3D(inimigo)} aria-label={`Colocar ${inimigo.nome} no mapa 3D`}>Colocar no mapa 3D</button>}
+                                  {embedded && tokenNoMapa && <button type="button" onClick={() => removerTokenAtualDoMapa(tokenNoMapa)} aria-label={`Remover ${inimigo.nome} do mapa 3D`}>Remover do mapa 3D</button>}
                                   {modoIniciativaAtivo && (
                                     <div className="npc-iniciativa-controles">
                                       {ehNpc ? (
@@ -4264,298 +4220,8 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
         </aside>
       )}
       {/* A lateral principal existe uma unica vez: no mestre ela aparece apenas na aba Participantes/Iniciativa. */}
-      {mestre && abaLateralMestre === "participantes" && (
-        <aside
-          key={`mestre-participantes-${chavePainelParticipantes}`}
-          className="mesa-lateral"
-        >
-          <>
-            <div className="mesa-lateral-titulo">
-              <Icon path={mdiShieldCrownOutline} size={0.8} />
-              <span>{tituloParticipantes}</span>
-              <b>{modoIniciativaAtivo ? ordemCombate.length : campanha.membros.length}</b>
-            </div>
-            <div className="mesa-membros">
-              {modoIniciativaAtivo ? (
-                ordemCombate.length ? (
-                  ordemCombate.map((entrada) => {
-                    const ehJogador = entrada.tipo === "jogador";
-                    return (
-                      <div
-                        className={`participante-condicionado combatente-iniciativa mestre ${ehJogador ? classesCondicoesMesa(entrada.personagem) : "combatente-npc"}`}
-                        key={entrada.chave}
-                        onClick={() => {
-                          if (!ehJogador && entrada.inimigo) {
-                            setAbaLateralMestre("inimigos");
-                            setSubAbaNpcs(entrada.tipo === "npc" ? "npcs" : "inimigos");
-                            setInimigoAberto(entrada.inimigo);
-                          } else if (ehJogador) {
-                            setFichaAberta({ membro: entrada.membro, personagem: entrada.personagem });
-                          }
-                        }}
-                      >
-                        <span>
-                          {entrada.foto ? <img src={entrada.foto} alt="" /> : entrada.nome?.slice(0, 2)}
-                        </span>
-                        {ehJogador ? (
-                          <div
-                            className="participante-iniciativa-edicao"
-                            onClick={(event) => event.stopPropagation()}
-                            onPointerDown={(event) => event.stopPropagation()}
-                            onMouseDown={(event) => event.stopPropagation()}
-                          >
-                            <input
-                              className="participante-iniciativa-input"
-                              type="text"
-                              inputMode="numeric"
-                              pattern="[0-9]*"
-                              placeholder="—"
-                              value={
-                                Object.prototype.hasOwnProperty.call(iniciativasRascunho, entrada.chave)
-                                  ? iniciativasRascunho[entrada.chave]
-                                  : (entrada.valor ?? "")
-                              }
-                              onChange={(event) =>
-                                alterarRascunhoIniciativa(entrada.membro, event.target.value)
-                              }
-                              onBlur={() => confirmarIniciativaMestre(entrada.membro)}
-                              onKeyDown={(event) => {
-                                if (event.key === "Enter") {
-                                  event.preventDefault();
-                                  confirmarIniciativaMestre(entrada.membro);
-                                }
-                              }}
-                              aria-label={`Iniciativa de ${entrada.nome}`}
-                            />
-                            {embedded && <button type="button" className="tt3-save-initiative" onClick={() => confirmarIniciativaMestre(entrada.membro)} aria-label={`Salvar iniciativa de ${entrada.nome}`}>Salvar</button>}
-                          </div>
-                        ) : (
-                          <div className="participante-iniciativa-valor">{entrada.valor}</div>
-                        )}
-                        <div>
-                          <strong>{entrada.nome}</strong>
-                          <small>{entrada.subtitulo}</small>
-                          {ehJogador && (
-                            <>
-                              <ResumoCondicoesParticipante personagem={entrada.personagem} />
-                              {recursosParticipante(entrada.personagem).length > 0 && (
-                                <div className="membro-recursos">
-                                  {recursosParticipante(entrada.personagem).map((recurso) => (
-                                    <div
-                                      className={`membro-recurso ${classeRecursoParticipante(recurso)}`}
-                                      key={recurso.id}
-                                    >
-                                      <span>{recurso.nome}</span>
-                                      <i>
-                                        <em style={{ width: `${percentualRecurso(recurso.valor)}%` }} />
-                                      </i>
-                                      <b>{recurso.valor?.atual || 0}/{recurso.valor?.max || 0}</b>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p>Nenhuma iniciativa definida.</p>
-                )
-              ) : (
-                <>
-                  {campanha.membros.length ? (
-                membrosOrdenados.map((membro) => {
-                  const personagem = personagens[membro.ficha_id];
-                  const recursos = recursosParticipante(personagem);
-                  return (
-                    <div
-                      className={`participante-condicionado ${classesCondicoesMesa(personagem)}`}
-                      key={membro.id}
-                      draggable
-                      title="Arraste para o mapa para criar ou mover o token"
-                      onDragStart={(event) => {
-                        event.dataTransfer.effectAllowed = "copy";
-                        event.dataTransfer.setData(
-                          "application/x-darkness-ficha",
-                          membro.ficha_id,
-                        );
-                      }}
-                      onClick={() => setFichaAberta({ membro, personagem })}
-                    >
-                      <span>
-                        {personagem?.fotoPerfil ? (
-                          <img src={personagem.fotoPerfil} alt="" />
-                        ) : (
-                          membro.nome?.slice(0, 2)
-                        )}
-                      </span>
-                      {modoIniciativaAtivo && (
-                        <div
-                          className="participante-iniciativa-edicao"
-                          onClick={(event) => event.stopPropagation()}
-                          onPointerDown={(event) => event.stopPropagation()}
-                          onMouseDown={(event) => event.stopPropagation()}
-                        >
-                          <input
-                            className="participante-iniciativa-input"
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            placeholder="—"
-                            value={
-                              Object.prototype.hasOwnProperty.call(
-                                iniciativasRascunho,
-                                membro.ficha_id,
-                              )
-                                ? iniciativasRascunho[membro.ficha_id]
-                                : (campanha.iniciativas?.[membro.ficha_id] ??
-                                  "")
-                            }
-                            aria-label={`Iniciativa de ${personagem?.nome || membro.nome}`}
-                            title="Salva ao sair do campo ou pressionar Enter"
-                            onBlur={() => confirmarIniciativaMestre(membro)}
-                            onDragStart={(event) => event.preventDefault()}
-                            onChange={(event) =>
-                              alterarRascunhoIniciativa(
-                                membro,
-                                event.target.value,
-                              )
-                            }
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter") {
-                                event.preventDefault();
-                                confirmarIniciativaMestre(membro);
-                              }
-                            }}
-                          />
-
-                        </div>
-                      )}
-                      <div>
-                        <strong>{personagem?.nome || membro.nome}</strong>
-                        <small>
-                          {personagem
-                            ? `Nivel ${personagem.nivel || 1} · ${personagem.classe || "Sem classe"}`
-                            : membro.papel}
-                        </small>
-                        <ResumoCondicoesParticipante personagem={personagem} />
-                        {recursos.length > 0 && (
-                          <div className="membro-recursos">
-                            {recursos.map((recurso) => (
-                              <div
-                                className={`membro-recurso ${classeRecursoParticipante(recurso)}`}
-                                key={recurso.id}
-                              >
-                                <span>{recurso.nome}</span>
-                                <i>
-                                  <em
-                                    style={{
-                                      width: `${percentualRecurso(recurso.valor)}%`,
-                                    }}
-                                  />
-                                </i>
-                                <b>
-                                  {recurso.valor?.atual || 0}/
-                                  {recurso.valor?.max || 0}
-                                </b>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <p>Nenhuma ficha vinculada ainda.</p>
-                  )}
-                </>
-              )}
-            </div>
-          </>
-        </aside>
-      )}
-      {documentoAberto && (
-        <div className="documento-visualizador-fundo">
-          <section
-            className={`documento-visualizador ${documentoAberto.categoria === "interativa" ? "interativo" : ""}`}
-            role="dialog"
-            aria-label={`Visualizador de ${nomeDocumentoExibicao(documentoAberto)}`}
-          >
-            <header>
-              <div>
-                <small>{documentoAberto.categoria === "interativa" ? "Evidencia interativa" : documentoAberto.categoria === "item" ? "Item" : "Evidencia"}</small>
-                <strong>{nomeDocumentoExibicao(documentoAberto)}</strong>
-              </div>
-              {mestre && documentoAberto.categoria === "interativa" && !String(documentoAberto.mimeType || documentoAberto.mime_type).includes("cassete") && (
-                <nav className="evidencia-interativa-abas" aria-label="Visualizacao da evidencia interativa">
-                  <button
-                    type="button"
-                    className={abaEvidenciaInterativa === "terminal" ? "ativo" : ""}
-                    onClick={() => setAbaEvidenciaInterativa("terminal")}
-                  >
-                    {String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc") ? "Computador" : "Terminal"}
-                  </button>
-                  <button
-                    type="button"
-                    className={abaEvidenciaInterativa === "conteudo" ? "ativo" : ""}
-                    onClick={() => setAbaEvidenciaInterativa("conteudo")}
-                  >
-                    Conteudo
-                  </button>
-                </nav>
-              )}
-              <button
-                type="button"
-                onClick={() => setDocumentoAberto(null)}
-                title="Fechar documento"
-              >
-                <Icon path={mdiClose} size={0.82} />
-              </button>
-            </header>
-            <div className="documento-visualizador-conteudo">
-              {String(documentoAberto.mimeType || documentoAberto.mime_type).includes("cassete") ? (
-                <ReprodutorCassete key={documentoAberto.id} documento={documentoAberto} />
-              ) : String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc") ? (
-                <ComputadorModerno key={`${documentoAberto.id}-${abaEvidenciaInterativa}`} campanhaId={campanha.id} documento={documentoAberto} admin={mestre && abaEvidenciaInterativa === "conteudo"} />
-              ) : documentoAberto.categoria === "interativa" ? (
-                <iframe
-                  className="evidencia-interativa-frame"
-                  title={documentoAberto.nome || "Computador interativo"}
-                  src={
-                    String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc")
-                      ? `/interactive/modern-pc/index.html${mestre && abaEvidenciaInterativa === "conteudo" ? "?admin=1" : ""}`
-                      : mestre && abaEvidenciaInterativa === "conteudo"
-                        ? "/interactive/ms-dos/index.html#/admin-secreto-123"
-                        : documentoAberto.url || "/interactive/ms-dos/index.html"
-                  }
-                  allow="autoplay"
-                />
-              ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "").startsWith("image/") ? (
-                <EvidenceImageViewer key={documentoAberto.id} src={documentoAberto.url} alt={documentoAberto.nome || "Evidência"} />
-              ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "") === "application/pdf" ? (
-                <iframe
-                  title={documentoAberto.nome || "Documento PDF"}
-                  src={documentoAberto.url}
-                />
-              ) : (
-                <div className="documento-sem-preview">
-                  <Icon path={mdiFileDocumentMultipleOutline} size={2} />
-                  <strong>Visualizacao indisponivel</strong>
-                  <p>Este arquivo nao possui uma visualizacao integrada.</p>
-                </div>
-              )}
-            </div>
-            {documentoAberto.descricao && (
-              <p className="documento-visualizador-descricao">
-                {documentoAberto.descricao}
-              </p>
-            )}
-          </section>
-        </div>
-      )}
+      {mestre && abaLateralMestre === "participantes" && !escudoAberto && renderShieldParticipants()}
+      {renderVisualizadorDocumento()}
       {aplicativoMesaAberto && (
         <section className="mesa-aplicativo-painel" role="dialog" aria-label={aplicativoMesaAberto === "dashboard" ? "Dashboard do mestre" : "Loja da cena"}>
           <header>
@@ -4575,7 +4241,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0}) => {
       )}
 {!embedded && <RollNotifications key={campanha.id} rolls={campanha.rolagens || []} mechanics={campanha.mecanicasEspeciais}/>}
 
-      {editorAberto && <TabletopSceneEditor key={editando.id || 'nova'} editando={editando} setEditando={setEditando} arquivos={arquivos} campanha={campanha} nomesPastasCenas={nomesPastasCenas} selecionarArquivosCena={selecionarArquivosCena} alternarJogadorCena={alternarJogadorCena} removerMidiaExistente={removerMidiaExistente} removerArquivoPendente={removerArquivoPendente} atualizarMapaExistente={atualizarMapaExistente} atualizarMapaPendente={atualizarMapaPendente} confirmarCena={confirmarCena} salvando={salvando} erro={erro} onClose={()=>setEditorAberto(false)}/>}
+      {renderShieldSceneEditor()}
     </main>
   );
 };

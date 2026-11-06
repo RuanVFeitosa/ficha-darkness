@@ -1,0 +1,6 @@
+.ficha-container.absoluto-dossier .abs-region-protection{grid-column:1/-1;display:grid;gap:12px;width:100%;padding-top:14px;border-top:1px solid #c8b17a25}
+.abs-region-protection>span{color:#b5a67e;font:9px 'Courier New',monospace;letter-spacing:1px}
+.abs-region-protection>div{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
+.abs-region-protection-value{display:grid;justify-items:center;gap:6px;min-width:36px;color:#c8b17a}
+.abs-region-protection-value svg{width:26px;height:30px;fill:#c8b17a12;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.abs-region-protection-value strong{font:18px/1.2 Georgia,serif;color:#e0d6ba}

@@ -1,11 +1,13 @@
 jest.mock('three', () => {
- class Vector3 { constructor() {this.set(0,0,0);} set(x,y,z) {this.x=x;this.y=y;this.z=z;return this;} add(v) {this.x+=v.x;this.y+=v.y;this.z+=v.z;return this;} toArray() {return [this.x,this.y,this.z];} }
+ class Vector3 { constructor() {this.set(0,0,0);} set(x,y,z) {this.x=x;this.y=y;this.z=z;return this;} add(v) {this.x+=v.x;this.y+=v.y;this.z+=v.z;return this;} copy(v) {return this.set(v.x,v.y,v.z);} sub(v) {this.x-=v.x;this.y-=v.y;this.z-=v.z;return this;} multiplyScalar(k) {this.x*=k;this.y*=k;this.z*=k;return this;} toArray() {return [this.x,this.y,this.z];} }
  return {Raycaster:class {setFromCamera() {} intersectObjects() {return [];}},Vector2:class {},Vector3,Plane:class {},PerspectiveCamera:class {position=new Vector3(); updateProjectionMatrix() {}},MOUSE:{},TOUCH:{}};
 });
+jest.mock('../utils/tabletopCollision', () => ({mapCollisionPending:jest.fn(() => false),mapCollisionMeshes:jest.fn(() => []),collisionSignature:jest.fn(() => ''),createTokenCollisionWorld:jest.fn(() => ({})),moveTokenWithCollision:jest.fn()}));
+import {moveTokenWithCollision,mapCollisionPending,mapCollisionMeshes,createTokenCollisionWorld} from '../utils/tabletopCollision';
 import React from 'react';
 import { render,screen,fireEvent } from '@testing-library/react';
 import * as THREE from 'three';
-import { Camera, PlayerTokenNavigation, StaticSceneCinema, SceneBoundary } from './Tabletop3D';
+import { Camera, useTokenDragCollision, PlayerTokenNavigation, StaticSceneCinema, SceneBoundary } from './Tabletop3D';
 import { useFrame } from '@react-three/fiber';
 const mockCamera = new THREE.PerspectiveCamera();
 let mockOrbit;
@@ -17,6 +19,44 @@ jest.mock('../components/tabletop/RealisticAvatar3D', () => ({}));
 jest.mock('../services/imageCompression', () => ({}));
 jest.mock('../services/mesaApi', () => ({}));
 const spawn={position:[3,4,5],target:[0,1,0],fov:42};
+
+test('loading map preserves saved token height until collision geometry is ready',()=>{
+ createTokenCollisionWorld.mockReturnValue({});
+ mapCollisionPending.mockReturnValue(true);
+ const move=jest.fn(),controller={current:null};
+ const before=moveTokenWithCollision.mock.calls.length;
+ const {unmount}=render(<PlayerTokenNavigation collision enabled position={[10,20]} elevation={3} collisionController={controller} onMove={move}/>);
+ const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ const camera={getWorldDirection:vector=>vector.set(0,0,-1)};
+ for(let i=0;i<120;i++) frame({camera},1/60);
+ expect(moveTokenWithCollision.mock.calls.length).toBe(before);
+ expect(move).not.toHaveBeenCalled();
+ expect(controller.current([11,20])).toEqual({position:[10,20],elevation:3,velocity:0});
+ mapCollisionPending.mockReturnValue(false);
+ moveTokenWithCollision.mockReturnValue({position:[10,20],elevation:3,velocity:0});
+ window.dispatchEvent(new Event('darkness:map-collision-changed'));
+ frame({camera},1/60);
+ expect(moveTokenWithCollision).toHaveBeenLastCalledWith(expect.anything(),[10,3,20],[10,20],expect.objectContaining({recoverSpawn:true,velocity:0}));
+ expect(move).not.toHaveBeenCalled();
+ unmount();
+});
+
+test('player collision follows every frame and releasing movement stops immediately',()=>{
+ const move=jest.fn(),stop=jest.fn();
+ moveTokenWithCollision.mockImplementation((_world,_feet,destination)=>({position:destination,elevation:0,velocity:0}));
+ const {unmount}=render(<PlayerTokenNavigation collision enabled position={[10,20]} onMove={move} onStop={stop}/>);
+ const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ const camera={getWorldDirection:vector=>vector.set(0,0,-1)};
+ window.dispatchEvent(new KeyboardEvent('keydown',{key:'w',bubbles:true}));
+ for(let i=0;i<6;i++) frame({camera},1/120);
+ expect(move).toHaveBeenCalledTimes(6);
+ expect(move.mock.calls[5][0][1]).toBeLessThan(move.mock.calls[0][0][1]);
+ window.dispatchEvent(new KeyboardEvent('keyup',{key:'w',bubbles:true}));
+ expect(stop).toHaveBeenCalledTimes(1);
+ frame({camera},1/120);
+ expect(move).toHaveBeenCalledTimes(6);
+ unmount();
+});
 test('preserva navegação após atualizar campanha e aplica spawn ao trocar mapa', () => {
  const {rerender}=render(<Camera view="room" spawnKey="a" spawnPose={spawn}/>);
  expect(mockCamera.position.toArray()).toEqual(spawn.position);
@@ -129,19 +169,82 @@ test('primeira pessoa segue os olhos e permite olhar com o esquerdo sem orbitar'
  for(let i=0;i<40;i++)frame({},1/60);
  expect(mockCamera.position.toArray()).toEqual(original);
 });
+
+test('câmera acompanha a posição renderizada do token sem atraso relativo nem saltos da rede',()=>{
+ let pose={position:[0,0],elevation:0};
+ const props={mode:'character',followPosition:[0,0],followHeight:1,followElevation:0,getFollowPose:()=>pose};
+ const {rerender}=render(<Camera {...props}/>);
+ let frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ for(let i=1;i<=60;i+=1) {
+   pose={position:[i*.01,i*.02],elevation:i*.001};
+   frame({},1/60);
+   expect(mockCamera.position.x-pose.position[0]).toBeCloseTo(.35,6);
+   expect(mockCamera.position.y-pose.elevation).toBeCloseTo(.75,6);
+   expect(mockCamera.position.z-pose.position[1]).toBeCloseTo(1.1,6);
+ }
+ const before=mockCamera.position.toArray();
+ rerender(<Camera {...props} followPosition={[100,100]}/>);
+ frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];frame({},1/60);
+ expect(mockCamera.position.toArray()).toEqual(before);
+ expect(useFrame.mock.calls[useFrame.mock.calls.length-1][1]).toBe(-1);
+ expect(mockOrbit.zoomToCursor).toBe(false);
+ expect(mockOrbit.enablePan).toBe(false);
+ expect(mockOrbit.minDistance).toBe(.8);
+});
 test('Meu personagem enquadra o token próximo, à esquerda e na altura da superfície', () => {
  render(<Camera mode="character" followPosition={[10,20]} followHeight={2} followElevation={3}/>);
  expect(mockCamera.position.toArray()).toEqual([10.7,4.5,22.2]);
  expect(mockOrbit.target.toArray()).toEqual([10.7,4.3,20]);
  expect(mockCamera.fov).toBe(50);
 });
+test('navegação aplica posição e altura resolvidas pela colisão, inclusive em repouso', () => {
+ const move=jest.fn(),controller={current:null};
+ moveTokenWithCollision.mockReturnValue({position:[10,20],elevation:3.1,velocity:0});
+ const {unmount}=render(<PlayerTokenNavigation collision enabled elevation={0} baseElevation={3} position={[10,20]} collisionController={controller} onMove={move}/>);
+ useFrame.mock.calls[useFrame.mock.calls.length-1][0]({camera:{getWorldDirection:vector=>vector.set(0,0,-1)}},0.05);
+ expect(move).toHaveBeenCalledWith([10,20],expect.closeTo(0.1));
+ expect(controller.current([12,21])).toEqual({position:[10,20],elevation:3.1,velocity:0});
+ unmount();
+ expect(controller.current).toBeNull();
+});
+
+test('personagem parado suspende a física e reaproveita o mundo de colisão', () => {
+ moveTokenWithCollision.mockReturnValue({position:[10,20],elevation:0,velocity:0});
+ const beforeMoves=moveTokenWithCollision.mock.calls.length;
+ const beforeScans=mapCollisionMeshes.mock.calls.length;
+ const beforeBuilds=createTokenCollisionWorld.mock.calls.length;
+ const {unmount}=render(<PlayerTokenNavigation collision enabled position={[10,20]} onMove={jest.fn()}/>);
+ const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ const camera={getWorldDirection:vector=>vector.set(0,0,-1)};
+ for(let i=0;i<120;i+=1) frame({camera},1/60);
+ expect(moveTokenWithCollision.mock.calls.length-beforeMoves).toBe(1);
+ expect(mapCollisionMeshes.mock.calls.length-beforeScans).toBe(1);
+ expect(createTokenCollisionWorld.mock.calls.length-beforeBuilds).toBe(1);
+ unmount();
+});
+
+test('interação com porta revalida a colisão imediatamente, inclusive com jogador parado',()=>{
+ moveTokenWithCollision.mockReturnValue({position:[10,20],elevation:0,velocity:0});
+ const before=mapCollisionMeshes.mock.calls.length;
+ const {unmount}=render(<PlayerTokenNavigation collision enabled position={[10,20]} onMove={jest.fn()}/>);
+ const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ const camera={getWorldDirection:vector=>vector.set(0,0,-1)};
+ frame({camera},.05);
+ window.dispatchEvent(new Event('darkness:map-collision-changed'));
+ frame({camera},.05);
+ expect(mapCollisionMeshes.mock.calls.length-before).toBe(2);
+ unmount();
+});
+
 test('WASD movimenta o token na direção da câmera e salva ao soltar', () => {
  const move=jest.fn(),stop=jest.fn();
  render(<PlayerTokenNavigation enabled position={[10,20]} onMove={move} onStop={stop}/>);
  window.dispatchEvent(new KeyboardEvent('keydown',{key:'w',bubbles:true}));
  const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
  frame({camera:{getWorldDirection:vector => vector.set(0,0,-1)}},0.05);
- expect(move).toHaveBeenCalledWith([10,19.9675]);
+ expect(move.mock.calls[0][0][0]).toBe(10);
+ expect(move.mock.calls[0][0][1]).toBeGreaterThan(19.9675);
+ expect(move.mock.calls[0][0][1]).toBeLessThan(20);
  window.dispatchEvent(new KeyboardEvent('keyup',{key:'w',bubbles:true}));
  expect(stop).toHaveBeenCalledTimes(1);
 });
@@ -174,7 +277,9 @@ test('WASD no mapa tático segue os eixos do mapa independentemente da câmera 3
  window.dispatchEvent(new KeyboardEvent('keydown',{key:'w',bubbles:true}));
  const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
  frame({camera:{getWorldDirection:vector => vector.set(1,0,0)}},0.05);
- expect(move).toHaveBeenCalledWith([10,19.9675]);
+ expect(move.mock.calls[0][0][0]).toBe(10);
+ expect(move.mock.calls[0][0][1]).toBeGreaterThan(19.9675);
+ expect(move.mock.calls[0][0][1]).toBeLessThan(20);
  window.dispatchEvent(new KeyboardEvent('keyup',{key:'w',bubbles:true}));
 });
 test('enquadra o token suavemente ao abrir a ficha e restaura ao fechar',()=>{
@@ -195,6 +300,27 @@ test('enquadra o token suavemente ao abrir a ficha e restaura ao fechar',()=>{
  for(let i=0;i<12;i++)frame({},0.05);
  expect(mockCamera.position.toArray()).toEqual(previous);
 });
+test('compact mobile sheet frames the character in the centre of the remaining right field',()=>{
+ const bounds=mockGl.domElement.getBoundingClientRect;
+ mockGl.domElement.getBoundingClientRect=()=>({left:0,top:0,width:920,height:430});
+ const props={touchNavigation:true,mode:'character',followPosition:[4,7],followHeight:1,getSheetBounds:()=>({right:452})};
+ try {
+  const {rerender}=render(<Camera {...props}/>);
+  const before=mockCamera.position.toArray();
+  rerender(<Camera {...props} sheetFocus/>);
+  const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+  for(let i=0;i<12;i++)frame({},.05);
+  const expectedRight=1.1*Math.tan(25*Math.PI/180)*(Number(mockCamera.aspect)||16/9)*(452/920);
+  expect(4-mockOrbit.target.x).toBeCloseTo(expectedRight);
+  expect(mockCamera.position.y).toBe(before[1]);
+  expect(mockCamera.position.z).toBe(before[2]);
+  rerender(<Camera {...props}/>);
+  const restore=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+  for(let i=0;i<12;i++)restore({},.05);
+  expect(mockCamera.position.toArray()).toEqual(before);
+ } finally {mockGl.domElement.getBoundingClientRect=bounds;}
+});
+
 test('ajusta a câmera lateralmente preservando ângulo e distância',()=>{
  const props={mode:'character',followPosition:[4,7],followHeight:1};
  const {rerender}=render(<Camera {...props}/>);
@@ -269,6 +395,40 @@ test('olhar no mesmo lugar também funciona na câmera vinculada ao token', () =
 });
 
 const touchEvent=(type,id,x,y) => {const event=new Event(type,{bubbles:true,cancelable:true});Object.assign(event,{button:0,pointerType:'touch',pointerId:id,clientX:x,clientY:y});return event;};
+
+test('mobile player uses the same native orbit across the whole canvas without a stationary-look jump',()=>{
+ const raycast=jest.spyOn(THREE.Raycaster.prototype,'intersectObjects');
+ const forwarded=jest.fn();
+ render(<Camera touchNavigation mode="character" view="room" followPosition={[10,20]} followHeight={1}/>);
+ mockGl.domElement.addEventListener('pointerdown',forwarded);
+ try {
+  const initial=mockCamera.position.toArray();
+  const down=touchEvent('pointerdown',1,100,100);
+  mockGl.domElement.dispatchEvent(down);
+  expect(forwarded).toHaveBeenCalledTimes(1);
+  expect(down.defaultPrevented).toBe(false);
+  expect(raycast).not.toHaveBeenCalled();
+  expect(mockOrbit.enabled).toBe(true);
+  expect(mockOrbit.enablePan).toBe(false);
+  expect(mockOrbit.zoomToCursor).toBe(false);
+  expect(mockOrbit.minPolarAngle).toBe(.45);
+  expect(mockOrbit.maxPolarAngle).toBeGreaterThan(Math.PI/2);
+  expect(mockOrbit.maxPolarAngle).toBeLessThan(Math.PI);
+  window.dispatchEvent(touchEvent('pointermove',1,200,-200));
+  useFrame.mock.calls[useFrame.mock.calls.length-1][0]({},1/60);
+  expect(mockCamera.position.toArray()).toEqual(initial);
+  window.dispatchEvent(touchEvent('pointerup',1,200,-200));
+ } finally {mockGl.domElement.removeEventListener('pointerdown',forwarded);raycast.mockRestore();}
+});
+
+test('mobile first person keeps native orbit disabled after finishing a look gesture',()=>{
+ render(<Camera touchNavigation mode="character" view="firstPerson" followPosition={[10,20]}/>);
+ mockGl.domElement.dispatchEvent(touchEvent('pointerdown',1,100,100));
+ window.dispatchEvent(touchEvent('pointermove',1,160,120));
+ window.dispatchEvent(touchEvent('pointerup',1,160,120));
+ expect(mockOrbit.enabled).toBe(false);
+});
+
 test('arrasto de toque gira a câmera sem deslocar sua posição', () => {
  render(<Camera view="room" spawnKey="touch" spawnPose={spawn}/>);
  const before=mockCamera.position.toArray();
@@ -298,3 +458,46 @@ test('pinça aproxima a câmera e libera os controles após soltar', () => {
 
 test('WebGL failures offer retry and an ordinary 2D table without losing the campaign',() => {const log=jest.spyOn(console,'error').mockImplementation(() => {});let fail=true;function Scene(){if(fail) throw new Error('FEATURE_FAILURE_WEBGL_EXHAUSTED_DRIVERS');return <div>Cena recuperada</div>;}try{render(<SceneBoundary><Scene/></SceneBoundary>);expect(screen.getByRole('heading')).toHaveTextContent('O navegador não conseguiu iniciar o 3D');expect(screen.getByRole('link',{name:'Abrir mesa 2D'})).toBeInTheDocument();fail=false;fireEvent.click(screen.getByRole('button',{name:'Tentar abrir o 3D novamente'}));expect(screen.getByText('Cena recuperada')).toBeInTheDocument();}finally{log.mockRestore();}});
 test('asset failures do not incorrectly blame graphics acceleration',() => {const log=jest.spyOn(console,'error').mockImplementation(() => {});function Scene(){throw new Error('Could not load image');}try{render(<SceneBoundary><Scene/></SceneBoundary>);expect(screen.getByRole('heading')).toHaveTextContent('Não foi possível carregar a cena');expect(screen.queryByText(/aceleração de hardware/)).not.toBeInTheDocument();}finally{log.mockRestore();}});
+
+test('drag collision uses rendered feet and preserves the pose while the map loads',()=>{
+ const ref={current:{position:{x:2,y:3,z:4}}};
+ let resolve;
+ function Harness() {resolve=useTokenDragCollision(ref,.35,1);return null;}
+ createTokenCollisionWorld.mockReturnValue({});
+ mapCollisionPending.mockReturnValue(false);
+ moveTokenWithCollision.mockReturnValue({position:[5,6],elevation:3.2});
+ const {unmount}=render(<Harness/>);
+ expect(resolve([8,9])).toEqual({position:[5,6],elevation:3.2});
+ expect(moveTokenWithCollision).toHaveBeenLastCalledWith({},[2,3,4],[8,9],expect.objectContaining({scale:.35,baseElevation:1,recoverSpawn:true}));
+ ref.current.position={x:5,y:3.2,z:6};
+ mapCollisionPending.mockReturnValue(true);
+ moveTokenWithCollision.mockClear();
+ expect(resolve([10,10])).toEqual({position:[5,6],elevation:3.2});
+ expect(moveTokenWithCollision).not.toHaveBeenCalled();
+ mapCollisionPending.mockReturnValue(false);
+ unmount();
+});
+
+test('over shoulder camera frames ahead and follows rendered feet without drifting',()=>{
+ let pose={position:[4,7],elevation:2};
+ render(<Camera overShoulder mode="character" view="room" followPosition={[4,7]} followHeight={1} followElevation={2} getFollowPose={()=>pose}/>);
+ expect(mockCamera.position.toArray()).toEqual([4.32,2.86,7.95]);
+ expect(mockOrbit.target.toArray()).toEqual([4.32,2.7800000000000002,6.55]);
+ expect(mockCamera.fov).toBe(48);
+ const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ const start=mockCamera.position.toArray();
+ for(let i=0;i<120;i++) frame({},1/60);
+ start.forEach((value,index)=>expect(mockCamera.position.toArray()[index]).toBeCloseTo(value,8));
+ pose={position:[5,9],elevation:2.3};
+ frame({},1/60);
+ expect(mockCamera.position.x).toBeCloseTo(start[0]+1,8);
+ expect(mockCamera.position.y).toBeCloseTo(start[1]+.3,8);
+ expect(mockCamera.position.z).toBeCloseTo(start[2]+2,8);
+});
+
+test.each([false,true])('shoulder camera can look above and below the horizon (touch: %s)',touch=>{
+ render(<Camera overShoulder touchNavigation={touch} mode="character" view="room" followPosition={[0,0]} followHeight={1}/>);
+ expect(mockOrbit.minPolarAngle).toBeLessThan(Math.PI/2);
+ expect(mockOrbit.maxPolarAngle).toBeGreaterThan(Math.PI/2+Math.PI/3);
+ expect(mockOrbit.maxPolarAngle).toBeLessThan(Math.PI);
+});

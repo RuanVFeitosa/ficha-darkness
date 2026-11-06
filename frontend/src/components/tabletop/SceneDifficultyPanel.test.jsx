@@ -15,3 +15,17 @@ test('exibe todas as categorias e permite selecionar e editar sem editar Defesa'
  expect(onSave).toHaveBeenCalledWith({ambiente:7});
  expect(screen.getByText('12')).toBeInTheDocument();
 });
+
+test('master chooses the enemy whose defense defines combat difficulty',()=>{
+ const onSave=jest.fn();
+ const scene={dificuldades:{ambiente:1,combateAmbiente:4}};
+ const enemies=[{id:'a',nome:'Cultista',defesa:2},{id:'b',nome:'Guardião',defesa:3}];
+ const view=render(<SceneDifficultyPanel system="absoluto" scene={scene} enemies={enemies} onSave={onSave}/>);
+ fireEvent.change(screen.getByLabelText('Inimigo que define a dificuldade de combate'),{target:{value:'b'}});
+ expect(onSave).toHaveBeenCalledWith({combateInimigoId:'b'});
+ view.rerender(<SceneDifficultyPanel system="absoluto" scene={{dificuldades:{...scene.dificuldades,combateInimigoId:'b'}}} enemies={enemies} onSave={onSave}/>);
+ expect(screen.getByLabelText('Dificuldade de Ambiente do combate')).toHaveValue(3);
+ expect(screen.getByLabelText('Dificuldade de Ambiente do combate')).toBeDisabled();
+ fireEvent.change(screen.getByLabelText('Inimigo que define a dificuldade de combate'),{target:{value:''}});
+ expect(onSave).toHaveBeenLastCalledWith({combateInimigoId:null});
+});

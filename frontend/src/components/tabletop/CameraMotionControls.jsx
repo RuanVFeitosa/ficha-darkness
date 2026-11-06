@@ -24,7 +24,7 @@ export default function CameraMotionControls({value,onChange}){
  return <details className="tt3-motion-controls">
   <summary>Balanço <span>{value.intensity===0 ? 'Desligado' : `${Math.round(value.intensity*100)}%`}</span></summary>
   <div className="tt3-motion-popover">
-   <header className="tt3-motion-heading"><span>CÂMERA</span><strong>Movimento e inclinação</strong><small>Ajuste o enquadramento ao seu gosto.</small></header>
+   <header className="tt3-motion-heading"><span>CÂMERA</span><strong>Movimento e inclinação</strong><small>Controle o movimento da câmera de toda a mesa.</small></header>
    <section className="tt3-motion-section">
     <div className="tt3-motion-section-title"><h3>Balanço natural</h3><span>{value.intensity===0 ? 'Desligado' : 'Ativo'}</span></div>
     <label className="tt3-motion-slider"><span>Intensidade<output>{Math.round(value.intensity*100)}%</output></span><input aria-label="Intensidade do balanço" type="range" min="0" max="3" step="0.05" value={value.intensity} onChange={event=>change({intensity:Number(event.target.value)})}/><small><span>Sutil</span><span>Intenso</span></small></label>
@@ -37,7 +37,7 @@ export default function CameraMotionControls({value,onChange}){
     <AngleField label="Lateral" hint="Inclinar o horizonte · Shift + scroll" ariaLabel="Inclinação lateral em graus" value={value.roll??0} onChange={roll=>change({roll})}/>
     <button className="tt3-motion-level" type="button" onClick={()=>change({pitch:0,roll:0})}>Nivelar câmera · 0°</button>
    </section>
-   <footer>Preferência pessoal · salva neste navegador</footer>
+   <footer>Balanço compartilhado · inclinação apenas na câmera do mestre</footer>
   </div>
  </details>;
 }

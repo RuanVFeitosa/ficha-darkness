@@ -1,3 +1,4 @@
+import { compressProfileImage, prepareTokenImage } from '../../services/imageCompression';
 import NumberInput from '../ui/NumberInput';
 import EspiralDice, { EspiralDiceInput } from './EspiralDice';
 import { espiralDie } from '../../utils/espiralDice';
@@ -30,6 +31,22 @@ function EncounterEditor({ record, onSave, onClose }) {
   const [severity, setSeverity] = useState('Moderada');
   const [injuryNote, setInjuryNote] = useState('');
   const closeRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const importImage = async (event, key) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setUploading(true);
+    setNotice('Preparando imagem…');
+    try {
+      const image = await (key === 'profileImage' ? compressProfileImage(file) : prepareTokenImage(file));
+      if (image) {
+        setDraft(current => ({ ...current, [key]: image }));
+        setNotice('Imagem preparada. Salve a ficha para confirmar.');
+      } else setNotice('');
+    } catch (error) { setNotice(error.message || 'Não foi possível preparar a imagem.'); }
+    finally { setUploading(false); }
+  };
   useEffect(() => {
     const previousFocus = document.activeElement;
     closeRef.current?.focus();
@@ -57,6 +74,7 @@ function EncounterEditor({ record, onSave, onClose }) {
   };
   const save = event => {
     event.preventDefault();
+    if (uploading) return;
     if (onSave(normalizeEspiralEncounter(draft))) onClose();
     else setNotice('Não foi possível salvar a ficha. Os dados anteriores foram preservados.');
   };
@@ -65,6 +83,7 @@ function EncounterEditor({ record, onSave, onClose }) {
     onClose();
   };
   const trapFocus = event => {
+    if (event.target.closest('[role=dialog]') !== event.currentTarget) return;
     if (event.key === 'Escape') { event.preventDefault(); close(); }
     if (event.key !== 'Tab') return;
     const elements = [...event.currentTarget.querySelectorAll('button:not(:disabled), input, select, textarea')];
@@ -76,8 +95,22 @@ function EncounterEditor({ record, onSave, onClose }) {
     <header className="ee-sheet-header"><div><span className="ed-eyebrow">ESPIRAL / FICHA DE ENCONTRO</span><h2 id="ee-sheet-title">{draft.name || 'Novo encontro'}</h2><p>{draft.tipo === 'npc' ? 'NPC do Mestre' : 'Inimigo'} · Defesa {Number(draft.attributes.sentido) + 2} · Integridade máxima {maxIntegrity}</p></div><button ref={closeRef} type="button" onClick={close} aria-label="Fechar ficha de encontro">×</button></header>
     <nav className="ee-tabs" aria-label="Seções da ficha de encontro">{['Ficha', 'Equipamentos', 'Habilidades', 'Lesões'].map(name => <button type="button" key={name} aria-pressed={section === name} onClick={() => setSection(name)}>{name}</button>)}</nav>
     {notice && <p className="ee-notice" role="status">{notice}</p>}
+    <div className="ee-sheet-content">
     {section === 'Ficha' && <>
-      <div className="ee-form-grid"><label>Nome<input required value={draft.name} onChange={event => field('name', event.target.value)} /></label><label>Tipo<select value={draft.tipo} onChange={event => field('tipo', event.target.value)}><option value="npc">NPC</option><option value="inimigo">Inimigo</option></select></label><label>Pasta<input value={draft.folder} onChange={event => field('folder', event.target.value)} placeholder="Ex.: Aliados, ameaças, capítulo 1" /></label><label>Função / ocupação<input value={draft.occupation} onChange={event => field('occupation', event.target.value)} /></label><label>Vertente<select value={draft.vertente} onChange={event => field('vertente', event.target.value)}>{Object.keys(VERTENTES).map(name => <option key={name}>{name}</option>)}</select></label><label>URL do retrato<input type="url" value={draft.profileImage} onChange={event => field('profileImage', event.target.value)} /></label></div>
+      <section className="ee-identity" aria-label="Aparência do encontro">
+        {[['profileImage', 'Foto de perfil', 'Retrato para identificar o personagem na ficha e no arquivo.'], ['tabletopTokenImage', 'Token 3D', 'Imagem de corpo inteiro para o tabletop 3D. Prefira PNG com fundo transparente.']].map(([key, title, description]) => <div className="ee-media" key={key}>
+          <div className={`ee-media-preview ${key === 'tabletopTokenImage' ? 'ee-token-preview' : ''}`}>
+            {draft[key] ? <img src={draft[key]} alt={`${title} de ${draft.name}`} /> : <span aria-hidden="true">{key === 'profileImage' ? (draft.name || '?').slice(0, 1) : '♟'}</span>}
+          </div>
+          <div className="ee-media-controls"><h3>{title}</h3><p>{description}</p>
+            <label className="ee-upload">{draft[key] ? `Trocar ${title.toLowerCase()}` : `Adicionar ${title.toLowerCase()}`}<input type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={`Enviar ${title.toLowerCase()}`} disabled={uploading} onChange={event => importImage(event, key)} /></label>
+            {draft[key] && <button type="button" disabled={uploading} onClick={() => field(key, '')}>Remover {title.toLowerCase()}</button>}
+          </div>
+        </div>)}
+      </section>
+      <h3>Identidade</h3>
+      <label>URL do token 3D<input type="text" placeholder="https://…" value={draft.tabletopTokenImage || ''} onChange={event => field('tabletopTokenImage', event.target.value)} /></label>
+      <div className="ee-form-grid"><label>Nome<input required value={draft.name} onChange={event => field('name', event.target.value)} /></label><label>Tipo<select value={draft.tipo} onChange={event => field('tipo', event.target.value)}><option value="npc">NPC</option><option value="inimigo">Inimigo</option></select></label><label>Pasta<input value={draft.folder} onChange={event => field('folder', event.target.value)} placeholder="Ex.: Aliados, ameaças, capítulo 1" /></label><label>Função / ocupação<input value={draft.occupation} onChange={event => field('occupation', event.target.value)} /></label><label>Vertente<select value={draft.vertente} onChange={event => field('vertente', event.target.value)}>{Object.keys(VERTENTES).map(name => <option key={name}>{name}</option>)}</select></label><label>URL do retrato<input type="text" placeholder="https://…" value={draft.profileImage} onChange={event => field('profileImage', event.target.value)} /></label></div>
       <h3>Atributos</h3><div className="ee-attributes">{Object.entries(ATTRIBUTES).map(([key, entry]) => <label key={key}>{entry.name}<select value={draft.attributes[key]} onChange={event => group('attributes', key, Number(event.target.value))}>{entry.stages.map((name, index) => <option key={name} value={index + 1}>{index + 1} · {name} · {espiralDie((index + 1) * 2 + 2)}</option>)}</select></label>)}</div>
       <h3>Estado atual</h3><div className="ee-attributes">{[['integrity', 'Integridade', maxIntegrity], ['sanity', 'Sanidade', 10], ['hope', 'Esperança', 10], ['pressure', 'Dados de Pressão', 20], ['failures', 'Fracassos', 3]].map(([key, label, max]) => <label key={key}>{label}<NumberInput type="number" min="0" max={max} value={draft[key]} onChange={event => field(key, Number(event.target.value))} /><small>Máximo: {max}</small></label>)}</div>
       <h3>Recursos</h3><div className="ee-resources">{RESOURCES.map(name => <label key={name}>{name}<select value={draft.resources[name]} onChange={event => group('resources', name, Number(event.target.value))}>{GRADES.map((grade, index) => <option key={grade} value={index}>Grau {index} · {grade}</option>)}</select></label>)}</div>
@@ -87,7 +120,7 @@ function EncounterEditor({ record, onSave, onClose }) {
     {section === 'Habilidades' && <><div className="ee-add"><label>Habilidade ESPIRAL<select value={abilityId} onChange={event => setAbilityId(event.target.value)}>{abilities.map(entry => <option key={entry.id} value={entry.id}>{entry.category} · {entry.name}</option>)}</select></label><button type="button" onClick={addAbility}>Adicionar habilidade</button></div>{(draft.evolution?.abilities || []).map(entry => <article className="ee-entry" key={entry.id}><div><b>{entry.name}</b><label>Nível de {entry.name}<select value={entry.level} onChange={event => group('evolution', 'abilities', draft.evolution.abilities.map(item => item.id === entry.id ? { ...item, level: Number(event.target.value) } : item))}>{[1, 2, 3].map(level => <option key={level}>{level}</option>)}</select></label><p>{APRIMORAMENTOS_HABILIDADES_ESPIRAL[entry.name]?.[entry.level - 1]}</p></div><button type="button" aria-label={`Remover habilidade ${entry.name}`} onClick={() => group('evolution', 'abilities', draft.evolution.abilities.filter(item => item.id !== entry.id))}>Remover</button></article>)}<label>Habilidades narrativas / especiais<textarea rows="5" value={draft.abilities} onChange={event => field('abilities', event.target.value)} /></label></>}
     {section === 'Lesões' && <><div className="ee-form-grid"><label>Região<select value={region} onChange={event => setRegion(event.target.value)}>{['Cabeça', 'Torso', 'Braço esquerdo', 'Braço direito', 'Perna esquerda', 'Perna direita'].map(name => <option key={name}>{name}</option>)}</select></label><label>Gravidade<select value={severity} onChange={event => setSeverity(event.target.value)}>{['Leve', 'Moderada', 'Grave', 'Crítica', 'Catastrófica / Fatal'].map(name => <option key={name}>{name}</option>)}</select></label><label>Nota da lesão<input value={injuryNote} onChange={event => setInjuryNote(event.target.value)} /></label></div><button type="button" onClick={() => { field('injuries', [...draft.injuries, { id: uid(), region, severity, note: injuryNote }]); setInjuryNote(''); }}>Registrar lesão</button>{draft.injuries.map(item => <article className="ee-entry" key={item.id}><div><b>{item.region} · {item.severity}</b><p>{item.note}</p></div><button type="button" aria-label={`Remover lesão ${item.region}`} onClick={() => field('injuries', draft.injuries.filter(entry => entry.id !== item.id))}>Remover</button></article>)}</>}
     <section className="ee-roll"><h3>Rolagem ESPIRAL</h3><div className="ee-form-grid"><label>Atributo da rolagem<select value={attribute} onChange={event => setAttribute(event.target.value)}>{Object.entries(ATTRIBUTES).map(([key, entry]) => <option key={key} value={key}>{entry.name}</option>)}</select></label><label>Recurso da rolagem<select value={resource} onChange={event => setResource(event.target.value)}>{RESOURCES.map(name => <option key={name}>{name}</option>)}</select></label><label>Dificuldade<NumberInput type="number" min="1" max="30" value={difficulty} onChange={event => setDifficulty(Number(event.target.value))} /></label></div><button type="button" onClick={() => setResult(rollEspiralEncounter(draft, attribute, resource, difficulty, die))}>Rolar teste</button>{result && <div className="ee-result" role="status"><b>{<EspiralDice value={result.label} />} · {result.outcome}</b><p>Dados: {result.dice.join(', ')}{result.pressure.length ? ` · Pressão: ${result.pressure.join(', ')}` : ''}</p><strong>{result.best}</strong>{result.outcome === 'Dano rolado' && <EspiralDamageResult damage={result.best} />}{result.stress && <span> · {result.stress}</span>}</div>}</section>
-    <footer className="ee-sheet-footer"><span>Ficha local · NPCs e inimigos usam o mesmo modelo ESPIRAL.</span><button type="submit">Salvar ficha</button></footer>
+    </div><footer className="ee-sheet-footer"><span>Ficha local · NPCs e inimigos usam o mesmo modelo ESPIRAL.</span><button type="submit" disabled={uploading}>{uploading ? 'Preparando imagem…' : 'Salvar ficha'}</button></footer>
   </form></div>;
 }
 

@@ -1,3 +1,6 @@
+import SceneMedia from './SceneMedia';
+import {cutsceneEditorUrl} from '../../utils/cutsceneRoutes';
+import {SPECIAL_SCENE_ACCEPT, specialSceneMediaType} from '../../utils/specialSceneMedia';
 import NumberInput from '../ui/NumberInput';
 import {ACEITAR_AUDIO} from '../../utils/audioUpload';
 import React,{useEffect,useState} from 'react';
@@ -5,11 +8,12 @@ import Icon from '@mdi/react';
 import {mdiClose,mdiDeleteOutline} from '@mdi/js';
 import SceneAnimationEditor from './SceneAnimationEditor';
 import '../../styles/TabletopSceneEditor.css';
-function SceneAssetThumbnail({src,file}){const [url,setUrl]=useState(src);useEffect(()=>{if(!file){setUrl(src);return;}const preview=URL.createObjectURL(file);setUrl(preview);return()=>URL.revokeObjectURL(preview);},[src,file]);return url?<img className="sce-thumbnail" src={url} alt=""/>:<span className="sce-thumbnail" aria-hidden="true">◇</span>;}
+import '../../styles/CutsceneStudio.css';
+function SceneAssetThumbnail({src,file}){const [url,setUrl]=useState(src);useEffect(()=>{if(!file){setUrl(src);return;}const preview=URL.createObjectURL(file);setUrl(preview);return()=>URL.revokeObjectURL(preview);},[src,file]);return url?<SceneMedia className="sce-thumbnail" src={url} file={file}/>:<span className="sce-thumbnail" aria-hidden="true">◇</span>;}
 export default function TabletopSceneEditor({editando,setEditando,arquivos,campanha,nomesPastasCenas,selecionarArquivosCena,alternarJogadorCena,removerMidiaExistente,removerArquivoPendente,atualizarMapaExistente,atualizarMapaPendente,confirmarCena,salvando,erro,onClose}){
  const [tab,setTab]=useState('cena'),[selectedImage,setSelectedImage]=useState('');
  const media=(editando.imagensCena || []).find(m=>m.id===selectedImage) || editando.imagensCena?.[0];
- const tabs=[['cena','Cena'],['mapas','Mapas'],['animacao','Animação'],['configuracoes','Configurações']];
+ const tabs=[['cena','Cena'],['mapas','Mapas'],['animacao','Animação'],['cutscene','Cutscene'],['configuracoes','Configurações']];
  return <div className="cena-editor-fundo sce-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget&&!salvando)onClose();}}><form className="cena-editor sce-dialog" role="dialog" aria-modal="true" aria-label={editando.id?'Editar cena':'Nova cena'} onSubmit={confirmarCena} onKeyDown={e=>{if(e.key==='Escape'&&!salvando)onClose();}}>
             <header>
               <div>
@@ -23,18 +27,18 @@ export default function TabletopSceneEditor({editando,setEditando,arquivos,campa
 
 <label className="sce-name">Nome da cena<input autoFocus required value={editando.nome || ''} onChange={e=>setEditando({...editando,nome:e.target.value})} placeholder="Ex.: A chegada do guardião"/></label>
 <nav className="sce-tabs" role="tablist" aria-label="Seções do editor de cena">{tabs.map(([id,label])=><button type="button" role="tab" key={id} id={'sce-tab-'+id} aria-selected={tab===id} aria-controls={'sce-panel-'+id} tabIndex={tab===id?0:-1} onClick={()=>setTab(id)} onKeyDown={e=>{const delta=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(delta){e.preventDefault();const next=tabs[(tabs.findIndex(t=>t[0]===id)+delta+tabs.length)%tabs.length][0];setTab(next);e.currentTarget.parentElement.querySelector('#sce-tab-'+next)?.focus();}}}>{label}</button>)}</nav>
-<div className="sce-content">
+<div className="sce-content"><section role="tabpanel" id="sce-panel-cutscene" aria-labelledby="sce-tab-cutscene" hidden={tab!=="cutscene"}><div className="sce-cutscene-launch"><span>ESTÚDIO DE CUTSCENES</span><h3>Uma página inteira para criar.</h3><p>Biblioteca, palco, propriedades e linha do tempo em um espaço dedicado, com todas as animações e configurações do projeto.</p>{editando.cenaEspecial?.cutscene&&<p>{editando.cenaEspecial.cutscene.duration}s · {editando.cenaEspecial.cutscene.layers?.length || 0} camadas no projeto salvo</p>}<a href={cutsceneEditorUrl(campanha,editando.id,new URLSearchParams(window.location.search).get('tabletop3d')==='1'?'3d':'2d')}>Abrir editor de cutscenes ↗</a><small>Salve as alterações da cena antes de abrir o estúdio.</small></div></section>
 <section role="tabpanel" id="sce-panel-cena" aria-labelledby="sce-tab-cena" hidden={tab!=='cena'}><p className="sce-intro">As imagens que os jogadores verão durante a cena.</p><div className="cena-editor-midias sce-upload"><label>
                 Adicionar imagens
                 <input
                   type="file"
                   multiple
-                  accept="image/webp,image/jpeg,image/png,image/avif"
+                  accept={SPECIAL_SCENE_ACCEPT}
                   onChange={(e) =>
                     selecionarArquivosCena("cena", e.target.files, e.target)
                   }
                 />
-                <small>Até 2 MB por imagem.</small>
+                <small>Imagens, GIFs, MP4 ou WebM · até 25 MB por arquivo.</small>
               </label></div>
             {(editando.imagensCena?.length > 0 || arquivos.cena.length > 0) && (
               <div className="cena-editor-lista-midias">
@@ -75,7 +79,7 @@ export default function TabletopSceneEditor({editando,setEditando,arquivos,campa
             )}
 
 {!editando.imagensCena?.length&&!arquivos.cena.length&&<p className="sce-empty">Adicione a primeira imagem desta cena.</p>}
-<details className="sce-options"><summary>Usar link de imagem</summary><label>
+<details className="sce-options"><summary>Usar link de imagem, GIF ou vídeo</summary><label>
                 URL da cena
                 <input
                   value={editando.imagemUrl || ""}
@@ -99,12 +103,12 @@ export default function TabletopSceneEditor({editando,setEditando,arquivos,campa
                 <input
                   type="file"
                   multiple
-                  accept="image/webp,image/jpeg,image/png,image/avif"
+                  accept={SPECIAL_SCENE_ACCEPT}
                   onChange={(e) =>
                     selecionarArquivosCena("mapa", e.target.files, e.target)
                   }
                 />
-                <small>Até 5 MB por mapa.</small>
+                <small>Imagens, GIFs, MP4 ou WebM · até 25 MB por arquivo.</small>
               </label></div>            {(editando.mapasBatalha?.length > 0 ||
               arquivos.mapa.length > 0) && (
               <div className="cena-editor-lista-midias">
@@ -325,11 +329,11 @@ export default function TabletopSceneEditor({editando,setEditando,arquivos,campa
                 <span><strong>Cena especial em tela cheia</strong><small>Para aberturas, revelacoes e confrontos importantes.</small></span>
               </label>
               {editando.cenaEspecial?.ativo && <div className="cena-editor-especial-campos">
-                <label>GIF, imagem ou video · max. 25 MB<input type="file" accept="image/gif,image/webp,image/jpeg,image/png,image/avif,video/mp4,video/webm" onChange={(e) => selecionarArquivosCena("especial", e.target.files, e.target)} /><small>{arquivos.especial[0]?.arquivo.name || editando.cenaEspecial.midiaUrl || "Nenhuma midia selecionada"}</small></label>
+                <label>GIF, imagem ou vídeo · máx. 25 MB<input type="file" accept={SPECIAL_SCENE_ACCEPT} onChange={(e) => selecionarArquivosCena("especial", e.target.files, e.target)} /><small>{arquivos.especial[0]?.arquivo.name || editando.cenaEspecial.midiaUrl || "Nenhuma midia selecionada"}</small></label>
                 <label>Musica de fundo · max. 20 MB<input type="file" accept={ACEITAR_AUDIO} onChange={(e) => selecionarArquivosCena("audio", e.target.files, e.target)} /><small>{arquivos.audio[0]?.arquivo.name || editando.cenaEspecial.audioUrl || "Sem trilha propria"}</small></label>
-                <label>URL da midia<input value={editando.cenaEspecial.midiaUrl || ""} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, midiaUrl: e.target.value } })} placeholder="https://.../abertura.gif" /></label>
+                <label>URL da midia<input value={editando.cenaEspecial.midiaUrl || ""} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, midiaUrl: e.target.value, midiaUrlPersistida: "", cutscene:undefined, tipoMidia: specialSceneMediaType({url:e.target.value}) } })} placeholder="https://.../abertura.gif" /></label>
                 <label>URL da musica ou YouTube<input value={editando.cenaEspecial.audioUrl || ""} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, audioUrl: e.target.value, audioUrlPersistida: "" } })} placeholder="https://youtube.com/watch?v=..." /><small>Aceita um video do YouTube ou um link direto de audio.</small></label>
-                <label>Transicao<select value={editando.cenaEspecial.transicao || "cinema"} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, transicao: e.target.value } })}><option value="cinema">Cortinas de cinema</option><option value="fade">Fade sombrio</option><option value="impacto">Impacto</option></select></label>
+                <label>Tipo da mídia<select value={editando.cenaEspecial.tipoMidia || "imagem"} onChange={e=>setEditando({...editando,cenaEspecial:{...editando.cenaEspecial,tipoMidia:e.target.value,cutscene:e.target.value==="cutscene"?editando.cenaEspecial.cutscene:undefined}})}>{editando.cenaEspecial.cutscene&&<option value="cutscene">Cutscene do editor</option>}<option value="imagem">Imagem ou GIF animado</option><option value="video">Vídeo</option></select><small>Para links sem extensão, escolha o tipo de mídia.</small></label><label>Transicao<select value={editando.cenaEspecial.transicao || "cinema"} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, transicao: e.target.value } })}><option value="cinema">Cortinas de cinema</option><option value="fade">Fade sombrio</option><option value="impacto">Impacto</option></select></label>
                 <label>Atraso da musica (ms)<NumberInput type="number" min="0" max="30000" step="100" value={editando.cenaEspecial.atrasoAudio || 0} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, atrasoAudio: e.target.value } })} /></label>
                 <label className="cena-especial-opcao"><input type="checkbox" checked={editando.cenaEspecial.exibirTitulo !== false} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, exibirTitulo: e.target.checked } })} />Exibir titulo</label>
                 <label className="cena-especial-opcao"><input type="checkbox" checked={editando.cenaEspecial.loop !== false} onChange={(e) => setEditando({ ...editando, cenaEspecial: { ...editando.cenaEspecial, loop: e.target.checked } })} />Repetir video</label>

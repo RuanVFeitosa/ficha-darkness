@@ -18,6 +18,7 @@ export function aplicarUso(personagem, habilidade, tipo='habilidade', agora=Date
  if(habilidade.status && habilidade.status!=='aprovada') throw new Error('Aguarde a aprovação do mestre.');
  if(!Number.isInteger(uso.custoAtivacao) || uso.custoAtivacao<0) throw new Error('Custo de ativação inválido.');
  const saldo=Number(personagem.esperanca?.atual)||0;
+ if(Number(personagem.medo)>=4 && uso.custoAtivacao>0) throw new Error('A Esperança já não consegue superar o terror.');
  if(saldo<uso.custoAtivacao) throw new Error('PE insuficientes.');
  if(uso.limiteUso && personagem.usosHabilidades?.[uso.idUso]) throw new Error(`Limite de uso por ${uso.limiteUso} atingido.`);
  const efeitos=habilidade.efeitosAutomaticos || extrairEfeitosDiretos(uso.descricaoUso);

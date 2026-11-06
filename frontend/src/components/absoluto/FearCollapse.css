@@ -1,0 +1,31 @@
+.fear-collapse-screen{position:fixed;inset:0;z-index:12000;overflow:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;color:#080808;padding:28px;box-sizing:border-box;font-family:Arial,sans-serif;isolation:isolate}
+.fear-collapse-screen header{text-align:center;z-index:1}.fear-collapse-screen header>span{font:10px 'Courier New',monospace;letter-spacing:4px;color:#444}.fear-collapse-screen h2{font:clamp(20px,3vw,30px) Georgia,serif;font-weight:normal;margin:12px 0;color:#080808}
+.fear-collapse-close{position:absolute;right:24px;top:18px;border:0;background:none;color:#222;font-size:28px;cursor:pointer}
+.fear-collapse-constellation{position:relative;width:min(100%,1000px);height:min(70vh,720px);min-height:440px;flex-shrink:0}
+.fear-collapse-constellation>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.9;filter:invert(1) grayscale(1);pointer-events:none}
+.fear-choice{position:absolute;display:grid;gap:8px;justify-items:center;min-width:170px;padding:18px 24px;border:1px solid #222;border-radius:40px;background:#fffffff2;color:#080808;cursor:pointer;box-shadow:0 8px 28px #00000012;animation:fear-choice-float 5s ease-in-out infinite;font-family:Arial,sans-serif;transition:border-color .2s,background .2s}
+.fear-choice>span{font-size:clamp(14px,1.8vw,21px);text-transform:uppercase;letter-spacing:1px}.fear-choice small{font:11px/1.5 Arial,sans-serif;color:#444}.fear-choice:hover:not(:disabled){background:#080808;color:#fff;border-color:#000}.fear-choice:focus-visible,.fear-collapse-close:focus-visible{outline:2px solid #111;outline-offset:5px}.fear-choice:disabled{opacity:.45;cursor:not-allowed}
+.fear-choice-face{top:4%;left:50%;translate:-50% 0}.fear-choice-flee{top:49%;left:3%;animation-delay:-1.5s}.fear-choice-shelter{top:49%;right:3%;animation-delay:-3s}.fear-choice-protect{bottom:0;left:50%;translate:-50% 0;animation-delay:-2s}
+.fear-collapse-screen footer{max-width:500px;text-align:center;color:#555;font:11px/1.7 Arial,sans-serif;margin-top:18px}
+@keyframes fear-choice-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.fear-choice>span{animation:fear-option-glitch 2.4s steps(1,end) infinite;will-change:transform}
+.fear-choice-flee>span{animation-delay:-2.3s}
+.fear-choice-shelter>span{animation-delay:-4.7s}
+.fear-choice-protect>span{animation-delay:-6.1s}
+.fear-choice:disabled>span{animation:none}
+@keyframes fear-option-glitch{
+  0%,28%,48%,70%,100%{transform:none;text-shadow:none;filter:none;clip-path:none}
+  10%{transform:translate(-5px,2px) skewX(-12deg);text-shadow:4px 0 #888,-3px 1px #bbb;clip-path:inset(0 0 14% 0)}
+  15%{transform:translate(6px,-2px) skewX(16deg);text-shadow:-5px 0 #555,3px 0 #aaa;clip-path:inset(8% 0 0 0)}
+  20%{transform:translate(-3px,1px) scaleX(1.06);text-shadow:3px 2px #999;clip-path:none}
+  38%{transform:translate(7px,0) skewX(-18deg);text-shadow:-6px -1px #777;clip-path:inset(12% 0 8% 0)}
+  43%{transform:translate(-6px,-2px) skewX(9deg);text-shadow:5px 0 #aaa;clip-path:none}
+  60%{transform:translate(4px,3px) skewX(14deg);text-shadow:-4px 0 #666,4px 1px #bbb;clip-path:inset(0 0 18% 0)}
+  65%{transform:translate(-5px,-1px) scaleX(.96);text-shadow:6px 0 #888;clip-path:none}
+  87%{transform:translate(6px,-2px) skewX(-15deg);text-shadow:-5px 1px #666;clip-path:inset(14% 0 0 0)}
+  93%{transform:translate(-4px,2px) skewX(12deg);text-shadow:4px -1px #aaa;clip-path:none}
+}
+@media(max-width:600px){.fear-collapse-screen{padding:20px 12px;justify-content:flex-start}.fear-collapse-screen header{margin-top:28px}.fear-collapse-constellation{min-height:510px;height:65vh}.fear-choice{min-width:0;width:44%;padding:15px 8px;box-sizing:border-box;border-radius:24px}.fear-choice-face,.fear-choice-protect{width:65%}.fear-choice-flee{left:1%;top:46%}.fear-choice-shelter{right:1%;top:46%}.fear-choice small{font-size:10px}.fear-choice>span{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.fear-choice,.fear-choice>span{animation:none;transition:none}}
+
+.fear-collapse-cracks{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;fill:none;stroke:#080808;stroke-linecap:square;stroke-linejoin:miter}.fear-crack-main{stroke-width:2}.fear-crack-branches{stroke-width:.7}.fear-collapse-screen footer{position:relative}.fear-choice:hover:not(:disabled) small{color:#ddd}

@@ -22,22 +22,30 @@ const getApiUrl = () => {
 };
 
 const API_URL = getApiUrl();
+const conditionalResponses = new Map();
+const pendingReads = new Map();
+let mutationRevision = 0;
 export const buscarJogador = async (codigo) => (await request(`/jogadores/${encodeURIComponent(codigo)}`)).jogador;
 export const salvarJogador = async (codigo, jogador) => (await request(`/jogadores/${encodeURIComponent(codigo)}`, { method: 'PUT', body: JSON.stringify({ jogador }) })).jogador;
 export const executarAcaoMural = async (scope, id, payload) => (await request(`/investigacao/${scope}/${encodeURIComponent(id)}`, {method:'POST',body:JSON.stringify(payload)})).board;
 
-const request = async (path, options = {}) => {
+const performRequest = async (path, options = {}) => {
   const url = `${API_URL}${path}`;
+  const isRead = !options.method || options.method.toUpperCase() === 'GET';
+  const cached = isRead ? conditionalResponses.get(url) : null;
+  const revision = mutationRevision;
   const response = await fetch(url, {
     // Fichas mudam durante a sessão; respostas em cache podiam restaurar
     // Integridade, Sanidade e Esperança com valores anteriores.
     cache: "no-store",
+    ...options,
     headers: {
-      "Content-Type": "application/json",
+      ...(!isRead ? { "Content-Type": "application/json" } : {}),
+      ...(cached ? { 'If-None-Match': cached.etag } : {}),
       ...(options.headers || {}),
     },
-    ...options,
   });
+  if (response.status === 304 && cached) return JSON.parse(cached.body);
   const contentType = response.headers.get("content-type") || "";
 
   if (!contentType.includes("application/json")) {
@@ -57,7 +65,42 @@ const request = async (path, options = {}) => {
     );
   }
 
-  return response.json();
+  const data = await response.json();
+  const etag = response.headers.get('etag');
+  if (isRead && etag && revision === mutationRevision) {
+    if (conditionalResponses.size >= 100) conditionalResponses.delete(conditionalResponses.keys().next().value);
+    conditionalResponses.set(url, { etag, body: JSON.stringify(data) });
+  } else if (isRead && revision === mutationRevision) conditionalResponses.delete(url);
+  return data;
+};
+
+const request = async (path, options = {}) => {
+  const isRead = !options.method || options.method.toUpperCase() === 'GET';
+  if (!isRead) {
+    // Uma consulta iniciada antes da gravação não pode alimentar o cache depois.
+    mutationRevision += 1;
+    pendingReads.clear();
+    try {
+      return await performRequest(path, options);
+    } finally {
+      mutationRevision += 1;
+      pendingReads.clear();
+      conditionalResponses.clear();
+    }
+  }
+  // Só agrupa as leituras padrão; opções personalizadas podem mudar a resposta.
+  if (Object.keys(options).length) return performRequest(path, options);
+  let pending = pendingReads.get(path);
+  if (!pending) {
+    pending = performRequest(path, options);
+    pendingReads.set(path, pending);
+  }
+  try {
+    // Cada consumidor recebe sua própria cópia, como em consultas separadas.
+    return JSON.parse(JSON.stringify(await pending));
+  } finally {
+    if (pendingReads.get(path) === pending) pendingReads.delete(path);
+  }
 };
 
 export const buscarPersonagem = async (fichaId) => {

@@ -1,0 +1,24 @@
+import React from 'react';
+import {render,screen,fireEvent,waitFor} from '@testing-library/react';
+import CampanhaDashboard from './CampanhaDashboard';
+import {listarCampanhas,buscarCampanhaPorCodigo,salvarCena} from '../../services/mesaApi';
+jest.mock('../../services/mesaApi',()=>({listarCampanhas:jest.fn(),buscarCampanhaPorCodigo:jest.fn(),salvarCena:jest.fn()}));
+jest.mock('../../services/fichasCampanha',()=>({listarFichasParaCampanha:jest.fn(async()=>[])}));
+jest.mock('../tabletop/SceneAnimationEditor',()=>()=>null);
+jest.mock('./AnotacoesCampanha',()=>()=>null);
+jest.mock('./MuralInvestigacao',()=>()=>null);
+jest.mock('./SceneCreationPreview',()=>()=>null);
+const project={version:1,name:'A chegada',duration:12,layers:[]};
+const campaign={id:'campaign',codigo:'TEST12',nome:'Campanha Cutscene',tabletop_tipo:'2d',membros:[],cenas:[{id:'source',nome:'A chegada',cenaEspecial:{ativo:true,tipoMidia:'cutscene',cutscene:project},imagensCena:[],mapasBatalha:[]}]};
+test('o modal de nova cena mostra o seletor de cutscene e salva o projeto escolhido',async()=>{
+ window.history.replaceState({},'', '/?mestre=1');
+ listarCampanhas.mockResolvedValue([campaign]);buscarCampanhaPorCodigo.mockResolvedValue(campaign);salvarCena.mockResolvedValue({id:'new'});
+ render(<CampanhaDashboard/>);
+ fireEvent.click(await screen.findByText('Campanha Cutscene',{selector:'h3'}));
+ fireEvent.click(await screen.findByRole('button',{name:'Nova cena'}));
+ expect(screen.getByRole('region',{name:'Cutscene da cena'})).toBeInTheDocument();
+ fireEvent.change(screen.getByLabelText('Nome',{exact:true}),{target:{value:'Cena com cutscene'}});
+ fireEvent.change(screen.getByLabelText('Cutscene desta cena'),{target:{value:'source'}});
+ fireEvent.click(screen.getByRole('button',{name:'Salvar cena'}));
+ await waitFor(()=>expect(salvarCena).toHaveBeenCalledWith('campaign',expect.objectContaining({nome:'Cena com cutscene',cenaEspecial:expect.objectContaining({cutscene:project,cutsceneSourceId:'source',tipoMidia:'cutscene'})})));
+});

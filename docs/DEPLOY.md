@@ -1,5 +1,11 @@
 # Deploy da Ficha Darkness
 
+Para detalhes técnicos do Koyeb, veja [KOYEB_DEPLOY.md](KOYEB_DEPLOY.md).
+Novas contas exigem plano pago, conforme o anúncio de transição para a Mistral;
+não considere essa opção uma migração gratuita disponível.
+
+Para publicar o backend no Northflank com Docker, veja [NORTHFLANK_DEPLOY.md](NORTHFLANK_DEPLOY.md).
+
 Arquitetura recomendada quando o servidor precisa ficar sempre ligado:
 
 - Frontend: Vercel

@@ -189,3 +189,80 @@
   .mesa-shell.mesa-2d .mesa-contexto-visual { max-width: 180px; }
   .mesa-shell.mesa-2d .mesa-rolagens-popup { top: 60px; }
 }
+/* Fit the actual board above the 2D shield; closing restores normal sizing. */
+.mesa-shell.mesa-2d.mesa-escudo-aberto:not(.mesa-embedded) > .mesa-palco {
+ position:absolute;
+ inset:var(--mesa-topo-altura,68px) 0 50dvh;
+ width:100%; height:auto; min-height:0;
+ padding:0; box-sizing:border-box;
+}
+.mesa-shell.mesa-2d.mesa-escudo-aberto:not(.mesa-embedded) > .mesa-palco.modo-cena { display:grid; place-items:center; }
+.mesa-shell.mesa-2d.mesa-escudo-aberto:not(.mesa-embedded) > .mesa-palco.modo-cena > .mesa-imagem { width:100%; height:100%; min-height:0; background-size:cover; background-repeat:no-repeat; background-position:center; }
+
+/* Narrative scenes fill the viewport without changing tactical map proportions. */
+.mesa-shell.mesa-2d:not(.mesa-embedded) > .mesa-palco.modo-cena > .mesa-imagem { width:100%; height:100%; min-height:0; background-size:cover; background-position:center; background-repeat:no-repeat; }
+/* Cover the stage with the whole tactical coordinate plane, preserving token alignment. */
+.mesa-shell.mesa-2d:not(.mesa-embedded) > .mesa-palco.modo-mapa > .mesa-imagem {
+ width:max(100cqw,calc(100cqh * var(--mapa-proporcao)));
+ height:max(100cqh,calc(100cqw * var(--mapa-proporcao-inversa)));
+ background-size:100% 100%;
+ flex:none;
+}
+/* Player HUD: clear hierarchy and separate zones for map, turn order and audio. */
+.mesa-shell.mesa-2d.visao-jogador > .mesa-topo { background:linear-gradient(180deg,#080f12ed,#0a1416b3); backdrop-filter:blur(14px); border-bottom:1px solid #ffffff0d; }
+.mesa-shell.mesa-2d.visao-jogador .mesa-contexto-visual { padding:10px 14px; border-radius:8px; background:#0a1518e8; box-shadow:0 5px 18px #0003; }
+.mesa-shell.mesa-2d.visao-jogador > .mesa-musica-ouvinte { left:auto!important; right:20px!important; bottom:86px!important; width:270px; max-width:calc(100vw - 40px); border:1px solid #a5b8b433; border-radius:10px; background:#0a1114ed; box-shadow:0 8px 24px #0005; backdrop-filter:blur(14px); }
+.mesa-shell.mesa-2d.visao-jogador > .mesa-jogador-navegacao { width:max-content; min-width:250px; max-width:calc(100vw - 32px); grid-template-columns:repeat(2,minmax(110px,1fr)); gap:5px; padding:6px; border-radius:14px; border:1px solid #9bbeb733; background:#0b1519ed; box-shadow:0 6px 24px #0006; backdrop-filter:blur(16px); }
+.mesa-shell.mesa-2d.visao-jogador > .mesa-jogador-navegacao button { display:flex; align-items:center; justify-content:center; gap:8px; min-height:42px; font:11px Arial,sans-serif; letter-spacing:.02em; color:#c0cfcb; cursor:pointer; transition:background .15s,color .15s; }
+.mesa-shell.mesa-2d.visao-jogador > .mesa-jogador-navegacao button:hover { background:#ffffff09; color:#fff5d5; }
+.mesa-shell.mesa-2d.visao-jogador > .mesa-jogador-navegacao button.ativo { background:#64b8b51c; color:#93dad4; }
+.mesa-shell.mesa-2d.visao-jogador > .mesa-jogador-navegacao button:focus-visible { outline:2px solid #93dad4; outline-offset:-2px; }
+.mesa-shell.mesa-2d.visao-jogador.jogador-ficha-ativa > .mesa-musica-ouvinte { visibility:hidden; pointer-events:none; }
+@media(max-width:760px) {
+ .mesa-shell.mesa-2d.visao-jogador > .mesa-musica-ouvinte { right:10px!important; bottom:82px!important; width:220px; }
+ .mesa-shell.mesa-2d.visao-jogador > .mesa-jogador-navegacao { bottom:12px; }
+}
+@media(prefers-reduced-motion:reduce) { .mesa-shell.mesa-2d.visao-jogador > .mesa-jogador-navegacao button { transition:none; } }
+/* Compact audio dock beside Focus; extra controls expand upward. */
+.mesa-shell.mesa-2d.visao-jogador > .mesa-musica-ouvinte {
+ right:128px!important; left:auto!important; bottom:20px!important;
+ width:250px; height:auto; max-width:calc(100vw - 148px);
+ border:0; border-radius:10px; overflow:visible;
+}
+.mesa-shell.mesa-2d.visao-jogador .music-listener {
+ grid-template-columns:30px minmax(0,1fr) 32px; gap:7px; padding:7px;
+ min-height:48px; box-sizing:border-box; border-radius:10px;
+ background:#0d1519f2; border:1px solid #789e9b44;
+}
+.mesa-shell.mesa-2d.visao-jogador .music-listener .ml-toggle { display:grid; width:30px; min-width:30px; height:32px; min-height:32px; padding:0; border:0; background:#ffffff08; color:#a8d6cf; font-size:17px; }
+.mesa-shell.mesa-2d.visao-jogador .music-listener .ml-cover,
+.mesa-shell.mesa-2d.visao-jogador .music-listener .ml-info small { display:none; }
+.mesa-shell.mesa-2d.visao-jogador .music-listener .ml-info { gap:2px; }
+.mesa-shell.mesa-2d.visao-jogador .music-listener .ml-info strong { font:11px Arial,sans-serif; }
+.mesa-shell.mesa-2d.visao-jogador .music-listener .ml-info span { font-size:8px; }
+.mesa-shell.mesa-2d.visao-jogador .music-listener > button:not(.ml-toggle) { width:32px; min-width:32px; height:32px; min-height:32px; padding:4px; }
+.mesa-shell.mesa-2d.visao-jogador .music-listener:not(.ml-expanded) :is(.ml-volume,.ml-error) { display:none; }
+.mesa-shell.mesa-2d.visao-jogador .music-listener.ml-expanded .ml-volume { padding-top:6px; gap:6px; }
+.mesa-shell.mesa-2d.visao-jogador .music-listener.ml-expanded .ml-error { max-height:55px; overflow:auto; font-size:9px; }
+@media(max-width:760px) {
+ .mesa-shell.mesa-2d.visao-jogador > .mesa-musica-ouvinte { right:66px!important; bottom:calc(8px + env(safe-area-inset-bottom))!important; width:220px; max-width:calc(100vw - 82px); }
+ .mesa-shell.mesa-2d.visao-jogador > .mesa-jogador-navegacao { bottom:72px; }
+}
+/* Keep the scene transition within the visible stage, above its HUD. */
+.mesa-shell.mesa-2d:not(.mesa-embedded) > .mesa-transicao {
+ inset:var(--mesa-topo-altura,68px) 0 0;
+ container-type:size;
+ overflow:hidden;
+ z-index:590;
+}
+.mesa-shell.mesa-2d.mesa-escudo-aberto:not(.mesa-embedded) > .mesa-transicao { bottom:50dvh; }
+.mesa-shell.mesa-2d:not(.mesa-embedded) > .mesa-transicao .mesa-transicao-simbolo {
+ width:min(240px,48cqw,55cqh);
+ height:min(240px,48cqw,55cqh);
+ top:45%; left:50%;
+ object-fit:contain;
+}
+.mesa-shell.mesa-2d:not(.mesa-embedded) > .mesa-transicao span {
+ left:5%; bottom:12%; width:90%; padding:0 12px;
+ box-sizing:border-box; font-size:10px; letter-spacing:.12em;
+}

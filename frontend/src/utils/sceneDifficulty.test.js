@@ -18,3 +18,12 @@ test('separa categorias da cena e usa a defesa do inimigo',()=>{
 test.each([[1,'Falha grave'],[3,'Falha'],[4,'Sucesso com consequência'],[6,'Sucesso'],[7,'Sucesso excepcional']])('classifica %s contra dificuldade 4', (result,outcome)=>{
  expect(rollOutcome(result,4)).toEqual({difficulty:4,margin:result-4,outcome});
 });
+
+test('chosen enemy defense applies only during combat and follows defense updates',()=>{
+ const scene={dificuldades:{ambiente:1,combateAmbiente:4,combateInimigoId:'b'}};
+ const enemies=[{id:'a',defesa:2},{id:'b',defesa:3}];
+ expect(activeSceneDifficulty(scene,enemies,true).value).toBe(3);
+ expect(activeSceneDifficulty(scene,enemies,false).value).toBe(1);
+ expect(activeSceneDifficulty(scene,[{id:'b',defesa:5}],true).value).toBe(5);
+ expect(activeSceneDifficulty(scene,[],true).value).toBe(4);
+});

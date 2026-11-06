@@ -24,6 +24,7 @@ const LojaHelena = lazy(() => import("./pages/lojaHelena"));
 const Mesa = lazy(() => import("./pages/mesa"));
 const Tabletop3D = lazy(() => import("./pages/Tabletop3D"));
 const CriadorMapa3D = lazy(() => import("./pages/CriadorMapa3D"));
+const CriadorCutscene = lazy(() => import("./pages/CriadorCutscene"));
 const TelaInicial = lazy(() => import("./pages/telaInicial"));
 const UpgradeNivel = lazy(() => import("./pages/upgradeNivel"));
 const FichaEspiral = lazy(() => import("./pages/fichaEspiral"));
@@ -112,6 +113,7 @@ function App() {
   const estaNoDashboardMestre = params.get("mestre") === "1";
   const estaNaMesa = Boolean(params.get("campanha"));
   const estaNoCriadorMapa3D = params.get("criarMapa3d") === "1";
+  const estaNoCriadorCutscene = params.get('cutscene') === '1';
   const mestreAutorizado =
     sessionStorage.getItem(MESTRE_AUTH_KEY) === "true";
   const tabletop3DAutorizado =
@@ -119,7 +121,7 @@ function App() {
 
   useEffect(() => {
     if (temFicha) return undefined;
-    const pageTitle = new URLSearchParams(search).has("jogador") ? "Perfil do Jogador" : estaNoCriadorMapa3D ? "Editor de mapas 3D" : new URLSearchParams(search).get("tabletop3d") === "1" ? "Tabletop 3D" : estaNaMesa
+    const pageTitle = estaNoCriadorCutscene ? 'Estúdio de cutscenes' : new URLSearchParams(search).has("jogador") ? "Perfil do Jogador" : estaNoCriadorMapa3D ? "Editor de mapas 3D" : new URLSearchParams(search).get("tabletop3d") === "1" ? "Tabletop 3D" : estaNaMesa
       ? "Tabletop"
       : estaNoDashboardMestre
         ? "Painel do Mestre"
@@ -145,6 +147,7 @@ function App() {
     estaNaLojaEspiral,
     estaNaMesa,
     estaNoCriadorMapa3D,
+    estaNoCriadorCutscene,
     estaNaTransformacaoEspiral,
     estaNoDashboardMestre,
     estaNoUpgrade,
@@ -154,7 +157,7 @@ function App() {
   if(params.get("tabletop3d")==="1" && sistemaEspiral && params.get("papel")!=="mestre" && !hasEspiralToken(readEspiralTabletopSheet(params.get("ficha") || "principal"))) {
     return <><PageTransition active={transitionActive} sistema={transitionSystem} simboloSistema={transitionFicha}/><DialogoGlobal /><Suspense fallback={<div>Carregando ficha…</div>}><FichaEspiral tabletopAccessError={MISSING_ESPIRAL_TOKEN}/></Suspense></>;
   }
-  if (!params.has("jogador") && params.get("tabletop3d") !== "1" && sistemaEspiral && !estaCriando && !estaNaMesa && !estaNoDashboardMestre && !estaNaLoja && !estaNaLojaEspiral && !estaNaTransformacaoEspiral && !estaNaArvoreHabilidades && !estaNoUpgrade) {
+  if (!params.has("jogador") && params.get("tabletop3d") !== "1" && sistemaEspiral && !estaCriando && !estaNaMesa && !estaNoCriadorCutscene && !estaNoDashboardMestre && !estaNaLoja && !estaNaLojaEspiral && !estaNaTransformacaoEspiral && !estaNaArvoreHabilidades && !estaNoUpgrade) {
     return <><PageTransition active={transitionActive} sistema={transitionSystem} simboloSistema={transitionFicha}/><DialogoGlobal /><Suspense fallback={<div style={{ color: '#aaa', padding: 40 }}>Abrindo ficha…</div>}><FichaEspiral key={params.get('ficha') || 'principal'} /></Suspense></>;
   }
 
@@ -162,10 +165,10 @@ function App() {
     <div className="App">
       <PageTransition active={transitionActive} sistema={transitionSystem} simboloSistema={transitionFicha} />
       <DialogoGlobal />
-      {Boolean(search && search !== '?') && !estaNaMesa && params.get('tabletop3d') !== '1' && <AmbientMusicControls />}
+      {Boolean(search && search !== '?') && !estaNaMesa && !estaNoCriadorCutscene && params.get('tabletop3d') !== '1' && <AmbientMusicControls />}
 
       <Suspense fallback={<div style={{ color: "#eee", padding: 40 }}>Abrindo a loja…</div>}>
-        {params.has("jogador") ? (<PaginaJogador key={params.get("jogador")} codigo={params.get("jogador")} onNavigate={navegarComTransicao} />) : estaNoCriadorMapa3D && mestreAutorizado ? (
+        {estaNoCriadorCutscene ? (mestreAutorizado ? <CriadorCutscene key={params.get('campanha')+':'+params.get('cena')}/> : <TelaInicial onNavigate={navegarComTransicao}/>) : params.has("jogador") ? (<PaginaJogador key={params.get("jogador")} codigo={params.get("jogador")} onNavigate={navegarComTransicao} />) : estaNoCriadorMapa3D && mestreAutorizado ? (
           <CriadorMapa3D />
         ) : params.get("tabletop3d") === "1" ? (
           tabletop3DAutorizado ? <Tabletop3D /> : <Tabletop3DAccess onAuthorized={() => setTabletopUnlocked(true)} />

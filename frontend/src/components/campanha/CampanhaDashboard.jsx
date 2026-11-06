@@ -1,9 +1,13 @@
+import {SPECIAL_SCENE_ACCEPT, specialSceneMediaType} from '../../utils/specialSceneMedia';
+import CutsceneWorkspace from '../cutscene/CutsceneWorkspace';
+import {campaignSystem, sheetSystem, systemLabel, campaignSheetOptions, removedCampaignSheets} from '../../utils/campaignSystem';
 import SceneCreationPreview from './SceneCreationPreview';
+import SceneCutsceneSettings from './SceneCutsceneSettings';
 import '../../styles/SceneComposer.css';
 import NumberInput from '../ui/NumberInput';
 import SceneAnimationEditor from '../tabletop/SceneAnimationEditor';
 import { ACEITAR_AUDIO } from "../../utils/audioUpload";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@mdi/react";
 import {
   mdiAccountMultipleOutline,
@@ -27,6 +31,7 @@ import {
   excluirCampanhaMesa,
   excluirCena,
   listarCampanhas,
+  salvarSistemaCampanha,
   ordenarCenasCampanha,
   salvarCena,
   salvarMusicasCampanha,
@@ -40,6 +45,17 @@ import AnotacoesCampanha from "./AnotacoesCampanha";
 import MuralInvestigacao from './MuralInvestigacao';
 import { confirmarDialogo } from "../ui/DialogoGlobal";
 import "../../styles/CampanhaDashboard.css";
+import "../../styles/CampaignWorkspace.css";
+
+const CAMPAIGN_AREAS = [
+  {id:'cutscenes', label:'Cutscenes', icon:mdiImagePlusOutline, description:'Crie sequências com imagens, tokens animados, câmera, legendas e trilha sonora.'},
+  {id:'cenas', label:'Cenas e mapas', icon:mdiMapOutline, description:'Prepare os lugares, organize os capítulos e defina o que os jogadores podem ver.'},
+  {id:'investigacao', label:'Investigação', icon:mdiFolderOutline, description:'Conecte pessoas, pistas e acontecimentos em um mural compartilhado.'},
+  {id:'musicas', label:'Playlist', icon:mdiPlaylistMusic, description:'Uma trilha para cada momento. Organize as faixas que acompanham sua história.'},
+  {id:'soundpad', label:'Soundpad', icon:mdiPlaylistMusic, description:'Prepare ambientes e efeitos para dar presença à próxima sessão.'},
+  {id:'anotacoes', label:'Anotações', icon:mdiPencilOutline, description:'Seu arquivo de sessão: personagens, planos, documentos e acontecimentos.'},
+  {id:'configuracoes', label:'Configurações', icon:mdiAccountMultipleOutline, description:'Defina o sistema da campanha e gerencie quem participa da mesa.'},
+];
 
 const cenaVazia = {
   nome: "",
@@ -80,12 +96,17 @@ const CampanhaDashboard = () => {
   const [criandoCampanha, setCriandoCampanha] = useState(false);
   const [nomeNovaCampanha, setNomeNovaCampanha] = useState("");
   const [tabletopNovaCampanha, setTabletopNovaCampanha] = useState("2d");
+  const [sistemaNovo, setSistemaNovo] = useState("absoluto");
+  const [sistemaEditado, setSistemaEditado] = useState("absoluto");
   const [fichasDisponiveis, setFichasDisponiveis] = useState([]);
   const [fichasNovaCampanha, setFichasNovaCampanha] = useState([]);
   const [carregandoFichas, setCarregandoFichas] = useState(false);
   const [gerenciandoFichas, setGerenciandoFichas] = useState(false);
   const [fichasVinculadas, setFichasVinculadas] = useState([]);
-  const [abaCampanha, setAbaCampanha] = useState("cenas");
+  const [abaCampanha, setAbaCampanha] = useState(()=>new URLSearchParams(window.location.search).get('area')==='cutscenes'?'cutscenes':'cenas');
+  const returnRestored=useRef(false);
+  const [buscaCenas, setBuscaCenas] = useState('');
+  const [aviso, setAviso] = useState('');
   const [musicas, setMusicas] = useState([]);
   const [sonsSoundpad, setSonsSoundpad] = useState([]);
   const [arrastando, setArrastando] = useState(null);
@@ -102,6 +123,7 @@ const CampanhaDashboard = () => {
     setErro("");
     try {
       setCampanhas(await listarCampanhas());
+      if(!returnRestored.current){returnRestored.current=true;const code=new URLSearchParams(window.location.search).get('campanhaPainel');if(code)setCampanha(await buscarCampanhaPorCodigo(code));}
     } catch (error) {
       setErro(error.message || "Nao foi possivel carregar as campanhas.");
     } finally {
@@ -112,7 +134,12 @@ const CampanhaDashboard = () => {
     carregarCampanhas();
   }, [carregarCampanhas]);
 
+  const fichasDoSistema = criandoCampanha
+    ? fichasDisponiveis.filter(ficha => sheetSystem(ficha) === sistemaNovo)
+    : campaignSheetOptions(fichasDisponiveis, campanha);
+  useEffect(() => { setSistemaEditado(campaignSystem(campanha)); }, [campanha]);
   const abrirCriacaoCampanha = async () => {
+    setSistemaNovo("absoluto");
     setCriandoCampanha(true);
     setNomeNovaCampanha("");
     setTabletopNovaCampanha("2d");
@@ -167,15 +194,12 @@ const CampanhaDashboard = () => {
     setSalvando(true);
     setErro("");
     try {
-      const idsConhecidos = fichasDisponiveis.map((ficha) => ficha.fichaId);
       const idsAtuais = (campanha.membros || []).map(
         (membro) => membro.ficha_id,
       );
-      const remover = idsAtuais.filter(
-        (id) => idsConhecidos.includes(id) && !fichasVinculadas.includes(id),
-      );
+      const remover = removedCampaignSheets(campanha, fichasVinculadas);
       await Promise.all([
-        ...fichasVinculadas.map((fichaId) => {
+        ...fichasVinculadas.filter(fichaId => !idsAtuais.includes(fichaId)).map((fichaId) => {
           const ficha = fichasDisponiveis.find(
             (item) => item.fichaId === fichaId,
           );
@@ -212,7 +236,7 @@ const CampanhaDashboard = () => {
     setSalvando(true);
     setErro("");
     try {
-      const nova = await criarCampanhaMesa(nomeNovaCampanha, tabletopNovaCampanha);
+      const nova = await criarCampanhaMesa(nomeNovaCampanha, tabletopNovaCampanha, sistemaNovo);
       await Promise.all(
         fichasNovaCampanha.map((fichaId) => {
           const ficha = fichasDisponiveis.find(
@@ -258,6 +282,10 @@ const CampanhaDashboard = () => {
         Math.min(...cenasB.map((cena) => Number(cena.ordem) || 0)),
     );
   }, [campanha?.cenas]);
+  const gruposVisiveis = grupos.map(([pasta, cenas]) => [pasta, cenas.filter(cena =>
+    `${pasta} ${cena.nome || ''} ${cena.descricao || ''}`.toLocaleLowerCase('pt-BR').includes(buscaCenas.toLocaleLowerCase('pt-BR').trim()))])
+    .filter(([,cenas]) => cenas.length);
+  const areaAtual = CAMPAIGN_AREAS.find(area => area.id === abaCampanha);
 
   const pastas = useMemo(() => grupos.map(([nome]) => nome), [grupos]);
   const abrirEditor = (cena = null) => {
@@ -513,6 +541,7 @@ const CampanhaDashboard = () => {
     try {
       await salvarMusicasCampanha(campanha.id, musicas);
       await recarregarCampanha();
+      setAviso('Playlist salva. As faixas já estão disponíveis na mesa.');
     } catch (error) {
       setErro(error.message || "Nao foi possivel salvar a playlist.");
     } finally {
@@ -602,7 +631,7 @@ const CampanhaDashboard = () => {
                 onClick={() => abrirCampanha(item.codigo)}
               >
                 <span>Campanha</span>
-                <h3>{item.nome}</h3>
+                <h3>{item.nome}</h3><small>{systemLabel(campaignSystem(item))}</small>
                 <p>Código {item.codigo}</p>
                 <small className={`campanha-tabletop-tipo tipo-${tipoTabletopCampanha(item)}`}>Tabletop {tipoTabletopCampanha(item).toUpperCase()}</small>
               </button>
@@ -660,6 +689,7 @@ const CampanhaDashboard = () => {
                   placeholder="Ex.: Prisao Blackgate"
                 />
               </label>
+              <label>Sistema da campanha<select value={sistemaNovo} onChange={e=>{setSistemaNovo(e.target.value);setFichasNovaCampanha([]);}}><option value="absoluto">Absoluto 1.0</option><option value="espiral">ESPIRAL</option></select></label>
               <fieldset className="campanha-tabletop-seletor">
                 <legend>Tipo de tabletop</legend>
                 <p>Esta será a experiência aberta por padrão para mestre e jogadores.</p>
@@ -683,9 +713,9 @@ const CampanhaDashboard = () => {
                 </header>
                 {carregandoFichas ? (
                   <p>Carregando fichas...</p>
-                ) : fichasDisponiveis.length ? (
+                ) : fichasDoSistema.length ? (
                   <div>
-                    {fichasDisponiveis.map((ficha) => (
+                    {fichasDoSistema.map((ficha) => (
                       <label
                         key={ficha.fichaId}
                         className={
@@ -740,7 +770,7 @@ const CampanhaDashboard = () => {
     );
 
   return (
-    <section className="campanha-dashboard">
+    <section className="campanha-dashboard campaign-workspace">
       <button
         className="campanha-voltar-lista"
         onClick={() => {
@@ -785,37 +815,36 @@ const CampanhaDashboard = () => {
         </div>
       </header>
       {erro && <p className="campanha-dashboard-erro">{erro}</p>}
-      <nav className="campanha-conteudo-abas">
-        <button className={abaCampanha === 'investigacao' ? 'ativo' : ''} onClick={()=>setAbaCampanha('investigacao')}>Mural de investigação</button>
-        <button
-          className={abaCampanha === "cenas" ? "ativo" : ""}
-          onClick={() => setAbaCampanha("cenas")}
-        >
-          Cenas e mapas
-        </button>
-        <button
-          className={abaCampanha === "musicas" ? "ativo" : ""}
-          onClick={() => setAbaCampanha("musicas")}
-        >
-          Playlist
-        </button>
-        <button
-          className={abaCampanha === "soundpad" ? "ativo" : ""}
-          onClick={() => setAbaCampanha("soundpad")}
-        >
-          Soundpad
-        </button>
-        <button
-          className={abaCampanha === "anotacoes" ? "ativo" : ""}
-          onClick={() => setAbaCampanha("anotacoes")}
-        >
-          Anotacoes do mestre
-        </button>
+      <div className="campaign-overview" aria-label="Resumo da campanha">
+        <div><span>Sistema de jogo</span><strong>{systemLabel(campaignSystem(campanha))}</strong></div>
+        <div><span>Arquivo de cenas</span><strong>{campanha.cenas.length.toString().padStart(2,'0')} <small>cenas preparadas</small></strong></div>
+        <div><span>Participantes</span><strong>{campanha.membros?.length || 0} <small>fichas vinculadas</small></strong></div>
+        <div><span>Experiência da mesa</span><strong>Tabletop {tipoTabletopCampanha(campanha).toUpperCase()}</strong></div>
+      </div>
+      <nav className="campanha-conteudo-abas" aria-label="Áreas da campanha">
+        {CAMPAIGN_AREAS.map(area=><button type="button" key={area.id} aria-current={abaCampanha===area.id?'page':undefined} className={abaCampanha===area.id?'ativo':''} onClick={()=>{setAbaCampanha(area.id);setAviso('');}}>
+          <Icon path={area.icon} size={.8}/><span>{area.label}</span>
+          {area.id==='cenas'&&<small>{campanha.cenas.length}</small>}
+          {area.id==='musicas'&&<small>{musicas.length}</small>}
+          {area.id==='soundpad'&&<small>{sonsSoundpad.length}</small>}
+        </button>)}
       </nav>
-      {abaCampanha === 'investigacao' ? <MuralInvestigacao key={campanha.id} scope="campanha" id={campanha.id} mestre members={(campanha.membros || []).map(m=>String(m.ficha_id))} nome={`Mural · ${campanha.nome}`}/> : abaCampanha === "cenas" ? (
+      <header className="campaign-area-heading"><div><span>PREPARAÇÃO DA MESA / {String(CAMPAIGN_AREAS.indexOf(areaAtual)+1).padStart(2,'0')}</span><h3>{areaAtual.label}</h3><p>{areaAtual.description}</p></div>{abaCampanha==='anotacoes'&&<span className="campaign-privacy">Arquivo do mestre</span>}</header>
+      {aviso&&<div className="campaign-feedback" role="status"><span>{aviso}</span><button type="button" aria-label="Dispensar mensagem" onClick={()=>setAviso('')}>×</button></div>}
+      {abaCampanha==='cenas'&&<div className="campaign-scene-toolbar">
+        <label>Buscar no arquivo<input type="search" value={buscaCenas} onChange={e=>setBuscaCenas(e.target.value)} placeholder="Nome, descrição ou pasta…"/></label>
+        <span>{gruposVisiveis.reduce((total,[,cenas])=>total+cenas.length,0)} de {campanha.cenas.length} cenas</span>
+        <button type="button" onClick={()=>setPastasFechadas({})}>Expandir pastas</button>
+        <button type="button" onClick={()=>setPastasFechadas(Object.fromEntries(grupos.map(([pasta])=>[pasta,true])))}>Recolher pastas</button>
+      </div>}
+      {abaCampanha === 'cutscenes' ? <CutsceneWorkspace campaign={campanha} onSaved={async saved=>{setCampanha(current=>({...current,cenas:current.cenas.some(scene=>scene.id===saved.id)?current.cenas.map(scene=>scene.id===saved.id?saved:scene):[...current.cenas,saved]}));}}/> : abaCampanha === 'configuracoes' ? <div className="campaign-settings-layout"><form className="campanha-configuracoes" onSubmit={async event=>{
+ event.preventDefault();setSalvando(true);setErro('');
+ try {const atualizada=await salvarSistemaCampanha(campanha.id,sistemaEditado);setCampanha({...campanha,...atualizada});await carregarCampanhas();}
+ catch(error){setErro(error.message);}finally{setSalvando(false);}
+}}><h3>Configurações da campanha</h3><label>Sistema usado<select value={sistemaEditado} onChange={e=>setSistemaEditado(e.target.value)}><option value="absoluto">Absoluto 1.0</option><option value="espiral">ESPIRAL</option></select></label><p>As fichas e o Escudo do mestre seguem o sistema escolhido. Para trocar de sistema, desvincule primeiro as fichas incompatíveis.</p><button className="campaign-primary" disabled={salvando || sistemaEditado===campaignSystem(campanha)}>{salvando?'Salvando…':'Salvar configurações'}</button></form><aside className="campaign-settings-side"><section><span>ACESSO À MESA</span><h3>Quem faz parte da história</h3><p>{campanha.membros?.length || 0} fichas vinculadas. Gerencie o acesso dos jogadores e remova vínculos de outros sistemas.</p><button type="button" onClick={abrirGerenciadorFichas}><Icon path={mdiAccountMultipleOutline} size={.8}/>Gerenciar fichas</button></section><section><span>IDENTIFICAÇÃO</span><h3>{campanha.codigo}</h3><p>Código da campanha · Tabletop {tipoTabletopCampanha(campanha).toUpperCase()}</p><a href={urlTabletopCampanha(campanha)} onClick={()=>autorizarTabletopCampanha(campanha)}>Entrar na mesa →</a></section></aside></div> : abaCampanha === 'investigacao' ? <MuralInvestigacao key={campanha.id} scope="campanha" id={campanha.id} mestre members={(campanha.membros || []).map(m=>String(m.ficha_id))} nome={`Mural · ${campanha.nome}`}/> : abaCampanha === "cenas" ? (
         <div className="campanha-pastas">
-          {grupos.length ? (
-            grupos.map(([pasta, cenas]) => (
+          {gruposVisiveis.length ? (
+            gruposVisiveis.map(([pasta, cenas]) => (
               <section
                 className={`campanha-pasta ${indicadorDrop?.tipo === "pasta" && indicadorDrop.id === pasta ? `drop-${indicadorDrop.posicao}` : ""}`}
                 key={pasta}
@@ -942,8 +971,8 @@ const CampanhaDashboard = () => {
           ) : (
             <div className="campanha-sem-cenas">
               <Icon path={mdiImagePlusOutline} size={1.3} />
-              <strong>Nenhuma cena salva</strong>
-              <button onClick={() => abrirEditor()}>Criar primeira cena</button>
+              <strong>{buscaCenas ? "Nenhuma cena encontrada" : "Seu próximo capítulo começa aqui"}</strong><p>{buscaCenas ? "Tente outro nome ou limpe a busca para ver todas as cenas." : "Crie uma cena, adicione imagens e mapas e escolha o que revelar aos jogadores."}</p>
+              {buscaCenas ? <button onClick={()=>setBuscaCenas("")}>Limpar busca</button> : <button onClick={() => abrirEditor()}>Criar primeira cena</button>}
             </div>
           )}
         </div>
@@ -1250,11 +1279,12 @@ const CampanhaDashboard = () => {
                   <span>{fichasVinculadas.length} selecionadas</span>
                 </div>
               </header>
+              <p>Desmarque as fichas que deseja desvincular e clique em Salvar fichas. Isso remove o acesso e os tokens da campanha.</p>
               {carregandoFichas ? (
                 <p>Carregando fichas...</p>
-              ) : fichasDisponiveis.length ? (
+              ) : fichasDoSistema.length ? (
                 <div>
-                  {fichasDisponiveis.map((ficha) => (
+                  {fichasDoSistema.map((ficha) => (
                     <label
                       key={ficha.fichaId}
                       className={
@@ -1280,8 +1310,9 @@ const CampanhaDashboard = () => {
                           {ficha.personagem?.nome || ficha.fichaId}
                         </strong>
                         <small>
-                          {ficha.sistema === "espiral" ? "ESPIRAL" : `DARKNESS · Nível ${ficha.personagem?.nivel || 1}`} ·{" "}
+                          {systemLabel(sheetSystem(ficha))} ·{" "}
                           {ficha.personagem?.classe || "Sem classe"}
+                          {ficha.indisponivel && ' · Ficha indisponível no catálogo; pode ser desvinculada'}
                         </small>
                       </span>
                     </label>
@@ -1363,12 +1394,13 @@ const CampanhaDashboard = () => {
               />
             </label>
             </section>
+            <SceneCutsceneSettings scene={editando} campaign={campanha} onChange={setEditando}/>
             <section className="campanha-midias-editor scene-composer-media">
               <header>
                 <div>
-                  <strong><span className="scene-section-number">02</span> Imagens da cena</strong>
+                  <strong><span className="scene-section-number">03</span> Imagens da cena</strong>
                   <span>
-                    {editando.imagensCena?.length || 0} arquivos · max. 2 MB
+                    {editando.imagensCena?.length || 0} arquivos · GIF, MP4, WebM ou imagem · max. 25 MB
                   </span>
                 </div>
                 <button type="button" onClick={() => adicionarMidia("cena")}>
@@ -1391,7 +1423,7 @@ const CampanhaDashboard = () => {
                   <label>
                     <input
                       type="file"
-                      accept="image/webp,image/jpeg,image/png,image/avif"
+                      accept={SPECIAL_SCENE_ACCEPT}
                       onChange={(e) =>
                         selecionarArquivoMidia(
                           "imagensCena",
@@ -1430,9 +1462,9 @@ const CampanhaDashboard = () => {
             <section className="campanha-midias-editor">
               <header>
                 <div>
-                  <strong><span className="scene-section-number">03</span> Mapas de batalha</strong>
+                  <strong><span className="scene-section-number">04</span> Mapas de batalha</strong>
                   <span>
-                    {editando.mapasBatalha?.length || 0} arquivos · max. 5 MB
+                    {editando.mapasBatalha?.length || 0} arquivos · GIF, MP4, WebM ou imagem · max. 25 MB
                   </span>
                 </div>
                 <button type="button" onClick={() => adicionarMidia("mapa")}>
@@ -1463,7 +1495,7 @@ const CampanhaDashboard = () => {
                   <label>
                     <input
                       type="file"
-                      accept="image/webp,image/jpeg,image/png,image/avif"
+                      accept={SPECIAL_SCENE_ACCEPT}
                       onChange={(e) =>
                         selecionarArquivoMidia(
                           "mapasBatalha",
@@ -1536,7 +1568,7 @@ const CampanhaDashboard = () => {
             </section>
             <section className="campanha-cena-visibilidade">
               <div>
-                <strong><span className="scene-section-number">04</span> Quem pode ver?</strong>
+                <strong><span className="scene-section-number">05</span> Quem pode ver?</strong>
                 <small>
                   {editando.visualizarTodos !== false
                     ? "Todos os jogadores verão esta cena quando ela estiver ativa."

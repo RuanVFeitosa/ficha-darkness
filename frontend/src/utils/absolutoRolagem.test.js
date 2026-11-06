@@ -12,7 +12,7 @@ test('Atributo usa sua reserva e apenas 6 como êxito, independentemente dos Dom
 test('Atributo respeita vantagem, Medo, Esforço, saldo e bloqueio em zero', () => {
   const p = {...ficha(),medo:3};
   const resultado = executarTesteAtributo(p,'inteligencia',{vantagem:2,contraFonte:true,esforco:true},()=>.99);
-  expect(resultado.rolagem.dados).toHaveLength(5);
+  expect(resultado.rolagem.dados).toHaveLength(6);
   expect(resultado.personagem.esperanca.atual).toBe(p.esperanca.atual-1);
   expect(() => executarTesteAtributo({...p,atributos:{forca:0}},'forca',{vantagem:2})).toThrow('Atributo 0');
   expect(() => executarTesteAtributo(p,'invalido')).toThrow('válido');

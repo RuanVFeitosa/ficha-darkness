@@ -18,6 +18,7 @@ export default function TabletopSessionTools({
   open,
   tool,
   requestVersion,
+  tabletopMapId,
   onClose,
 }) {
   return (
@@ -46,7 +47,7 @@ export default function TabletopSessionTools({
         <Suspense
           fallback={<p role="status">Carregando ferramentas da sessão…</p>}
         >
-          <Mesa embedded requestedTool={tool} requestVersion={requestVersion} />
+          <Mesa embedded requestedTool={tool} requestVersion={requestVersion} tabletopMapId={tabletopMapId} />
         </Suspense>
       </div>
     </section>

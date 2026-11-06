@@ -75,3 +75,26 @@
 .scene-composer>.campanha-dashboard-erro{flex:none;margin:0;padding:10px 28px;border-top:1px solid #b9746a55;background:#301711;color:#efb6ad;font-size:12px}
 @media(max-width:850px){.campanha-editor-fundo.scene-composer-backdrop{padding:12px}.campanha-editor.scene-composer{height:calc(100dvh - 24px);max-height:calc(100dvh - 24px)}.scene-composer-layout{display:block;overflow:auto}.scene-composer-fields{overflow:visible;padding:22px}.scene-composer-preview{overflow:visible;border-left:0;border-top:1px solid var(--sc-line);padding:22px}.scene-preview-stage{aspect-ratio:16/9;max-height:300px}.scene-preview-copy{padding:20px 0}.scene-composer .scene-save-note{display:none}.campanha-editor.scene-composer>header{padding:20px 22px}.campanha-editor.scene-composer>footer{padding:14px 22px}}
 @media(max-width:480px){.campanha-editor.scene-composer h3{font-size:28px}.scene-composer .campanha-editor-linha{grid-template-columns:1fr}.scene-composer-fields,.scene-composer-preview{padding:18px}.scene-composer .scene-composer-media>header strong{font-size:16px}.campanha-editor.scene-composer input:not([type=checkbox]):not([type=file]),.campanha-editor.scene-composer textarea{font-size:16px}.scene-composer-preview .scene-preview-copy h4{font-size:25px}}
+.scene-composer .scene-cutscene-settings{display:grid;gap:15px;padding:20px;border:1px solid #d0bc9155;background:#000;border-radius:8px}
+.scene-composer .scene-cutscene-settings>header{display:flex;justify-content:space-between;align-items:start;gap:12px;margin:0;padding:0 0 14px;border-bottom:1px solid var(--sc-line)}
+.scene-composer .scene-cutscene-settings>header strong{font:20px Georgia,serif;color:#eee3cc}
+.scene-composer .scene-cutscene-settings>header p{font:12px/1.7 Arial,sans-serif;color:var(--sc-muted);margin:8px 0 0;max-width:450px}
+.scene-composer .scene-cutscene-status{font:9px/1.4 Arial,sans-serif;color:#d6c49c;padding:5px 8px;border:1px solid #d0bc9130;border-radius:4px;white-space:nowrap}
+.scene-composer .scene-cutscene-settings>label{font-size:11px;gap:8px}
+.scene-composer .scene-cutscene-settings select{width:100%;min-height:44px;background:#000;color:#eee4d0;border:1px solid #d0bc9150;border-radius:4px;padding:10px;font:12px Arial,sans-serif}
+.scene-cutscene-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:14px;border:1px solid var(--sc-line);border-radius:5px}
+.scene-composer .scene-cutscene-summary>strong{font:18px Georgia,serif;overflow-wrap:anywhere}
+.scene-cutscene-summary>span{color:var(--sc-muted);font:11px Arial,sans-serif}
+.scene-composer .scene-cutscene-summary>button{grid-column:1/-1;justify-self:start;border:0;background:none;color:#d7a6a0;padding:6px 0;min-height:30px;font:11px Arial,sans-serif;cursor:pointer}
+.scene-composer .scene-cutscene-enabled{display:flex;align-items:center;gap:10px}
+.scene-composer .scene-cutscene-enabled input{width:16px;height:16px;accent-color:#d0bc91}
+.scene-cutscene-actions{display:flex;gap:10px;flex-wrap:wrap}
+.scene-composer .scene-cutscene-actions a{display:inline-flex;align-items:center;min-height:42px;padding:10px 14px;background:#000;border:1px solid #d0bc9160;color:#e5d2aa;border-radius:5px;text-decoration:none;font:11px Arial,sans-serif}
+.scene-composer .scene-cutscene-settings>small,.scene-composer .scene-cutscene-help{font:11px/1.7 Arial,sans-serif;color:var(--sc-muted);margin:0;text-transform:none}
+.scene-preview-stage.has-cutscene{aspect-ratio:16/9}
+.scene-preview-stage>.cs-player{display:grid;padding:0;gap:0;color:#eee}
+.scene-preview-stage .cs-player .cs-stage{width:100%;max-height:100%}
+.scene-preview-stage .cs-player-controls{opacity:1;left:8px;right:8px;bottom:6px;gap:4px}
+.scene-composer .scene-preview-stage .cs-player-controls button{min-height:28px;padding:5px 7px;font:9px Arial,sans-serif;border:1px solid #ffffff35;background:#000c;color:#eee}
+.scene-composer .scene-preview-cutscene-info{font:10px/1.8 Arial,sans-serif;color:#caba95;margin:12px 0 0}
+@media(max-width:480px){.scene-cutscene-summary{grid-template-columns:1fr}.scene-composer .scene-cutscene-settings{padding:16px}.scene-composer .scene-cutscene-settings>header{flex-direction:column}}

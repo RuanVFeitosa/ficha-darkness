@@ -2,6 +2,7 @@ const fichaRecriacao = require('./fichaRecriacao.cjs');
 const http = require("http");
 const fs = require("fs/promises");
 const path = require("path");
+const { gzip } = require('node:zlib');
 const { createInvestigation } = require('./investigacao');
 
 const PORT = Number(process.env.PORT || 4000);
@@ -73,7 +74,9 @@ const getCorsHeaders = (req) => {
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, If-None-Match",
+    "Access-Control-Expose-Headers": "ETag",
+    "Access-Control-Max-Age": "600",
     Vary: "Origin",
   };
 };
@@ -196,13 +199,21 @@ const sendJson = ({
   lastModified = undefined,
 }) => {
   const body = statusCode === 204 ? "" : JSON.stringify(payload);
+  // Toda leitura JSON pode ser revalidada, inclusive perfis e investigação.
+  // Cache privado exige consulta ao servidor antes de reutilizar os dados.
+  if (req.method === 'GET' && statusCode === 200) {
+    etag = etag || computeEtag(payload);
+    cacheControl = cacheControl || 'private, no-cache';
+  }
+  const vary = [res.corsHeaders?.Vary, 'Accept-Encoding'].filter(Boolean).join(', ');
 
   // Revalidação condicional (evita Fast Origin Transfer quando conteúdo não mudou)
   if (statusCode === 200 && etag) {
     const inm = String(req.headers["if-none-match"] || "");
-    if (inm && inm === etag) {
+    if (inm.split(',').some(value => value.trim().replace(/^W\//, '') === etag || value.trim() === '*')) {
       res.writeHead(304, {
         ...(res.corsHeaders || {}),
+        Vary: vary,
         ...(cacheControl ? { "Cache-Control": cacheControl } : {}),
         ...(etag ? { ETag: etag } : {}),
         ...(lastModified ? { "Last-Modified": lastModified } : {}),
@@ -216,13 +227,30 @@ const sendJson = ({
     "Content-Type": "application/json; charset=utf-8",
     "Content-Length": Buffer.byteLength(body),
     ...(res.corsHeaders || {}),
+    Vary: vary,
     ...(cacheControl ? { "Cache-Control": cacheControl } : {}),
     ...(etag ? { ETag: etag } : {}),
     ...(lastModified ? { "Last-Modified": lastModified } : {}),
   };
 
-  res.writeHead(statusCode, headers);
-  res.end(body);
+  const acceptsGzip = String(req.headers['accept-encoding'] || '').split(',').some(entry => {
+    const [encoding, ...parameters] = entry.trim().split(';');
+    const quality = parameters.find(value => value.trim().startsWith('q='));
+    return encoding === 'gzip' && (!quality || Number(quality.trim().slice(2)) > 0);
+  });
+  if (Buffer.byteLength(body) >= 1024 && acceptsGzip) {
+    gzip(body, (error, compressed) => {
+      if (res.destroyed) return;
+      const result = !error && compressed.length < Buffer.byteLength(body) ? compressed : body;
+      if (result !== body) headers['Content-Encoding'] = 'gzip';
+      headers['Content-Length'] = Buffer.byteLength(result);
+      res.writeHead(statusCode, headers);
+      res.end(result);
+    });
+  } else {
+    res.writeHead(statusCode, headers);
+    res.end(body);
+  }
 };
 
 

@@ -3,8 +3,42 @@ import { fireEvent, render, screen, within, waitFor } from '@testing-library/rea
 import EspiralEncounters from './EspiralEncounters';
 import { ESPIRAL_ENCOUNTERS_KEY } from '../../utils/espiralEncounters';
 import { confirmarDialogo } from '../ui/DialogoGlobal';
+import { compressProfileImage, prepareTokenImage } from '../../services/imageCompression';
+
+jest.mock('../../services/imageCompression', () => ({ compressProfileImage: jest.fn(), prepareTokenImage: jest.fn() }));
 
 jest.mock('../ui/DialogoGlobal', () => ({ confirmarDialogo: jest.fn(() => Promise.resolve(true)) }));
+
+test('envia, salva, reabre e remove retrato e token de corpo inteiro separadamente', async () => {
+  compressProfileImage.mockResolvedValue('data:image/webp;base64,portrait');
+  prepareTokenImage.mockResolvedValue('data:image/webp;base64,token');
+  render(<EspiralEncounters />);
+  fireEvent.click(screen.getByRole('button', { name: 'Criar NPC' }));
+  const file = new File(['image'], 'npc.png', { type: 'image/png' });
+  fireEvent.change(screen.getByLabelText('Enviar foto de perfil'), { target: { files: [file] } });
+  await waitFor(() => expect(screen.getByAltText('Foto de perfil de Novo NPC')).toHaveAttribute('src', 'data:image/webp;base64,portrait'));
+  fireEvent.change(screen.getByLabelText('Enviar token 3d'), { target: { files: [file] } });
+  await waitFor(() => expect(screen.getByAltText('Token 3D de Novo NPC')).toHaveAttribute('src', 'data:image/webp;base64,token'));
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar ficha' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Abrir ficha de Novo NPC' }));
+  expect(screen.getByAltText('Token 3D de Novo NPC')).toHaveAttribute('src', 'data:image/webp;base64,token');
+  fireEvent.click(screen.getByRole('button', { name: 'Remover foto de perfil' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar ficha' }));
+  const record = JSON.parse(localStorage.getItem(ESPIRAL_ENCOUNTERS_KEY)).records[0];
+  expect(record.profileImage).toBe('');
+  expect(record.tabletopTokenImage).toBe('data:image/webp;base64,token');
+});
+
+test('falha no upload preserva a imagem anterior e permite salvar', async () => {
+  prepareTokenImage.mockRejectedValue(new Error('Imagem inválida'));
+  render(<EspiralEncounters />);
+  fireEvent.click(screen.getByRole('button', { name: 'Criar NPC' }));
+  fireEvent.change(screen.getByLabelText('URL do token 3D'), { target: { value: '/token.png' } });
+  fireEvent.change(screen.getByLabelText('Enviar token 3d'), { target: { files: [new File(['bad'], 'bad.png', { type: 'image/png' })] } });
+  await waitFor(() => expect(screen.getByText('Imagem inválida')).toBeInTheDocument());
+  expect(screen.getByAltText('Token 3D de Novo NPC')).toHaveAttribute('src', '/token.png');
+  expect(screen.getByRole('button', { name: 'Salvar ficha' })).toBeEnabled();
+});
 beforeEach(() => {
   localStorage.clear();
   jest.clearAllMocks();
