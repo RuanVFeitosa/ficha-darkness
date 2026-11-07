@@ -27,6 +27,7 @@ export const ABSOLUTAS_BALANCEADAS = {
 };
 
 export function balancearAbsoluta(habilidade) {
+ if(habilidade.editadoPeloMestre===true)return habilidade;
  const descricao=ABSOLUTAS_BALANCEADAS[habilidade.id];
  return {...habilidade,...(descricao ? {descricao:`Uma vez por cena, ${descricao.charAt(0).toLowerCase()+descricao.slice(1)}`,balanceamentoAbsoluta:1} : {}),
   custoLegado:habilidade.custoLegado??habilidade.custo??'Não informado',custo:'10 PE',custoAtivacao:10,categoriaUso:'Absoluta'};

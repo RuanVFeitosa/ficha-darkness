@@ -36,6 +36,7 @@ export const PASSIVAS_BALANCEADAS = {
 };
 
 export function balancearAptidao(aptidao) {
+ if(aptidao.editadoPeloMestre===true)return aptidao;
  const regra=PASSIVAS_BALANCEADAS[aptidao.id];
  if(!regra) return aptidao;
  return {...aptidao,descricao:regra.descricao,custo:'0 PE · Passiva',custoLegado:'Passiva',custoAtivacao:0,categoriaUso:'Passiva',

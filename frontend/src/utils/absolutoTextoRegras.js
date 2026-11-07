@@ -51,6 +51,7 @@ export const HABILIDADES_ADAPTADAS = {
 };
 
 export function adaptarHabilidadeRegras(valor) {
+ if(valor.editadoPeloMestre===true)return valor;
  if(ABSOLUTAS_BALANCEADAS[valor.id]) return balancearAbsoluta(valor);
  const descricao=HABILIDADES_ADAPTADAS[valor.id];
  return descricao && typeof valor.descricao==='string' ? {...valor,descricao} : valor;

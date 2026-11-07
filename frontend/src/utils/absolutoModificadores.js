@@ -71,6 +71,9 @@ const CAMPOS_DANO = new Set(['dmg','dano','cura','formula']);
 const CAMPOS_PRESERVADOS = new Set(['id','nome','titulo','codigo','fichaId','tipo','categoria','subcategoria','preco','custo','requisitos','nivel','nivelRito','data','historia','anotacao','humanidade','recriacaoPendente','historicoRecriacao','legadoAbsoluto','arquetipoId','classeId','idade','imagem','fotoPerfil','url','arquivo','createdAt','updatedAt','bonusMunicao']);
 
 export function normalizarConteudoAbsoluto(valor, campo = '') {
+  // Explicit master edits are authoritative; automatic rule migrations only
+  // apply to the official and legacy content, not to authored overrides.
+  if(valor && typeof valor==='object' && valor.editadoPeloMestre===true) return valor;
   if(['descricaoEspecialidadeOriginal','passivaEspecialidadeOriginal'].includes(campo)) return valor;
   if(valor && !Array.isArray(valor) && typeof valor==='object') valor=adaptarHabilidadeRegras(valor);
   if (Array.isArray(valor)) return valor.map(v => normalizarConteudoAbsoluto(v, campo));

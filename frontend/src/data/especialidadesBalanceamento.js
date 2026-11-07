@@ -51,6 +51,7 @@ export const EFEITOS_ESPECIALIDADES = {
 const plain=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 const romanos={I:1,II:2,III:3,IV:4,V:5,VI:6,VII:7,VIII:8,IX:9,X:10};
 export function balancearEspecialidade(h,index=0) {
+ if(h.editadoPeloMestre===true)return h;
  const anterior=h.custoLegado??h.custo??'';
  const original=h.descricaoEspecialidadeOriginal??h.descricao??'';
  const nivel=h.balanceamentoEspecialidade?.nivel||Number(h.nivel)||romanos[h.nivel]||index+1;
@@ -68,6 +69,7 @@ export function balancearEspecialidade(h,index=0) {
 }
 
 export function balancearTrilhaEspecialidade(e) {
+ if(e.editadoPeloMestre===true)return e;
  const passiva=e.passivaEspecialidadeOriginal??e.passiva;
  return {...e,passivaEspecialidadeOriginal:passiva,passiva:passiva?`${adaptarTextoRegras(passiva)} Benefício apenas na situação descrita. Bônus de dados passivos não se acumulam: máximo +1 por teste. Benefícios de Defesa, Proteção, cura ou ações extras só podem ocorrer uma vez por cena e não se acumulam com outra Especialidade.`:passiva,
  habilidades:(e.habilidades||[]).map(balancearEspecialidade)};

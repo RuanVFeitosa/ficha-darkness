@@ -1,4 +1,6 @@
+import SystemAbilitiesCatalog from '../components/habilidades/SystemAbilitiesCatalog';
 import RecriacaoRequests from '../components/jogador/RecriacaoRequests';
+import {createSkillTreeSync} from '../utils/skillTreeSync';
 import HopeWhispersEditor from '../components/absoluto/HopeWhispersEditor';
 import { isEspiralSheet, salvarFichaEspiral, unirFichasEspiral } from '../services/espiralApi';
 import NumberInput from '../components/ui/NumberInput';
@@ -610,6 +612,9 @@ const DashboardMestre = () => {
   const fichasEmGravacaoRef = useRef(new Set());
 
   const [arvoresEditor, setArvoresEditor] = useState({});
+  const arvoresSync=useRef(null);
+  if(!arvoresSync.current)arvoresSync.current=createSkillTreeSync(salvarArvoresHabilidades);
+  const [salvandoArvores,setSalvandoArvores]=useState(false);
   const [classeArvoreAtiva, setClasseArvoreAtiva] = useState("aniquilador");
   const [tipoHabilidadeEditor, setTipoHabilidadeEditor] = useState("absolutas");
   const [especialidadeEditorId, setEspecialidadeEditorId] = useState("");
@@ -1001,6 +1006,7 @@ const DashboardMestre = () => {
   }, [receitasPadraoNormalizadas]);
 
   const carregarTudo = async () => {
+    const versaoArvores=arvoresSync.current.revision;
     setCarregando(true);
     setMensagem("");
 
@@ -1088,14 +1094,16 @@ const DashboardMestre = () => {
       setFichas(fichasCompletas);
       setCatalogo(catalogoNormalizado);
       setReceitasCriacaoDashboard(receitasCriacaoLocais);
-      salvarArvoresCustom(arvoresCompartilhadas);
-      setArvoresEditor(obterTodasArvores());
+      if(arvoresSync.current.canApplyRemote(versaoArvores)){
+        salvarArvoresCustom(arvoresCompartilhadas);
+        setArvoresEditor(obterTodasArvores());
+      }
 
       if (
-        Object.keys(arvoresApi || {}).length === 0 &&
+        arvoresSync.current.canApplyRemote(versaoArvores) && Object.keys(arvoresApi || {}).length === 0 &&
         Object.keys(arvoresLocais).length > 0
       ) {
-        salvarArvoresHabilidades(arvoresLocais).catch((error) => {
+        arvoresSync.current.enqueue(arvoresLocais).catch((error) => {
           console.warn("Nao foi possivel publicar arvores locais.", error);
         });
       }
@@ -1379,6 +1387,7 @@ const DashboardMestre = () => {
 
     const sincronizarListas = async () => {
       if (fichasEmGravacaoRef.current.size > 0) return;
+      const versaoArvores=arvoresSync.current.revision;
 
       try {
         const [fichasApi, arvoresApi] = await Promise.all([
@@ -1400,7 +1409,7 @@ const DashboardMestre = () => {
         // Combina as fichas compartilhadas com as cópias locais, sem duplicatas.
         setFichas(unirFichasEspiral(listarFichasEspiralLocais(), fichasDarkness));
 
-        if (arvoresApi && Object.keys(arvoresApi).length > 0) {
+        if (arvoresSync.current.canApplyRemote(versaoArvores) && arvoresApi && Object.keys(arvoresApi).length > 0) {
           salvarArvoresCustom(arvoresApi);
           setArvoresEditor(obterTodasArvores());
         }
@@ -1410,6 +1419,8 @@ const DashboardMestre = () => {
     };
 
     const sincronizarArvores = async ({ arvores } = {}) => {
+      const versaoArvores=arvoresSync.current.revision;
+      if(!arvoresSync.current.canApplyRemote(versaoArvores))return;
       if (arvores && Object.keys(arvores).length > 0) {
         salvarArvoresCustom(arvores);
         setArvoresEditor(obterTodasArvores());
@@ -1418,7 +1429,7 @@ const DashboardMestre = () => {
 
       try {
         const arvoresApi = await buscarArvoresHabilidades();
-        if (!cancelado && arvoresApi && Object.keys(arvoresApi).length > 0) {
+        if (!cancelado && arvoresSync.current.canApplyRemote(versaoArvores) && arvoresApi && Object.keys(arvoresApi).length > 0) {
           salvarArvoresCustom(arvoresApi);
           setArvoresEditor(obterTodasArvores());
         }
@@ -1700,19 +1711,24 @@ const DashboardMestre = () => {
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "");
 
-  const salvarArvoresEditor = (novasArvores) => {
+  const salvarArvoresEditor = async (novasArvores) => {
     setArvoresEditor(novasArvores);
     salvarArvoresCustom(novasArvores);
-    notificarArvoresAtualizadas(novasArvores);
-    salvarArvoresHabilidades(novasArvores)
-      .then((arvoresSalvas) => {
-        notificarArvoresAtualizadas(arvoresSalvas || novasArvores);
-      })
-      .catch((error) => {
-        console.warn("Backend indisponivel. Arvore salva localmente.", error);
-        setMensagem("Arvore salva localmente. Backend indisponivel.");
-      });
-    setMensagem("Árvore de habilidades salva.");
+    setSalvandoArvores(true);
+    setMensagem('Salvando alterações das habilidades no servidor…');
+    try {
+      const {data,latest}=await arvoresSync.current.enqueue(novasArvores);
+      if(latest){
+        salvarArvoresCustom(data || novasArvores);
+        setArvoresEditor(obterTodasArvores());
+        notificarArvoresAtualizadas(data || novasArvores);
+        setMensagem('Habilidades salvas no servidor.');
+      }
+      return latest;
+    } catch(error){
+      setMensagem(`Não foi possível salvar online: ${error.message}. A edição foi mantida neste navegador; tente salvar novamente.`);
+      return false;
+    } finally{setSalvandoArvores(arvoresSync.current.pending>0);}
   };
 
   const limparFormHabilidade = () => {
@@ -1725,7 +1741,7 @@ const DashboardMestre = () => {
     setHabilidadeEditando(null);
   };
 
-  const salvarHabilidadeEditor = (event) => {
+  const salvarHabilidadeEditor = async (event) => {
     event.preventDefault();
 
     if (!formHabilidade.nome.trim()) {
@@ -1738,6 +1754,7 @@ const DashboardMestre = () => {
     if (!arvoreAtual) return;
 
     const novaHabilidade = {
+      editadoPeloMestre:true,
       id: formHabilidade.id || gerarIdHabilidade(formHabilidade.nome),
       nome: formHabilidade.nome.trim(),
       custo: formHabilidade.custo.trim(),
@@ -1777,7 +1794,7 @@ const DashboardMestre = () => {
       };
     }
 
-    salvarArvoresEditor(novasArvores);
+    if(!await salvarArvoresEditor(novasArvores))return;
     limparFormHabilidade();
     setMostrarFormHabilidade(false);
   };
@@ -1797,7 +1814,7 @@ const DashboardMestre = () => {
     setHabilidadeEditandoDados(null);
   };
 
-  const salvarEdicaoHabilidadeCard = () => {
+  const salvarEdicaoHabilidadeCard = async () => {
     if (!habilidadeEditandoDados?.nome.trim()) {
       setMensagem("Informe o nome da habilidade.");
       return;
@@ -1808,6 +1825,7 @@ const DashboardMestre = () => {
 
     const habilidadeAtualizada = {
       ...habilidadeEditandoDados,
+      editadoPeloMestre:true,
       nome: habilidadeEditandoDados.nome.trim(),
       custo: habilidadeEditandoDados.custo.trim(),
       descricao: habilidadeEditandoDados.descricao.trim(),
@@ -1842,7 +1860,7 @@ const DashboardMestre = () => {
       };
     }
 
-    salvarArvoresEditor(novasArvores);
+    if(!await salvarArvoresEditor(novasArvores))return;
     cancelarEdicaoHabilidadeCard();
   };
 
@@ -1852,7 +1870,7 @@ const DashboardMestre = () => {
       titulo: "Excluir habilidade",
       mensagem: "Deseja excluir esta habilidade permanentemente?",
       confirmarTexto: "Excluir",
-      onConfirmar: () => {
+      onConfirmar: async () => {
         const arvoreAtual = arvoresEditor[classeArvoreAtiva];
         const novasArvores = { ...arvoresEditor };
 
@@ -1879,7 +1897,7 @@ const DashboardMestre = () => {
           };
         }
 
-        salvarArvoresEditor(novasArvores);
+        if(!await salvarArvoresEditor(novasArvores))return;
         abrirPopup({
           titulo: "Habilidade excluída",
           mensagem: "A habilidade foi removida com sucesso.",
@@ -7326,361 +7344,20 @@ const DashboardMestre = () => {
 
           {aba === "habilidades" && sistemaAtivo === "espiral" && <EspiralDashboardCatalog key="espiral-abilities" kind="abilities" fichas={fichasDaSubAba} onGrant={concederEntradaEspiral} />}
           {aba === "habilidades" && sistemaAtivo !== "espiral" && (
-            <section className="mestre-loja">
-              <div className="mestre-loja-editor-topo">
-                <div>
-                  <h2>Editor de Habilidades</h2>
-                  <p>Organize e edite as habilidades de cada classe.</p>
-                </div>
-                <button
-                  type="button"
-                  className="mestre-btn-novo-item-loja"
-                  onClick={() => {
-                    limparFormHabilidade();
-                    setMostrarFormHabilidade((atual) => !atual);
-                  }}
-                >
-                  {mostrarFormHabilidade
-                    ? "Fechar formulário"
-                    : "+ Adicionar habilidade"}
-                </button>
-              </div>
-
-              <nav
-                className="mestre-ficha-tabs"
-                aria-label="Classes de habilidades"
-              >
-                {Object.entries(arvoresEditor).map(([id, arvore]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    className={classeArvoreAtiva === id ? "ativa" : ""}
-                    onClick={() => {
-                      setClasseArvoreAtiva(id);
-                      setEspecialidadeEditorId(
-                        tipoHabilidadeEditor === "especialidade"
-                          ? arvore.especialidades?.[0]?.id || ""
-                          : "",
-                      );
-                      limparFormHabilidade();
-                      cancelarEdicaoHabilidadeCard();
-                    }}
-                  >
-                    {arvore.classe || id}
-                  </button>
-                ))}
-              </nav>
-
-              <nav
-                className="mestre-ficha-tabs mestre-habilidades-subabas"
-                aria-label="Categorias de habilidades"
-              >
-                {[
-                  { id: "absolutas", nome: "Habilidades Absolutas" },
-                  { id: "aptidoes", nome: "Aptidões" },
-                  { id: "especialidade", nome: "Especialidades" },
-                ].map((tipo) => (
-                  <button
-                    key={tipo.id}
-                    type="button"
-                    className={tipoHabilidadeEditor === tipo.id ? "ativa" : ""}
-                    onClick={() => {
-                      setTipoHabilidadeEditor(tipo.id);
-                      setEspecialidadeEditorId(
-                        tipo.id === "especialidade"
-                          ? arvoresEditor[classeArvoreAtiva]
-                              ?.especialidades?.[0]?.id || ""
-                          : "",
-                      );
-                      limparFormHabilidade();
-                      cancelarEdicaoHabilidadeCard();
-                    }}
-                  >
-                    {tipo.nome}
-                  </button>
-                ))}
-              </nav>
-
-              {tipoHabilidadeEditor === "especialidade" && (
-                <nav
-                  className="mestre-ficha-tabs mestre-habilidades-subabas"
-                  aria-label="Especialidades"
-                >
-                  {(arvoresEditor[classeArvoreAtiva]?.especialidades || []).map(
-                    (especialidade) => (
-                      <button
-                        key={especialidade.id}
-                        type="button"
-                        className={
-                          especialidadeEditorId === especialidade.id
-                            ? "ativa"
-                            : ""
-                        }
-                        onClick={() => {
-                          setEspecialidadeEditorId(especialidade.id);
-                          cancelarEdicaoHabilidadeCard();
-                        }}
-                      >
-                        {especialidade.nome}
-                      </button>
-                    ),
-                  )}
-                </nav>
-              )}
-
-              {mostrarFormHabilidade && (
-                <form
-                  className="mestre-loja-form"
-                  onSubmit={salvarHabilidadeEditor}
-                >
-                  <h3>
-                    {habilidadeEditando
-                      ? "Editando habilidade"
-                      : "Nova habilidade"}
-                  </h3>
-
-                  <label className="mestre-habilidade-contexto">
-                    Classe
-                    <select
-                      value={classeArvoreAtiva}
-                      onChange={(e) => {
-                        setClasseArvoreAtiva(e.target.value);
-                        setEspecialidadeEditorId("");
-                        limparFormHabilidade();
-                      }}
-                    >
-                      {Object.entries(arvoresEditor).map(([id, arvore]) => (
-                        <option key={id} value={id}>
-                          {arvore.classe || id}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="mestre-habilidade-contexto">
-                    Tipo
-                    <select
-                      value={tipoHabilidadeEditor}
-                      onChange={(e) => {
-                        setTipoHabilidadeEditor(e.target.value);
-                        limparFormHabilidade();
-                      }}
-                    >
-                      <option value="absolutas">Habilidades Absolutas</option>
-                      <option value="aptidoes">Aptidões</option>
-                      <option value="especialidade">
-                        Habilidades de Especialidade
-                      </option>
-                    </select>
-                  </label>
-
-                  {tipoHabilidadeEditor === "especialidade" && (
-                    <label className="mestre-habilidade-contexto">
-                      Especialidade
-                      <select
-                        value={especialidadeEditorId}
-                        onChange={(e) =>
-                          setEspecialidadeEditorId(e.target.value)
-                        }
-                      >
-                        <option value="">Selecione</option>
-                        {(
-                          arvoresEditor[classeArvoreAtiva]?.especialidades || []
-                        ).map((esp) => (
-                          <option key={esp.id} value={esp.id}>
-                            {esp.nome}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  )}
-
-                  <label>
-                    Nome
-                    <input
-                      value={formHabilidade.nome}
-                      onChange={(e) =>
-                        setFormHabilidade((prev) => ({
-                          ...prev,
-                          nome: e.target.value,
-                        }))
-                      }
-                    />
-                  </label>
-
-                  <label>
-                    Custo
-                    <input
-                      value={formHabilidade.custo}
-                      onChange={(e) =>
-                        setFormHabilidade((prev) => ({
-                          ...prev,
-                          custo: e.target.value,
-                        }))
-                      }
-                      placeholder="Ex: 2 PE, Passiva, Reação..."
-                    />
-                  </label>
-
-                  <label>
-                    Descrição
-                    <textarea
-                      value={formHabilidade.descricao}
-                      onChange={(e) =>
-                        setFormHabilidade((prev) => ({
-                          ...prev,
-                          descricao: e.target.value,
-                        }))
-                      }
-                    />
-                  </label>
-
-                  <div className="mestre-loja-form-acoes">
-                    <button type="submit">
-                      {habilidadeEditando
-                        ? "Salvar alteração"
-                        : "Criar habilidade"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        limparFormHabilidade();
-                        setMostrarFormHabilidade(false);
-                      }}
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              <div className="mestre-catalogo-area">
-                <div className="mestre-catalogo">
-                  {(() => {
-                    const arvoreAtual = arvoresEditor[classeArvoreAtiva] || {};
-
-                    const lista =
-                      tipoHabilidadeEditor === "especialidade"
-                        ? (arvoreAtual.especialidades || []).find(
-                            (esp) => esp.id === especialidadeEditorId,
-                          )?.habilidades || []
-                        : arvoreAtual[tipoHabilidadeEditor] || [];
-
-                    return lista.map((habilidade) => {
-                      const editando =
-                        habilidadeEditandoCardId === habilidade.id;
-                      const dados = editando
-                        ? habilidadeEditandoDados
-                        : habilidade;
-
-                      return (
-                        <article
-                          key={habilidade.id}
-                          className={`mestre-habilidade-card ${editando ? "editando" : ""}`}
-                        >
-                          <div className="mestre-habilidade-card-topo">
-                            <span>{tipoHabilidadeEditor}</span>
-                            <div className="mestre-habilidade-card-acoes">
-                              {editando ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={salvarEdicaoHabilidadeCard}
-                                  >
-                                    Salvar
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={cancelarEdicaoHabilidadeCard}
-                                  >
-                                    Cancelar
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button
-                                    type="button"
-                                    className="mestre-botao-editar"
-                                    onClick={() =>
-                                      iniciarEdicaoHabilidadeCard(habilidade)
-                                    }
-                                    aria-label={`Editar ${habilidade.nome}`}
-                                  >
-                                    <Icon path={mdiPencil} size={0.8} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="perigo"
-                                    onClick={() =>
-                                      excluirHabilidadeEditor(habilidade.id)
-                                    }
-                                    aria-label={`Excluir ${habilidade.nome}`}
-                                  >
-                                    <Icon path={mdiDeleteOutline} size={0.8} />
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-
-                          {editando ? (
-                            <div className="mestre-habilidade-card-form">
-                              <label>
-                                Nome
-                                <input
-                                  value={dados?.nome || ""}
-                                  onChange={(event) =>
-                                    setHabilidadeEditandoDados((atual) => ({
-                                      ...atual,
-                                      nome: event.target.value,
-                                    }))
-                                  }
-                                />
-                              </label>
-                              <label>
-                                Custo
-                                <input
-                                  value={dados?.custo || ""}
-                                  onChange={(event) =>
-                                    setHabilidadeEditandoDados((atual) => ({
-                                      ...atual,
-                                      custo: event.target.value,
-                                    }))
-                                  }
-                                />
-                              </label>
-                              <label>
-                                Descrição
-                                <textarea
-                                  value={dados?.descricao || ""}
-                                  onChange={(event) =>
-                                    setHabilidadeEditandoDados((atual) => ({
-                                      ...atual,
-                                      descricao: event.target.value,
-                                    }))
-                                  }
-                                />
-                              </label>
-                            </div>
-                          ) : (
-                            <>
-                              <h3>{dados.nome}</h3>
-                              <p>{dados.descricao || "Sem descrição."}</p>
-                              {dados.custo && (
-                                <small className="mestre-habilidade-custo">
-                                  {dados.custo}
-                                </small>
-                              )}
-                            </>
-                          )}
-                        </article>
-                      );
-                    });
-                  })()}
-                </div>
-              </div>
-            </section>
+            <SystemAbilitiesCatalog
+              trees={arvoresEditor} activeClass={classeArvoreAtiva} activeType={tipoHabilidadeEditor} specialtyId={especialidadeEditorId}
+              onClassChange={id=>{setClasseArvoreAtiva(id);setEspecialidadeEditorId(tipoHabilidadeEditor==="especialidade"?arvoresEditor[id]?.especialidades?.[0]?.id || "":"");limparFormHabilidade();cancelarEdicaoHabilidadeCard();}}
+              onTypeChange={id=>{setTipoHabilidadeEditor(id);setEspecialidadeEditorId(id==="especialidade"?arvoresEditor[classeArvoreAtiva]?.especialidades?.[0]?.id || "":"");limparFormHabilidade();cancelarEdicaoHabilidadeCard();}}
+              onSpecialtyChange={id=>{setEspecialidadeEditorId(id);cancelarEdicaoHabilidadeCard();}}
+              showForm={mostrarFormHabilidade} form={formHabilidade} creatingEditId={habilidadeEditando}
+              onToggleForm={()=>{limparFormHabilidade();cancelarEdicaoHabilidadeCard();setMostrarFormHabilidade(value=>!value);}}
+              onFormChange={setFormHabilidade} onSaveNew={salvarHabilidadeEditor}
+              onCancelNew={()=>{limparFormHabilidade();setMostrarFormHabilidade(false);}}
+              editingId={habilidadeEditandoCardId} editingData={habilidadeEditandoDados}
+              onEdit={item=>{setMostrarFormHabilidade(false);iniciarEdicaoHabilidadeCard(item);}}
+              onEditChange={setHabilidadeEditandoDados} onSaveEdit={salvarEdicaoHabilidadeCard} onCancelEdit={cancelarEdicaoHabilidadeCard}
+              onDelete={excluirHabilidadeEditor} saving={salvandoArvores}
+            />
           )}
           {aba === "analises" && (
             <section className="mestre-analises"><RecriacaoRequests fichas={fichas} onSaved={(ficha,saved)=>{setFichas(current=>current.map(item=>item.fichaId===ficha.fichaId?{...item,personagem:saved}:item));setMensagem("Solicitação de recriação analisada.");}}/>
