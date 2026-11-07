@@ -4,24 +4,24 @@ import { alterarMedo, DOMINIOS } from '../data/absolutoV1';
 const plain = value => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export function prepararUso(habilidade, tipo='habilidade') {
  const rito=tipo==='rito' || habilidade.tipo==='rito' || habilidade.categoria==='ritos';
- const grupo=['aptidao','habilidade absoluta'].includes(plain(habilidade.grupo)) ? habilidade.grupo : tipo==='absoluta' || habilidade.tipo==='poderAbsoluto' ? 'Habilidade Absoluta' : 'Aptidão';
- const convertida=converterCustoUso({...habilidade,grupo});
- const custo=rito ? custoUsoRito(habilidade) : Number.isFinite(habilidade.custoAtivacao) ? habilidade.custoAtivacao : convertida.custoAtivacao;
- const descricao=habilidade.descricao || habilidade.detalhe || habilidade.efeito || habilidade.habilidadePrincipal || '';
+ const grupo=['aptidao','habilidade absoluta','especialismo','especialidade'].includes(plain(habilidade.grupo)) ? habilidade.grupo : tipo==='absoluta' || habilidade.tipo==='poderAbsoluto' ? 'Habilidade Absoluta' : 'Aptidão';
+ const convertida=rito ? habilidade : converterCustoUso({...habilidade,grupo});
+ const custo=rito ? custoUsoRito(habilidade) : plain(grupo)==='habilidade absoluta' ? 10 : convertida.balanceamentoEspecialidade ? convertida.custoAtivacao : convertida.balanceamentoPassiva ? 0 : Number.isFinite(habilidade.custoAtivacao) ? habilidade.custoAtivacao : convertida.custoAtivacao;
+ const descricao=convertida.descricao || habilidade.descricao || habilidade.detalhe || habilidade.efeito || habilidade.habilidadePrincipal || '';
  const normal=plain(descricao);
- const limite=/uma vez por sessao|1x\s*\/\s*sessao/.test(normal) ? 'sessao' : /uma vez por combate|1x\s*\/\s*combate/.test(normal) ? 'combate' : /uma vez por cena|1x\s*\/\s*cena/.test(normal) ? 'cena' : null;
- return {...habilidade,custoAtivacao:custo,passiva:!rito && custo===0,descricaoUso:descricao,limiteUso:limite,idUso:`${rito ? 'rito' : tipo}:${habilidade.id || habilidade.nome}`};
+ const limite=convertida.balanceamentoEspecialidade ? convertida.balanceamentoEspecialidade.limite : plain(grupo)==='habilidade absoluta' && !rito ? 'cena' : convertida.balanceamentoPassiva?.limite || (/uma vez por sessao|1x\s*\/\s*sessao/.test(normal) ? 'sessao' : /uma vez por combate|1x\s*\/\s*combate/.test(normal) ? 'combate' : /uma vez por cena|1x\s*\/\s*cena/.test(normal) ? 'cena' : null);
+ return {...habilidade,...convertida,custoAtivacao:custo,passiva:!rito && custo===0,descricaoUso:descricao,limiteUso:limite,idUso:`${rito ? 'rito' : tipo}:${habilidade.id || habilidade.nome}`};
 }
 export function aplicarUso(personagem, habilidade, tipo='habilidade', agora=Date.now()) {
  const uso=prepararUso(habilidade,tipo);
- if(uso.passiva) throw new Error('Aptidão passiva: permanece ativa sem gasto de PE.');
+ if(uso.passiva && !uso.limiteUso) throw new Error('Aptidão passiva: permanece ativa sem gasto de PE.');
  if(habilidade.status && habilidade.status!=='aprovada') throw new Error('Aguarde a aprovação do mestre.');
  if(!Number.isInteger(uso.custoAtivacao) || uso.custoAtivacao<0) throw new Error('Custo de ativação inválido.');
  const saldo=Number(personagem.esperanca?.atual)||0;
  if(Number(personagem.medo)>=4 && uso.custoAtivacao>0) throw new Error('A Esperança já não consegue superar o terror.');
  if(saldo<uso.custoAtivacao) throw new Error('PE insuficientes.');
  if(uso.limiteUso && personagem.usosHabilidades?.[uso.idUso]) throw new Error(`Limite de uso por ${uso.limiteUso} atingido.`);
- const efeitos=habilidade.efeitosAutomaticos || extrairEfeitosDiretos(uso.descricaoUso);
+ const efeitos=uso.balanceamentoPassiva || uso.balanceamentoAbsoluta || uso.balanceamentoEspecialidade ? [] : habilidade.efeitosAutomaticos || extrairEfeitosDiretos(uso.descricaoUso);
  if(!Array.isArray(efeitos)) throw new Error('Efeitos automáticos inválidos.');
  let proximo={...personagem,esperanca:{...personagem.esperanca,atual:saldo-uso.custoAtivacao}};
  const aplicados=[];
@@ -41,12 +41,15 @@ export function aplicarUso(personagem, habilidade, tipo='habilidade', agora=Date
    aplicados.push(`${DOMINIOS[efeito.dominio].nome}: ${efeito.valor>0?'+':''}${efeito.valor} dado enquanto ativo`);
   } else throw new Error('Este efeito precisa ser configurado pelo mestre antes de aplicar.');
  }
- const registro={id:`${uso.idUso}:${agora}`,idUso:uso.idUso,nome:uso.nome,custo:uso.custoAtivacao,descricao:uso.descricaoUso,limite:uso.limiteUso,duracao:habilidade.duracao || 'Encerrar após resolver o efeito',efeitos:efeitos.filter(e=>e.tipo==='dados'),aplicados,pendente:!habilidade.efeitosAutomaticos || efeitos.some(e=>e.tipo==='dano'),criadoEm:agora};
+ const registro={origemPassiva:uso.passiva,id:`${uso.idUso}:${agora}`,idUso:uso.idUso,nome:uso.nome,custo:uso.custoAtivacao,descricao:uso.descricaoUso,limite:uso.limiteUso,duracao:habilidade.duracao || 'Encerrar após resolver o efeito',efeitos:efeitos.filter(e=>e.tipo==='dados'),aplicados,pendente:Boolean(uso.balanceamentoPassiva) || !habilidade.efeitosAutomaticos || efeitos.some(e=>e.tipo==='dano'),criadoEm:agora};
  if(tipo==='rito') {
   registro.ritoId=habilidade.id || `${habilidade.nome}-${habilidade.index}`;
   proximo={...proximo,ritosAtivos:[...new Set([...(proximo.ritosAtivos||[]),registro.ritoId])]};
  }
- return {...proximo,usosHabilidades:{...personagem.usosHabilidades,...(uso.limiteUso ? {[uso.idUso]:uso.limiteUso} : {})},efeitosHabilidadesAtivos:[...(personagem.efeitosHabilidadesAtivos||[]).filter(e=>e.idUso!==uso.idUso),registro]};
+ return {...proximo,
+  ...(uso.passiva && uso.limiteUso ? {usosPassivas:{...personagem.usosPassivas,[uso.idUso]:uso.limiteUso}} : {}),
+  ...(uso.balanceamentoEspecialidade && uso.limiteUso ? {usosEspecialidades:{...personagem.usosEspecialidades,[uso.idUso]:uso.limiteUso}} : {}),
+  usosHabilidades:{...personagem.usosHabilidades,...(uso.limiteUso ? {[uso.idUso]:uso.limiteUso} : {})},efeitosHabilidadesAtivos:[...(personagem.efeitosHabilidadesAtivos||[]).filter(e=>e.idUso!==uso.idUso),registro]};
 }
 export function extrairEfeitosDiretos(descricao) {
  const texto=plain(descricao), efeitos=[];
@@ -66,7 +69,9 @@ export function extrairEfeitosDiretos(descricao) {
  return efeitos;
 }
 export function bonusHabilidades(personagem,dominio) {
- return (personagem.efeitosHabilidadesAtivos||[]).flatMap(e=>e.efeitos||[]).filter(e=>e.tipo==='dados' && e.dominio===dominio).reduce((total,e)=>total+e.valor,0);
+ const registros=personagem.efeitosHabilidadesAtivos||[];
+ const soma=lista=>lista.flatMap(e=>e.efeitos||[]).filter(e=>e.tipo==='dados' && e.dominio===dominio).reduce((total,e)=>total+e.valor,0);
+ return soma(registros.filter(e=>!e.origemPassiva)) + Math.min(1,soma(registros.filter(e=>e.origemPassiva)));
 }
 export function renovarUsos(personagem,periodo) {
  const periodos=periodo==='sessao' ? ['cena','combate','sessao'] : periodo==='combate' ? ['cena','combate'] : ['cena'];

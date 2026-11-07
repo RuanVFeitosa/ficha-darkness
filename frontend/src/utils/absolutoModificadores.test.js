@@ -37,7 +37,7 @@ test('custos, recursos, medidas, intervalos e progressão não viram modificador
   expect(converterTextoAbsoluto(texto)).toBe(texto);
   const original={id:'arma-15',nome:'Arma +15',preco:150,custo:'5 PE',nivel:4,efeito:'+15 em ataques',armaStatus:{dmg:'3d6+10'},modificacao:{efeitos:{bonusTesteAtaque:15,penalidadeCurto:-10}}};
   const novo=normalizarConteudoAbsoluto(original);
-  expect(novo).toMatchObject({id:'arma-15',nome:'Arma +15',preco:150,custo:'5 PE',nivel:4,efeito:'+1 dado em ataques',armaStatus:{dmg:'4d6'},modificacao:{efeitos:{bonusTesteAtaque:1,penalidadeCurto:-1}}});
+  expect(novo).toMatchObject({id:'arma-15',nome:'Arma +15',preco:150,custo:'5 PE',nivel:4,efeito:'+1 dado em ataques',armaStatus:{dmg:'3d6+10'},modificacao:{efeitos:{bonusTesteAtaque:1,penalidadeCurto:-1}}});
   expect(original.armaStatus.dmg).toBe('3d6+10');
   expect(normalizarConteudoAbsoluto({bonusMunicao:15})).toEqual({bonusMunicao:15});
 });
@@ -61,7 +61,7 @@ test('bônus e Crítico adicionam dados de dano, sem somar pontos e sem ultrapas
 });
 
 test('catálogos e árvores personalizadas usam a mesma conversão das fichas salvas', () => {
-  expect(CATALOGO_COMBATE.find(i => i.id==='fuzil-assalto-helena').armaStatus.dmg).toBe('4d12');
+  expect(CATALOGO_COMBATE.find(i => i.id==='fuzil-assalto-helena').armaStatus.dmg).toBe('3d10+3');
   expect(CATALOGO_RITOS_ABSOLUTOS.find(i => i.id==='rito-olhos-orvalho').detalhe).toContain('+1 dado');
   salvarArvoresCustom({teste:{classe:'Teste',absolutas:[{id:'h',nome:'H',descricao:'+15 no ataque e -10 no dano'}]}});
   expect(obterArvoreClasse('teste').absolutas[0].descricao).toBe('+1 dado no ataque e −1 dado no dano');
@@ -69,7 +69,7 @@ test('catálogos e árvores personalizadas usam a mesma conversão das fichas sa
   const p={...criarBaseV1(),inventario:[{nome:'Arma',armaStatus:{dmg:'3d6+15'}}],legadoAbsoluto:{bonusTeste:'+15'}};
   const atualizado=normalizarFichaAbsoluto(p);
   expect(atualizado.configuracaoAbsoluto.limiteDados).toBe(8);
-  expect(atualizado.inventario[0].armaStatus.dmg).toBe('4d6');
+  expect(atualizado.inventario[0].armaStatus.dmg).toBe('3d6+15');
   expect(atualizado.legadoAbsoluto.bonusTeste).toBe('+15');
   expect(normalizarFichaAbsoluto(atualizado)).toEqual(atualizado);
   const espiral={sistema:'espiral',attributes:{pulso:3},abilities:'+15 em testes'};

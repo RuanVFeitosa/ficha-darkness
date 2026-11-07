@@ -1,3 +1,7 @@
+import {balancearAptidao} from './aptidoesBalanceamento';
+import {balancearAbsoluta} from './absolutasBalanceamento';
+import {balancearEspecialidade} from './especialidadesBalanceamento';
+import {adaptarHabilidadeRegras,adaptarTextoRegras} from '../utils/absolutoTextoRegras';
 const texto = value => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export const CUSTOS_RITOS = {iniciante:2, intermediario:3, avancado:4, experiente:5, absoluto:6};
 export function custoUsoRito(rito={}) {
@@ -6,7 +10,12 @@ export function custoUsoRito(rito={}) {
 }
 export function converterCustoUso(habilidade={}) {
  const grupo=texto(habilidade.grupo);
+ if(['especialismo','especialidade'].includes(grupo)) return balancearEspecialidade(habilidade);
  if(!['aptidao','habilidade absoluta'].includes(grupo)) return habilidade;
+ habilidade=adaptarHabilidadeRegras(habilidade);
+ if(typeof habilidade.descricao==='string') habilidade={...habilidade,descricao:adaptarTextoRegras(habilidade.descricao)};
+ if(grupo==='aptidao') habilidade=balancearAptidao(habilidade);
+ if(grupo==='habilidade absoluta') return balancearAbsoluta(habilidade);
  const anterior=habilidade.custoLegado ?? habilidade.custo;
  const valor=Number.parseInt(anterior,10)||0;
  const categoria=texto(habilidade.categoriaUso);

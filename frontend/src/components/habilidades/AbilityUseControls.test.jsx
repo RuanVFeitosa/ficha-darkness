@@ -1,6 +1,20 @@
 import React from 'react';
 import {render,screen,fireEvent,waitFor} from '@testing-library/react';
 import AbilityUseControls from './AbilityUseControls';
+
+test('passiva de cena é gratuita e seu uso fica indisponível até renovar o limite',async()=>{
+ const habilidade={id:'dosagem-segura',nome:'Dosagem Segura',custo:'Passiva'};
+ const onUse=jest.fn().mockResolvedValue({});
+ const {rerender}=render(<AbilityUseControls habilidade={habilidade} personagem={{esperanca:{atual:0}}} onUse={onUse}/>);
+ expect(screen.getByText('0 PE')).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Usar Dosagem Segura'}));
+ await waitFor(()=>expect(onUse).toHaveBeenCalledTimes(1));
+ const registro={id:'e',idUso:'habilidade:dosagem-segura'};
+ rerender(<AbilityUseControls habilidade={habilidade} personagem={{esperanca:{atual:0},usosHabilidades:{'habilidade:dosagem-segura':'cena'},efeitosHabilidadesAtivos:[registro]}} onUse={onUse}/>);
+ expect(screen.getByRole('button',{name:'Usar Dosagem Segura'})).toBeDisabled();
+ rerender(<AbilityUseControls habilidade={habilidade} personagem={{esperanca:{atual:0},usosHabilidades:{},efeitosHabilidadesAtivos:[registro]}} onUse={onUse}/>);
+ expect(screen.getByRole('button',{name:'Usar Dosagem Segura'})).toBeEnabled();
+});
 test('card mostra custo, usa uma vez por clique e comunica resultado',async()=>{
  const onUse=jest.fn().mockResolvedValue({});
  render(<AbilityUseControls habilidade={{nome:'Foco',custo:'4 PE'}} personagem={{esperanca:{atual:3}}} onUse={onUse}/>);

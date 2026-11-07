@@ -1,3 +1,4 @@
+import {balancearArvore} from '../aptidoesBalanceamento';
 import { normalizarConteudoAbsoluto } from '../../utils/absolutoModificadores';
 import { arvoreEspecialista } from "./arvoreEspecialista";
 import { arvoreAtiradorElite } from "./arvoreAtiradorElite";
@@ -741,13 +742,13 @@ const arvoreAniquilador = {
     },
   ],
 };
-export const arvoresHabilidades = normalizarConteudoAbsoluto({
+export const arvoresHabilidades = Object.fromEntries(Object.entries(normalizarConteudoAbsoluto({
   aniquilador: arvoreAniquilador,
   especialista: arvoreEspecialista,
   atiradorElite: arvoreAtiradorElite,
   medicoDeCampo: arvoreMedicoCampo,
   renegado: arvoreRenegado,
-});
+})).map(([id,arvore])=>[id,balancearArvore(arvore)]));
 
 const normalizarClasse = (classe) =>
   String(classe || "")
@@ -894,7 +895,7 @@ export const salvarArvoresCustom = (arvores) => {
   }
 };
 
-export const obterTodasArvores = () => ({
+export const obterTodasArvores = () => Object.fromEntries(Object.entries({
   ...arvoresHabilidades,
   ...carregarArvoresCustom(),
-});
+}).map(([id,arvore])=>[id,balancearArvore(arvore)]));
