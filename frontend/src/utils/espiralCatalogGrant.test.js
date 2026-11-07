@@ -1,4 +1,9 @@
 import { grantEspiralCatalogEntry } from './espiralCatalogGrant';
+
+test.each([0,3])('preserva as %s balas definidas pelo mestre ao salvar a arma',ammo=>{
+ const result=grantEspiralCatalogEntry({weapons:[]},{id:'pistol',type:'weapon',name:'Pistola',ammo},'new');
+ expect(result.weapons[0].ammo).toBe(ammo);
+});
 import { CATALOGO_ESPIRAL } from '../data/catalogoEspiral';
 
 test('concede armas e proteções no formato lido pela ficha ESPIRAL', () => {

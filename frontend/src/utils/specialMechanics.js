@@ -1,4 +1,5 @@
 import { applyRevoltAction, createRevolt } from './revoltMechanic';
+import { applyOptionalAction } from './optionalSystems';
 
 export const MECHANIC_TYPES = {
   revolt: { name: 'Revolta', description: 'Três frentes simultâneas por Brasília: conquiste os acessos à sede e derrube o comando.' },
@@ -34,6 +35,7 @@ export function createMechanic(type, config = {}, id = `mechanic-${Date.now()}-$
 }
 export function applyMechanicAction(input, action, now = new Date().toISOString(), random = Math.random) {
   const state = normalizeMechanics(input);
+  if (action.type.startsWith('optional')) return applyOptionalAction(state, action);
   let events = state.events.map(event => JSON.parse(JSON.stringify(event)));
   let activeId = state.activeId;
   if (action.type === 'create') {

@@ -1,0 +1,20 @@
+/* Player tools occupy the bottom edge; the initiative keeps its left position. */
+.tt3-player-settings{position:relative;pointer-events:auto;color:#ddd;font:11px monospace}
+.tt3-player-settings>summary,.tt3-player-camera-menu>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 16px;border:1px solid #ffffff26;border-radius:4px;background:#080c0de8;color:#d7ddda;font:11px monospace;backdrop-filter:blur(16px)}
+.tt3-player-settings summary::-webkit-details-marker,.tt3-player-camera-menu summary::-webkit-details-marker{display:none}
+.tt3-player-settings>.tt3-session-meta{position:absolute;right:0;top:calc(100% + 10px);width:280px;max-width:calc(100vw - 40px);padding:16px;display:flex;flex-direction:column;align-items:stretch;gap:12px;border:1px solid #ffffff26;border-radius:5px;background:#080c0df5;box-shadow:0 16px 40px #0008;backdrop-filter:blur(20px)}
+.tt3-player-settings .tt3-role{display:none}.tt3-player-settings .tt3-shared-motion{font-size:10px;color:#8faaa6}.tt3-player-controls-help{margin:0;padding-top:12px;border-top:1px solid #ffffff1a;color:#94a29e;font:10px/1.9 monospace}
+.tt3-player-settings .tt3-motion-popover,.tt3-player-settings .tt3-token-speed>div{position:static;width:auto;min-width:0;max-width:100%;margin-top:8px;box-shadow:none;box-sizing:border-box}
+.tt3-player-settings>.tt3-session-meta{max-height:calc(100dvh - 150px);overflow:auto;box-sizing:border-box}
+.tt3-player-camera-menu{position:absolute;right:18px;bottom:18px;z-index:10;max-width:calc(100% - 36px)}
+.tt3-player-camera-menu .tt3-camera-dock{position:static;display:flex;flex-direction:column;align-items:stretch;transform:none;gap:4px;border:0;background:transparent;box-shadow:none;padding:0}
+.tt3-player-camera-options{position:absolute;bottom:calc(100% + 10px);right:0;width:200px;padding:8px;border:1px solid #ffffff26;border-radius:5px;background:#080c0df5;box-shadow:0 12px 36px #0008}
+.tt3-player-camera-menu .tt3-camera-dock button{text-align:left;min-height:34px;padding:8px 12px}
+.tt3-stage.tt3-player-desktop .tt3-command-rail{top:auto;left:50%;right:auto;bottom:18px;width:max-content;max-width:calc(100% - 420px);height:auto;flex-direction:row;justify-content:center;transform:translateX(-50%);gap:2px;padding:5px;border:1px solid #ffffff26;border-radius:5px;background:#080c0de8;backdrop-filter:blur(16px)}
+.tt3-stage.tt3-player-desktop .tt3-command-rail button{min-width:60px;min-height:38px;max-width:100px;padding:7px 10px;font-size:10px;color:#adbcb6}.tt3-stage.tt3-player-desktop .tt3-command-rail button[aria-pressed=true]{background:#87b7aa20;color:#e2f0e9;border-color:#87b7aa55}
+.tt3-stage.tt3-player-desktop .tt3-player-flashlight{left:18px;bottom:21px}.tt3-stage.tt3-player-desktop .tt3-player-uv{left:66px;bottom:21px}
+.tt3-stage.tt3-player-desktop .tt3-toast{left:50%;bottom:86px;transform:translateX(-50%);max-width:min(520px,calc(100% - 270px));text-align:center;font-size:11px}.tt3-stage.tt3-player-desktop .tt3-toast:has(span:empty){display:none}.tt3-stage.tt3-player-desktop .tt3-toast small{display:none}
+.tt3-stage.tt3-player-desktop .tt3-cinema-header{border:0;background:linear-gradient(#03070699,transparent);align-items:flex-start}.tt3-stage.tt3-player-desktop .tt3-scene-identity h1{font-size:19px}.tt3-stage.tt3-player-desktop .tt3-scene-identity>div>span{max-width:280px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.65}
+.tt3-stage.tt3-player-desktop .tt3-hud-drawer:not(.tt3-sheet-drawer){left:auto;right:18px;top:80px;bottom:86px}
+.tt3-hud-hidden .tt3-player-camera-menu{opacity:0;pointer-events:none}
+@media(min-width:761px) and (max-width:1100px){.tt3-stage.tt3-player-desktop .tt3-command-rail{max-width:calc(100% - 330px)}.tt3-stage.tt3-player-desktop .tt3-command-rail button{min-width:42px;padding:6px;font-size:9px}.tt3-player-camera-menu>summary{padding:12px;font-size:10px}}

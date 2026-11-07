@@ -54,3 +54,15 @@ test('jogador não pode alterar velocidade ou inclinação pelos atalhos',()=>{
  expect(setSpeed).not.toHaveBeenCalled();
  expect(setMotion).not.toHaveBeenCalled();
 });
+
+test('studio shortcuts target the recording canvas without changing another view',()=>{
+ const setSpeed=jest.fn(),setMotion=jest.fn();
+ function Studio(){useCameraSpeedShortcut(setSpeed,setMotion,true,'.cs-map-capture canvas');return <><div className="cs-map-capture"><canvas data-testid="studio"/></div><div className="tt3"><canvas data-testid="other"/></div></>;}
+ render(<Studio/>);
+ fireEvent.wheel(screen.getByTestId('studio'),{ctrlKey:true,deltaY:-100});
+ expect(setSpeed.mock.calls[0][0](1)).toBe(1.25);
+ fireEvent.wheel(screen.getByTestId('studio'),{shiftKey:true,deltaY:-100});
+ expect(setMotion.mock.calls[0][0]({roll:0})).toEqual({roll:1});
+ fireEvent.wheel(screen.getByTestId('other'),{ctrlKey:true,deltaY:-100});
+ expect(setSpeed).toHaveBeenCalledTimes(1);
+});

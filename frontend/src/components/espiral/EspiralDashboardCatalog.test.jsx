@@ -3,6 +3,21 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import EspiralDashboardCatalog from './EspiralDashboardCatalog';
 
 const ficha = { fichaId: 'espiral:123', espiralId: '123', personagem: { name: 'Ana', evolution: { points: 5, abilities: [] } } };
+
+test('mestre escolhe poucas balas ou entrega arma vazia sem alterar o catálogo',async()=>{
+ const onGrant=jest.fn();
+ render(<EspiralDashboardCatalog kind="items" fichas={[ficha]} onGrant={onGrant}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Armas de fogo'}));
+ fireEvent.change(screen.getByLabelText('Conceder a uma ficha local'),{target:{value:ficha.fichaId}});
+ fireEvent.change(screen.getByLabelText('Balas na entrega de Pistola'),{target:{value:'3'}});
+ fireEvent.click(screen.getByRole('button',{name:'Conceder: Pistola'}));
+ expect(onGrant).toHaveBeenLastCalledWith(ficha,expect.objectContaining({name:'Pistola',ammo:3}));
+ await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('com 3 balas'));
+ fireEvent.change(screen.getByLabelText('Balas na entrega de Pistola'),{target:{value:'0'}});
+ fireEvent.click(screen.getByRole('button',{name:'Conceder: Pistola'}));
+ expect(onGrant).toHaveBeenLastCalledWith(ficha,expect.objectContaining({name:'Pistola',ammo:0}));
+ await waitFor(()=>expect(screen.getByRole('status')).toHaveTextContent('com 0 balas'));
+});
 test('exibe o acervo ESPIRAL e concede a arma selecionada', () => {
   const onGrant = jest.fn();
   render(<EspiralDashboardCatalog kind="items" fichas={[ficha]} onGrant={onGrant} />);

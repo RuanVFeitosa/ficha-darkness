@@ -1,3 +1,6 @@
+import WeaponAmmoEditor from '../components/espiral/WeaponAmmoEditor';
+import {SheetSurvival} from '../components/campanha/SurvivalIndicators';
+import useSheetAmmoEnabled from '../hooks/useSheetAmmoEnabled';
 import RefazerFicha from '../components/jogador/RefazerFicha';
 import { buscarFichaEspiral, salvarFichaEspiral } from '../services/espiralApi';
 import NumberInput from '../components/ui/NumberInput';
@@ -364,7 +367,7 @@ function BodyMap({ injuries, protections, selectedRegion, onSelect }) {
   );
 }
 
-export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedded=false,scene=null,sceneEnemies=[],rollContext=null,difficultyLocked=false,onRollContextChange,onSheetChange,onRoll}) {
+export default function FichaEspiral({campaign=undefined,tabletopAccessError="",sheetId=null,embedded=false,scene=null,sceneEnemies=[],rollContext=null,difficultyLocked=false,onRollContextChange,onSheetChange,onRoll}) {
   const idFromUrl = sheetId || new URLSearchParams(window.location.search).get("ficha");
   const id = idFromUrl || "principal";
   const storageKey = `espiral:sheet:v1:${id}`;
@@ -434,6 +437,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
     : "";
   const budget = creationWarnings(sheet);
   const defense = sheet.attributes.sentido + 2;
+  const contarBalas=useSheetAmmoEnabled(`espiral:${id}`,campaign);
   const weapons = Array.isArray(sheet.weapons) ? sheet.weapons : [];
   const protections = Array.isArray(sheet.protections) ? sheet.protections : [];
   const temporaryBonusesFor = (resourceName, source = sheet) =>
@@ -932,7 +936,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
         description: item.detail || catalogItem.detail || "Arma registrada no equipamento do personagem.",
         properties: [
           { label: "Dano", value: item.damage || catalogItem.damage || "Não informado" },
-          { label: "Munição", value: item.ammo || "Não registrada" },
+          ...(contarBalas ? [{ label: "Munição", value: item.ammo ?? "Não registrada" }] : []),
           { label: "Grupo", value: weaponGroup === "fogo" ? "Arma de fogo" : weaponGroup === "brancas" ? "Arma branca" : "Não informado" },
         ],
       };
@@ -1398,6 +1402,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
                             }
                             placeholder="Nome da arma"
                           />
+                          {contarBalas && <WeaponAmmoEditor name={weapon.name || 'arma'} value={weapon.ammo} onChange={value=>updateEquipment('weapons',weapon.id,'ammo',value)}/>}
                           <label className="es-kit-damage"><span>DANO</span><EspiralDiceInput
                             aria-label="Dano da arma"
                             value={weapon.damage}
@@ -1562,6 +1567,7 @@ export default function FichaEspiral({tabletopAccessError="",sheetId=null,embedd
                   Integridade mede o que você ainda suporta. Lesões registram o
                   que aconteceu.
                 </p>
+                <SheetSurvival sheetId={`espiral:${id}`} campaign={campaign}/>
                 <div className="es-injury-workspace">
                   <BodyMap
                     injuries={sheet.injuries}

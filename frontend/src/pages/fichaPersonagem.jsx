@@ -1,3 +1,6 @@
+import SheetOptionalSystems from '../components/campanha/SheetOptionalSystems';
+import {SheetSurvival} from '../components/campanha/SurvivalIndicators';
+import {changeWeaponAmmo,weaponAmmo} from '../utils/optionalSystems';
 import useAbsolutoSceneDifficulty from '../hooks/useAbsolutoSceneDifficulty';
 import BodyProtectionSummary from '../components/absoluto/BodyProtectionSummary';
 import {protecaoRegional} from '../utils/absolutoProtecao';
@@ -509,6 +512,7 @@ const FichaPersonagem = () => {
     return () => document.removeEventListener('keydown', teclado);
   }, [menuFichaAberto]);
   const [adaptacaoAberta, setAdaptacaoAberta] = useState(false);
+  const [contarBalas, setContarBalas] = useState(false);
   const [campanhasDaFicha, setCampanhasDaFicha] = useState([]);
   const [carregandoCampanhas, setCarregandoCampanhas] = useState(false);
   const [erroCampanhas, setErroCampanhas] = useState("");
@@ -1783,14 +1787,11 @@ const FichaPersonagem = () => {
     gruposCorpo = 1,
   ) => {
     if (ehAbsolutoV1(personagem)) {
-      if (!ultimoTesteV1?.sucesso || ultimoTesteV1.danoResolvido) {
-        alertarDialogo('Realize primeiro um teste de Violência ou Precisão na aba Combate. Após acertar, use o botão da arma para rolar o dano.', { titulo: 'Dano do ataque' });
-        return;
-      }
+      const criticoDoTeste = Boolean(ultimoTesteV1?.sucesso && !ultimoTesteV1.danoResolvido && ultimoTesteV1.critico);
       if (!item.armaStatus?.dmg) return;
-      const resultado = rolarDanoArma(item.armaStatus.dmg, ultimoTesteV1.critico ? 1 : 0, [item.bonusDanoArma || '', item.municaoCarregada?.bonusDano || '']);
-      const rolagem = { ...resultado, tipo: 'dano', titulo: item.nome, modo: ultimoTesteV1.critico ? 'Crítico · +1 dado de dano (máximo 8 dados)' : 'Dano bruto antes da Proteção', formula: resultado.texto, dados: [...resultado.rolagens, ...(resultado.rolagensBonus || [])], dadosDetalhados: resultado.dadosDetalhados, faces: interpretarDano(item.armaStatus.dmg)?.faces || 6, total: resultado.total };
-      setUltimoTesteV1({ ...ultimoTesteV1, danoResolvido: true });
+      const resultado = rolarDanoArma(item.armaStatus.dmg, criticoDoTeste ? 1 : 0, [item.bonusDanoArma || '', item.municaoCarregada?.bonusDano || '']);
+      const rolagem = { ...resultado, tipo: 'dano', titulo: item.nome, modo: criticoDoTeste ? 'Crítico · +1 dado de dano (máximo 8 dados)' : 'Dano bruto antes da Proteção', formula: resultado.texto, dados: [...resultado.rolagens, ...(resultado.rolagensBonus || [])], dadosDetalhados: resultado.dadosDetalhados, faces: interpretarDano(item.armaStatus.dmg)?.faces || 6, total: resultado.total };
+      if (ultimoTesteV1) setUltimoTesteV1({ ...ultimoTesteV1, danoResolvido: true });
       abrirRolagemAnimada(rolagem); registrarRolagemMestre(rolagem);
       if (item.municaoCarregada) { const index = encontrarIndexArmaNoInventario(item); if (index >= 0) consumirMunicaoDaArma(index); }
       if (item.durabilidade && item.durabilidade !== '—') reduzirDurabilidadeItem(item.index);
@@ -2909,11 +2910,12 @@ const FichaPersonagem = () => {
 
   const rolarAtributoV1 = (chave, anterior = null) => rolarTesteV1(chave, anterior, true);
   const rolarDominioV1 = (chave, anterior = null) => rolarTesteV1(chave, anterior, false);
-  const rolarTesteV1 = async (chave, anterior, atributo) => {
+  const rolarTesteV1 = async (chave, anterior, atributo, weapon = null) => {
     try {
       if (codigoCampanhaTeste && (erroDificuldadeMesa || carregandoDificuldadeMesa)) throw new Error(erroDificuldadeMesa || 'Aguarde a dificuldade da mesa carregar.');
       const executar = atributo ? executarTesteAtributo : executarTesteDominio;
-      const { rolagem, personagem: atualizado } = executar(personagem, chave, { dt: dtEfetivaV1, vantagem: modificadorDadosRolagem, acaoMedo, esforco: esforcoTesteV1 && !efeitosMedo(personagem,contraFonteMedo).semEsforco, contraFonte: contraFonteMedo, repetir: anterior });
+      let { rolagem, personagem: atualizado } = executar(personagem, chave, { dt: dtEfetivaV1, vantagem: modificadorDadosRolagem, acaoMedo, esforco: esforcoTesteV1 && !efeitosMedo(personagem,contraFonteMedo).semEsforco, contraFonte: contraFonteMedo, repetir: anterior });
+      if (weapon && contarBalas && weaponAmmo(weapon).capacity) atualizado = {...atualizado,inventario:atualizado.inventario.map((entry,i)=>i===weapon.index?changeWeaponAmmo({...entry,armaStatus:weapon.armaStatus},'fire'):entry)};
       if (efeitosMedo(personagem,contraFonteMedo).colapso) setAcaoMedo('');
       if (atualizado !== personagem) { revisaoRecursosRef.current += 1; setPersonagem(atualizado); }
       if (!atributo) setUltimoTesteV1(rolagem);
@@ -3532,6 +3534,7 @@ const FichaPersonagem = () => {
           <label><input type="checkbox" checked={esforcoTesteV1 && !efeitosMedo(personagem,contraFonteMedo).semEsforco} disabled={efeitosMedo(personagem,contraFonteMedo).semEsforco} onChange={e => setEsforcoTesteV1(e.target.checked)} /> Esforço · 1 Esperança / +1D</label>
         </div>}
         </div>
+        {ehAbsolutoV1(personagem) && <AbsolutoCombatWeapons trackAmmo={contarBalas} onAmmoChange={(weapon,action,value)=>setPersonagem(p=>({...p,inventario:p.inventario.map((item,i)=>i===weapon.index?changeWeaponAmmo({...item,armaStatus:weapon.armaStatus},action,value):item)}))} onQuickChange={(slot,index)=>setPersonagem(p=>({...p,inventario:p.inventario.map((item,i)=>({...item,acessoRapidoCombate:i===index ? slot : item.acessoRapidoCombate===slot ? null : item.acessoRapidoCombate}))}))} weapons={combatWeapons(personagem.inventario,CATALOGO_COMBATE)} renderIcon={renderizarIconeItem} onManage={()=>{setAbaAtiva('inventario');setSubAbaInventario('mochila');}} onAttack={item=>rolarTesteV1(item.categoria==='armas-corpo' || item.armaStatus.tipo==='Corpo a Corpo' ? 'violencia' : 'precisao',null,false,item)} onDamage={item=>rolarAtaqueArma(item)}/>}
         <div className="ativos-layout">
           <div className="lista-ativos">
             {ehAbsolutoV1(personagem) ? Object.keys(DOMINIOS).map(chave => <AbsolutoDominio key={chave} chave={chave} personagem={personagem} onRoll={rolarDominioV1} vantagem={modificadorDadosRolagem} esforco={esforcoTesteV1 && !efeitosMedo(personagem,contraFonteMedo).semEsforco} contraFonte={contraFonteMedo} />) : <>
@@ -3633,7 +3636,7 @@ const FichaPersonagem = () => {
               )}
             </div>
           </aside>
-        {ehAbsolutoV1(personagem) && <AbsolutoCombatWeapons onQuickChange={(slot,index)=>setPersonagem(p=>({...p,inventario:p.inventario.map((item,i)=>({...item,acessoRapidoCombate:i===index ? slot : item.acessoRapidoCombate===slot ? null : item.acessoRapidoCombate}))}))} weapons={combatWeapons(personagem.inventario,CATALOGO_COMBATE)} ready={Boolean(ultimoTesteV1?.sucesso && !ultimoTesteV1.danoResolvido)} renderIcon={renderizarIconeItem} onManage={()=>{setAbaAtiva('inventario');setSubAbaInventario('mochila');}} onAttack={item=>rolarDominioV1(item.categoria==='armas-corpo' || item.armaStatus.tipo==='Corpo a Corpo' ? 'violencia' : 'precisao')} onDamage={item=>rolarAtaqueArma(item)}/>}
+        {ehAbsolutoV1(personagem) && <SheetOptionalSystems sheetId={fichaId} onAmmoEnabled={setContarBalas}/>}
         </div>
       </div>
     ),
@@ -5850,6 +5853,7 @@ const FichaPersonagem = () => {
 
     corpo: (
       <div className={`conteudo-aba corpo-aba ${ehAbsolutoV1(personagem) ? "abs-body-tab" : ""}`}>
+        <SheetSurvival sheetId={fichaId}/>
         <label className="tipo-dano-corporal">
           Tipo de dano recebido
           <select

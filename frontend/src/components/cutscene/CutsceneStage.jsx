@@ -1,7 +1,9 @@
-import React,{useEffect,useMemo,useRef,useState} from 'react';
+import React,{lazy,Suspense,useEffect,useMemo,useRef,useState} from 'react';
+import {cameraClipTime} from '../../utils/cameraCutscene';
 import {cutsceneLayerFrame,interpolatePose,limit,normalizeCutscene} from '../../utils/cutscene';
 import {normalizeTokenAnimation,tokenAnimationFrame} from '../../utils/tokenAnimation';
 import '../../styles/Cutscene.css';
+const CutsceneMap3D=lazy(()=>import('./CutsceneMap3D'));
 
 function AudioClip({layer,time,playing,muted,onBlocked}) {
  const ref=useRef(null);
@@ -19,15 +21,19 @@ function AudioClip({layer,time,playing,muted,onBlocked}) {
  useEffect(()=>{const audio=ref.current;return()=>audio?.pause();},[]);
  return <audio ref={ref} src={layer.src} preload="metadata"/>;
 }
-export default function CutsceneStage({project,time=0,playing=false,muted=true,selected,onSelect,onDrag,onBlocked}) {
+export default function CutsceneStage({project,time=0,playing=false,muted=true,selected,onSelect,onDrag,onBlocked,onSelectToken}) {
  const p=useMemo(()=>normalizeCutscene(project),[project]),camera=interpolatePose(p.camera.from,p.camera.to,time/p.duration);
+ const mapLayers=p.layers.filter(layer=>layer.type==='map3d' && layer.map3D && layer.recording3D);
+ const activeMap=mapLayers.filter(layer=>!layer.hidden && time>=layer.start && time<=layer.end).at(-1);
+ const displayedMap=activeMap || mapLayers[0];
  const drag=useRef(null);
  const [dragPreview,setDragPreview]=useState(null);
  const [reduced,setReduced]=useState(()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || false);
  useEffect(()=>{const media=window.matchMedia?.('(prefers-reduced-motion: reduce)');if(!media)return;const update=()=>setReduced(media.matches);media.addEventListener?.('change',update);return()=>media.removeEventListener?.('change',update);},[]);
  return <div className="cs-stage" style={{background:p.background}} aria-label="Palco da cutscene">
   <div className="cs-camera" style={{transform:`translate(${(50-camera.x)*camera.scale}%,${(50-camera.y)*camera.scale}%) scale(${camera.scale}) rotate(${camera.rotation}deg)`}}>
-   {p.layers.filter(layer=>layer.type!=='audio').map(layer=>{
+   {displayedMap&&<div className="cs-map-layer" style={{opacity:activeMap?cutsceneLayerFrame(activeMap,time).opacity:0,pointerEvents:onSelectToken?'auto':'none'}}><Suspense fallback={<span>Carregando mapa 3D…</span>}><CutsceneMap3D scene={displayedMap.map3D} recording={displayedMap.recording3D} time={cameraClipTime(displayedMap,time)} cameraMotion={displayedMap.cameraMotion3D} onSelectToken={onSelectToken?id=>{onSelect?.(displayedMap.id);onSelectToken(id);}:undefined}/></Suspense></div>}
+   {p.layers.filter(layer=>layer.type!=='audio' && layer.type!=='map3d').map(layer=>{
     let frame=cutsceneLayerFrame(layer,time);if(!frame)return null;
     if(dragPreview?.id===layer.id)frame={...frame,...dragPreview.position};
     const animation=normalizeTokenAnimation(layer.animation || {enabled:false});

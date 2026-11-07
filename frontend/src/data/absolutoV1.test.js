@@ -1,5 +1,17 @@
 import { criarBaseV1, resolverTeste, quantidadeDados, custoAtributos, custoDominios, alterarMedo, descansar, recalcularBases, proporMigracaoV1, evoluirV1, rolarDanoV1, defesaPersonagem } from './absolutoV1';
 
+test.each(['atributos','dominios'])('reduzir e recomprar não cria pontos extras em %s',grupo=>{
+ const chave=grupo==='atributos'?'forca':'razao';
+ const p={...criarBaseV1(),pontosEvolucao:{disponiveis:0}};p[grupo][chave]=5;
+ const reduzido=evoluirV1(p,grupo,chave,undefined,0);
+ const restaurado=evoluirV1(reduzido,grupo,chave,undefined,5);
+ expect(restaurado[grupo][chave]).toBe(5);
+ expect(restaurado.pontosEvolucao.disponiveis).toBe(0);
+ expect(reduzido.historicoEvolucaoV1[0].custo).toBeLessThan(0);
+ expect(()=>evoluirV1(p,grupo,chave,undefined,-1)).toThrow();
+ expect(()=>evoluirV1(p,grupo,chave,undefined,6)).toThrow();
+});
+
 test.each([[0,2],[1,2],[2,2],[3,3],[4,3],[5,4]])('Mobilidade %s define Defesa %s independentemente de Reflexos e proteção', (mobilidade, defesa) => {
   const personagem = {dominios:{mobilidade},atributos:{reflexos:5},defesaGeral:5,bonusDefesa:10};
   expect(defesaPersonagem(personagem)).toBe(defesa);

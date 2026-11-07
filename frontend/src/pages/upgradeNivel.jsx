@@ -59,7 +59,9 @@ const montarUrlFicha = (personagem, fichaId, destino = "") => {
 
 const NOMES_MEMBROS = {
   cabeca: "Cabeça",
+  pescoco: "Pescoço",
   torso: "Torso",
+  abdomen: "Abdômen",
   bracoDireito: "Braço Direito",
   bracoEsquerdo: "Braço Esquerdo",
   pernaDireita: "Perna Direita",
@@ -68,12 +70,16 @@ const NOMES_MEMBROS = {
 
 const LIMITE_MEMBROS = {
   cabeca: 100,
+  pescoco: 500,
   torso: 500,
+  abdomen: 500,
   bracoDireito: 500,
   bracoEsquerdo: 500,
   pernaDireita: 500,
   pernaEsquerda: 500,
 };
+
+const INTEGRIDADE_POR_NIVEL = 20;
 
 const UpgradeNivel = () => {
   const [fichaId] = useState(obterFichaIdDaUrl);
@@ -113,7 +119,7 @@ const UpgradeNivel = () => {
     personagem.pontosIntegridade = { gastos: 0 };
   }
 
-  const totalIntegridadeRecebida = Math.max(0, (nivelAtual - 1) * 150);
+  const totalIntegridadeRecebida = Math.max(0, (nivelAtual - 1) * INTEGRIDADE_POR_NIVEL);
   const gastosIntegridade = personagem.pontosIntegridade?.gastos || 0;
   const disponiveisIntegridade = Math.max(0, totalIntegridadeRecebida - gastosIntegridade);
 
@@ -645,7 +651,7 @@ const UpgradeNivel = () => {
         mostrarNotificacao("Distribua pelo menos 1 ponto de integridade.", "info");
         return;
       }
-      if (restantesIntegridade < 0) {
+      if (integridadeAlocada > disponiveisIntegridade) {
         mostrarNotificacao("Você está gastando mais pontos de integridade do que possui.", "erro");
         return;
       }
@@ -858,7 +864,7 @@ const UpgradeNivel = () => {
             ))}
           </div>
           <div style={{ marginTop: '12px', fontSize: '0.85rem', color: '#b0b0b0' }}>
-            Total de Integridade recebido: <strong>{totalIntegridadeRecebida}</strong> ({(nivelAtual-1)} níveis × 150)
+            Total de Integridade recebido: <strong>{totalIntegridadeRecebida}</strong> ({Math.max(0,nivelAtual-1)} níveis × {INTEGRIDADE_POR_NIVEL})
             <br />
             Gastos acumulados: <strong>{gastosIntegridade}</strong>
           </div>

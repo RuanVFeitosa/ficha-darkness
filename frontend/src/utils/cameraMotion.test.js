@@ -1,4 +1,19 @@
-import {easeCameraAngle,cameraDamping,walkingCameraMotion,cameraMotionForViewer} from './cameraMotion';
+import {easeCameraAngle,cameraDamping,walkingCameraMotion,cameraMotionForViewer,smoothCameraTranslation} from './cameraMotion';
+
+test('cinematic translation accelerates and settles consistently across refresh rates',()=>{
+ const run=fps=>{
+  let velocity=[0,0,0],position=0;
+  for(let i=0;i<fps;i++){const next=smoothCameraTranslation(velocity,[1,0,0],1/fps);velocity=next.velocity;position+=next.offset[0];}
+  expect(velocity[0]).toBeGreaterThan(.99);
+  for(let i=0;i<fps;i++){const next=smoothCameraTranslation(velocity,[0,0,0],1/fps);velocity=next.velocity;position+=next.offset[0];}
+  expect(velocity[0]).toBeLessThan(.004);
+  return position;
+ };
+ expect(run(30)).toBeCloseTo(run(60),8);
+ expect(run(60)).toBeCloseTo(run(144),8);
+ const first=smoothCameraTranslation([0,0,0],[1,0,0],1/60);
+ expect(first.offset[0]).toBeGreaterThan(0);expect(first.offset[0]).toBeLessThan(1/60);
+});
 
 test('walking camera follows actual travel and settles when the token stops',()=>{
  let state=walkingCameraMotion(null,[0,0],1/60);

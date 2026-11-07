@@ -1,5 +1,6 @@
 import {SPECIAL_SCENE_ACCEPT, specialSceneMediaType} from '../../utils/specialSceneMedia';
 import CutsceneWorkspace from '../cutscene/CutsceneWorkspace';
+import OptionalSystems from './OptionalSystems';
 import {campaignSystem, sheetSystem, systemLabel, campaignSheetOptions, removedCampaignSheets} from '../../utils/campaignSystem';
 import SceneCreationPreview from './SceneCreationPreview';
 import SceneCutsceneSettings from './SceneCutsceneSettings';
@@ -48,6 +49,7 @@ import "../../styles/CampanhaDashboard.css";
 import "../../styles/CampaignWorkspace.css";
 
 const CAMPAIGN_AREAS = [
+  {id:'sistemas', label:'Sistemas opcionais', icon:mdiFolderOutline, description:'Crie e administre regras opcionais, sobrevivência e munição por campanha.'},
   {id:'cutscenes', label:'Cutscenes', icon:mdiImagePlusOutline, description:'Crie sequências com imagens, tokens animados, câmera, legendas e trilha sonora.'},
   {id:'cenas', label:'Cenas e mapas', icon:mdiMapOutline, description:'Prepare os lugares, organize os capítulos e defina o que os jogadores podem ver.'},
   {id:'investigacao', label:'Investigação', icon:mdiFolderOutline, description:'Conecte pessoas, pistas e acontecimentos em um mural compartilhado.'},
@@ -837,7 +839,7 @@ const CampanhaDashboard = () => {
         <button type="button" onClick={()=>setPastasFechadas({})}>Expandir pastas</button>
         <button type="button" onClick={()=>setPastasFechadas(Object.fromEntries(grupos.map(([pasta])=>[pasta,true])))}>Recolher pastas</button>
       </div>}
-      {abaCampanha === 'cutscenes' ? <CutsceneWorkspace campaign={campanha} onSaved={async saved=>{setCampanha(current=>({...current,cenas:current.cenas.some(scene=>scene.id===saved.id)?current.cenas.map(scene=>scene.id===saved.id?saved:scene):[...current.cenas,saved]}));}}/> : abaCampanha === 'configuracoes' ? <div className="campaign-settings-layout"><form className="campanha-configuracoes" onSubmit={async event=>{
+      {abaCampanha === 'sistemas' ? <OptionalSystems key={campanha.id} campaign={campanha} master onState={state=>setCampanha(current=>({...current,mecanicasEspeciais:state}))}/> : abaCampanha === 'cutscenes' ? <CutsceneWorkspace campaign={campanha} onSaved={async saved=>{setCampanha(current=>({...current,cenas:current.cenas.some(scene=>scene.id===saved.id)?current.cenas.map(scene=>scene.id===saved.id?saved:scene):[...current.cenas,saved]}));}}/> : abaCampanha === 'configuracoes' ? <div className="campaign-settings-layout"><form className="campanha-configuracoes" onSubmit={async event=>{
  event.preventDefault();setSalvando(true);setErro('');
  try {const atualizada=await salvarSistemaCampanha(campanha.id,sistemaEditado);setCampanha({...campanha,...atualizada});await carregarCampanhas();}
  catch(error){setErro(error.message);}finally{setSalvando(false);}

@@ -26,7 +26,7 @@ export default function CriadorCutscene() {
  return <main className="cutscene-page" aria-label="Estúdio de cutscenes">
   <CutsceneEditor key={sceneId || 'new'} standalone draftKey={`cutscene:draft:${campaign.id}:${sceneId || 'new'}:0`}
    navigation={<><a className="cs-studio-back" href={back} aria-label="Voltar à campanha ou tabletop">←</a><span className="cs-studio-brand">CUTSCENES<small>{campaign.nome}</small></span></>}
-   initialValue={scene?.cenaEspecial?.cutscene || {name:scene?.nome || 'Nova cutscene'}} assets={campaignCutsceneAssets(campaign)}
+   initialValue={scene?.cenaEspecial?.cutscene || {name:scene?.nome || 'Nova cutscene'}} assets={campaignCutsceneAssets(campaign)} maps3D={campaign.mapas3D || []} campaign={campaign} sceneId={sceneId}
    onResolveProject={resolverProjetoCutscene} onUpload={(file,type)=>enviarMidiaCutscene(campaign.id,file,type)} busy={busy} applyLabel="Salvar na campanha"
    onApply={async project=>{setBusy(true);try{
     const saved=await salvarCena(campaign.id,cutsceneScenePayload(project,scene));

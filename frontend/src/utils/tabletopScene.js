@@ -15,3 +15,17 @@ export function activeTabletopScene(campaign) {
  if(fallback) return {type:'static',media:fallback};
  return maps.length ? {type:'map',media:maps[0]} : {type:'empty'};
 }
+
+export function specialSceneDestinations(campaign){
+ const maps=[],images=[];
+ const scene=campaign?.cenaAtiva;
+ if(!scene)return {maps,images};
+  for(const mapLink of scene.mapasBatalha || scene.mapas_batalha || []){
+   const map=(campaign.mapas3D || []).find(item=>item.id===mapLink.mapa3dId);
+   if(map)maps.push({id:`${scene.id}:${mapLink.id}`,label:map.nome || mapLink.nome || 'Mapa 3D',scene,mapLink});
+  }
+  const media=scene.imagensCena || scene.imagens_cena || [];
+  for(const imageLink of media)images.push({id:`${scene.id}:${imageLink.id}`,label:imageLink.nome || 'Cena estática',scene,imageLink});
+  if(!media.length && (scene.imagemUrl || scene.imagem_url))images.push({id:`${scene.id}:static`,label:'Cena estática',scene});
+ return {maps,images};
+}

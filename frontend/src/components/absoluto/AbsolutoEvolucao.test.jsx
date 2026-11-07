@@ -34,3 +34,27 @@ test('soma os custos de todos os níveis de Atributo e impede preço manual', as
   expect(salvar.mock.calls[0][0].atributos.forca).toBe(3);
   expect(salvar.mock.calls[0][0].pontosEvolucao.disponiveis).toBe(55);
 });
+
+test.each(['atributos','dominios'])('permite reduzir de cinco até zero e devolve pontos em %s',async grupo=>{
+ const chave=grupo==='atributos'?'forca':'razao',nome=grupo==='atributos'?'Força':'Razão';
+ const personagem={...criarBaseV1(),pontosEvolucao:{disponiveis:0}};
+ personagem[grupo][chave]=5;
+ const salvar=jest.fn();
+ render(<AbsolutoEvolucao grupo={grupo} personagem={personagem} onSave={salvar}/>);
+ fireEvent.change(screen.getByLabelText(`Nível desejado de ${nome}`),{target:{value:'0'}});
+ fireEvent.click(screen.getByRole('button',{name:`Diminuir ${nome}`}));
+ await waitFor(()=>expect(salvar).toHaveBeenCalledTimes(1));
+ expect(salvar.mock.calls[0][0][grupo][chave]).toBe(0);
+ expect(salvar.mock.calls[0][0].pontosEvolucao.disponiveis).toBe(grupo==='atributos'?90:50);
+});
+
+test.each(['atributos','dominios'])('permite comprar o primeiro nível zerado em %s',async grupo=>{
+ const chave=grupo==='atributos'?'forca':'razao',nome=grupo==='atributos'?'Força':'Razão';
+ const personagem={...criarBaseV1(),pontosEvolucao:{disponiveis:10}};personagem[grupo][chave]=0;
+ const salvar=jest.fn();
+ render(<AbsolutoEvolucao grupo={grupo} personagem={personagem} onSave={salvar}/>);
+ fireEvent.click(screen.getByRole('button',{name:`Aumentar ${nome}`}));
+ await waitFor(()=>expect(salvar).toHaveBeenCalledTimes(1));
+ expect(salvar.mock.calls[0][0][grupo][chave]).toBe(1);
+ expect(salvar.mock.calls[0][0].pontosEvolucao.disponiveis).toBe(0);
+});

@@ -6,7 +6,7 @@ export function grantEspiralCatalogEntry(sheet, entry, id) {
     return { evolution: { ...sheet.evolution, abilities: [...abilities, { id: entry.id, name: entry.name, category: entry.category, level: 1 }] } };
   }
   if (entry.type === 'weapon') {
-    return { weapons: [...(Array.isArray(sheet.weapons) ? sheet.weapons : []), { id, sourceId: entry.id, name: entry.name, damage: entry.damage, ammo: '', detail: entry.detail, category: entry.category, weaponGroup: entry.weaponGroup }] };
+    return { weapons: [...(Array.isArray(sheet.weapons) ? sheet.weapons : []), { id, sourceId: entry.id, name: entry.name, damage: entry.damage, ammo: entry.ammo == null ? '' : Math.max(0,Math.min(9999,Math.floor(Number(entry.ammo) || 0))), detail: entry.detail, category: entry.category, weaponGroup: entry.weaponGroup }] };
   }
   if (entry.type === 'protection') {
     return { protections: [...(Array.isArray(sheet.protections) ? sheet.protections : []), { id, sourceId: entry.id, name: entry.name, value: String(entry.value), region: entry.region, detail: entry.detail, category: entry.category }] };

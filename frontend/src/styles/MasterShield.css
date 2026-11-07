@@ -328,3 +328,77 @@
 .master-shield .shield-library-card small,.master-shield .shield-library-card > div > span { font:9px monospace; color:#a8b0a5; }
 .master-shield .shield-library-card > button { flex:0 0 auto; padding:6px; font-size:10px; color:#ecd9a5; }
 .master-shield .shield-library > p { padding:0 12px 10px; }
+.master-shield .shield-optional-systems{padding:0 4px;min-width:0}
+.master-shield .shield-optional-systems .optional-systems{padding-top:8px}
+.master-shield .shield-optional-systems .optional-workspace-heading{padding:16px}
+.master-shield .shield-optional-systems .optional-system-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+
+/* Organized 3D shield: six areas, one tool row and one content scroll. */
+.tt3 .master-shield.master-shield-organized { --shield-accent:#eee; --shield-line:#ffffff24; padding:12px 20px 24px; }
+.master-shield-organized .shield-organized-navigation { position:sticky; top:-12px; z-index:5; background:#090909; padding:6px 0 0; margin-bottom:12px; border-bottom:1px solid #ffffff24; }
+.master-shield-organized .shield-navigation-row { display:flex; align-items:center; gap:12px; }
+.master-shield-organized .shield-area-tabs { display:flex; flex:1; min-width:0; gap:4px; overflow-x:auto; scrollbar-width:thin; }
+.master-shield-organized .shield-area-tabs button { display:inline-flex; align-items:center; justify-content:center; gap:8px; flex:1 0 auto; padding:10px 14px; min-height:38px; border:1px solid transparent; border-radius:5px; background:transparent; color:#a6a6a6; font:12px Arial,sans-serif; white-space:nowrap; }
+.master-shield-organized .shield-area-tabs button[aria-pressed=true] { background:#f1f1ed; border-color:#f1f1ed; color:#101010; }
+.master-shield-organized .shield-area-tabs button:hover:not([aria-pressed=true]) { background:#ffffff0d; color:#fff; }
+.master-shield-organized .shield-subnavigation { display:flex; align-items:center; gap:4px; overflow-x:auto; scrollbar-width:thin; padding:8px 0; }
+.master-shield-organized .shield-subnavigation button { flex-shrink:0; min-height:30px; padding:6px 11px; color:#a6a6a6; border:0; border-radius:4px; font:11px Arial,sans-serif; background:transparent; white-space:nowrap; }
+.master-shield-organized .shield-subnavigation button[aria-pressed=true] { background:#ffffff12; color:#fff; box-shadow:inset 0 -2px 0 #ddd; }
+.master-shield-organized .shield-location { display:flex; align-items:center; gap:12px; padding:0 0 12px; font:11px Arial,sans-serif; color:#999; }
+.master-shield-organized .shield-location>span:first-child { color:#eee; font-weight:600; }
+.master-shield-organized .shield-location>span+span { padding-left:12px; border-left:1px solid #ffffff30; }
+.tt3 .master-shield-organized .shield-workspace { display:grid; grid-template-columns:minmax(260px,1.25fr) minmax(230px,1fr); gap:16px; }
+.tt3 .tt3-master-shield-drawer .master-shield-organized .shield-workspace>section,
+.tt3 .tt3-master-shield-drawer .master-shield-organized .shield-workspace>.shield-context,
+.tt3 .tt3-master-shield-drawer .master-shield-organized .shield-reference-column { max-height:none; overflow:visible; }
+.master-shield-organized .shield-session-modes { padding:0 0 8px; border-bottom:1px solid #ffffff18; }
+.master-shield-organized .shield-session-mode-buttons button { border:1px solid #ffffff30; color:#ddd; background:#ffffff06; min-height:34px; }
+.master-shield-organized .shield-overview-card { display:flex; flex-direction:column; align-items:flex-start; gap:10px; border:1px solid #ffffff24; border-radius:7px; padding:18px; background:#111; }
+.master-shield-organized .shield-overview-card>span { font:9px monospace; letter-spacing:.12em; color:#999; }
+.master-shield-organized .shield-overview-card h3 { margin:0; font:18px Arial,sans-serif; color:#eee; }
+.master-shield-organized .shield-overview-card p { margin:0; color:#aaa; }
+.master-shield-organized .shield-overview-card button { border-color:#ffffff30; color:#eee; background:#ffffff06; }
+.master-shield-organized .shield-reference-column { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.master-shield-organized .shield-reference-column>.shield-tools { grid-column:1/-1; display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.master-shield-organized .shield-organized-roster>.shield-roster { border:0; padding:0; }
+.master-shield-organized :is(h3,.shield-context strong,.shield-roster-identity strong) { color:#eee; }
+.master-shield-organized .shield-new-scene>button { color:#eee; border-color:#ffffff40; background:#ffffff08; }
+.master-shield-organized>section>.shield-private { padding:0 16px; max-width:850px; border:1px solid #ffffff24; border-radius:6px; }
+@media(max-width:760px) {
+ .tt3 .master-shield.master-shield-organized { padding:10px 12px 20px; }
+ .master-shield-organized .shield-organized-navigation { top:-10px; }
+ .master-shield-organized .shield-area-tabs button { padding:9px 11px; font-size:11px; }
+ .tt3 .master-shield-organized .shield-workspace,.master-shield-organized .shield-reference-column,.master-shield-organized .shield-reference-column>.shield-tools { grid-template-columns:minmax(0,1fr); }
+ .master-shield-organized .shield-navigation-row { align-items:stretch; }
+ .master-shield-organized .shield-new-scene>button { padding:8px; font-size:10px; }
+}
+
+/* The 2D shield shares the grouped navigation and has a single content scroll. */
+.mesa-master-shield-panel>.master-shield-organized{padding:12px 20px 20px;scrollbar-width:thin}
+.mesa-master-shield-panel .master-shield-organized .shield-organized-navigation{top:-12px;background:#000;border-color:var(--shield-line)}
+.mesa-master-shield-panel .master-shield-organized .shield-area-tabs button[aria-pressed=true]{color:#efdbab;background:#d8c69c18;border-color:#d8c69c55}
+.mesa-master-shield-panel .master-shield-organized .shield-subnavigation button[aria-pressed=true]{color:#efdbab;background:#d8c69c0d;box-shadow:inset 0 -2px 0 var(--shield-accent)}
+.mesa-master-shield-panel .master-shield-organized .shield-location{flex-wrap:wrap;gap:8px 12px;line-height:1.5}
+.mesa-master-shield-panel .master-shield-organized .shield-current-difficulty{margin-left:auto;color:var(--shield-accent)}
+.mesa-master-shield-panel .master-shield-organized .shield-workspace{display:grid;grid-template-columns:minmax(250px,1fr) minmax(250px,1.2fr);gap:16px;align-items:start}
+.mesa-master-shield-panel .master-shield-organized .shield-workspace>section,
+.mesa-master-shield-panel .master-shield-organized .shield-workspace>.shield-context,
+.mesa-master-shield-panel .master-shield-organized .shield-reference-column{max-height:none;overflow:visible}
+.mesa-master-shield-panel .master-shield-organized .shield-overview-card{background:#000;border-color:var(--shield-line)}
+.master-shield-organized .shield-overview-actions{display:flex;flex-wrap:wrap;gap:8px}
+.mesa-master-shield-panel .master-shield-organized .shield-overview-actions button{color:#e0d1ad;border-color:var(--shield-line)}
+.mesa-master-shield-panel .master-shield-organized .shield-reference-column{grid-template-columns:repeat(2,minmax(0,1fr))}
+.mesa-master-shield-panel .master-shield-organized .shield-documents .mesa-documentos-painel{align-items:start}
+.mesa-master-shield-panel .master-shield-organized .shield-session-participants{overflow:visible}
+.mesa-master-shield-panel .shield-header-initiative[data-mode=exploration]{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"caption actions" "error error";gap:6px 16px}
+.mesa-master-shield-panel .shield-header-initiative[data-mode=exploration] .shield-initiative-actions{padding-top:0;border-top:0;justify-content:flex-end}
+.mesa-master-shield-panel .shield-header-initiative:not([data-mode=combat]) .shield-initiative-turns{display:none}
+@media(max-width:760px){
+ .mesa-master-shield-panel>.master-shield-organized{padding:10px 12px 16px}
+ .mesa-master-shield-panel .master-shield-organized .shield-organized-navigation{top:-10px}
+ .mesa-master-shield-panel .master-shield-organized .shield-workspace,
+ .mesa-master-shield-panel .master-shield-organized .shield-reference-column{grid-template-columns:minmax(0,1fr)}
+ .mesa-master-shield-panel .master-shield-organized .shield-current-difficulty{margin-left:0}
+ .mesa-master-shield-panel .shield-header-initiative[data-mode=exploration]{grid-template-columns:minmax(0,1fr);grid-template-areas:"caption" "actions" "error"}
+ .mesa-master-shield-panel .shield-header-initiative[data-mode=exploration] .shield-initiative-actions{justify-content:flex-start}
+}

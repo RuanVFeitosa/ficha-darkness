@@ -4,7 +4,7 @@ import {Euler,Quaternion} from 'three';
 import {easeCameraAngle,walkingCameraMotion} from '../../utils/cameraMotion';
 
 // Apply only to the rendered orientation; navigation and shared poses stay steady.
-export default function HandheldCameraMotion({intensity=1,speed=1,pitch=0,roll=0,walking=false,getWalkingPosition}){
+export default function HandheldCameraMotion({intensity=1,speed=1,pitch=0,roll=0,walking=false,getWalkingPosition,timelineTime}){
  const {camera}=useThree();
  const reduced=useRef(false);
  const time=useRef(0);
@@ -28,11 +28,11 @@ export default function HandheldCameraMotion({intensity=1,speed=1,pitch=0,roll=0
   const amount=reduced.current ? 0 : intensity;
   gait.current=walkingCameraMotion(gait.current,getWalkingPosition?.(),delta,walking && !reduced.current,amount);
   const walk=gait.current;
-  inclination.current.pitch=easeCameraAngle(inclination.current.pitch,pitch,delta,reduced.current);
-  inclination.current.roll=easeCameraAngle(inclination.current.roll,roll,delta,reduced.current);
+  inclination.current.pitch=Number.isFinite(timelineTime)?pitch:easeCameraAngle(inclination.current.pitch,pitch,delta,reduced.current);
+  inclination.current.roll=Number.isFinite(timelineTime)?roll:easeCameraAngle(inclination.current.roll,roll,delta,reduced.current);
   const smooth=inclination.current;
   if(amount===0 && smooth.pitch===0 && smooth.roll===0) return;
-  time.current+=Math.min(delta,.05)*speed;
+  time.current=Number.isFinite(timelineTime)?timelineTime*speed:time.current+Math.min(delta,.05)*speed;
   const t=time.current;
   // Slow overlapping rhythms avoid a repetitive bob or a sharp shake.
   pose.angles.set(

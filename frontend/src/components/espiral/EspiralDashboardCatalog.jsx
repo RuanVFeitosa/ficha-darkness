@@ -13,6 +13,7 @@ export default function EspiralDashboardCatalog({ kind, fichas = [], onGrant }) 
   const [query, setQuery] = useState('');
   const [recipient, setRecipient] = useState('');
   const [notice, setNotice] = useState('');
+  const [initialAmmo,setInitialAmmo] = useState({});
   const categories = abilities
     ? [...Object.keys(HABILIDADES_ESPIRAL).map(name => ({ id: name, nome: name })), { id: 'vertentes', nome: 'Vertentes' }]
     : CATEGORIAS_ESPIRAL;
@@ -26,7 +27,8 @@ export default function EspiralDashboardCatalog({ kind, fichas = [], onGrant }) 
   const grant = async (entry) => {
     if (!selectedFicha) return;
     try {
-      if (await onGrant(selectedFicha, entry) !== false) setNotice(`${entry.name} concedido a ${selectedFicha.personagem?.name || 'personagem'}.`);
+      const delivered = entry.type==='weapon' && entry.weaponGroup==='fogo' ? {...entry,ammo:Math.max(0,Math.min(9999,Math.floor(Number(initialAmmo[entry.id]) || 0)))} : entry;
+      if (await onGrant(selectedFicha, delivered) !== false) setNotice(`${entry.name} concedido a ${selectedFicha.personagem?.name || 'personagem'}${delivered.ammo!==undefined ? ` com ${delivered.ammo} balas` : ''}.`);
       else setNotice('Não foi possível salvar. Atualize o Dashboard e tente novamente.');
     } catch {
       setNotice('Não foi possível salvar. Atualize o Dashboard e tente novamente.');
@@ -46,6 +48,7 @@ export default function EspiralDashboardCatalog({ kind, fichas = [], onGrant }) 
         <span className="ed-eyebrow">{abilities ? `${entry.category}${entry.action ? ` · Ação ${entry.action}` : ''}` : categories.find(item => item.id === entry.category)?.nome}</span><h3>{entry.name}</h3>
         {!abilities && <><div className="ed-catalog-facts">{entry.damage && <span>Dano <b>{espiralDiceText(entry.damage)}</b></span>}{entry.value !== undefined && <span>Proteção <b>{entry.value}</b></span>}{entry.region && <span>Região <b>{entry.region}</b></span>}</div><p>{entry.detail}</p></>}
         {abilities && <>{entry.hope && <p className="ed-catalog-hope">Esperança: {entry.hope[0] ? `${entry.hope[0]} no Fracasso / ${entry.hope[1]} no Sucesso com Consequência` : 'sem custo'}</p>}<ol className="ed-catalog-levels">{entry.levels.map((level, index) => <li key={index}><b>Nível {['I', 'II', 'III'][index]}</b><p>{level}</p></li>)}</ol></>}
+        {entry.type==='weapon' && entry.weaponGroup==='fogo' && <label>Balas na entrega<input type="number" min="0" max="9999" step="1" aria-label={`Balas na entrega de ${entry.name}`} value={initialAmmo[entry.id] ?? 0} onChange={event=>setInitialAmmo(current=>({...current,[entry.id]:event.target.value}))}/></label>}
         {entry.type !== 'vertente' && <button type="button" className="ed-catalog-grant" disabled={!selectedFicha || owned} onClick={() => grant(entry)} aria-label={`${owned ? 'Já concedida' : 'Conceder'}: ${entry.name}`}>{owned ? 'Já adquirida' : abilities ? 'Conceder habilidade ↗' : 'Dar item ↗'}</button>}
       </article>;
     })}</div>

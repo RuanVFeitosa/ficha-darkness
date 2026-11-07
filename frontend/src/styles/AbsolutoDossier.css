@@ -429,3 +429,16 @@
 .ficha-container.absoluto-dossier .abs-player-defense .defesa-titulo{height:12px;line-height:12px}
 .ficha-container.absoluto-dossier .abs-player-defense-evasion input{width:36px;height:32px;padding:0;text-align:center;border:1px solid #c8b17a40;border-radius:4px;background:transparent;color:var(--abs-ink);font:18px Georgia,serif;box-shadow:none}
 @media(max-width:360px){.ficha-container.absoluto-dossier .abs-attributes-panel .atributos-linha>.atributoCompleto{padding:9px 8px;gap:6px}.ficha-container.absoluto-dossier .abs-attributes-panel .atributo-reserva-v1 .atributo-dado{gap:6px}.ficha-container.absoluto-dossier .abs-attributes-panel .abs-attribute-dice{max-width:88px;gap:2px}.ficha-container.absoluto-dossier .abs-attributes-panel .abs-attribute-dice svg{width:16px!important;height:16px!important}}
+
+/* Arsenal left, domains center, defenses right. */
+@media(min-width:1301px){
+.ficha-container.absoluto-dossier .abs-combat{grid-template-columns:280px minmax(0,1fr) 280px}
+.ficha-container.absoluto-dossier .abs-combat>.abs-combat-weapons{grid-column:1;grid-row:3}
+.ficha-container.absoluto-dossier .abs-combat>.ativos-layout{grid-column:2;grid-row:3}
+.ficha-container.absoluto-dossier .abs-combat>.abs-combat-side{grid-column:3;grid-row:3}
+}
+@media(max-width:1300px){
+.ficha-container.absoluto-dossier .abs-combat>.abs-combat-weapons{grid-column:1;grid-row:3;margin:0 0 18px}
+.ficha-container.absoluto-dossier .abs-combat>.ativos-layout{grid-column:1;grid-row:4}
+.ficha-container.absoluto-dossier .abs-combat>.abs-combat-side{grid-column:1;grid-row:5}
+}

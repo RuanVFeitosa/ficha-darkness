@@ -1,0 +1,7 @@
+.player-weapon-hud{position:relative;display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap;margin:12px 0;pointer-events:none}
+.player-weapon-hud-slot{pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:78px;padding:8px;border:0;border-radius:5px;background:transparent;color:#fff;cursor:pointer;filter:drop-shadow(0 2px 3px #000);transition:background .15s}
+.player-weapon-hud-slot:hover,.player-weapon-hud-slot:focus-visible{background:#0006;outline:1px solid #ffffff70}
+.player-weapon-hud-icon{height:46px;display:flex;align-items:center;justify-content:center}.player-weapon-hud-icon img{width:76px;height:46px;object-fit:contain;filter:brightness(0) invert(1)}
+.player-weapon-hud-ammo{display:flex;flex-direction:column;align-items:center;gap:4px;font:600 12px monospace}.player-weapon-hud-ammo small{font-size:10px;opacity:.65}
+.player-weapon-hud-bullets{display:flex;gap:2px;max-width:118px;flex-wrap:wrap;justify-content:center}.player-weapon-hud-bullets i{display:block;width:3px;height:7px;border-radius:1px 1px 0 0;background:#ffffff30}.player-weapon-hud-bullets i.is-loaded{background:#fff}
+@media(max-width:700px){.player-weapon-hud{gap:10px}.player-weapon-hud-icon img{width:60px;height:36px}.player-weapon-hud-icon{height:36px}}

@@ -1,9 +1,11 @@
+import ShieldInitiativeStrip from '../components/tabletop/ShieldInitiativeStrip';
 import InlineInitiative from '../components/tabletop/InlineInitiative';
 import ParticipantDossiers from '../components/tabletop/ParticipantDossiers';
 import {nextCombatTurn} from '../utils/combatTurn';
 import CombatTurnControls from '../components/tabletop/CombatTurnControls';
 import {initiativeOrder} from '../utils/initiativeOrder';
 import PlayerInitiativeBar from '../components/tabletop/PlayerInitiativeBar';
+import SurvivalIndicators from '../components/campanha/SurvivalIndicators';
 import InitiativeCards from '../components/tabletop/InitiativeCards';
 import {specialSceneMediaType} from '../utils/specialSceneMedia';
 import {SpecialSceneMedia} from '../components/tabletop/SpecialScene';
@@ -3269,7 +3271,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
 
       {!embedded && campanha.modo === "especial" && cena?.cenaEspecial?.midiaUrl && (
         <section className={`cena-especial cena-especial-${cena.cenaEspecial.transicao || "cinema"}`} aria-label={`Cena especial: ${cena.nome}`}>
-          <SpecialSceneMedia special={cena.cenaEspecial} name={cena.nome}/>
+          <SpecialSceneMedia special={cena.cenaEspecial} name={cena.nome} controls={mestre}/>
           <div className="cena-especial-vinheta" />
           {!cena.cenaEspecial.cutscene && cena.cenaEspecial.exibirTitulo !== false && (
             <div className="cena-especial-titulo"><span>{cena.descricao}</span><strong>{cena.nome}</strong></div>
@@ -3288,6 +3290,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
       )}
 
       {!embedded && !mestre && <PlayerInitiativeBar campaign={campanha} entries={ordemCombate}/>}
+      {!embedded && !mestre && abaLateralJogador!=='ficha' && <SurvivalIndicators campaign={campanha} playerId={fichaJogadorId} compact/>}
       <section className={`mesa-palco modo-${campanha.modo} ${cenaRestrita ? "cena-restrita" : ""}`}>
         {cenaRestrita && (
           <div className="mesa-cena-restrita" role="status">
@@ -3702,7 +3705,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
           </div>
         )}
       </section>
-      {mestre&&escudoAberto&&<aside className="mesa-master-shield-panel" aria-label="Escudo do mestre" onKeyDown={event=>{if(event.key==="Escape")setEscudoAberto(false);}}><header><strong>Consulta privada</strong><button type="button" onClick={()=>setEscudoAberto(false)} aria-label="Fechar escudo do mestre">Fechar ×</button></header><MasterShield members={campanha.membros || []} campaignSystem={campanha.sistema || "absoluto"} campaignId={campanha.id} scene={campanha.cenaAtiva} combat={campanha.combateAtivo} investigation={campanha.investigacaoAtiva} enemies={campanha.inimigos || []} onSaveDifficulty={salvarDificuldadeCena} onSaveEnemy={salvarParticipanteEscudo} onAddEnemy={adicionarParticipanteEscudo} onRemoveEnemy={removerInimigo} documents={renderDocumentosMestre()} renderTool={renderShieldTool}/></aside>}
+      {mestre&&escudoAberto&&<aside className="mesa-master-shield-panel" aria-label="Escudo do mestre" onKeyDown={event=>{if(event.key==="Escape")setEscudoAberto(false);}}><header><strong>Escudo do mestre</strong><ShieldInitiativeStrip campaign={campanha} onCampaignChange={setCampanha} onRefresh={carregar}/><button type="button" onClick={()=>setEscudoAberto(false)} aria-label="Fechar escudo do mestre">Fechar ×</button></header><MasterShield organized extraTools={[["players","Jogadores"],["lighting","Iluminação"]]} campaign={campanha} onOptionalState={state=>setCampanha(current=>({...current,mecanicasEspeciais:state}))} members={campanha.membros || []} campaignSystem={campanha.sistema || "absoluto"} campaignId={campanha.id} scene={campanha.cenaAtiva} combat={campanha.combateAtivo} investigation={campanha.investigacaoAtiva} enemies={campanha.inimigos || []} onSaveDifficulty={salvarDificuldadeCena} onSaveEnemy={salvarParticipanteEscudo} onAddEnemy={adicionarParticipanteEscudo} onRemoveEnemy={removerInimigo} documents={renderDocumentosMestre()} renderTool={renderShieldTool}/></aside>}
       {!mestre && (
         <nav
           className={`mesa-lateral-navegacao mesa-jogador-navegacao ${mostrarDocumentosJogador ? "com-documentos" : ""}`}
@@ -3812,7 +3815,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
           </header>
           <iframe
             title={`Ficha de ${personagemJogador.nome}`}
-            src={membroJogador.ficha_id.startsWith("espiral:") ? `/?sistema=espiral&ficha=${encodeURIComponent(membroJogador.ficha_id.slice("espiral:".length))}&embed=mesa` : `/?sistema=darkness&ficha=${encodeURIComponent(personagemJogador.nome || membroJogador.ficha_id)}&senha=${encodeURIComponent(membroJogador.ficha_id)}&embed=mesa&campanhaTeste=${encodeURIComponent(campanha.codigo)}`}
+            src={membroJogador.ficha_id.startsWith("espiral:") ? `/?sistema=espiral&ficha=${encodeURIComponent(membroJogador.ficha_id.slice("espiral:".length))}&embed=mesa&campanhaTeste=${encodeURIComponent(campanha.codigo)}` : `/?sistema=darkness&ficha=${encodeURIComponent(personagemJogador.nome || membroJogador.ficha_id)}&senha=${encodeURIComponent(membroJogador.ficha_id)}&embed=mesa&campanhaTeste=${encodeURIComponent(campanha.codigo)}`}
           />
         </section>
       )}

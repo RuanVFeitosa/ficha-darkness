@@ -1,10 +1,19 @@
 // Exponential easing keeps the same response across refresh rates.
+export function normalizeCameraMotion(value){
+ const bounded=(number,min,max,fallback)=>Number.isFinite(Number(number)) ? Math.max(min,Math.min(max,Number(number))) : fallback;
+ return {intensity:bounded(value?.intensity??1,0,3,1),speed:bounded(value?.speed??1,.25,2,1),pitch:bounded(value?.pitch??0,-45,45,0),roll:bounded(value?.roll??0,-45,45,0)};
+}
 export function easeCameraAngle(current,target,delta,reduced=false){
  if(reduced || Math.abs(target-current)<.001) return target;
  return current+(target-current)*(1-Math.exp(-9*Math.max(0,Math.min(delta,.05))));
 }
 export function cameraDamping(delta){
  return 1-Math.pow(1-.045,Math.max(0,Math.min(delta,.05))*60);
+}
+
+export function smoothCameraTranslation(previous,target,delta,response=.18){
+ const dt=Math.max(0,Math.min(delta,.05)),decay=Math.exp(-dt/response);
+ return {velocity:target.map((value,index)=>value+(previous[index]-value)*decay),offset:target.map((value,index)=>value*dt+(previous[index]-value)*response*(1-decay))};
 }
 
 export function walkingCameraMotion(previous,position,delta,enabled=true,intensity=1) {

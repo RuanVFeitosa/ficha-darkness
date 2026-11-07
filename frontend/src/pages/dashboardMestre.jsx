@@ -568,6 +568,7 @@ const DashboardMestre = () => {
   const [ritosCreditosDelta, setRitosCreditosDelta] = useState(100);
   const [catalogo, setCatalogo] = useState(DEFAULT_CATALOGO_LOJA);
   const [itemLojaSelecionadoId, setItemLojaSelecionadoId] = useState("");
+  const [balasEntrega,setBalasEntrega] = useState({});
   const [menuHamburguerAberto, setMenuHamburguerAberto] = useState(false);
   const [receitasCriacaoDashboard, setReceitasCriacaoDashboard] =
     useState(RECEITAS_PADRAO);
@@ -2312,6 +2313,7 @@ const DashboardMestre = () => {
       quantidade: itemCatalogo.quantidade || 0,
       municaoEspecial: Boolean(itemCatalogo.municaoEspecial),
       armaStatus: itemCatalogo.armaStatus || null,
+      ...(Number(itemCatalogo.armaStatus?.mag)>0 ? {municaoAtual:Math.max(0,Math.min(Number(itemCatalogo.armaStatus.mag),Math.floor(Number(balasEntrega[itemCatalogo.id] ?? itemCatalogo.armaStatus.mag) || 0))),municaoReserva:0} : {}),
       modificacoesArma: itemCatalogo.modificacoesArma || [],
       aprimoramentoCustomizado: itemCatalogo.aprimoramentoCustomizado || null,
       nivelRito: itemCatalogo.nivelRito || "",
@@ -3901,6 +3903,11 @@ const DashboardMestre = () => {
                         )}
                       </div>
 
+                      {(() => {
+                        const weapon=catalogo.find(item=>item.id===itemLojaSelecionadoId);
+                        const capacity=Number(weapon?.armaStatus?.mag) || 0;
+                        return capacity>0 && <label>Balas no carregador na entrega (máximo {capacity})<input type="number" min="0" max={capacity} step="1" aria-label="Balas no carregador na entrega" value={balasEntrega[weapon.id] ?? capacity} onChange={event=>setBalasEntrega(current=>({...current,[weapon.id]:event.target.value}))}/><small>Use 0 para entregar a arma vazia. A reserva começa sem balas.</small></label>;
+                      })()}
                       <div className="mestre-entrega-loja">
                         <div className="mestre-entrega-info">
                           <span>Categoria ativa</span>

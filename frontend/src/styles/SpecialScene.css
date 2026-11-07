@@ -39,6 +39,23 @@
 .cena-especial-titulo strong { font: 500 clamp(28px, 5vw, 76px) Georgia, serif; letter-spacing: .05em; }
 .cena-especial-titulo span { max-width: 620px; font-size: clamp(10px, 1.1vw, 15px); letter-spacing: .16em; text-transform: uppercase; }
 .cena-especial-sair { position: absolute; z-index: 2; top: 24px; right: 26px; display: flex; align-items: center; gap: 7px; padding: 10px 14px; border: 1px solid rgba(255,255,255,.3); background: rgba(0,0,0,.5); color: #fff; text-transform: uppercase; }
+.cena-especial .cena-especial-actions{position:absolute;z-index:5;top:18px;left:24px;right:24px;display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(13,17,21,.94);border:1px solid #ffffff20;border-radius:12px;box-shadow:0 8px 32px #0005;backdrop-filter:blur(16px);color:#e8edf1;text-align:left;font:13px/1.4 Arial,sans-serif}
+.cena-especial-identity{display:grid;gap:4px;flex:1;min-width:100px;padding:0 10px}
+.cena-especial-identity>span{font-size:9px;font-weight:600;letter-spacing:.16em;color:#a3b5c2}
+.cena-especial-identity i{font-style:normal;padding:0 7px;color:#89bba7}
+.cena-especial-identity>strong{font-size:15px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cena-especial-destination{display:grid;gap:5px;width:220px;min-width:0}
+.cena-especial .cena-especial-destination-button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;min-height:48px;border:1px solid #ffffff24;border-radius:8px;background:#ffffff08;color:#e8edf1;text-align:left;cursor:pointer;font:12px/1.4 Arial,sans-serif;text-transform:none}
+.cena-especial-destination-button>span:nth-child(2){display:grid;gap:2px;flex:1;min-width:0}
+.cena-especial-destination-button strong{font-weight:600}.cena-especial-destination-button small{color:#9caebc;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cena-especial-destination-icon{font-size:20px;color:#a9d4e8}
+.cena-especial .cena-especial-destination-button:hover:not(:disabled){background:#a9d4e817;border-color:#a9d4e870}
+.cena-especial .cena-especial-destination-button:disabled{opacity:.4;cursor:default}
+.cena-especial .cena-especial-destination select{width:100%;min-width:0;padding:5px 8px;border:1px solid #ffffff30;border-radius:6px;background:#192127;color:#e8edf1;font:11px Arial,sans-serif}
+.cena-especial .cena-especial-actions .cena-especial-sair{position:static;display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;padding:0;margin-left:4px;border:1px solid #ffffff24;border-radius:8px;background:transparent;color:#c1cdd5;font:24px/1 Arial,sans-serif;cursor:pointer}
+.cena-especial-actions button:focus-visible,.cena-especial-actions select:focus-visible{outline:2px solid #a9d4e8;outline-offset:3px}
+.cena-especial-actions p{position:absolute;top:100%;right:0;margin:8px 0 0;padding:10px 14px;border:1px solid #d4826c80;border-radius:8px;background:#201916;color:#ffd2c5;font:12px Arial,sans-serif}
+@media(max-width:700px){.cena-especial .cena-especial-actions{left:8px;right:8px;top:8px;gap:6px;padding:8px;flex-wrap:wrap}.cena-especial-identity{flex:1 1 calc(100% - 60px);order:-2;padding:0 4px}.cena-especial .cena-especial-actions .cena-especial-sair{order:-1}.cena-especial-destination{flex:1 1 130px;width:auto}.cena-especial .cena-especial-destination-button{padding:7px;gap:6px}.cena-especial-destination-icon{font-size:16px}}
 .cena-especial-cinema:before,
 .cena-especial-cinema:after { content: ""; position: absolute; z-index: 3; left: 0; width: 100%; height: 10vh; background: #000; animation: cenaEspecialCortina 1.25s both; pointer-events: none; }
 .cena-especial-cinema:before { top: 0; transform-origin: top; }

@@ -38,6 +38,26 @@
 .cs-presets{display:flex;gap:6px;flex-wrap:wrap}
 .cs-preview{min-width:0}.cs-stage{width:100%;aspect-ratio:16/9;position:relative;isolation:isolate;overflow:hidden;container-type:inline-size;border:1px solid #ffffff20;touch-action:pan-y}
 .cs-camera{position:absolute;inset:0;transform-origin:center}
+.cs-map-layer{position:absolute;inset:0;pointer-events:none}
+.cs-map-layer>div,.cs-map-capture>div{position:absolute;inset:0;width:100%;height:100%}
+.cs-map-capture{touch-action:none}
+.cs-map-error{display:flex;align-items:center;justify-content:center;flex-direction:column;padding:24px;background:#111;color:#e7ddc5;text-align:center}
+.cs-clip-map3d{background:#263d48!important;border-color:#8bb7c9!important}
+.cs-editor .tt3-motion-popover{position:static;inset:auto;transform:none;width:auto;max-width:100%;box-shadow:none;padding:10px 0;background:transparent;color:inherit;border:0;display:grid;gap:12px}
+.cs-editor .tt3-motion-heading,.cs-editor .tt3-motion-section,.cs-editor .tt3-camera-speed{display:grid;gap:10px}
+.cs-editor .tt3-motion-heading small,.cs-editor .tt3-motion-popover footer,.cs-editor .tt3-camera-speed p,.cs-editor .tt3-camera-speed small{font-size:11px;color:var(--cs-muted);line-height:1.6}
+.cs-editor .tt3-motion-angle{display:grid;gap:6px}
+.cs-editor .tt3-motion-angle>div:first-child{display:grid}
+.cs-editor .tt3-motion-stepper{display:flex;align-items:center;gap:5px}
+.cs-editor .tt3-motion-degree{display:flex;align-items:center;gap:4px}
+.cs-editor .tt3-motion-section-title{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.cs-editor .tt3-motion-slider>span{display:flex;justify-content:space-between}
+.cs-editor .tt3-motion-slider>small{display:flex;justify-content:space-between}
+.cs-weather-controls fieldset{display:grid;gap:12px;border:0;padding:0;margin:0;min-width:0}
+.cs-weather-controls output{color:var(--cs-accent)}
+.cs-token-controls{display:grid;gap:12px;padding:12px 0;border-bottom:1px solid var(--cs-line)}
+.cs-token-axis{display:grid;gap:6px}
+.cs-token-axis>div{display:flex;gap:6px}
 .cs-layer{position:absolute;transform-origin:center;user-select:none;touch-action:none;line-height:0}
 .cs-layer>div{position:relative;width:100%}.cs-layer img{display:block;width:100%;height:auto;pointer-events:none}
 .cs-layer.is-selected{outline:1px dashed #e2c682;outline-offset:4px;cursor:move}
@@ -62,8 +82,10 @@
 .cs-playhead{position:absolute;top:-7px;bottom:-7px;border-left:1px solid #f4e5bc;pointer-events:none;z-index:2}
 .cs-project-picker{display:flex;gap:16px;flex-wrap:wrap;align-items:end;padding:18px;border:1px solid var(--cs-line);margin-bottom:20px}.cs-project-picker label{flex:1;min-width:180px}.cs-project-picker p{margin:0;max-width:300px;font-size:11px;color:var(--cs-muted)}
 .cs-player{position:absolute;inset:0;z-index:1;background:#000;display:grid;place-items:center}.cs-player .cs-stage{border:0;max-height:100%;width:min(100%,177.7778vh);aspect-ratio:16/9}
-.cs-player-controls{position:absolute;left:18px;bottom:16px;right:18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;z-index:6;opacity:.15;transition:opacity .2s}
-.cs-player:hover .cs-player-controls,.cs-player:focus-within .cs-player-controls{opacity:1}.cs-player-controls button{padding:8px 12px;min-height:36px;color:#eee;background:#000b;border:1px solid #ffffff40;cursor:pointer;font:11px Arial,sans-serif}.cs-player-controls output{color:#ddd;font:10px monospace}
+.cs-player-controls{position:absolute;left:24px;bottom:16px;right:24px;display:grid;gap:10px;z-index:6;padding:12px 16px;background:rgba(13,17,21,.94);border:1px solid #ffffff20;border-radius:12px;box-shadow:0 8px 24px #0006;backdrop-filter:blur(16px);font:13px Arial,sans-serif}
+.cs-player-buttons{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.cs-player .cs-player-controls button{padding:8px 14px;min-height:36px;color:#e5edf3;background:#ffffff08;border:1px solid #ffffff25;border-radius:6px;cursor:pointer;font:12px Arial,sans-serif;text-transform:none}.cs-player .cs-player-controls button:hover{background:#a9d4e81c;border-color:#a9d4e870}.cs-player .cs-player-controls button:first-child{background:#a9d4e8;color:#102027;border-color:#a9d4e8}.cs-player-controls output{margin-left:auto;color:#e5edf3;font:12px monospace}.cs-player-controls output span{color:#8c9eac}
+.cs-player-progress{display:block;width:100%;height:5px;margin:0;accent-color:#a9d4e8;cursor:pointer}.cs-player-controls :focus-visible{outline:2px solid #a9d4e8;outline-offset:3px}
+@media(max-width:700px){.cs-player-controls{left:8px;right:8px;bottom:8px;padding:10px}.cs-player-buttons{gap:5px}.cs-player .cs-player-controls button{padding:7px 10px}}
 .cena-especial:has(.cs-player)>.cena-especial-vinheta{display:none}.cena-especial:has(.cs-player)>.cena-especial-sair{z-index:8}
 .sce-dialog:has(#sce-panel-cutscene:not([hidden])){width: min(1500px,98vw);max-width:98vw}
 @container (max-width: 1050px){.cs-layout{grid-template-columns:160px minmax(0,1fr)}.cs-inspector{grid-column:1/-1;max-height:none;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}.cs-inspector>h4{grid-column:1/-1}.cs-header{flex-direction:column}.cs-header>.cs-actions{max-width:none;justify-content:flex-start}}

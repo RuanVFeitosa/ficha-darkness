@@ -1,7 +1,24 @@
 import React from 'react';
-import {render,screen,fireEvent,within} from '@testing-library/react';
+import {render,screen,fireEvent,within,waitFor} from '@testing-library/react';
 import MasterShield from './MasterShield';
+import {commitMechanicAction} from '../../services/mechanicActions';
+jest.mock('../../services/mechanicActions',()=>({commitMechanicAction:jest.fn()}));
 beforeEach(()=>localStorage.clear());
+
+test('escudo administra os sistemas da campanha e publica alteração no estado da mesa',async()=>{
+ const campaign={id:'c',nome:'ATO III',membros:[{ficha_id:'lia',nome:'Lia'}],mecanicasEspeciais:{version:1,revision:0,events:[],optionalSystems:[{id:'survival',kind:'survival',name:'Fome e sede',enabled:true,participants:{lia:{hunger:2,thirst:4}}}]}};
+ const saved={...campaign.mecanicasEspeciais,revision:1};
+ commitMechanicAction.mockResolvedValue(saved);const onOptionalState=jest.fn();
+ render(<MasterShield campaign={campaign} onOptionalState={onOptionalState} campaignSystem="espiral"/>);
+ fireEvent.click(screen.getByRole('button',{name:'Sistemas opcionais'}));
+ const controls=screen.getByRole('region',{name:'Controles dos sistemas opcionais'});
+ expect(within(controls).getByRole('switch',{name:'Ativar Fome e sede'})).toHaveAttribute('aria-checked','true');
+ fireEvent.click(within(controls).getByRole('button',{name:'Aumentar Fome de Lia'}));
+ await waitFor(()=>expect(onOptionalState).toHaveBeenCalledWith(saved));
+ expect(commitMechanicAction).toHaveBeenCalledWith(campaign,expect.anything(),{type:'optionalSurvival',id:'survival',playerId:'lia',key:'hunger',delta:1},expect.objectContaining({master:true}));
+ fireEvent.click(screen.getByRole('button',{name:'Cena e participantes'}));
+ expect(screen.queryByRole('region',{name:'Controles dos sistemas opcionais'})).not.toBeInTheDocument();
+});
 test('recebe ferramentas do 3D sem duplicar Cenas e mantém cada ferramenta no escudo',()=>{
  render(<MasterShield extraTools={[['tokens','Tokens'],['weather','Clima'],['background','Fundo'],['dice','Dados'],['flashlight','Lanterna']]} renderTool={tool=><p>Ferramenta {tool}</p>}/>);
  const navigation=screen.getByRole('navigation',{name:'Áreas do escudo'});
@@ -19,7 +36,7 @@ test('master tools have icons and preserve their content while changing sections
  const navigation=screen.getByRole('navigation',{name:'Áreas do escudo'});
  expect(within(navigation).queryByRole('button',{name:'Combate',exact:true})).not.toBeInTheDocument();
  expect(within(navigation).queryByRole('button',{name:'Investigação',exact:true})).not.toBeInTheDocument();
- expect(screen.getByRole('textbox',{name:'Rascunho sessionModes'})).toBeInTheDocument();
+ expect(screen.queryByRole('textbox',{name:'Rascunho sessionModes'})).not.toBeInTheDocument();
  for(const label of ['Dashboard','Cenas','Anotações','Música','Soundpad']) {
   expect(within(navigation).getByRole('button',{name:label,exact:true}).querySelector('svg')).not.toBeNull();
  }
@@ -105,4 +122,75 @@ test('Absoluto limits scene DT and displays quick references',()=>{
  const references=screen.getByRole('complementary',{name:'Referências rápidas'});
  expect(within(references).getByText('Atributos')).toBeInTheDocument();
  expect(within(references).getByText('Domínios')).toBeInTheDocument();
+});
+
+const organizedTools=[['exploration','Exploração'],['tokens','Tokens'],['mechanics','Mecânicas especiais'],['weather','Clima'],['background','Fundo'],['dice','Dados'],['flashlight','Lanterna'],['players','Jogadores']];
+
+test('organized 2D shield connects overview shortcuts and groups lighting with scenes',()=>{
+ render(<div className="mesa-master-shield-panel"><MasterShield organized campaignSystem="absoluto" combat
+  scene={{nome:'Arquivo',dificuldades:{ambiente:1,combateInimigoId:'a'}}}
+  enemies={[{id:'a',nome:'Vigia',defesa:3}]} members={[{id:'p',papel:'jogador'}]}
+  extraTools={[["players","Jogadores"],["lighting","Iluminação"]]}
+  documents={<input aria-label="Rascunho da pista"/>} renderTool={tool=><input aria-label={'Ferramenta '+tool}/>}/></div>);
+ expect(screen.getByText('DT 3 · Ambiente do combate')).toBeVisible();
+ const overview=screen.getByRole('region',{name:'Resumo dos participantes'});
+ fireEvent.click(within(overview).getByRole('button',{name:'Fichas dos jogadores'}));
+ expect(screen.getByRole('textbox',{name:'Ferramenta players'})).toBeVisible();
+ expect(screen.getByRole('navigation',{name:'Ferramentas de Participantes'})).toBeVisible();
+ fireEvent.click(screen.getByRole('button',{name:'Cena',exact:true}));
+ fireEvent.click(screen.getByRole('button',{name:'Iluminação',exact:true}));
+ expect(screen.getByRole('textbox',{name:'Ferramenta lighting'})).toBeVisible();
+ fireEvent.click(screen.getByRole('button',{name:'Arquivo',exact:true}));
+ fireEvent.change(screen.getByRole('textbox',{name:'Rascunho da pista'}),{target:{value:'Carta'}});
+ fireEvent.click(screen.getByRole('button',{name:'Sessão',exact:true}));
+ fireEvent.click(within(overview).getByRole('button',{name:'Documentos e pistas'}));
+ expect(screen.getByRole('textbox',{name:'Rascunho da pista'})).toHaveValue('Carta');
+});
+test('organized 3D shield groups tools in six areas and keeps the overview focused',()=>{
+ render(<MasterShield organized campaignSystem="espiral" scene={{nome:'Casa'}} extraTools={organizedTools} documents={<p>Documentos disponíveis</p>} renderTool={tool=><p>Ferramenta {tool}</p>}/>);
+ const nav=screen.getByRole('navigation',{name:'Áreas do escudo'});
+ expect(within(nav).getAllByRole('button')).toHaveLength(6);
+ for(const name of ['Sessão','Cena','Participantes','Arquivo','Áudio','Regras'])expect(within(nav).getByRole('button',{name,exact:true})).toBeInTheDocument();
+ expect(screen.getByRole('region',{name:'Resumo dos participantes'})).toBeVisible();
+ expect(screen.queryByRole('region',{name:'Inimigos e NPCs'})).not.toBeInTheDocument();
+ expect(screen.queryByRole('complementary',{name:'Referências rápidas'})).not.toBeInTheDocument();
+ fireEvent.click(within(nav).getByRole('button',{name:'Participantes'}));
+ expect(screen.getByRole('region',{name:'Inimigos e NPCs'})).toBeVisible();
+ const subnav=screen.getByRole('navigation',{name:'Ferramentas de Participantes'});
+ expect(within(subnav).getByRole('button',{name:'Tokens'})).toBeInTheDocument();
+ expect(within(subnav).getByRole('button',{name:'Jogadores'})).toBeInTheDocument();
+ fireEvent.click(within(nav).getByRole('button',{name:'Regras'}));
+ expect(screen.getByRole('complementary',{name:'Referências rápidas'})).toBeVisible();
+ expect(screen.getByText('Maior dado − dificuldade')).toBeVisible();
+});
+test('organized navigation remembers the last tool and preserves its draft',()=>{
+ render(<MasterShield organized campaignSystem="espiral" extraTools={organizedTools} renderTool={tool=><input aria-label={'Rascunho '+tool}/>}/>);
+ const nav=screen.getByRole('navigation',{name:'Áreas do escudo'});
+ fireEvent.click(within(nav).getByRole('button',{name:'Cena',exact:true}));
+ fireEvent.click(screen.getByRole('button',{name:'Clima',exact:true}));
+ fireEvent.change(screen.getByRole('textbox',{name:'Rascunho weather'}),{target:{value:'Névoa ao anoitecer'}});
+ fireEvent.click(within(nav).getByRole('button',{name:'Áudio'}));
+ fireEvent.click(screen.getByRole('button',{name:'Soundpad',exact:true}));
+ fireEvent.click(within(nav).getByRole('button',{name:'Cena',exact:true}));
+ expect(screen.getByRole('textbox',{name:'Rascunho weather'})).toHaveValue('Névoa ao anoitecer');
+ fireEvent.click(within(nav).getByRole('button',{name:'Áudio'}));
+ expect(screen.getByRole('textbox',{name:'Rascunho soundpad'})).toBeVisible();
+});
+test('organized archive unifies documents, campaign notes and private reminders',()=>{
+ render(<MasterShield organized campaignSystem="espiral" documents={<input aria-label="Documento"/>} renderTool={tool=><p>Ferramenta {tool}</p>}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Arquivo',exact:true}));
+ expect(screen.getByRole('textbox',{name:'Documento'})).toBeVisible();
+ fireEvent.click(screen.getByRole('button',{name:'Lembretes privados',exact:true}));
+ expect(screen.getByRole('textbox',{name:'Anotações do mestre'})).toBeVisible();
+ expect(screen.getByRole('button',{name:'Anotações',exact:true})).toBeInTheDocument();
+});
+
+test.each([false,true])('shield body omits duplicate initiative and session controls (organized: %s)',organized=>{
+ const tool=jest.fn(id=><p>Ferramenta {id}</p>);
+ render(<MasterShield organized={organized} combat scene={{nome:'Casa'}} renderTool={tool}/>);
+ expect(screen.queryByRole('region',{name:'Iniciativa da sessão'})).not.toBeInTheDocument();
+ expect(tool).not.toHaveBeenCalledWith('sessionModes');
+ expect(tool).not.toHaveBeenCalledWith('initiative');
+ expect(screen.queryByText('Ferramenta sessionModes')).not.toBeInTheDocument();
+ expect(screen.getAllByText('Combate ativo').length).toBeGreaterThan(0);
 });

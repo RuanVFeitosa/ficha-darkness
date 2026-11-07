@@ -1,10 +1,17 @@
+import ShieldInitiativeStrip from '../components/tabletop/ShieldInitiativeStrip';
+import PlayerViewSettings from '../components/tabletop/PlayerViewSettings';
+import SurvivalIndicators from '../components/campanha/SurvivalIndicators';
+import '../styles/PlayerTabletop.css';
+import {WEATHER_PRESETS,DEFAULT_WEATHER} from '../utils/tabletopWeather';
+import WeatherEnvironment from '../components/tabletop/WeatherEnvironment';
+import Camera from '../components/tabletop/TabletopCamera';
+import {cutsceneEditorUrl} from '../utils/cutsceneRoutes';
 import ExplorationPanel from '../components/tabletop/ExplorationPanel';
 import ContextualInteraction from '../components/tabletop/ContextualInteraction';
 import SpatialAudioZones from '../components/tabletop/SpatialAudioZones';
 import TokenQuickActions from '../components/tabletop/TokenQuickActions';
 import {visibleToPlayer,localCameraMotion} from '../utils/tabletopExploration';
 import CharacterCameraObstruction from '../components/tabletop/CharacterCameraObstruction';
-import {shoulderCameraTarget} from '../utils/shoulderCamera';
 import {confirmarDialogo} from '../components/ui/DialogoGlobal';
 import {initiativeOrder} from '../utils/initiativeOrder';
 import PlayerInitiativeBar from '../components/tabletop/PlayerInitiativeBar';
@@ -20,7 +27,7 @@ import useUVReveal from '../components/tabletop/useUVReveal';
 import {uvTextImage} from '../utils/uvLight';
 import UVClueControls from '../components/tabletop/UVClueControls';
 import PlayerCameraDistance,{PLAYER_CAMERA_DISTANCE_KEY,normalizePlayerDistance,minimumPlayerDistance} from '../components/tabletop/PlayerCameraDistance';
-import {cameraDamping,cameraMotionForViewer} from '../utils/cameraMotion';
+import {cameraMotionForViewer} from '../utils/cameraMotion';
 import CameraMotionControls,{CAMERA_MOTION_KEY,normalizeCameraMotion} from '../components/tabletop/CameraMotionControls';
 import HandheldCameraMotion from '../components/tabletop/HandheldCameraMotion';
 import useCameraSpeedShortcut from '../components/tabletop/useCameraSpeedShortcut';
@@ -55,7 +62,6 @@ import {activeSceneDifficulty,rollOutcome} from "../utils/sceneDifficulty";
 import RollNotifications, {RollHistory} from "../components/tabletop/RollNotifications";
 import React, { Component, Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import * as THREE from "three";
 import { PlacedAssets, loadSavedMap } from "../components/tabletop/MapEditor3D";
 import { RealisticAvatarModel } from "../components/tabletop/RealisticAvatar3D";
@@ -63,7 +69,9 @@ import { compressBackgroundImage, prepareTokenImage } from "../services/imageCom
 import { definirIniciativa, desvincularInimigo, vincularInimigo, atualizarInimigoCampanha, ativarCena, buscarCampanhaPorCodigo, enviarImagemCena, ouvirCampanha, salvarClima3DCampanha, salvarMapas3DCampanha, salvarPorta3DCampanha, obterEstadoToken3D, salvarEstadoToken3D, salvarTokenCustom3D, desvincularFicha, registrarRolagem, salvarCena } from "../services/mesaApi";
 import "../styles/Tabletop3D.css";
 import ContextTransition from "../components/ui/ContextTransition";
-import { activeTabletopScene } from "../utils/tabletopScene";
+import { activeTabletopScene,specialSceneDestinations } from "../utils/tabletopScene";
+
+export {default as Camera} from '../components/tabletop/TabletopCamera';
 
 const TabletopSessionTools = lazy(() => import("../components/tabletop/TabletopSessionTools"));
 const TacticalTabletop = lazy(() => import("../components/tabletop/TacticalTabletop"));
@@ -72,17 +80,6 @@ const FichaEspiral = lazy(() => import("./fichaEspiral"));
 const CUSTOM_TOKENS_STORAGE_KEY = "darkness_tabletop_custom_tokens_v1";
 const ESPIRAL_SHEET_PREFIX = "espiral:sheet:v1:";
 const DARKNESS_SHEET_PREFIX = "fichaRPG_personagem_";
-const WEATHER_PRESETS = {
-  dia: { preset:"dia", label:"Dia", skyColor:"#7db9df", fogColor:"#bfd9e5", sunColor:"#fff0bd", ambient:0.92, sun:2.05, sunSize:1.05, sunPosition:[11,14,-25], fogNear:20, fogFar:75, rain:0, snow:0, wind:0.12 },
-  sol: { preset:"sol", label:"Sol forte", skyColor:"#48a4df", fogColor:"#a9d5e9", sunColor:"#fff2af", ambient:1, sun:2.55, sunSize:1.25, sunPosition:[12,15,-25], fogNear:24, fogFar:90, rain:0, snow:0, wind:0.08 },
-  tarde: { preset:"tarde", label:"Tarde", skyColor:"#b36f62", fogColor:"#d39a79", sunColor:"#ff9a4f", ambient:0.58, sun:1.7, sunSize:1.35, sunPosition:[14,5,-24], fogNear:16, fogFar:62, rain:0, snow:0, wind:0.16 },
-  noite: { preset:"noite", label:"Noite", skyColor:"#07121f", fogColor:"#101d28", sunColor:"#7596bb", ambient:0.13, sun:0.08, sunSize:0.8, sunPosition:[-12,12,-25], fogNear:12, fogFar:52, rain:0, snow:0, wind:0.12 },
-  nublado: { preset:"nublado", label:"Nublado", skyColor:"#657178", fogColor:"#879195", sunColor:"#d8e0df", ambient:0.62, sun:0.7, sunSize:1, sunPosition:[9,13,-25], fogNear:12, fogFar:45, rain:0, snow:0, wind:0.35 },
-  chuva: { preset:"chuva", label:"Chuva", skyColor:"#25343c", fogColor:"#40515a", sunColor:"#a9c1cb", ambient:0.38, sun:0.38, sunSize:1, sunPosition:[9,12,-25], fogNear:8, fogFar:32, rain:0.82, snow:0, wind:0.48 },
-  neve: { preset:"neve", label:"Neve", skyColor:"#9da9ad", fogColor:"#d8dfe0", sunColor:"#f1f7ff", ambient:0.78, sun:0.75, sunSize:1, sunPosition:[8,12,-25], fogNear:7, fogFar:29, rain:0, snow:0.72, wind:0.22 },
-  ato3: { preset:"ato3", label:"Ato III", skyColor:"#53070a", fogColor:"#260205", sunColor:"#ff392e", ambient:0.24, sun:1.05, sunSize:1.7, sunPosition:[13,7,-24], fogNear:6, fogFar:34, rain:0.12, snow:0, wind:0.58 },
-};
-const DEFAULT_WEATHER = WEATHER_PRESETS.dia;
 const mapRevision = (maps = []) => (Array.isArray(maps) ? maps : [])
   .map((map) => `${map.id || ""}:${map.atualizadoEm || ""}`)
   .join("|");
@@ -133,57 +130,6 @@ function loadSavedDarknessCharacters() {
     }
   } catch {}
   return characters.sort((a,b) => String(a.sheet.nome || "").localeCompare(String(b.sheet.nome || ""),"pt-BR"));
-}
-
-function WeatherParticles({type,intensity=0,wind=0}) {
-  const geometryRef=useRef();
-  const count=Math.round(Math.max(0,Math.min(1,intensity))*1400);
-  const positions=useMemo(() => {
-    const values=new Float32Array(count*3);
-    for(let index=0;index<count;index+=1) {
-      values[index*3]=(Math.random()-0.5)*34;
-      values[index*3+1]=Math.random()*16;
-      values[index*3+2]=(Math.random()-0.5)*34;
-    }
-    return values;
-  },[count]);
-  useFrame((_,delta) => {
-    const attribute=geometryRef.current?.attributes?.position;
-    if(!attribute) return;
-    const speed=type==="rain" ? 13 : 1.25;
-    for(let index=0;index<attribute.count;index+=1) {
-      attribute.array[index*3]+=wind*delta*(type==="rain" ? 2.4 : 1);
-      attribute.array[index*3+1]-=speed*delta;
-      if(attribute.array[index*3+1]<0) {
-        attribute.array[index*3+1]=16;
-        attribute.array[index*3]=(Math.random()-0.5)*34;
-        attribute.array[index*3+2]=(Math.random()-0.5)*34;
-      }
-    }
-    attribute.needsUpdate=true;
-  });
-  if(!count) return null;
-  return <points frustumCulled={false} renderOrder={20}>
-    <bufferGeometry ref={geometryRef}><bufferAttribute attach="attributes-position" args={[positions,3]}/></bufferGeometry>
-    <pointsMaterial color={type==="rain" ? "#b9d8e5" : "#ffffff"} size={type==="rain" ? 0.035 : 0.085} transparent opacity={type==="rain" ? 0.62 : 0.88} depthWrite={false}/>
-  </points>;
-}
-
-function WeatherEnvironment({weather}) {
-  const sunPosition=Array.isArray(weather.sunPosition) ? weather.sunPosition : DEFAULT_WEATHER.sunPosition;
-  return <>
-    <color attach="background" args={[weather.skyColor]}/>
-    <fog attach="fog" args={[weather.fogColor,Number(weather.fogNear),Number(weather.fogFar)]}/>
-    <ambientLight intensity={Number(weather.ambient)}/>
-    <hemisphereLight args={[weather.skyColor,"#33281f",Number(weather.ambient)*0.9]}/>
-    <directionalLight position={sunPosition} intensity={Number(weather.sun)} color={weather.sunColor} castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-15} shadow-camera-right={15} shadow-camera-top={15} shadow-camera-bottom={-15} shadow-normalBias={0.04}/>
-    {Number(weather.sun)>0.12 && <group position={sunPosition}>
-      <mesh><sphereGeometry args={[Number(weather.sunSize)||1.1,28,20]}/><meshBasicMaterial color={weather.sunColor}/></mesh>
-      <pointLight color={weather.sunColor} intensity={8} distance={28}/>
-    </group>}
-    <WeatherParticles type="rain" intensity={Number(weather.rain)} wind={Number(weather.wind)}/>
-    <WeatherParticles type="snow" intensity={Number(weather.snow)} wind={Number(weather.wind)}/>
-  </>;
 }
 
 function PanoramaBackground({url}) {
@@ -463,13 +409,6 @@ function CustomToken({ token, selected, onSelect, onEdit, onDragStart, onDragEnd
     <group ref={artRef}><AnimatedTokenArt unlit={Boolean(token.uvOnly)} image={image} animation={token.animation} id={token.id} width={tokenWidth} height={tokenHeight} selected={selected}/></group>
   </group>;
 }
-const CAMERA_PRESETS = {
-  room: { position: [10,8,12], target: [0,0.7,0], fov: 42 },
-  cinema: { position: [-8,2.35,10], target: [0,1.15,0], fov: 42 },
-  panorama: { position: [10,8,12], target: [0,0.7,0], fov: 65 },
-  detail: { position: [10,8,12], target: [0,0.7,0], fov: 28 },
-};
-
 export function StaticSceneCinema({activeKey,mestre,onHudChange}) {
   const automatic=useRef(false);
   useEffect(() => {
@@ -564,450 +503,6 @@ export function PlayerTokenNavigation({enabled,position,onMove,onStop,cameraRela
   });
   return null;
 }
-export function Camera({view,cameraSpeed=1,allowRightLook=true,characterDistance=null,overShoulder=false,shoulderSide=1,interactionLocked=false,mode="free",followPosition=null,followHeight=0.65,followElevation=0,getFollowPose,sheetFocus=false,getSheetBounds,focusRequest=0,syncedPose=null,onPoseChange,spawnPose=null,spawnKey="",touchNavigation=false}) {
-  const {camera,gl,scene}=useThree();
-  const controls=useRef();
-  const cameraSpeedRef=useRef(1);
-  cameraSpeedRef.current=normalizeCameraSpeed(cameraSpeed);
-  const pressedKeys=useRef(new Set());
-  const lookDrag=useRef(null);
-  const smoothLook=useRef(null);
-  const distanceTarget=useRef(null);
-  const smoothShoulder=useRef(shoulderSide);
-  const firstPersonPose=useRef(null);
-  useEffect(()=>{firstPersonPose.current=null;},[spawnKey]);
-  useEffect(()=>{distanceTarget.current=mode==="character" && characterDistance!==null ? normalizePlayerDistance(characterDistance) : null;},[characterDistance,mode,spawnKey]);
-  useEffect(()=>{smoothLook.current=null;},[interactionLocked,mode,view,spawnKey,sheetFocus,focusRequest]);
-  const lastReportedPose=useRef(null);
-  const appliedCameraSpawn=useRef(null);
-  const forward=useMemo(() => new THREE.Vector3(),[]);
-  const characterCameraInitialized=useRef(false);
-  const stationaryLook=useRef(false);
-  const touchPoints=useRef(new Map());
-  const pinchDistance=useRef(null);
-  const stationaryFollow=useRef(null);
-  const sheetCameraPose=useRef(null);
-  const sheetCameraTransition=useRef(null);
-  const appliedFocusRequest=useRef(0);
-  const cameraPresetInitialized=useRef(false);
-  const viewFovTransition=useRef(null);
-  const characterViewInitialized=useRef(false);
-  const transitionFov=useCallback((target,smooth=true) => {
-    if (smooth && view!=="cinema" && !window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
-      viewFovTransition.current={from:camera.fov,to:target,elapsed:0};
-    } else {
-      viewFovTransition.current=null;
-      camera.fov=target;
-      camera.updateProjectionMatrix();
-    }
-  },[camera,view]);
-  const right=useMemo(() => new THREE.Vector3(),[]);
-  const movement=useMemo(() => new THREE.Vector3(),[]);
-  const desiredTarget=useMemo(() => new THREE.Vector3(),[]);
-  useEffect(() => {
-    const orbit=new OrbitControls(camera,gl.domElement);
-    orbit.enableDamping=true;
-    orbit.dampingFactor=0.045;
-    orbit.enableRotate=true;
-    orbit.enablePan=true;
-    orbit.enableZoom=true;
-    orbit.zoomToCursor=true;
-    orbit.screenSpacePanning=true;
-    orbit.rotateSpeed=0.18;
-    orbit.panSpeed=0.28;
-    orbit.zoomSpeed=1.6;
-    orbit.keyPanSpeed=18;
-    orbit.minDistance=0.08;
-    orbit.maxDistance=500;
-    orbit.minPolarAngle=0.01;
-    orbit.maxPolarAngle=Math.PI-0.01;
-    orbit.mouseButtons={LEFT:THREE.MOUSE.ROTATE,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.ROTATE};
-    orbit.touches={ONE:THREE.TOUCH.ROTATE,TWO:THREE.TOUCH.DOLLY_PAN};
-    orbit.target.set(0,0.7,0);
-    controls.current=orbit;
-    return () => {
-      orbit.dispose();
-    };
-  },[camera,gl]);
-  useEffect(()=>{
-    const orbit=controls.current;
-    if(!orbit) return;
-    const orbital=mode==='character' && view!=='firstPerson';
-    orbit.enablePan=mode!=='character';
-    orbit.zoomToCursor=mode!=='character';
-    orbit.minPolarAngle=orbital && touchNavigation ? .45 : .01;
-    orbit.minDistance=orbital ? minimumPlayerDistance(followHeight) : 0.08;
-    // Permit looking above the horizon without flipping over the vertical pole.
-    orbit.maxPolarAngle=orbital ? Math.PI-.15 : Math.PI-0.01;
-  },[mode,view,followHeight,touchNavigation]);
-  useEffect(()=>{if(controls.current)controls.current.mouseButtons.RIGHT=allowRightLook ? THREE.MOUSE.ROTATE : null;},[allowRightLook]);
-  useEffect(()=>{const orbit=controls.current;if(!orbit)return;const factor=normalizeCameraSpeed(cameraSpeed);orbit.rotateSpeed=(touchNavigation ? .65 : .18)*factor;orbit.panSpeed=.28*factor;orbit.zoomSpeed=1.6*factor;orbit.keyPanSpeed=18*factor;},[cameraSpeed,touchNavigation]);
-  useEffect(() => {
-    const touches=touchPoints.current;
-    const canvas=gl.domElement;
-    const finishLook=() => {
-      if(!lookDrag.current) return;
-      lookDrag.current=null;
-      if(controls.current) controls.current.enabled=!interactionLocked && mode!=="master" && view!=="firstPerson";
-    };
-    const startLook=(event) => {
-      if(event.button===2 && event.pointerType!=="touch" && !allowRightLook) return;
-      if(event.button===0 && event.pointerType!=="touch") smoothLook.current=null;
-      if(interactionLocked || !controls.current || !["free","character"].includes(mode)) return;
-      // Use the same orbit gesture over the entire player canvas. Mixing a
-      // stationary look on scenery with orbit on tokens made touch unpredictable
-      // and let orbit's polar clamp move the camera upwards after looking up.
-      if(event.pointerType==='touch' && touchNavigation && mode==='character' && view!=='firstPerson') {
-        stationaryLook.current=false;
-        stationaryFollow.current=null;
-        smoothLook.current=null;
-        return;
-      }
-      if(event.pointerType==="touch") {
-        touchPoints.current.set(event.pointerId,{x:event.clientX,y:event.clientY});
-        if(touchPoints.current.size===2) {lookDrag.current=null;smoothLook.current=null;pinchDistance.current=null;controls.current.enabled=false;event.preventDefault();event.stopImmediatePropagation();return;}
-        const ray=new THREE.Raycaster();const bounds=canvas.getBoundingClientRect();
-        ray.setFromCamera(new THREE.Vector2((event.clientX-bounds.left)/bounds.width*2-1,-(event.clientY-bounds.top)/bounds.height*2+1),camera);
-        const hit=scene ? ray.intersectObjects(scene.children,true)[0] : null;
-        let object=hit?.object;while(object) {if(object.userData?.tokenInteraction && !touchNavigation) return;object=object.parent;}
-      }
-      if((event.button!==2 && !(view==="firstPerson" && event.button===0) && event.pointerType!=="touch") || !["free","character"].includes(mode) || interactionLocked || !controls.current) return;
-      stationaryLook.current=mode==="character";
-      stationaryFollow.current=null;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      // Flush orbit damping before beginning a stationary look.
-      const orbit=controls.current;
-      const frozenPosition=camera.position.toArray();
-      const damping=orbit.enableDamping;
-      orbit.enableDamping=false;
-      orbit.update();
-      orbit.enableDamping=damping;
-      camera.position.set(...frozenPosition);
-      orbit.enabled=false;
-      const dx=orbit.target.x-camera.position.x,dy=orbit.target.y-camera.position.y,dz=orbit.target.z-camera.position.z;
-      const distance=Math.max(Math.hypot(dx,dy,dz),.08);
-      const yaw=Math.atan2(dx,dz),pitch=Math.asin(Math.max(-1,Math.min(1,dy/distance)));
-      smoothLook.current={yaw,pitch,targetYaw:yaw,targetPitch:pitch,distance};
-      lookDrag.current={id:event.pointerId,x:event.clientX,y:event.clientY};
-    };
-    const moveLook=(event) => {
-      if(event.pointerType==="touch" && touchPoints.current.has(event.pointerId)) {
-        touchPoints.current.set(event.pointerId,{x:event.clientX,y:event.clientY});
-        if(touchPoints.current.size===2) {
-          event.preventDefault();event.stopImmediatePropagation();
-          if(touchNavigation && view==='firstPerson') {pinchDistance.current=null;return;}
-          const [a,b]=[...touchPoints.current.values()];const distance=Math.hypot(a.x-b.x,a.y-b.y);
-          if(pinchDistance.current && distance>0) {const orbit=controls.current;const currentDistance=Math.hypot(camera.position.x-orbit.target.x,camera.position.y-orbit.target.y,camera.position.z-orbit.target.z);const nextDistance=Math.max(.2,Math.min(500,currentDistance*pinchDistance.current/distance));const factor=nextDistance/Math.max(currentDistance,.001);camera.position.set(orbit.target.x+(camera.position.x-orbit.target.x)*factor,orbit.target.y+(camera.position.y-orbit.target.y)*factor,orbit.target.z+(camera.position.z-orbit.target.z)*factor);orbit.update();}
-          pinchDistance.current=distance;return;
-        }
-      }
-      const drag=lookDrag.current;
-      if(!drag || drag.id!==event.pointerId) return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      const look=smoothLook.current;
-      if(!look) return;
-      look.targetYaw-=(event.clientX-drag.x)*.0035*cameraSpeedRef.current;
-      look.targetPitch=Math.max(-Math.PI/2+.01,Math.min(Math.PI/2-.01,look.targetPitch-(event.clientY-drag.y)*.0035*cameraSpeedRef.current));
-      drag.x=event.clientX;
-      drag.y=event.clientY;
-    };
-    const endLook=(event) => {
-      if(event.pointerType==="touch") {touchPoints.current.delete(event.pointerId);pinchDistance.current=null;if(!touchPoints.current.size && controls.current) controls.current.enabled=!interactionLocked && mode!=="master" && view!=="firstPerson";}
-      if(lookDrag.current?.id!==event.pointerId) return;
-      event.stopImmediatePropagation();
-      finishLook();
-    };
-    canvas.addEventListener("pointerdown",startLook,true);
-    window.addEventListener("pointermove",moveLook,true);
-    window.addEventListener("pointerup",endLook,true);
-    window.addEventListener("pointercancel",endLook,true);
-    window.addEventListener("blur",finishLook);
-    return () => {
-      finishLook();
-      touches.clear();smoothLook.current=null;pinchDistance.current=null;
-      canvas.removeEventListener("pointerdown",startLook,true);
-      window.removeEventListener("pointermove",moveLook,true);
-      window.removeEventListener("pointerup",endLook,true);
-      window.removeEventListener("pointercancel",endLook,true);
-      window.removeEventListener("blur",finishLook);
-    };
-  },[camera,gl,scene,interactionLocked,mode,allowRightLook,view,touchNavigation]);
-  useEffect(() => {
-    const navigationKeys=new Set(["w","a","s","d","q","e","arrowup","arrowdown","arrowleft","arrowright"]);
-    const isEditable=(target) => target instanceof HTMLElement && (target.isContentEditable || Boolean(target.closest("input, textarea, select, button")));
-    const onKeyDown=(event) => {
-      const key=event.key.toLowerCase();
-      if(!navigationKeys.has(key) || isEditable(event.target)) return;
-      pressedKeys.current.add(key);
-      event.preventDefault();
-    };
-    const onKeyUp=(event) => pressedKeys.current.delete(event.key.toLowerCase());
-    const clearKeys=() => pressedKeys.current.clear();
-    window.addEventListener("keydown",onKeyDown);
-    window.addEventListener("keyup",onKeyUp);
-    window.addEventListener("blur",clearKeys);
-    return () => {
-      window.removeEventListener("keydown",onKeyDown);
-      window.removeEventListener("keyup",onKeyUp);
-      window.removeEventListener("blur",clearKeys);
-    };
-  },[]);
-  useEffect(() => {
-    if(mode!=="character") {
-      characterCameraInitialized.current=false;
-      return;
-    }
-    if(characterCameraInitialized.current || !Array.isArray(followPosition) || !controls.current) return;
-    if(focusRequest) {characterCameraInitialized.current=true;return;}
-    const x=Number(followPosition[0])||0;
-    const z=Number(followPosition[1])||0;
-    const height=Math.max(0.05,Number(followHeight)||0.65);
-    const ground=Number(followElevation)||0;
-    controls.current.target.set(x+height*0.35,ground+height*0.65,z);
-    camera.position.set(x+height*0.35,ground+height*0.75,z+height*1.1);
-    if(overShoulder) {
-      controls.current.target.set(...shoulderCameraTarget([x,z],height,ground,[0,-1],shoulderSide));
-      camera.position.set(x+height*.32*shoulderSide,ground+height*.86,z+height*.95);
-    }
-    camera.fov=overShoulder ? 48 : 50;
-    camera.near=0.01;
-    camera.updateProjectionMatrix();
-    controls.current.update();
-    characterCameraInitialized.current=true;
-  },[camera,followPosition,followHeight,followElevation,mode,focusRequest,overShoulder,shoulderSide]);
-  useEffect(() => {
-    if(!focusRequest || appliedFocusRequest.current===focusRequest || mode!=="character" || !controls.current || !Array.isArray(followPosition)) return;
-    appliedFocusRequest.current=focusRequest;
-    stationaryLook.current=false;stationaryFollow.current=null;
-    const x=Number(followPosition[0])||0,z=Number(followPosition[1])||0;
-    const height=Math.max(0.05,Number(followHeight)||0.65),ground=Number(followElevation)||0;
-    sheetCameraTransition.current={from:{position:camera.position.toArray(),target:controls.current.target.toArray(),fov:camera.fov},to:{position:[x+height*0.35,ground+height*0.75,z+height*1.1],target:[x+height*0.35,ground+height*0.65,z],fov:50},elapsed:0};
-    if(overShoulder) sheetCameraTransition.current.to={position:[x+height*.32,ground+height*.86,z+height*.95],target:shoulderCameraTarget([x,z],height,ground),fov:48};
-  },[camera,mode,focusRequest,followPosition,followHeight,followElevation,overShoulder]);
-  useEffect(() => {
-    const orbit=controls.current;
-    if(mode!=="character" || !orbit) return;
-    if(sheetFocus && !sheetCameraPose.current && Array.isArray(followPosition)) {
-      sheetCameraPose.current={position:camera.position.toArray(),target:orbit.target.toArray(),fov:camera.fov};
-      const x=Number(followPosition[0])||0,z=Number(followPosition[1])||0;
-      const height=Math.max(0.05,Number(followHeight)||0.65),ground=Number(followElevation)||0;
-      // Translate along the current camera right axis at every orbit angle.
-      const dx=orbit.target.x-camera.position.x,dz=orbit.target.z-camera.position.z;
-      const length=Math.hypot(dx,dz)||1;
-      const screenRight=((x-orbit.target.x)*(-dz)+(z-orbit.target.z)*dx)/length;
-      {
-        const panelBounds=getSheetBounds?.();
-        const canvasBounds=gl.domElement.getBoundingClientRect();
-        // The remaining field starts at the panel's right edge. Its centre has
-        // this NDC offset, keeping the character visible beside a compact sheet.
-        const screenOffset=panelBounds && canvasBounds.width>0 ? Math.max(0,Math.min(.9,(panelBounds.right-canvasBounds.left)/canvasBounds.width)) : .64;
-        const desiredRight=length*Math.tan((Number(camera.fov)||50)*Math.PI/360)*(Number(camera.aspect)||16/9)*screenOffset;
-        const shift=desiredRight-screenRight;
-        const shiftX=(-dz/length)*shift,shiftZ=(dx/length)*shift;
-        const target=[orbit.target.x-shiftX,orbit.target.y,orbit.target.z-shiftZ];
-        sheetCameraPose.current.followOffset=[target[0]-x,target[1]-ground,target[2]-z];
-        if(Math.abs(shift)<height*0.05) {sheetCameraPose.current.preserved=true;return;}
-        sheetCameraTransition.current={from:{position:camera.position.toArray(),target:orbit.target.toArray(),fov:camera.fov},to:{position:[camera.position.x-shiftX,camera.position.y,camera.position.z-shiftZ],target,fov:camera.fov},elapsed:0};
-        return;
-      }
-    } else if(!sheetFocus && sheetCameraPose.current) {
-      const pose=sheetCameraPose.current;
-      if(pose.preserved) {sheetCameraPose.current=null;return;}
-      sheetCameraTransition.current={from:{position:camera.position.toArray(),target:orbit.target.toArray(),fov:camera.fov},to:pose,elapsed:0};
-      sheetCameraPose.current=null;
-    }
-  },[camera,gl,mode,sheetFocus,getSheetBounds,followPosition,followHeight,followElevation]);
-  useEffect(() => {
-    if(mode!=="free" || !controls.current) return;
-    if(focusRequest>0) {sheetCameraTransition.current=null;cameraPresetInitialized.current=true;}
-    const preset=CAMERA_PRESETS[view] || CAMERA_PRESETS.room;
-    if(!cameraPresetInitialized.current) camera.position.set(...preset.position);
-    transitionFov(preset.fov,cameraPresetInitialized.current);
-    camera.near=0.05;
-    camera.far=1200;
-    camera.updateProjectionMatrix();
-    if(!cameraPresetInitialized.current) controls.current.target.set(...preset.target);
-    cameraPresetInitialized.current=true;
-    controls.current.update();
-  },[camera,mode,view,focusRequest,transitionFov]);
-  useEffect(() => {
-    if(mode!=="character" || !view) return;
-    transitionFov(view==="panorama" ? 65 : view==="detail" ? 28 : overShoulder ? 48 : 50,characterViewInitialized.current);
-    characterViewInitialized.current=true;
-  },[camera,mode,view,transitionFov,overShoulder]);
-  useEffect(() => {
-    if(appliedCameraSpawn.current?.key!==spawnKey) {
-      appliedCameraSpawn.current={key:spawnKey,applied:false};
-    }
-    if(appliedCameraSpawn.current.applied) return;
-    if(mode!=="free" || !controls.current || !Array.isArray(spawnPose?.position) || !Array.isArray(spawnPose?.target)) return;
-    viewFovTransition.current=null;
-    camera.position.set(...spawnPose.position);
-    camera.fov=Number(spawnPose.fov)||42;
-    camera.near=0.05;
-    camera.far=1200;
-    camera.updateProjectionMatrix();
-    controls.current.target.set(...spawnPose.target);
-    controls.current.update();
-    appliedCameraSpawn.current.applied=true;
-  },[camera,mode,spawnKey,spawnPose]);
-  useEffect(() => {
-    if (controls.current) controls.current.enabled = view!=="firstPerson" && !interactionLocked && mode!=="master" && !lookDrag.current && touchPoints.current.size<2;
-    if (interactionLocked || mode!=="free") pressedKeys.current.clear();
-  }, [interactionLocked,mode,view]);
-  useEffect(()=>{
-    const previous=firstPersonPose.current;
-    if(view!=="firstPerson" && previous && controls.current){
-      const shift=Array.isArray(followPosition) ? [followPosition[0]-previous.follow[0],(Number(followElevation)||0)-previous.elevation,followPosition[1]-previous.follow[1]] : [0,0,0];
-      const to={position:previous.position.map((v,i)=>v+shift[i]),target:previous.target.map((v,i)=>v+shift[i]),fov:previous.fov};
-      if(mode==="character")sheetCameraTransition.current={from:{position:camera.position.toArray(),target:controls.current.target.toArray(),fov:camera.fov},to,elapsed:0};
-      else {camera.position.set(...to.position);controls.current.target.set(...to.target);controls.current.update();}
-      firstPersonPose.current=null;
-    }
-  },[view,mode,camera,followPosition,followElevation]);
-  useFrame((_,delta) => {
-    const renderedPose=getFollowPose?.();
-    const visualPosition=renderedPose?.position || followPosition;
-    const visualElevation=renderedPose?.elevation ?? followElevation;
-    const orbit=controls.current;
-    if(!orbit) return;
-    orbit.dampingFactor=touchNavigation ? 1-Math.exp(-12*Math.min(delta,.05)) : cameraDamping(delta);
-    const fovTransition=viewFovTransition.current;
-    if (fovTransition && mode!=="master" && !sheetCameraTransition.current) {
-      fovTransition.elapsed+=Math.min(delta,0.05);
-      const progress=Math.min(1,fovTransition.elapsed/0.65);
-      const eased=progress*progress*(3-2*progress);
-      camera.fov=fovTransition.from+(fovTransition.to-fovTransition.from)*eased;
-      camera.updateProjectionMatrix();
-      if (progress===1) viewFovTransition.current=null;
-    }
-    if(view==="firstPerson" && Array.isArray(visualPosition)){
-      orbit.enabled=false;
-      if(!firstPersonPose.current){
-        firstPersonPose.current={position:camera.position.toArray(),target:orbit.target.toArray(),fov:camera.fov,follow:[...visualPosition],elevation:Number(visualElevation)||0};
-        const dx=orbit.target.x-camera.position.x,dz=orbit.target.z-camera.position.z;
-        firstPersonPose.current.yaw=Math.atan2(dx,dz);firstPersonPose.current.pitch=0;
-        const damping=orbit.enableDamping;orbit.enableDamping=false;orbit.update();orbit.enableDamping=damping;
-        sheetCameraTransition.current=null;
-      }
-      const pose=firstPersonPose.current,look=smoothLook.current;
-      if(look){const alpha=1-Math.exp(-12*Math.min(delta,.05));look.yaw+=(look.targetYaw-look.yaw)*alpha;look.pitch+=(look.targetPitch-look.pitch)*alpha;pose.yaw=look.yaw;pose.pitch=look.pitch;}
-      const alpha=1-Math.exp(-12*Math.min(delta,.05));
-      const eye=[Number(visualPosition[0])||0,(Number(visualElevation)||0)+Math.max(.05,Number(followHeight)||.65)*.9,Number(visualPosition[1])||0];
-      camera.position.set(camera.position.x+(eye[0]-camera.position.x)*alpha,camera.position.y+(eye[1]-camera.position.y)*alpha,camera.position.z+(eye[2]-camera.position.z)*alpha);
-      const horizontal=Math.cos(pose.pitch);
-      orbit.target.set(camera.position.x+Math.sin(pose.yaw)*horizontal,camera.position.y+Math.sin(pose.pitch),camera.position.z+Math.cos(pose.yaw)*horizontal);
-      orbit.update();return;
-    }
-    const transition=sheetCameraTransition.current;
-    if(transition && mode==="character") {
-      transition.elapsed+=Math.min(delta,0.05);
-      const t=Math.min(1,transition.elapsed/0.55);
-      const eased=t*t*t*(t*(t*6-15)+10);
-      const blend=(a,b)=>a+(b-a)*eased;
-      camera.position.set(...transition.from.position.map((value,index)=>blend(value,transition.to.position[index])));
-      orbit.target.set(...transition.from.target.map((value,index)=>blend(value,transition.to.target[index])));
-      camera.fov=blend(transition.from.fov,transition.to.fov);
-      camera.updateProjectionMatrix();orbit.enabled=false;orbit.update();
-      if(t===1) {sheetCameraTransition.current=null;orbit.enabled=!interactionLocked;}
-      return;
-    }
-    if(mode==="master" && syncedPose?.position?.length===3 && syncedPose?.target?.length===3) {
-      const factor=1-Math.exp(-Math.min(delta,0.05)*9);
-      desiredTarget.set(...syncedPose.position);
-      camera.position.lerp(desiredTarget,factor);
-      desiredTarget.set(...syncedPose.target);
-      orbit.target.lerp(desiredTarget,factor);
-      const nextFov=Number(syncedPose.fov) || camera.fov;
-      if(Math.abs(camera.fov-nextFov)>0.01) {
-        camera.fov=THREE.MathUtils.lerp(camera.fov,nextFov,factor);
-        camera.updateProjectionMatrix();
-      }
-      orbit.update();
-      return;
-    }
-    if(mode==="character" && stationaryLook.current && Array.isArray(visualPosition)) {
-      const next=[Number(visualPosition[0])||0,Number(visualElevation)||0,Number(visualPosition[1])||0];
-      const previous=stationaryFollow.current || next;
-      movement.set(next[0]-previous[0],next[1]-previous[1],next[2]-previous[2]);
-      camera.position.add(movement);orbit.target.add(movement);
-      stationaryFollow.current=next;
-    }
-    if(mode==="character" && !stationaryLook.current && Array.isArray(visualPosition)) {
-      const height=Math.max(0.05,Number(followHeight)||0.65);
-      desiredTarget.set((Number(visualPosition[0])||0)+(sheetFocus ? -height*1.7*Math.tan(25*Math.PI/180)*(Number(camera.aspect)||16/9)*0.64 : height*0.35),(Number(visualElevation)||0)+height*(sheetFocus ? 0.5 : 0.65),Number(visualPosition[1])||0);
-      if(overShoulder && !sheetFocus) {
-        smoothShoulder.current+=(shoulderSide-smoothShoulder.current)*(1-Math.exp(-12*Math.min(delta,.05)));
-        desiredTarget.set(...shoulderCameraTarget(visualPosition,height,visualElevation,[
-          orbit.target.x-camera.position.x,orbit.target.z-camera.position.z,
-        ],smoothShoulder.current));
-      }
-      if(sheetFocus && sheetCameraPose.current?.followOffset) {
-        const offset=sheetCameraPose.current.followOffset;
-        desiredTarget.set((Number(visualPosition[0])||0)+offset[0],(Number(visualElevation)||0)+offset[1],(Number(visualPosition[1])||0)+offset[2]);
-      }
-      movement.copy(desiredTarget).sub(orbit.target).multiplyScalar(renderedPose ? 1 : 1-Math.exp(-Math.min(delta,0.05)*10));
-      camera.position.add(movement);
-      orbit.target.add(movement);
-    }
-    if(mode==="free" && !interactionLocked && pressedKeys.current.size) {
-      camera.getWorldDirection(forward);
-      forward.y=0;
-      if(forward.lengthSq()<0.0001) forward.set(0,0,-1);
-      else forward.normalize();
-      right.crossVectors(forward,camera.up).normalize();
-      movement.set(0,0,0);
-      if(pressedKeys.current.has("w") || pressedKeys.current.has("arrowup")) movement.add(forward);
-      if(pressedKeys.current.has("s") || pressedKeys.current.has("arrowdown")) movement.sub(forward);
-      if(pressedKeys.current.has("d") || pressedKeys.current.has("arrowright")) movement.add(right);
-      if(pressedKeys.current.has("a") || pressedKeys.current.has("arrowleft")) movement.sub(right);
-      if(pressedKeys.current.has("e")) movement.y+=1;
-      if(pressedKeys.current.has("q")) movement.y-=1;
-      if(movement.lengthSq()>0) {
-        const speed=0.65*cameraSpeedRef.current;
-        movement.normalize().multiplyScalar(speed*Math.min(delta,0.05));
-        camera.position.add(movement);
-        orbit.target.add(movement);
-      }
-    }
-    if(distanceTarget.current!==null && mode==="character") {
-      const dx=camera.position.x-orbit.target.x,dy=camera.position.y-orbit.target.y,dz=camera.position.z-orbit.target.z;
-      const current=Math.max(.0001,Math.hypot(dx,dy,dz));
-      const target=distanceTarget.current;
-      const next=current+(target-current)*(1-Math.exp(-9*Math.min(delta,.05)));
-      const factor=next/current;
-      camera.position.set(orbit.target.x+dx*factor,orbit.target.y+dy*factor,orbit.target.z+(current<=.0001 ? next : dz*factor));
-      if(Math.abs(next-target)<.001)distanceTarget.current=null;
-    }
-    const look=smoothLook.current;
-    if(look && !interactionLocked && mode!=="master" && !sheetCameraTransition.current) {
-      const alpha=1-Math.exp(-12*Math.min(delta,.05));
-      look.yaw+=(look.targetYaw-look.yaw)*alpha;
-      look.pitch+=(look.targetPitch-look.pitch)*alpha;
-      const horizontal=Math.cos(look.pitch)*look.distance;
-      orbit.target.set(camera.position.x+Math.sin(look.yaw)*horizontal,camera.position.y+Math.sin(look.pitch)*look.distance,camera.position.z+Math.cos(look.yaw)*horizontal);
-      if(!lookDrag.current && Math.abs(look.targetYaw-look.yaw)+Math.abs(look.targetPitch-look.pitch)<.00001) smoothLook.current=null;
-    }
-    orbit.update();
-    if(mode==="free" && onPoseChange) {
-      const pose={
-        position:camera.position.toArray(),
-        target:orbit.target.toArray(),
-        fov:camera.fov,
-        updatedAt:new Date().toISOString(),
-      };
-      const previous=lastReportedPose.current;
-      const changed=!previous || pose.position.some((value,index) => Math.abs(value-previous.position[index])>0.002) || pose.target.some((value,index) => Math.abs(value-previous.target[index])>0.002) || Math.abs(pose.fov-previous.fov)>0.02;
-      if(changed) {
-        lastReportedPose.current=pose;
-        onPoseChange(pose);
-      }
-    }
-  },-1);
-  return null;
-}
 export class SceneBoundary extends Component {
   state={error:null};
   static getDerivedStateFromError(error) {return {error};}
@@ -1052,7 +547,7 @@ export class SceneBoundary extends Component {
   const playerCameraMode="character";
   const [tacticalMode,setTacticalMode]=useState(false);
   const [savingWeather,setSavingWeather]=useState(false);
-  const [notice,setNotice]=useState("Selecione um personagem e clique no piso para movê-lo.");
+  const [notice,setNotice]=useState(mestre ? "Selecione um personagem e clique no piso para movê-lo." : "");
   const actualPositions=useRef([]);
   const renderedTokenPoses=useRef(new Map());
   const localMapAssets=useRef(campaignCode === "local" ? loadSavedMap() : []).current;
@@ -1710,7 +1205,7 @@ export class SceneBoundary extends Component {
     .map((link) => ({link,map:campaign?.mapas3D?.find((item) => item.id === link.mapa3dId)}))
     .filter((item) => item.map);
   const switchScene = async (scene,mapLink=null,imageLink=null,special=false) => {
-    if(!mestre || !campaign?.id || switchingScene) return;
+    if(!mestre || !campaign?.id || switchingScene) return false;
     try {
       setSwitchingScene(true);
       const mode=special ? "especial" : mapLink ? "mapa" : "cena";
@@ -1719,8 +1214,10 @@ export class SceneBoundary extends Component {
       applyCampaign({...campaign,cenaAtiva:scene,modo:mode,midiaAtivaId:mediaId});
       setPositions(tabletopPeople.map((person) => [...person.start]));
       setNotice(mapLink ? `${scene.nome} · ${mapLink.nome} apresentado para a mesa.` : `${scene.nome} apresentada sem mapa 3D.`);
+      return true;
     } catch(error) {
       setNotice(error.message || "Não foi possível trocar a cena.");
+      return false;
     } finally {
       setSwitchingScene(false);
     }
@@ -1802,11 +1299,12 @@ export class SceneBoundary extends Component {
           <a href={returnUrl} className="tt3-back" aria-label={mestre ? "Voltar ao dashboard" : "Voltar para a ficha"}>←</a>
           <div><span>{activeMapName ? `CENA ${activeSceneLabel} · ${activeMapName}` : `CENA ${activeSceneLabel} · SEM MAPA 3D`}</span><h1>{activeSceneName}</h1></div>
         </div>
-        <div className="tt3-session-meta">
+        <PlayerViewSettings master={mestre || mobilePlayer}>
           {mestre && <><button type="button" className="tt3-master-launch" aria-pressed={hudPanel==="shield" && !shieldCollapsed} onClick={()=>{setShieldCollapsed(false);if(hudPanel!=="shield")toggleHudPanel("shield");}}><span aria-hidden="true">◈</span> Escudo do mestre <small>Central da sessão</small></button><details className="tt3-master-options"><summary>Ajustes da mesa</summary><div>          {mestre && <a className="tt3-role" href={`/?${new URLSearchParams({criarMapa3d:"1",campanha:campaignCode,...(activeMapId ? {mapa3d:activeMapId} : {})})}`}>Editar mapa</a>}
           {mestre && activeMapName && !staticScene && !tacticalMode && <button className="tt3-role" aria-pressed={identifyDoors} onClick={()=>{setIdentifyDoors(value=>!value);setNotice(identifyDoors ? 'Clique em uma porta para abrir ou fechar.' : 'Clique somente na folha da porta para identificá-la. O objeto deve estar separado das paredes no modelo.');}}>{identifyDoors ? 'Concluir portas' : 'Marcar portas'}</button>}
 
 
+          {mestre && campaign && <a className="tt3-role" href={cutsceneEditorUrl(campaign,campaign.cenaAtiva?.id,'3d')}>Editor de cutscenes ↗</a>}
           {mestre && <CameraMotionControls value={cameraMotion} onChange={setCameraMotion}/>}          {mestre && <div className="tt3-speed-indicator" title="Ctrl + scroll para ajustar a velocidade da câmera"><span>Velocidade</span><output aria-label="Velocidade da câmera" aria-live="polite">{cameraSpeed.toLocaleString('pt-BR',{maximumFractionDigits:2})}×</output><small>Ctrl + scroll</small></div>}</div></details></>}
           {!mestre && !tacticalMode && !staticScene && view!=="firstPerson" && <PlayerCameraDistance minimum={playerCameraMinimum} value={effectivePlayerDistance} onChange={setPlayerCameraDistance}/>}
           {!mestre && <><details className="tt3-token-speed"><summary>Velocidade <span>{tokenSpeed.toLocaleString('pt-BR')}×</span></summary><div><label>Velocidade do token<input aria-label="Velocidade do token" type="range" min="0.25" max="5" step="0.25" value={tokenSpeed} onChange={event=>setTokenSpeed(normalizeCameraSpeed(event.target.value))}/></label><small>Ctrl + roda sobre o mapa</small><button type="button" onClick={()=>setTokenSpeed(1)}>Restaurar 1×</button></div></details><span className="tt3-shared-motion" title="Balanço da câmera controlado pelo mestre">Balanço {Math.round(cameraMotion.intensity*100)}% · Mestre</span></>}
@@ -1820,7 +1318,7 @@ export class SceneBoundary extends Component {
           }}>{spatialContext?"Desligar som ambiente":"Ativar som ambiente"}</button>}
           <span className="tt3-role">{mestre ? "Visão do mestre" : "Visão do jogador"}</span>{!mestre && playerCharacterIndex>=0 && <CombatPostureButton active={Boolean(sheetTokenTransforms[tabletopPeople[playerCharacterIndex].id]?.combat)} animation={tabletopPeople[playerCharacterIndex].animation || sheetTokenTransforms[tabletopPeople[playerCharacterIndex].id]?.animation} onChange={combat => updateSheetToken(tabletopPeople[playerCharacterIndex].id,{combat})} onNotice={setNotice}/>}
           {!mobilePlayer && <button type="button" onClick={() => setHudHidden(true)} title="Ocultar interface (H)">Modo cinema</button>}
-        </div>
+        </PlayerViewSettings>
       </header></>);
   const commandMenu=(<><nav className="tt3-command-rail" aria-label={mestre ? "Ferramentas do mestre" : "Ferramentas do jogador"}>
         {(mestre ? [
@@ -1946,7 +1444,7 @@ export class SceneBoundary extends Component {
     <ContextTransition contextKey={campaign ? `${campaign.cenaAtiva?.id}:${campaign.midiaAtivaId}:${campaign.modo}` : "loading"}/>
     <Suspense fallback={null}><TabletopSessionTools tabletopMapId={activeMapId} open={sessionOpen} tool={sessionTool} requestVersion={sessionRequest} onClose={() => setSessionOpen(false)}/></Suspense>
 
-    <section style={mestre ? {"--master-workspace-height":hudPanel==="shield" && !shieldCollapsed ? shieldHeight+"dvh" : "0px"} : undefined} className="tt3-stage" aria-label="Sala de investigação tridimensional">
+    <section style={mestre ? {"--master-workspace-height":hudPanel==="shield" && !shieldCollapsed ? shieldHeight+"dvh" : "0px"} : undefined} className={`tt3-stage ${!mestre && !mobile ? 'tt3-player-desktop' : ''}`} aria-label="Sala de investigação tridimensional">
       <div className="tt3-cinema-bars" aria-hidden="true"/>
       {!mestre && <PlayerInitiativeBar campaign={campaign} entries={initiativeOrder(campaign,Object.fromEntries(tabletopPeople.map(person=>[person.id,{nome:person.name,fotoPerfil:person.portrait}])))} variant="3d"/>}
     <StaticSceneCinema activeKey={staticCinemaKey} mestre={mestre} onHudChange={setHudHidden}/>
@@ -2002,7 +1500,7 @@ export class SceneBoundary extends Component {
       </SceneBoundary>
 
       {tacticalMode && !staticScene && <SceneBoundary><Suspense fallback={<div className="tt3-fallback">Carregando mapa tático…</div>}><TacticalTabletop doorStates={doorStates} onToggleDoor={toggleDoor} constrainMove={(token,position) => !mestre ? playerCollisionController.current?.(position) : null} cameraSpeed={mestre ? cameraSpeed : 1} playerTokenId={!mestre ? tabletopPeople[playerCharacterIndex]?.id : null} navigation={<PlayerTokenNavigation speed={tokenSpeed} key={activeMapId} collision elevation={Number(sheetTokenTransforms[tabletopPeople[playerCharacterIndex]?.id]?.elevation)||0} baseElevation={Number(activeSpawnPoints.tokens?.y)||0} scale={sheetTokenTransforms[tabletopPeople[playerCharacterIndex]?.id]?.scale} collisionController={playerCollisionController} enabled={!mestre && playerCharacterIndex>=0 && !hudPanel && !tokenPanelOpen && !draggingToken && !examinedClue && !quickToken} cameraRelative={false} position={playerFollowPosition} onMove={movePlayerToken} onStop={() => {if(playerCharacterIndex>=0 && playerFollowPosition) updateSheetToken(tabletopPeople[playerCharacterIndex].id,{x:playerFollowPosition[0],z:playerFollowPosition[1],elevation:Number(sheetTokenTransforms[tabletopPeople[playerCharacterIndex]?.id]?.elevation)||0});}}/>} assets={visibleAssets} mapKey={activeMapId} center={tacticalCenter} locked={draggingToken} mestre={mestre} tokens={tacticalTokens} onFloor={move} onDragStart={() => setDraggingToken(true)} onDragEnd={() => setDraggingToken(false)} onSelect={token => {if(token.personIndex!==undefined) {setSelected(token.personIndex);setTokenMode(false);} else {setSelectedToken(token.id);setTokenMode(true);}}} onMove={(token,position) => {if(!canMoveTacticalToken(token,mestre,tabletopPeople[playerCharacterIndex]?.id)) return;if(!mestre) {movePlayerToken(position);return;}position=limitarPosicaoToken(position);if(token.personIndex!==undefined) {setPositions(current => current.map((p,index) => index===token.personIndex ? position : p));updateSheetToken(token.id,{x:position[0],z:position[1]});} else finishTokenInteraction(token.id,position,true);}}/></Suspense></SceneBoundary>}
-      {activePresentation.type==="special" && <SpecialScene key={campaign.cenaAtiva.id+activePresentation.media.midiaUrl} scene={campaign.cenaAtiva} onClose={mestre ? ()=>switchScene(campaign.cenaAtiva) : undefined}/>}
+      {activePresentation.type==="special" && <SpecialScene key={campaign.cenaAtiva.id+activePresentation.media.midiaUrl} scene={campaign.cenaAtiva} destinations={specialSceneDestinations(campaign)} busy={switchingScene} onNavigate={mestre ? target=>switchScene(target.scene,target.mapLink || null,target.imageLink || null) : undefined} onClose={mestre ? ()=>switchScene(campaign.cenaAtiva) : undefined}/>}
       {staticScene && <div className={`tt3-static-scene ${!mestre ? "tt3-static-scene-player" : ""}`}>{staticScene.animation?.enabled ? <AnimatedScene media={staticScene} id={`${campaign?.cenaAtiva?.id}:${staticScene.id}`} alt={staticScene.nome || campaign?.cenaAtiva?.nome || "Cena narrativa"}/> : <SceneMedia media={staticScene} alt={staticScene.nome || campaign?.cenaAtiva?.nome || "Cena estática"}/>}</div>}
       <div className="tt3-cinema-shade" aria-hidden="true"/>
       <div className="tt3-film-grain" aria-hidden="true"/>
@@ -2018,6 +1516,7 @@ export class SceneBoundary extends Component {
       {!mestre && (!mobilePlayer || mobileMenu) && !mechanicsOpen && <RevoltPlayerHUD campaign={campaign} playerId={routeParams.get('sistema')==='espiral' ? `espiral:${playerSheetId}` : playerSheetId} onOpen={() => setMechanicsOpen(true)} onState={state => setCampaign(current => ({ ...current, mecanicasEspeciais: state }))}/>}
       {mechanicsOpen && campaign && <SpecialMechanicsDialog campaign={campaign} master={mestre} playerId={routeParams.get("sistema")==="espiral" ? `espiral:${playerSheetId}` : playerSheetId} onClose={() => setMechanicsOpen(false)} onState={state => setCampaign(current => ({ ...current, mecanicasEspeciais: state }))}/>}
       {!mobilePlayer && !mestre && commandMenu}
+      {!mestre && !hudPanel && !mechanicsOpen && !mobileMenu && <SurvivalIndicators campaign={campaign} playerId={routeParams.get('sistema')==='espiral' ? `espiral:${playerSheetId}` : playerSheetId} compact/>}
 
       {mestre && <div className="tt3-cast-bar" aria-label="Personagens na cena">
         <div className="tt3-cast-heading"><span>EM CENA</span><b>{tabletopPeople.length+customTokens.length}</b></div>
@@ -2027,18 +1526,18 @@ export class SceneBoundary extends Component {
 
       {!mobilePlayer && normalFlashlight}
       {mobilePlayer && !staticScene && !mobileMenu && !hudPanel && !sessionOpen && !tokenPanelOpen && !mechanicsOpen && <div className="tt3-mobile-flashlights" role="group" aria-label="Iluminação">{normalFlashlight}{uvFlashlight}</div>}
-      {!mobilePlayer && cameraModes}
+      {!mobilePlayer && (mestre ? cameraModes : <details className="tt3-player-camera-menu" onClick={event=>{if(event.target.closest('button'))event.currentTarget.open=false;}}><summary>Câmera · {tacticalMode ? 'Mapa 2D' : ({room:'Cena',cinema:'Cinema',panorama:'Panorâmica',detail:'Detalhe',firstPerson:'Primeira pessoa'})[view]} <span aria-hidden="true">⌃</span></summary><div className="tt3-player-camera-options">{cameraModes}</div></details>)}
 
       {!mobilePlayer && uvFlashlight}
       {campaign && <RollNotifications key={campaign.id} rolls={campaign.rolagens || []} mechanics={campaign.mecanicasEspeciais} mestre={mestre}/>}
       <div className="tt3-toast" role="status"><span>{notice}</span><small>{mestre && "Ctrl + roda: velocidade · Shift + roda: inclinação lateral · "}{view==="firstPerson" ? (mestre ? "Botão esquerdo + arrastar: olhar ao redor · visão do personagem selecionado" : "Botão esquerdo + arrastar: olhar ao redor · WASD: mover seu personagem") : tacticalMode && !staticScene ? (mestre ? "Arraste os tokens para mover · arraste o mapa para navegar · roda: zoom" : "Arraste seu personagem ou use WASD · arraste o mapa para navegar · roda: zoom") : mestre ? "Botão direito + arrastar: olhar sem sair do lugar · botão esquerdo: orbitar · WASD: mover · Shift + arrastar: deslocar · roda: zoom · Q/E: descer/subir" : "WASD: mover seu personagem · botão esquerdo: orbitar · roda: aproximar"}</small></div>
 
       {hudPanel && <aside ref={sheetPanelRef} style={hudPanel==="shield"?{'--shield-height':shieldHeight+'dvh'}:undefined} data-collapsed={hudPanel==="shield" && shieldCollapsed ? "true":undefined} className={`tt3-hud-drawer ${hudPanel==="shield"?"tt3-master-shield-drawer":""} ${hudPanel==="sheet" && embeddedEspiralId ? "tt3-sheet-drawer" : ""}`} aria-label="Painel de ferramentas">
-        <header><div><span>TABLETOP 3D</span><h2>{({camera:"Câmera",shield:"Escudo do mestre",scene:"Cena",weather:"Clima",background:"Background",initiative:"Iniciativa",dice:"Dados",evidence:"Pistas",audio:"Áudio",notes:"Notas",sheet:"Ficha"})[hudPanel]}</h2></div>{hudPanel==='shield' && <div className="tt3-shield-layout-controls"><label>Altura<input aria-label="Altura do escudo" type="range" min="25" max="65" step="1" value={shieldHeight} disabled={shieldCollapsed} onChange={event=>{const value=Number(event.target.value);setShieldHeight(value);localStorage.setItem('darkness:shield3d:height',String(value));}}/></label><button type="button" aria-label={shieldCollapsed?'Expandir escudo do mestre':'Recolher escudo do mestre'} aria-expanded={!shieldCollapsed} onClick={()=>setShieldCollapsed(value=>!value)}>{shieldCollapsed?'⌃ Escudo do mestre':'⌄ Recolher'}</button></div>}<button type="button" onClick={() => setHudPanel(null)} aria-label="Fechar painel">×</button></header>
+        <header><div><span>TABLETOP 3D</span><h2>{({camera:"Câmera",shield:"Escudo do mestre",scene:"Cena",weather:"Clima",background:"Background",initiative:"Iniciativa",dice:"Dados",evidence:"Pistas",audio:"Áudio",notes:"Notas",sheet:"Ficha"})[hudPanel]}</h2></div>{mestre && hudPanel==='shield' && !shieldCollapsed && <ShieldInitiativeStrip campaign={campaign} onCampaignChange={setCampaign} onRefresh={refreshCampaign}/>} {hudPanel==='shield' && <div className="tt3-shield-layout-controls"><label>Altura<input aria-label="Altura do escudo" type="range" min="25" max="65" step="1" value={shieldHeight} disabled={shieldCollapsed} onChange={event=>{const value=Number(event.target.value);setShieldHeight(value);localStorage.setItem('darkness:shield3d:height',String(value));}}/></label><button type="button" aria-label={shieldCollapsed?'Expandir escudo do mestre':'Recolher escudo do mestre'} aria-expanded={!shieldCollapsed} onClick={()=>setShieldCollapsed(value=>!value)}>{shieldCollapsed?'⌃ Escudo do mestre':'⌄ Recolher'}</button></div>}<button type="button" onClick={() => setHudPanel(null)} aria-label="Fechar painel">×</button></header>
         {hudPanel==="scene" && renderNativeScene()}
         {hudPanel==="flashlight" && renderShieldFlashlight()}
 
-        {mestre && hudPanel==="shield" && <MasterShield extraTools={[
+        {mestre && hudPanel==="shield" && <MasterShield organized campaign={campaign} onOptionalState={state=>setCampaign(current=>({...current,mecanicasEspeciais:state}))} extraTools={[
           ['exploration','Exploração'],['tokens','Tokens'],['mechanics','Mecânicas especiais'],['weather','Clima'],['background','Fundo'],['dice','Dados'],['flashlight','Lanterna'],['players','Jogadores']
         ]} members={campaign?.membros || []} campaignSystem={campaign?.sistema || "absoluto"} campaignId={campaign?.id} scene={campaign?.cenaAtiva} combat={campaign?.combateAtivo} investigation={campaign?.investigacaoAtiva} enemies={campaign?.inimigos} onSaveDifficulty={updateSceneDifficulty} onSaveEnemy={updateShieldEnemy} onAddEnemy={addShieldEnemy} onRemoveEnemy={removeShieldEnemy} renderTool={tool=>{
           if(tool==='exploration') return <ExplorationPanel key={activeMapId} assets={mapAssets} config={exploration} members={campaign?.membros || []} position={cameraFollowPosition || positions[selected] || [0,0]} elevation={Number(activeSpawnPoints.tokens?.y)||0} onSave={saveExploration}/>;
@@ -2056,7 +1555,7 @@ export class SceneBoundary extends Component {
         {hudPanel==="dice" && renderNativeDice()}
         {hudPanel==="notes" && renderNativeNotes()}
         {hudPanel==="sheet" && (embeddedEspiralId ? <div className="tt3-embedded-sheet" onKeyDown={event => event.stopPropagation()} onKeyUp={event => event.stopPropagation()}>
-          <Suspense fallback={<p role="status">Carregando ficha ESPIRAL…</p>}><FichaEspiral key={embeddedEspiralId} sheetId={embeddedEspiralId} embedded scene={campaign?.cenaAtiva} sceneEnemies={campaign?.inimigos || []} rollContext={activeDifficulty} difficultyLocked={!mestre} onRollContextChange={setDifficultyContext} onSheetChange={updateEspiralSheet} onRoll={(roll,author) => {if(campaign?.id) registrarRolagem(campaign.id,author,{...roll,...(roll.tipo==="dano" ? {} : rollOutcome(roll.total ?? roll.best ?? roll.resultado ?? 0,roll.difficulty ?? activeDifficulty.value)),context:roll.context || activeDifficulty.label,category:roll.category || activeDifficulty.category,formula:roll.label,sistema:"espiral"}).catch(() => setNotice("Não foi possível compartilhar a rolagem da ficha."));}}/></Suspense>
+          <Suspense fallback={<p role="status">Carregando ficha ESPIRAL…</p>}><FichaEspiral campaign={campaign} key={embeddedEspiralId} sheetId={embeddedEspiralId} embedded scene={campaign?.cenaAtiva} sceneEnemies={campaign?.inimigos || []} rollContext={activeDifficulty} difficultyLocked={!mestre} onRollContextChange={setDifficultyContext} onSheetChange={updateEspiralSheet} onRoll={(roll,author) => {if(campaign?.id) registrarRolagem(campaign.id,author,{...roll,...(roll.tipo==="dano" ? {} : rollOutcome(roll.total ?? roll.best ?? roll.resultado ?? 0,roll.difficulty ?? activeDifficulty.value)),context:roll.context || activeDifficulty.label,category:roll.category || activeDifficulty.category,formula:roll.label,sistema:"espiral"}).catch(() => setNotice("Não foi possível compartilhar a rolagem da ficha."));}}/></Suspense>
         </div> : <div className="tt3-drawer-content tt3-empty-panel"><span>▤</span><h3>Ficha do personagem</h3><a href={returnUrl} className="tt3-primary">Abrir ficha</a></div>)}
       </aside>}
 

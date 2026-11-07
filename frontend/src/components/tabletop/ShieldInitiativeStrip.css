@@ -1,0 +1,72 @@
+:is(.tt3,.mesa-master-shield-panel) .shield-header-initiative { display:flex; align-items:center; gap:14px; flex:1 1 0; min-width:0; margin:0 18px; padding:0 16px; border-inline:1px solid #ffffff20; }
+.shield-initiative-caption { display:grid; gap:3px; flex:0 0 auto; }
+.shield-initiative-caption strong { font:600 11px Arial,sans-serif; color:#eee; }
+.shield-initiative-caption>span { font:9px Arial,sans-serif; color:#aaa; white-space:nowrap; }
+.shield-header-initiative ol { display:flex; align-items:center; gap:6px; overflow-x:auto; min-width:0; margin:0; padding:2px 0 5px; list-style:none; scrollbar-width:thin; scrollbar-color:#666 transparent; }
+.shield-header-initiative li { display:flex; align-items:center; flex:0 0 auto; gap:7px; padding:7px 9px; border:1px solid #ffffff24; border-radius:4px; background:#ffffff04; color:#bbb; font:11px Arial,sans-serif; }
+.shield-header-initiative li[aria-current=step] { background:#f0f0ed; border-color:#f0f0ed; color:#111; }
+.shield-initiative-rank { opacity:.6; font-size:9px; }
+.shield-initiative-name { max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.shield-header-initiative li b { padding-left:6px; border-left:1px solid currentColor; font:600 12px monospace; }
+.shield-initiative-current { font:600 8px Arial,sans-serif; text-transform:uppercase; }
+.shield-initiative-empty { color:#999; font:10px Arial,sans-serif; }
+:is(.tt3,.mesa-master-shield-panel) .shield-header-initiative { flex-wrap:wrap; column-gap:12px; row-gap:5px; padding-block:2px; }
+.shield-header-initiative ol { flex:1 1 220px; }
+:is(.tt3,.mesa-master-shield-panel) .shield-header-initiative li input { width:42px; box-sizing:border-box; height:26px; min-height:0; padding:3px; margin:0; border:1px solid #ffffff40; border-radius:3px; background:#080808; color:#eee; text-align:center; font:12px monospace; }
+:is(.tt3,.mesa-master-shield-panel) .shield-header-initiative li[aria-current=step] input { background:#fff; color:#111; border-color:#888; }
+.shield-initiative-actions { display:flex; align-items:center; flex-wrap:wrap; gap:6px 14px; flex:1 1 100%; }
+.shield-initiative-modes,.shield-initiative-turns { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+:is(.tt3,.mesa-master-shield-panel) .shield-initiative-actions button { padding:5px 8px; min-height:27px; border:1px solid #ffffff30; border-radius:3px; background:#ffffff06; color:#ddd; font:10px Arial,sans-serif; white-space:nowrap; }
+:is(.tt3,.mesa-master-shield-panel) .shield-initiative-actions button[aria-pressed=true] { border-color:#ddd; background:#ddd; color:#111; }
+:is(.tt3,.mesa-master-shield-panel) .shield-initiative-actions button:disabled { opacity:.4; cursor:default; }
+:is(.tt3,.mesa-master-shield-panel) .shield-initiative-turns select { max-width:130px; height:27px; padding:3px; border:1px solid #ffffff30; border-radius:3px; background:#111; color:#eee; font:10px Arial,sans-serif; }
+.shield-header-initiative .shield-initiative-error { flex-basis:100%; padding:3px 0; margin:0; color:#efaaaa; font:10px/1.4 Arial,sans-serif; }
+/* The 2D shield uses all available header width for initiative actions. */
+.mesa-master-shield-panel>header { gap:16px; align-items:center; }
+.mesa-master-shield-panel>header>strong,.mesa-master-shield-panel>header>button { flex:0 0 auto; }
+.mesa-master-shield-panel .shield-header-initiative { margin:0; padding-inline:16px; }
+.mesa-master-shield-panel .shield-initiative-actions { flex:0 1 auto; }
+.mesa-master-shield-panel .shield-header-initiative input:focus-visible,
+.mesa-master-shield-panel .shield-header-initiative select:focus-visible,
+.mesa-master-shield-panel .shield-header-initiative button:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+@media(max-width:1100px) {
+ .mesa-master-shield-panel>header { flex-wrap:wrap; padding:10px 14px; gap:10px; }
+ .mesa-master-shield-panel>header>strong { order:0; flex:1; }
+ .mesa-master-shield-panel>header>button { order:1; }
+ .mesa-master-shield-panel .shield-header-initiative { order:2; flex-basis:100%; border-inline:0; padding:8px 0 0; border-top:1px solid #ffffff22; }
+ .mesa-master-shield-panel .shield-initiative-actions { flex:1 1 100%; }
+}
+
+/* 2D: the order has its own row; session and turn controls sit below it. */
+.shield-initiative-group-label { display:none; }
+.mesa-master-shield-panel>header { align-items:flex-start; padding:14px 20px; }
+.mesa-master-shield-panel>header>strong { padding-top:12px; color:#ddd; font:11px Arial,sans-serif; }
+.mesa-master-shield-panel>header>button { margin-top:3px; }
+.mesa-master-shield-panel .shield-header-initiative {
+ display:grid; grid-template-columns:auto minmax(0,1fr);
+ grid-template-areas:"caption order" "actions actions" "error error";
+ gap:12px 18px; margin:0; padding:0 18px; align-items:center;
+}
+.mesa-master-shield-panel .shield-initiative-caption { grid-area:caption; min-width:120px; }
+.mesa-master-shield-panel .shield-initiative-caption strong { font-size:13px; }
+.mesa-master-shield-panel .shield-initiative-caption>span { font-size:10px; }
+.mesa-master-shield-panel .shield-header-initiative ol { grid-area:order; width:100%; box-sizing:border-box; gap:8px; padding:2px 0 6px; }
+.mesa-master-shield-panel .shield-header-initiative li { min-height:38px; box-sizing:border-box; padding:5px 10px; gap:9px; font-size:12px; }
+.mesa-master-shield-panel .shield-initiative-name { max-width:145px; }
+.mesa-master-shield-panel .shield-header-initiative li input { width:38px; height:28px; appearance:textfield; font-size:13px; }
+.mesa-master-shield-panel .shield-header-initiative li input::-webkit-inner-spin-button { appearance:none; margin:0; }
+.mesa-master-shield-panel .shield-initiative-actions { grid-area:actions; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px 24px; padding-top:10px; border-top:1px solid #ffffff20; }
+.mesa-master-shield-panel .shield-initiative-group-label { display:block; margin-right:5px; font:9px Arial,sans-serif; letter-spacing:.1em; text-transform:uppercase; color:#888; }
+.mesa-master-shield-panel .shield-initiative-modes,.mesa-master-shield-panel .shield-initiative-turns { gap:7px; }
+.mesa-master-shield-panel .shield-initiative-actions button { min-height:32px; padding:7px 11px; font-size:11px; }
+.mesa-master-shield-panel .shield-initiative-turns select { min-width:115px; max-width:170px; height:32px; font-size:11px; padding:5px 8px; }
+.mesa-master-shield-panel .shield-initiative-turns button:last-child { border-color:#ffffff65; background:#ffffff0d; }
+.mesa-master-shield-panel .shield-initiative-error { grid-area:error; }
+.mesa-master-shield-panel .shield-initiative-empty { grid-area:order; }
+@media(max-width:760px) {
+ .mesa-master-shield-panel .shield-header-initiative { grid-template-columns:minmax(0,1fr); grid-template-areas:"caption" "order" "actions" "error"; padding:10px 0 0; gap:8px; }
+ .mesa-master-shield-panel .shield-initiative-caption { display:flex; align-items:center; gap:10px; }
+ .mesa-master-shield-panel .shield-initiative-actions { align-items:stretch; }
+ .mesa-master-shield-panel .shield-initiative-turns { flex:1 1 100%; }
+ .mesa-master-shield-panel .shield-initiative-group-label { width:42px; }
+}

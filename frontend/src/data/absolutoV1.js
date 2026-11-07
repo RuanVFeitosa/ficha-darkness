@@ -141,17 +141,18 @@ export function recalcularBases(personagem, atributos) {
 }
 
 export function custoEvolucaoAtributo(atual, destino = atual + 1) {
-  if (!Number.isInteger(atual) || !Number.isInteger(destino) || atual < 1 || destino <= atual || destino > 5) return null;
-  return custoAtributo(destino) - custoAtributo(atual);
+  if (!Number.isInteger(atual) || !Number.isInteger(destino) || atual < 0 || atual > 5 || destino < 0 || destino > 5) return null;
+  const investimento = nivel => custoAtributo(nivel) + (nivel>0 ? 10 : 0);
+  return investimento(destino) - investimento(atual);
 }
 
 export function evoluirV1(personagem, grupo, chave, _custo, destino) {
   const opcoes = grupo === 'atributos' ? ATRIBUTOS_ABSOLUTO : grupo === 'dominios' ? DOMINIOS : {};
   if (!opcoes[chave]) throw new Error('Escolha um Atributo ou Domínio válido.');
   const valor = Number(personagem[grupo]?.[chave]) || 0;
-  if (valor >= 5) throw new Error('O limite desta característica é 5.');
+  if (valor >= 5 && destino === undefined) throw new Error('O limite desta característica é 5.');
   const alvo = destino === undefined ? valor + 1 : Number(destino);
-  if (!Number.isInteger(alvo) || alvo <= valor || alvo > 5) throw new Error('Escolha um nível superior ao atual, até 5.');
+  if (!Number.isInteger(alvo) || alvo === valor || alvo < 0 || alvo > 5) throw new Error('Escolha um nível diferente do atual, entre 0 e 5.');
   const custo = grupo === 'dominios' ? (alvo - valor) * 10 : custoEvolucaoAtributo(valor, alvo);
   if (custo === null) throw new Error('O custo de Atributo de 0 para 1 ainda não foi definido.');
   const saldo = Number(personagem.pontosEvolucao?.disponiveis) || 0;

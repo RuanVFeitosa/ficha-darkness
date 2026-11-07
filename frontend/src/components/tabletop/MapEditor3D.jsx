@@ -151,6 +151,10 @@ export function PrimitiveAsset({ kind,doorOpen=false }) {
 
 export function RemoteAsset({ file, dependencies, modelRole,instanceId,doorStates=EMPTY_DOOR_STATES }) {
   const url = file;
+  // Saved clips contain separate objects for the same model resources.
+  // Keep equivalent resources stable so a cut does not clear the loaded map.
+  const dependencyKey=JSON.stringify(Object.entries(dependencies || EMPTY_DEPENDENCIES).sort(([a],[b])=>a.localeCompare(b)));
+  const dependencyEntries=useMemo(()=>JSON.parse(dependencyKey),[dependencyKey]);
   const [loadedScene, setLoadedScene] = useState(null);
   const [failed, setFailed] = useState(false);
   const identifiedDoors=JSON.stringify(Object.keys(doorStates).filter(key=>key.startsWith(`${instanceId}:`) && doorStates[key]?.interactive).map(key=>key.slice(`${instanceId}:`.length)).sort());
@@ -159,7 +163,6 @@ export function RemoteAsset({ file, dependencies, modelRole,instanceId,doorState
     setLoadedScene(null);
     setFailed(false);
     const manager = new THREE.LoadingManager();
-    const dependencyEntries = Object.entries(dependencies || EMPTY_DEPENDENCIES);
     manager.setURLModifier((requestedUrl) => {
       const normalized = decodeURI(requestedUrl).replaceAll("\\", "/");
       const match = dependencyEntries.find(([path]) => normalized.endsWith(path.replaceAll("\\", "/")));
@@ -171,7 +174,7 @@ export function RemoteAsset({ file, dependencies, modelRole,instanceId,doorState
       if(active) setLoadedScene(gltf.scene);
     }, undefined, () => active && setFailed(true));
     return () => { active = false; };
-  }, [dependencies, url]);
+  }, [dependencyEntries, url]);
   const normalized = useMemo(() => {
     if (!loadedScene) return null;
     const scene = new THREE.Group();
