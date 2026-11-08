@@ -1,14 +1,14 @@
 import ShieldInitiativeStrip from '../components/tabletop/ShieldInitiativeStrip';
 import InlineInitiative from '../components/tabletop/InlineInitiative';
 import ParticipantDossiers from '../components/tabletop/ParticipantDossiers';
-import {nextCombatTurn} from '../utils/combatTurn';
+import { nextCombatTurn } from '../utils/combatTurn';
 import CombatTurnControls from '../components/tabletop/CombatTurnControls';
-import {initiativeOrder} from '../utils/initiativeOrder';
+import { initiativeOrder } from '../utils/initiativeOrder';
 import PlayerInitiativeBar from '../components/tabletop/PlayerInitiativeBar';
 import SurvivalIndicators from '../components/campanha/SurvivalIndicators';
 import InitiativeCards from '../components/tabletop/InitiativeCards';
-import {specialSceneMediaType} from '../utils/specialSceneMedia';
-import {SpecialSceneMedia} from '../components/tabletop/SpecialScene';
+import { specialSceneMediaType } from '../utils/specialSceneMedia';
+import { SpecialSceneMedia } from '../components/tabletop/SpecialScene';
 import RollNotifications from '../components/tabletop/RollNotifications';
 import MasterShield from '../components/tabletop/MasterShield';
 import { SpecialMechanicsBanner, SpecialMechanicsDialog } from '../components/tabletop/SpecialMechanics';
@@ -21,7 +21,7 @@ import EspiralEncounterViewer from '../components/espiral/EspiralEncounterViewer
 import { readEspiralEncounters, espiralEncounterForTabletop, ESPIRAL_ENCOUNTERS_CHANGED } from '../utils/espiralEncounters';
 import EvidenceImageViewer from "../components/campanha/EvidenceImageViewer";
 import { ACEITAR_AUDIO } from "../utils/audioUpload";
-import {createPortal} from "react-dom";
+import { createPortal } from "react-dom";
 import React, {
   useCallback,
   useEffect,
@@ -101,9 +101,9 @@ const urlCena = (cena, tipo, midiaId = null) => {
 const percentualRecurso = (recurso) =>
   recurso?.max > 0
     ? Math.max(
-        0,
-        Math.min(100, ((Number(recurso.atual) || 0) / recurso.max) * 100),
-      )
+      0,
+      Math.min(100, ((Number(recurso.atual) || 0) / recurso.max) * 100),
+    )
     : 0;
 const NOMES_MEMBROS_MESA = {
   cabeca: "CAB",
@@ -311,9 +311,9 @@ const corInterfaceDaImagem = (url) =>
     imagem.src = url;
   });
 
-const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId="",documentsOnly=false,shieldTool=""}) => {
-  const turnBusyRef=useRef(false);
-  const [turnBusy,setTurnBusy]=useState(false);
+const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tabletopMapId = "", documentsOnly = false, shieldTool = "" }) => {
+  const turnBusyRef = useRef(false);
+  const [turnBusy, setTurnBusy] = useState(false);
   const [mechanicsOpen, setMechanicsOpen] = useState(false);
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
   const codigo = (params.get("campanha") || "DARK26").toUpperCase();
@@ -349,9 +349,9 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
   const [arquivos, setArquivos] = useState({ cena: [], mapa: [], especial: [], audio: [] });
   const [salvando, setSalvando] = useState(false);
   const [transicao, setTransicao] = useState(false);
-  const playerSceneTransition=useRef({revision:0,timer:null,disposed:false});
-  useEffect(()=>{playerSceneTransition.current.disposed=false;return ()=>{playerSceneTransition.current.disposed=true;playerSceneTransition.current.revision+=1;clearTimeout(playerSceneTransition.current.timer);};},[]);
-  const [escudoAberto,setEscudoAberto]=useState(false);
+  const playerSceneTransition = useRef({ revision: 0, timer: null, disposed: false });
+  useEffect(() => { playerSceneTransition.current.disposed = false; return () => { playerSceneTransition.current.disposed = true; playerSceneTransition.current.revision += 1; clearTimeout(playerSceneTransition.current.timer); }; }, []);
+  const [escudoAberto, setEscudoAberto] = useState(false);
   const audioCenaEspecialRef = useRef(null);
   const [audioEspecialPronto, setAudioEspecialPronto] = useState(false);
   const [fichasDisponiveis, setFichasDisponiveis] = useState([]);
@@ -387,19 +387,20 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
   );
   const [focoVisual, setFocoVisual] = useState(!embedded);
   useEffect(() => {
-    if(!embedded || !requestedTool) return;
-    setBibliotecaAberta(requestedTool==='scenes');
-    setAnotacoesAbertas(requestedTool==='notes');
-    setMusicaAberta(requestedTool==='audio');
-    setSoundpadAberto(requestedTool==='soundpad');
-    const panel=requestedTool==='evidence' ? 'documentos' : requestedTool==='npcs' ? 'inimigos' : ['participants','initiative','combat','investigation'].includes(requestedTool) ? 'participantes' : '';
-    setAplicativoMesaAberto(requestedTool==='dashboard' ? 'dashboard' : requestedTool==='shop' ? 'loja' : null);
-    if(mestre) setAbaLateralMestre(panel);
+    if (!embedded || !requestedTool) return;
+    setBibliotecaAberta(requestedTool === 'scenes');
+    setAnotacoesAbertas(requestedTool === 'notes');
+    setMusicaAberta(requestedTool === 'audio');
+    setSoundpadAberto(requestedTool === 'soundpad');
+    const panel = requestedTool === 'evidence' ? 'documentos' : requestedTool === 'npcs' ? 'inimigos' : ['participants', 'initiative', 'combat', 'investigation'].includes(requestedTool) ? 'participantes' : '';
+    setAplicativoMesaAberto(requestedTool === 'dashboard' ? 'dashboard' : requestedTool === 'shop' ? 'loja' : null);
+    if (mestre) setAbaLateralMestre(panel);
     else setAbaLateralJogador(panel);
-  },[embedded,requestedTool,requestVersion,mestre]);
+  }, [embedded, requestedTool, requestVersion, mestre]);
   const [catalogoInimigos, setCatalogoInimigos] = useState([]);
   const [inimigoParaAdicionar, setInimigoParaAdicionar] = useState("");
   const [inimigoAberto, setInimigoAberto] = useState(null);
+  const [adicionandoInimigoId, setAdicionandoInimigoId] = useState(null);
   const [subAbaNpcs, setSubAbaNpcs] = useState("inimigos");
   const [pastasNpcsFechadas, setPastasNpcsFechadas] = useState({});
   const [pastasCenasFechadas, setPastasCenasFechadas] = useState({});
@@ -426,7 +427,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
   const arquivoDocumentoRef = useRef(null);
   const [fichaJogadorId, setFichaJogadorId] = useState(
     () =>
-      (params.get("sistema")==="espiral" && fichaUrl ? `espiral:${fichaUrl.replace(/^espiral:/,"")}` : fichaUrl) ||
+      (params.get("sistema") === "espiral" && fichaUrl ? `espiral:${fichaUrl.replace(/^espiral:/, "")}` : fichaUrl) ||
       localStorage.getItem(`darkness_mesa_ficha_${codigo}`) ||
       localStorage.getItem("fichaRPG_ultimaFicha") ||
       "",
@@ -493,17 +494,17 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
     try {
       setErro("");
       const dados = await buscarCampanhaPorCodigo(codigo);
-      if(!mestre && !embedded && dados && campanhaRef.current) {
-        const previous=campanhaRef.current;
-        const changed=previous.cenaAtiva?.id!==dados.cenaAtiva?.id || previous.modo!==dados.modo || (previous.midiaAtivaId || null)!==(dados.midiaAtivaId || null);
-        if(changed) {
-          const state=playerSceneTransition.current;
-          const revision=++state.revision;
+      if (!mestre && !embedded && dados && campanhaRef.current) {
+        const previous = campanhaRef.current;
+        const changed = previous.cenaAtiva?.id !== dados.cenaAtiva?.id || previous.modo !== dados.modo || (previous.midiaAtivaId || null) !== (dados.midiaAtivaId || null);
+        if (changed) {
+          const state = playerSceneTransition.current;
+          const revision = ++state.revision;
           clearTimeout(state.timer);
           setTransicao(true);
-          await new Promise(resolve=>setTimeout(resolve,360));
-          if(state.disposed || revision!==state.revision)return;
-          state.timer=setTimeout(()=>setTransicao(false),700);
+          await new Promise(resolve => setTimeout(resolve, 360));
+          if (state.disposed || revision !== state.revision) return;
+          state.timer = setTimeout(() => setTransicao(false), 700);
         }
       }
       setCampanha((atual) => {
@@ -542,7 +543,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
     } finally {
       setCarregando(false);
     }
-  }, [codigo,mestre,embedded]);
+  }, [codigo, mestre, embedded]);
 
   useEffect(() => {
     carregar();
@@ -554,129 +555,129 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
     () =>
       campanha?.id
         ? ouvirCampanha(campanha.id, (evento) => {
-            if (evento?.tipo === "tokens_sincronizados") {
-              setCampanha((atual) => {
-                if (!atual) return atual;
-                const mapaChave = chavePosicaoMapa(
-                  atual.cenaAtiva?.id,
-                  atual.midiaAtivaId,
-                );
-                const tokens = (evento.tokens || []).map((token) => {
-                  const pendente = posicoesTokensPendentesRef.current.get(
-                    token.id,
-                  );
-                  if (pendente) {
-                    const posicaoRemota =
-                      token.posicoes?.[pendente.mapaChave] || token;
-                    const confirmou =
-                      Math.abs(Number(posicaoRemota.x) - pendente.x) < 0.001 &&
-                      Math.abs(Number(posicaoRemota.y) - pendente.y) < 0.001;
-                    if (confirmou)
-                      posicoesTokensPendentesRef.current.delete(token.id);
-                    else
-                      return (
-                        atual.tokens.find((item) => item.id === token.id) ||
-                        token
-                      );
-                  }
-                  if (tokensEmGravacaoRef.current.has(token.id)) {
-                    return (
-                      atual.tokens.find((item) => item.id === token.id) || token
-                    );
-                  }
-                  const tokenAtual = atual.tokens.find(
-                    (item) => item.id === token.id,
-                  );
-                  if (!aceitarTokenRemoto(tokenAtual, token)) return tokenAtual;
-                  const estadoMapa = {
-                    ...(token.posicoes?.[mapaChave] || {}),
-                    ...(token.posicoes?.[`__estado:${mapaChave}`] || {}),
-                  };
-                  return { ...token, ...estadoMapa };
-                });
-                atual.tokens.forEach((token) => {
-                  if (
-                    tokensEmGravacaoRef.current.has(token.id) &&
-                    !tokens.some((item) => item.id === token.id)
-                  )
-                    tokens.push(token);
-                });
-                return { ...atual, tokens };
-              });
-              return;
-            }
-            if (evento?.table === "tokens_mapa") {
-              const tokenRecebido = evento.new;
-              const tokenRemovidoId = evento.old?.id;
-              setCampanha((atual) => {
-                if (!atual) return atual;
-                if (evento.eventType === "DELETE") {
-                  if (tokensEmGravacaoRef.current.has(tokenRemovidoId))
-                    return atual;
-                  return {
-                    ...atual,
-                    tokens: atual.tokens.filter(
-                      (token) => token.id !== tokenRemovidoId,
-                    ),
-                  };
-                }
-                if (
-                  !tokenRecebido?.id ||
-                  tokensEmGravacaoRef.current.has(tokenRecebido.id)
-                ) {
-                  return atual;
-                }
+          if (evento?.tipo === "tokens_sincronizados") {
+            setCampanha((atual) => {
+              if (!atual) return atual;
+              const mapaChave = chavePosicaoMapa(
+                atual.cenaAtiva?.id,
+                atual.midiaAtivaId,
+              );
+              const tokens = (evento.tokens || []).map((token) => {
                 const pendente = posicoesTokensPendentesRef.current.get(
-                  tokenRecebido.id,
+                  token.id,
                 );
                 if (pendente) {
                   const posicaoRemota =
-                    tokenRecebido.posicoes?.[pendente.mapaChave] ||
-                    tokenRecebido;
+                    token.posicoes?.[pendente.mapaChave] || token;
                   const confirmou =
                     Math.abs(Number(posicaoRemota.x) - pendente.x) < 0.001 &&
                     Math.abs(Number(posicaoRemota.y) - pendente.y) < 0.001;
-                  if (!confirmou) return atual;
-                  posicoesTokensPendentesRef.current.delete(tokenRecebido.id);
+                  if (confirmou)
+                    posicoesTokensPendentesRef.current.delete(token.id);
+                  else
+                    return (
+                      atual.tokens.find((item) => item.id === token.id) ||
+                      token
+                    );
+                }
+                if (tokensEmGravacaoRef.current.has(token.id)) {
+                  return (
+                    atual.tokens.find((item) => item.id === token.id) || token
+                  );
                 }
                 const tokenAtual = atual.tokens.find(
-                  (token) => token.id === tokenRecebido.id,
+                  (item) => item.id === token.id,
                 );
-                if (!aceitarTokenRemoto(tokenAtual, tokenRecebido))
-                  return atual;
-                const mapaChave = chavePosicaoMapa(
-                  atual.cenaAtiva?.id,
-                  atual.midiaAtivaId,
-                );
+                if (!aceitarTokenRemoto(tokenAtual, token)) return tokenAtual;
                 const estadoMapa = {
-                  ...(tokenRecebido.posicoes?.[mapaChave] || {}),
-                  ...(tokenRecebido.posicoes?.[`__estado:${mapaChave}`] || {}),
+                  ...(token.posicoes?.[mapaChave] || {}),
+                  ...(token.posicoes?.[`__estado:${mapaChave}`] || {}),
                 };
-                const tokenAtualizado = { ...tokenRecebido, ...estadoMapa };
-                const existe = atual.tokens.some(
-                  (token) => token.id === tokenRecebido.id,
-                );
+                return { ...token, ...estadoMapa };
+              });
+              atual.tokens.forEach((token) => {
+                if (
+                  tokensEmGravacaoRef.current.has(token.id) &&
+                  !tokens.some((item) => item.id === token.id)
+                )
+                  tokens.push(token);
+              });
+              return { ...atual, tokens };
+            });
+            return;
+          }
+          if (evento?.table === "tokens_mapa") {
+            const tokenRecebido = evento.new;
+            const tokenRemovidoId = evento.old?.id;
+            setCampanha((atual) => {
+              if (!atual) return atual;
+              if (evento.eventType === "DELETE") {
+                if (tokensEmGravacaoRef.current.has(tokenRemovidoId))
+                  return atual;
                 return {
                   ...atual,
-                  tokens: existe
-                    ? atual.tokens.map((token) =>
-                        token.id === tokenRecebido.id ? tokenAtualizado : token,
-                      )
-                    : [...atual.tokens, tokenAtualizado],
+                  tokens: atual.tokens.filter(
+                    (token) => token.id !== tokenRemovidoId,
+                  ),
                 };
-              });
-              return;
-            }
-            if (!mestre || !eventoMudaApresentacao(evento, campanhaRef.current)) {
-              carregar();
-              return;
-            }
-            setTransicao(true);
-            setTimeout(carregar, 320);
-            setTimeout(() => setTransicao(false), 1000);
-          })
+              }
+              if (
+                !tokenRecebido?.id ||
+                tokensEmGravacaoRef.current.has(tokenRecebido.id)
+              ) {
+                return atual;
+              }
+              const pendente = posicoesTokensPendentesRef.current.get(
+                tokenRecebido.id,
+              );
+              if (pendente) {
+                const posicaoRemota =
+                  tokenRecebido.posicoes?.[pendente.mapaChave] ||
+                  tokenRecebido;
+                const confirmou =
+                  Math.abs(Number(posicaoRemota.x) - pendente.x) < 0.001 &&
+                  Math.abs(Number(posicaoRemota.y) - pendente.y) < 0.001;
+                if (!confirmou) return atual;
+                posicoesTokensPendentesRef.current.delete(tokenRecebido.id);
+              }
+              const tokenAtual = atual.tokens.find(
+                (token) => token.id === tokenRecebido.id,
+              );
+              if (!aceitarTokenRemoto(tokenAtual, tokenRecebido))
+                return atual;
+              const mapaChave = chavePosicaoMapa(
+                atual.cenaAtiva?.id,
+                atual.midiaAtivaId,
+              );
+              const estadoMapa = {
+                ...(tokenRecebido.posicoes?.[mapaChave] || {}),
+                ...(tokenRecebido.posicoes?.[`__estado:${mapaChave}`] || {}),
+              };
+              const tokenAtualizado = { ...tokenRecebido, ...estadoMapa };
+              const existe = atual.tokens.some(
+                (token) => token.id === tokenRecebido.id,
+              );
+              return {
+                ...atual,
+                tokens: existe
+                  ? atual.tokens.map((token) =>
+                    token.id === tokenRecebido.id ? tokenAtualizado : token,
+                  )
+                  : [...atual.tokens, tokenAtualizado],
+              };
+            });
+            return;
+          }
+          if (!mestre || !eventoMudaApresentacao(evento, campanhaRef.current)) {
+            carregar();
+            return;
+          }
+          setTransicao(true);
+          setTimeout(carregar, 320);
+          setTimeout(() => setTransicao(false), 1000);
+        })
         : undefined,
-    [campanha?.id, carregar,mestre],
+    [campanha?.id, carregar, mestre],
   );
   useEffect(() => {
     const url = urlCena(
@@ -709,13 +710,13 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
     const audio = audioCenaEspecialRef.current;
     if (!audio || !audioEspecialPronto) return undefined;
     audio.currentTime = 0;
-    audio.play().catch(() => {});
+    audio.play().catch(() => { });
     return () => { audio.pause(); audio.currentTime = 0; };
   }, [audioEspecialPronto]);
   useEffect(() => {
     if (campanha?.modo !== "mapa") return undefined;
     const url = urlCena(cenaAtivaVisivel, "mapa", campanha?.midiaAtivaId);
-    if (!url || specialSceneMediaType({url}) === "video") return undefined;
+    if (!url || specialSceneMediaType({ url }) === "video") return undefined;
     let ativo = true;
     const imagem = new Image();
     imagem.onload = () => {
@@ -736,7 +737,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
     listarFichasParaCampanha()
       .then((fichas) => {
         setFichasDisponiveis(fichas);
-        setPersonagens(current => ({...current,...Object.fromEntries(fichas.map(ficha => [ficha.fichaId,ficha.personagem]))}));
+        setPersonagens(current => ({ ...current, ...Object.fromEntries(fichas.map(ficha => [ficha.fichaId, ficha.personagem])) }));
       })
       .catch((error) => {
         setFichasDisponiveis([]);
@@ -747,28 +748,28 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
     carregarFichas();
   }, [carregarFichas]);
   useEffect(() => {
-    const refresh=event => {
-      if(event.type==='storage' && !event.key?.startsWith('espiral:sheet:v1:')) return;
+    const refresh = event => {
+      if (event.type === 'storage' && !event.key?.startsWith('espiral:sheet:v1:')) return;
       carregarFichas();
     };
-    window.addEventListener('storage',refresh);window.addEventListener('darkness:token-animation-updated',refresh);
-    return () => {window.removeEventListener('storage',refresh);window.removeEventListener('darkness:token-animation-updated',refresh);};
-  },[carregarFichas]);
+    window.addEventListener('storage', refresh); window.addEventListener('darkness:token-animation-updated', refresh);
+    return () => { window.removeEventListener('storage', refresh); window.removeEventListener('darkness:token-animation-updated', refresh); };
+  }, [carregarFichas]);
   useEffect(() => {
     if (!mestre) return;
     const refresh = () => {
-    const records = [];
-    try {
-      const inimigos = (
-        JSON.parse(localStorage.getItem("darkness_inimigos")) || []
-      ).map((item) => ({ ...item, tipo: "inimigo" }));
-      const npcs = (
-        JSON.parse(localStorage.getItem("darkness_npcs")) || []
-      ).map((item) => ({ ...item, tipo: "npc" }));
-      records.push(...inimigos, ...npcs);
-    } catch {}
-    try { records.push(...readEspiralEncounters(localStorage).map(espiralEncounterForTabletop)); } catch {}
-    setCatalogoInimigos(records);
+      const records = [];
+      try {
+        const inimigos = (
+          JSON.parse(localStorage.getItem("darkness_inimigos")) || []
+        ).map((item) => ({ ...item, tipo: "inimigo" }));
+        const npcs = (
+          JSON.parse(localStorage.getItem("darkness_npcs")) || []
+        ).map((item) => ({ ...item, tipo: "npc" }));
+        records.push(...inimigos, ...npcs);
+      } catch { }
+      try { records.push(...readEspiralEncounters(localStorage).map(espiralEncounterForTabletop)); } catch { }
+      setCatalogoInimigos(records);
     };
     refresh();
     window.addEventListener('storage', refresh);
@@ -1112,30 +1113,30 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
       if (fitaCassete && !novoDocumento.arquivo) throw new Error("Selecione um áudio para a fita cassete.");
       const audioUrl = fitaCassete ? await enviarImagemCena(campanha.id, novoDocumento.arquivo, "audio") : "";
       const metadadosDocumento = {
-          audioUrl,
-          nome:
-            novoDocumento.nome ||
-            (evidenciaInterativa
-              ? novoDocumento.modeloInterativo === "cassete" ? "Fita cassete" : novoDocumento.modeloInterativo === "modern-pc"
-                ? "Computador moderno"
-                : "Terminal MS-DOS"
-              : novoDocumento.arquivo.name.replace(/\.[^.]+$/, "")),
-          descricao: novoDocumento.descricao,
-          categoria: novoDocumento.categoria,
-          modeloInterativo: novoDocumento.modeloInterativo || "msdos",
-          revelada: !prepararSomente,
-          visualizarTodos: novoDocumento.visualizarTodos,
-          jogadoresVisiveis: novoDocumento.visualizarTodos
-            ? []
-            : novoDocumento.jogadoresVisiveis,
-        };
+        audioUrl,
+        nome:
+          novoDocumento.nome ||
+          (evidenciaInterativa
+            ? novoDocumento.modeloInterativo === "cassete" ? "Fita cassete" : novoDocumento.modeloInterativo === "modern-pc"
+              ? "Computador moderno"
+              : "Terminal MS-DOS"
+            : novoDocumento.arquivo.name.replace(/\.[^.]+$/, "")),
+        descricao: novoDocumento.descricao,
+        categoria: novoDocumento.categoria,
+        modeloInterativo: novoDocumento.modeloInterativo || "msdos",
+        revelada: !prepararSomente,
+        visualizarTodos: novoDocumento.visualizarTodos,
+        jogadoresVisiveis: novoDocumento.visualizarTodos
+          ? []
+          : novoDocumento.jogadoresVisiveis,
+      };
       const salvo = evidenciaInterativa
         ? await salvarEvidenciaInterativa(campanha.id, metadadosDocumento)
         : await salvarDocumentoInvestigacao(
-            campanha.id,
-            novoDocumento.arquivo,
-            metadadosDocumento,
-          );
+          campanha.id,
+          novoDocumento.arquivo,
+          metadadosDocumento,
+        );
       setCampanha((atual) => ({
         ...atual,
         documentosInvestigacao: [
@@ -1360,15 +1361,15 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
   };
 
   const adicionarIniciativaNoPainel = async (inimigo, valor, tipo) => {
-    if(!mestre || !modoIniciativaAtivo || !campanha?.id || !Number.isInteger(valor) || valor<0) return;
-    let registro=inimigo;
-    if(tipo!=='npc' && Boolean(inimigo.bossIniciativa || inimigo.dados?.bossIniciativa)!==(tipo==='boss')) {
-      registro=await atualizarInimigoCampanha(campanha.id,{...inimigo,bossIniciativa:tipo==='boss'});
-      setCampanha(atual=>({...atual,inimigos:(atual.inimigos || []).map(item=>item.id===registro.id?registro:item)}));
+    if (!mestre || !modoIniciativaAtivo || !campanha?.id || !Number.isInteger(valor) || valor < 0) return;
+    let registro = inimigo;
+    if (tipo !== 'npc' && Boolean(inimigo.bossIniciativa || inimigo.dados?.bossIniciativa) !== (tipo === 'boss')) {
+      registro = await atualizarInimigoCampanha(campanha.id, { ...inimigo, bossIniciativa: tipo === 'boss' });
+      setCampanha(atual => ({ ...atual, inimigos: (atual.inimigos || []).map(item => item.id === registro.id ? registro : item) }));
     }
-    const chave=tipo==='npc' ? chaveIniciativaNpc(registro) : prefixoIniciativaInimigo(registro)+Date.now()+'-'+Math.random().toString(36).slice(2,6);
-    await definirIniciativa(campanha.id,chave,valor,registro.nome || 'Personagem');
-    setCampanha(atual=>({...atual,iniciativas:{...(atual.iniciativas || {}),[chave]:valor}}));
+    const chave = tipo === 'npc' ? chaveIniciativaNpc(registro) : prefixoIniciativaInimigo(registro) + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+    await definirIniciativa(campanha.id, chave, valor, registro.nome || 'Personagem');
+    setCampanha(atual => ({ ...atual, iniciativas: { ...(atual.iniciativas || {}), [chave]: valor } }));
   };
 
   const apresentar = async (cena, modo, midia = null) => {
@@ -1398,33 +1399,33 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
     const alturaGrade = cena?.altura_grade || cena?.alturaGrade || 8;
     const imagensCena = cena
       ? midiasDaCena(cena, "cena").map((midia, indice) => ({
-          ...midia,
-          id: midia.id || `cena-${cena.id || "existente"}-${indice + 1}`,
-          nome: midia.nome || `Cena ${indice + 1}`,
-        }))
+        ...midia,
+        id: midia.id || `cena-${cena.id || "existente"}-${indice + 1}`,
+        nome: midia.nome || `Cena ${indice + 1}`,
+      }))
       : [];
     const mapasBatalha = cena
       ? midiasDaCena(cena, "mapa").map((midia, indice) => ({
-          ...midia,
-          id: midia.id || `mapa-${cena.id || "existente"}-${indice + 1}`,
-          nome: midia.nome || `Mapa ${indice + 1}`,
-          larguraGrade: Number(midia.larguraGrade || larguraGrade),
-          alturaGrade: Number(midia.alturaGrade || alturaGrade),
-          exibirGrade: midia.exibirGrade !== false,
-        }))
+        ...midia,
+        id: midia.id || `mapa-${cena.id || "existente"}-${indice + 1}`,
+        nome: midia.nome || `Mapa ${indice + 1}`,
+        larguraGrade: Number(midia.larguraGrade || larguraGrade),
+        alturaGrade: Number(midia.alturaGrade || alturaGrade),
+        exibirGrade: midia.exibirGrade !== false,
+      }))
       : [];
     setEditando(
       cena
         ? {
-            ...cena,
-            imagemUrl: urlCena(cena, "cena"),
-            mapaUrl: urlCena(cena, "mapa"),
-            imagensCena,
-            mapasBatalha,
-            cenaEspecial: cena.cenaEspecial || null,
-            larguraGrade,
-            alturaGrade,
-          }
+          ...cena,
+          imagemUrl: urlCena(cena, "cena"),
+          mapaUrl: urlCena(cena, "mapa"),
+          imagensCena,
+          mapasBatalha,
+          cenaEspecial: cena.cenaEspecial || null,
+          larguraGrade,
+          alturaGrade,
+        }
         : { ...cenaVazia, imagensCena: [], mapasBatalha: [] },
     );
     setArquivos({ cena: [], mapa: [], especial: [], audio: [] });
@@ -1455,7 +1456,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
           arquivos.cena.map(async (item) => ({
             id: item.id,
             nome: item.nome || item.arquivo.name,
-            tipoMidia: specialSceneMediaType({file:item.arquivo}),
+            tipoMidia: specialSceneMediaType({ file: item.arquivo }),
             url: await enviarImagemCena(campanha.id, item.arquivo, "cena"),
           })),
         ),
@@ -1463,7 +1464,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
           arquivos.mapa.map(async (item) => ({
             id: item.id,
             nome: item.nome || item.arquivo.name,
-            tipoMidia: specialSceneMediaType({file:item.arquivo}),
+            tipoMidia: specialSceneMediaType({ file: item.arquivo }),
             url: await enviarImagemCena(campanha.id, item.arquivo, "mapa"),
             larguraGrade: Number(
               item.larguraGrade || editando.larguraGrade || 12,
@@ -1508,7 +1509,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
           ...editando.cenaEspecial,
           midiaUrl: midiaEspecialUrl || editando.cenaEspecial.midiaUrl || "",
           audioUrl: audioEspecialUrl || editando.cenaEspecial.audioUrl || "",
-          tipoMidia: editando.cenaEspecial.cutscene ? "cutscene" : specialSceneMediaType({file:arquivos.especial[0]?.arquivo,url:editando.cenaEspecial.midiaUrl,fallback:editando.cenaEspecial.tipoMidia || "imagem"}),
+          tipoMidia: editando.cenaEspecial.cutscene ? "cutscene" : specialSceneMediaType({ file: arquivos.especial[0]?.arquivo, url: editando.cenaEspecial.midiaUrl, fallback: editando.cenaEspecial.tipoMidia || "imagem" }),
           atrasoAudio: Math.max(0, Number(editando.cenaEspecial.atrasoAudio) || 0),
         } : null,
       });
@@ -1526,7 +1527,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
     if (!selecionados.length) return;
     try {
       selecionados.forEach((arquivo) => validarArquivoImagem(arquivo, tipo));
-      if(tipo==="especial")setEditando(current=>({...current,cenaEspecial:{...current.cenaEspecial,cutscene:undefined,tipoMidia:specialSceneMediaType({file:selecionados[0]})}}));
+      if (tipo === "especial") setEditando(current => ({ ...current, cenaEspecial: { ...current.cenaEspecial, cutscene: undefined, tipoMidia: specialSceneMediaType({ file: selecionados[0] }) } }));
       setErro("");
       setArquivos((atuais) => ({
         ...atuais,
@@ -1538,10 +1539,10 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
             arquivo,
             ...(tipo === "mapa"
               ? {
-                  larguraGrade: Number(editando.larguraGrade || 12),
-                  alturaGrade: Number(editando.alturaGrade || 8),
-                  exibirGrade: true,
-                }
+                larguraGrade: Number(editando.larguraGrade || 12),
+                alturaGrade: Number(editando.alturaGrade || 8),
+                exibirGrade: true,
+              }
               : {}),
           })),
         ],
@@ -1618,15 +1619,15 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
       tokens: atual.tokens.map((item) =>
         item.id === tokenId
           ? {
-              ...item,
-              posicoes: {
-                ...(item.posicoes || {}),
-                [chaveEstado]: {
-                  ...(item.posicoes?.[chaveEstado] || {}),
-                  ...mudanca,
-                },
+            ...item,
+            posicoes: {
+              ...(item.posicoes || {}),
+              [chaveEstado]: {
+                ...(item.posicoes?.[chaveEstado] || {}),
+                ...mudanca,
               },
-            }
+            },
+          }
           : item,
       ),
     }));
@@ -1653,14 +1654,14 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
       tokens: atual.tokens.map((item) =>
         item.id === tokenArrastando
           ? {
-              ...item,
-              x,
-              y,
-              posicoes: {
-                ...(item.posicoes || {}),
-                [mapaChaveAtual]: { x, y },
-              },
-            }
+            ...item,
+            x,
+            y,
+            posicoes: {
+              ...(item.posicoes || {}),
+              [mapaChaveAtual]: { x, y },
+            },
+          }
           : item,
       ),
     }));
@@ -1682,8 +1683,8 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
     const rotacao =
       anguloPonteiro +
       Math.round((rotacaoAtual - anguloPonteiro) / (Math.PI * 2)) *
-        Math.PI *
-        2;
+      Math.PI *
+      2;
     const lanterna = visual.lanterna?.ativa
       ? { ...visual.lanterna, direcao: rotacao }
       : visual.lanterna;
@@ -1812,15 +1813,15 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
       tokens: atual.tokens.map((item) =>
         item.id === token.id
           ? {
-              ...item,
-              posicoes: {
-                ...(item.posicoes || {}),
-                [chaveEstado]: {
-                  ...(item.posicoes?.[chaveEstado] || {}),
-                  lanterna,
-                },
+            ...item,
+            posicoes: {
+              ...(item.posicoes || {}),
+              [chaveEstado]: {
+                ...(item.posicoes?.[chaveEstado] || {}),
+                lanterna,
               },
-            }
+            },
+          }
           : item,
       ),
     }));
@@ -1847,16 +1848,16 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
       tokens: atual.tokens.map((item) =>
         item.id === token.id
           ? {
-              ...item,
-              removido: true,
-              posicoes: {
-                ...(item.posicoes || {}),
-                "__estado:global": {
-                  ...(item.posicoes?.["__estado:global"] || {}),
-                  removido: true,
-                },
+            ...item,
+            removido: true,
+            posicoes: {
+              ...(item.posicoes || {}),
+              "__estado:global": {
+                ...(item.posicoes?.["__estado:global"] || {}),
+                removido: true,
               },
-            }
+            },
+          }
           : item,
       ),
     }));
@@ -1879,29 +1880,17 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
       const inimigo = (campanha.inimigos || []).find(
         (item) =>
           String(item.id) === inimigoId ||
-          String(item.inimigo_ref) === inimigoId,
+          (item.inimigo_ref != null && String(item.inimigo_ref) === inimigoId),
       );
-      if (!inimigo) return;
+      if (!inimigo) {
+        setErro("Inimigo ou NPC não encontrado na campanha. Adicione-o primeiro à lista de participantes.");
+        return;
+      }
       const { x, y } = calcularPosicaoToken(event);
       try {
-        const token = await posicionarInimigoNoMapa(
-          campanha.id,
-          inimigo,
-          x,
-          y,
-          mapaChaveAtual,
-        );
-        setCampanha((atual) => ({
-          ...atual,
-          tokens: [
-            ...(atual.tokens || []).filter(
-              (item) => item.ficha_id !== token.ficha_id,
-            ),
-            token,
-          ],
-        }));
+        await adicionarInimigoAoMapa(inimigo, x, y);
       } catch (error) {
-        setErro(error.message || "Nao foi possivel colocar o inimigo no mapa.");
+        setErro(error.message || "Não foi possível colocar o inimigo ou NPC no mapa 2D.");
       }
       return;
     }
@@ -2015,14 +2004,14 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
           (inicioPinca.centro.x -
             inicioPinca.centroPalco.x -
             inicioPinca.pan.x) *
-            proporcao,
+          proporcao,
         y:
           centroAtual.y -
           inicioPinca.centroPalco.y -
           (inicioPinca.centro.y -
             inicioPinca.centroPalco.y -
             inicioPinca.pan.y) *
-            proporcao,
+          proporcao,
       });
       event.preventDefault();
       return true;
@@ -2058,8 +2047,8 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
   const cenaMapaAtual = campanha?.cenaAtiva;
   const mapaAtualIluminacao = cenaMapaAtual
     ? midiasDaCena(cenaMapaAtual, "mapa").find(
-        (item) => item.id === campanha?.midiaAtivaId,
-      ) || midiasDaCena(cenaMapaAtual, "mapa")[0]
+      (item) => item.id === campanha?.midiaAtivaId,
+    ) || midiasDaCena(cenaMapaAtual, "mapa")[0]
     : null;
   const chaveMapaIluminacao = `${cenaMapaAtual?.id || ""}:${mapaAtualIluminacao?.id || ""}`;
   const assinaturaIluminacaoRemota = JSON.stringify(
@@ -2166,34 +2155,74 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
     );
 
   const adicionarParticipanteEscudo = async (record) => {
-    await vincularInimigo(campanha.id,record);
+    await vincularInimigo(campanha.id, record);
     await carregar();
   };
   const salvarParticipanteEscudo = async (record) => {
     const saved = await atualizarInimigoCampanha(campanha.id, record);
-    setCampanha(current => ({...current, inimigos:(current.inimigos || []).map(item=>item.id===saved.id ? saved:item)}));
-    setInimigoAberto(current=>current?.id===saved.id ? saved:current);
+    setCampanha(current => ({ ...current, inimigos: (current.inimigos || []).map(item => item.id === saved.id ? saved : item) }));
+    setInimigoAberto(current => current?.id === saved.id ? saved : current);
     return saved;
   };
   const salvarDificuldadeCena = async (patch) => {
     if (!mestre || !campanha?.cenaAtiva) return;
-    const cena = {...campanha.cenaAtiva, dificuldades: {ambiente:4, combateAmbiente:4, conflitos:4, ...campanha.cenaAtiva.dificuldades, ...patch}};
+    const cena = { ...campanha.cenaAtiva, dificuldades: { ambiente: 4, combateAmbiente: 4, conflitos: 4, ...campanha.cenaAtiva.dificuldades, ...patch } };
     try {
       await salvarCena(campanha.id, cena);
-      setCampanha(atual => ({...atual, cenaAtiva: atual.cenaAtiva?.id === cena.id ? cena : atual.cenaAtiva, cenas: (atual.cenas || []).map(item => item.id === cena.id ? cena : item)}));
+      setCampanha(atual => ({ ...atual, cenaAtiva: atual.cenaAtiva?.id === cena.id ? cena : atual.cenaAtiva, cenas: (atual.cenas || []).map(item => item.id === cena.id ? cena : item) }));
     } catch (error) {
       setErro(error.message || "Não foi possível salvar a dificuldade da cena.");
     }
   };
 
+  // Um único caminho para colocar NPCs/inimigos no mapa 2D:
+  // botão da lateral, arrastar/soltar e escudo do mestre.
+  const adicionarInimigoAoMapa = async (inimigo, x = 50, y = 50) => {
+    if (!mestre || !campanha?.id) {
+      throw new Error("Apenas o mestre pode posicionar inimigos ou NPCs no mapa.");
+    }
+    if (campanha.modo !== "mapa") {
+      throw new Error("Ative o modo mapa para posicionar inimigos ou NPCs.");
+    }
+    if (!inimigo) {
+      throw new Error("Selecione um inimigo ou NPC já adicionado à campanha.");
+    }
+    // Algumas fichas chegam como { dados: {...}, ...registro }.
+    // Preserva o ID/ref da instância vinculada e recupera a imagem do token.
+    const dados = { ...(inimigo.dados || {}), ...inimigo };
+    const token = await posicionarInimigoNoMapa(
+      campanha.id,
+      {
+        ...dados,
+        fotoPerfil: dados.tabletopTokenImage || dados.fotoPerfil || dados.profileImage,
+      },
+      x,
+      y,
+      mapaChaveAtual,
+    );
+    if (!token?.ficha_id) {
+      throw new Error("O serviço não retornou um token válido. Verifique posicionarInimigoNoMapa em mesaApi.");
+    }
+    setCampanha((atual) => atual ? ({
+      ...atual,
+      tokens: [
+        ...(atual.tokens || []).filter(
+          (item) => item.ficha_id !== token.ficha_id,
+        ),
+        token,
+      ],
+    }) : atual);
+    return token;
+  };
+
   const cena = cenaAtivaVisivel;
   const palcoUrl = urlCena(cena, campanha.modo, campanha.midiaAtivaId);
-  const mediaAnimada = campanha?.modo === "cena" ? (cena?.imagensCena || []).find(m=>m.id===campanha.midiaAtivaId) || cena?.imagensCena?.[0] : null;
+  const mediaAnimada = campanha?.modo === "cena" ? (cena?.imagensCena || []).find(m => m.id === campanha.midiaAtivaId) || cena?.imagensCena?.[0] : null;
   const midiaAtiva =
     midiasDaCena(cena, campanha.modo).find(
       (item) => item.id === campanha.midiaAtivaId,
     ) || midiasDaCena(cena, campanha.modo)[0];
-  const palcoVideo = specialSceneMediaType({url:palcoUrl,fallback:midiaAtiva?.tipoMidia}) === 'video';
+  const palcoVideo = specialSceneMediaType({ url: palcoUrl, fallback: midiaAtiva?.tipoMidia }) === 'video';
   const colunas =
     midiaAtiva?.larguraGrade || cena?.largura_grade || cena?.larguraGrade || 12;
   const linhas =
@@ -2260,17 +2289,17 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
     ? "Iniciativa"
     : "Participantes";
 
-  const ordemCombate = modoIniciativaAtivo ? initiativeOrder(campanha,personagens) : [];
+  const ordemCombate = modoIniciativaAtivo ? initiativeOrder(campanha, personagens) : [];
 
-  const controlarTurno = async (action,target) => {
-    if(!mestre || !campanha?.combateAtivo || turnBusyRef.current) return;
-    turnBusyRef.current=true;setTurnBusy(true);
+  const controlarTurno = async (action, target) => {
+    if (!mestre || !campanha?.combateAtivo || turnBusyRef.current) return;
+    turnBusyRef.current = true; setTurnBusy(true);
     try {
-      const next=nextCombatTurn(campanha.turnoCombate,ordemCombate,action,target);
-      const saved=await salvarTurnoCombate(campanha.id,next,campanha.turnoCombate?.revision || 0);
-      setCampanha(current=>({...current,turnoCombate:saved}));
-    } catch(error) {setErro(error.message || 'Não foi possível atualizar o turno.');}
-    finally {turnBusyRef.current=false;setTurnBusy(false);}
+      const next = nextCombatTurn(campanha.turnoCombate, ordemCombate, action, target);
+      const saved = await salvarTurnoCombate(campanha.id, next, campanha.turnoCombate?.revision || 0);
+      setCampanha(current => ({ ...current, turnoCombate: saved }));
+    } catch (error) { setErro(error.message || 'Não foi possível atualizar o turno.'); }
+    finally { turnBusyRef.current = false; setTurnBusy(false); }
   };
 
   const agruparPorPastaNpc = (itens) => {
@@ -2346,62 +2375,62 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
       (midia) => midia.tipo === campanha.modo,
     )?.id;
     return midias.length ? (
-<section
-            className={`biblioteca-midias-ativas ${midiasRecolhidas ? "recolhida" : ""}`}
-          >
-            <button
-              className="biblioteca-midias-toggle"
-              onClick={() => setMidiasRecolhidas((valor) => !valor)}
-              aria-expanded={!midiasRecolhidas}
-            >
-              <Icon
-                path={midiasRecolhidas ? mdiChevronRight : mdiChevronDown}
-                size={0.62}
-              />
-              <span>Imagens da cena atual</span>
-              <b>{midias.length}</b>
-            </button>
-            {!midiasRecolhidas && (
-              <div>
-                {midias.map((midia) => (
-                  <button
-                    key={`${midia.tipo}-${midia.id}`}
-                    className={
-                      campanha.modo === midia.tipo &&
-                      (campanha.midiaAtivaId === midia.id ||
-                        (!campanha.midiaAtivaId && primeiraDoModo === midia.id))
-                        ? "ativo"
-                        : ""
+      <section
+        className={`biblioteca-midias-ativas ${midiasRecolhidas ? "recolhida" : ""}`}
+      >
+        <button
+          className="biblioteca-midias-toggle"
+          onClick={() => setMidiasRecolhidas((valor) => !valor)}
+          aria-expanded={!midiasRecolhidas}
+        >
+          <Icon
+            path={midiasRecolhidas ? mdiChevronRight : mdiChevronDown}
+            size={0.62}
+          />
+          <span>Imagens da cena atual</span>
+          <b>{midias.length}</b>
+        </button>
+        {!midiasRecolhidas && (
+          <div>
+            {midias.map((midia) => (
+              <button
+                key={`${midia.tipo}-${midia.id}`}
+                className={
+                  campanha.modo === midia.tipo &&
+                    (campanha.midiaAtivaId === midia.id ||
+                      (!campanha.midiaAtivaId && primeiraDoModo === midia.id))
+                    ? "ativo"
+                    : ""
+                }
+                onClick={() => apresentar(item, midia.tipo, midia)}
+                title={`Exibir ${midia.nome}`}
+              >
+                <i style={{ backgroundImage: `url(${midia.url})` }}>
+                  <Icon
+                    path={
+                      midia.tipo === "mapa"
+                        ? mdiMapOutline
+                        : mdiImageOutline
                     }
-                    onClick={() => apresentar(item, midia.tipo, midia)}
-                    title={`Exibir ${midia.nome}`}
-                  >
-                    <i style={{ backgroundImage: `url(${midia.url})` }}>
-                      <Icon
-                        path={
-                          midia.tipo === "mapa"
-                            ? mdiMapOutline
-                            : mdiImageOutline
-                        }
-                        size={0.62}
-                      />
-                    </i>
-                    <span>
-                      <small>{midia.rotulo}</small>
-                      <strong>{midia.nome}</strong>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </section>
+                    size={0.62}
+                  />
+                </i>
+                <span>
+                  <small>{midia.rotulo}</small>
+                  <strong>{midia.nome}</strong>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
     ) : <p>Nenhuma imagem ou mapa nesta cena.</p>;
   };
-  const renderizarCenaBiblioteca = (item, showFolder=false) => {
+  const renderizarCenaBiblioteca = (item, showFolder = false) => {
     const selecionada = item.id === cena?.id;
     return (
       <div className="biblioteca-scene-card" key={item.id}>
-        {showFolder && <div className="biblioteca-scene-folder"><Icon path={mdiFolderOutline} size={0.6}/><span>{item.pasta || 'Sem pasta'}</span></div>}
+        {showFolder && <div className="biblioteca-scene-folder"><Icon path={mdiFolderOutline} size={0.6} /><span>{item.pasta || 'Sem pasta'}</span></div>}
         <article
           className={selecionada ? "selecionado" : ""}
           style={{
@@ -2450,578 +2479,578 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
     );
   };
   const renderDocumentosMestre = () => (
-<aside className="mesa-documentos-painel">
-          <div className="mesa-lateral-titulo">
-            <Icon path={mdiFileDocumentMultipleOutline} size={0.8} />
-            <span>Visualizador de documentos</span>
-            <b>{documentosDisponiveis.length}</b>
-          </div>
-          <form className="documentos-envio" onSubmit={enviarDocumentoParaInvestigacao}>
-            <div className="documentos-envio-titulo">
-              <strong>Compartilhar evidencia ou item</strong>
-              <small>PDF ou imagem · max. 12 MB</small>
+    <aside className="mesa-documentos-painel">
+      <div className="mesa-lateral-titulo">
+        <Icon path={mdiFileDocumentMultipleOutline} size={0.8} />
+        <span>Visualizador de documentos</span>
+        <b>{documentosDisponiveis.length}</b>
+      </div>
+      <form className="documentos-envio" onSubmit={enviarDocumentoParaInvestigacao}>
+        <div className="documentos-envio-titulo">
+          <strong>Compartilhar evidencia ou item</strong>
+          <small>PDF ou imagem · max. 12 MB</small>
+        </div>
+        <div className="documentos-envio-campos">
+          <select
+            value={novoDocumento.categoria}
+            onChange={(event) =>
+              setNovoDocumento((atual) => ({
+                ...atual,
+                categoria: event.target.value,
+              }))
+            }
+            aria-label="Tipo do documento"
+          >
+            <option value="evidencia">Evidencia</option>
+            <option value="item">Item</option>
+            <option value="interativa">Evidencia interativa</option>
+          </select>
+          <input
+            type="text"
+            placeholder="Nome da evidencia"
+            value={novoDocumento.nome}
+            onChange={(event) =>
+              setNovoDocumento((atual) => ({
+                ...atual,
+                nome: event.target.value,
+              }))
+            }
+          />
+        </div>
+        <textarea
+          rows="2"
+          placeholder="Descricao opcional"
+          value={novoDocumento.descricao}
+          onChange={(event) =>
+            setNovoDocumento((atual) => ({
+              ...atual,
+              descricao: event.target.value,
+            }))
+          }
+        />
+        <div className="documentos-visibilidade">
+          <div className="documentos-visibilidade-cabecalho">
+            <div>
+              <strong>Quem pode visualizar?</strong>
+              <small>
+                {novoDocumento.visualizarTodos
+                  ? "A evidencia ficara disponivel para todos."
+                  : "Selecione os jogadores que receberao a evidencia."}
+              </small>
             </div>
-            <div className="documentos-envio-campos">
-              <select
-                value={novoDocumento.categoria}
-                onChange={(event) =>
-                  setNovoDocumento((atual) => ({
-                    ...atual,
-                    categoria: event.target.value,
-                  }))
-                }
-                aria-label="Tipo do documento"
-              >
-                <option value="evidencia">Evidencia</option>
-                <option value="item">Item</option>
-                <option value="interativa">Evidencia interativa</option>
-              </select>
-              <input
-                type="text"
-                placeholder="Nome da evidencia"
-                value={novoDocumento.nome}
-                onChange={(event) =>
-                  setNovoDocumento((atual) => ({
-                    ...atual,
-                    nome: event.target.value,
-                  }))
-                }
-              />
-            </div>
-            <textarea
-              rows="2"
-              placeholder="Descricao opcional"
-              value={novoDocumento.descricao}
-              onChange={(event) =>
+            <button
+              type="button"
+              className={novoDocumento.visualizarTodos ? "ativo" : ""}
+              aria-pressed={novoDocumento.visualizarTodos}
+              onClick={() =>
                 setNovoDocumento((atual) => ({
                   ...atual,
-                  descricao: event.target.value,
+                  visualizarTodos: !atual.visualizarTodos,
+                  jogadoresVisiveis: !atual.visualizarTodos
+                    ? []
+                    : atual.jogadoresVisiveis,
                 }))
               }
-            />
-            <div className="documentos-visibilidade">
-              <div className="documentos-visibilidade-cabecalho">
-                <div>
-                  <strong>Quem pode visualizar?</strong>
-                  <small>
-                    {novoDocumento.visualizarTodos
-                      ? "A evidencia ficara disponivel para todos."
-                      : "Selecione os jogadores que receberao a evidencia."}
-                  </small>
-                </div>
-                <button
-                  type="button"
-                  className={novoDocumento.visualizarTodos ? "ativo" : ""}
-                  aria-pressed={novoDocumento.visualizarTodos}
-                  onClick={() =>
-                    setNovoDocumento((atual) => ({
-                      ...atual,
-                      visualizarTodos: !atual.visualizarTodos,
-                      jogadoresVisiveis: !atual.visualizarTodos
-                        ? []
-                        : atual.jogadoresVisiveis,
-                    }))
-                  }
-                >
-                  Visualizar para todos
-                </button>
-              </div>
-              {!novoDocumento.visualizarTodos && (
-                <div className="documentos-visibilidade-jogadores">
-                  {(campanha.membros || []).map((membro) => {
-                    const fichaId = String(membro.ficha_id || "");
-                    const selecionado = (novoDocumento.jogadoresVisiveis || [])
-                      .map(String)
-                      .includes(fichaId);
-                    const personagem = personagens[membro.ficha_id];
-                    return (
-                      <label
-                        className={selecionado ? "selecionado" : ""}
-                        key={membro.id || fichaId}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selecionado}
-                          onChange={() => alternarJogadorDocumento(fichaId)}
-                        />
-                        <span>
-                          {personagem?.fotoPerfil ? (
-                            <img src={personagem.fotoPerfil} alt="" />
-                          ) : (
-                            (personagem?.nome || membro.nome || "?").slice(0, 2)
-                          )}
-                        </span>
-                        <b>{personagem?.nome || membro.nome}</b>
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-            <div className={`documentos-envio-acoes ${novoDocumento.categoria === "interativa" ? "interativa" : ""}`}>
-              {novoDocumento.categoria === "interativa" ? (
-                <div className="evidencia-interativa-configuracao">
-                  <div className="evidencia-modelos-titulo"><span>FORMATO DA EVIDÊNCIA</span><small>Escolha uma experiência</small></div>
-                <div className="evidencia-interativa-modelos">
-                  <button type="button" aria-pressed={novoDocumento.modeloInterativo === "cassete"} className={novoDocumento.modeloInterativo === "cassete" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "cassete", arquivo: null }))}>
-                    <b>◉◉</b><span><strong>Fita cassete</strong><small>Áudio e rebobinamento</small></span>
-                  </button>
-
-                  <button type="button" aria-pressed={novoDocumento.modeloInterativo === "msdos"} className={novoDocumento.modeloInterativo === "msdos" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "msdos" }))}>
-                    <b>C:\&gt;</b><span><strong>MS-DOS 6.13</strong><small>Terminal classico</small></span>
-                  </button>
-                  <button type="button" aria-pressed={novoDocumento.modeloInterativo === "modern-pc"} className={novoDocumento.modeloInterativo === "modern-pc" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "modern-pc" }))}>
-                    <b>PC</b><span><strong>Computador moderno</strong><small>Internet, mensagens e arquivos</small></span>
-                  </button>
-                </div>
-                  {novoDocumento.modeloInterativo === "cassete" && <label className={`cassete-upload ${novoDocumento.arquivo ? "selecionado" : ""}`}><span className="cassete-upload-icone"><Icon path={mdiUploadOutline} size={0.9} /></span><span className="cassete-upload-texto"><strong>{novoDocumento.arquivo?.name || "Selecione o áudio da fita"}</strong><small>MP3, OGG, WAV ou M4A · até 20 MB</small></span><span className="cassete-upload-acao">{novoDocumento.arquivo ? "Trocar" : "Escolher"}</span><input aria-label="Selecionar áudio da fita" type="file" accept={ACEITAR_AUDIO} onChange={(event) => {
-                    const arquivo = event.target.files?.[0] || null;
-                    try { if (arquivo) validarArquivoImagem(arquivo, "audio"); setNovoDocumento((atual) => ({ ...atual, arquivo })); setErro(""); }
-                    catch (error) { event.target.value = ""; setNovoDocumento((atual) => ({ ...atual, arquivo: null })); setErro(error.message); }
-                  }} /></label>}
-                </div>
-              ) : (
-              <label className={`documento-arquivo-seletor ${novoDocumento.arquivo ? "selecionado" : ""}`}>
-                <Icon path={mdiFileDocumentMultipleOutline} size={0.68} />
-                <span>{novoDocumento.arquivo?.name || "Selecionar arquivo"}</span>
-                <input
-                  ref={arquivoDocumentoRef}
-                  type="file"
-                  accept="application/pdf,image/webp,image/jpeg,image/png,image/avif"
-                  onChange={(event) => {
-                    const arquivo = event.target.files?.[0] || null;
-                    if (!arquivo) {
-                      setNovoDocumento((atual) => ({ ...atual, arquivo: null }));
-                      return;
-                    }
-                    try {
-                      validarArquivoInvestigacao(arquivo);
-                      setNovoDocumento((atual) => ({ ...atual, arquivo }));
-                      setErro("");
-                      setEstadoEnvioDocumento("");
-                    } catch (error) {
-                      event.target.value = "";
-                      setNovoDocumento((atual) => ({ ...atual, arquivo: null }));
-                      setErro(error.message || "Arquivo invalido.");
-                      setEstadoEnvioDocumento(`Erro: ${error.message || "Arquivo invalido."}`);
-                    }
-                  }}
-                />
-              </label>
-              )}
-              <div className="documentos-envio-botoes">
-                <button
-                  type="submit"
-                  name="acaoDocumento"
-                  value="preparar"
-                  className="secundario"
-                  disabled={
-                    (novoDocumento.categoria !== "interativa" && !novoDocumento.arquivo) ||
-                    enviandoDocumento ||
-                    (!novoDocumento.visualizarTodos &&
-                      !(novoDocumento.jogadoresVisiveis || []).length)
-                  }
-                >
-                  Preparar evidencia
-                </button>
-                <button
-                  type="submit"
-                  name="acaoDocumento"
-                  value="enviar"
-                  disabled={
-                    (novoDocumento.categoria !== "interativa" && !novoDocumento.arquivo) ||
-                    enviandoDocumento ||
-                    (!novoDocumento.visualizarTodos &&
-                      !(novoDocumento.jogadoresVisiveis || []).length)
-                  }
-                >
-                  <Icon path={mdiUploadOutline} size={0.68} />
-                  {enviandoDocumento
-                    ? "Salvando..."
-                    : novoDocumento.categoria === "interativa"
-                      ? novoDocumento.modeloInterativo === "cassete" ? "Compartilhar fita cassete" : "Disponibilizar sistema"
-                      : "Enviar aos jogadores"}
-                </button>
-              </div>
-            </div>
-            {estadoEnvioDocumento && (
-              <p
-                className={`documentos-envio-estado ${estadoEnvioDocumento.startsWith("Erro:") ? "erro" : ""}`}
-                role="status"
-              >
-                {estadoEnvioDocumento}
-              </p>
-            )}
-          </form>
-          <div className="documentos-lista">
-            {documentosDisponiveis.length ? (
-              documentosDisponiveis.map((documento) => {
-                const editandoVisibilidade =
-                  visibilidadeDocumentoEditando?.id === documento.id;
-                const visualizarTodosEditando =
-                  editandoVisibilidade
-                    ? visibilidadeDocumentoEditando.visualizarTodos !== false
-                    : documento.visualizarTodos !== false;
-                const jogadoresEditando = editandoVisibilidade
-                  ? visibilidadeDocumentoEditando.jogadoresVisiveis || []
-                  : documento.jogadoresVisiveis || [];
-                return (
-                  <article
-                    className={`documento-card ${editandoVisibilidade ? "editando-visibilidade" : ""}`}
-                    key={documento.id}
-                  >
-                    <button
-                      type="button"
-                      className="documento-card-abrir"
-                      onClick={() => {
-                        setAbaEvidenciaInterativa("terminal");
-                        setDocumentoAberto(documento);
-                      }}
-                    >
-                      <div className="documento-card-preview">
-                        {documento.categoria === "interativa" ? (
-                          <span>{String(documento.mimeType || documento.mime_type).includes("modern-pc") ? "PC" : "DOS"}</span>
-                        ) : String(documento.mimeType || documento.mime_type || "").startsWith("image/") ? (
-                          <img src={documento.url} alt="" />
-                        ) : (
-                          <span>PDF</span>
-                        )}
-                      </div>
-                      <div>
-                        <small>{documento.categoria === "interativa" ? "Evidencia interativa" : documento.categoria === "item" ? "Item" : "Evidencia"}</small>
-                        <strong>{nomeDocumentoExibicao(documento)}</strong>
-                        <p>{documento.descricao || documento.arquivoNome || documento.arquivo_nome || "Clique para visualizar"}</p>
-                        <em className="documento-visibilidade-resumo">
-                          {nomesVisibilidadeDocumento(documento)}
-                        </em>
-                      </div>
-                    </button>
-                    {documento.revelada === false && (
-                      <div className="documento-card-preparado-acoes">
-                        <span>Preparada · invisivel aos jogadores</span>
-                        <button
-                          type="button"
-                          onClick={() => enviarEvidenciaPreparada(documento)}
-                          disabled={Boolean(enviandoDocumentoPreparadoId)}
-                        >
-                          <Icon path={mdiUploadOutline} size={0.62} />
-                          {enviandoDocumentoPreparadoId === documento.id
-                            ? "Enviando..."
-                            : "Enviar evidencia preparada"}
-                        </button>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      className={`documento-card-editar ${editandoVisibilidade ? "ativo" : ""}`}
-                      onClick={() => abrirEdicaoVisibilidadeDocumento(documento)}
-                      title="Editar quem pode visualizar"
-                      aria-label={`Editar visibilidade de ${documento.nome}`}
-                    >
-                      <Icon path={mdiPencilOutline} size={0.64} />
-                    </button>
-                    <button
-                      type="button"
-                      className="documento-card-remover"
-                      onClick={() => removerDocumentoDaInvestigacao(documento)}
-                      title="Remover do visualizador"
-                    >
-                      <Icon path={mdiDeleteOutline} size={0.68} />
-                    </button>
-                    {editandoVisibilidade && (
-                      <div className="documentos-visibilidade documento-visibilidade-existente">
-                        <div className="documentos-visibilidade-cabecalho">
-                          <div>
-                            <strong>Quem pode visualizar?</strong>
-                            <small>
-                              {visualizarTodosEditando
-                                ? "Este documento esta disponivel para todos."
-                                : "Escolha quais jogadores podem consultar este documento."}
-                            </small>
-                          </div>
-                          <button
-                            type="button"
-                            className={visualizarTodosEditando ? "ativo" : ""}
-                            aria-pressed={visualizarTodosEditando}
-                            onClick={() =>
-                              setVisibilidadeDocumentoEditando((atual) => ({
-                                ...atual,
-                                visualizarTodos: !atual.visualizarTodos,
-                                jogadoresVisiveis: !atual.visualizarTodos
-                                  ? []
-                                  : atual.jogadoresVisiveis,
-                              }))
-                            }
-                          >
-                            Visualizar para todos
-                          </button>
-                        </div>
-                        {!visualizarTodosEditando && (
-                          <div className="documentos-visibilidade-jogadores">
-                            {(campanha.membros || []).map((membro) => {
-                              const fichaId = String(membro.ficha_id || "");
-                              const selecionado = jogadoresEditando
-                                .map(String)
-                                .includes(fichaId);
-                              const personagem = personagens[membro.ficha_id];
-                              return (
-                                <label
-                                  className={selecionado ? "selecionado" : ""}
-                                  key={membro.id || fichaId}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={selecionado}
-                                    onChange={() => alternarJogadorDocumentoExistente(fichaId)}
-                                  />
-                                  <span>
-                                    {personagem?.fotoPerfil ? (
-                                      <img src={personagem.fotoPerfil} alt="" />
-                                    ) : (
-                                      (personagem?.nome || membro.nome || "?").slice(0, 2)
-                                    )}
-                                  </span>
-                                  <b>{personagem?.nome || membro.nome}</b>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        )}
-                        <div className="documento-visibilidade-edicao-acoes">
-                          <button
-                            type="button"
-                            className="secundario"
-                            onClick={() => setVisibilidadeDocumentoEditando(null)}
-                            disabled={salvandoVisibilidadeDocumento}
-                          >
-                            Cancelar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => salvarVisibilidadeDocumentoExistente(documento)}
-                            disabled={
-                              salvandoVisibilidadeDocumento ||
-                              (!visualizarTodosEditando && !jogadoresEditando.length)
-                            }
-                          >
-                            {salvandoVisibilidadeDocumento ? "Salvando..." : "Salvar visibilidade"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </article>
-                );
-              })
-            ) : (
-              <div className="documentos-vazio">
-                <Icon path={mdiFileDocumentMultipleOutline} size={1.2} />
-                <strong>Nenhum documento compartilhado</strong>
-                <p>Envie uma evidencia ou item para que todos os jogadores possam consultar.</p>
-              </div>
-            )}
-          </div>
-        </aside>
-  );
-  const renderVisualizadorDocumento = () => documentoAberto ? createPortal((<div className="mesa-shell shield-document-viewer-host">
-<div className="documento-visualizador-fundo">
-          <section
-            className={`documento-visualizador ${documentoAberto.categoria === "interativa" ? "interativo" : ""}`}
-            role="dialog"
-            aria-label={`Visualizador de ${nomeDocumentoExibicao(documentoAberto)}`}
-          >
-            <header>
-              <div>
-                <small>{documentoAberto.categoria === "interativa" ? "Evidencia interativa" : documentoAberto.categoria === "item" ? "Item" : "Evidencia"}</small>
-                <strong>{nomeDocumentoExibicao(documentoAberto)}</strong>
-              </div>
-              {mestre && documentoAberto.categoria === "interativa" && !String(documentoAberto.mimeType || documentoAberto.mime_type).includes("cassete") && (
-                <nav className="evidencia-interativa-abas" aria-label="Visualizacao da evidencia interativa">
-                  <button
-                    type="button"
-                    className={abaEvidenciaInterativa === "terminal" ? "ativo" : ""}
-                    onClick={() => setAbaEvidenciaInterativa("terminal")}
-                  >
-                    {String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc") ? "Computador" : "Terminal"}
-                  </button>
-                  <button
-                    type="button"
-                    className={abaEvidenciaInterativa === "conteudo" ? "ativo" : ""}
-                    onClick={() => setAbaEvidenciaInterativa("conteudo")}
-                  >
-                    Conteudo
-                  </button>
-                </nav>
-              )}
-              <button
-                type="button"
-                onClick={() => setDocumentoAberto(null)}
-                title="Fechar documento"
-              >
-                <Icon path={mdiClose} size={0.82} />
-              </button>
-            </header>
-            <div className="documento-visualizador-conteudo">
-              {String(documentoAberto.mimeType || documentoAberto.mime_type).includes("cassete") ? (
-                <ReprodutorCassete key={documentoAberto.id} documento={documentoAberto} />
-              ) : String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc") ? (
-                <ComputadorModerno key={`${documentoAberto.id}-${abaEvidenciaInterativa}`} campanhaId={campanha.id} documento={documentoAberto} admin={mestre && abaEvidenciaInterativa === "conteudo"} />
-              ) : documentoAberto.categoria === "interativa" ? (
-                <iframe
-                  className="evidencia-interativa-frame"
-                  title={documentoAberto.nome || "Computador interativo"}
-                  src={
-                    String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc")
-                      ? `/interactive/modern-pc/index.html${mestre && abaEvidenciaInterativa === "conteudo" ? "?admin=1" : ""}`
-                      : mestre && abaEvidenciaInterativa === "conteudo"
-                        ? "/interactive/ms-dos/index.html#/admin-secreto-123"
-                        : documentoAberto.url || "/interactive/ms-dos/index.html"
-                  }
-                  allow="autoplay"
-                />
-              ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "").startsWith("image/") ? (
-                <EvidenceImageViewer key={documentoAberto.id} src={documentoAberto.url} alt={documentoAberto.nome || "Evidência"} />
-              ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "") === "application/pdf" ? (
-                <iframe
-                  title={documentoAberto.nome || "Documento PDF"}
-                  src={documentoAberto.url}
-                />
-              ) : (
-                <div className="documento-sem-preview">
-                  <Icon path={mdiFileDocumentMultipleOutline} size={2} />
-                  <strong>Visualizacao indisponivel</strong>
-                  <p>Este arquivo nao possui uma visualizacao integrada.</p>
-                </div>
-              )}
-            </div>
-            {documentoAberto.descricao && (
-              <p className="documento-visualizador-descricao">
-                {documentoAberto.descricao}
-              </p>
-            )}
-          </section>
-        </div>
-  </div>), document.body) : null;
-  const renderShieldScenes = (flat=false) => (
-<aside className={`mesa-biblioteca ${flat ? "shield-scenes-layout" : ""}`}>
-          <div className="biblioteca-cabecalho">
-            <div>
-              <span>Direcao da sessao</span>
-              <h2>Cenas e mapas</h2>
-            </div>
-          {flat && <aside className="shield-scene-media" aria-label="Mídias da cena atual"><h3>{cena?.nome || 'Cena atual'}</h3>{cena ? renderMidiasCenaBiblioteca(cena) : <p>Selecione uma cena para consultar suas imagens e mapas.</p>}</aside>}
-            <button onClick={() => abrirEditor()} title="Nova cena">
-              <Icon path={mdiPlus} size={0.9} />
+            >
+              Visualizar para todos
             </button>
           </div>
-          {!flat && <div className="biblioteca-fichas">
-            <span>Fichas da campanha</span>
-            <div>
-              <select
-                value={fichaParaVincular}
-                onChange={(e) => setFichaParaVincular(e.target.value)}
-              >
-                <option value="">Selecionar ficha...</option>
-                {fichasDisponiveis
-                  .filter(
-                    (item) =>
-                      !campanha.membros.some(
-                        (membro) => membro.ficha_id === item.fichaId,
-                      ),
-                  )
-                  .map((item) => (
-                    <option key={item.fichaId} value={item.fichaId}>
-                      {item.personagem?.nome || item.fichaId}
-                    </option>
-                  ))}
-              </select>
-              <button
-                onClick={adicionarFicha}
-                disabled={!fichaParaVincular}
-                title="Vincular ficha"
-              >
-                <Icon path={mdiAccountPlusOutline} size={0.78} />
-              </button>
+          {!novoDocumento.visualizarTodos && (
+            <div className="documentos-visibilidade-jogadores">
+              {(campanha.membros || []).map((membro) => {
+                const fichaId = String(membro.ficha_id || "");
+                const selecionado = (novoDocumento.jogadoresVisiveis || [])
+                  .map(String)
+                  .includes(fichaId);
+                const personagem = personagens[membro.ficha_id];
+                return (
+                  <label
+                    className={selecionado ? "selecionado" : ""}
+                    key={membro.id || fichaId}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selecionado}
+                      onChange={() => alternarJogadorDocumento(fichaId)}
+                    />
+                    <span>
+                      {personagem?.fotoPerfil ? (
+                        <img src={personagem.fotoPerfil} alt="" />
+                      ) : (
+                        (personagem?.nome || membro.nome || "?").slice(0, 2)
+                      )}
+                    </span>
+                    <b>{personagem?.nome || membro.nome}</b>
+                  </label>
+                );
+              })}
             </div>
-            {erroFichas && (
-              <div className="biblioteca-fichas-erro">
-                <span>{erroFichas}</span>
-                <button onClick={carregarFichas}>Tentar novamente</button>
+          )}
+        </div>
+        <div className={`documentos-envio-acoes ${novoDocumento.categoria === "interativa" ? "interativa" : ""}`}>
+          {novoDocumento.categoria === "interativa" ? (
+            <div className="evidencia-interativa-configuracao">
+              <div className="evidencia-modelos-titulo"><span>FORMATO DA EVIDÊNCIA</span><small>Escolha uma experiência</small></div>
+              <div className="evidencia-interativa-modelos">
+                <button type="button" aria-pressed={novoDocumento.modeloInterativo === "cassete"} className={novoDocumento.modeloInterativo === "cassete" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "cassete", arquivo: null }))}>
+                  <b>◉◉</b><span><strong>Fita cassete</strong><small>Áudio e rebobinamento</small></span>
+                </button>
+
+                <button type="button" aria-pressed={novoDocumento.modeloInterativo === "msdos"} className={novoDocumento.modeloInterativo === "msdos" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "msdos" }))}>
+                  <b>C:\&gt;</b><span><strong>MS-DOS 6.13</strong><small>Terminal classico</small></span>
+                </button>
+                <button type="button" aria-pressed={novoDocumento.modeloInterativo === "modern-pc"} className={novoDocumento.modeloInterativo === "modern-pc" ? "ativo" : ""} onClick={() => setNovoDocumento((atual) => ({ ...atual, modeloInterativo: "modern-pc" }))}>
+                  <b>PC</b><span><strong>Computador moderno</strong><small>Internet, mensagens e arquivos</small></span>
+                </button>
               </div>
-            )}
-            {!erroFichas && fichasDisponiveis.length === 0 && (
-              <small>Nenhuma ficha cadastrada foi encontrada.</small>
-            )}
-          </div>}
-          <div className={`biblioteca-lista biblioteca-cenas-organizadas ${flat ? "biblioteca-cenas-grid" : ""}`}>
-            {flat ? gruposCenas.flatMap(([,cenas])=>cenas.map(item=>renderizarCenaBiblioteca(item,true))) : gruposCenas.map(([pasta, cenas]) => {
-              const fechada = Boolean(pastasCenasFechadas[pasta]);
-              return (
-                <section className="biblioteca-pasta-cenas" key={pasta}>
-                  <button type="button" className="biblioteca-pasta-cabecalho" onClick={() => alternarPastaCena(pasta)} aria-expanded={!fechada}>
-                    <Icon path={fechada ? mdiChevronRight : mdiChevronDown} size={0.68} />
-                    <Icon path={mdiFolderOutline} size={0.74} />
-                    <strong>{pasta}</strong>
-                    <span>{cenas.length}</span>
-                  </button>
-                  {!fechada && cenas.map(item=>renderizarCenaBiblioteca(item))}
-                </section>
-              );
-            })}
-          </div>
-        </aside>
-  );
-  const renderShieldParticipants = (integrated=false) => (
-<section
-          key={`mestre-participantes-${chavePainelParticipantes}`}
-          className={integrated ? "shield-session-participants" : "mesa-lateral"}
-        >
-          <>
-            <div className="mesa-lateral-titulo">
-              <Icon path={mdiShieldCrownOutline} size={0.8} />
-              <span>{tituloParticipantes}</span>
-              <b>{modoIniciativaAtivo ? ordemCombate.length : campanha.membros.length}</b>
+              {novoDocumento.modeloInterativo === "cassete" && <label className={`cassete-upload ${novoDocumento.arquivo ? "selecionado" : ""}`}><span className="cassete-upload-icone"><Icon path={mdiUploadOutline} size={0.9} /></span><span className="cassete-upload-texto"><strong>{novoDocumento.arquivo?.name || "Selecione o áudio da fita"}</strong><small>MP3, OGG, WAV ou M4A · até 20 MB</small></span><span className="cassete-upload-acao">{novoDocumento.arquivo ? "Trocar" : "Escolher"}</span><input aria-label="Selecionar áudio da fita" type="file" accept={ACEITAR_AUDIO} onChange={(event) => {
+                const arquivo = event.target.files?.[0] || null;
+                try { if (arquivo) validarArquivoImagem(arquivo, "audio"); setNovoDocumento((atual) => ({ ...atual, arquivo })); setErro(""); }
+                catch (error) { event.target.value = ""; setNovoDocumento((atual) => ({ ...atual, arquivo: null })); setErro(error.message); }
+              }} /></label>}
             </div>
-            {campanha.combateAtivo && <CombatTurnControls entries={ordemCombate} turn={campanha.turnoCombate} busy={turnBusy} onAction={controlarTurno}/>}
-            <div className="mesa-membros">
-              {modoIniciativaAtivo ? (
-                <InitiativeCards turn={campanha.combateAtivo?campanha.turnoCombate:null} entries={ordemCombate} master onSaveEnemy={salvarParticipanteEscudo} candidates={campanha.inimigos || []} onAdd={integrated ? undefined : adicionarIniciativaNoPainel} system={campanha.sistema} drafts={iniciativasRascunho} onChange={alterarRascunhoIniciativa} onConfirm={confirmarIniciativaMestre} onEntryChange={alterarRascunhoIniciativaPorChave} onEntryConfirm={confirmarIniciativaPorChave} onRemove={removerIniciativaPorChave} onOpen={entrada=>{
-                  if(entrada.tipo==='jogador') setFichaAberta({membro:entrada.membro,personagem:entrada.personagem});
-                  else if(entrada.inimigo) {setAbaLateralMestre('inimigos');setSubAbaNpcs(entrada.tipo==='npc'?'npcs':'inimigos');setInimigoAberto(entrada.inimigo);}
-                }}/>
-              ) : (
-                <>
-                  {campanha.membros.length ? (
-                <ParticipantDossiers members={membrosOrdenados} characters={personagens} master onOpen={(membro,personagem)=>setFichaAberta({membro,personagem})}/>
+          ) : (
+            <label className={`documento-arquivo-seletor ${novoDocumento.arquivo ? "selecionado" : ""}`}>
+              <Icon path={mdiFileDocumentMultipleOutline} size={0.68} />
+              <span>{novoDocumento.arquivo?.name || "Selecionar arquivo"}</span>
+              <input
+                ref={arquivoDocumentoRef}
+                type="file"
+                accept="application/pdf,image/webp,image/jpeg,image/png,image/avif"
+                onChange={(event) => {
+                  const arquivo = event.target.files?.[0] || null;
+                  if (!arquivo) {
+                    setNovoDocumento((atual) => ({ ...atual, arquivo: null }));
+                    return;
+                  }
+                  try {
+                    validarArquivoInvestigacao(arquivo);
+                    setNovoDocumento((atual) => ({ ...atual, arquivo }));
+                    setErro("");
+                    setEstadoEnvioDocumento("");
+                  } catch (error) {
+                    event.target.value = "";
+                    setNovoDocumento((atual) => ({ ...atual, arquivo: null }));
+                    setErro(error.message || "Arquivo invalido.");
+                    setEstadoEnvioDocumento(`Erro: ${error.message || "Arquivo invalido."}`);
+                  }
+                }}
+              />
+            </label>
+          )}
+          <div className="documentos-envio-botoes">
+            <button
+              type="submit"
+              name="acaoDocumento"
+              value="preparar"
+              className="secundario"
+              disabled={
+                (novoDocumento.categoria !== "interativa" && !novoDocumento.arquivo) ||
+                enviandoDocumento ||
+                (!novoDocumento.visualizarTodos &&
+                  !(novoDocumento.jogadoresVisiveis || []).length)
+              }
+            >
+              Preparar evidencia
+            </button>
+            <button
+              type="submit"
+              name="acaoDocumento"
+              value="enviar"
+              disabled={
+                (novoDocumento.categoria !== "interativa" && !novoDocumento.arquivo) ||
+                enviandoDocumento ||
+                (!novoDocumento.visualizarTodos &&
+                  !(novoDocumento.jogadoresVisiveis || []).length)
+              }
+            >
+              <Icon path={mdiUploadOutline} size={0.68} />
+              {enviandoDocumento
+                ? "Salvando..."
+                : novoDocumento.categoria === "interativa"
+                  ? novoDocumento.modeloInterativo === "cassete" ? "Compartilhar fita cassete" : "Disponibilizar sistema"
+                  : "Enviar aos jogadores"}
+            </button>
+          </div>
+        </div>
+        {estadoEnvioDocumento && (
+          <p
+            className={`documentos-envio-estado ${estadoEnvioDocumento.startsWith("Erro:") ? "erro" : ""}`}
+            role="status"
+          >
+            {estadoEnvioDocumento}
+          </p>
+        )}
+      </form>
+      <div className="documentos-lista">
+        {documentosDisponiveis.length ? (
+          documentosDisponiveis.map((documento) => {
+            const editandoVisibilidade =
+              visibilidadeDocumentoEditando?.id === documento.id;
+            const visualizarTodosEditando =
+              editandoVisibilidade
+                ? visibilidadeDocumentoEditando.visualizarTodos !== false
+                : documento.visualizarTodos !== false;
+            const jogadoresEditando = editandoVisibilidade
+              ? visibilidadeDocumentoEditando.jogadoresVisiveis || []
+              : documento.jogadoresVisiveis || [];
+            return (
+              <article
+                className={`documento-card ${editandoVisibilidade ? "editando-visibilidade" : ""}`}
+                key={documento.id}
+              >
+                <button
+                  type="button"
+                  className="documento-card-abrir"
+                  onClick={() => {
+                    setAbaEvidenciaInterativa("terminal");
+                    setDocumentoAberto(documento);
+                  }}
+                >
+                  <div className="documento-card-preview">
+                    {documento.categoria === "interativa" ? (
+                      <span>{String(documento.mimeType || documento.mime_type).includes("modern-pc") ? "PC" : "DOS"}</span>
+                    ) : String(documento.mimeType || documento.mime_type || "").startsWith("image/") ? (
+                      <img src={documento.url} alt="" />
+                    ) : (
+                      <span>PDF</span>
+                    )}
+                  </div>
+                  <div>
+                    <small>{documento.categoria === "interativa" ? "Evidencia interativa" : documento.categoria === "item" ? "Item" : "Evidencia"}</small>
+                    <strong>{nomeDocumentoExibicao(documento)}</strong>
+                    <p>{documento.descricao || documento.arquivoNome || documento.arquivo_nome || "Clique para visualizar"}</p>
+                    <em className="documento-visibilidade-resumo">
+                      {nomesVisibilidadeDocumento(documento)}
+                    </em>
+                  </div>
+                </button>
+                {documento.revelada === false && (
+                  <div className="documento-card-preparado-acoes">
+                    <span>Preparada · invisivel aos jogadores</span>
+                    <button
+                      type="button"
+                      onClick={() => enviarEvidenciaPreparada(documento)}
+                      disabled={Boolean(enviandoDocumentoPreparadoId)}
+                    >
+                      <Icon path={mdiUploadOutline} size={0.62} />
+                      {enviandoDocumentoPreparadoId === documento.id
+                        ? "Enviando..."
+                        : "Enviar evidencia preparada"}
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className={`documento-card-editar ${editandoVisibilidade ? "ativo" : ""}`}
+                  onClick={() => abrirEdicaoVisibilidadeDocumento(documento)}
+                  title="Editar quem pode visualizar"
+                  aria-label={`Editar visibilidade de ${documento.nome}`}
+                >
+                  <Icon path={mdiPencilOutline} size={0.64} />
+                </button>
+                <button
+                  type="button"
+                  className="documento-card-remover"
+                  onClick={() => removerDocumentoDaInvestigacao(documento)}
+                  title="Remover do visualizador"
+                >
+                  <Icon path={mdiDeleteOutline} size={0.68} />
+                </button>
+                {editandoVisibilidade && (
+                  <div className="documentos-visibilidade documento-visibilidade-existente">
+                    <div className="documentos-visibilidade-cabecalho">
+                      <div>
+                        <strong>Quem pode visualizar?</strong>
+                        <small>
+                          {visualizarTodosEditando
+                            ? "Este documento esta disponivel para todos."
+                            : "Escolha quais jogadores podem consultar este documento."}
+                        </small>
+                      </div>
+                      <button
+                        type="button"
+                        className={visualizarTodosEditando ? "ativo" : ""}
+                        aria-pressed={visualizarTodosEditando}
+                        onClick={() =>
+                          setVisibilidadeDocumentoEditando((atual) => ({
+                            ...atual,
+                            visualizarTodos: !atual.visualizarTodos,
+                            jogadoresVisiveis: !atual.visualizarTodos
+                              ? []
+                              : atual.jogadoresVisiveis,
+                          }))
+                        }
+                      >
+                        Visualizar para todos
+                      </button>
+                    </div>
+                    {!visualizarTodosEditando && (
+                      <div className="documentos-visibilidade-jogadores">
+                        {(campanha.membros || []).map((membro) => {
+                          const fichaId = String(membro.ficha_id || "");
+                          const selecionado = jogadoresEditando
+                            .map(String)
+                            .includes(fichaId);
+                          const personagem = personagens[membro.ficha_id];
+                          return (
+                            <label
+                              className={selecionado ? "selecionado" : ""}
+                              key={membro.id || fichaId}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selecionado}
+                                onChange={() => alternarJogadorDocumentoExistente(fichaId)}
+                              />
+                              <span>
+                                {personagem?.fotoPerfil ? (
+                                  <img src={personagem.fotoPerfil} alt="" />
+                                ) : (
+                                  (personagem?.nome || membro.nome || "?").slice(0, 2)
+                                )}
+                              </span>
+                              <b>{personagem?.nome || membro.nome}</b>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <div className="documento-visibilidade-edicao-acoes">
+                      <button
+                        type="button"
+                        className="secundario"
+                        onClick={() => setVisibilidadeDocumentoEditando(null)}
+                        disabled={salvandoVisibilidadeDocumento}
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => salvarVisibilidadeDocumentoExistente(documento)}
+                        disabled={
+                          salvandoVisibilidadeDocumento ||
+                          (!visualizarTodosEditando && !jogadoresEditando.length)
+                        }
+                      >
+                        {salvandoVisibilidadeDocumento ? "Salvando..." : "Salvar visibilidade"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })
+        ) : (
+          <div className="documentos-vazio">
+            <Icon path={mdiFileDocumentMultipleOutline} size={1.2} />
+            <strong>Nenhum documento compartilhado</strong>
+            <p>Envie uma evidencia ou item para que todos os jogadores possam consultar.</p>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+  const renderVisualizadorDocumento = () => documentoAberto ? createPortal((<div className="mesa-shell shield-document-viewer-host">
+    <div className="documento-visualizador-fundo">
+      <section
+        className={`documento-visualizador ${documentoAberto.categoria === "interativa" ? "interativo" : ""}`}
+        role="dialog"
+        aria-label={`Visualizador de ${nomeDocumentoExibicao(documentoAberto)}`}
+      >
+        <header>
+          <div>
+            <small>{documentoAberto.categoria === "interativa" ? "Evidencia interativa" : documentoAberto.categoria === "item" ? "Item" : "Evidencia"}</small>
+            <strong>{nomeDocumentoExibicao(documentoAberto)}</strong>
+          </div>
+          {mestre && documentoAberto.categoria === "interativa" && !String(documentoAberto.mimeType || documentoAberto.mime_type).includes("cassete") && (
+            <nav className="evidencia-interativa-abas" aria-label="Visualizacao da evidencia interativa">
+              <button
+                type="button"
+                className={abaEvidenciaInterativa === "terminal" ? "ativo" : ""}
+                onClick={() => setAbaEvidenciaInterativa("terminal")}
+              >
+                {String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc") ? "Computador" : "Terminal"}
+              </button>
+              <button
+                type="button"
+                className={abaEvidenciaInterativa === "conteudo" ? "ativo" : ""}
+                onClick={() => setAbaEvidenciaInterativa("conteudo")}
+              >
+                Conteudo
+              </button>
+            </nav>
+          )}
+          <button
+            type="button"
+            onClick={() => setDocumentoAberto(null)}
+            title="Fechar documento"
+          >
+            <Icon path={mdiClose} size={0.82} />
+          </button>
+        </header>
+        <div className="documento-visualizador-conteudo">
+          {String(documentoAberto.mimeType || documentoAberto.mime_type).includes("cassete") ? (
+            <ReprodutorCassete key={documentoAberto.id} documento={documentoAberto} />
+          ) : String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc") ? (
+            <ComputadorModerno key={`${documentoAberto.id}-${abaEvidenciaInterativa}`} campanhaId={campanha.id} documento={documentoAberto} admin={mestre && abaEvidenciaInterativa === "conteudo"} />
+          ) : documentoAberto.categoria === "interativa" ? (
+            <iframe
+              className="evidencia-interativa-frame"
+              title={documentoAberto.nome || "Computador interativo"}
+              src={
+                String(documentoAberto.mimeType || documentoAberto.mime_type).includes("modern-pc")
+                  ? `/interactive/modern-pc/index.html${mestre && abaEvidenciaInterativa === "conteudo" ? "?admin=1" : ""}`
+                  : mestre && abaEvidenciaInterativa === "conteudo"
+                    ? "/interactive/ms-dos/index.html#/admin-secreto-123"
+                    : documentoAberto.url || "/interactive/ms-dos/index.html"
+              }
+              allow="autoplay"
+            />
+          ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "").startsWith("image/") ? (
+            <EvidenceImageViewer key={documentoAberto.id} src={documentoAberto.url} alt={documentoAberto.nome || "Evidência"} />
+          ) : String(documentoAberto.mimeType || documentoAberto.mime_type || "") === "application/pdf" ? (
+            <iframe
+              title={documentoAberto.nome || "Documento PDF"}
+              src={documentoAberto.url}
+            />
+          ) : (
+            <div className="documento-sem-preview">
+              <Icon path={mdiFileDocumentMultipleOutline} size={2} />
+              <strong>Visualizacao indisponivel</strong>
+              <p>Este arquivo nao possui uma visualizacao integrada.</p>
+            </div>
+          )}
+        </div>
+        {documentoAberto.descricao && (
+          <p className="documento-visualizador-descricao">
+            {documentoAberto.descricao}
+          </p>
+        )}
+      </section>
+    </div>
+  </div>), document.body) : null;
+  const renderShieldScenes = (flat = false) => (
+    <aside className={`mesa-biblioteca ${flat ? "shield-scenes-layout" : ""}`}>
+      <div className="biblioteca-cabecalho">
+        <div>
+          <span>Direcao da sessao</span>
+          <h2>Cenas e mapas</h2>
+        </div>
+        {flat && <aside className="shield-scene-media" aria-label="Mídias da cena atual"><h3>{cena?.nome || 'Cena atual'}</h3>{cena ? renderMidiasCenaBiblioteca(cena) : <p>Selecione uma cena para consultar suas imagens e mapas.</p>}</aside>}
+        <button onClick={() => abrirEditor()} title="Nova cena">
+          <Icon path={mdiPlus} size={0.9} />
+        </button>
+      </div>
+      {!flat && <div className="biblioteca-fichas">
+        <span>Fichas da campanha</span>
+        <div>
+          <select
+            value={fichaParaVincular}
+            onChange={(e) => setFichaParaVincular(e.target.value)}
+          >
+            <option value="">Selecionar ficha...</option>
+            {fichasDisponiveis
+              .filter(
+                (item) =>
+                  !campanha.membros.some(
+                    (membro) => membro.ficha_id === item.fichaId,
+                  ),
+              )
+              .map((item) => (
+                <option key={item.fichaId} value={item.fichaId}>
+                  {item.personagem?.nome || item.fichaId}
+                </option>
+              ))}
+          </select>
+          <button
+            onClick={adicionarFicha}
+            disabled={!fichaParaVincular}
+            title="Vincular ficha"
+          >
+            <Icon path={mdiAccountPlusOutline} size={0.78} />
+          </button>
+        </div>
+        {erroFichas && (
+          <div className="biblioteca-fichas-erro">
+            <span>{erroFichas}</span>
+            <button onClick={carregarFichas}>Tentar novamente</button>
+          </div>
+        )}
+        {!erroFichas && fichasDisponiveis.length === 0 && (
+          <small>Nenhuma ficha cadastrada foi encontrada.</small>
+        )}
+      </div>}
+      <div className={`biblioteca-lista biblioteca-cenas-organizadas ${flat ? "biblioteca-cenas-grid" : ""}`}>
+        {flat ? gruposCenas.flatMap(([, cenas]) => cenas.map(item => renderizarCenaBiblioteca(item, true))) : gruposCenas.map(([pasta, cenas]) => {
+          const fechada = Boolean(pastasCenasFechadas[pasta]);
+          return (
+            <section className="biblioteca-pasta-cenas" key={pasta}>
+              <button type="button" className="biblioteca-pasta-cabecalho" onClick={() => alternarPastaCena(pasta)} aria-expanded={!fechada}>
+                <Icon path={fechada ? mdiChevronRight : mdiChevronDown} size={0.68} />
+                <Icon path={mdiFolderOutline} size={0.74} />
+                <strong>{pasta}</strong>
+                <span>{cenas.length}</span>
+              </button>
+              {!fechada && cenas.map(item => renderizarCenaBiblioteca(item))}
+            </section>
+          );
+        })}
+      </div>
+    </aside>
+  );
+  const renderShieldParticipants = (integrated = false) => (
+    <section
+      key={`mestre-participantes-${chavePainelParticipantes}`}
+      className={integrated ? "shield-session-participants" : "mesa-lateral"}
+    >
+      <>
+        <div className="mesa-lateral-titulo">
+          <Icon path={mdiShieldCrownOutline} size={0.8} />
+          <span>{tituloParticipantes}</span>
+          <b>{modoIniciativaAtivo ? ordemCombate.length : campanha.membros.length}</b>
+        </div>
+        {campanha.combateAtivo && <CombatTurnControls entries={ordemCombate} turn={campanha.turnoCombate} busy={turnBusy} onAction={controlarTurno} />}
+        <div className="mesa-membros">
+          {modoIniciativaAtivo ? (
+            <InitiativeCards turn={campanha.combateAtivo ? campanha.turnoCombate : null} entries={ordemCombate} master onSaveEnemy={salvarParticipanteEscudo} candidates={campanha.inimigos || []} onAdd={integrated ? undefined : adicionarIniciativaNoPainel} system={campanha.sistema} drafts={iniciativasRascunho} onChange={alterarRascunhoIniciativa} onConfirm={confirmarIniciativaMestre} onEntryChange={alterarRascunhoIniciativaPorChave} onEntryConfirm={confirmarIniciativaPorChave} onRemove={removerIniciativaPorChave} onOpen={entrada => {
+              if (entrada.tipo === 'jogador') setFichaAberta({ membro: entrada.membro, personagem: entrada.personagem });
+              else if (entrada.inimigo) { setAbaLateralMestre('inimigos'); setSubAbaNpcs(entrada.tipo === 'npc' ? 'npcs' : 'inimigos'); setInimigoAberto(entrada.inimigo); }
+            }} />
+          ) : (
+            <>
+              {campanha.membros.length ? (
+                <ParticipantDossiers members={membrosOrdenados} characters={personagens} master onOpen={(membro, personagem) => setFichaAberta({ membro, personagem })} />
               ) : (
                 <p>Nenhuma ficha vinculada ainda.</p>
-                  )}
-                </>
               )}
-            </div>
-          </>
-        </section>
+            </>
+          )}
+        </div>
+      </>
+    </section>
   );
-  const renderShieldSceneEditor = () => editorAberto ? createPortal(<div className="mesa-shell shield-scene-editor-host"> <TabletopSceneEditor key={editando.id || 'nova'} editando={editando} setEditando={setEditando} arquivos={arquivos} campanha={campanha} nomesPastasCenas={nomesPastasCenas} selecionarArquivosCena={selecionarArquivosCena} alternarJogadorCena={alternarJogadorCena} removerMidiaExistente={removerMidiaExistente} removerArquivoPendente={removerArquivoPendente} atualizarMapaExistente={atualizarMapaExistente} atualizarMapaPendente={atualizarMapaPendente} confirmarCena={confirmarCena} salvando={salvando} erro={erro} onClose={()=>setEditorAberto(false)}/></div>,document.body) : null;
+  const renderShieldSceneEditor = () => editorAberto ? createPortal(<div className="mesa-shell shield-scene-editor-host"> <TabletopSceneEditor key={editando.id || 'nova'} editando={editando} setEditando={setEditando} arquivos={arquivos} campanha={campanha} nomesPastasCenas={nomesPastasCenas} selecionarArquivosCena={selecionarArquivosCena} alternarJogadorCena={alternarJogadorCena} removerMidiaExistente={removerMidiaExistente} removerArquivoPendente={removerArquivoPendente} atualizarMapaExistente={atualizarMapaExistente} atualizarMapaPendente={atualizarMapaPendente} confirmarCena={confirmarCena} salvando={salvando} erro={erro} onClose={() => setEditorAberto(false)} /></div>, document.body) : null;
   const renderShieldTool = (tool) => {
-    if(tool==='scenes') return renderShieldScenes(true);
-    if(tool==='notes') return <AnotacoesCampanha campanhaId={campanha.id}/>;
-    if(tool==='audio') return <MusicaTabletop campanhaId={campanha.id} musicasCampanha={campanha.musicas || []} estadoRemoto={campanha.musicaEstado} aoAlterarEstado={estado=>atualizarEstadoMusica(campanha.id,estado)}/>;
-    if(tool==='soundpad') return <SoundpadTabletop sons={campanha.soundpad || []} estadoRemoto={campanha.soundpadEstado} aoAlterarEstado={estado=>atualizarEstadoSoundpad(campanha.id,estado)}/>;
-    if(tool==='players') return <ParticipantDossiers members={membrosOrdenados} characters={personagens} master/>;
-    if(tool==='dashboard') return <iframe className="shield-dashboard-frame" title="Dashboard do mestre" src="/?mestre=1&embutido=1"/>;
-    if(tool.startsWith('enemyInitiative:')) {
-      const record=(campanha.inimigos || []).find(item=>String(item.id)===tool.slice('enemyInitiative:'.length));
-      if(!modoIniciativaAtivo || !record) return null;
-      const turns=ordemCombate.filter(entry=>String(entry.inimigo?.id)===String(record.id));
-      return <InlineInitiative record={record} turns={turns} drafts={iniciativasRascunho} onChange={alterarRascunhoIniciativaPorChave} onConfirm={confirmarIniciativaPorChave} onAdd={adicionarIniciativaNoPainel}/>;
+    if (tool === 'scenes') return renderShieldScenes(true);
+    if (tool === 'notes') return <AnotacoesCampanha campanhaId={campanha.id} />;
+    if (tool === 'audio') return <MusicaTabletop campanhaId={campanha.id} musicasCampanha={campanha.musicas || []} estadoRemoto={campanha.musicaEstado} aoAlterarEstado={estado => atualizarEstadoMusica(campanha.id, estado)} />;
+    if (tool === 'soundpad') return <SoundpadTabletop sons={campanha.soundpad || []} estadoRemoto={campanha.soundpadEstado} aoAlterarEstado={estado => atualizarEstadoSoundpad(campanha.id, estado)} />;
+    if (tool === 'players') return <ParticipantDossiers members={membrosOrdenados} characters={personagens} master />;
+    if (tool === 'dashboard') return <iframe className="shield-dashboard-frame" title="Dashboard do mestre" src="/?mestre=1&embutido=1" />;
+    if (tool.startsWith('enemyInitiative:')) {
+      const record = (campanha.inimigos || []).find(item => String(item.id) === tool.slice('enemyInitiative:'.length));
+      if (!modoIniciativaAtivo || !record) return null;
+      const turns = ordemCombate.filter(entry => String(entry.inimigo?.id) === String(record.id));
+      return <InlineInitiative record={record} turns={turns} drafts={iniciativasRascunho} onChange={alterarRascunhoIniciativaPorChave} onConfirm={confirmarIniciativaPorChave} onAdd={adicionarIniciativaNoPainel} />;
     }
-    if(tool==='sessionModes') return <div className="shield-session-mode-buttons"><button type="button" disabled={salvandoCombate || salvandoInvestigacao} onClick={alternarModoCombate}>{campanha.combateAtivo?'Encerrar combate':'Iniciar combate'}</button><button type="button" disabled={salvandoCombate || salvandoInvestigacao} onClick={alternarModoInvestigacao}>{campanha.investigacaoAtiva?'Encerrar investigação':'Iniciar investigação'}</button></div>;
-    if(tool==='initiative') return (campanha.combateAtivo || campanha.investigacaoAtiva) ? renderShieldParticipants(true) : null;
-    if(tool==='combat' || tool==='investigation') return <><button type="button" disabled={salvandoCombate || salvandoInvestigacao} onClick={tool==='combat'?alternarModoCombate:alternarModoInvestigacao}>{tool==='combat' ? (campanha.combateAtivo?'Encerrar combate':'Iniciar combate'):(campanha.investigacaoAtiva?'Encerrar investigação':'Iniciar investigação')}</button></>;
-    if(tool==='lighting') return mapaAtualIluminacao ? <div className="shield-lighting-map"><img src={mapaAtualIluminacao.url} alt="Mapa para editar iluminação"/><MapLightingLayer key={chaveMapaIluminacao} mapaUrl={mapaAtualIluminacao.url} configuracao={configuracaoIluminacao} luzesTokens={luzesDosTokens} observadores={null} editando aoAlterar={alterarConfiguracaoIluminacao} salvando={salvandoIluminacao}/></div> : <p>Selecione um mapa de batalha na aba Cenas para configurar a iluminação.</p>;
+    if (tool === 'sessionModes') return <div className="shield-session-mode-buttons"><button type="button" disabled={salvandoCombate || salvandoInvestigacao} onClick={alternarModoCombate}>{campanha.combateAtivo ? 'Encerrar combate' : 'Iniciar combate'}</button><button type="button" disabled={salvandoCombate || salvandoInvestigacao} onClick={alternarModoInvestigacao}>{campanha.investigacaoAtiva ? 'Encerrar investigação' : 'Iniciar investigação'}</button></div>;
+    if (tool === 'initiative') return (campanha.combateAtivo || campanha.investigacaoAtiva) ? renderShieldParticipants(true) : null;
+    if (tool === 'combat' || tool === 'investigation') return <><button type="button" disabled={salvandoCombate || salvandoInvestigacao} onClick={tool === 'combat' ? alternarModoCombate : alternarModoInvestigacao}>{tool === 'combat' ? (campanha.combateAtivo ? 'Encerrar combate' : 'Iniciar combate') : (campanha.investigacaoAtiva ? 'Encerrar investigação' : 'Iniciar investigação')}</button></>;
+    if (tool === 'lighting') return mapaAtualIluminacao ? <div className="shield-lighting-map"><img src={mapaAtualIluminacao.url} alt="Mapa para editar iluminação" /><MapLightingLayer key={chaveMapaIluminacao} mapaUrl={mapaAtualIluminacao.url} configuracao={configuracaoIluminacao} luzesTokens={luzesDosTokens} observadores={null} editando aoAlterar={alterarConfiguracaoIluminacao} salvando={salvandoIluminacao} /></div> : <p>Selecione um mapa de batalha na aba Cenas para configurar a iluminação.</p>;
     return null;
   };
-  if(shieldTool) return mestre ? <div className="mesa-shell visao-mestre shield-tools-host">{erro && <p role="alert">{erro}</p>}{renderShieldTool(shieldTool)}{renderShieldSceneEditor()}</div> : <p>Ferramentas disponíveis apenas para o mestre.</p>;
+  if (shieldTool) return mestre ? <div className="mesa-shell visao-mestre shield-tools-host">{erro && <p role="alert">{erro}</p>}{renderShieldTool(shieldTool)}{renderShieldSceneEditor()}</div> : <p>Ferramentas disponíveis apenas para o mestre.</p>;
   if (documentsOnly) return mestre ? <div className="mesa-shell visao-mestre shield-documents-host">{erro && <p role="alert">{erro}</p>}{renderDocumentosMestre()}{renderVisualizadorDocumento()}</div> : <p>Documentos disponíveis apenas para o mestre.</p>;
 
   return (
@@ -3040,18 +3069,18 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
           : personagemJogador?.temaFicha?.borda || "rgba(212,175,55,.35)",
       }}
     >
-      {!embedded && (mestre || !hasActiveRevolt(campanha.mecanicasEspeciais)) && <SpecialMechanicsBanner state={campanha.mecanicasEspeciais} onOpen={() => setMechanicsOpen(true)}/>}
-      {!embedded && !mestre && !mechanicsOpen && <RevoltPlayerHUD campaign={campanha} playerId={fichaJogadorId} onOpen={() => setMechanicsOpen(true)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))}/>}
-      {mechanicsOpen && <SpecialMechanicsDialog campaign={campanha} master={mestre} playerId={fichaJogadorId} onClose={() => setMechanicsOpen(false)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))}/>}
+      {!embedded && (mestre || !hasActiveRevolt(campanha.mecanicasEspeciais)) && <SpecialMechanicsBanner state={campanha.mecanicasEspeciais} onOpen={() => setMechanicsOpen(true)} />}
+      {!embedded && !mestre && !mechanicsOpen && <RevoltPlayerHUD campaign={campanha} playerId={fichaJogadorId} onOpen={() => setMechanicsOpen(true)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))} />}
+      {mechanicsOpen && <SpecialMechanicsDialog campaign={campanha} master={mestre} playerId={fichaJogadorId} onClose={() => setMechanicsOpen(false)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))} />}
       <div className={`mesa-transicao ${transicao ? "ativa" : ""}`}>
-        <img className="mesa-transicao-simbolo" src="/simbolo-darkness.png" alt=""/>
+        <img className="mesa-transicao-simbolo" src="/simbolo-darkness.png" alt="" />
         <span>
           {campanha.modo === "especial" ? "Iniciando cena especial" : campanha.modo === "mapa" ? "Preparando o mapa" : "Voltando a cena"}
         </span>
       </div>
 
-      {embedded && mestre && ['initiative','investigation'].includes(requestedTool) && <div className="tt3-session-mode"><p>{requestedTool==='initiative' ? 'Organize os turnos e acompanhe os participantes.' : 'Acompanhe a investigação e a iniciativa.'}</p><button type="button" className="tt3-primary" disabled={salvandoCombate || salvandoInvestigacao} onClick={requestedTool==='initiative' ? alternarModoCombate : alternarModoInvestigacao}>{requestedTool==='initiative' ? (campanha.combateAtivo ? 'Encerrar combate' : 'Iniciar combate') : (campanha.investigacaoAtiva ? 'Encerrar investigação' : 'Iniciar investigação')}</button></div>}
-<header className="mesa-topo">
+      {embedded && mestre && ['initiative', 'investigation'].includes(requestedTool) && <div className="tt3-session-mode"><p>{requestedTool === 'initiative' ? 'Organize os turnos e acompanhe os participantes.' : 'Acompanhe a investigação e a iniciativa.'}</p><button type="button" className="tt3-primary" disabled={salvandoCombate || salvandoInvestigacao} onClick={requestedTool === 'initiative' ? alternarModoCombate : alternarModoInvestigacao}>{requestedTool === 'initiative' ? (campanha.combateAtivo ? 'Encerrar combate' : 'Iniciar combate') : (campanha.investigacaoAtiva ? 'Encerrar investigação' : 'Iniciar investigação')}</button></div>}
+      <header className="mesa-topo">
         <a
           href={urlRetorno}
           title={mestre ? "Voltar ao dashboard" : "Voltar para a ficha"}
@@ -3069,7 +3098,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
         <button type="button" className="mesa-cenas-botao" onClick={() => setMechanicsOpen(true)}>Mecânicas especiais</button>
         {mestre && (
           <div className="mesa-ferramentas-mestre">
-            <button type="button" className={`mesa-cenas-botao mesa-escudo-topo ${escudoAberto?'ativo':''}`} aria-pressed={escudoAberto} onClick={()=>{setEscudoAberto(aberto=>!aberto);setAbaLateralMestre('');setInimigoAberto(null);}} title="Abrir escudo do mestre"><Icon path={mdiShieldCrownOutline} size={0.85}/>Escudo do mestre</button>
+            <button type="button" className={`mesa-cenas-botao mesa-escudo-topo ${escudoAberto ? 'ativo' : ''}`} aria-pressed={escudoAberto} onClick={() => { setEscudoAberto(aberto => !aberto); setAbaLateralMestre(''); setInimigoAberto(null); }} title="Abrir escudo do mestre"><Icon path={mdiShieldCrownOutline} size={0.85} />Escudo do mestre</button>
             {campanha.modo === "mapa" && (
               <button
                 className={`mesa-cenas-botao ${editorIluminacaoAberto ? "ativo" : ""}`}
@@ -3271,7 +3300,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
 
       {!embedded && campanha.modo === "especial" && cena?.cenaEspecial?.midiaUrl && (
         <section className={`cena-especial cena-especial-${cena.cenaEspecial.transicao || "cinema"}`} aria-label={`Cena especial: ${cena.nome}`}>
-          <SpecialSceneMedia special={cena.cenaEspecial} name={cena.nome} controls={mestre}/>
+          <SpecialSceneMedia special={cena.cenaEspecial} name={cena.nome} controls={mestre} />
           <div className="cena-especial-vinheta" />
           {!cena.cenaEspecial.cutscene && cena.cenaEspecial.exibirTitulo !== false && (
             <div className="cena-especial-titulo"><span>{cena.descricao}</span><strong>{cena.nome}</strong></div>
@@ -3289,8 +3318,8 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
         </section>
       )}
 
-      {!embedded && !mestre && <PlayerInitiativeBar campaign={campanha} entries={ordemCombate}/>}
-      {!embedded && !mestre && abaLateralJogador!=='ficha' && <SurvivalIndicators campaign={campanha} playerId={fichaJogadorId} compact/>}
+      {!embedded && !mestre && <PlayerInitiativeBar campaign={campanha} entries={ordemCombate} />}
+      {!embedded && !mestre && abaLateralJogador !== 'ficha' && <SurvivalIndicators campaign={campanha} playerId={fichaJogadorId} compact />}
       <section className={`mesa-palco modo-${campanha.modo} ${cenaRestrita ? "cena-restrita" : ""}`}>
         {cenaRestrita && (
           <div className="mesa-cena-restrita" role="status">
@@ -3333,7 +3362,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
           onPointerDown={iniciarPanMapa}
           onPointerDownCapture={(event) => {
             if (campanha.modo === "mapa" && mestre && editorIluminacaoAberto &&
-                (event.button === 1 || event.button === 2)) {
+              (event.button === 1 || event.button === 2)) {
               event.stopPropagation();
               iniciarPanMapa(event);
             }
@@ -3365,8 +3394,8 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
           }}
           onPointerLeave={(event) => tokenArrastando && soltarToken(event)}
         >
-          {palcoVideo && <video key={palcoUrl} src={palcoUrl} autoPlay muted loop playsInline aria-label={cena?.nome || 'Cena'} onLoadedMetadata={e => {if(campanha.modo==='mapa') setProporcaoMapa({largura:e.currentTarget.videoWidth || 1,altura:e.currentTarget.videoHeight || 1});}} style={{position:'absolute',inset:0,width:'100%',height:'100%',objectFit:campanha.modo==='mapa'?'fill':'contain',pointerEvents:'none'}}/>}
-          {!palcoVideo && mediaAnimada?.animation?.enabled && <AnimatedScene media={mediaAnimada} id={`${cena.id}:${mediaAnimada.id}`} alt={mediaAnimada.nome || cena.nome}/> }
+          {palcoVideo && <video key={palcoUrl} src={palcoUrl} autoPlay muted loop playsInline aria-label={cena?.nome || 'Cena'} onLoadedMetadata={e => { if (campanha.modo === 'mapa') setProporcaoMapa({ largura: e.currentTarget.videoWidth || 1, altura: e.currentTarget.videoHeight || 1 }); }} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: campanha.modo === 'mapa' ? 'fill' : 'contain', pointerEvents: 'none' }} />}
+          {!palcoVideo && mediaAnimada?.animation?.enabled && <AnimatedScene media={mediaAnimada} id={`${cena.id}:${mediaAnimada.id}`} alt={mediaAnimada.nome || cena.nome} />}
           {cena && campanha.modo === "mapa" && mapaAtualIluminacao?.exibirGrade !== false && (
             <div
               className="mesa-grade"
@@ -3410,10 +3439,10 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
                         ...estiloBordaToken(personagens[tokenVisual.ficha_id]?.coresToken),
                         ...(mestre && tokenVisual.oculto
                           ? {
-                              opacity: 0.38,
-                              filter: "grayscale(.8)",
-                              outline: "2px dashed rgba(255,255,255,.65)",
-                            }
+                            opacity: 0.38,
+                            filter: "grayscale(.8)",
+                            outline: "2px dashed rgba(255,255,255,.65)",
+                          }
                           : {}),
                       }}
                       title={
@@ -3446,7 +3475,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
                       }}
                     >
                       {tokenVisual.imagem_url ||
-                      personagens[tokenVisual.ficha_id]?.fotoPerfil ? (
+                        personagens[tokenVisual.ficha_id]?.fotoPerfil ? (
                         <AnimatedTokenImage animation={personagens[tokenVisual.ficha_id]?.profileTokenAnimation}
                           src={
                             personagens[tokenVisual.ficha_id]?.fotoPerfil ||
@@ -3705,16 +3734,37 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
           </div>
         )}
       </section>
-      {mestre&&escudoAberto&&<aside className="mesa-master-shield-panel" aria-label="Escudo do mestre" onKeyDown={event=>{if(event.key==="Escape")setEscudoAberto(false);}}><header><strong>Escudo do mestre</strong><ShieldInitiativeStrip campaign={campanha} onCampaignChange={setCampanha} onRefresh={carregar}/><button type="button" onClick={()=>setEscudoAberto(false)} aria-label="Fechar escudo do mestre">Fechar ×</button></header><MasterShield organized extraTools={[["players","Jogadores"],["lighting","Iluminação"]]} campaign={campanha} onOptionalState={state=>setCampanha(current=>({...current,mecanicasEspeciais:state}))} members={campanha.membros || []} campaignSystem={campanha.sistema || "absoluto"} campaignId={campanha.id} scene={campanha.cenaAtiva} combat={campanha.combateAtivo} investigation={campanha.investigacaoAtiva} enemies={campanha.inimigos || []} onSaveDifficulty={salvarDificuldadeCena} onSaveEnemy={salvarParticipanteEscudo} onAddEnemy={adicionarParticipanteEscudo} onRemoveEnemy={removerInimigo} documents={renderDocumentosMestre()} renderTool={renderShieldTool}/></aside>}
+      {mestre && escudoAberto && <aside className="mesa-master-shield-panel" aria-label="Escudo do mestre" onKeyDown={event => { if (event.key === "Escape") setEscudoAberto(false); }}><header><strong>Escudo do mestre</strong><ShieldInitiativeStrip campaign={campanha} onCampaignChange={setCampanha} onRefresh={carregar} /><button type="button" onClick={() => setEscudoAberto(false)} aria-label="Fechar escudo do mestre">Fechar ×</button></header>
+      <MasterShield
+        organized
+        extraTools={[["players", "Jogadores"], ["lighting", "Iluminação"]]}
+        campaign={campanha}
+        onOptionalState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))}
+        members={campanha.membros || []}
+        campaignSystem={campanha.sistema || "absoluto"}
+        campaignId={campanha.id}
+        scene={campanha.cenaAtiva}
+        combat={campanha.combateAtivo}
+        investigation={campanha.investigacaoAtiva}
+        enemies={campanha.inimigos || []}
+        onSaveDifficulty={salvarDificuldadeCena}
+        onSaveEnemy={salvarParticipanteEscudo}
+        onAddEnemy={adicionarParticipanteEscudo}
+        onRemoveEnemy={removerInimigo}
+        onAddToMap={adicionarInimigoAoMapa}
+        mapReady={campanha.modo === "mapa"}
+        documents={renderDocumentosMestre()}
+        renderTool={renderShieldTool}
+      /></aside>}
       {!mestre && (
         <nav
           className={`mesa-lateral-navegacao mesa-jogador-navegacao ${mostrarDocumentosJogador ? "com-documentos" : ""}`}
           aria-label="Conteudo do jogador"
         >
-          
+
           {mostrarDocumentosJogador && (
-            <button className={abaLateralJogador === 'documentos' ? 'ativo' : ''} onClick={()=>setAbaLateralJogador(aba=>aba==='documentos'?'':'documentos')}>
-              <Icon path={mdiFileDocumentMultipleOutline} size={0.85}/><span>Documentos</span> <b>{documentosVisiveisJogador.length}</b>
+            <button className={abaLateralJogador === 'documentos' ? 'ativo' : ''} onClick={() => setAbaLateralJogador(aba => aba === 'documentos' ? '' : 'documentos')}>
+              <Icon path={mdiFileDocumentMultipleOutline} size={0.85} /><span>Documentos</span> <b>{documentosVisiveisJogador.length}</b>
             </button>
           )}
           <button
@@ -3723,7 +3773,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
               setAbaLateralJogador((aba) => (aba === "ficha" ? "" : "ficha"))
             }
           >
-            <Icon path={mdiViewDashboardOutline} size={0.85}/><span>Minha ficha</span>
+            <Icon path={mdiViewDashboardOutline} size={0.85} /><span>Minha ficha</span>
           </button>
         </nav>
       )}
@@ -3739,9 +3789,9 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
           </div>
           <div className="mesa-membros">
             {modoIniciativaAtivo ? (
-              <InitiativeCards entries={ordemCombate} system={campanha.sistema}/>
+              <InitiativeCards entries={ordemCombate} system={campanha.sistema} />
             ) : campanha.membros.length ? (
-              <ParticipantDossiers members={membrosOrdenados} characters={personagens}/>
+              <ParticipantDossiers members={membrosOrdenados} characters={personagens} />
             ) : (
               <p>Nenhuma ficha vinculada ainda.</p>
             )}
@@ -3896,97 +3946,97 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
                 </button>
               </header>
               {(inimigoAberto.sistema || inimigoAberto.dados?.sistema) === 'espiral' ? <EspiralEncounterViewer record={inimigoAberto} onChange={salvarVitalInimigo} /> : <>
-              <div className="mesa-inimigo-identidade">
-                {inimigoAberto.fotoPerfil ? (
-                  <img src={inimigoAberto.fotoPerfil} alt="" />
-                ) : (
-                  <span>{inimigoAberto.nome?.slice(0, 2)}</span>
-                )}
-                <div>
-                  <strong>{inimigoAberto.nome}</strong>
-                  <small>
-                    Nivel {inimigoAberto.nivel || 1} ·{" "}
-                    {inimigoAberto.classe ||
-                      (inimigoAberto.tipo === "npc" ? "NPC" : "Inimigo")}
-                  </small>
-                </div>
-              </div>
-              <div className="mesa-inimigo-recursos">
-                <ControleVitalInimigo
-                  nome="Sanidade"
-                  tipo="sanidade"
-                  recurso={inimigoAberto.sanidade}
-                  aoAlterar={alterarSanidadeInimigo}
-                />
-                <label className="inimigo-defesa-resumo">
-                  <span>Defesa</span>
-                  <NumberInput
-                    key={inimigoAberto.defesa}
-                    type="number"
-                    min="0"
-                    defaultValue={inimigoAberto.defesa || 0}
-                    onBlur={(event) => alterarDefesaInimigo(event.target.value)}
-                    onKeyDown={(event) =>
-                      event.key === "Enter" && event.currentTarget.blur()
-                    }
-                    aria-label="Defesa"
-                  />
-                </label>
-              </div>
-              <section className="mesa-inimigo-corpo">
-                <h3>Integridade dos membros</h3>
-                <div className="mesa-inimigo-membros">
-                  {MEMBROS_INIMIGO_MESA.map(([chave, nome]) => (
-                    <ControleVitalInimigo
-                      key={chave}
-                      nome={nome}
-                      recurso={inimigoAberto.membros?.[chave]}
-                      aoAlterar={(valor) => alterarMembroInimigo(chave, valor)}
-                    />
-                  ))}
-                </div>
-              </section>
-              <section>
-                <h3>Atributos</h3>
-                <div className="mesa-inimigo-atributos">
-                  {Object.entries(inimigoAberto.atributos || {}).map(
-                    ([nome, valor]) => (
-                      <div key={nome}>
-                        <span>{nome}</span>
-                        <b>{valor}</b>
-                      </div>
-                    ),
+                <div className="mesa-inimigo-identidade">
+                  {inimigoAberto.fotoPerfil ? (
+                    <img src={inimigoAberto.fotoPerfil} alt="" />
+                  ) : (
+                    <span>{inimigoAberto.nome?.slice(0, 2)}</span>
                   )}
+                  <div>
+                    <strong>{inimigoAberto.nome}</strong>
+                    <small>
+                      Nivel {inimigoAberto.nivel || 1} ·{" "}
+                      {inimigoAberto.classe ||
+                        (inimigoAberto.tipo === "npc" ? "NPC" : "Inimigo")}
+                    </small>
+                  </div>
                 </div>
-              </section>
-              <section>
-                <h3>Habilidades e ataques</h3>
-                <div className="mesa-inimigo-habilidades">
-                  {[
-                    ...(inimigoAberto.habilidades || []),
-                    ...(inimigoAberto.ataques || []),
-                  ].length ? (
-                    [
+                <div className="mesa-inimigo-recursos">
+                  <ControleVitalInimigo
+                    nome="Sanidade"
+                    tipo="sanidade"
+                    recurso={inimigoAberto.sanidade}
+                    aoAlterar={alterarSanidadeInimigo}
+                  />
+                  <label className="inimigo-defesa-resumo">
+                    <span>Defesa</span>
+                    <NumberInput
+                      key={inimigoAberto.defesa}
+                      type="number"
+                      min="0"
+                      defaultValue={inimigoAberto.defesa || 0}
+                      onBlur={(event) => alterarDefesaInimigo(event.target.value)}
+                      onKeyDown={(event) =>
+                        event.key === "Enter" && event.currentTarget.blur()
+                      }
+                      aria-label="Defesa"
+                    />
+                  </label>
+                </div>
+                <section className="mesa-inimigo-corpo">
+                  <h3>Integridade dos membros</h3>
+                  <div className="mesa-inimigo-membros">
+                    {MEMBROS_INIMIGO_MESA.map(([chave, nome]) => (
+                      <ControleVitalInimigo
+                        key={chave}
+                        nome={nome}
+                        recurso={inimigoAberto.membros?.[chave]}
+                        aoAlterar={(valor) => alterarMembroInimigo(chave, valor)}
+                      />
+                    ))}
+                  </div>
+                </section>
+                <section>
+                  <h3>Atributos</h3>
+                  <div className="mesa-inimigo-atributos">
+                    {Object.entries(inimigoAberto.atributos || {}).map(
+                      ([nome, valor]) => (
+                        <div key={nome}>
+                          <span>{nome}</span>
+                          <b>{valor}</b>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </section>
+                <section>
+                  <h3>Habilidades e ataques</h3>
+                  <div className="mesa-inimigo-habilidades">
+                    {[
                       ...(inimigoAberto.habilidades || []),
                       ...(inimigoAberto.ataques || []),
-                    ].map((item, index) => (
-                      <article key={item.id || index}>
-                        <strong>
-                          {item.nome || item.titulo || `Acao ${index + 1}`}
-                        </strong>
-                        <p>
-                          {item.descricao ||
-                            item.efeito ||
-                            item.dano ||
-                            "Sem descricao"}
-                        </p>
-                      </article>
-                    ))
-                  ) : (
-                    <p>Nenhuma habilidade cadastrada.</p>
-                  )}
-                </div>
-              </section>
+                    ].length ? (
+                      [
+                        ...(inimigoAberto.habilidades || []),
+                        ...(inimigoAberto.ataques || []),
+                      ].map((item, index) => (
+                        <article key={item.id || index}>
+                          <strong>
+                            {item.nome || item.titulo || `Acao ${index + 1}`}
+                          </strong>
+                          <p>
+                            {item.descricao ||
+                              item.efeito ||
+                              item.dano ||
+                              "Sem descricao"}
+                          </p>
+                        </article>
+                      ))
+                    ) : (
+                      <p>Nenhuma habilidade cadastrada.</p>
+                    )}
+                  </div>
+                </section>
               </>}
             </div>
           ) : (
@@ -4061,21 +4111,29 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
                               const chaveNovo = chaveRascunhoNovoInimigo(inimigo);
                               return (
                                 <div className="mesa-inimigo-item-wrap" key={inimigo.id}>
-                                  <button
+                                  <div
+                                    role="button"
+                                    tabIndex={0}
                                     className="mesa-inimigo-item-principal"
                                     draggable
-                                    title="Arraste para o mapa para criar ou mover o token"
                                     onDragStart={(event) => {
                                       event.dataTransfer.effectAllowed = "copy";
                                       event.dataTransfer.setData(
                                         "application/x-darkness-inimigo",
-                                        String(inimigo.inimigo_ref || inimigo.id),
+                                        String(inimigo.inimigo_ref ?? inimigo.id),
                                       );
                                     }}
                                     onClick={() => setInimigoAberto(inimigo)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        setInimigoAberto(inimigo);
+                                      }
+                                    }}
+                                    title="Arraste para o mapa ou clique para abrir a ficha"
                                   >
                                     {inimigo.fotoPerfil ? (
-                                      <img src={inimigo.fotoPerfil} alt="" />
+                                      <img src={inimigo.fotoPerfil} alt="" draggable="false" />
                                     ) : (
                                       <span>{inimigo.nome?.slice(0, 2)}</span>
                                     )}
@@ -4088,8 +4146,33 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
                                         {inimigo.sanidade?.atual || 0}/{inimigo.sanidade?.max || 0} SAN
                                       </em>
                                     </div>
-                                  </button>
+                                  </div>
 
+                                  {campanha.modo === "mapa" && (
+                                    <button
+                                      type="button"
+                                      className="mesa-inimigo-add-mapa"
+                                      title="Adicionar ao mapa 2D"
+                                      disabled={adicionandoInimigoId === inimigo.id}
+                                      onClick={async () => {
+                                        if (adicionandoInimigoId === inimigo.id) return;
+                                        setAdicionandoInimigoId(inimigo.id);
+                                        setErro("");
+                                        try {
+                                          await adicionarInimigoAoMapa(inimigo);
+                                        } catch (error) {
+                                          setErro(
+                                            error.message ||
+                                            "Não foi possível adicionar o inimigo ao mapa.",
+                                          );
+                                        } finally {
+                                          setAdicionandoInimigoId(null);
+                                        }
+                                      }}
+                                    >
+                                      {adicionandoInimigoId === inimigo.id ? "…" : "+ Mapa 2D"}
+                                    </button>
+                                  )}
                                   {embedded && <button type="button" onClick={() => colocarInimigo3D(inimigo)} aria-label={`Colocar ${inimigo.nome} no mapa 3D`}>Colocar no mapa 3D</button>}
                                   {embedded && tokenNoMapa && <button type="button" onClick={() => removerTokenAtualDoMapa(tokenNoMapa)} aria-label={`Remover ${inimigo.nome} do mapa 3D`}>Remover do mapa 3D</button>}
                                   {modoIniciativaAtivo && (
@@ -4242,7 +4325,7 @@ const Mesa = ({embedded=false,requestedTool="",requestVersion=0,tabletopMapId=""
           />
         </section>
       )}
-{!embedded && <RollNotifications key={campanha.id} rolls={campanha.rolagens || []} mechanics={campanha.mecanicasEspeciais}/>}
+      {!embedded && <RollNotifications key={campanha.id} rolls={campanha.rolagens || []} mechanics={campanha.mecanicasEspeciais} />}
 
       {renderShieldSceneEditor()}
     </main>

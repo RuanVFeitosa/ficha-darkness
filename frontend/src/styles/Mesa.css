@@ -5335,3 +5335,120 @@
 
 .mesa-transicao-simbolo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(65vw,65vh);height:min(65vw,65vh);object-fit:contain}
 .mesa-transicao span{position:absolute;bottom:12%;width:90%;text-align:center}
+
+/* ================================================================
+   DRAG DE INIMIGOS/NPCs → MAPA + BOTÃO + MAPA + ERRO FLUTUANTE
+   ================================================================ */
+
+.mesa-inimigo-item-principal {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -webkit-user-drag: element;
+  cursor: grab;
+  outline: none;
+  transition: background-color .15s, transform .15s;
+}
+.mesa-inimigo-item-principal:active {
+  cursor: grabbing;
+  transform: scale(.995);
+}
+.mesa-inimigo-item-principal:focus-visible {
+  outline: 2px solid var(--mesa-acento);
+  outline-offset: -2px;
+}
+.mesa-inimigo-item-principal img {
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+
+/* Botão + Mapa */
+.mesa-inimigo-add-mapa {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  margin: 0 14px 10px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--mesa-acento) 55%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--mesa-acento) 14%, transparent);
+  color: var(--mesa-acento);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color .15s, color .15s, border-color .15s;
+}
+.mesa-inimigo-add-mapa:hover:not(:disabled) {
+  background: var(--mesa-acento);
+  border-color: var(--mesa-acento);
+  color: #050505;
+}
+.mesa-inimigo-add-mapa:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.mesa-inimigo-add-mapa:disabled {
+  opacity: .5;
+  cursor: wait;
+}
+
+/* Erro flutuante no tabletop 2D */
+.mesa-erro-flutuante {
+  position: fixed;
+  z-index: 10000;
+  top: 78px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(540px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid rgba(211, 106, 106, .55);
+  border-left: 3px solid #d36a6a;
+  border-radius: 6px;
+  background: rgba(30, 8, 8, .96);
+  color: #ffc4c4;
+  font-size: 11px;
+  line-height: 1.45;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: mesaErroSurge .25s ease-out;
+}
+.mesa-erro-flutuante > span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.mesa-erro-flutuante > button {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.mesa-erro-flutuante > button:hover {
+  background: rgba(255, 255, 255, .08);
+}
+@keyframes mesaErroSurge {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+@media (max-width: 760px) {
+  .mesa-erro-flutuante {
+    top: 66px;
+    font-size: 10px;
+    padding: 8px 10px 8px 12px;
+  }
+}
