@@ -54,6 +54,7 @@ import "../styles/Mesa2D.css";
 import { estiloBordaToken } from "../utils/tokenAppearance";
 import { limitarMovimentoToken } from "../utils/tokenCollision";
 import { cenaVisivelParaJogador } from "../utils/sceneVisibility";
+import { isSpecialSceneAvailable, newSpecialPresentationId } from "../utils/tabletopScene";
 import {
   SENHA_MESTRE,
   TABLETOP_3D_AUTH_KEY,
@@ -1373,17 +1374,24 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
   };
 
   const apresentar = async (cena, modo, midia = null) => {
+    const midiaId = modo === "especial" ? newSpecialPresentationId() : midia?.id || null;
     setTransicao(true);
-    await ativarCena(campanha.id, cena.id, modo, midia?.id || null);
-    setTimeout(() => {
-      setCampanha((atual) => ({
-        ...atual,
-        cenaAtiva: cena,
-        modo,
-        midiaAtivaId: midia?.id || null,
-      }));
-    }, 350);
-    setTimeout(() => setTransicao(false), 1050);
+    setErro("");
+    try {
+      await ativarCena(campanha.id, cena.id, modo, midiaId);
+      setTimeout(() => {
+        setCampanha((atual) => ({
+          ...atual,
+          cenaAtiva: cena,
+          modo,
+          midiaAtivaId: midiaId,
+        }));
+      }, 350);
+      setTimeout(() => setTransicao(false), 1050);
+    } catch (error) {
+      setTransicao(false);
+      setErro(error.message || "Não foi possível apresentar a cena.");
+    }
   };
 
   const trocarModo = async (modo) => {
@@ -2448,8 +2456,8 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
           </div>
           <div className="biblioteca-item-acoes">
             <button
-              onClick={() => apresentar(item, "cena")}
-              title="Exibir cena"
+              onClick={() => apresentar(item, item.cenaEspecial?.cutscene && isSpecialSceneAvailable(item) ? "especial" : "cena")}
+              title={item.cenaEspecial?.cutscene && isSpecialSceneAvailable(item) ? "Reproduzir cutscene" : "Exibir cena"}
             >
               <Icon path={mdiPlay} size={0.72} />
             </button>
@@ -2461,7 +2469,7 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
                 <Icon path={mdiMapOutline} size={0.72} />
               </button>
             )}
-            {item.cenaEspecial?.ativo && item.cenaEspecial?.midiaUrl && (
+            {isSpecialSceneAvailable(item) && (
               <button onClick={() => apresentar(item, "especial")} title="Exibir cena especial">
                 <Icon path={mdiMusicBoxMultipleOutline} size={0.72} />
               </button>
@@ -3298,9 +3306,9 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
         <SoundpadTabletop sons={campanha.soundpad} estadoRemoto={campanha.soundpadEstado} controlavel={false} />
       )}
 
-      {!embedded && campanha.modo === "especial" && cena?.cenaEspecial?.midiaUrl && (
+      {!embedded && campanha.modo === "especial" && isSpecialSceneAvailable(cena) && (
         <section className={`cena-especial cena-especial-${cena.cenaEspecial.transicao || "cinema"}`} aria-label={`Cena especial: ${cena.nome}`}>
-          <SpecialSceneMedia special={cena.cenaEspecial} name={cena.nome} controls={mestre} />
+          <SpecialSceneMedia key={`${cena.id}:${campanha.midiaAtivaId || "especial"}`} special={cena.cenaEspecial} name={cena.nome} controls={mestre} />
           <div className="cena-especial-vinheta" />
           {!cena.cenaEspecial.cutscene && cena.cenaEspecial.exibirTitulo !== false && (
             <div className="cena-especial-titulo"><span>{cena.descricao}</span><strong>{cena.nome}</strong></div>

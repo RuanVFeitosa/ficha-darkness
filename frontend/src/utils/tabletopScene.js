@@ -1,8 +1,17 @@
+export function isSpecialSceneAvailable(scene) {
+ const special=scene?.cenaEspecial || scene?.cena_especial;
+ return Boolean(special && special.ativo !== false && (special.cutscene || special.midiaUrl));
+}
+
+export function newSpecialPresentationId() {
+ return `especial:${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
+}
+
 export function activeTabletopScene(campaign) {
  const scene=campaign?.cenaAtiva;
  if(!scene) return {type:'empty'};
  const special=scene.cenaEspecial || scene.cena_especial;
- if(campaign.modo==='especial' && special?.ativo && special.midiaUrl) return {type:'special',media:special};
+ if(campaign.modo==='especial' && isSpecialSceneAvailable(scene)) return {type:'special',media:special};
  const images=scene.imagensCena || scene.imagens_cena || [];
  const maps=(scene.mapasBatalha || scene.mapas_batalha || []).filter(m => m.origem==='tabletop3d' || m.mapa3dId);
  const id=campaign.midiaAtivaId;

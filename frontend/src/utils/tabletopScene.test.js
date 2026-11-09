@@ -1,4 +1,4 @@
-import { activeTabletopScene,specialSceneDestinations } from './tabletopScene';
+import { activeTabletopScene,isSpecialSceneAvailable,newSpecialPresentationId,specialSceneDestinations } from './tabletopScene';
 const scene={id:'a',imagensCena:[{id:'photo',url:'image.png'}],mapasBatalha:[{id:'map',mapa3dId:'3d'}]};
 
 test('cutscene destinations include only media inside the current scene',()=>{
@@ -29,4 +29,17 @@ test('seleciona mapa explícito e mantém suporte a imagens antigas', () => {
 test('cena sem mídia ativa prioriza imagem e modo mapa prioriza o 3D', () => {
  expect(activeTabletopScene({cenaAtiva:scene,modo:'cena'}).type).toBe('static');
  expect(activeTabletopScene({cenaAtiva:scene,modo:'mapa'}).type).toBe('map');
+});
+
+test('cutscene ativa sem URL de mídia abre uma cena especial; projeto desativado não abre',()=>{
+ const special={ativo:true,tipoMidia:'cutscene',cutscene:{version:1,name:'Abertura',duration:10,layers:[]}};
+ expect(isSpecialSceneAvailable({cenaEspecial:special})).toBe(true);
+ expect(activeTabletopScene({cenaAtiva:{id:'cutscene',cenaEspecial:special},modo:'especial'})).toEqual({type:'special',media:special});
+ expect(isSpecialSceneAvailable({cenaEspecial:{...special,ativo:false}})).toBe(false);
+ expect(activeTabletopScene({cenaAtiva:{id:'cutscene',cenaEspecial:{...special,ativo:false}},modo:'especial'}).type).not.toBe('special');
+});
+
+test('nova apresentação recebe identificação para reiniciar a cutscene nos espectadores',()=>{
+ expect(newSpecialPresentationId()).toMatch(/^especial:d+-[a-z0-9]+$/);
+ expect(newSpecialPresentationId()).not.toBe(newSpecialPresentationId());
 });
