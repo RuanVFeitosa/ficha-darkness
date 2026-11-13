@@ -448,9 +448,6 @@ export default function FichaEspiral({campaign=undefined,tabletopAccessError="",
       : [];
   const temporaryGradeFor = (resourceName, source = sheet) =>
     temporaryBonusesFor(resourceName, source).length;
-  const abilityProgress = Array.isArray(sheet.abilityProgress) && sheet.abilityProgress.length === 2
-    ? sheet.abilityProgress
-    : [{ name: "", detail: "", level: 1 }, { name: "", detail: "", level: 1 }];
   const acquiredAbilities = Array.isArray(sheet.evolution?.abilities)
     ? sheet.evolution.abilities
     : [];
@@ -1735,49 +1732,7 @@ export default function FichaEspiral({campaign=undefined,tabletopAccessError="",
                     </div>
                   </section>
                 )}
-                <label className="es-writing">
-                  <span>Habilidades escolhidas</span>
-                  <p>
-                    Comece com duas. Registre nome, nível, ação, efeito e custo
-                    de Esperança. Habilidades de legado podem ser adaptadas com
-                    o mestre.
-                  </p>
-                  <div className="es-ability-list">
-                    {abilityProgress.map((ability, index) => (
-                      <article className="es-ability-card" key={index}>
-                        <input
-                          aria-label={`Nome da habilidade ${index + 1}`}
-                          placeholder={`${String(index + 1).padStart(2, "0")} / Nome da habilidade`}
-                          value={ability.name}
-                          onChange={(event) => update("abilityProgress", abilityProgress.map((item, i) => i === index ? { ...item, name: event.target.value } : item))}
-                        />
-                        <div className="es-ability-heading">
-                          <span className="es-ability-dots" aria-hidden="true">
-                            {[1, 2, 3].map((level) => <i key={level} className={level <= ability.level ? "filled" : ""} />)}
-                          </span>
-                          <strong>Nível {String(ability.level).toUpperCase()}</strong>
-                          <div className="es-ability-levels" aria-label={`Nível da habilidade ${index + 1}`}>
-                            {[1, 2, 3].map((level) => (
-                              <button type="button" key={level} className={ability.level === level ? "active" : ""} onClick={() => update("abilityProgress", abilityProgress.map((item, i) => i === index ? { ...item, level } : item))}>{level}</button>
-                            ))}
-                          </div>
-                        </div>
-                        <textarea
-                          aria-label={`Descrição da habilidade ${index + 1}`}
-                          placeholder="Ação, custo e efeito da habilidade."
-                          value={ability.detail}
-                          onChange={(event) => update("abilityProgress", abilityProgress.map((item, i) => i === index ? { ...item, detail: event.target.value } : item))}
-                        />
-                      </article>
-                    ))}
-                  </div>
-                  <textarea
-                    aria-label="Habilidades legadas"
-                    value={sheet.abilities}
-                    onChange={(e) => update("abilities", e.target.value)}
-                    placeholder="01 / Nome da habilidade — Nível I\nAção: …\nEfeito: …\nCusto: …\n\n02 / Nome da habilidade — Nível I"
-                  />
-                </label>
+
                 <p className="es-help">
                   Quando houver custo, o teste de Propósito determina a perda de
                   Esperança: primeiro valor na falha, segundo no sucesso com

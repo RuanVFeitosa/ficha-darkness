@@ -5,7 +5,7 @@ jest.mock('./criarPersonagem',()=>()=> <div>Cadastro Darkness</div>);
 test('cadastro oferece os dois sistemas',()=>{window.history.replaceState({},'', '/?criar=1');render(<CadastroPersonagem/>);expect(screen.getByRole('link',{name:/Escolher ESPIRAL/})).toHaveAttribute('href','?criar=1&sistema=espiral');expect(screen.getByRole('link',{name:/Escolher Darkness/})).toHaveAttribute('href','?criar=1&sistema=darkness');});
 test('ESPIRAL exige identidade e orçamento correto antes de avançar',()=>{render(<CriacaoEspiral/>);fireEvent.click(screen.getByText('Continuar →'));expect(screen.getByRole('alert')).toHaveTextContent('Preencha');fireEvent.change(screen.getByLabelText('Nome do personagem'),{target:{value:'Ana'}});fireEvent.change(screen.getByLabelText('Nome do jogador'),{target:{value:'Ruan'}});fireEvent.click(screen.getByText('Continuar →'));expect(screen.getByRole('heading',{name:'Atributos'})).toBeInTheDocument();fireEvent.click(screen.getByText('Continuar →'));expect(screen.getByRole('alert')).toHaveTextContent('6 pontos');fireEvent.change(screen.getByLabelText('Pulso'),{target:{value:'4'}});fireEvent.change(screen.getByLabelText('Razão'),{target:{value:'4'}});fireEvent.click(screen.getByText('Continuar →'));expect(screen.getByRole('heading',{name:'Recursos'})).toBeInTheDocument();fireEvent.click(screen.getByText('Continuar →'));expect(screen.getByRole('alert')).toHaveTextContent('10 pontos');});
 
-test('foto e código aparecem antes da revisão e o código exige quatro dígitos',()=>{
+test('foto é opcional e criação não pede código da ficha',()=>{
  render(<CriacaoEspiral/>);
  fireEvent.change(screen.getByLabelText('Nome do personagem'),{target:{value:'Ana'}});
  fireEvent.change(screen.getByLabelText('Nome do jogador'),{target:{value:'Ruan'}});
@@ -18,12 +18,21 @@ test('foto e código aparecem antes da revisão e o código exige quatro dígito
  fireEvent.change(screen.getByLabelText('Atletismo'),{target:{value:'1'}});
  fireEvent.click(screen.getByText('Continuar →'));
  fireEvent.click(screen.getByText('Continuar →'));
+ expect(screen.getByRole('heading',{name:'Habilidades'})).toBeInTheDocument();
+ fireEvent.click(screen.getByText('Continuar →'));
+ expect(screen.getByRole('alert')).toHaveTextContent('exatamente duas');
+ fireEvent.click(screen.getByRole('checkbox',{name:'Golpe Calculado'}));
+ fireEvent.click(screen.getByText('Continuar →'));
+ expect(screen.getByRole('alert')).toHaveTextContent('exatamente duas');
+ fireEvent.click(screen.getByRole('checkbox',{name:'Sem Hesitar'}));
+ expect(screen.getByRole('checkbox',{name:'Ponto Fraco'})).toBeDisabled();
+ fireEvent.click(screen.getByRole('checkbox',{name:'Golpe Calculado'}));
+ expect(screen.getByRole('checkbox',{name:'Ponto Fraco'})).toBeEnabled();
+ fireEvent.click(screen.getByRole('checkbox',{name:'Golpe Calculado'}));
+ fireEvent.click(screen.getByText('Continuar →'));
  expect(screen.getByLabelText('Foto de perfil (opcional)')).toHaveAttribute('type','file');
  fireEvent.click(screen.getByText('Continuar →'));
- expect(screen.getByRole('alert')).toHaveTextContent('4 a 8 dígitos');
- fireEvent.change(screen.getByLabelText(/Código da ficha/),{target:{value:'ab0123'}});
- expect(screen.getByLabelText(/Código da ficha/)).toHaveValue('0123');
- fireEvent.click(screen.getByText('Continuar →'));
+ expect(screen.queryByLabelText(/Código da ficha/)).not.toBeInTheDocument();
  expect(screen.getByRole('heading',{name:'Revisão'})).toBeInTheDocument();
- expect(screen.getByText('0123')).toBeInTheDocument();
+ expect(screen.getByText('Sem Hesitar, Golpe Calculado')).toBeInTheDocument();
 });

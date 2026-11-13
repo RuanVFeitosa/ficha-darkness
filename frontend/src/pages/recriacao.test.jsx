@@ -27,16 +27,15 @@ test.each(['espiral','darkness'])('envia proposta de %s sem gravar as alteraçõ
  expect(cached.recriacaoPendente.id).toBe('request');
 });
 
-test('reabre criação ESPIRAL preenchida e mantém o código da ficha',async()=>{
+test('reabre criação ESPIRAL preenchida sem pedir código da ficha',async()=>{
  const sheet={...freshSheet(),name:'Maya',player:'Ana',occupation:'Médica',evolution:{points:10}};
  buscarPersonagem.mockResolvedValue(sheet);
  window.history.replaceState({},'','/?criar=1&sistema=espiral&refazer=1234');
  render(<CriacaoEspiral/>);
  await waitFor(()=>expect(screen.getByLabelText('Nome do personagem')).toHaveValue('Maya'));
  expect(screen.getByLabelText('Nome do jogador')).toHaveValue('Ana');
- for(let index=0;index<4;index++)fireEvent.click(screen.getByRole('button',{name:'Continuar →'}));
- expect(screen.getByLabelText(/Código da ficha/)).toHaveValue('1234');
- expect(screen.getByLabelText(/Código da ficha/)).toHaveAttribute('readonly');
+ for(let index=0;index<5;index++)fireEvent.click(screen.getByRole('button',{name:'Continuar →'}));
+ expect(screen.queryByLabelText(/Código da ficha/)).not.toBeInTheDocument();
  fireEvent.click(screen.getByRole('button',{name:'Continuar →'}));
  expect(screen.getByRole('button',{name:'Enviar ao mestre ↗'})).toBeInTheDocument();
  expect(sheet.evolution.points).toBe(10);

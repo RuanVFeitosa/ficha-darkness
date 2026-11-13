@@ -48,3 +48,44 @@
 .ec-profile-preview,.ec-profile-empty { width: 160px; height: 160px; object-fit: cover; border: 1px solid #555; margin-bottom: 20px; }
 .ec-profile-empty { display: grid; place-items: center; color: #999; background: #1b1b1b; }
 .ec-photo-block label { margin-bottom: 16px; }
+
+.ec-abilities { text-align:left; min-width:0; }
+.ec-ability-summary { padding:24px; background:linear-gradient(120deg,#242424,#181818); border:1px solid #444; margin-bottom:28px; }
+.ec-ability-summary-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+.ec-ability-summary-heading > strong { font-size:18px; }
+.ec-ability-summary-heading > span { font-size:12px; border:1px solid #666; padding:6px 10px; color:#eee; }
+.ec-ability-summary p { color:#bbb; font:14px/1.6 Arial,sans-serif; margin:12px 0 20px; }
+.ec-ability-slots { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.ec-page .ec-ability-slots button,.ec-ability-empty { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px; min-height:78px; box-sizing:border-box; text-align:left; }
+.ec-page .ec-ability-slots button { background:#eee; color:#111; }
+.ec-ability-slots button > span:first-child { display:grid; gap:6px; }
+.ec-ability-slots button > span:last-child { font-size:24px; }
+.ec-page .ec-ability-slots small { color:#555; font-size:10px; letter-spacing:1px; }
+.ec-ability-empty { justify-content:flex-start; border:1px dashed #555; color:#999; font-size:13px; }
+.ec-ability-empty > span { font-size:24px; color:#777; }
+.ec-ability-search { display:grid; gap:10px; font-size:12px; color:#aaa; }
+.ec-page .ec-ability-search input { font:14px Arial,sans-serif; padding:15px 16px; }
+.ec-ability-categories { display:flex; gap:8px; flex-wrap:wrap; margin:18px 0 26px; }
+.ec-page .ec-ability-categories button { display:flex; align-items:center; gap:16px; background:#181818; color:#bbb; border-color:#444; padding:12px 16px; font-size:13px; }
+.ec-page .ec-ability-categories button span { opacity:.6; font-size:11px; }
+.ec-page .ec-ability-categories button[aria-pressed=true] { background:#eee; color:#111; border-color:#eee; }
+.ec-ability-results { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
+.ec-ability-results h3 { margin:0; font-size:20px; font-weight:400; }
+.ec-ability-results > span { font-size:12px; color:#999; }
+.ec-ability-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.ec-abilities .ec-ability-option { position:relative; display:flex; align-items:flex-start; gap:14px; padding:22px; border:1px solid #3d3d3d; background:#151515; cursor:pointer; text-align:left; transition:border-color .15s,background .15s; min-width:0; }
+.ec-ability-option:hover { border-color:#888; background:#1c1c1c; }
+.ec-ability-option:has(input:checked) { border-color:#eee; background:#242424; box-shadow:inset 3px 0 #eee; }
+.ec-page .ec-ability-option input { width:18px; height:18px; margin:2px 0 0; flex-shrink:0; accent-color:#eee; }
+.ec-ability-copy { display:grid; gap:10px; min-width:0; }
+.ec-ability-copy > strong { font-size:16px; line-height:1.4; }
+.ec-page .ec-ability-copy small { color:#aaa; font:11px/1.5 Arial,sans-serif; letter-spacing:.3px; }
+.ec-ability-copy > span { font:14px/1.75 Arial,sans-serif; color:#ccc; }
+.ec-ability-copy > b { font-size:10px; font-weight:400; letter-spacing:.6px; color:#999; margin-top:6px; }
+.ec-ability-option:has(input:checked) b { color:#fff; }
+.ec-ability-option:has(input:disabled) { cursor:default; }
+.ec-ability-option:has(input:disabled) .ec-ability-copy > b { visibility:hidden; }
+.ec-ability-no-results { padding:32px 16px; text-align:center; color:#aaa; font-size:14px; border:1px dashed #444; }
+@media(max-width:1100px) { .ec-ability-grid { grid-template-columns:1fr; } }
+@media(max-width:800px) { .ec-ability-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:560px) { .ec-ability-grid,.ec-ability-slots { grid-template-columns:1fr; } .ec-ability-summary { padding:18px; } .ec-abilities .ec-ability-option { padding:18px; } .ec-page .ec-ability-categories button { flex:1 1 40%; justify-content:space-between; } }

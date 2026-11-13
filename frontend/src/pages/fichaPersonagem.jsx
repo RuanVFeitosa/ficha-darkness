@@ -6532,8 +6532,6 @@ const FichaPersonagem = () => {
       >
         <span>Jogador</span>
         <strong>{personagem.nomeJogador || "Sem jogador"}</strong>
-        <span>Senha da ficha</span>
-        <strong>{fichaId}</strong>
       </aside>
 
       {/* Container Principal: Perfil + Atributos + Sidebar */}
