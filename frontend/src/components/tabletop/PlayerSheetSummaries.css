@@ -1,0 +1,27 @@
+.shield-player-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr)); gap:8px; width:100%; min-width:0; }
+.shield-player-card { min-width:0; padding:9px; border:1px solid #ffffff22; border-radius:6px; background:linear-gradient(145deg,#151515,#090909); text-align:left; }
+.master-shield .shield-player-card>header { display:flex; gap:8px; align-items:center; padding:0 0 7px; margin:0; border:0; background:none; }
+.shield-player-portrait { display:grid; place-items:center; flex:0 0 38px; width:38px; height:46px; overflow:hidden; border:1px solid #ffffff30; border-radius:4px; background:#1c1c1c; color:#aaa; font:24px Georgia,serif; }
+.shield-player-portrait img { width:100%; height:100%; object-fit:cover; object-position:50% 20%; }
+.shield-player-card>header>div:nth-child(2) { flex:1; min-width:0; }
+.master-shield .shield-player-card h3 { margin:2px 0!important; font:16px/1.15 Georgia,serif!important; color:#eee; overflow-wrap:anywhere; }
+.shield-player-card header small { font:7px monospace; letter-spacing:.1em; color:#aaa; }
+.master-shield .shield-player-card header p { margin:2px 0!important; font:10px/1.3 Arial,sans-serif!important; color:#ccc; }
+.shield-player-card header span { font:9px Arial,sans-serif; color:#999; }
+.master-shield .shield-player-card dl { display:grid; gap:6px; margin:0; }
+.master-shield .shield-player-card dl>div { display:grid; grid-template-columns:1fr; gap:3px; padding:0; border:0; }
+.master-shield .shield-player-card dt { font:7px monospace; text-transform:uppercase; letter-spacing:.04em; color:#999; }
+.master-shield .shield-player-card dd { font:600 14px/1.2 Arial,sans-serif; color:#eee; margin:0; }
+.master-shield .shield-player-card dd small { font-size:9px; color:#999; }
+.master-shield .shield-player-card .shield-player-vitals { grid-template-columns:repeat(3,minmax(0,1fr)); padding-block:7px 8px; border-top:1px solid #ffffff18; }
+.shield-player-vital>span { height:2px; background:#ffffff13; border-radius:2px; overflow:hidden; }
+.shield-player-vital>span i { display:block; height:100%; background:#aaa; }
+.shield-player-vital[data-tone=integrity]>span i { background:#86aa99; }
+.shield-player-vital[data-tone=sanity]>span i { background:#8e9ca8; }
+.shield-player-vital[data-tone=hope]>span i { background:#c3c0ae; }
+.master-shield .shield-player-vital[data-empty=true] dd { color:#d78e83; }
+.master-shield .shield-player-card .shield-player-defenses { grid-template-columns:repeat(4,minmax(0,1fr)); padding:6px 0; border-block:1px solid #ffffff15; }
+.master-shield .shield-player-card .shield-player-attributes { grid-template-columns:repeat(4,minmax(0,1fr)); padding-top:7px; text-align:center; }
+.master-shield .shield-player-attributes dd { justify-self:center; padding:3px 5px; border:1px solid #ffffff3a; border-radius:3px; background:#ffffff08; font:600 11px monospace; }
+.shield-player-pavor { align-self:start; padding:3px 4px; border:1px solid #9b625c66; font:8px monospace; color:#ca8e86; }
+.shield-player-empty,.shield-player-unavailable { font:11px/1.6 Arial,sans-serif; color:#999; }

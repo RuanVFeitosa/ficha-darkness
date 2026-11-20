@@ -1,0 +1,86 @@
+/* One palette for every master-dashboard tab and its portaled dialogs. */
+body[data-darkness-dashboard="true"] {
+  --dashboard-black:#000;
+  --dashboard-white:#fff;
+  --dashboard-gold:#bfa66b;
+  --dashboard-line:#bfa66b40;
+  background:#000;
+  color:#fff;
+  color-scheme:dark;
+}
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master {
+  --ed-paper:#000; --ed-ink:#fff; --ed-muted:#fff; --ed-line:#bfa66b40; --ed-red:#bfa66b;
+  --tw-ink:#fff; --tw-muted:#fff; --tw-panel:#000; --tw-accent:#bfa66b; --tw-line:#bfa66b40;
+  --cw-muted:#fff; --cw-accent:#bfa66b; --cw-line:#bfa66b40;
+  --de-gold:#bfa66b; --de-border:#bfa66b40;
+  --tas-paper:#000; --tas-ink:#fff; --tas-muted:#fff; --tas-line:#bfa66b40; --tas-gold:#bfa66b;
+  --mi-ink:#fff; --mi-muted:#fff; --mi-gold:#bfa66b; --mi-line:#bfa66b40;
+  background:#000!important; color:#fff!important;
+}
+body[data-darkness-dashboard="true"] :where(.darkness-master,.de-overlay,.mestre-popup-overlay,.dialogo-global-overlay) :where(*) {
+  --cw-muted:#fff; --cw-accent:#bfa66b; --cw-line:#bfa66b40;
+  --tw-muted:#fff; --tw-ink:#fff; --tw-accent:#bfa66b; --tw-panel:#000;
+  --de-gold:#bfa66b; --de-border:#bfa66b40;
+  --mi-ink:#fff; --mi-muted:#fff; --mi-gold:#bfa66b;
+}
+/* Text is white throughout, including secondary copy and disabled form labels. */
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master :is(h1,h2,h3,h4,h5,p,label,small,strong,b,em,dt,dd,summary,input,select,textarea,option,a,button,span,output,legend,li,pre,div,td,th,caption,code),
+body[data-darkness-dashboard="true"] :is(.de-overlay,.mestre-popup-overlay,.dialogo-global-overlay) :is(h1,h2,h3,h4,p,label,small,strong,b,span,input,select,textarea,button,li) {
+  color:#fff!important;
+}
+/* Structural surfaces are pure black; artwork, maps, tokens and video retain their colors. */
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master :is(section,article,aside,nav,fieldset,form,header,footer),
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master :is(.de-main,.de-sidebar,.de-card,.de-heading,.de-search,.dm-sigil,.dm-metrics,.dm-hero,.tas-card,.tas-controls,.tas-layout,.ed-agent-body,.ed-agent-photo,.ad-agent-vitals,.ad-agent-identity,.mestre-modal,.mestre-modal-bloco,.mestre-ficha-tabs,.campaign-card-art,.tabletop-hub-toolbar,.campaign-scene-toolbar,.campanha-pasta-titulo,.campanha-cartao-abrir,.campanha-editor,.campanha-fichas-vinculo,.campanha-tabletop-seletor,.campanha-configuracoes,.campaign-overview>div,.rolagem-mestre-card,.rolagem-mestre-dados span,.mestre-hamburguer-menu,.marcas-card,.marcas-lista-header,.marcas-card-detalhes,.ee-card,.ee-tools,.ee-entry,.ee-add,.ee-editor,.sa-card,.sa-heading,.sa-class-summary,.rr-card,.rr-request),
+body[data-darkness-dashboard="true"] :is(.de-dialog,.de-delivery-item,.de-confirmation,.de-recipients button,.mestre-popup,.dialogo-global,.dialogo-global-modal) {
+  background-color:#000!important;
+  background-image:none!important;
+  border-color:#bfa66b40!important;
+  box-shadow:none!important;
+}
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master :is(input,select,textarea,option,button),
+body[data-darkness-dashboard="true"] :is(.de-overlay,.mestre-popup-overlay,.dialogo-global-overlay) :is(input,select,textarea,option,button) {
+  background-color:#000!important;
+  background-image:none!important;
+  border-color:#bfa66b66!important;
+  accent-color:#bfa66b;
+  color-scheme:dark;
+}
+body[data-darkness-dashboard="true"] :is(input,textarea)::placeholder { color:#fff; opacity:.65; }
+/* Gold is reserved for ornaments, selection, focus and interaction details. */
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master :is(.dm-kicker,.dm-status,.dm-brand small,.de-kicker,.ed-eyebrow,.sa-kicker,.tas-eyebrow,.ad-eyebrow,.dm-sigil>span,.dm-sigil>small,.de-item-icon,.de-total>svg,.de-card-top button>svg,.campanha-tabletop-tipo,.campanha-dashboard-topo>div>span,.campaign-area-heading>div>span,.tabletop-settings-kicker,.marcas-tag,.rolagem-mestre-formula,.ad-agent-open,.ed-agent-open),
+body[data-darkness-dashboard="true"] .de-overlay :is(.de-kicker,.de-avatar,.de-check,.de-context) {
+  color:#bfa66b!important;
+}
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master :is(.mestre-tabs button.ativa,.mestre-ficha-tabs button.ativa,.de-sidebar button[aria-pressed=true],.de-groups button[aria-pressed=true],.tabletop-hub-toolbar button[aria-pressed=true],.campanha-conteudo-abas button.ativo,.ee-tabs button.ativa,.de-primary,.tas-primary,.sa-primary),
+body[data-darkness-dashboard="true"] .de-overlay :is(.de-primary,.de-recipients button[aria-pressed=true]) {
+  background:#000!important;
+  border:1px solid #bfa66b!important;
+  box-shadow:inset 0 -2px #bfa66b!important;
+  color:#fff!important;
+}
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master :is(button,a):hover,
+body[data-darkness-dashboard="true"] .de-overlay button:hover { border-color:#bfa66b!important; }
+body[data-darkness-dashboard="true"] :is(.darkness-master,.de-overlay,.mestre-popup-overlay) :is(button,a,input,select,textarea,summary):focus-visible { outline:2px solid #bfa66b!important; outline-offset:3px; }
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master :is(.de-notice,.mestre-mensagem,.campanha-dashboard-erro,.campaign-feedback,.de-error,.mestre-aviso),
+body[data-darkness-dashboard="true"] .de-overlay :is(.de-error,.da-effect) { background:#000!important; border:1px solid #bfa66b66!important; color:#fff!important; }
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master progress { accent-color:#bfa66b; color:#bfa66b!important; background:#000!important; }
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master progress::-webkit-progress-bar { background:#000!important; }
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master progress::-webkit-progress-value { background:#bfa66b!important; }
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master progress::-moz-progress-bar { background:#bfa66b!important; }
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master .de-search { display:flex!important; align-items:center; }
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master .de-search>input { width:100%; min-width:0; border:0!important; }
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master .de-search>svg { flex-shrink:0; }
+
+/* Shared card/panel shells, including tabs with their own imported stylesheet. */
+body[data-darkness-dashboard="true"] .mestre-page.darkness-master :is([class$="-card"],[class$="-panel"],.tas-stage,.tas-library,.tas-controls,.ee-tools,.ee-card-state,.de-sidebar-note,.de-facts,.de-recipients,.de-confirmation,.marcas-form,.marcas-lista,.recriacao-requests,.mestre-analises-topo) {
+  background-color:#000!important; background-image:none!important; border-color:#bfa66b40!important;
+}
+/* Dialogs can be portaled outside main; activate the same palette only while the dashboard is mounted. */
+body[data-darkness-dashboard="true"] [role="dialog"],
+body[data-darkness-dashboard="true"] [role="alertdialog"],
+body[data-darkness-dashboard="true"] :is([role="dialog"],[role="alertdialog"]) :is(section,article,aside,nav,header,footer,fieldset,form,input,select,textarea,button,.de-delivery-item,.de-confirmation,.de-recipients button,.ee-entry,.ee-add,.ee-panel) {
+  background-color:#000!important; background-image:none!important; border-color:#bfa66b55!important; box-shadow:none!important;
+}
+body[data-darkness-dashboard="true"] :is([role="dialog"],[role="alertdialog"]) :is(h1,h2,h3,h4,p,label,small,strong,b,em,span,dt,dd,li,pre,button,a,input,select,textarea,summary) { color:#fff!important; }
+body[data-darkness-dashboard="true"] :is([role="dialog"],[role="alertdialog"]) :is(.de-kicker,.de-avatar,.de-check,.dialogo-global__rotulo) { color:#bfa66b!important; }
+body[data-darkness-dashboard="true"] :is([role="dialog"],[role="alertdialog"]) :is(button,a,input,select,textarea):focus-visible { outline:2px solid #bfa66b!important; outline-offset:3px; }

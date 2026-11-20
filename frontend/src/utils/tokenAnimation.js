@@ -40,7 +40,7 @@ export function fitClosedEyeImage(source,target) {
 }
 
 export function tokenPresentation(image,animation,options={}) {
- const c=normalizeTokenAnimation(animation || {enabled:false});
+ const c=automaticTokenAnimation(image,animation);
  const back=Boolean(options.playerView && !options.sheetOpen);
  const selected=back ? (options.combat ? c.combatBackImage || c.combatImage || c.backImage : c.backImage) : (options.combat ? c.combatImage : '');
  const shown=selected || image;
@@ -48,3 +48,8 @@ export function tokenPresentation(image,animation,options={}) {
 }
 
 
+
+// Novas imagens recebem movimento padrão sem depender do estúdio do mestre.
+export function automaticTokenAnimation(image,animation) {
+ return normalizeTokenAnimation(animation && (!animation.image || animation.image===image) ? {...animation,image} : {image});
+}

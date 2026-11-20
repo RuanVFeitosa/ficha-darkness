@@ -1,3 +1,4 @@
+import ProtocolLogo from '../ui/ProtocolLogo';
 import { espiralDie } from '../../utils/espiralDice';
 import React from 'react';
 
@@ -17,7 +18,7 @@ export function EspiralDashboardHeader({ agents, pending, loading, onRefresh, on
       <div className="ed-header-actions"><span className="ed-session"><i /> MESA DE CONTROLE</span><button type="button" onClick={onRefresh} disabled={loading} className="ed-refresh">{loading ? 'Atualizando…' : '↻ Atualizar'}</button><button type="button" onClick={onHome} className="ed-home">Início ↗</button></div>
     </header>
     <section className="ed-intro" aria-labelledby="ed-title">
-      <div className="ed-intro-copy"><span className="ed-eyebrow">NARRATIVA / PERSONAGENS / CONSEQUÊNCIAS</span><h1 id="ed-title">Toda escolha<br />deixa uma <em>marca.</em></h1><p>Organize sua mesa. Acompanhe quem atravessa a história.<br />Prepare o que vem depois.</p><div className="ed-system-switch" role="group" aria-label="Sistema do dashboard"><button type="button" aria-pressed="false" onClick={() => onSystemChange('darkness')}>DARKNESS</button><button type="button" aria-pressed="true" onClick={() => onSystemChange('espiral')}>ESPIRAL <span>↗</span></button></div></div>
+      <div className="ed-intro-copy"><span className="ed-eyebrow">NARRATIVA / PERSONAGENS / CONSEQUÊNCIAS</span><h1 id="ed-title">Toda escolha<br />deixa uma <em>marca.</em></h1><p>Organize sua mesa. Acompanhe quem atravessa a história.<br />Prepare o que vem depois.</p><div className="ed-system-switch" role="group" aria-label="Sistema do dashboard"><button type="button" aria-pressed="false" onClick={() => onSystemChange('darkness')}><ProtocolLogo /></button><button type="button" aria-pressed="true" onClick={() => onSystemChange('espiral')}>ESPIRAL <span>↗</span></button></div></div>
       <div className="ed-intro-art" aria-hidden="true"><span className="ed-orbit-label">CADA VOLTA, UMA NOVA HISTÓRIA.</span><EspiralSigil /><span className="ed-orbit-index">ES / 01</span></div>
       <dl className="ed-summary"><div><dt>Agentes no arquivo</dt><dd>{String(agents).padStart(2, '0')}<span>Fichas ESPIRAL neste dispositivo</span></dd></div><div><dt>Triagens pendentes</dt><dd>{String(pending).padStart(2, '0')}<span>Solicitações aguardando análise</span></dd></div><div className="ed-summary-note"><dt>Princípio da mesa</dt><dd>A intenção vem<br />antes dos dados.<span>O resto é consequência.</span></dd></div></dl>
     </section>

@@ -24,7 +24,7 @@ export function mergeTokenUpdate(current={},incoming) {
 }
 
 export function tokenTransformCache(transforms) {
-  const fields=new Set(['x','z','elevation','scale','rotacao','olharCamera','lanterna','combat','animationEnabled','uvPermitida','hidden','audience','origin','revision']);
+  const fields=new Set(['x','z','elevation','scale','rotacao','olharCamera','lanterna','combat','animationEnabled','uvPermitida','hidden','removed','audience','origin','revision']);
   return Object.fromEntries(Object.entries(transforms).map(([id,state])=>[id,Object.fromEntries(Object.entries(state).filter(([key])=>fields.has(key)))]));
 }
 

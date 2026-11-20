@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import {render,screen,fireEvent,waitFor} from '@testing-library/react';
 import PlayerAppearance from './PlayerAppearance';
 import { PALETA_CLARA, salvarPaletaFicha } from '../../utils/playerAppearance';
@@ -10,16 +10,24 @@ async function abrir(props = {}) {
  const callbacks = { onSavePagina: jest.fn().mockResolvedValue(true), onSavePaletas: jest.fn().mockResolvedValue(true), onFichaSalva: jest.fn() };
  render(<PlayerAppearance perfil={{nome:'Ana'}} fichas={fichas} {...callbacks} {...props}/>);
  fireEvent.click(screen.getByText('Paletas de cores'));
- await screen.findByLabelText('Nome da paleta');
+ await screen.findByLabelText('Cor do halo');
  return callbacks;
 }
-test('cria uma paleta nomeada sem aplicar e permite reutilizar na página', async () => {
+
+test('aplica as cores atuais diretamente sem salvar na biblioteca',async()=>{
+ const cb=await abrir();
+ fireEvent.change(screen.getByLabelText('Cor do halo'),{target:{value:'#2255aa'}});
+ fireEvent.click(screen.getByText('Aplicar paleta'));
+ await waitFor(()=>expect(cb.onSavePagina).toHaveBeenCalledWith(expect.objectContaining({halo:'#2255aa'})));
+ expect(cb.onSavePaletas).not.toHaveBeenCalled();
+});
+test('guarda cores sem exigir nome e permite reutilizar na página', async () => {
  const cb = await abrir();
- fireEvent.change(screen.getByLabelText('Nome da paleta'), {target:{value:'Minha paleta'}});
+ expect(screen.queryByLabelText('Nome da paleta')).toBeNull();
  fireEvent.change(screen.getByLabelText('Cor do halo'), {target:{value:'#ff0000'}});
  fireEvent.change(screen.getByLabelText('Cor do símbolo'), {target:{value:'#002ee6'}});
  fireEvent.click(screen.getByText('Salvar nova paleta'));
- await waitFor(()=>expect(cb.onSavePaletas).toHaveBeenCalledWith([expect.objectContaining({nome:'Minha paleta',cores:expect.objectContaining({halo:'#ff0000',simbolo:'#002ee6'})})]));
+ await waitFor(()=>expect(cb.onSavePaletas).toHaveBeenCalledWith([expect.objectContaining({nome:'Paleta 1',cores:expect.objectContaining({halo:'#ff0000',simbolo:'#002ee6'})})]));
  expect(cb.onSavePagina).not.toHaveBeenCalled();
  fireEvent.click(await screen.findByText('Aplicar paleta'));
  await waitFor(()=>expect(cb.onSavePagina).toHaveBeenCalledWith(expect.objectContaining({halo:'#ff0000',simbolo:'#002ee6'})));
@@ -40,12 +48,12 @@ test('recupera a biblioteca, edita a mesma paleta e aplica a uma ficha',async()=
  expect(cb.onFichaSalva).toHaveBeenCalled();
  expect(cb.onSavePagina).not.toHaveBeenCalled();
 });
-test('erro ao salvar mantém o rascunho e não oferece aplicação',async()=>{
+test('erro ao guardar mantém as cores disponíveis para aplicar',async()=>{
  const onSavePaletas=jest.fn().mockResolvedValue(false);
  await abrir({onSavePaletas});
- fireEvent.change(screen.getByLabelText('Nome da paleta'),{target:{value:'Rascunho'}});
+ fireEvent.change(screen.getByLabelText('Cor do halo'),{target:{value:'#123456'}});
  fireEvent.click(screen.getByText('Salvar nova paleta'));
  expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível salvar');
- expect(screen.getByLabelText('Nome da paleta')).toHaveValue('Rascunho');
- expect(screen.queryByText('Aplicar paleta')).not.toBeInTheDocument();
+ expect(screen.getByLabelText('Cor do halo')).toHaveValue('#123456');
+ expect(screen.getByText('Aplicar paleta')).toBeInTheDocument();
 });

@@ -823,3 +823,7 @@
 .absoluto-merchant .abs-merchant-detail .merchant-inspection-content{column-gap:26px}
 .absoluto-merchant .abs-merchant-detail .merchant-specification dl>div{padding-left:2px;padding-right:8px}
 @media(max-width:700px){.absoluto-merchant .abs-merchant-detail{padding:14px 16px 18px}}
+/* The ESPIRAL catalogue shares Helena's scenery while retaining its sheet data. */
+.absoluto-merchant .espiral-store-toolbar-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; }
+.absoluto-merchant .espiral-store-search { display: grid; gap: 8px; color: #bdb9a6; font: 10px 'Courier New', monospace; }
+.absoluto-merchant .espiral-store-search input { width: 100%; box-sizing: border-box; padding: 12px; color: #e5dfce; background: #10110d; border: 1px solid #cbb77c50; }

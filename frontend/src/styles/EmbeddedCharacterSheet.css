@@ -1,0 +1,93 @@
+
+/* Embedded character sheets respond to their panel, not the browser window. */
+.espiral-app.es-embedded { container: embedded-character-sheet / inline-size; width:100%; min-width:0; box-sizing:border-box; }
+.espiral-app.es-embedded .es-main { width:100%; min-width:0; max-width:none; box-sizing:border-box; }
+.espiral-app.es-embedded :is(.pd-sheet-right,.es-content,.es-sidebar,.pd-equipment-sidebar,.es-resource) { min-width:0; max-width:100%; box-sizing:border-box; }
+.espiral-app.protocolo-app.es-embedded .pd-sheet-workspace { grid-template-columns:minmax(300px,360px) minmax(0,1fr); gap:20px; }
+.espiral-app.protocolo-app.es-embedded .pd-sheet-workspace>.es-hero { position:static; top:auto; min-width:0; padding:14px; }
+.espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-hero>.es-hero-art,
+.espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-attribute-rail { width:min(100%,330px); }
+.espiral-app.protocolo-app.es-embedded .pd-sheet-right .es-layout.pd-resource-layout { grid-template-columns:minmax(0,1fr); gap:18px; }
+.espiral-app.protocolo-app.es-embedded .pd-sheet-right .pd-equipment-sidebar { grid-column:auto; }
+.espiral-app.protocolo-app.es-embedded .pd-sheet-right .pd-equipment-sidebar .es-combat-kit { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.espiral-app.protocolo-app.es-embedded .pd-sheet-right .pd-resource-layout .es-resources { grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr)); }
+.espiral-app.protocolo-app.es-embedded .pd-sheet-right .es-sidebar { position:static; top:auto; grid-column:auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr)); align-items:start; }
+.espiral-app.es-embedded .es-tabs { display:flex; flex-wrap:wrap; min-width:0; gap:0; }
+.espiral-app.es-embedded .es-tabs button { flex:1 1 auto; min-width:0; white-space:normal; overflow-wrap:anywhere; }
+.espiral-app.es-embedded .pd-test-dice-toolbar { display:flex; flex-wrap:wrap; gap:12px; min-width:0; }
+.espiral-app.es-embedded :is(.pd-pressure-picker,.pd-pressure-picker>div,.es-resource-dots) { flex-wrap:wrap; min-width:0; }
+.espiral-app.es-embedded :is(.es-resource-name,.es-resource-grade,.es-purpose p) { overflow-wrap:anywhere; }
+/* Reserve the first row for the skill; pool hints must not squeeze its name. */
+.espiral-app.protocolo-app.es-embedded .pd-resource-layout .es-resource {
+ grid-template-columns:28px minmax(0,1fr) auto;
+ grid-template-rows:auto auto;
+ align-content:start;
+ gap:8px;
+}
+.espiral-app.protocolo-app.es-embedded .pd-resource-layout .es-resource-roll { grid-column:1; grid-row:1; }
+.espiral-app.protocolo-app.es-embedded .pd-resource-layout .es-resource-name {
+ grid-column:2; grid-row:1;
+ text-align:left;
+ overflow-wrap:normal;
+ word-break:normal;
+}
+.espiral-app.protocolo-app.es-embedded .pd-resource-layout .es-resource-dots { grid-column:3; grid-row:1; }
+.espiral-app.protocolo-app.es-embedded .pd-resource-layout .es-resource-grade {
+ grid-column:1/-1; grid-row:2;
+ width:100%; min-width:0;
+ text-align:left;
+ white-space:normal;
+ overflow-wrap:break-word;
+}
+.espiral-app.protocolo-app.es-embedded .pd-resource-layout .es-resource-grade .pd-success-range {
+ max-width:none;
+ white-space:normal;
+ overflow-wrap:break-word;
+}
+@container embedded-character-sheet (max-width:960px) {
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace { grid-template-columns:minmax(0,1fr); }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace>.es-hero { display:grid; grid-template-columns:minmax(260px,.9fr) minmax(0,1fr); grid-template-rows:auto auto; gap:18px; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-hero>.es-hero-art,
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-attribute-rail { grid-column:1; grid-row:1; height:390px; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-hero>.es-hero-vitals { grid-column:2; grid-row:1; align-self:center; padding:0; border:0; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-hero .es-edit { grid-column:1/-1; grid-row:2; }
+ .espiral-app.es-embedded .es-injury-workspace,.espiral-app.es-embedded .es-background-page { grid-template-columns:minmax(0,1fr); }
+}
+@container embedded-character-sheet (max-width:600px) {
+ .espiral-app.es-embedded .es-main { padding:12px; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace>.es-hero { grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto auto; gap:16px; padding:12px; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-hero>.es-hero-art,
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-attribute-rail { grid-column:1; grid-row:1; height:390px; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-hero>.es-hero-vitals { grid-column:1; grid-row:2; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-hero .es-edit { grid-row:3; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-right .pd-equipment-sidebar .es-combat-kit,
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-right .es-sidebar { grid-template-columns:minmax(0,1fr); }
+ .espiral-app.es-embedded .es-tabs button { flex:1 1 30%; font-size:11px; padding:9px 5px; }
+ .espiral-app.es-embedded .es-damage-fields { grid-template-columns:minmax(0,1fr); }
+}
+@container embedded-character-sheet (max-width:380px) {
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-hero>.es-hero-art { height:280px; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-attribute-rail { grid-row:2; width:100%; height:auto; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-rail-attributes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; height:auto; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-attribute-rail .es-rail-attribute { position:static; inset:auto; transform:none; width:100%; min-width:0; height:auto; min-height:106px; padding:8px; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-hero>.es-hero-vitals { grid-row:3; }
+ .espiral-app.protocolo-app.es-embedded .pd-sheet-workspace .es-hero .es-edit { grid-row:4; }
+ .espiral-app.es-embedded .hero-dots { grid-template-columns:60px repeat(10,minmax(0,1fr)); gap:2px; }
+}
+
+/* Keep defenses above the tabs, and leave every tab the full content width. */
+.espiral-app.es-embedded .es-embedded-defense { width:100%; min-width:0; margin-bottom:14px; }
+.espiral-app.es-embedded .es-embedded-defense .es-defense-card { margin:0; padding:14px 18px; width:100%; box-sizing:border-box; }
+.espiral-app.protocolo-app.es-embedded .es-embedded-defense .pd-defense-summary { display:flex; align-items:center; flex-wrap:wrap; gap:12px 22px; }
+.espiral-app.protocolo-app.es-embedded .es-embedded-defense .pd-defense-values { flex:1 1 260px; gap:16px; }
+.espiral-app.protocolo-app.es-embedded .es-embedded-defense .pd-defense-values>div { gap:6px; }
+.espiral-app.protocolo-app.es-embedded .es-embedded-defense .pd-defense-base { padding:8px; }
+.espiral-app.protocolo-app.es-embedded .es-embedded-defense .pd-defense-summary>p { margin:0; flex:0 0 auto; }
+.espiral-app.es-embedded .pd-sheet-workspace .pd-sheet-right .es-layout,
+.espiral-app.es-embedded .pd-sheet-workspace .pd-sheet-right .es-layout.pd-resource-layout { grid-template-columns:minmax(0,1fr); }
+.espiral-app.es-embedded .pd-sheet-workspace .pd-sheet-right .es-layout>.es-content { min-width:0; width:100%; }
+.espiral-app.es-embedded .pd-sheet-workspace .pd-sheet-right .es-layout>.es-sidebar { position:static; inset:auto; grid-column:1/-1; min-width:0; width:100%; }
+@container embedded-character-sheet (max-width:600px) {
+ .espiral-app.es-embedded .es-embedded-defense .es-defense-card { padding:12px; }
+ .espiral-app.protocolo-app.es-embedded .es-embedded-defense .pd-defense-summary>p { flex-basis:100%; }
+}

@@ -1,3 +1,4 @@
+import { darknessAbilityName } from '../../utils/darknessAbilityName';
 import EspiralDice from '../espiral/EspiralDice';
 import React, { useState } from 'react';
 import { CATEGORIAS_LOJA } from '../../data/catalogoLoja';
@@ -20,7 +21,7 @@ export default function BuildCatalog({ sistema, entries, selected, onToggle, bus
   const classeAtual=classe || classes[0]?.id;
   const categorias=tipo==='item' ? (espiral ? CATEGORIAS_ESPIRAL : CATEGORIAS_LOJA) : espiral ? [...new Set(fonte.map(e=>e.categoria))].map(c=>({id:c,nome:c==='vertentes' ? 'Vertentes' : c})) : secoes;
   const atual=categorias.some(c=>c.id===categoria) ? categoria : categorias[0]?.id;
-  const resultados=fonte.filter(e=>(espiral || tipo==='item' || e.classeId===classeAtual) && e.categoria===atual && !(espiral && tipo==='item' && atual==='armas' && e.weaponGroup!==arma) && normalizar(`${e.nome} ${e.descricao} ${e.grupo} ${(e.niveis || []).join(' ')}`).includes(normalizar(busca)));
+  const resultados=fonte.filter(e=>(espiral || tipo==='item' || e.classeId===classeAtual) && e.categoria===atual && !(espiral && tipo==='item' && atual==='armas' && e.weaponGroup!==arma) && normalizar(`${espiral ? darknessAbilityName(e.nome) : e.nome} ${e.descricao} ${e.grupo} ${(e.niveis || []).join(' ')}`).includes(normalizar(busca)));
   return <section className={`build-catalog ${espiral ? 'bc-espiral' : 'bc-absoluto'}`} aria-label={`Catálogo de builds ${espiral ? 'ESPIRAL' : 'Sistema Absoluto'}`}>
     <Tabs label="Tipo de seleção da build" opcoes={[{id:'habilidade',nome:'Habilidades'},{id:'item',nome:'Armas e equipamentos'}]} valor={tipo} onChange={v=>{setTipo(v);setCategoria('');setBusca('');}}/>
     {!espiral && tipo==='habilidade' && <Tabs label="Classes do Sistema Absoluto" opcoes={classes} valor={classeAtual} onChange={setClasse}/>}
@@ -33,12 +34,12 @@ export default function BuildCatalog({ sistema, entries, selected, onToggle, bus
       const custo=CUSTOS_ESPERANCA_HABILIDADES[e.nome] || [0,0];
       const selecionado=selected.includes(e.id);
       return <article key={e.id} className={`bc-card ${tipo==='item' ? 'bc-card-item' : 'bc-card-habilidade'}`}>
-        <small className="bc-categoria">{tipo==='item' ? e.armaStatus?.tipo || categorias.find(c=>c.id===e.categoria)?.nome : espiral ? `${e.grupo}${e.acao ? ` · Ação ${e.acao}` : ''}` : secoes.find(c=>c.id===e.categoria)?.nome}</small><h3>{e.nome}</h3>
+        <small className="bc-categoria">{tipo==='item' ? e.armaStatus?.tipo || categorias.find(c=>c.id===e.categoria)?.nome : espiral ? `${e.grupo}${e.acao ? ` · Ação ${e.acao}` : ''}` : secoes.find(c=>c.id===e.categoria)?.nome}</small><h3>{espiral ? darknessAbilityName(e.nome) : e.nome}</h3>
         {espiral && tipo==='habilidade' ? <><p className="bc-esperanca">{e.categoria==='vertentes' ? 'Habilidade de Vertente' : custo[0] ? `Esperança: ${custo[0]} no Fracasso / ${custo[1]} no Sucesso com Consequência` : 'Esperança: sem custo'}</p><ol className="bc-niveis">{niveis.map((n,i)=><li key={i}><b>Nível {['I','II','III'][i] || i+1}</b><p>{n}</p></li>)}</ol></> : <>
           {espiral && tipo==='item' && <div className="bc-fatos">{e.damage && <span>Dano<strong>{<EspiralDice value={e.damage}/>}</strong></span>}{e.value!==undefined && <span>Proteção<strong>{e.value}</strong></span>}{e.region && <span>Região<strong>{e.region}</strong></span>}</div>}
           <p className="bc-descricao">{e.descricao}</p>{!espiral && e.armaStatus && <ArmaAbsoluta dados={e.armaStatus}/>}{e.custo && <small>Custo de uso: {e.custo}</small>}
         </>}
-        <footer>{!espiral && e.preco!==undefined && <strong>{e.preco} cr</strong>}<button type="button" aria-pressed={selecionado} aria-label={`${selecionado ? 'Remover' : 'Adicionar'} ${e.nome} ${selecionado ? 'da' : 'à'} build`} onClick={()=>onToggle(e.id)}>{selecionado ? '− Remover' : '+ Combinar'}</button></footer>
+        <footer>{!espiral && e.preco!==undefined && <strong>{e.preco} cr</strong>}<button type="button" aria-pressed={selecionado} aria-label={`${selecionado ? 'Remover' : 'Adicionar'} ${espiral ? darknessAbilityName(e.nome) : e.nome} ${selecionado ? 'da' : 'à'} build`} onClick={()=>onToggle(e.id)}>{selecionado ? '− Remover' : '+ Combinar'}</button></footer>
       </article>;
     })}</div>{!resultados.length && <p>Nenhum registro encontrado nesta categoria.</p>}
   </section>;

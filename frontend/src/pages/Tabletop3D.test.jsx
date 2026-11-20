@@ -7,7 +7,7 @@ import {moveTokenWithCollision,mapCollisionPending,mapCollisionMeshes,createToke
 import React from 'react';
 import { render,screen,fireEvent } from '@testing-library/react';
 import * as THREE from 'three';
-import { Camera, useTokenDragCollision, PlayerTokenNavigation, StaticSceneCinema, SceneBoundary } from './Tabletop3D';
+import { Camera, useMasterTokenDrag, useTokenDragCollision, PlayerTokenNavigation, StaticSceneCinema, SceneBoundary } from './Tabletop3D';
 import { useFrame } from '@react-three/fiber';
 const mockCamera = new THREE.PerspectiveCamera();
 let mockOrbit;
@@ -500,4 +500,127 @@ test.each([false,true])('shoulder camera can look above and below the horizon (t
  expect(mockOrbit.minPolarAngle).toBeLessThan(Math.PI/2);
  expect(mockOrbit.maxPolarAngle).toBeGreaterThan(Math.PI/2+Math.PI/3);
  expect(mockOrbit.maxPolarAngle).toBeLessThan(Math.PI);
+});
+
+
+test('WASD continua movendo o jogador depois de clicar em um botão da interface', () => {
+  const move = jest.fn();
+  const view = render(<><button type="button">Cena</button><PlayerTokenNavigation enabled cameraRelative={false} position={[10,20]} onMove={move}/></>);
+  const button = screen.getByRole('button', { name: 'Cena' });
+  button.focus();
+  fireEvent.keyDown(button, { key: 'w' });
+  useFrame.mock.calls[useFrame.mock.calls.length - 1][0]({ camera: mockCamera }, 0.016);
+  expect(move).toHaveBeenCalled();
+  expect(move.mock.calls[0][0][1]).toBeLessThan(20);
+  fireEvent.keyUp(button, { key: 'w' });
+  view.unmount();
+});
+
+test('click movement walks gradually, respects speed and ignores WASD input',()=>{
+ const move=jest.fn(),done=jest.fn();
+ const {unmount}=render(<PlayerTokenNavigation enabled movementMode="click" destination={[5,0]} position={[0,0]} collision={false} cameraRelative={false} onMove={move} onDestinationEnd={done}/>);
+ const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+ window.dispatchEvent(new KeyboardEvent('keydown',{key:'w',bubbles:true}));
+ frame({camera:mockCamera},1/60);
+ expect(move).toHaveBeenCalledTimes(1);
+ const next=move.mock.calls[0][0];
+ expect(next[0]).toBeGreaterThan(0);expect(next[0]).toBeLessThan(.65/60);
+ expect(next[1]).toBe(0);expect(done).not.toHaveBeenCalled();
+ unmount();
+});
+test('click movement never overshoots a nearby destination and stops on arrival',()=>{
+ const move=jest.fn(),done=jest.fn();
+ const props={enabled:true,movementMode:'click',destination:[.03,0],position:[0,0],collision:false,cameraRelative:false,speed:5,onMove:move,onDestinationEnd:done};
+ const {rerender,unmount}=render(<PlayerTokenNavigation {...props}/>);
+ let frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];frame({camera:mockCamera},.05);
+ expect(move.mock.calls[0][0][0]).toBeCloseTo(.03);
+ rerender(<PlayerTokenNavigation {...props} position={[.03,0]}/>);
+ frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];frame({camera:mockCamera},1/60);
+ expect(done).toHaveBeenCalledWith('arrived');unmount();
+});
+test('click movement stops when collision prevents reaching the destination',()=>{
+ mapCollisionPending.mockReturnValue(false);createTokenCollisionWorld.mockReturnValue({});
+ moveTokenWithCollision.mockReturnValue({position:[0,0],elevation:0,velocity:0});
+ const done=jest.fn();
+ const {unmount}=render(<PlayerTokenNavigation enabled collision movementMode="click" destination={[5,0]} position={[0,0]} cameraRelative={false} onMove={jest.fn()} onDestinationEnd={done}/>);
+ const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];for(let i=0;i<10;i++)frame({camera:mockCamera},.05);
+ expect(done).toHaveBeenCalledWith('blocked');unmount();
+});
+
+test.each(['wasd','click'])('disabled tactical navigation ignores keyboard and click destinations (%s)',mode=>{
+ const move=jest.fn();
+ const {unmount}=render(<PlayerTokenNavigation enabled={false} movementMode={mode} destination={[5,0]} position={[0,0]} onMove={move} cameraRelative={false}/>);
+ window.dispatchEvent(new KeyboardEvent('keydown',{key:'w',bubbles:true}));
+ const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];for(let i=0;i<30;i++)frame({camera:mockCamera},1/60);
+ expect(move).not.toHaveBeenCalled();unmount();
+});
+
+test('master drag preserves the click offset, resolves collision and saves height on release',()=>{
+ createTokenCollisionWorld.mockReturnValue({});mapCollisionPending.mockReturnValue(false);
+ let handlers;const ref={current:{position:new THREE.Vector3().set(2,3,4)}},dragRef={current:null};
+ const start=jest.fn(),end=jest.fn();
+ moveTokenWithCollision.mockReturnValue({position:[5,6],elevation:4});
+ function Harness(){handlers=useMasterTokenDrag({ref,dragRef,enabled:true,scale:.35,baseElevation:1,onDragStart:start,onDragEnd:end});return null;}
+ render(<Harness/>);
+ const target={setPointerCapture:jest.fn(),hasPointerCapture:()=>true,releasePointerCapture:jest.fn()};
+ const event={button:0,pointerId:1,clientX:10,clientY:10,target,stopPropagation:jest.fn(),ray:{intersectPlane:(_plane,hit)=>hit.set(3,3,5)}};
+ handlers.begin(event);expect(start).toHaveBeenCalledTimes(1);
+ handlers.move({...event,clientX:30,ray:{intersectPlane:(_plane,hit)=>hit.set(8,3,10)}});
+ expect(moveTokenWithCollision).toHaveBeenLastCalledWith(expect.anything(),[2,3,4],[7,9],expect.anything());
+ handlers.finish(event);
+ expect(end).toHaveBeenCalledWith([5,6],true,3);
+ expect(dragRef.current).toBeNull();expect(target.releasePointerCapture).toHaveBeenCalledWith(1);
+});
+test('3D drag remains disabled for players',()=>{
+ let handlers;const start=jest.fn();
+ function Harness(){handlers=useMasterTokenDrag({ref:{current:{position:new THREE.Vector3()}},dragRef:{current:null},enabled:false,onDragStart:start});return null;}
+ render(<Harness/>);handlers.begin({button:0});expect(start).not.toHaveBeenCalled();
+});
+
+test('desktop sheet frames the full token in the uncovered right field and restores the camera',()=>{
+ const original=mockGl.domElement.getBoundingClientRect;
+ mockGl.domElement.getBoundingClientRect=()=>({left:0,width:1600,height:900});
+ const props={mode:'character',followPosition:[4,7],followHeight:1,getSheetBounds:()=>({right:940})};
+ try {
+  const {rerender}=render(<Camera {...props}/>);
+  mockCamera.position.set(4,.7,8);mockOrbit.target.set(4,.5,7);
+  const before=mockCamera.position.toArray();
+  rerender(<Camera {...props} sheetFocus/>);
+  let frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+  for(let i=0;i<12;i++)frame({},.05);
+  const distance=mockCamera.position.z-7;
+  expect(distance).toBeGreaterThanOrEqual(1.8);
+  const projectedOffset=(4-mockOrbit.target.x)/(distance*Math.tan(mockCamera.fov*Math.PI/360)*(Number(mockCamera.aspect)||16/9));
+  expect(projectedOffset).toBeCloseTo(940/1600);
+  rerender(<Camera {...props}/>);
+  frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+  for(let i=0;i<12;i++)frame({},.05);
+  expect(mockCamera.position.toArray()).toEqual(before);
+ }finally{mockGl.domElement.getBoundingClientRect=original;}
+});
+
+test.each(['room','cinema','panorama','detail','firstPerson'])('sheet keeps the whole character on the right in %s view despite camera changes',view=>{
+ const original=mockGl.domElement.getBoundingClientRect;
+ mockGl.domElement.getBoundingClientRect=()=>({left:0,width:1600,height:900});
+ const props={mode:'character',view,followPosition:[4,7],followHeight:1,getSheetBounds:()=>({right:940})};
+ try{
+  const {rerender}=render(<Camera {...props}/>);
+  mockCamera.position.set(4,8,7);mockOrbit.target.set(4,.5,7);
+  rerender(<Camera {...props} sheetFocus/>);
+  const frame=useFrame.mock.calls[useFrame.mock.calls.length-1][0];
+  const before=mockCamera.position.toArray();
+  frame({},.05);const intermediate=mockCamera.position.toArray();
+  expect(intermediate).not.toEqual(before);
+  for(let i=0;i<11;i++)frame({},.05);
+  const expected=mockCamera.position.toArray();
+  expect(intermediate).not.toEqual(expected);
+  mockCamera.position.set(100,0,-40);mockCamera.fov=15;
+  frame({},.05);
+  expect(mockCamera.position.toArray()).toEqual(expected);
+  expect(mockCamera.fov).toBe(50);
+  expect(mockCamera.position.y).toBe(.5);
+  const distance=Math.hypot(mockCamera.position.x-mockOrbit.target.x,mockCamera.position.z-mockOrbit.target.z);
+  expect(distance).toBeGreaterThanOrEqual(1.8);
+  expect(mockOrbit.enabled).toBe(false);
+ }finally{mockGl.domElement.getBoundingClientRect=original;}
 });

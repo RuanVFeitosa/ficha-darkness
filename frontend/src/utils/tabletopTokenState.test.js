@@ -31,3 +31,7 @@ test('cache de ajustes não duplica imagens grandes nem o modelo no localStorage
 test('estado antigo de uma porta não desfaz uma abertura recente nem altera outra porta',()=>{
  expect(mergeDoorStates({a:{open:true,revision:2},b:{open:false,revision:3}},{a:{open:false,revision:1}})).toEqual({a:{open:true,revision:2},b:{open:false,revision:3}});
 });
+
+test('removed tokens retain their state in the local cache for restoration',()=>{
+ expect(tokenTransformCache({hero:{removed:true,x:2,z:3}})).toEqual({hero:{removed:true,x:2,z:3}});
+});

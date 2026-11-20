@@ -1,0 +1,19 @@
+
+.pd-darkness-resonance { position:absolute; left:50%; top:50%; width:290px; height:290px; transform:translate(-50%,-50%); z-index:0; pointer-events:none; --mind-symbol:url('../../public/simbolo-darkness.png'); }
+.pd-darkness-resonance>span { position:absolute; inset:0; mask:var(--mind-symbol) center/contain no-repeat; -webkit-mask:var(--mind-symbol) center/contain no-repeat; transition:opacity 1.6s ease,filter 1.6s ease; }
+.pd-darkness-fracture { background:#d8e4e6; opacity:var(--mind-echo-opacity); animation:pdDarknessFracture var(--mind-cycle) ease-in-out infinite; }
+.pd-darkness-fracture.is-upper { clip-path:polygon(0 0,100% 0,100% 37%,65% 44%,47% 30%,30% 47%,0 40%); }
+.pd-darkness-fracture.is-lower { clip-path:polygon(0 62%,30% 54%,49% 69%,66% 56%,100% 62%,100% 100%,0 100%); animation-direction:reverse; animation-delay:-1.8s; background:#b1a399; }
+.pd-darkness-afterimage { background:radial-gradient(ellipse,transparent 23%,#c6b6a0 64%,transparent 80%); opacity:calc(var(--mind-fading)*.45); filter:blur(.8px); animation:pdDarknessExhale 7s ease-in-out infinite; }
+.espiral-app.protocolo-app[data-portrait-symbol=darkness] .es-hero-art>.es-spiral:not(.es-hope-spiral) { opacity:calc(.24 + var(--pd-hope-saturation,1)*.61); filter:contrast(calc(1 + var(--pd-perception-loss,0)*.4)) brightness(calc(.55 + var(--pd-hope-saturation,1)*.45)); transition:opacity 1.8s ease,filter 1.8s ease; }
+.espiral-app.protocolo-app[data-portrait-symbol=darkness] .pd-symbol-emergence { opacity:calc(.2 + var(--pd-hope-saturation,1)*.75); transition:opacity 1.8s ease; }
+.espiral-app.protocolo-app[data-pavor-active=true] .pd-darkness-resonance { opacity:0; visibility:hidden; }
+@keyframes pdDarknessFracture { 0%,65%,100% { transform:translate(0,0); } 70% { transform:translate(calc(var(--mind-fracture)*-8px),calc(var(--mind-fracture)*2px)); } 78% { transform:translate(calc(var(--mind-fracture)*5px),calc(var(--mind-fracture)*-3px)); } 88% { transform:translate(calc(var(--mind-fracture)*-3px),0); } }
+@keyframes pdDarknessExhale { 0%,100% { transform:scale(.98); opacity:calc(var(--mind-fading)*.2); } 55% { transform:scale(1.06); opacity:calc(var(--mind-fading)*.45); } }
+@media(max-width:760px) { .pd-darkness-resonance { width:255px; height:255px; } }
+@media(prefers-reduced-motion:reduce) { .pd-darkness-resonance>span { animation:none; transition:none; } }
+
+.espiral-app.protocolo-app .hero-dots { position:relative; }
+.espiral-app.protocolo-app .hero-dots>.pd-reserve-condition { position:absolute; grid-column:2 / -1; grid-row:1; left:0; right:0; top:50%; transform:translateY(-50%); width:auto; margin:0; padding:0; z-index:2; text-align:center; color:#d5a68f; font:italic 13px/1 Georgia,serif; letter-spacing:.5px; text-shadow:0 0 3px var(--es-bg,#000),0 0 7px var(--es-bg,#000); pointer-events:none; }
+.espiral-app.protocolo-app .hero-sanity .hero-dots>.pd-reserve-condition { color:#aabfca; }
+.espiral-app.protocolo-app .hero-vital[data-state=empty] .hero-dots>button { opacity:.14; }

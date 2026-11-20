@@ -1,3 +1,4 @@
+import AdaptacaoDarkness from '../components/adaptacao/AdaptacaoDarkness';
 import SheetOptionalSystems from '../components/campanha/SheetOptionalSystems';
 import {SheetSurvival} from '../components/campanha/SurvivalIndicators';
 import {changeWeaponAmmo,weaponAmmo} from '../utils/optionalSystems';
@@ -511,6 +512,7 @@ const FichaPersonagem = () => {
     document.addEventListener('keydown', teclado);
     return () => document.removeEventListener('keydown', teclado);
   }, [menuFichaAberto]);
+  const [darknessAdaptation, setDarknessAdaptation] = useState(false);
   const [adaptacaoAberta, setAdaptacaoAberta] = useState(false);
   const [contarBalas, setContarBalas] = useState(false);
   const [campanhasDaFicha, setCampanhasDaFicha] = useState([]);
@@ -6379,7 +6381,7 @@ const FichaPersonagem = () => {
             </div>
           </div>
         </div>
-        <div className="abs-heading"><div className="abs-portrait-stage"><HopeWhispers resource={personagem.esperanca} messages={personagem.esperancaMensagens}/><img className="abs-portrait-symbol" src="/simbolo-absoluto.png" alt="" aria-hidden="true"/><div
+        <div className="abs-heading"><div className="abs-portrait-stage"><HopeWhispers resource={personagem.esperanca} messages={personagem.esperancaMensagens}/><img className="abs-portrait-symbol" src="/simbolo-darkness.png" alt="" aria-hidden="true"/><div
                     className={`profile-wrapper profile-editavel ${estadoSanidadePerfil} ${estadoEsperancaPerfil} ${
                       temRitoAtivo ? "rito-ativo-perfil" : ""
                     } ${ritoDesativando ? "rito-desativando" : ""} ${
@@ -6415,6 +6417,7 @@ const FichaPersonagem = () => {
                   <div className="abs-level"><span>NÍVEL</span><strong>{personagem.nivel || 1}</strong></div></div>
         </div>
       </header>
+      {darknessAdaptation && <AdaptacaoDarkness original={personagem} sistema="absoluto" fichaId={fichaId} onClose={() => setDarknessAdaptation(false)} onComplete={id => { window.location.href = `/?sistema=darkness&protocolo=1&ficha=${encodeURIComponent(id)}`; }} />}
       {adaptacaoAberta && <AdaptacaoEspiral personagem={personagem} fichaId={fichaId} onClose={() => setAdaptacaoAberta(false)} onConcluir={sheet => { localStorage.setItem(`espiral:sheet:v1:${fichaId}`, JSON.stringify(sheet)); window.location.href=`/?sistema=espiral&ficha=${encodeURIComponent(fichaId)}`; }} />}
       <nav className="menu-ficha-flutuante ficha-drawer-menu" aria-label="Atalhos da ficha">
         {menuFichaAberto && (
@@ -6442,10 +6445,10 @@ const FichaPersonagem = () => {
             </button>
             <button
               type="button"
-              onClick={() => { setMenuFichaAberto(false); setAdaptacaoAberta(true); }}
+              onClick={() => { setMenuFichaAberto(false); setDarknessAdaptation(true); }}
             >
               <Icon path={mdiSwapHorizontal} size={1} />
-              <span>Adaptação ao Espiral</span>
+              <span>Adaptar ficha para Darkness</span>
             </button>
             <button
               type="button"

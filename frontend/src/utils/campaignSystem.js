@@ -1,6 +1,6 @@
 export const campaignSystem = campaign => campaign?.sistema === 'espiral' ? 'espiral' : 'absoluto';
 export const sheetSystem = sheet => sheet?.sistema === 'espiral' || String(sheet?.fichaId || sheet?.ficha_id || '').startsWith('espiral:') ? 'espiral' : 'absoluto';
-export const systemLabel = system => system === 'espiral' ? 'ESPIRAL' : 'Absoluto 1.0';
+export const systemLabel = system => system === 'espiral' ? 'ESPIRAL' : 'Darkness';
 
 // Membership remains removable even when the original sheet was deleted or is
 // unavailable on this browser.

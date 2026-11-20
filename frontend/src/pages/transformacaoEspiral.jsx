@@ -1,3 +1,5 @@
+import ProtocolLogo from '../components/ui/ProtocolLogo';
+import { darknessAbilityName } from '../utils/darknessAbilityName';
 import { buscarFichaEspiral, salvarFichaEspiral } from '../services/espiralApi';
 import EspiralDice from '../components/espiral/EspiralDice';
 import { espiralDie } from '../utils/espiralDice';
@@ -5,23 +7,21 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   mdiArrowLeft,
   mdiLockOutline,
+  mdiMinus,
   mdiPlus,
-  mdiStarFourPoints,
 } from "@mdi/js";
 import Icon from "@mdi/react";
-import { ATTRIBUTES, GRADES, RESOURCES, VERTENTE_HABILIDADES, VERTENTES, freshSheet } from "../data/espiral";
-import {
-  APRIMORAMENTOS_HABILIDADES_ESPIRAL,
-  CUSTOS_ESPERANCA_HABILIDADES,
-  HABILIDADES_ESPIRAL,
-} from "../data/habilidadesEspiral";
+import { ATTRIBUTES, GRADES, RESOURCES, VERTENTE_HABILIDADES, VERTENTES, freshSheet, normalizarFichaEspiral } from "../data/espiral";
+import DarknessTransformationCatalog from '../components/espiral/DarknessTransformationCatalog';
 import "../styles/TransformacaoEspiral.css";
+import "../styles/TransformationAttributes.css";
+import "../styles/TransformationResources.css";
 
 const storageKey = (id) => `espiral:sheet:v1:${id}`;
 const loadSheet = (id) => {
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey(id)) || "null");
-    return saved?.version === 1 ? { ...freshSheet(), ...saved } : freshSheet();
+    return saved?.version === 1 ? normalizarFichaEspiral(saved) : freshSheet();
   } catch {
     return freshSheet();
   }
@@ -34,9 +34,7 @@ export default function TransformacaoEspiral() {
   const id =
     new URLSearchParams(window.location.search).get("ficha") || "principal";
   const [sheet, setSheet] = useState(() => loadSheet(id));
-  const [activeSection, setActiveSection] = useState("recursos");
-  const [abilityCategory, setAbilityCategory] = useState("Ofensiva");
-  const [selectedAbility, setSelectedAbility] = useState(null);
+  const [activeSection, setActiveSection] = useState("habilidades");
   const [selectedVertente, setSelectedVertente] = useState(sheet.vertente);
   const [notice, setNotice] = useState("");
   const [loading,setLoading]=useState(true);
@@ -94,6 +92,19 @@ export default function TransformacaoEspiral() {
       `${name} avançou para Grau ${roman[next]}.`,
     );
   };
+  const downgradeResource = (name) => {
+    const current = Math.max(0, Math.min(4, Number(sheet.resources?.[name]) || 0));
+    if (current <= 0) return;
+    const refund = resourceCosts[current];
+    save(
+      {
+        ...sheet,
+        resources: { ...sheet.resources, [name]: current - 1 },
+        evolution: { ...(sheet.evolution || {}), points: points + refund },
+      },
+      `${name} reduzido para Grau ${roman[current - 1]}. Você recebeu ${refund} ${refund === 1 ? "ponto" : "pontos"} de evolução.`,
+    );
+  };
   const upgradeAttribute = (key) => {
     const current = Number(sheet.attributes?.[key]) || 1;
     const next = current + 1;
@@ -108,7 +119,17 @@ export default function TransformacaoEspiral() {
       `${ATTRIBUTES[key].name} avançou para o Estágio ${next}.`,
     );
   };
-  const acquireAbility = (ability) => {
+  const downgradeAttribute = (key) => {
+    const current = Math.max(1, Math.min(5, Number(sheet.attributes?.[key]) || 1));
+    if (current <= 1) return;
+    const refund = attributeCosts[current];
+    save({
+      ...sheet,
+      attributes: { ...sheet.attributes, [key]: current - 1 },
+      evolution: { ...(sheet.evolution || {}), points: points + refund },
+    }, `${ATTRIBUTES[key].name} reduzido para o Estágio ${current - 1}. Você recebeu ${refund} pontos de evolução.`);
+  };
+  const acquireAbility = (ability, abilityCategory) => {
     const id = `${abilityCategory}:${ability[0]}`;
     const current = sheet.evolution?.abilities || [];
     if (points < 3 || current.some((item) => item.id === id)) return;
@@ -124,7 +145,7 @@ export default function TransformacaoEspiral() {
           ],
         },
       },
-      `${ability[0]} foi incorporada ao arquivo.`,
+      `${darknessAbilityName(ability[0])} foi incorporada ao arquivo.`,
     );
   };
   const upgradeAbility = (id) => {
@@ -142,7 +163,7 @@ export default function TransformacaoEspiral() {
           ),
         },
       },
-      `${ability.name} avançou para o Nível ${ability.level + 1}.`,
+      `${darknessAbilityName(ability.name)} avançou para o Nível ${ability.level + 1}.`,
     );
   };
   const upgradeVertente = () => {
@@ -194,13 +215,12 @@ export default function TransformacaoEspiral() {
         >
           <Icon path={mdiArrowLeft} size={0.8} /> Voltar à ficha
         </a>
-        <span>ESPIRAL // PROGRESSÃO DE CAMPO</span>
+        <span><ProtocolLogo /> / ARQUIVO DE EVOLUÇÃO</span>
         <h1>Transformação</h1>
         <p>
-          A experiência muda quem sobrevive. O Mestre define os Pontos de
-          Evolução recebidos ao final de cada sessão.
+          Nada atravessa a escuridão sem mudar. Escolha as marcas que ficam.
         </p>
-        <div className="transformacao-spiral" aria-hidden="true" />
+        <div className="transformacao-emblem" aria-hidden="true"><img src="/simbolo-darkness.png" alt=""/><span>EXPERIÊNCIA DEIXA MARCAS.</span></div>
       </header>
       <section className="transformacao-shell">
         <aside className="transformacao-side">
@@ -209,10 +229,8 @@ export default function TransformacaoEspiral() {
           <div />
           <small>PONTOS DE EVOLUÇÃO</small>
           <b>{points}</b>
-          <p>
-            Este saldo é concedido pelo Mestre. Cada avanço consome pontos e
-            acontece um estágio por vez.
-          </p>
+          <p>Experiência concedida pelo Mestre. Cada escolha deixa uma marca no seu repertório.</p>
+          <div className="transformacao-side-summary"><span>REPERTÓRIO</span><strong>{(sheet.evolution?.abilities || []).length} habilidades</strong><span>VERTENTE</span><strong>{sheet.vertente || "Não definida"}</strong></div>
         </aside>
         <section className="transformacao-main">
           <nav
@@ -266,271 +284,107 @@ export default function TransformacaoEspiral() {
             </p>
           )}
           {activeSection === "recursos" && (
-            <div className="transformacao-list">
-              {RESOURCES.map((name) => {
+            <section className="dt-resources" aria-label="Evolução de recursos">
+              <div className="dt-resources-intro">
+                <div><span>PRÁTICA, CONHECIMENTO, SOBREVIVÊNCIA</span><p>Invista experiência para avançar um grau. Cada passo custa mais que o anterior.</p></div>
+                <div className="dt-resource-cost-key" aria-label="Custo por grau">
+                  {GRADES.slice(1).map((grade, index) => <span key={grade}><b>{roman[index + 1]}</b>{index + 1} {index === 0 ? "ponto" : "pontos"}</span>)}
+                </div>
+              </div>
+              <div className="dt-resource-grid">
+              {RESOURCES.map((name, index) => {
                 const current = Number(sheet.resources?.[name]) || 0;
                 const next = current + 1;
                 const cost = resourceCosts[next];
                 const maxed = current >= 4;
+                const missing = maxed ? 0 : Math.max(0, cost - points);
                 return (
-                  <article className="transformacao-card" key={name}>
-                    <div>
-                      <span>RECURSO</span>
-                      <h2>{name}</h2>
-                      <p>
-                        Grau atual:{" "}
-                        <b>
-                          {roman[current]} · {GRADES[current]}
-                        </b>
-                      </p>
+                  <article className={`dt-resource-card ${maxed ? "maxed" : ""}`} key={name} aria-label={`${name}: Grau ${roman[current]} ${GRADES[current]}`}>
+                    <header><span>RECURSO / {String(index + 1).padStart(2, "0")}</span><span>{maxed ? "DOMINADO" : `GRAU ${roman[current]}`}</span></header>
+                    <h2>{name}</h2>
+                    <div className="dt-resource-current"><span>GRAU ATUAL</span><strong>{GRADES[current]}</strong></div>
+                    <ol className="dt-resource-track" aria-label={`Progressão: grau ${roman[current]} de IV`}>
+                      {GRADES.map((grade, gradeIndex) => <li key={grade} className={gradeIndex <= current ? "reached" : ""} aria-current={gradeIndex === current ? "step" : undefined} title={`${roman[gradeIndex]} · ${grade}`}><span/><small>{roman[gradeIndex]}</small></li>)}
+                    </ol>
+                    <div className="dt-resource-next">
+                      {maxed ? <><span>TRAJETÓRIA COMPLETA</span><strong>Domínio alcançado</strong></> : <><span>PRÓXIMO GRAU · {roman[next]}</span><strong>{GRADES[next]}</strong></>}
                     </div>
-                    <div className="transformacao-card-action">
-                      <small>
-                        {maxed
-                          ? "DOMINADO"
-                          : `${roman[next]} · ${GRADES[next]}`}
-                      </small>
-                      <strong>
-                        {maxed
-                          ? "—"
-                          : `${cost} ${cost === 1 ? "PONTO" : "PONTOS"}`}
-                      </strong>
-                      <button
-                        type="button"
-                        disabled={loading || saving || maxed || points < cost}
-                        onClick={() => upgradeResource(name)}
-                      >
-                        {maxed ? (
-                          <Icon path={mdiLockOutline} size={0.75} />
-                        ) : (
-                          <Icon path={mdiPlus} size={0.75} />
-                        )}{" "}
-                        {maxed ? "Concluído" : "Avançar"}
-                      </button>
-                    </div>
+                    <footer>
+                      <div><span>INVESTIMENTO</span><strong>{maxed ? "—" : `${cost} ${cost === 1 ? "PONTO" : "PONTOS"}`}</strong></div>
+                      <div className="dt-resource-actions">
+                        <button
+                          className="dt-resource-upgrade"
+                          type="button"
+                          disabled={loading || saving || maxed || points < cost}
+                          onClick={() => upgradeResource(name)}
+                          aria-label={maxed ? `${name}: grau máximo` : `Avançar ${name} para grau ${roman[next]}`}
+                        >
+                          {maxed ? <Icon path={mdiLockOutline} size={0.75} /> : <Icon path={mdiPlus} size={0.75} />}{" "}
+                          {maxed ? "Grau máximo" : "Avançar recurso"}
+                        </button>
+                        <button
+                          className="dt-resource-downgrade"
+                          type="button"
+                          disabled={loading || saving || current <= 0}
+                          onClick={() => downgradeResource(name)}
+                          aria-label={current <= 0 ? `${name}: já está no grau mínimo` : `Reduzir ${name} para grau ${roman[current - 1]} e recuperar ${resourceCosts[current]} pontos`}
+                        >
+                          {current <= 0 ? <Icon path={mdiLockOutline} size={0.7} /> : <Icon path={mdiMinus} size={0.7} />}{" "}
+                          {current <= 0 ? "Grau mínimo" : `Reduzir · recuperar ${resourceCosts[current]} ${resourceCosts[current] === 1 ? "ponto" : "pontos"}`}
+                        </button>
+                      </div>
+                      <small>{maxed ? "Este recurso já atingiu o grau máximo." : missing ? `Faltam ${missing} ${missing === 1 ? "ponto" : "pontos"} de evolução.` : "Pontos suficientes para avançar."}</small>
+                    </footer>
                   </article>
                 );
               })}
-            </div>
+              </div>
+            </section>
           )}
           {activeSection === "atributos" && (
-            <div className="transformacao-list">
-              {Object.entries(ATTRIBUTES).map(([key, attribute]) => {
-                const current = Number(sheet.attributes?.[key]) || 1;
+            <section className="dt-attributes" aria-label="Evolução de atributos">
+              <div className="dt-attributes-intro"><span>QUATRO FORMAS DE ENFRENTAR A ESCURIDÃO</span><p>Cada estágio fortalece seu dado de atributo. Veja onde você está e o que muda no próximo passo.</p></div>
+              <div className="dt-attribute-grid">
+              {Object.entries(ATTRIBUTES).map(([key, attribute], index) => {
+                const current = Math.max(1, Math.min(5, Number(sheet.attributes?.[key]) || 1));
                 const next = current + 1;
                 const cost = attributeCosts[next];
                 const maxed = current >= 5;
+                const missing = maxed ? 0 : Math.max(0, cost - points);
                 return (
-                  <article className="transformacao-card" key={key}>
-                    <div>
-                      <span>ATRIBUTO</span>
+                  <article className={`dt-attribute-card ${maxed ? 'maxed' : ''}`} key={key} aria-label={attribute.name}>
+                    <header><span>0{index + 1} / ATRIBUTO</span><span>{current} / 5</span></header>
                       <h2>{attribute.name}</h2>
-                      <p>
-                        {attribute.hint} · Estágio atual:{" "}
-                        <b>
-                          {current} · {<EspiralDice value={espiralDie(current * 2 + 2)}/>}
-                        </b>
-                      </p>
-                    </div>
-                    <div className="transformacao-card-action">
-                      <small>
-                        {maxed
-                          ? "ESTÁGIO MÁXIMO"
-                          : <>ESTÁGIO {next} · <EspiralDice value={espiralDie(next * 2 + 2)}/></>}
-                      </small>
-                      <strong>{maxed ? "—" : `${cost} PONTOS`}</strong>
+                      <p className="dt-attribute-hint">{attribute.hint}</p>
+                    <div className="dt-attribute-current"><div><span>SEU ESTÁGIO</span><strong>{attribute.stages[current - 1]}</strong><small>Estágio {current}</small></div><div className="dt-attribute-die"><EspiralDice value={espiralDie(current * 2 + 2)}/></div></div>
+                    <ol className="dt-attribute-track" aria-label={`Progressão de ${attribute.name}: estágio ${current} de 5`}>{attribute.stages.map((stage, i) => <li key={stage} className={i + 1 <= current ? 'reached' : ''} aria-current={i + 1 === current ? 'step' : undefined} title={`Estágio ${i + 1}: ${stage}`}><span/><small>{i + 1}</small></li>)}</ol>
+                    <div className="dt-attribute-next">{maxed ? <><span>CAMINHO CONCLUÍDO</span><strong>{attribute.stages[4]}</strong><small>Você alcançou o estágio máximo.</small></> : <><span>PRÓXIMO ESTÁGIO / {next}</span><div><strong>{attribute.stages[next - 1]}</strong><EspiralDice value={espiralDie(next * 2 + 2)}/></div><small>d{current * 2 + 2} → d{next * 2 + 2}</small></>}</div>
+                    <footer>
+                      <div className="dt-attribute-cost"><span>{maxed ? 'PROGRESSÃO' : 'INVESTIMENTO'}</span><strong>{maxed ? 'Completa' : <>{cost}<small> pontos</small></>}</strong></div>
                       <button
                         type="button"
+                        aria-label={maxed ? `${attribute.name}: estágio máximo` : `Evoluir ${attribute.name} para o estágio ${next}`}
                         disabled={loading || saving || maxed || points < cost}
                         onClick={() => upgradeAttribute(key)}
                       >
-                        {maxed ? (
-                          <Icon path={mdiLockOutline} size={0.75} />
-                        ) : (
-                          <Icon path={mdiPlus} size={0.75} />
-                        )}{" "}
-                        {maxed ? "Concluído" : "Avançar"}
+                        {maxed ? 'Estágio máximo' : saving ? 'Salvando…' : 'Evoluir atributo'}<span aria-hidden="true">{maxed ? '✓' : '↗'}</span>
                       </button>
-                    </div>
+                      <p className="dt-attribute-budget">{maxed ? 'Todos os cinco estágios alcançados.' : missing ? `Faltam ${missing} ponto${missing === 1 ? '' : 's'} de evolução.` : `Saldo após o avanço: ${points - cost} ponto${points - cost === 1 ? '' : 's'}.`}</p>
+                      <div className="dt-attribute-reduce">
+                        <button type="button" disabled={loading || saving || current <= 1} aria-label={`Diminuir ${attribute.name}`} onClick={() => downgradeAttribute(key)}>
+                          <span>− Diminuir estágio</span><strong>{current > 1 ? `+${attributeCosts[current]} pontos` : 'Mínimo'}</strong>
+                        </button>
+                        <small>{current > 1 ? `Estágio ${current - 1} · d${current * 2 + 2} → d${current * 2} · ${attribute.stages[current - 2]}` : 'O atributo não pode ficar abaixo do estágio 1.'}</small>
+                      </div>
+                    </footer>
                   </article>
                 );
               })}
-            </div>
+              </div>
+            </section>
           )}
           {activeSection === "habilidades" && (
-            <section className="transformacao-ability-area">
-              <div className="transformacao-ability-categories">
-                {Object.keys(HABILIDADES_ESPIRAL).map((name) => (
-                  <button
-                    type="button"
-                    className={abilityCategory === name ? "active" : ""}
-                    onClick={() => {
-                      setAbilityCategory(name);
-                      setSelectedAbility(null);
-                    }}
-                    key={name}
-                  >
-                    {name}
-                  </button>
-                ))}
-              </div>
-              <div
-                className="transformacao-spiral-map"
-                aria-label={`Habilidades de ${abilityCategory}`}
-              >
-                {HABILIDADES_ESPIRAL[abilityCategory].map((ability, index) => {
-                  const id = `${abilityCategory}:${ability[0]}`;
-                  const acquired = (sheet.evolution?.abilities || []).some(
-                    (item) => item.id === id,
-                  );
-                  return (
-                    <button
-                      type="button"
-                      className={`transformacao-ability-node ${selectedAbility?.[0] === ability[0] ? "selected" : ""} ${acquired ? "acquired" : ""}`}
-                      style={{ "--node": index }}
-                      onClick={() => setSelectedAbility(ability)}
-                      key={ability[0]}
-                    >
-                      <i>{String(index + 1).padStart(2, "0")}</i>
-                      <span>{ability[0]}</span>
-                      {acquired && <b>●</b>}
-                    </button>
-                  );
-                })}
-                <div className="transformacao-spiral-core">
-                  <Icon path={mdiStarFourPoints} size={1.15} />
-                  <span>SEM PRÉ-REQUISITOS</span>
-                </div>
-              </div>
-              <aside className="transformacao-ability-detail">
-                {selectedAbility ? (
-                  <>
-                    {(() => {
-                      const owned = (sheet.evolution?.abilities || []).find(
-                        (item) =>
-                          item.id ===
-                          `${abilityCategory}:${selectedAbility[0]}`,
-                      );
-                      const details = APRIMORAMENTOS_HABILIDADES_ESPIRAL[
-                        selectedAbility[0]
-                      ] || [
-                        selectedAbility[2],
-                        "Aprimoramento de Nível II.",
-                        "Aprimoramento de Nível III.",
-                      ];
-                      const cost = CUSTOS_ESPERANCA_HABILIDADES[
-                        selectedAbility[0]
-                      ] || [0, 0];
-                      const dots = (amount) =>
-                        amount ? "૦".repeat(amount) : "—";
-                      return (
-                        <>
-                          <span>
-                            {abilityCategory.toUpperCase()} · AÇÃO{" "}
-                            {selectedAbility[1].toUpperCase()}
-                          </span>
-                          <h2>{selectedAbility[0]}</h2>
-                          <div className="transformacao-hope-cost">
-                            <span>CUSTO DE ESPERANÇA</span>
-                            <b>
-                              {cost[0]
-                                ? `${dots(cost[0])} FRACASSO / ${dots(cost[1])} SUCESSO COM CONSEQUÊNCIA`
-                                : "— SEM CUSTO"}
-                            </b>
-                          </div>
-                          <div className="transformacao-level-one">
-                            <b>▰ ▱ ▱ NÍVEL 1</b>
-                            <p>{details[0]}</p>
-                          </div>
-                          <div className="transformacao-levels">
-                            {details.slice(1).map((detail, index) => {
-                              const level = index + 2;
-                              return (
-                              <div
-                                className={
-                                  level === (owned?.level || 1)
-                                    ? "current"
-                                    : level === (owned?.level || 1) + 1
-                                      ? "next"
-                                      : ""
-                                }
-                                key={detail}
-                              >
-                                <b>
-                                  {level === 2 ? "▰ ▰ ▱" : "▰ ▰ ▰"} NÍVEL {level}
-                                </b>
-                                <small>{detail}</small>
-                              </div>
-                              );
-                            })}
-                          </div>
-                          {owned ? (
-                            <div className="transformacao-upgrade-action">
-                              <strong>ADQUIRIDA · NÍVEL {owned.level}</strong>
-                              <button
-                                type="button"
-                                disabled={loading || saving || owned.level >= 3 || points < 3}
-                                onClick={() => upgradeAbility(owned.id)}
-                              >
-                                {owned.level >= 3 ? (
-                                  <Icon path={mdiLockOutline} size={0.75} />
-                                ) : (
-                                  <Icon path={mdiPlus} size={0.75} />
-                                )}{" "}
-                                {owned.level >= 3
-                                  ? "Nível máximo"
-                                  : `Aprimorar para o Nível ${owned.level + 1} · 3 pontos`}
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              disabled={loading || saving || points < 3}
-                              onClick={() => acquireAbility(selectedAbility)}
-                            >
-                              <Icon path={mdiPlus} size={0.75} /> Adquirir · 3
-                              pontos
-                            </button>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </>
-                ) : (
-                  <>
-                    <Icon path={mdiStarFourPoints} size={1.3} />
-                    <h2>Escolha uma possibilidade</h2>
-                    <p>
-                      As habilidades não formam uma árvore. Selecione um ponto
-                      da espiral para consultar e adquirir a habilidade que
-                      fizer sentido para sua história.
-                    </p>
-                  </>
-                )}
-              </aside>
-              {(sheet.evolution?.abilities || []).length > 0 && (
-                <section className="transformacao-owned-list">
-                  <span>HABILIDADES ADQUIRIDAS</span>
-                  {sheet.evolution.abilities.map((item) => (
-                    <article key={item.id}>
-                      <div>
-                        <strong>{item.name}</strong>
-                        <small>
-                          {item.category} · NÍVEL {item.level}
-                        </small>
-                      </div>
-                      <button
-                        type="button"
-                        disabled={loading || saving || item.level >= 3 || points < 3}
-                        onClick={() => upgradeAbility(item.id)}
-                      >
-                        {item.level >= 3 ? "Máximo" : `Aprimorar · 3`}
-                      </button>
-                    </article>
-                  ))}
-                </section>
-              )}
-            </section>
+            <DarknessTransformationCatalog owned={sheet.evolution?.abilities || []} points={points} busy={loading || saving} onAcquire={acquireAbility} onUpgrade={upgradeAbility} />
           )}
           {activeSection === "vertente" && (
             <section className="transformacao-vertente-area">

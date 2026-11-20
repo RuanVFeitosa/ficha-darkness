@@ -30,3 +30,18 @@ test('dossiê mostra identidade, atributos e recursos preservando valores zero e
  expect(container.querySelector('.ad-esperanca .ad-meter-track>i')).toHaveStyle({width:'75%'});
  fireEvent.keyDown(screen.getByRole('button',{name:'Abrir ficha de Ana'}),{key:'Enter'});expect(onAbrir).toHaveBeenCalledWith(ficha,'jogador');
 });
+
+test('foto e sombra de Ellie são decorativas e cada cartão abre o próprio personagem', () => {
+ const onAbrir=jest.fn();
+ const ellie={fichaId:'ellie',personagem:{nome:'Ellie',fotoPerfil:'/ellie.png'}};
+ const jorge={fichaId:'jorge',personagem:{nome:'Jorge'}};
+ const {container}=render(<div className="darkness-master"><Card ficha={jorge} onAbrir={onAbrir}/><Card ficha={ellie} onAbrir={onAbrir}/></div>);
+ const cover=container.querySelector('.ad-agent-cover');
+ expect(cover).toHaveStyle({pointerEvents:'none'});
+ expect(cover.querySelector('div')).toHaveStyle({pointerEvents:'none'});
+ expect(cover).toHaveAttribute('aria-hidden','true');
+ fireEvent.click(screen.getByRole('button',{name:'Abrir ficha de Jorge'}));
+ expect(onAbrir).toHaveBeenLastCalledWith(jorge,'jogador');
+ fireEvent.click(screen.getByRole('button',{name:'Abrir ficha de Ellie'}));
+ expect(onAbrir).toHaveBeenLastCalledWith(ellie,'jogador');
+});

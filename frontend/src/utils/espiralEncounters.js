@@ -1,3 +1,4 @@
+import { isProtocolSheet, protocolDefenses, freshProtocolSheet, protocolPool, resolveProtocolRoll } from '../data/protocoloDarkness';
 import { ATTRIBUTES, RESOURCES, freshSheet, integrityMax, resolveRoll } from '../data/espiral';
 
 export const ESPIRAL_ENCOUNTERS_KEY = 'espiral:encounters:v1';
@@ -6,7 +7,8 @@ export const ESPIRAL_ENCOUNTERS_CHANGED = 'espiral:encounters-changed';
 export function espiralEncounterForTabletop(record) {
   const sheet = normalizeEspiralEncounter(record);
   return { ...sheet, id: `espiral:${sheet.id}`, nome: sheet.name, pasta: sheet.folder,
-    fotoPerfil: sheet.profileImage, defesa: sheet.attributes.sentido + 2,
+    fotoPerfil: sheet.profileImage, defesa: isProtocolSheet(sheet) ? protocolDefenses(sheet.attributes).base : sheet.attributes.sentido + 2,
+    ...(isProtocolSheet(sheet) ? {esquiva:protocolDefenses(sheet.attributes).dodge,bloqueio:protocolDefenses(sheet.attributes).block} : {}),
     sanidade: { atual: sheet.sanity, max: 10 },
     integridade: { atual: sheet.integrity, max: integrityMax(sheet.attributes.pulso) },
   };
@@ -15,6 +17,9 @@ const bounded = (value, min, max) => Math.min(max, Math.max(min, Number.isFinite
 
 export function createEspiralEncounter(type, id) {
   return { ...freshSheet(), id, sistema: 'espiral', tipo: type === 'npc' ? 'npc' : 'inimigo', name: type === 'npc' ? 'Novo NPC' : 'Novo inimigo', folder: '', phase: 'play' };
+}
+export function createDarknessEncounter(type, id) {
+  return { ...createEspiralEncounter(type, id), ...freshProtocolSheet(), id, tipo: type === 'npc' ? 'npc' : 'inimigo', name: type === 'npc' ? 'Novo NPC' : 'Novo inimigo', folder: '', phase: 'play' };
 }
 
 export function normalizeEspiralEncounter(record) {
@@ -58,5 +63,9 @@ export function rollEspiralEncounter(sheet, attribute, resource, difficulty, die
   const sides = normalized.attributes[attribute] * 2 + 2;
   const count = 1 + normalized.resources[resource];
   const pressure = normalized.pressure + (resource === 'Controle Mental' && normalized.sanity === 0 ? 1 : 0);
+  if (isProtocolSheet(normalized)) {
+    const pool = protocolPool({ count, pressure });
+    return { ...resolveProtocolRoll(Array.from({ length: pool.count }, () => die(sides)), Array.from({ length: pool.pressure }, () => die(6)), sides, Math.round(bounded(difficulty, 1, 5))), label: `${ATTRIBUTES[attribute].name} + ${resource}`, sides };
+  }
   return { ...resolveRoll(Array.from({ length: count }, () => die(sides)), Array.from({ length: pressure }, () => die(6)), sides, bounded(difficulty, 1, 30)), label: `${ATTRIBUTES[attribute].name} + ${resource}`, sides };
 }

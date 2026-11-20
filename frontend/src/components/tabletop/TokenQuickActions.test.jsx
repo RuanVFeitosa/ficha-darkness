@@ -21,3 +21,10 @@ test('initiative errors remain visible and do not close the dialog',async()=>{
  expect(add).toHaveBeenCalledWith(8);expect(close).not.toHaveBeenCalled();
  await waitFor(()=>expect(screen.getByRole('button',{name:'Adicionar à iniciativa'})).not.toBeDisabled());
 });
+
+test('token can be removed through its quick actions',()=>{
+ const remove=jest.fn();
+ render(<TokenQuickActions name="Guarda" onRemove={remove} onVisibility={()=>{}} onFocus={()=>{}} onEdit={()=>{}} onClose={()=>{}}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Remover da mesa'}));
+ expect(remove).toHaveBeenCalledTimes(1);
+});

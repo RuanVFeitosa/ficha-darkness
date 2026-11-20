@@ -1,14 +1,16 @@
+import TabletopSheetGate from './components/tabletop/TabletopSheetGate';
 import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import PageTransition from "./pages/pageTransition";
 import { pageTransitionSystem } from "./utils/pageTransitionSystem";
 import "./App.css";
 import "./styles/Responsive.css";
+import "./styles/ProtocoloDarkness.css";
 import {
   MESTRE_AUTH_KEY,
   TABLETOP_3D_AUTH_KEY,
 } from "./constants/masterAccess";
 import DialogoGlobal from "./components/ui/DialogoGlobal";
-import { hasEspiralToken, readEspiralTabletopSheet, MISSING_ESPIRAL_TOKEN } from "./utils/espiralTabletop";
+import { MISSING_ESPIRAL_TOKEN } from "./utils/espiralTabletop";
 import LojaEspiral from "./pages/lojaEspiral";
 import TransformacaoEspiral from "./pages/transformacaoEspiral";
 import Tabletop3DAccess from './components/tabletop/Tabletop3DAccess';
@@ -93,7 +95,7 @@ function App() {
 
   const params = new URLSearchParams(search);
   void (params.get("sistema") === "darkness");
-  const sistemaEspiral = params.get("sistema") === "espiral";
+  const sistemaEspiral = params.get("sistema") === "espiral" || (params.get("sistema") === "darkness" && params.get("protocolo") === "1");
 
   useEffect(() => {
     const rota = new URLSearchParams(search);
@@ -154,9 +156,6 @@ function App() {
     temFicha,
   ]);
 
-  if(params.get("tabletop3d")==="1" && sistemaEspiral && params.get("papel")!=="mestre" && !hasEspiralToken(readEspiralTabletopSheet(params.get("ficha") || "principal"))) {
-    return <><PageTransition active={transitionActive} sistema={transitionSystem} simboloSistema={transitionFicha}/><DialogoGlobal /><Suspense fallback={<div>Carregando ficha…</div>}><FichaEspiral tabletopAccessError={MISSING_ESPIRAL_TOKEN}/></Suspense></>;
-  }
   if (!params.has("jogador") && params.get("tabletop3d") !== "1" && sistemaEspiral && !estaCriando && !estaNaMesa && !estaNoCriadorCutscene && !estaNoDashboardMestre && !estaNaLoja && !estaNaLojaEspiral && !estaNaTransformacaoEspiral && !estaNaArvoreHabilidades && !estaNoUpgrade) {
     return <><PageTransition active={transitionActive} sistema={transitionSystem} simboloSistema={transitionFicha}/><DialogoGlobal /><Suspense fallback={<div style={{ color: '#aaa', padding: 40 }}>Abrindo ficha…</div>}><FichaEspiral key={params.get('ficha') || 'principal'} /></Suspense></>;
   }
@@ -171,7 +170,7 @@ function App() {
         {estaNoCriadorCutscene ? (mestreAutorizado ? <CriadorCutscene key={params.get('campanha')+':'+params.get('cena')}/> : <TelaInicial onNavigate={navegarComTransicao}/>) : params.has("jogador") ? (<PaginaJogador key={params.get("jogador")} codigo={params.get("jogador")} onNavigate={navegarComTransicao} />) : estaNoCriadorMapa3D && mestreAutorizado ? (
           <CriadorMapa3D />
         ) : params.get("tabletop3d") === "1" ? (
-          tabletop3DAutorizado ? <Tabletop3D /> : <Tabletop3DAccess onAuthorized={() => setTabletopUnlocked(true)} />
+          tabletop3DAutorizado ? <TabletopSheetGate key={params.get("ficha") || "principal"} id={params.get("ficha") || "principal"} enabled={sistemaEspiral && params.get("papel") !== "mestre"} missing={<FichaEspiral tabletopAccessError={MISSING_ESPIRAL_TOKEN}/>} >{sheet => <Tabletop3D initialPlayerSheet={sheet}/>}</TabletopSheetGate> : <Tabletop3DAccess onAuthorized={() => setTabletopUnlocked(true)} />
         ) : estaNaMesa ? (
           <Mesa />
         ) : estaNoDashboardMestre && mestreAutorizado ? (
@@ -179,15 +178,15 @@ function App() {
         ) : estaNaArvoreHabilidades ? (
           <ArvoreHabilidades />
         ) : estaNoUpgrade ? (
-          <UpgradeNivel />
+          <UpgradeNivel key={params.get('senha') || params.get('codigo') || params.get('ficha') || 'principal'} />
         ) : estaNaTransformacaoEspiral ? (
-          <TransformacaoEspiral />
+          <TransformacaoEspiral key={params.get('ficha') || 'principal'} />
         ) : estaNaLojaEspiral ? (
           <LojaEspiral />
         ) : estaNaLoja ? (
           <LojaHelena />
         ) : temFicha ? (
-          <FichaPersonagem />
+          <FichaPersonagem key={params.get('senha') || params.get('codigo') || params.get('ficha') || 'principal'} />
         ) : estaCriando ? (
           <CriarPersonagem key={params.get("sistema") || "escolha"} />
         ) : (

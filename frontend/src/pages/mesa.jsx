@@ -428,7 +428,7 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
   const arquivoDocumentoRef = useRef(null);
   const [fichaJogadorId, setFichaJogadorId] = useState(
     () =>
-      (params.get("sistema") === "espiral" && fichaUrl ? `espiral:${fichaUrl.replace(/^espiral:/, "")}` : fichaUrl) ||
+      params.get("vinculo") || (params.get("sistema") === "espiral" && fichaUrl ? `espiral:${fichaUrl.replace(/^espiral:/, "")}` : fichaUrl) ||
       localStorage.getItem(`darkness_mesa_ficha_${codigo}`) ||
       localStorage.getItem("fichaRPG_ultimaFicha") ||
       "",
@@ -3873,7 +3873,7 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
           </header>
           <iframe
             title={`Ficha de ${personagemJogador.nome}`}
-            src={membroJogador.ficha_id.startsWith("espiral:") ? `/?sistema=espiral&ficha=${encodeURIComponent(membroJogador.ficha_id.slice("espiral:".length))}&embed=mesa&campanhaTeste=${encodeURIComponent(campanha.codigo)}` : `/?sistema=darkness&ficha=${encodeURIComponent(personagemJogador.nome || membroJogador.ficha_id)}&senha=${encodeURIComponent(membroJogador.ficha_id)}&embed=mesa&campanhaTeste=${encodeURIComponent(campanha.codigo)}`}
+            src={(membroJogador.ficha_id.startsWith("espiral:") || membroJogador.ficha_id.startsWith("espiral_")) ? `/?sistema=espiral&ficha=${encodeURIComponent(membroJogador.ficha_id.slice(8))}&embed=mesa&campanhaTeste=${encodeURIComponent(campanha.codigo)}` : `/?sistema=darkness&ficha=${encodeURIComponent(personagemJogador.nome || membroJogador.ficha_id)}&senha=${encodeURIComponent(membroJogador.ficha_id)}&embed=mesa&campanhaTeste=${encodeURIComponent(campanha.codigo)}`}
           />
         </section>
       )}

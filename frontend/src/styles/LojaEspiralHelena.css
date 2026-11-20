@@ -1,0 +1,34 @@
+/* Keep the original two-column catalogue independent of Absoluto's card layout. */
+.espiral-helena { text-align: left; font-family: Arial, Helvetica, sans-serif; }
+.espiral-helena * { box-sizing: border-box; }
+.espiral-helena.absoluto-merchant .abs-store-hero { height: auto; min-height: 235px; }
+.espiral-helena .abs-store-hero-copy { margin: 0; padding: 85px 24px 28px; margin-left: 3vw; }
+.espiral-helena.absoluto-merchant .loja-voltar { position: absolute; top: 24px; left: calc(3vw + 24px); display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; text-decoration: none; font: 11px 'Courier New', monospace; border: 1px solid #cbb77c50; }
+.espiral-helena .espiral-store-toolbar-row { align-items: flex-start; margin-bottom: 20px; }
+.espiral-helena .loja-toolbar { margin-bottom: 0; }
+.espiral-helena .ritos-subabas { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px; margin: 0 0 22px; }
+.espiral-helena .ritos-subabas button { min-height: 34px; padding: 8px 12px; cursor: pointer; }
+.espiral-helena .espiral-store-ledger { margin-bottom: 22px; border-color: #cbb77c30; }
+.espiral-helena .espiral-store-ledger span, .espiral-helena .espiral-store-ledger small { color: #aaa68e; }
+.loja-page.espiral-helena .loja-layout { grid-template-rows: auto auto; gap: 24px 20px; }
+.espiral-helena .merchant-list { grid-column: 1; grid-row: 1 / 3; position: static; max-height: none; min-width: 0; }
+.espiral-helena .merchant-inspection { grid-column: 2; grid-row: 1; padding: 0 16px 16px; }
+.espiral-helena .merchant-specification { text-align: left; }
+.loja-page.espiral-helena .loja-layout > .loja-carrinho { grid-column: 2; grid-row: 2; position: static; margin: 0; min-width: 0; width: 100%; }
+.espiral-helena .loja-carrinho-topo, .espiral-helena .loja-total { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px; }
+.espiral-helena .loja-carrinho-topo > div { display: flex; align-items: center; gap: 8px; }
+.espiral-helena .loja-carrinho-vazio { margin: 0; padding: 16px; font: 12px/1.6 Arial, sans-serif; }
+.espiral-helena .loja-total strong { overflow-wrap: anywhere; }
+.espiral-helena .loja-finalizar { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; cursor: pointer; }
+@media (max-width: 900px) {
+  .loja-page.espiral-helena .loja-layout { display: flex; flex-direction: column; gap: 24px; }
+  .espiral-helena .merchant-list { width: 100%; max-height: 320px; overflow: auto; }
+  .espiral-helena .merchant-inspection { width: 100%; }
+  .espiral-helena .espiral-store-ledger { grid-template-columns: 1fr auto; gap: 10px; }
+  .espiral-helena .espiral-store-ledger > span { display: none; }
+}
+@media (max-width: 700px) {
+  .espiral-helena .abs-store-hero-copy { margin: 0; padding: 85px 24px 28px; }
+  .espiral-helena.absoluto-merchant .loja-voltar { left: 24px; }
+  .espiral-helena .espiral-store-search { width: 100%; }
+}

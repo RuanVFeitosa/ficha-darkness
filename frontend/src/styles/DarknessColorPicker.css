@@ -1,0 +1,20 @@
+.darkness-color-picker { min-width:0; margin:0; padding:14px; border:1px solid #ffffff20; border-radius:5px; background:#090909; }
+.darkness-color-picker legend { padding:0 6px; color:#d7cfc3; font-size:12px; }
+.darkness-color-picker .dcp-swatches { display:grid; grid-template-columns:repeat(6,1fr); gap:7px; margin-bottom:18px; }
+.darkness-color-picker .dcp-swatches button { width:100%; aspect-ratio:1; min-height:22px; padding:0; border:1px solid #ffffff25; border-radius:3px; cursor:pointer; }
+.darkness-color-picker .dcp-swatches button[aria-pressed=true] { outline:2px solid #eee4d5; outline-offset:2px; }
+.darkness-color-picker .dcp-swatches button:focus-visible { outline:2px solid white; outline-offset:3px; }
+.darkness-color-picker .dcp-sliders { display:grid; gap:12px; }
+.darkness-color-picker .dcp-sliders label { display:grid; gap:7px; color:#a9a29a; font:10px monospace; }
+.darkness-color-picker input.dcp-range { appearance:none; width:100%; height:7px; min-height:0; margin:0; padding:0; border:0; border-radius:8px; cursor:pointer; }
+.darkness-color-picker .dcp-range-0 { background:linear-gradient(to right,red,#ff0,#0f0,#0ff,#00f,#f0f,red); }
+.darkness-color-picker .dcp-range-1 { background:linear-gradient(to right,#888,var(--picker-hue)); }
+.darkness-color-picker .dcp-range-2 { background:linear-gradient(to right,#000,var(--picker-hue),#fff); }
+.darkness-color-picker .dcp-range::-webkit-slider-thumb { appearance:none; width:13px; height:13px; border:2px solid #eee; border-radius:50%; background:#242020; box-shadow:0 1px 4px #000; }
+.darkness-color-picker .dcp-range::-moz-range-thumb { width:10px; height:10px; border:2px solid #eee; border-radius:50%; background:#242020; }
+.darkness-color-picker .dcp-hex { display:flex; align-items:center; gap:8px; margin-top:18px; }
+.darkness-color-picker .dcp-hex i { flex:0 0 22px; height:22px; background:var(--picker-color); border:1px solid #ffffff30; border-radius:3px; }
+.darkness-color-picker .dcp-hex label { color:#9e9489; font:9px monospace; }
+.darkness-color-picker .dcp-hex input { min-width:0; width:100%; box-sizing:border-box; padding:7px; border:1px solid #ffffff25; border-radius:3px; background:#151212; color:#e8e1d5; font:11px monospace; }
+@media(max-width:380px) { .pd-pavor-color-fields { flex-direction:column; } }
+.pd-pavor-color-fields > .darkness-color-picker { flex:1; }

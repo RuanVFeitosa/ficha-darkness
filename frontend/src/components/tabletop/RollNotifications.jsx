@@ -1,3 +1,4 @@
+import RollingDie from '../espiral/RollingDie';
 import { espiralDiceText } from '../../utils/espiralDice';
 import React,{useEffect,useRef,useState} from 'react';
 import { injurySeverity } from '../../utils/espiralInjuries';
@@ -38,22 +39,21 @@ export function notificationDice(roll) {
  const sides=Number(detail.faces || detail.sides || String(roll.expressao || '').match(/d(\d+)/i)?.[1]) || 20;
  const source=detail.dadosDetalhados?.length ? detail.dadosDetalhados : detail.dados?.length ? detail.dados : detail.dice?.length ? detail.dice : detail.rolagens?.length ? detail.rolagens : [roll.resultado];
  const dice=source.map(die => ({value:Number(typeof die==='object' ? die.valor ?? die.value : die),sides:Number(die?.faces || die?.sides) || sides})).filter(die => Number.isFinite(die.value));
- return [...dice,...(Array.isArray(detail.pressure) ? detail.pressure.map(value => ({value,sides:6,pressure:true})) : [])];
+ const pool=[...dice.map((die,index)=>detail.bonusDice>0 && index>=dice.length-detail.bonusDice ? {...die,bonus:true}:die),...(Array.isArray(detail.pressure) ? detail.pressure.map(value=>({value,sides:6,pressure:true})):[]),...(Array.isArray(detail.extra)?detail.extra.map((value,index)=>({value,sides:Number(detail.extraDieSides?.[index] ?? detail.extraSides)||6,...(index===detail.relationshipExtraIndex?{relationship:true}:{})})):[])];
+ return [...pool.map((die,index)=>detail.pavor?.cancelled?.[index]?{...die,cancelled:true}:die),...(detail.pavor && Number.isFinite(Number(detail.pavor.value))?[{value:Number(detail.pavor.value),sides:Number(detail.pavor.sides)||6,dread:true}]:[])];
 }
 function FloatingRoll({roll}) {
  const [rolling,setRolling]=useState(true);
  useEffect(() => {const timer=setTimeout(() => setRolling(false),1200);return () => clearTimeout(timer);},[]);
  const title=notificationTitle(roll);
- return <article className={`tt3-floating-roll ${rolling ? 'is-rolling' : 'is-revealed'}`} aria-label={`Rolagem de ${roll.autor_nome || 'Jogador'}`}>
+ return <article className={`tt3-floating-roll ${rolling ? 'is-rolling' : 'is-revealed'}`} style={{'--pavor-primary':roll.detalhes?.pavor?.colors?.primary || '#db5b52','--pavor-glow':roll.detalhes?.pavor?.colors?.glow || '#e14d43'}} aria-label={`Rolagem de ${roll.autor_nome || 'Jogador'}`}>
   <div className="tt3-roll-author">{roll.autor_nome || 'Jogador'}</div>
-  <div className="tt3-floating-dice">{notificationDice(roll).map((die,index) => <div key={index} className={`tt3-floating-die${die.pressure ? ' is-pressure' : ''}`} style={{'--die-delay':`${index*55}ms`}} aria-label={rolling ? 'Dado rolando' : `d${die.sides}: ${die.value}`}>
-   <svg viewBox="0 0 100 100" aria-hidden="true"><polygon points={die.sides===4 ? '50,7 95,88 5,88' : die.sides===6 ? '20,12 80,12 92,24 92,80 80,92 20,92 8,80 8,24' : '50,4 94,28 94,74 50,97 6,74 6,28'}/>{die.sides!==6 && die.sides!==4 && <path d="M50 4 24 70 76 70 50 4 M6 28 24 70 50 97 76 70 94 28"/>}</svg>
-   <span aria-hidden="true">{rolling ? '?' : die.value}</span>
-  </div>)}</div>
+  {<div className="tt3-roll-test">{roll.detalhes?.sistema==='espiral' ? espiralDiceText(roll.expressao || 'Teste') : roll.expressao || 'Teste'}</div>}
+  {<div className="tt3-physical-dice" aria-label="Dados rolados" aria-busy={rolling}>{notificationDice(roll).map((die,index)=><div key={index} className={'pd-roll-die '+(die.pressure?'pressure':die.dread?'dread':die.bonus?'bonus':die.relationship?'relationship':'')+(die.cancelled && !rolling?' cancelled':!rolling && roll.detalhes?.type!=='formula' && roll.detalhes?.sistema==='espiral' && die.value>=4 && !die.dread?' hit':'')} aria-label={rolling?'Dado rolando':undefined}><RollingDie sides={die.sides} value={die.value} rolling={rolling} index={index}/><small>{die.dread?'Pavor':die.pressure?'Pressão':die.relationship?'Relação':die.bonus?'Bônus':''}{!rolling && die.cancelled?' · Anulado':''}</small></div>)}</div>}
   {!rolling && <h2 className={/falha|fracasso/i.test(title) ? 'is-failure' : /sucesso|crítico/i.test(title) ? 'is-success' : ''}>{title}</h2>}
  </article>;
 }
-export default function RollNotifications({rolls=[],mechanics}) {
+export default function RollNotifications({rolls=[],mechanics,sheetRollSource=null}) {
  const known=useRef(null),timers=useRef([]);
  const [recent,setRecent]=useState([]);
  useEffect(()=>{
@@ -62,10 +62,12 @@ export default function RollNotifications({rolls=[],mechanics}) {
   const fresh=visible.filter(roll=>!known.current.has(roll.id));
   if(!fresh.length)return;
   fresh.forEach(roll=>known.current.add(roll.id));
-  setRecent(previous=>[...fresh,...previous].slice(0,3));
+  const notify=fresh.filter(roll=>!sheetRollSource || roll.detalhes?.sourceSheetId!==sheetRollSource);
+  setRecent(previous=>[...notify,...previous].slice(0,3));
   timers.current.push(setTimeout(()=>setRecent(previous=>previous.filter(roll=>!fresh.some(item=>item.id===roll.id))),7000));
- },[rolls,mechanics]);
+ },[rolls,mechanics,sheetRollSource]);
  useEffect(()=>()=>timers.current.forEach(clearTimeout),[]);
- if(!recent.length)return null;
- return <aside className="tt3-roll-popups tt3-transparent-rolls" aria-label="Rolagens recentes" aria-live="polite">{recent.map(roll=><FloatingRoll key={roll.id} roll={roll}/>)}</aside>;
+ const displayed=recent.filter(roll=>!sheetRollSource || roll.detalhes?.sourceSheetId!==sheetRollSource);
+ if(!displayed.length)return null;
+ return <aside className={`tt3-roll-popups tt3-transparent-rolls tt3-sheet-style-rolls`} aria-label="Rolagens recentes" aria-live="polite">{displayed.map(roll=><FloatingRoll key={roll.id} roll={roll}/>)}</aside>;
 }

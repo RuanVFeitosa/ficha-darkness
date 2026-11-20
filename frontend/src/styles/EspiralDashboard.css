@@ -79,7 +79,7 @@
 .espiral-dashboard .ed-agent { display: block; width: 100%; padding: 0; overflow: hidden; background: #000000; border: 1px solid var(--ed-line); color: var(--ed-ink); text-align: left; transition: border-color .2s, transform .2s, box-shadow .2s; }
 .espiral-dashboard .ed-agent:hover { transform: translateY(-3px); border-color: var(--ed-red); box-shadow: 0 8px 24px #f5f5f50c; }
 .espiral-dashboard .ed-agent-photo { height: 205px; position: relative; overflow: hidden; background: #000000; }
-.espiral-dashboard .ed-agent-photo::after { position: absolute; inset: 50% 0 0; content: ''; background: linear-gradient(transparent, #10181099); pointer-events: none; }
+.espiral-dashboard .ed-agent-photo::after { display: none; }
 .espiral-dashboard .ed-agent-photo > img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
 .espiral-dashboard .ed-agent-code { position: absolute; left: 15px; bottom: 14px; z-index: 1; color: #f5f5f5; font: 8px 'Courier New', monospace; letter-spacing: .1em; }
 .espiral-dashboard .ed-agent-open { position: absolute; top: 12px; right: 12px; z-index: 1; width: 29px; height: 29px; display: grid; place-items: center; border: 1px solid #ffffff60; color: white; background: #f5f5f530; }

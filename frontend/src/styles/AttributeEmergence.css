@@ -1,0 +1,74 @@
+
+/* The attributes belong to the symbol, without a separate card surface. */
+.espiral-app.protocolo-app .pd-sheet-workspace .es-attribute-rail .es-rail-attributes > .es-rail-attribute,
+.espiral-app.protocolo-app .pd-sheet-workspace .es-attribute-rail .es-rail-attributes > .es-rail-attribute.selected {
+ background:transparent;
+ border:0;
+ border-radius:0;
+ box-shadow:none;
+ backdrop-filter:none;
+}
+.espiral-app.protocolo-app .pd-sheet-workspace .es-attribute-rail .es-rail-attributes > .es-rail-attribute::before,
+.espiral-app.protocolo-app .pd-sheet-workspace .es-attribute-rail .es-rail-attributes > .es-rail-attribute::after { content:none; }
+.espiral-app.protocolo-app .pd-sheet-workspace .es-attribute-rail .es-rail-name,
+.espiral-app.protocolo-app .pd-sheet-workspace .es-attribute-rail .es-rail-detail { position:relative; z-index:5; text-shadow:0 1px 3px #000,0 0 7px #000,0 0 12px #000; }
+.espiral-app.protocolo-app .pd-sheet-workspace .es-attribute-rail .es-attribute-dice-controls { position:relative; z-index:5; }
+.espiral-app.protocolo-app .pd-sheet-workspace .es-attribute-rail .es-rail-attribute.selected .es-rail-name { color:var(--es-accent,var(--es-text)); text-decoration:underline; text-decoration-color:color-mix(in srgb,var(--es-accent,#ddd) 50%,transparent); text-underline-offset:5px; text-decoration-thickness:1px; }
+.espiral-app.protocolo-app[data-portrait-symbol=darkness]:not([data-pavor-active=true]) .pd-sheet-workspace .es-hero-art > .es-spiral:not(.es-hope-spiral) { width:280px; height:280px; }
+.espiral-app.protocolo-app[data-portrait-symbol=darkness]:not([data-pavor-active=true]) .pd-sheet-workspace .pd-symbol-emergence { background-size:280px 280px; }
+@media(max-width:380px) {
+ .espiral-app.protocolo-app[data-portrait-symbol=darkness]:not([data-pavor-active=true]) .pd-sheet-workspace .es-hero-art > .es-spiral:not(.es-hope-spiral) { width:255px; height:255px; }
+ .espiral-app.protocolo-app[data-portrait-symbol=darkness]:not([data-pavor-active=true]) .pd-sheet-workspace .pd-symbol-emergence { background-size:255px 255px; }
+}
+
+/* Each universe extends its own line work to the attribute anchors. */
+.pd-attribute-symbol-links { position:absolute; inset:0; width:100%; height:100%; color:var(--es-text,#eee); opacity:.76; z-index:0; pointer-events:none; overflow:visible; transition:opacity .8s ease; }
+.pd-attribute-symbol-links .pd-symbol-link-scaffold { opacity:.25; }
+.pd-attribute-symbol-links>g[data-active] { opacity:.48; transition:opacity .25s ease; }
+.pd-attribute-symbol-links>g[data-active=true] { opacity:1; color:var(--es-accent,var(--es-text,#eee)); }
+.pd-attribute-symbol-links.is-judgment { color:#cda971; opacity:.8; }
+.pd-attribute-symbol-links.is-judgment .pd-symbol-link-scaffold { opacity:.5; }
+.pd-symbol-link-engraving { opacity:.35; }
+.espiral-app.protocolo-app[data-pavor-active=true] .pd-attribute-symbol-links { opacity:0; visibility:hidden; }
+.espiral-app.protocolo-app[data-portrait-symbol=absoluto]:not([data-pavor-active=true]) .pd-sheet-workspace .es-hero-art>.es-spiral:not(.es-hope-spiral) { width:300px; height:300px; opacity:.48; }
+.espiral-app.protocolo-app[data-portrait-symbol=espiral]:not([data-pavor-active=true]) .pd-sheet-workspace .es-hero-art>.es-spiral:not(.es-hope-spiral) { width:min(300px,92%); height:min(300px,92%); opacity:.8; }
+.espiral-app.protocolo-app[data-portrait-symbol=judgment] .pd-sheet-workspace .es-hero-art>.pd-portrait-theme-backdrop::after { background:radial-gradient(ellipse at center,transparent 32%,#0006 80%,#0009); }
+@media(prefers-reduced-motion:reduce) { .pd-attribute-symbol-links,.pd-attribute-symbol-links>g[data-active] { transition:none; } }
+
+.pd-attribute-symbol-links.is-absoluto { opacity:.95; }
+.pd-attribute-symbol-links.is-absoluto>g[data-active] { opacity:1; color:#c6af73; stroke-width:1; }
+
+/* Attributes follow the outer turn of the single large spiral. */
+.espiral-app.protocolo-app[data-portrait-symbol=espiral]:not([data-pavor-active=true]) .pd-sheet-workspace .es-attribute-rail .es-rail-attribute {
+ left:calc(var(--pd-spiral-anchor-x) - var(--rest-card-w)/2);
+ top:calc(var(--pd-spiral-anchor-y) - var(--rest-card-h)/2);
+}
+.espiral-app.protocolo-app[data-portrait-symbol=espiral] .es-rail-attribute:nth-of-type(1) { --pd-spiral-anchor-x:41%; --pd-spiral-anchor-y:13%; }
+.espiral-app.protocolo-app[data-portrait-symbol=espiral] .es-rail-attribute:nth-of-type(2) { --pd-spiral-anchor-x:87%; --pd-spiral-anchor-y:41%; }
+.espiral-app.protocolo-app[data-portrait-symbol=espiral] .es-rail-attribute:nth-of-type(3) { --pd-spiral-anchor-x:59%; --pd-spiral-anchor-y:87%; }
+.espiral-app.protocolo-app[data-portrait-symbol=espiral] .es-rail-attribute:nth-of-type(4) { --pd-spiral-anchor-x:13%; --pd-spiral-anchor-y:59%; }
+
+/* Darkness: the die itself, rather than the die/+ group, sits on each flame axis. */
+.espiral-app.protocolo-app[data-portrait-symbol=darkness]:not([data-pavor-active=true]) .pd-sheet-workspace .es-attribute-rail .es-attribute-dice-controls {
+ display:grid; place-items:center; width:max-content; justify-self:center; margin-left:0; margin-right:0;
+}
+.espiral-app.protocolo-app[data-portrait-symbol=darkness]:not([data-pavor-active=true]) .pd-sheet-workspace .es-attribute-rail .es-attribute-add {
+ position:absolute; left:calc(100% + 8px); top:50%; transform:translateY(-50%); margin:0;
+}
+.espiral-app.protocolo-app[data-portrait-symbol=darkness]:not([data-pavor-active=true]) .pd-sheet-workspace .es-rail-attribute:nth-of-type(1) {
+ left:calc(50% - var(--rest-card-w)/2); top:12px;
+}
+.espiral-app.protocolo-app[data-portrait-symbol=darkness]:not([data-pavor-active=true]) .pd-sheet-workspace .es-rail-attribute:nth-of-type(2) {
+ left:calc(50% + min(120px,calc(50% - var(--rest-card-w)/2)) - var(--rest-card-w)/2); top:calc(50% - 28px);
+}
+.espiral-app.protocolo-app[data-portrait-symbol=darkness]:not([data-pavor-active=true]) .pd-sheet-workspace .es-rail-attribute:nth-of-type(3) {
+ left:calc(50% - var(--rest-card-w)/2); top:calc(100% - var(--rest-card-h));
+}
+.espiral-app.protocolo-app[data-portrait-symbol=darkness]:not([data-pavor-active=true]) .pd-sheet-workspace .es-rail-attribute:nth-of-type(4) {
+ left:calc(50% - min(120px,calc(50% - var(--rest-card-w)/2)) - var(--rest-card-w)/2); top:calc(50% - 28px);
+}
+
+/* Voz opens outward, away from the white flames. */
+.espiral-app.protocolo-app[data-portrait-symbol=darkness]:not([data-pavor-active=true]) .pd-sheet-workspace .es-attribute-rail .es-rail-attribute:nth-of-type(4) .es-attribute-add {
+ left:auto; right:calc(100% + 8px);
+}

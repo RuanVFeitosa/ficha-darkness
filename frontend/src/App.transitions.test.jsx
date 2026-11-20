@@ -4,6 +4,14 @@ import App from './App';
 
 jest.mock('./pages/lojaEspiral', () => () => null);
 jest.mock('./pages/transformacaoEspiral', () => () => null);
+jest.mock('./pages/fichaPersonagem', () => () => {
+  const [id] = require('react').useState(() => new URLSearchParams(globalThis.window.location.search).get('senha') || new URLSearchParams(globalThis.window.location.search).get('ficha'));
+  return <div>Ficha antiga {id}<a href="/?sistema=darkness&ficha=segunda">Outra ficha antiga</a></div>;
+});
+jest.mock('./pages/fichaEspiral', () => () => {
+  const [id] = require('react').useState(() => new URLSearchParams(globalThis.window.location.search).get('ficha'));
+  return <div>Ficha nova {id}<a href="/?sistema=espiral&ficha=segunda">Outra ficha nova</a></div>;
+});
 jest.mock('./components/ui/DialogoGlobal', () => () => null);
 jest.mock('./pages/telaInicial', () => ({ onNavigate }) => <button onClick={() => onNavigate('/?jogador=1234')}>Login teste</button>);
 jest.mock('./pages/PaginaJogador', () => () => <div>Dashboard teste<a href="/?">Sair teste</a></div>);
@@ -15,6 +23,18 @@ beforeEach(() => {
   window.history.replaceState({}, '', '/');
 });
 afterEach(() => jest.useRealTimers());
+
+test.each([['darkness', 'antiga'], ['espiral', 'nova']])('trocar a ficha no sistema %s carrega o personagem do novo código', async (sistema, tipo) => {
+  window.history.replaceState({}, '', `/?sistema=${sistema}&ficha=primeira`);
+  render(<App />);
+  await act(async () => {});
+  expect(screen.getByText(`Ficha ${tipo} primeira`)).toBeInTheDocument();
+  act(() => jest.advanceTimersByTime(1000));
+  fireEvent.click(screen.getByText(`Outra ficha ${tipo}`));
+  await act(async () => jest.advanceTimersByTime(1000));
+  expect(screen.getByText(`Ficha ${tipo} segunda`)).toBeInTheDocument();
+  expect(screen.queryByText(`Ficha ${tipo} primeira`)).not.toBeInTheDocument();
+});
 
 test('login e links internos acionam a transição antes de trocar a página', async () => {
   const view = render(<App />);
@@ -59,3 +79,5 @@ test.each([
   await act(async () => {});
   expect(document.documentElement.dataset.controlTheme).toBe(tema);
 });
+
+

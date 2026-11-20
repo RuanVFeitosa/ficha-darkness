@@ -1,10 +1,15 @@
+import { useDarknessWeaponCatalog } from '../utils/darknessWeaponCatalog';
+import HelenaToken from '../components/absoluto/HelenaToken';
 import EspiralDice from '../components/espiral/EspiralDice';
 import React, { useMemo, useState } from "react";
 import Icon from "@mdi/react";
 import { mdiArrowLeft, mdiCart, mdiCheck, mdiClose, mdiMedicalBag, mdiPistol, mdiRadio, mdiShield, mdiSword, mdiToolbox, mdiAxe, mdiKnifeMilitary } from "@mdi/js";
+import "../styles/LojaHelena.css";
 import "../styles/LojaEspiral.css";
 import "../styles/EspiralMerchant.css";
-import { CATALOGO_ESPIRAL, CATEGORIAS_ESPIRAL } from "../data/catalogoEspiral";
+import "../styles/AbsolutoMerchant.css";
+import "../styles/LojaEspiralHelena.css";
+import { CATEGORIAS_ESPIRAL } from "../data/catalogoEspiral";
 import { obterIconeItem } from "../utils/itemIcons";
 import { iconeLojaEspiral } from '../utils/espiralStoreIcons';
 
@@ -39,6 +44,7 @@ const renderItemIcon = (item, size = 1.45) => {
 };
 
 export default function LojaEspiral() {
+  const weaponCatalog = useDarknessWeaponCatalog();
   const id = new URLSearchParams(window.location.search).get("ficha") || "principal";
   const [area, setArea] = useState("armas");
   const [weaponGroup, setWeaponGroup] = useState("brancas");
@@ -50,8 +56,8 @@ export default function LojaEspiral() {
   const equipmentCategories = CATEGORIAS_ESPIRAL.filter(({ id: categoryId }) => !["armas", "protecoes"].includes(categoryId));
   const items = useMemo(() => {
     const normalizar = valor => valor.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-    return CATALOGO_ESPIRAL.filter((item) => item.category === (area === "equipamentos" ? category : area) && (area !== "armas" || item.weaponGroup === weaponGroup) && normalizar(`${item.name} ${item.detail}`).includes(normalizar(busca.trim())));
-  }, [area, category, weaponGroup, busca]);
+    return weaponCatalog.filter((item) => item.category === (area === "equipamentos" ? category : area) && (area !== "armas" || item.weaponGroup === weaponGroup) && normalizar(`${item.name} ${item.detail}`).includes(normalizar(busca.trim())));
+  }, [area, category, weaponGroup, busca, weaponCatalog]);
   const selected = items.find(item => item.id === selectedId) || items[0];
   const addToCart = (item) => { setCart((current) => [...current, { ...item, cartId: `${item.id}-${Date.now()}-${current.length}` }]); setNotice(`${item.name} separado para incorporação.`); };
   const removeFromCart = (cartId) => setCart((current) => current.filter((item) => item.cartId !== cartId));
@@ -98,8 +104,16 @@ export default function LojaEspiral() {
     setCart([]);
   };
   const catalogTitle = area === "equipamentos" ? equipmentCategories.find((entry) => entry.id === category)?.nome : area === "armas" ? "Armas" : "Proteções";
-  return <main className="espiral-store loja-page espiral-merchant" style={{ '--store-texture': `url("${process.env.PUBLIC_URL || ''}/tabletop/textures/concrete_floor_diff_1k.jpg")` }}>
-    <header className="espiral-store-hero loja-hero"><div className="espiral-store-hero-overlay" /><a className="espiral-store-back loja-voltar" href={`?sistema=espiral&ficha=${encodeURIComponent(id)}`}><Icon path={mdiArrowLeft} size={0.8} /> Voltar à ficha</a><div className="espiral-store-hero-copy loja-hero-copy"><span className="loja-kicker">ESPIRAL / DEPÓSITO DE SUPRIMENTOS</span><h1>Leve o necessário.<br /><em>Volte inteiro.</em></h1><p>Uma lâmina confiável. Um colete gasto. O kit que pode salvar alguém. Escolha o que vai acompanhar você lá fora.</p><div className="espiral-store-hero-tags"><span><i/> Suprimentos de campo</span><span>Armas · Proteções · Equipamentos</span></div></div><div className="espiral-store-hero-art" aria-hidden="true"><div className="espiral-store-orbit"/><div className="espiral-store-case"><Icon path={mdiToolbox} size={5}/><span>ESPIRAL / MATERIAL DE CAMPO</span></div><span className="espiral-store-art-note">INSPECIONADO E CATALOGADO<br/>USO EM CAMPO</span><span className="espiral-store-art-cross">+</span></div></header>
+  return <main className="loja-page absoluto-merchant espiral-helena" style={{ '--abs-store-background': 'url("/loja-absoluto/fundo.png")' }}>
+    <img className="abs-store-scene" src="/loja-absoluto/fundo.png" alt="" aria-hidden="true" />
+    <div className="abs-store-scene-shade" aria-hidden="true" />
+    <HelenaToken />
+    <img className="abs-store-glass abs-store-counter" src="/loja-absoluto/vitrine.png" alt="" aria-hidden="true" />
+    <header className="abs-store-hero">
+      <a className="loja-voltar" href={`?sistema=espiral&ficha=${encodeURIComponent(id)}`}><Icon path={mdiArrowLeft} size={0.8} /> Voltar à ficha</a>
+      <div className="abs-store-hero-copy"><span>ESPIRAL / ARSENAL PARTICULAR</span><h1>Loja da Helena</h1><p>O preparo faz a diferença. Escolha o que vai acompanhar você lá fora.</p></div>
+      <svg className="abs-store-filter" aria-hidden="true"><defs><filter id="helena-white-key" colorInterpolationFilters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -1 -1 -1 0 3" /><feComposite in2="SourceGraphic" operator="in" /></filter></defs></svg>
+    </header>
     <section className="loja-shell espiral-store-shell">
       <div className="espiral-store-toolbar-row"><div className="loja-toolbar" aria-label="Categorias da loja"><button type="button" className={`loja-categoria ${area === "armas" ? "ativa" : ""}`} onClick={() => setArea("armas")}><Icon path={mdiPistol} size={0.8} /> Armas</button><button type="button" className={`loja-categoria ${area === "protecoes" ? "ativa" : ""}`} onClick={() => setArea("protecoes")}><Icon path={mdiShield} size={0.8} /> Proteções</button><button type="button" className={`loja-categoria ${area === "equipamentos" ? "ativa" : ""}`} onClick={() => setArea("equipamentos")}><Icon path={mdiToolbox} size={0.8} /> Equipamentos</button></div><label className="espiral-store-search"><span>Buscar no catálogo</span><input type="search" placeholder="Nome ou característica…" value={busca} onChange={e=>setBusca(e.target.value)}/></label></div>
       {area === "armas" && <div className="ritos-subabas espiral-store-subtabs" aria-label="Categorias de armas"><button type="button" className={weaponGroup === "brancas" ? "ativa" : ""} onClick={() => setWeaponGroup("brancas")}>Armas brancas</button><button type="button" className={weaponGroup === "fogo" ? "ativa" : ""} onClick={() => setWeaponGroup("fogo")}>Armas de fogo</button></div>}

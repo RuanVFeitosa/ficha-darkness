@@ -1,0 +1,26 @@
+.shield-session-reference { min-width:0; }
+.shield-session-reference>[role=tablist] { display:flex; flex-wrap:wrap; gap:4px; padding-bottom:12px; margin-bottom:14px; border-bottom:1px solid #ffffff24; }
+.shield-session-reference>[role=tablist]>button { padding:9px 12px; border:1px solid transparent; background:transparent; color:#bbb; cursor:pointer; font:12px/1.4 Arial,sans-serif; }
+.shield-session-reference>[role=tablist]>button[aria-selected=true] { color:#080808; background:#f0efea; border-color:#f0efea; border-radius:3px; }
+.shield-session-reference>[role=tablist]>button:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+.shield-session-table { width:100%; border-collapse:collapse; table-layout:fixed; color:#ddd; font:12px/1.6 Arial,sans-serif; }
+.shield-session-table caption { text-align:left; color:#fff; font:600 20px/1.4 Georgia,serif; padding:0 0 12px; }
+.shield-session-table th,.shield-session-table td { padding:11px 10px; text-align:left; vertical-align:top; border-bottom:1px solid #ffffff20; overflow-wrap:break-word; }
+.shield-session-table thead th { color:#aaa; font-size:11px; background:#ffffff05; }
+.shield-session-table th:first-child { width:32%; }
+.shield-session-table tbody th { font-weight:600; color:#f0efea; }
+.shield-session-table tbody th>span { white-space:nowrap; }
+@media(max-width:480px) { .shield-session-table th:first-child { width:38%; } .shield-session-table th,.shield-session-table td { padding:9px 6px; } }
+.shield-reference-browser { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:12px; align-items:start; }
+.shield-reference-browser h3 { margin:0 0 12px; color:#eee; font:600 18px/1.3 Georgia,serif; }
+.shield-reference-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }
+.shield-reference-options>button { display:flex; gap:5px; align-items:center; text-align:left; min-width:0; min-height:34px; padding:5px 6px; color:#ddd; background:#080808; border:1px solid #ffffff25; border-radius:3px; font:11px/1.3 Arial,sans-serif; cursor:pointer; }
+.shield-reference-options>button>b { flex:0 0 25px; font-size:10px; }
+.shield-reference-options>button>span { min-width:0; overflow-wrap:break-word; color:inherit; }
+.shield-reference-options>button[aria-pressed=true] { color:#080808; background:#f0efea; border-color:#f0efea; }
+.shield-reference-options>button:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+.shield-reference-effect { min-width:0; padding:12px; border:1px solid #ffffff25; border-radius:4px; background:#080808; }
+.shield-reference-effect>span { display:block; margin-bottom:10px; color:#aaa; font:11px monospace; }
+.shield-reference-effect p { margin:0; color:#ddd; font:12px/1.5 Arial,sans-serif; }
+@media(max-width:1100px) { .shield-reference-options { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:480px) { .shield-reference-browser { grid-template-columns:minmax(0,1fr); } }

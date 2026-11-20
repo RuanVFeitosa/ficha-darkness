@@ -73,3 +73,40 @@ test('cinematic navigation eases both key presses and releases and stops immedia
  const beforeBlur=mockCamera.position.z;mockCanvas.blur();frame(.05);
  expect(mockCamera.position.z).toBe(beforeBlur);
 });
+
+test('click navigation reserves the left button and follows actual walking direction',()=>{
+ let pose={position:[0,0],elevation:0};
+ const props={overShoulder:true,mode:'character',view:'room',followPosition:[0,0],followHeight:1,getFollowPose:()=>pose};
+ const {rerender}=render(<TabletopCamera {...props} autoFollowMovement/>);
+ expect(mockOrbit.mouseButtons.LEFT).toBeNull();expect(mockOrbit.enableRotate).toBe(false);
+ frame(1/60);
+ for(let i=1;i<=120;i++){pose={position:[i*.01,0],elevation:0};frame(1/60);}
+ const dx=mockOrbit.target.x-mockCamera.position.x,dz=mockOrbit.target.z-mockCamera.position.z;
+ expect(dx).toBeGreaterThan(1);expect(Math.abs(dz)).toBeLessThan(.01);
+ const before=mockCamera.position.toArray();for(let i=0;i<30;i++)frame(1/60);
+ expect(Math.hypot(mockCamera.position.x-before[0],mockCamera.position.z-before[2])).toBeLessThan(.01);
+ rerender(<TabletopCamera {...props} autoFollowMovement={false}/>);
+ expect(mockOrbit.mouseButtons.LEFT).toBe(THREE.MOUSE.ROTATE);expect(mockOrbit.enableRotate).toBe(true);
+});
+
+test('click mode rotates only while dragging the right mouse button',()=>{
+ render(<TabletopCamera rightMouseLook overShoulder mode="character" view="room" followPosition={[0,0]} followHeight={1}/>);
+ expect(mockOrbit.mouseButtons.LEFT).toBeNull();expect(mockOrbit.enableZoom).toBe(true);
+ const before=mockCamera.position.toArray();
+ mockCanvas.dispatchEvent(pointer('pointermove',0,100,100));
+ mockCanvas.dispatchEvent(pointer('pointermove',0,220,40));
+ frame(1/60);expect(mockCamera.position.toArray()).toEqual(before);
+ mockCanvas.dispatchEvent(pointer('pointerdown',2,100,100));
+ window.dispatchEvent(pointer('pointermove',2,220,40));
+ window.dispatchEvent(pointer('pointerup',2,220,40));
+ for(let i=0;i<30;i++)frame(1/60);
+ expect(mockCamera.position.toArray()).not.toEqual(before);
+ expect(mockCamera.position.y).toBeLessThan(before[1]);
+ expect(mockCamera.position.x).not.toBeCloseTo(before[0]);
+});
+test('mouse-look mode does not translate the camera with WASD even in free view',()=>{
+ render(<TabletopCamera rightMouseLook mode="free" view="room"/>);
+ const before=mockCamera.position.toArray();
+ fireEvent.keyDown(window,{key:'w'});for(let i=0;i<30;i++)frame(1/60);fireEvent.keyUp(window,{key:'w'});
+ expect(mockCamera.position.toArray()).toEqual(before);
+});

@@ -1,0 +1,38 @@
+/* Trim the artwork's empty vertical margins without changing the source asset. */
+img.protocol-logo {
+  display: inline-block;
+  width: 260px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 7 / 1;
+  object-fit: cover;
+  object-position: center;
+  vertical-align: middle;
+  flex-shrink: 1;
+}
+
+.login-marca img.protocol-logo {
+  width: clamp(180px, 24vw, 320px);
+}
+
+.dm-brand img.protocol-logo {
+  width: clamp(160px, 22vw, 280px);
+  height: auto;
+  object-fit: cover;
+}
+
+.dm-metric-name img.protocol-logo,
+.pj-file-index img.protocol-logo {
+  width: 180px;
+}
+
+button img.protocol-logo,
+.pj-dossier-kicker img.protocol-logo,
+.pj-card-caption img.protocol-logo,
+.gravador-marca img.protocol-logo {
+  width: 150px;
+}
+
+.site-boot-caption img.protocol-logo {
+  width: 220px;
+}

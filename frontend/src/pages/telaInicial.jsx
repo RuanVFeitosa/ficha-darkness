@@ -1,3 +1,4 @@
+import ProtocolLogo from '../components/ui/ProtocolLogo';
 import HaloEclipse from '../components/ui/HaloEclipse';
 import SiteBoot from '../components/ui/SiteBoot';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -82,7 +83,7 @@ export default function TelaInicial({ onNavigate = navegar, inicializar = true }
       <button type="button" onClick={alternarSom} aria-pressed={somAtivo} aria-label={somAtivo ? 'Desativar sons de teclado' : 'Ativar sons de teclado'}>SOM {somAtivo ? 'ON' : 'OFF'}</button>
     </div>
     <div className="login-atmosfera" aria-hidden="true">{Array.from({ length: 16 }, (_, i) => <span key={i} style={{ '--i': i }} />)}</div>
-    <div className="login-marca" aria-hidden="true">DARKNESS<span>O desconhecido espera por você</span></div>
+    <div className="login-marca" aria-hidden="true"><ProtocolLogo /><span>O desconhecido espera por você</span></div>
     <div className="login-simbolo"><HaloEclipse /><img className="login-glyph" src="/simbolo-darkness.png" alt="Símbolo Darkness" draggable="false"/></div>
     {etapa === 'boas-vindas' && <h1 className="login-boas-vindas" role="status">{boasVindas}</h1>}
     <form className="login-form" onSubmit={entrar} aria-label={mestre ? 'Entrada do mestre' : 'Entrada do jogador'} aria-hidden={etapa === 'boas-vindas' ? true : undefined}>

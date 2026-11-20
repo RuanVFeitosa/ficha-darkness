@@ -1,0 +1,559 @@
+[
+  {
+    "name": "Impacto Desarmado",
+    "members": [
+      "concentracao-aniquiladora",
+      "maos-pesadas",
+      "fisico-sublime",
+      "pugilista",
+      "aperfeicoamento-maximo"
+    ],
+    "action": "Movimento",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Prepare um ataque desarmado até o fim do próximo turno: +1 dado no ataque e no dano. Seu dano desarmado mínimo é 1d6.",
+      "No acerto, também pode repetir um dado de dano com resultado 1, aceitando o novo resultado.",
+      "A preparação passa a ser uma ação livre. Os bônus não aumentam."
+    ]
+  },
+  {
+    "name": "Golpe Devastador",
+    "members": [
+      "corte-devastador",
+      "mestre-artes-marciais",
+      "armas-especificas",
+      "aniquilacao-total"
+    ],
+    "action": "Padrão",
+    "hope": [
+      3,
+      2
+    ],
+    "effects": [
+      "1×/cena. Faça um ataque corpo a corpo com +1 dado no teste e, se acertar, +1 dado de dano.",
+      "No acerto, pode trocar o dado adicional de dano por ignorar 2 de Proteção.",
+      "Ao trocar o dado de dano, ignore 3 de Proteção. Não ignora Defesa."
+    ]
+  },
+  {
+    "name": "Golpe de Ruptura",
+    "members": [
+      "ponto-pressao",
+      "golpe-precisao",
+      "ataque-preciso-esgrimista"
+    ],
+    "action": "Padrão",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Faça um ataque corpo a corpo. Se acertar, escolha +1 dado de dano ou ignorar 2 de Proteção.",
+      "O ataque também recebe +1 dado no teste.",
+      "Ao escolher perfuração, ignore 3 de Proteção em vez de 2."
+    ]
+  },
+  {
+    "name": "Contra-ataque",
+    "members": [
+      "contra-ataque-devastador",
+      "contragolpe-veloz",
+      "contra-ataque-oportuno",
+      "espelho-tatico",
+      "contra-ofensiva-relampago"
+    ],
+    "action": "Reação",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Quando um inimigo ao alcance errar um ataque corpo a corpo contra você, gaste a reação para atacá-lo. Pode usar arma corpo a corpo ou de fogo; consuma munição normalmente.",
+      "O contra-ataque recebe +1 dado no teste.",
+      "Se acertar, escolha +1 dado de dano ou desarmar o alvo se ele falhar em Pulso com Atletismo (DT 2). Não gera novos ataques."
+    ]
+  },
+  {
+    "name": "Retaliação",
+    "members": [
+      "retaliacao-imediata",
+      "aniq-retaliacao"
+    ],
+    "action": "Reação",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Após sofrer dano corpo a corpo, use a reação para atacar o agressor ao alcance com −1 dado. Este ataque não gera outros ataques.",
+      "O contra-ataque deixa de sofrer −1 dado.",
+      "Se acertar, receba +1 Proteção contra o próximo ataque desse agressor até seu próximo turno."
+    ]
+  },
+  {
+    "name": "Ataque Furtivo",
+    "members": [
+      "ataque-furtivo",
+      "assassino-silencioso",
+      "furtivo-letal",
+      "furtivo-mortal",
+      "furtivo-supremo",
+      "executor-noturno",
+      "golpe-da-sombra",
+      "estilo-de-combate-sujo"
+    ],
+    "action": "Livre",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Ao acertar com Armas ou Pontaria um alvo que não percebeu você, esteja surpreendido ou distraído por um aliado, adicione +1 dado de dano. Exige percepção real do alvo.",
+      "Pode trocar o dado adicional de dano por ignorar 2 de Proteção.",
+      "Ao trocar o dado de dano, ignore 3 de Proteção; ou mantenha o dado adicional e repita um dado de dano com resultado 1. Aceite o novo resultado."
+    ]
+  },
+  {
+    "name": "Emboscada Precisa",
+    "members": [
+      "golpe-sombrio",
+      "emboscada-precisa",
+      "golpe-fantasma",
+      "estrategia-de-emboscada"
+    ],
+    "action": "Padrão",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Faça um ataque de Armas ou Pontaria a partir de uma posição oculta, ou contra alvo distraído por um aliado, com +1 dado no teste.",
+      "Se acertar, o alvo perde sua próxima reação até o fim do próximo turno.",
+      "Após o acerto, pode mover metade do deslocamento até uma cobertura acessível. Não fica oculto automaticamente."
+    ]
+  },
+  {
+    "name": "Investida",
+    "members": [
+      "investida-esmagadora",
+      "investida-poderosa",
+      "investida-acrobatica",
+      "ataque-em-movimento",
+      "giro-artistico",
+      "aniq-avanco"
+    ],
+    "action": "Completa",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Mova-se uma distância curta por caminho livre e faça um ataque corpo a corpo com +1 dado. O movimento não provoca reação do alvo atacado.",
+      "Se acertar, escolha +1 dado de dano ou empurrar o alvo uma distância curta por caminho livre.",
+      "Se errar, pode recuar metade do deslocamento até uma cobertura acessível. Não atravessa obstáculos."
+    ]
+  },
+  {
+    "name": "Combate Ágil",
+    "members": [
+      "lutador-desarmado",
+      "esgrimista",
+      "mestre-marcial",
+      "guerreiro-armas-duplas"
+    ],
+    "action": "Livre",
+    "hope": [
+      0,
+      0
+    ],
+    "effects": [
+      "1×/cena. Receba +1 dado em um ataque ou manobra com arma leve ou desarmado. Não concede outro ataque nem dano adicional.",
+      "No mesmo teste, também ignore −1 dado por lutar com duas armas leves.",
+      "Pode usar duas vezes por cena, em testes diferentes."
+    ]
+  },
+  {
+    "name": "Ataque Duplo",
+    "members": [
+      "golpes-consecutivos",
+      "dancarino-macabro",
+      "cadencia-de-precisao",
+      "cascata-de-balas",
+      "atir-dois-alvos"
+    ],
+    "action": "Completa",
+    "hope": [
+      3,
+      2
+    ],
+    "effects": [
+      "1×/cena. Faça dois ataques, com armas empunhadas ou desarmado, contra um ou dois alvos ao alcance. Resolva Defesa, dano e munição separadamente. Nenhum deles gera ataques extras.",
+      "Após resolver os ataques, mova-se até metade do deslocamento por caminho livre.",
+      "Se os dois acertarem o mesmo alvo, ele sofre −1 dado na próxima ação até o fim do próximo turno."
+    ]
+  },
+  {
+    "name": "Ataque Rápido",
+    "members": [
+      "golpe-relampago",
+      "en-garde",
+      "especialista-dual",
+      "tiro-rapido",
+      "tiro-rapido-de-precisao"
+    ],
+    "action": "Movimento",
+    "hope": [
+      3,
+      2
+    ],
+    "effects": [
+      "1×/cena. Após seu ataque neste turno, use Movimento para atacar novamente o mesmo alvo com uma arma empunhada ou desarmado, com −1 dado. Consuma munição normalmente. Não gera ataques extras.",
+      "O ataque adicional deixa de sofrer −1 dado.",
+      "Se ambos acertarem, o alvo testa Pulso com Atletismo (DT 2); na falha, perde sua reação até o próximo turno."
+    ]
+  },
+  {
+    "name": "Sequência Mortal",
+    "members": [
+      "danca-macabra",
+      "atirador-implacavel",
+      "carrasco",
+      "aniq-massacre"
+    ],
+    "action": "Reação",
+    "hope": [
+      3,
+      2
+    ],
+    "effects": [
+      "1×/cena. Ao reduzir uma ameaça real a 0 de Integridade, use a reação para atacar outra ameaça ao alcance com −1 dado. Consuma munição normalmente. Não gera outra sequência.",
+      "Pode mover metade do deslocamento antes do ataque, por caminho livre.",
+      "O ataque adicional deixa de sofrer −1 dado. Não recupera Esperança."
+    ]
+  },
+  {
+    "name": "Ataque em Varredura",
+    "members": [
+      "danca-das-espadas",
+      "mestre-da-chuva-de-balas",
+      "barragem-de-disparos",
+      "supressao-total",
+      "atir-chuva"
+    ],
+    "action": "Completa",
+    "hope": [
+      3,
+      2
+    ],
+    "effects": [
+      "1×/cena. Ataque até dois alvos diferentes ao alcance com −1 dado em cada teste. Use uma arma compatível com cada alvo e resolva dano e munição separadamente. Não gera ataques extras.",
+      "Pode atingir até três alvos diferentes, mantendo a penalidade.",
+      "Após resolver os ataques, um alvo atingido sofre −1 dado no próximo ataque até o fim do próximo turno."
+    ]
+  },
+  {
+    "name": "Mira Calculada",
+    "members": [
+      "foco-de-precisao",
+      "foco-de-precisao-avancado",
+      "balistica-calculada",
+      "zero-absoluto",
+      "franco-atirador",
+      "precisao-cirurgica-executor",
+      "fogo-concentrado",
+      "executor"
+    ],
+    "action": "Completa",
+    "hope": [
+      3,
+      2
+    ],
+    "effects": [
+      "1×/cena. Mire e faça um disparo contra alvo visível no alcance da arma com +1 dado no ataque. Ignore cobertura parcial; cobertura total impede o disparo.",
+      "Se acertar, adicione +1 dado de dano.",
+      "Ignore também até −1 dado por vento, distância ou movimento do alvo. Não aumenta o alcance da arma."
+    ]
+  },
+  {
+    "name": "Disparo Perfurante",
+    "members": [
+      "tiro-penetrante",
+      "anular-obstrucoes",
+      "atir-perfurante"
+    ],
+    "action": "Movimento",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Prepare seu próximo disparo até o fim do próximo turno: se acertar, ignore 2 de Proteção. Exige alvo visível no alcance da arma.",
+      "O disparo também ignora cobertura parcial. Cobertura total continua impedindo o ataque.",
+      "Ignore 3 de Proteção em vez de 2."
+    ]
+  },
+  {
+    "name": "Mira Estável",
+    "members": [
+      "paciencia-de-predador",
+      "mira-imovel",
+      "respiracao-controlada",
+      "atir-paciencia",
+      "dominio-absoluto"
+    ],
+    "action": "Movimento",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Mire sem se deslocar: seu próximo disparo até o fim do próximo turno recebe +1 dado e ignora −1 dado por vento ou movimento do alvo. Deslocar-se encerra a mira.",
+      "Se permanecer imóvel por uma rodada inteira, adicione +1 dado de dano no acerto.",
+      "Pode ignorar até −2 dados por vento ou movimento. A mira não acumula bônus por rodadas."
+    ]
+  },
+  {
+    "name": "Precisão de Longo Alcance",
+    "members": [
+      "tiro-preciso",
+      "precisao-milimetrica",
+      "calculos-mortais"
+    ],
+    "action": "Livre",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Ignore até −1 dado de penalidade por distância em um disparo contra alvo visível no alcance da arma.",
+      "Ignore até −2 dados de penalidade por distância.",
+      "Se não houver penalidade de distância, receba +1 dado no ataque. Não aumenta o alcance da arma."
+    ]
+  },
+  {
+    "name": "Disparo Potente",
+    "members": [
+      "tiro-cirurgico-mira",
+      "tiro-cirurgico-executor",
+      "arsenal-destruidor",
+      "chuva-de-destruicao",
+      "dominio-de-armas-de-cano-curto",
+      "especialista-em-armas-leves"
+    ],
+    "action": "Padrão",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Faça um disparo com +1 dado no ataque; se acertar, adicione +1 dado de dano. Não soma atributos ao dano.",
+      "Se acertar com 2 êxitos além da Defesa, o alvo sofre −1 dado na próxima ação até o fim do próximo turno.",
+      "Após o disparo, pode recarregar a arma como ação livre, consumindo a munição disponível."
+    ]
+  },
+  {
+    "name": "Posição de Tiro",
+    "members": [
+      "posicao-de-tiro-operacoes",
+      "atir-ninho"
+    ],
+    "action": "Completa",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Prepare uma posição de tiro. Até o fim do próximo turno, receba +1 dado em disparos enquanto não sair dela.",
+      "Receba também +1 Defesa contra o próximo ataque enquanto mantiver a posição, máximo 5.",
+      "A posição dura até três rodadas. Mover-se encerra todos os benefícios."
+    ]
+  },
+  {
+    "name": "Provocação",
+    "members": [
+      "provocacao-calculada",
+      "rugido-de-rebeldia",
+      "aniq-arena"
+    ],
+    "action": "Padrão",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Teste Voz com Influência (DT 2) contra uma ameaça que o ouça. No sucesso, o próximo ataque dela contra outro alvo sofre −1 dado até o fim do próximo turno. Não força suas escolhas.",
+      "Se ela atacar você durante esse prazo, seu próximo ataque contra ela recebe +1 dado até o fim do próximo turno.",
+      "Pode provocar até duas ameaças com a mesma ação; faça um teste para cada uma."
+    ]
+  },
+  {
+    "name": "Domínio do Agarre",
+    "members": [
+      "rompe-muralhas",
+      "imobilizacao-precisa",
+      "agarrao-esmagador"
+    ],
+    "action": "Padrão",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Receba +1 dado em Pulso com Atletismo para agarrar ou manter agarrado um alvo de porte compatível.",
+      "Ao manter o agarre com sucesso, pode causar 1d6 de dano de impacto após a Proteção, uma vez nesta ativação.",
+      "O alvo sofre −1 dado na primeira tentativa de escapar até sua próxima ação. Não causa dano automático por rodada."
+    ]
+  },
+  {
+    "name": "Abertura Tática de Combate",
+    "members": [
+      "rompe-defesas",
+      "ren-revidar",
+      "base:Abertura"
+    ],
+    "action": "Livre",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Após acertar corpo a corpo ou quando um inimigo ao alcance errar um ataque contra você, o próximo ataque contra ele até o fim do próximo turno recebe +1 dado.",
+      "Pode aplicar o benefício a um aliado que perceba a abertura.",
+      "Se o ataque beneficiado acertar, ele pode ignorar 1 de Proteção. Não reduz a Defesa do alvo."
+    ]
+  },
+  {
+    "name": "Execução de Oportunidade",
+    "members": [
+      "golpe-sem-misericordia",
+      "execucao-final",
+      "base:Finalizar"
+    ],
+    "action": "Padrão",
+    "hope": [
+      3,
+      2
+    ],
+    "effects": [
+      "1×/cena. Ataque uma região com Lesão Grave ou Crítica, ou um alvo já incapacitado. No acerto, adicione +1 dado de dano. Não causa morte ou mutilação automática.",
+      "Pode trocar o dado adicional por ignorar 2 de Proteção.",
+      "Se o alvo já estiver incapacitado, receba também +1 dado no teste de ataque."
+    ]
+  },
+  {
+    "name": "Impacto Atordoante",
+    "members": [
+      "ataque-rapido",
+      "punho-de-aco",
+      "ponto-de-pressao-nao-letal",
+      "golpe-baixo"
+    ],
+    "action": "Padrão",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Faça um ataque desarmado ou com arma leve. Se acertar, o alvo testa Pulso com Atletismo (DT 2); na falha, sofre −1 dado na próxima ação até o fim do próximo turno. Pode declarar dano não letal antes do ataque.",
+      "O ataque recebe +1 dado no teste.",
+      "Na falha do teste de resistência, o alvo também perde sua reação até o próximo turno. Não causa inconsciência automática."
+    ]
+  },
+  {
+    "name": "Ricochete",
+    "members": [
+      "explosao-de-ricochete",
+      "atir-ricochete"
+    ],
+    "action": "Completa",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Com uma superfície rígida visível adequada, dispare com −1 dado contra alvo percebido em cobertura parcial, ignorando essa cobertura. Não atravessa cobertura total.",
+      "O disparo deixa de sofrer −1 dado.",
+      "Se acertar, um segundo alvo adjacente sofre 1d4 de dano após Proteção. Exige munição ou cenário compatível."
+    ]
+  },
+  {
+    "name": "Interrupção Armada",
+    "members": [
+      "quebra-ritmo",
+      "cicatrizes-que-ensinam",
+      "atir-instante"
+    ],
+    "action": "Padrão",
+    "hope": [
+      3,
+      2
+    ],
+    "effects": [
+      "1×/cena. Faça um ataque. Se acertar, o alvo testa Pulso com Atletismo (DT 2); na falha, perde sua reação até o próximo turno.",
+      "No acerto com 2 êxitos além da Defesa, ele também sofre −1 dado na próxima ação até o fim do próximo turno.",
+      "Pode usar como reação a uma ação hostil de um alvo percebido ao alcance. Não cancela ações já resolvidas nem gera outro ataque."
+    ]
+  },
+  {
+    "name": "Fúria de Combate",
+    "members": [
+      "furia-exterminador",
+      "furia-contida",
+      "aniq-furia",
+      "aniq-cicatrizes",
+      "agressao-continua",
+      "sangue-no-olhar"
+    ],
+    "action": "Livre",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Ao ficar com metade ou menos da Integridade ou derrotar uma ameaça real, receba +1 dado no próximo ataque corpo a corpo até o fim do próximo turno.",
+      "Se acertar, adicione +1 dado de dano.",
+      "Após resolver o ataque, receba +1 Proteção contra o próximo dano físico até sua próxima ação. Não recupera Esperança nem acumula bônus."
+    ]
+  },
+  {
+    "name": "Marcar Alvo",
+    "members": [
+      "sinal-aniquilacao",
+      "alvo-prioritario",
+      "grande-desafio",
+      "predador"
+    ],
+    "action": "Movimento",
+    "hope": [
+      2,
+      1
+    ],
+    "effects": [
+      "1×/cena. Marque uma ameaça visível até o fim do próximo turno. Seu próximo ataque contra ela recebe +1 dado. Só uma marca ativa.",
+      "Se acertar esse ataque, adicione +1 dado de dano.",
+      "Ao avançar contra a marca, pode mover uma distância curta adicional por caminho livre. A marca não se transfere nem gera novos ataques."
+    ]
+  },
+  {
+    "name": "Golpe Final",
+    "members": [
+      "aniq-golpe-final",
+      "atir-bala-final",
+      "fantasma-completo"
+    ],
+    "action": "Completa",
+    "hope": [
+      4,
+      2
+    ],
+    "limit": "sessão",
+    "effects": [
+      "1×/sessão. Faça um ataque de Armas ou Pontaria contra alvo percebido ao alcance, com +2 dados no teste. Se acertar, adicione +1 dado de dano; se errar, receba 2 Dados de Pressão.",
+      "Se acertar, adicione +2 dados de dano em vez de +1.",
+      "O ataque também ignora cobertura parcial. Cobertura total continua impedindo o ataque."
+    ]
+  }
+]

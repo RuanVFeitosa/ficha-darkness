@@ -1,0 +1,28 @@
+.pd-heartbeat { --heartbeat-color:#72c49a; --heartbeat-speed:4s; display:flex; align-items:center; gap:18px; color:var(--heartbeat-color); width:100%; }
+.pd-heartbeat.is-hurt { --heartbeat-color:#d8ba60; --heartbeat-speed:3.2s; }
+.pd-heartbeat.is-critical { --heartbeat-color:#df635c; --heartbeat-speed:2.4s; }
+.pd-heartbeat-screen { position:relative; flex:1; min-width:0; height:76px; overflow:hidden; border:1px solid color-mix(in srgb,var(--heartbeat-color) 24%,transparent); border-radius:3px; background:repeating-linear-gradient(0deg,transparent 0 18px,color-mix(in srgb,var(--heartbeat-color) 6%,transparent) 18px 19px),repeating-linear-gradient(90deg,transparent 0 26px,color-mix(in srgb,var(--heartbeat-color) 6%,transparent) 26px 27px); }
+.pd-heartbeat-trace { display:flex; width:200%; height:100%; animation:pdHeartbeatTravel var(--heartbeat-speed) linear infinite; }
+.pd-heartbeat-trace svg { flex:0 0 50%; width:50%; height:100%; overflow:visible; }
+.pd-heartbeat-trace path { fill:none; stroke:var(--heartbeat-color); stroke-width:2px; vector-effect:non-scaling-stroke; stroke-linejoin:round; filter:drop-shadow(0 0 3px var(--heartbeat-color)); }
+.pd-heartbeat .pd-heartbeat-state { display:flex; align-items:center; gap:8px; min-width:88px; font:10px monospace; letter-spacing:1px; text-transform:uppercase; }
+.pd-heartbeat-state i { width:5px; height:5px; border-radius:50%; background:var(--heartbeat-color); }
+@keyframes pdHeartbeatTravel { to { transform:translateX(-50%); } }
+@media(max-width:760px) { .pd-heartbeat { flex-wrap:wrap; gap:8px; } .pd-heartbeat-screen { flex-basis:100%; height:62px; } }
+@media(prefers-reduced-motion:reduce) { .pd-heartbeat-trace { animation:none; } }
+
+.pd-heartbeat-title { position:absolute; top:9px; left:12px; z-index:1; color:var(--heartbeat-color); font:9px monospace; letter-spacing:2px; }
+.pd-heartbeat-summary { display:grid; gap:12px; flex:0 0 auto; min-width:115px; justify-items:start; }
+.pd-heartbeat-values { display:flex; align-items:center; gap:8px; color:var(--es-text); font:12px monospace; white-space:nowrap; }
+.espiral-app.protocolo-app .pd-heartbeat-values .es-counter { display:inline-flex; align-items:center; gap:0; }
+.espiral-app.protocolo-app .pd-heartbeat-values .es-counter input { min-height:28px; height:28px; width:36px; padding:2px; font:11px monospace; }
+.espiral-app.protocolo-app .pd-heartbeat-values .es-counter button { width:22px; height:24px; padding:0; }
+@media(max-width:760px) { .pd-heartbeat-summary { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; width:100%; gap:10px; } }
+
+/* Leitura de Integridade: número em destaque, sem controles de edição. */
+.espiral-app.protocolo-app .pd-heartbeat-readout { gap:14px; }
+.espiral-app.protocolo-app .pd-heartbeat-readout .pd-heartbeat-values { align-items:baseline; gap:7px; color:var(--heartbeat-color); }
+.pd-heartbeat-readout .pd-heartbeat-values > strong { font:500 46px/.95 Georgia,serif; letter-spacing:-2px; color:var(--heartbeat-color); text-shadow:0 0 20px color-mix(in srgb,var(--heartbeat-color) 15%,transparent); }
+.pd-heartbeat-readout .pd-heartbeat-maximum { color:var(--es-muted,#aaa); font:13px monospace; }
+.espiral-app.protocolo-app .pd-heartbeat-readout .pd-heartbeat-state { min-width:0; padding:7px 10px; border:1px solid color-mix(in srgb,var(--heartbeat-color) 28%,transparent); border-radius:4px; background:color-mix(in srgb,var(--heartbeat-color) 5%,transparent); font-size:9px; }
+@media(max-width:480px) { .pd-heartbeat-readout .pd-heartbeat-values > strong { font-size:40px; } }

@@ -1,4 +1,5 @@
 import { normalizeEspiralDice } from '../utils/espiralDice';
+import { consolidarOfensivasAdquiridas } from './ofensivasConsolidadas';
 export const ATTRIBUTES = {
   pulso: {
     name: "Pulso",
@@ -172,7 +173,13 @@ export function normalizarFichaEspiral(sheet) {
   for (const name of RESOURCES) resources[name] = numeric(resources[name], defaults.resources[name], defaults.resources[name], 4);
   const attributes = { ...sheet.attributes };
   for (const name of Object.keys(ATTRIBUTES)) attributes[name] = numeric(attributes[name], defaults.attributes[name], 1, 5);
-  return { ...defaults, ...sheet, resources, attributes };
+  const evolution = sheet.evolution?.abilities ? { ...sheet.evolution, abilities: consolidarOfensivasAdquiridas(sheet.evolution.abilities) } : sheet.evolution;
+  const normalized = { ...defaults, ...sheet, resources, attributes, ...(evolution ? { evolution } : {}) };
+  if(normalized.ruleset === 'protocolo-darkness-v1') {
+    delete normalized.psychology;
+    delete normalized.pendingHopeCost;
+  }
+  return normalized;
 }
 
 // Atualiza também as fichas já criadas neste dispositivo, sem alterar sua progressão.

@@ -53,3 +53,18 @@ test('rolagem usa grau de Recurso, dado de Atributo e pressão conforme a ficha 
   const mental = rollEspiralEncounter({ ...sheet, sanity: 0 }, 'razao', 'Controle Mental', 4, die);
   expect(mental.pressure).toHaveLength(3);
 });
+
+
+test('encontro Darkness usa êxitos, reserva máxima de seis e defesas do protocolo', () => {
+  const { createDarknessEncounter, espiralEncounterForTabletop } = require('./espiralEncounters');
+  const sheet = createDarknessEncounter('inimigo', 'darkness-one');
+  sheet.resources.Armas = 4;
+  sheet.pressure = 5;
+  const result = rollEspiralEncounter(sheet, 'pulso', 'Armas', 3, () => 6);
+  expect(sheet.ruleset).toBe('protocolo-darkness-v1');
+  expect(result.dice.length + result.pressure.length).toBe(6);
+  expect(result.successes).toBe(6);
+  expect(result.difficulty).toBe(3);
+  expect(result.outcome).toBe('Sucesso excepcional');
+  expect(espiralEncounterForTabletop(sheet)).toMatchObject({ defesa: 1, esquiva: 2, bloqueio: 2 });
+});

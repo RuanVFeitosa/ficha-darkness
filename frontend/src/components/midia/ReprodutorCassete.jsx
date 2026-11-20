@@ -1,3 +1,4 @@
+import ProtocolLogo from '../ui/ProtocolLogo';
 import React, { useEffect, useRef, useState } from "react";
 import "./ReprodutorCassete.css";
 
@@ -80,7 +81,7 @@ export default function ReprodutorCassete({ documento }) {
       onEnded={() => setTocando(false)} onError={() => { pausar(); setErro("Áudio indisponível. Verifique o arquivo ou sua conexão."); }} />
     <div className="gravador-corpo">
       <div className="gravador-grade" aria-hidden="true"><span>PORTABLE CASSETTE RECORDER</span></div>
-      <div className="gravador-marca"><strong>DARKNESS</strong><span>DC • 60 / MONO</span></div>
+      <div className="gravador-marca"><strong><ProtocolLogo /></strong><span>DC • 60 / MONO</span></div>
       <div className="gravador-tampa">
         <div className="cassete-fita">
           <div className="cassete-etiqueta"><small>LOW NOISE · C60</small><h2>{documento.nome || "Fita cassete"}</h2></div>

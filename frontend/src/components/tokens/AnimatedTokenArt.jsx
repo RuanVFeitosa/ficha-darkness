@@ -2,7 +2,7 @@ import {tokenImageBounds} from '../../utils/tokenImageSizing';
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {useFrame,useLoader} from '@react-three/fiber';
 import * as THREE from 'three';
-import {normalizeTokenAnimation,tokenAnimationFrame} from '../../utils/tokenAnimation';
+import {automaticTokenAnimation,tokenAnimationFrame} from '../../utils/tokenAnimation';
 export function useReducedTokenMotion() {
  const [reduced,setReduced]=useState(false);
  useEffect(() => {const q=window.matchMedia?.('(prefers-reduced-motion: reduce)');if(!q) return;const change=() => setReduced(q.matches);change();q.addEventListener?.('change',change);return () => q.removeEventListener?.('change',change);},[]);return reduced;
@@ -26,7 +26,7 @@ export function BlinkMaterial({texture,config,blink}) {
  return <meshStandardMaterial key={JSON.stringify([config.region,config.closedTransform])+config.closedImage} map={texture} transparent alphaTest={0.08} side={THREE.DoubleSide} roughness={0.88} onBeforeCompile={compile} customProgramCacheKey={() => 'token-blink-v1'}/>;
 }
 export default function AnimatedTokenArt({image,animation,id,height,selected=false,bottom=0,unlit=false,timelineTime}) {
- const config=useMemo(() => normalizeTokenAnimation(animation && (!animation.image || animation.image===image) ? animation : {enabled:false}),[animation,image]);
+ const config=useMemo(() => automaticTokenAnimation(image,animation),[animation,image]);
  const sourceTexture=useLoader(THREE.TextureLoader,config.image || image),group=useRef(),blink=useMemo(() => ({value:0}),[]),reduced=useReducedTokenMotion();
  const bounds=useMemo(() => tokenImageBounds(sourceTexture.image,config.cropTransparent),[sourceTexture,config.cropTransparent]);
  const texture=useMemo(() => {const copy=sourceTexture.clone();if(config.cropTransparent){copy.offset.set(bounds.x/sourceTexture.image.width,1-(bounds.y+bounds.height)/sourceTexture.image.height);copy.repeat.set(bounds.width/sourceTexture.image.width,bounds.height/sourceTexture.image.height);}copy.needsUpdate=true;return copy;},[sourceTexture,bounds,config.cropTransparent]);

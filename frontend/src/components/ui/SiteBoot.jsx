@@ -1,3 +1,4 @@
+import ProtocolLogo from './ProtocolLogo';
 import React,{useEffect,useRef,useState} from 'react';
 import '../../styles/SiteBoot.css';
 export const BOOT_DURATION=3200;
@@ -27,7 +28,7 @@ export default function SiteBoot({onFinish,onReveal}) {
   return ()=>{timers.forEach(clearTimeout);clearTimeout(skipTimer.current);};
  },[onFinish,onReveal,reduzido]);
  return <main className={`site-boot ${saindo?'site-boot-exit':''}`} aria-label="Inicialização do Universo Darkness">
-  <div className="site-boot-terminal"><div className="site-boot-caption"><span>UNIVERSO DARKNESS</span><span>INICIALIZAÇÃO</span></div>
+  <div className="site-boot-terminal"><div className="site-boot-caption"><span><ProtocolLogo /></span><span>INICIALIZAÇÃO</span></div>
    <div className="site-boot-lines" aria-hidden="true">{linhas.slice(0,visiveis).map((linha,i)=><div key={i}>{linha || '\u00a0'}</div>)}<span className="site-boot-cursor">▌</span></div>
    <div className="site-boot-footer"><div role="progressbar" aria-label="Inicializando o site" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(visiveis/linhas.length*100)}><span style={{width:`${visiveis/linhas.length*100}%`}}/></div><span>{Math.round(visiveis/linhas.length*100)}%</span></div>
    <p role="status" className="site-boot-sr">Inicializando o Universo Darkness. A tela de identificação abrirá em instantes.</p>

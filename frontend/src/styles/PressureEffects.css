@@ -1,0 +1,16 @@
+.pd-pressure-effects { flex:1 1 100%; display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding-top:10px; border-top:1px solid var(--es-line,#333); font-size:11px; }
+.pd-pressure-effects>small { color:var(--es-muted,#aaa); font-size:10px; }
+.pd-pressure-effect { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:7px 10px; border-left:2px solid #a98651; background:#a986510b; line-height:1.6; }
+.pd-pressure-effect.is-abalo { border-left-color:#bc7966; }
+.pd-pressure-effect strong { font-weight:500; color:#d6bda1; }
+.pd-pressure-effects button,.pd-pressure-effects select,.pd-pressure-effects input { background:var(--es-bg,#000); color:var(--es-text,#eee); border:1px solid var(--es-line,#444); padding:5px 8px; font-size:10px; }
+.pd-pressure-effect>button { border:0; padding:0 3px; cursor:pointer; }
+.pd-pressure-pending { padding:7px 10px; border:1px solid #a9865144; }
+.pd-pressure-pending summary { cursor:pointer; color:#d6bda1; }
+.pd-pressure-pending>div { display:flex; flex-wrap:wrap; align-items:end; gap:8px; margin-top:10px; }
+.pd-pressure-pending label { display:grid; gap:5px; font-size:10px; }
+.pd-pressure-pending p { font-size:11px; line-height:1.6; max-width:500px; margin:10px 0 0; }
+.pd-pressure-expiry { display:flex; gap:6px; margin-left:auto; }
+.pd-pressure-expiry button { border:0; cursor:pointer; color:var(--es-muted,#aaa); }
+
+.pd-roll-pressure-note { text-align:center; font-size:11px; color:#d6bda1; margin:12px 0; }

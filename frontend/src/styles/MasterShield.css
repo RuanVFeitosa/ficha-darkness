@@ -345,6 +345,7 @@
     width: calc(100vw - 24px);
   }
 }
+
 .mesa-shell .mesa-lateral-navegacao:has(> button[aria-pressed]) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-auto-flow: column;
@@ -2157,6 +2158,327 @@
   }
 }
 
+/* Darkness control room: keep the tabletop visible above a compact, legible dock. */
+.mesa-master-shield-panel {
+  --shield-accent: #bfa66b;
+  --shield-line: #bfa66b45;
+  inset: auto 0 0 !important;
+  height: min(56dvh, 690px);
+  max-height: 72dvh;
+  background: #050505;
+  border: 1px solid var(--shield-line);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -18px 60px #000b;
+}
+.tt3 .tt3-hud-drawer.tt3-master-shield-drawer {
+  --shield-accent: #bfa66b;
+  --shield-line: #bfa66b45;
+  border: 1px solid var(--shield-line);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  background: #050505;
+  box-shadow: 0 -18px 60px #000b;
+}
+.mesa-master-shield-panel > header,
+.tt3-master-shield-drawer > header {
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 18px;
+  background: #080808;
+  border-bottom: 1px solid var(--shield-line);
+}
+.mesa-master-shield-panel > header > strong,
+.tt3-master-shield-drawer > header h2 {
+  margin: 0 !important;
+  color: #fff !important;
+  font: 600 13px/1.2 Arial, sans-serif !important;
+}
+.mesa-master-shield-panel > header > button,
+.tt3-master-shield-drawer > header > button {
+  min-height: 32px;
+  padding: 6px 10px;
+  color: #c9c9c9;
+  border: 1px solid #ffffff30;
+  border-radius: 4px;
+  background: #000;
+}
+.mesa-master-shield-panel > header > button:hover,
+.tt3-master-shield-drawer > header > button:hover {
+  color: #fff;
+  border-color: var(--shield-accent);
+}
+.mesa-master-shield-panel .shield-header-initiative,
+.tt3-master-shield-drawer .shield-header-initiative {
+  min-width: 0;
+  margin: 0;
+  padding: 0 12px;
+  border-inline: 1px solid var(--shield-line);
+}
+.mesa-master-shield-panel .shield-header-initiative li[aria-current="step"],
+.tt3-master-shield-drawer .shield-header-initiative li[aria-current="step"] {
+  color: #fff;
+  background: #211c10;
+  border-color: var(--shield-accent);
+}
+.mesa-master-shield-panel .shield-initiative-actions button[aria-pressed="true"],
+.tt3-master-shield-drawer .shield-initiative-actions button[aria-pressed="true"] {
+  color: #fff;
+  background: #211c10;
+  border-color: var(--shield-accent);
+}
+.mesa-master-shield-panel > .master-shield-organized,
+.tt3-master-shield-drawer > .master-shield-organized {
+  width: 100%;
+  height: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 18px 18px;
+  color: #f5f5f5;
+  --shield-accent: #bfa66b;
+  --shield-line: #bfa66b45;
+  scrollbar-color: #6b5b36 #090909;
+}
+.master-shield-organized .shield-organized-navigation {
+  top: 0;
+  margin: 0 -18px 10px;
+  padding: 8px 18px 0;
+  background: #050505f5;
+  border-bottom-color: var(--shield-line);
+  backdrop-filter: blur(12px);
+}
+.master-shield-organized .shield-navigation-row {
+  gap: 12px;
+}
+.master-shield-organized .shield-area-tabs {
+  gap: 6px;
+}
+.master-shield-organized .shield-area-tabs button {
+  min-height: 38px;
+  flex: 0 0 auto;
+  padding: 8px 13px;
+  border-color: #ffffff18;
+  border-radius: 4px 4px 0 0;
+  color: #c6c6c6;
+  background: #ffffff04;
+  font-size: 11px;
+}
+.master-shield-organized .shield-area-tabs button[aria-pressed="true"] {
+  color: #fff;
+  background: #111;
+  border-color: var(--shield-line);
+  box-shadow: inset 0 -2px var(--shield-accent);
+}
+.master-shield-organized .shield-new-scene > button {
+  min-height: 36px;
+  padding: 7px 13px;
+  color: #fff;
+  border-color: var(--shield-accent);
+  background: #bfa66b14;
+}
+.master-shield-organized .shield-subnavigation {
+  min-height: 36px;
+  padding: 5px 0 8px;
+  gap: 5px;
+}
+.master-shield-organized .shield-subnavigation button {
+  min-height: 28px;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  color: #aaa;
+}
+.master-shield-organized .shield-subnavigation button[aria-pressed="true"] {
+  color: #f2dfb1;
+  border-color: var(--shield-line);
+  background: #bfa66b12;
+  box-shadow: none;
+}
+.master-shield-organized .shield-location {
+  min-height: 36px;
+  padding: 0 0 9px;
+  color: #aaa;
+  font-size: 10px;
+}
+.master-shield-organized .shield-location > span:first-child {
+  color: #fff;
+  font-size: 12px;
+}
+.master-shield-organized .shield-location > span + span {
+  padding: 3px 8px;
+  border: 1px solid var(--shield-line);
+  border-radius: 3px;
+  color: #e4d3a7;
+}
+.master-shield-organized .shield-current-difficulty {
+  color: var(--shield-accent);
+}
+.mesa-master-shield-panel .master-shield-organized .shield-workspace,
+.tt3-master-shield-drawer .master-shield-organized .shield-workspace {
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.9fr);
+  align-items: stretch;
+  gap: 12px;
+}
+.master-shield-organized .shield-context,
+.master-shield-organized .shield-overview-card,
+.master-shield-organized .shield-reference-column > *,
+.master-shield-organized .shield-organized-roster > .shield-roster,
+.master-shield-organized > section:not(.shield-workspace) {
+  min-width: 0;
+  padding: 13px 15px;
+  border: 1px solid var(--shield-line);
+  border-radius: 6px;
+  background: #090909;
+}
+.master-shield-organized .shield-context {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  margin: 0;
+}
+.master-shield-organized .shield-scene-overview {
+  display: block;
+}
+.master-shield-organized .shield-context .tt3-scene-difficulty-panel > header > span,
+.master-shield-organized .shield-overview-card > span {
+  color: var(--shield-accent);
+  font: 9px/1.4 "Courier New", monospace;
+  letter-spacing: 0.12em;
+}
+.master-shield-organized .shield-context .tt3-scene-difficulty-panel h3 {
+  margin: 4px 0 8px;
+  color: #fff;
+  font: 21px/1.15 Georgia, serif;
+}
+.master-shield-organized .shield-context .tt3-difficulty-group {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 7px;
+}
+.master-shield-organized .shield-context .tt3-difficulty-card {
+  min-height: 54px;
+  padding: 7px 9px;
+  border-color: #ffffff20;
+  border-radius: 4px;
+  background: #000;
+}
+.master-shield-organized .shield-context .tt3-difficulty-choice span {
+  color: #ddd;
+  font-size: 11px;
+}
+.master-shield-organized .shield-context .tt3-difficulty-value input {
+  border-color: var(--shield-line) !important;
+  color: #fff;
+}
+.master-shield-organized .shield-overview-card {
+  justify-content: flex-start;
+  gap: 9px;
+  background: #090909;
+}
+.master-shield-organized .shield-overview-card h3 {
+  color: #fff;
+  font: 19px/1.25 Georgia, serif;
+}
+.master-shield-organized .shield-overview-card p {
+  max-width: 50ch;
+  margin: 0;
+  color: #b8b8b8;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.master-shield-organized .shield-overview-actions {
+  margin-top: 3px;
+  gap: 6px;
+}
+.master-shield-organized .shield-overview-actions button {
+  min-height: 32px;
+  padding: 6px 9px;
+  color: #eee;
+  border-color: #ffffff26;
+  background: #000;
+  font-size: 10px;
+}
+.master-shield-organized .shield-reference-column {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.master-shield-organized .shield-reference-column > .shield-tools {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.master-shield-organized .shield-organized-roster > .shield-roster {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.master-shield-organized .shield-roster-card,
+.master-shield-organized .shield-roster-card > details > summary {
+  border-color: #ffffff24;
+}
+.master-shield-organized :is(button, input, textarea, select, summary):focus-visible {
+  outline-color: var(--shield-accent);
+}
+.tt3-master-shield-drawer > .master-shield-organized,
+.mesa-master-shield-panel > .master-shield-organized {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (max-width: 900px) {
+  .mesa-master-shield-panel {
+    height: 60dvh;
+  }
+  .mesa-master-shield-panel > header,
+  .tt3-master-shield-drawer > header {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .mesa-master-shield-panel .shield-header-initiative,
+  .tt3-master-shield-drawer .shield-header-initiative {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    border: 0;
+    border-top: 1px solid var(--shield-line);
+    padding: 6px 0 0;
+  }
+  .mesa-master-shield-panel > header > button,
+  .tt3-master-shield-drawer > header > button {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .mesa-master-shield-panel .master-shield-organized .shield-workspace,
+  .tt3-master-shield-drawer .master-shield-organized .shield-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .mesa-master-shield-panel {
+    inset: auto 0 0 !important;
+    height: 70dvh;
+    border-radius: 10px 10px 0 0;
+  }
+  .mesa-master-shield-panel > .master-shield-organized,
+  .tt3-master-shield-drawer > .master-shield-organized {
+    padding-inline: 12px;
+  }
+  .master-shield-organized .shield-organized-navigation {
+    margin-inline: -12px;
+    padding-inline: 12px;
+  }
+  .master-shield-organized .shield-navigation-row {
+    display: block;
+  }
+  .master-shield-organized .shield-area-tabs button {
+    padding-inline: 10px;
+  }
+  .master-shield-organized .shield-new-scene {
+    margin: 7px 0 0;
+  }
+  .master-shield-organized .shield-reference-column {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* The 2D shield shares the grouped navigation and has a single content scroll. */
 .mesa-master-shield-panel > .master-shield-organized {
   padding: 12px 20px 20px;
@@ -2193,6 +2515,18 @@
 .mesa-master-shield-panel .master-shield-organized .shield-current-difficulty {
   margin-left: auto;
   color: var(--shield-accent);
+}
+
+/* Compact Darkness badge and a bounded dock keep the scene in view. */
+.tt3 .tt3-hud-drawer.tt3-master-shield-drawer {
+  max-height: 52dvh;
+}
+.master-shield-organized .shield-location .shield-system-badge {
+  color: #d8c69c;
+  border-color: #bfa66b55;
+  background: #bfa66b0d;
+  font: 9px/1.4 "Courier New", monospace;
+  letter-spacing: 0.1em;
 }
 .mesa-master-shield-panel .master-shield-organized .shield-workspace {
   display: grid;
@@ -2285,3 +2619,106 @@
   }
 }
 
+/* Keep the same Darkness treatment on the 2D tabletop after its legacy rules. */
+.mesa-master-shield-panel
+  .master-shield-organized
+  .shield-organized-navigation {
+  top: 0;
+  background: #050505f5;
+  backdrop-filter: blur(12px);
+}
+.mesa-master-shield-panel
+  .master-shield-organized
+  .shield-area-tabs
+  button[aria-pressed="true"] {
+  color: #fff;
+  background: #111;
+  border-color: var(--shield-line);
+  box-shadow: inset 0 -2px var(--shield-accent);
+}
+.mesa-master-shield-panel
+  .master-shield-organized
+  .shield-subnavigation
+  button[aria-pressed="true"] {
+  color: #f2dfb1;
+  border: 1px solid var(--shield-line);
+  background: #bfa66b12;
+  box-shadow: none;
+}
+.mesa-master-shield-panel .master-shield-organized .shield-workspace {
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.9fr);
+  gap: 12px;
+}
+.mesa-master-shield-panel .master-shield-organized .shield-overview-card {
+  background: #090909;
+  border-color: var(--shield-line);
+}
+.mesa-master-shield-panel
+  .master-shield-organized
+  .shield-overview-actions
+  button {
+  color: #eee;
+  border-color: #ffffff26;
+  background: #000;
+}
+.mesa-master-shield-panel
+  .master-shield-organized
+  .shield-location
+  > span
+  + span {
+  padding: 3px 8px;
+  border: 1px solid var(--shield-line);
+  border-radius: 3px;
+  color: #e4d3a7;
+}
+@media (max-width: 900px) {
+  .mesa-master-shield-panel .master-shield-organized .shield-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Darkness command desk */
+.tt3 .master-shield.master-shield-organized { display:grid; grid-template-columns:140px minmax(0,1fr); gap:12px 18px; padding:14px 18px; align-content:start; --shield-accent:#bfa66b; --shield-line:#333; }
+.tt3 .master-shield-organized > header { display:none!important; }
+.tt3 .master-shield-organized > .shield-organized-navigation { grid-column:1; grid-row:1 / 3; position:sticky; top:0; align-self:start; margin:0; padding:0 12px 0 0; border:0; border-right:1px solid #292929; background:#050505; }
+.tt3 .master-shield-organized .shield-navigation-row,.tt3 .master-shield-organized .shield-area-tabs { display:flex; flex-direction:column; align-items:stretch; gap:4px; }
+.tt3 .master-shield-organized .shield-area-tabs button { width:100%; justify-content:flex-start; border:0; border-radius:3px; padding:9px 10px; min-height:36px; background:transparent; color:#aaa; font:12px Arial,sans-serif; }
+.tt3 .master-shield-organized .shield-area-tabs button[aria-pressed=true] { color:#e6d7b2; background:#bfa66b17; box-shadow:inset 2px 0 #bfa66b; }
+.tt3 .master-shield-organized .shield-subnavigation { display:flex; flex-direction:column; align-items:stretch; border-top:1px solid #292929; margin-top:12px; padding-top:10px; gap:3px; }
+.tt3 .master-shield-organized .shield-subnavigation button { text-align:left; font:11px/1.4 Arial,sans-serif; white-space:normal; }
+.tt3 .master-shield-organized > :not(header):not(.shield-organized-navigation) { grid-column:2; min-width:0; }
+.tt3 .master-shield-organized .shield-location { margin:0; padding:0 0 10px; border-bottom:1px solid #292929; flex-wrap:wrap; }
+.tt3 .master-shield-organized .shield-location > span:first-child { font:20px Georgia,serif; margin-right:auto; }
+.tt3 .master-shield-organized .shield-workspace { grid-template-columns:minmax(0,1.2fr) minmax(240px,1fr); gap:14px; }
+.tt3 .master-shield-organized .shield-workspace > *, .tt3 .master-shield-organized .shield-reference-column { max-height:none; overflow:visible; }
+.tt3 .master-shield-organized :is(.shield-context,.shield-overview-card) { border:1px solid #292929; border-radius:4px; background:#0c0c0c; padding:16px; }
+.tt3 .master-shield-organized h3 { color:#eee; font:22px/1.25 Georgia,serif; }
+.tt3 .master-shield-organized p { font:12px/1.6 Arial,sans-serif!important; color:#aaa; }
+.tt3 .master-shield-organized .tt3-scene-difficulty-panel { display:block; padding:0; border:0; background:transparent; }
+.tt3 .master-shield-organized .tt3-scene-difficulty-panel > header { padding:0 0 10px; }
+.tt3 .master-shield-organized .tt3-difficulty-group { display:block; margin:0; padding:8px 0; border-top:1px solid #292929; }
+.tt3 .master-shield-organized .tt3-difficulty-group h4 { margin:0 0 6px; color:#bfa66b; font:11px Arial,sans-serif; }
+.tt3 .master-shield-organized .tt3-difficulty-card { min-height:50px; margin:4px 0; padding:8px 10px; background:#050505; border-color:#292929; }
+.tt3 .master-shield-organized .tt3-difficulty-value { margin:0; }
+.shield-live-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:16px 0; }
+.shield-live-stats > div { display:grid; gap:6px; padding:12px; background:#050505; border:1px solid #292929; }
+.shield-live-stats strong { font:28px Georgia,serif; color:#d7c18e; }
+.shield-live-stats span { font:11px Arial,sans-serif; color:#aaa; }
+.tt3 .master-shield-organized .shield-overview-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.tt3 .master-shield-organized .shield-overview-actions button { min-height:38px; text-align:left; color:#ddd; border-color:#333; }
+.master-shield :is(button,input,select,textarea,summary):focus-visible { outline:2px solid #bfa66b; outline-offset:2px; }
+.shield-darkness-tools > header > span { color:#bfa66b; font:10px monospace; letter-spacing:.12em; }
+@media(max-width:760px) {
+ .tt3 .master-shield.master-shield-organized { display:block; padding:12px; }
+ .tt3 .master-shield-organized > .shield-organized-navigation { position:static; border:0; margin-bottom:12px; padding:0; }
+ .tt3 .master-shield-organized .shield-navigation-row,.tt3 .master-shield-organized .shield-area-tabs,.tt3 .master-shield-organized .shield-subnavigation { flex-direction:row; overflow-x:auto; }
+ .tt3 .master-shield-organized .shield-area-tabs button { width:auto; flex:none; }
+ .tt3 .master-shield-organized .shield-workspace { grid-template-columns:1fr; }
+}
+
+/* Session player cards beside the scene difficulties. */
+.tt3 .master-shield-organized .shield-workspace { grid-template-columns:minmax(280px,.85fr) minmax(0,1.4fr); }
+.tt3 .master-shield-organized .shield-overview-card { display:block; }
+.tt3 .master-shield-organized .shield-overview-card>.shield-player-cards { margin-top:14px; }
+.tt3 .master-shield-organized .shield-overview-card>.shield-overview-actions { margin-top:16px; padding-top:12px; border-top:1px solid #ffffff20; }
+@media(max-width:900px) { .tt3 .master-shield-organized .shield-workspace { grid-template-columns:minmax(0,1fr); } }

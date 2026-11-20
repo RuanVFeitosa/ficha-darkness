@@ -16,3 +16,21 @@
 @keyframes tt3-floating-roll-fade{0%{opacity:0;transform:translateY(10px)}9%{opacity:1;transform:translateY(0)}90%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-8px)}}
 .mesa-2d .tt3-roll-popups.tt3-transparent-rolls{position:fixed;top:50%;bottom:auto;transform:translateY(-50%);max-height:70vh}
 .tt3-transparent-rolls .tt3-roll-author{display:block;flex:none;color:#eee5d0;font:600 14px/1.4 Georgia,serif;text-align:center;text-shadow:0 2px 6px #000,0 0 16px #000}
+
+/* The 3D tabletop uses the same faceted, animated dice as the character sheet. */
+.tt3-sheet-style-rolls .tt3-floating-roll { width:min(680px,90vw); padding:14px 20px!important; border:1px solid #ffffff20!important; border-radius:10px; background:linear-gradient(145deg,#101010e8,#050505d9)!important; box-shadow:0 14px 50px #0008!important; }
+.tt3-sheet-style-rolls .tt3-physical-dice { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:12px; max-width:100%; padding:16px 6px 0; }
+.tt3-sheet-style-rolls .pd-roll-die { display:grid; justify-items:center; gap:3px; }
+.tt3-sheet-style-rolls .pd-physical-die { width:72px; height:84px; }
+.tt3-sheet-style-rolls .pd-roll-die>small { min-height:12px; color:#ccc; font:9px monospace; }
+.tt3-sheet-style-rolls .pd-roll-die.dread .pd-physical-die { --die-light:var(--pavor-primary,#db5b52); --die-dark:color-mix(in srgb,var(--pavor-primary,#db5b52) 32%,#100308); --die-edge:color-mix(in srgb,var(--pavor-primary,#db5b52) 18%,#100308); }
+.tt3-sheet-style-rolls .pd-roll-die.bonus .pd-physical-die { --die-light:#ccefa1; --die-dark:#5e9437; --die-edge:#35531f; }
+.tt3-sheet-style-rolls .pd-roll-die.relationship .pd-physical-die { --die-light:#c1dce7; --die-dark:#628697; --die-edge:#314b59; }
+.tt3-sheet-style-rolls .pd-roll-die.cancelled .pd-physical-die { opacity:.35; filter:grayscale(1); }
+.tt3-sheet-style-rolls .pd-roll-die.dread .pd-die-number { fill:#fff1e6; stroke:#31050c88; }
+@media(max-width:600px) { .tt3-sheet-style-rolls .pd-physical-die { width:55px; height:64px; } .tt3-sheet-style-rolls .tt3-physical-dice { gap:6px; } }
+
+.tt3-sheet-style-rolls .tt3-roll-test { color:#ddd; text-align:center; font:12px/1.5 Arial,sans-serif; margin-top:4px; }
+.tt3-sheet-style-rolls .tt3-roll-author { color:#fff; }
+
+.tt3-sheet-style-rolls .pd-roll-die.dread .pd-physical-die svg { filter:drop-shadow(2px 4px 1px #000c) drop-shadow(0 5px 12px color-mix(in srgb,var(--pavor-glow,#e14d43) 25%,transparent)); }

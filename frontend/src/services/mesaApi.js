@@ -283,11 +283,28 @@ export const buscarCampanhaPorCodigo = async (codigo) => {
 };
 
 export const listarCampanhas = async () => {
-  if (!supabaseConfigurado) return listarCampanhasDemo();
+  if (!supabaseConfigurado) return Promise.all(listarCampanhasDemo().map(resolverCapaCampanha));
   const { data, error } = await supabase.from("campanhas").select("*").order("criado_em", { ascending: false });
   if (error) throw error;
-  return data || [];
+  return Promise.all((data || []).map(resolverCapaCampanha));
 };
+
+const chaveCapaCampanha = id => `darkness:campaign-cover:${id}`;
+export async function resolverCapaCampanha(campanha) {
+  const local = typeof campanha.capa_url === 'string' ? null : await readLocalCampaign(chaveCapaCampanha(campanha.id)).catch(() => null);
+  const persisted = campanha.capa_url ?? local?.url;
+  return persisted === undefined ? campanha : { ...campanha, capa_url: await resolverImagemLocal(persisted), capaPersistida: persisted };
+}
+export async function salvarCapaCampanha(campanhaId, url) {
+  let local = !supabaseConfigurado || campanhaId === 'demo' || String(campanhaId).startsWith('demo-');
+  if (!local) {
+    const { error } = await supabase.from('campanhas').update({ capa_url: url }).eq('id', campanhaId);
+    if (error && !colunaAusente(error, 'capa_url')) throw error;
+    local = Boolean(error);
+  }
+  if (local) await writeLocalCampaign(chaveCapaCampanha(campanhaId), { url });
+  return { capa_url: await resolverImagemLocal(url), capaPersistida: url, capaLocal: local };
+}
 
 export const listarCampanhasDaFicha = async (fichaId) => {
   const id = String(fichaId || "").trim();

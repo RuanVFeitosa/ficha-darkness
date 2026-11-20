@@ -55,3 +55,47 @@ test('habilidade já adquirida não pode ser concedida novamente e falha não an
   fireEvent.click(screen.getByRole('button', { name: 'Conceder: Sem Hesitar' }));
   await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Não foi possível salvar'));
 });
+
+
+test('central Darkness concede a habilidade adaptada com o identificador usado pela ficha', async () => {
+  const { HABILIDADES_DARKNESS_ADAPTADAS } = require('../../data/habilidadesDarkness');
+  const ability = HABILIDADES_DARKNESS_ADAPTADAS.find(entry => entry.category === 'Ofensiva');
+  const onGrant = jest.fn().mockResolvedValue(true);
+  render(<EspiralDashboardCatalog kind="abilities" darkness fichas={[ficha]} onGrant={onGrant} />);
+  expect(screen.getByRole('heading', { name: 'Habilidades Darkness' })).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Conceder a um personagem'), { target: { value: ficha.fichaId } });
+  fireEvent.change(screen.getByLabelText('Buscar no catálogo'), { target: { value: ability.name } });
+  fireEvent.click(screen.getByRole('button', { name: 'Conceder: ' + ability.name.split(' · ')[0] }));
+  await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('concedido'));
+  expect(onGrant).toHaveBeenCalledWith(ficha, expect.objectContaining({ id: ability.id, type: 'ability', levels: ability.levels, hope: ability.hope }));
+});
+
+
+test('edita arma Darkness, persiste e usa os novos dados na entrega', async () => {
+  localStorage.removeItem('darkness:weapon-catalog:v1');
+  const onGrant = jest.fn().mockResolvedValue(true);
+  const view = render(<EspiralDashboardCatalog kind="items" darkness fichas={[ficha]} onGrant={onGrant}/>);
+  fireEvent.click(screen.getByRole('button', { name: 'Editar arma: Faca' }));
+  fireEvent.change(screen.getByLabelText('Nome da arma'), { target: { value: 'Faca personalizada' } });
+  fireEvent.change(screen.getByLabelText('Dano da arma'), { target: { value: '2d8+2' } });
+  fireEvent.change(screen.getByLabelText('Descrição e propriedades'), { target: { value: 'Corte · Precisa' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar arma' }));
+  view.unmount();
+  render(<EspiralDashboardCatalog kind="items" darkness fichas={[ficha]} onGrant={onGrant}/>);
+  fireEvent.change(screen.getByLabelText('Conceder a um personagem'), { target: { value: ficha.fichaId } });
+  fireEvent.click(screen.getByRole('button', { name: 'Conceder: Faca personalizada' }));
+  await waitFor(() => expect(onGrant).toHaveBeenCalledWith(ficha, expect.objectContaining({ id: 'arma-faca', damage: '2d8+2', detail: 'Corte · Precisa' })));
+  await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('concedido'));
+  localStorage.removeItem('darkness:weapon-catalog:v1');
+});
+
+test('cancelar ou informar dano inválido preserva a arma original', () => {
+  render(<EspiralDashboardCatalog kind="items" darkness fichas={[]} onGrant={jest.fn()}/>);
+  fireEvent.click(screen.getByRole('button', { name: 'Editar arma: Faca' }));
+  fireEvent.change(screen.getByLabelText('Dano da arma'), { target: { value: 'inválido' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar arma' }));
+  expect(screen.getByRole('alert')).toHaveTextContent('dano válido');
+  fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+  expect(screen.queryByRole('form', { name: 'Editar arma Darkness' })).not.toBeInTheDocument();
+  expect(localStorage.getItem('darkness:weapon-catalog:v1')).toBeNull();
+});

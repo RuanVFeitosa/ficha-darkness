@@ -2507,6 +2507,73 @@
 @media(max-width:700px) { .tt3-exploration-fields { grid-template-columns:repeat(2,minmax(0,1fr)); } .tt3-interact-prompt { bottom:136px; max-width:calc(100vw - 40px); white-space:nowrap; } }
 .tt3-interaction-aim { position:absolute; z-index:3; top:50%; left:50%; width:3px; height:3px; border:1px solid #ffffffa0; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 0 3px #000; pointer-events:none; }
 
+/* Darkness master shield finish, loaded after the shared tabletop styles. */
+.tt3 .tt3-hud-drawer.tt3-master-shield-drawer {
+  border: 1px solid #bfa66b66;
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  background: #050505;
+  box-shadow: 0 -18px 60px #000b;
+}
+.tt3.tt3-master aside.tt3-hud-drawer.tt3-master-shield-drawer {
+  border-top: 1px solid #bfa66b66;
+  box-shadow: 0 -18px 60px #000b;
+}
+.tt3 .tt3-master-shield-drawer > header {
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 18px;
+  background: #080808;
+  border-bottom: 1px solid #bfa66b45;
+}
+.tt3 .tt3-master-shield-drawer > header h2 {
+  margin: 2px 0 0;
+  color: #fff;
+  font-size: 13px;
+}
+.tt3 .tt3-master-shield-drawer > header > button {
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid #ffffff30;
+  border-radius: 4px;
+  background: #000;
+  color: #ddd;
+}
+.tt3 .tt3-master-shield-drawer > header > button:hover {
+  border-color: #bfa66b;
+  color: #fff;
+}
+.tt3 .tt3-master-shield-drawer .shield-header-initiative {
+  margin: 0;
+  padding-inline: 12px;
+  border-color: #bfa66b45;
+}
+.tt3 .tt3-master-shield-drawer .shield-header-initiative li[aria-current="step"],
+.tt3 .tt3-master-shield-drawer .shield-initiative-actions button[aria-pressed="true"] {
+  border-color: #bfa66b;
+  background: #211c10;
+  color: #fff;
+}
+.tt3 .tt3-master-shield-drawer > .master-shield.master-shield-organized {
+  --shield-accent: #bfa66b;
+  --shield-line: #bfa66b45;
+}
+@media (max-width: 850px) {
+  .tt3 .tt3-master-shield-drawer > header {
+    grid-template-columns: minmax(0, 1fr) auto 28px;
+  }
+  .tt3 .tt3-master-shield-drawer .shield-header-initiative {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    border: 0;
+    border-top: 1px solid #bfa66b45;
+    padding: 6px 0 0;
+  }
+}
+
 /* Master dice workspace: campaign history left, quick rolls right. */
 .tt3 .tt3-master-shield-drawer .tt3-dice-panel {
   grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);
@@ -2561,3 +2628,27 @@
 .tt3 .shield-initiative-turns select { max-width:130px; height:27px; padding:3px; border:1px solid #ffffff30; border-radius:3px; background:#111; color:#eee; font:10px Arial,sans-serif; }
 .shield-header-initiative .shield-initiative-error { flex-basis:100%; padding:3px 0; margin:0; color:#efaaaa; font:10px/1.4 Arial,sans-serif; }
 @media(max-width:1100px) { .tt3 .shield-header-initiative { margin-inline:5px; padding-inline:8px; } .shield-initiative-actions { gap:5px; } }
+@media(min-width:1100px) {
+ .tt3.tt3-shield-side.tt3-master-working .tt3-stage { width:calc(100% - clamp(440px,38vw,650px)); }
+ .tt3.tt3-shield-side.tt3-master-working aside.tt3-hud-drawer.tt3-master-shield-drawer { inset:80px 0 0 auto!important; width:clamp(440px,38vw,650px)!important; height:calc(100dvh - 80px); max-height:none; border:1px solid #49402c; border-radius:6px 0 0 0; }
+ .tt3.tt3-shield-side .tt3-master-shield-drawer > header { display:flex; flex-wrap:wrap; gap:8px; padding:12px; }
+ .tt3.tt3-shield-side .tt3-master-shield-drawer .shield-header-initiative { flex:1 0 100%; order:4; border:0; padding:10px 0 0; border-top:1px solid #292929; }
+ .tt3.tt3-shield-side .tt3-shield-layout-controls { margin-left:auto; }
+ .tt3.tt3-shield-side .tt3-shield-layout-controls label { display:none; }
+ .tt3.tt3-shield-side .master-shield.master-shield-organized { grid-template-columns:110px minmax(0,1fr); gap:12px; padding:12px; }
+ .tt3.tt3-shield-side .master-shield-organized .shield-workspace,.tt3.tt3-shield-side .master-shield-organized .shield-reference-column { grid-template-columns:1fr; }
+ .tt3.tt3-shield-side .master-shield-organized .shield-location > span:first-child { flex-basis:100%; }
+ .tt3.tt3-shield-side .master-shield-organized .shield-input-row { display:flex; flex-wrap:wrap; }
+ .tt3.tt3-shield-side .master-shield-organized .shield-input-row > label { flex:1 1 120px; }
+}
+@media(max-width:1099px) { .tt3 .tt3-shield-dock-toggle { display:none; } }
+@media(min-width:1100px) {
+ .tt3.tt3-shield-side.tt3-master-working .tt3-stage { width:100%; --master-workspace-height:0px!important; }
+ .tt3.tt3-shield-side.tt3-master-working .tt3-world-canvas { width:calc(100% - clamp(440px,38vw,650px))!important; }
+ .tt3.tt3-shield-side.tt3-master-working .tt3-camera-dock { right:calc(clamp(440px,38vw,650px) + 16px); max-width:calc(100vw - clamp(440px,38vw,650px) - 230px); }
+}
+
+/* Leave the right field available for the character while consulting the sheet. */
+@media (min-width:761px) {
+ .tt3-player-sheet-open .tt3-hud-drawer.tt3-sheet-drawer { left:12px; right:auto; width:min(1100px,58vw); }
+}

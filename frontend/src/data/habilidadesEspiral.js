@@ -1,3 +1,6 @@
+import { HABILIDADES_DARKNESS_ADAPTADAS } from './habilidadesDarkness';
+import { FONTES_OFENSIVAS_MESCLADAS } from './ofensivasConsolidadas';
+
 export const HABILIDADES_ESPIRAL = {
   Ofensiva: [
     ["Golpe Calculado", "Padrão", "Antes de atacar, reduza a Reserva de Ataque em 1 dado; ao acertar, adicione +1 dado de Dano."],
@@ -105,3 +108,12 @@ export const CUSTOS_ESPERANCA_HABILIDADES = {
   "Olhar Treinado":[0,0],"Algo Está Errado":[0,0],"Leitura de Movimento":[2,1],"Procurar o Ausente":[0,0],"Memória Visual":[0,0],"Sentir a Emboscada":[3,2],Varredura:[2,1],"Reconhecer Padrão":[0,0],"Atenção Dividida":[2,1],"Instante Perfeito":[6,3],
   "Orientação Precisa":[2,1],"Cobertura!":[1,1],"Estabilização de Campo":[2,1],"Tirar da Linha de Fogo":[2,1],"Dividir o Peso":[0,0],"Coordenar Ataque":[3,2],Âncora:[2,1],"Mãos Firmes":[0,0],"Abertura Tática":[2,1],Levanta:[4,2],
 };
+
+// Compartilhado por criação, ficha, evolução, builds e concessão do mestre.
+// Nomes qualificados distinguem homônimos sem alterar os IDs já salvos.
+HABILIDADES_ESPIRAL.Ofensiva = HABILIDADES_ESPIRAL.Ofensiva.filter(([name]) => !FONTES_OFENSIVAS_MESCLADAS.has(`base:${name}`));
+HABILIDADES_DARKNESS_ADAPTADAS.forEach(ability => {
+  HABILIDADES_ESPIRAL[ability.category].push([ability.name, ability.action, ability.detail]);
+  APRIMORAMENTOS_HABILIDADES_ESPIRAL[ability.name] = ability.levels;
+  CUSTOS_ESPERANCA_HABILIDADES[ability.name] = ability.hope;
+});

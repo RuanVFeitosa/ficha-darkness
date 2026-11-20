@@ -1,0 +1,87 @@
+.espiral-app .pd-simple-damage { padding:22px; }
+.pd-injury-step { display:flex; align-items:center; gap:10px; margin:18px 0 12px; }
+.pd-injury-step:first-child { margin-top:0; }
+.pd-injury-step > span { display:grid; place-items:center; width:23px; height:23px; border:1px solid #bb927655; border-radius:50%; color:#d5ad8d; font:10px monospace; }
+.pd-injury-step h3 { margin:0; font:20px Georgia,serif; }
+.pd-injury-main-fields { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.espiral-app .pd-simple-damage .es-field { margin:0; }
+.pd-simple-damage .es-field > span { font-size:11px; }
+.pd-simple-damage input,.pd-simple-damage select { width:100%; box-sizing:border-box; }
+.pd-injury-options { padding:12px 0; border-bottom:1px solid var(--es-line); }
+.pd-injury-options summary { cursor:pointer; color:var(--es-muted); font-size:11px; }
+.pd-injury-options > label { margin-top:14px !important; }
+.pd-injury-options .es-damage-check { display:flex; align-items:center; gap:8px; font-size:11px; }
+.pd-injury-options input[type=checkbox] { width:auto; }
+.pd-injury-preview { padding:16px; margin:0 0 14px; border:1px solid #9d805044; border-radius:5px; background:#9d805009; }
+.pd-injury-preview-title { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.pd-injury-preview-title > strong { font:19px Georgia,serif; }
+.pd-injury-preview-title > span { font:10px monospace; color:var(--es-muted); }
+.pd-injury-health { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px solid var(--es-line); }
+.pd-injury-health > span,.pd-injury-health small { font-size:11px; color:var(--es-muted); }
+.pd-injury-health strong { font:23px Georgia,serif; color:#e9b39f; }
+.pd-injury-preview p { font-size:12px; line-height:1.6; margin:10px 0; }
+.pd-injury-preview > small { display:block; font:10px/1.6 monospace; color:var(--es-muted); }
+.pd-injury-preview[data-severity=none] .pd-injury-health strong { color:#afc79e; }
+.pd-injury-preview[data-severity=Grave],.pd-injury-preview[data-severity=Crítica],.pd-injury-preview[data-severity=Fatal],.pd-injury-preview[data-severity=Catastrófica] { border-color:#b9544855; background:#b9544809; }
+.pd-simple-damage > .es-primary { width:100%; min-height:42px; }
+.pd-injury-feedback { padding:10px; border-left:2px solid #94b17a; font-size:12px; }
+.espiral-app.protocolo-app .es-injury-workspace { grid-template-columns:minmax(200px,280px) minmax(0,1fr); gap:20px; align-items:start; }
+.espiral-app.protocolo-app .es-body-map { padding:16px; }
+.espiral-app.protocolo-app .es-body-map svg { max-height:270px; width:100%; }
+.espiral-app.protocolo-app .es-body-map-heading { flex-wrap:wrap; gap:6px; }
+.espiral-app.protocolo-app .es-body-map-heading small { font-size:9px; }
+.pd-injury-reference { margin-top:16px; color:var(--es-muted); font-size:11px; }
+.pd-injury-reference summary { cursor:pointer; }
+.pd-injury-list-title { font:22px Georgia,serif; margin:24px 0 14px; }
+.pd-injury-list-title small { font:11px monospace; color:var(--es-muted); margin-left:8px; }
+.pd-injury-record { margin:10px 0; padding:16px; border:1px solid var(--es-line); border-left:2px solid #bb9276; border-radius:4px; background:var(--es-surface); }
+.pd-injury-record header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.pd-injury-record header strong { font:18px Georgia,serif; }
+.pd-injury-record header span { display:block; margin-top:5px; color:#c4a18b; font-size:11px; }
+.pd-injury-record button { background:transparent; color:var(--es-muted); border:1px solid var(--es-line); padding:6px 10px; cursor:pointer; font-size:10px; }
+.pd-injury-record p { margin:10px 0; font-size:12px; line-height:1.6; }
+.pd-injury-record details { margin-top:12px; font-size:10px; color:var(--es-muted); }
+.pd-injury-record summary { cursor:pointer; }
+@media(max-width:800px) { .espiral-app.protocolo-app .es-injury-workspace { grid-template-columns:minmax(0,1fr); } .espiral-app.protocolo-app .es-body-map svg { max-height:200px; } .pd-injury-main-fields { gap:10px; } .espiral-app .pd-simple-damage { padding:16px; } }
+
+.pd-injury-modes { display:flex; gap:6px; margin-bottom:12px; }
+.pd-injury-modes button { flex:1; padding:10px; background:transparent; color:var(--es-muted); border:1px solid var(--es-line); border-radius:4px; cursor:pointer; font-size:12px; }
+.pd-injury-modes button[aria-pressed=true] { background:#b58a5820; border-color:#b58a58; color:var(--es-text); }
+.pd-injury-modes button:last-child[aria-pressed=true] { background:#82af7218; border-color:#82af72; }
+.pd-simple-healing .pd-injury-step > span { border-color:#82af7266; color:#a6cc97; }
+.pd-healing-preview { border-color:#82af7244; background:#82af7209; }
+.pd-healing-preview .pd-injury-health { border-top:0; margin-top:0; padding-top:0; }
+.pd-healing-preview .pd-injury-health strong { color:#b5d4a8; }
+.pd-healing-help,.pd-healing-manual p { color:var(--es-muted); font-size:11px; line-height:1.6; }
+.pd-healing-manual { margin-top:14px; }
+.pd-healing-manual .es-field { margin-top:10px !important; }
+.pd-injury-remaining { display:block; color:#b5c4a4; margin:12px 0 0; font:10px monospace; }
+
+/* Corpo e marcas na visão geral ocupa apenas um cartão. */
+.pd-body-quick { margin-top:16px; padding:16px; border:1px solid var(--es-line); border-radius:4px; background:var(--es-surface); }
+.pd-body-quick > header { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.pd-body-quick h3 { margin:0; font:19px Georgia,serif; }
+.pd-body-quick > header > span { border:1px solid var(--es-line); padding:3px 6px; font:10px monospace; }
+.pd-body-quick p { margin:10px 0 12px; color:var(--es-muted); font-size:10px; }
+.pd-body-quick ul { list-style:none; margin:0 0 14px; padding:0; }
+.pd-body-quick li { display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:6px 0; border-bottom:1px solid var(--es-line); font-size:10px; }
+.pd-body-quick li small { font-size:9px; color:#c6a084; }
+.pd-body-quick > div { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+.pd-body-quick button { padding:9px 5px; font-size:11px; background:transparent; color:var(--es-text); border:1px solid var(--es-line); border-radius:3px; cursor:pointer; }
+.pd-body-quick button:last-child { border-color:#86a67766; color:#b4ccaa; }
+.pd-body-panel-backdrop { z-index:3000; padding:24px; }
+.pd-body-panel { position:relative; width:min(100%,1050px); max-height:calc(100dvh - 48px); overflow-y:auto; overscroll-behavior:contain; box-sizing:border-box; padding:28px; border:1px solid var(--es-line); border-radius:6px; background:var(--es-bg); color:var(--es-text); box-shadow:0 24px 80px #000c; }
+.pd-body-panel-close { display:block; margin:0 0 18px auto; padding:8px 12px; color:var(--es-text); border:1px solid var(--es-line); background:transparent; cursor:pointer; }
+.espiral-app.protocolo-app .pd-body-panel .es-injury-workspace { grid-template-columns:minmax(180px,260px) minmax(0,1fr); }
+@media(max-width:800px) { .pd-body-panel-backdrop { padding:12px; } .pd-body-panel { max-height:calc(100dvh - 24px); padding:16px; } .espiral-app.protocolo-app .pd-body-panel .es-injury-workspace { grid-template-columns:minmax(0,1fr); } }
+
+/* Lesões acompanham os formulários na coluna da direita. */
+.espiral-app.protocolo-app .es-injury-workspace,.espiral-app.protocolo-app .pd-body-panel .es-injury-workspace { grid-template-columns:minmax(150px,.65fr) minmax(280px,1.5fr) minmax(200px,.85fr); gap:16px; align-items:start; }
+.pd-injury-list { min-width:0; padding:16px; border:1px solid var(--es-line); border-radius:4px; background:var(--es-surface); }
+.pd-injury-list .pd-injury-reference { margin-top:0; font-size:10px; }
+.pd-injury-list .pd-injury-list-title { margin:16px 0 12px; font-size:20px; }
+.pd-injury-list .pd-injury-record { padding:12px; margin-bottom:0; }
+.pd-injury-list .pd-injury-record header { flex-wrap:wrap; }
+.pd-injury-list .pd-injury-record p { font-size:11px; }
+.pd-injury-list .es-empty { padding:20px 10px; font-size:12px; }
+@media(max-width:800px) { .espiral-app.protocolo-app .es-injury-workspace,.espiral-app.protocolo-app .pd-body-panel .es-injury-workspace { grid-template-columns:minmax(0,1fr); } }

@@ -59,3 +59,27 @@ test('exibe cada dado da reserva, incluindo os dados de Pressão',()=>{
  expect(notificationDice({detalhes:{dice:[4,8],sides:8,pressure:[2]}})).toEqual([{value:4,sides:8},{value:8,sides:8},{value:2,sides:6,pressure:true}]);
  expect(notificationDice({detalhes:{dadosDetalhados:[{valor:5,faces:6}]}})).toEqual([{value:5,sides:6}]);
 });
+
+test('tabletop 3D usa os dados da ficha com extras e Pavor',()=>{
+ jest.useFakeTimers();
+ const {rerender,container}=render(<RollNotifications rolls={[]}/>);
+ rerender(<RollNotifications rolls={[{...roll,detalhes:{dice:[5],sides:8,pressure:[2],extra:[7],extraDieSides:[10],relationshipExtraIndex:0,pavor:{value:3,sides:6,cancelled:[true,false,false]}}}]}/>);
+ expect(container.querySelectorAll('.pd-physical-die')).toHaveLength(4);
+ expect(container.querySelector('.tt3-floating-die')).toBeNull();
+ act(()=>jest.advanceTimersByTime(1200));
+ expect(screen.getByRole('img',{name:'d8: 5'})).toBeInTheDocument();
+ expect(screen.getByRole('img',{name:'d10: 7'})).toBeInTheDocument();
+ expect(screen.getByText('Relação')).toBeInTheDocument();
+ expect(container.querySelector('.cancelled')).toBeInTheDocument();
+ jest.useRealTimers();
+});
+test('ficha aberta recebe sua própria rolagem sem duplicar ou reproduzir ao fechar',()=>{
+ const own={...roll,detalhes:{sourceSheetId:'espiral:ana'}};
+ const other={...roll,id:'other',autor_nome:'Lia',detalhes:{sourceSheetId:'espiral:lia'}};
+ const {rerender}=render(<RollNotifications rolls={[]} sheetRollSource="espiral:ana"/>);
+ rerender(<RollNotifications rolls={[own,other]} sheetRollSource="espiral:ana"/>);
+ expect(screen.queryByLabelText('Rolagem de Victoria')).not.toBeInTheDocument();
+ expect(screen.getByLabelText('Rolagem de Lia')).toBeInTheDocument();
+ rerender(<RollNotifications rolls={[own,other]}/>);
+ expect(screen.queryByLabelText('Rolagem de Victoria')).not.toBeInTheDocument();
+});

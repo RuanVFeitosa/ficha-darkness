@@ -14,6 +14,7 @@ test('envia, salva, reabre e remove retrato e token de corpo inteiro separadamen
   prepareTokenImage.mockResolvedValue('data:image/webp;base64,token');
   render(<EspiralEncounters />);
   fireEvent.click(screen.getByRole('button', { name: 'Criar NPC' }));
+  fireEvent.click(screen.getByText('Personalizar retrato e token'));
   const file = new File(['image'], 'npc.png', { type: 'image/png' });
   fireEvent.change(screen.getByLabelText('Enviar foto de perfil'), { target: { files: [file] } });
   await waitFor(() => expect(screen.getByAltText('Foto de perfil de Novo NPC')).toHaveAttribute('src', 'data:image/webp;base64,portrait'));
@@ -21,6 +22,7 @@ test('envia, salva, reabre e remove retrato e token de corpo inteiro separadamen
   await waitFor(() => expect(screen.getByAltText('Token 3D de Novo NPC')).toHaveAttribute('src', 'data:image/webp;base64,token'));
   fireEvent.click(screen.getByRole('button', { name: 'Salvar ficha' }));
   fireEvent.click(screen.getByRole('button', { name: 'Abrir ficha de Novo NPC' }));
+  fireEvent.click(screen.getByText('Personalizar retrato e token'));
   expect(screen.getByAltText('Token 3D de Novo NPC')).toHaveAttribute('src', 'data:image/webp;base64,token');
   fireEvent.click(screen.getByRole('button', { name: 'Remover foto de perfil' }));
   fireEvent.click(screen.getByRole('button', { name: 'Salvar ficha' }));
@@ -33,6 +35,7 @@ test('falha no upload preserva a imagem anterior e permite salvar', async () => 
   prepareTokenImage.mockRejectedValue(new Error('Imagem inválida'));
   render(<EspiralEncounters />);
   fireEvent.click(screen.getByRole('button', { name: 'Criar NPC' }));
+  fireEvent.click(screen.getByText('Personalizar retrato e token'));
   fireEvent.change(screen.getByLabelText('URL do token 3D'), { target: { value: '/token.png' } });
   fireEvent.change(screen.getByLabelText('Enviar token 3d'), { target: { files: [new File(['bad'], 'bad.png', { type: 'image/png' })] } });
   await waitFor(() => expect(screen.getByText('Imagem inválida')).toBeInTheDocument());
@@ -52,6 +55,7 @@ test('cria, edita e reabre a mesma ficha ESPIRAL para NPC e inimigo', () => {
   const view = render(<EspiralEncounters />);
   expect(screen.queryByText('Darkness NPC')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Criar NPC' }));
+  fireEvent.click(screen.getByText('Personalizar retrato e token'));
   expect(screen.getByRole('dialog')).toBeInTheDocument();
   expect(screen.queryByLabelText('Força')).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Aliada' } });
@@ -103,9 +107,35 @@ test('incorpora equipamentos, habilidades e lesões e calcula dano com a fórmul
 test('cancelar alterações não grava uma ficha incompleta', async () => {
   render(<EspiralEncounters />);
   fireEvent.click(screen.getByRole('button', { name: 'Criar NPC' }));
+  fireEvent.click(screen.getByText('Personalizar retrato e token'));
   fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Rascunho' } });
   fireEvent.click(screen.getByRole('button', { name: 'Fechar ficha de encontro' }));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(confirmarDialogo).toHaveBeenCalled();
   expect(localStorage.getItem(ESPIRAL_ENCOUNTERS_KEY)).toBeNull();
+});
+
+
+test('nova ficha usa Darkness e exibe teste por êxitos', () => {
+  render(<EspiralEncounters/>);
+  fireEvent.click(screen.getByRole('button', { name: 'Criar inimigo' }));
+  expect(screen.getByText('Darkness / FICHA DE ENCONTRO', { exact: false })).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Vigia' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Rolar teste' }));
+  expect(screen.getByText(/êxitos/)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar ficha' }));
+  expect(JSON.parse(localStorage.getItem(ESPIRAL_ENCOUNTERS_KEY)).records[0]).toMatchObject({ name: 'Vigia', ruleset: 'protocolo-darkness-v1' });
+});
+
+test('adapta encontro Absoluto em uma cópia e conserva a ficha de referência', () => {
+  const legacy = { id: 'old', tipo: 'npc', nome: 'Aliada antiga', atributos: { forca: 3, inteligencia: 3 }, dominios: { razao: 2 } };
+  localStorage.setItem('darkness_npcs', JSON.stringify([legacy]));
+  render(<EspiralEncounters legacyRecords={[legacy]}/>);
+  fireEvent.click(screen.getByRole('button', { name: 'Adaptar para Darkness' }));
+  expect(screen.getByLabelText('Nome')).toHaveValue('Aliada antiga');
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar ficha' }));
+  const saved = JSON.parse(localStorage.getItem(ESPIRAL_ENCOUNTERS_KEY)).records[0];
+  expect(saved).toMatchObject({ ruleset: 'protocolo-darkness-v1', legacySourceId: 'old', adaptationSource: { original: legacy } });
+  expect(JSON.parse(localStorage.getItem('darkness_npcs'))).toEqual([legacy]);
+  expect(screen.getByRole('button', { name: 'Adaptado' })).toBeDisabled();
 });

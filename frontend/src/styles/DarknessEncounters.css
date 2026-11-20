@@ -1,0 +1,116 @@
+.darkness-master .darkness-encounters { border:1px solid #bfa66b40; padding:28px; background:#000; color:#fff; min-width:0; }
+.darkness-master .darkness-encounters .ed-section-heading { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:0 0 24px; border-bottom:1px solid #bfa66b40; }
+.darkness-master .darkness-encounters .ed-section-heading h2 { font:36px/1.15 Georgia,serif; margin:12px 0; }
+.darkness-master .darkness-encounters .ed-section-heading p { font:12px/1.7 Arial,sans-serif; margin:0; }
+.darkness-master .darkness-encounters .ee-create button { padding:13px 18px; border:1px solid #bfa66b; background:#000; color:#fff; font:12px Arial,sans-serif; }
+.dn-overview { display:grid; grid-template-columns:repeat(3,1fr); border-bottom:1px solid #bfa66b40; }
+.dn-overview>div { padding:20px; border-right:1px solid #bfa66b40; }
+.dn-overview>div:first-child { padding-left:0; }
+.dn-overview>div:last-child { border:0; }
+.dn-overview span { display:block; font:10px monospace; letter-spacing:2px; text-transform:uppercase; }
+.dn-overview strong { display:block; font:28px Georgia,serif; margin-top:10px; }
+.darkness-master .darkness-encounters .ee-toolbar { display:grid; grid-template-columns:minmax(220px,1fr) minmax(220px,1.5fr) minmax(160px,1fr); gap:20px; align-items:end; margin:24px 0; }
+.darkness-master .darkness-encounters .ee-toolbar label { margin:0; min-width:0; font-size:11px; }
+.darkness-master .darkness-encounters .ee-tabs button { min-height:42px; padding:10px 12px; font-size:11px; }
+.darkness-master .darkness-encounters .ee-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr)); gap:20px; align-items:start; }
+.darkness-master .darkness-encounters .ee-card { border:1px solid #bfa66b40; overflow:hidden; }
+.darkness-master .darkness-encounters .ee-card:hover { border-color:#bfa66b; }
+.darkness-master .darkness-encounters .ee-card-open { display:block; width:100%; text-align:left; padding:0; cursor:pointer; }
+.darkness-master .darkness-encounters .ee-portrait { position:relative; display:grid; place-items:center; width:100%; height:180px; overflow:hidden; border-bottom:1px solid #bfa66b40; }
+.darkness-master .darkness-encounters .ee-portrait img { width:100%; height:100%; max-height:180px; object-fit:cover; object-position:center 25%; }
+.darkness-master .darkness-encounters .ee-portrait>span { font:68px Georgia,serif; }
+.darkness-master .darkness-encounters .ee-portrait>b { position:absolute; left:12px; bottom:12px; border:1px solid #bfa66b; padding:6px 10px; background:#000!important; color:#bfa66b!important; font:10px monospace; }
+.darkness-master .darkness-encounters .ee-card-body { padding:20px; text-align:left; }
+.darkness-master .darkness-encounters .ee-card-body h3 { font-size:26px; margin:10px 0; }
+.darkness-master .darkness-encounters .ee-card-body dl { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:14px 0; margin:18px 0; border-block:1px solid #bfa66b40; }
+.darkness-master .darkness-encounters .ee-card-state { display:grid; gap:10px; font:11px/1.6 Arial,sans-serif; }
+.darkness-master .darkness-encounters .ee-card-state progress { width:100%; height:5px; }
+.darkness-master .darkness-encounters .ee-card footer { display:flex; justify-content:space-between; padding:14px 20px; border-top:1px solid #bfa66b40; }
+.darkness-master .darkness-encounters .ee-card footer button { padding:7px; font-size:11px; }
+.darkness-master .ee-overlay { z-index:19000; align-items:center; }
+.darkness-master .ee-sheet { width:min(1100px,100%); padding:28px; border:1px solid #bfa66b; }
+.darkness-master .ee-sheet-header { display:flex; justify-content:space-between; gap:20px; padding-bottom:20px; border-bottom:1px solid #bfa66b40; }
+.darkness-master .ee-sheet-header h2 { font:32px Georgia,serif; margin:10px 0; }
+.darkness-master .ee-sheet-header p { font:12px/1.7 Arial,sans-serif; }
+.darkness-master .ee-sheet-header>button { width:38px; height:38px; border:1px solid #bfa66b80; font-size:22px; }
+.darkness-master .ee-sheet>.ee-tabs { padding:18px 0; }
+.darkness-master .ee-sheet .ee-tabs button { padding:12px 18px; }
+.darkness-master .ee-sheet .ee-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.darkness-master .ee-sheet .ee-attributes { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; }
+.darkness-master .ee-sheet .ee-resources { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+.darkness-master .ee-sheet h3 { font:22px Georgia,serif; padding-top:14px; margin:16px 0; }
+.darkness-master .ee-sheet :is(input,select,textarea) { min-height:42px; padding:11px; }
+.darkness-master .ee-sheet .ee-media-preview { height:150px; }
+.darkness-master .ee-sheet .ee-media-preview img { width:100%; height:100%; object-fit:contain; }
+.darkness-master .ee-sheet .ee-entry { border:1px solid #bfa66b40; padding:18px; margin:12px 0; }
+.darkness-master .ee-sheet .ee-entry>div { min-width:0; }
+.darkness-master .ee-sheet .ee-add button,.darkness-master .ee-sheet .ee-entry>button { padding:10px 14px; border:1px solid #bfa66b66; }
+.darkness-master .ee-sheet .ee-roll { border:1px solid #bfa66b40; padding:20px; margin-top:28px; }
+.darkness-master .ee-sheet .ee-roll>button { padding:12px 20px; border:1px solid #bfa66b; }
+.dn-archive { border:1px solid #bfa66b40; padding:20px; margin-top:28px; font:12px/1.7 Arial,sans-serif; }
+.dn-archive summary { cursor:pointer; color:#bfa66b; }
+.dn-archive>div { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; margin-top:18px; }
+.dn-archive article { display:flex; justify-content:space-between; align-items:center; gap:12px; border:1px solid #bfa66b40; padding:14px; }
+.dn-archive small { display:block; margin-top:6px; }
+.dn-archive button { padding:10px; border:1px solid #bfa66b; font-size:10px; }
+@media(max-width:1000px) { .darkness-master .darkness-encounters .ee-toolbar { grid-template-columns:1fr 1fr; } .darkness-master .darkness-encounters .ee-toolbar nav { grid-column:1/-1; } }
+@media(max-width:650px) { .darkness-master .darkness-encounters { padding:16px; } .darkness-master .darkness-encounters .ed-section-heading { flex-direction:column; align-items:flex-start; } .darkness-master .darkness-encounters .ee-toolbar { grid-template-columns:1fr; } .darkness-master .ee-sheet { padding:18px; } .darkness-master .ee-sheet .ee-form-grid { grid-template-columns:1fr; } .dn-overview>div { padding:16px 8px; } .dn-overview strong { font-size:23px; } }
+
+/* Visual encounter dossier, with persistent navigation and a readable stat hierarchy. */
+.darkness-master .ee-sheet.dn-visual-sheet { width:min(1220px,100%); padding:26px; }
+.darkness-master .dn-visual-sheet .ee-sheet-header { align-items:flex-start; padding-bottom:14px; }
+.darkness-master .dn-visual-sheet .ee-sheet-header h2 { font-size:30px; }
+.darkness-master .dn-visual-sheet>.ee-tabs { gap:8px; padding:16px 0; }
+.darkness-master .dn-visual-sheet>.ee-tabs button { min-width:110px; padding:12px 20px; font-size:11px; }
+.darkness-master .dn-visual-sheet>.ee-tabs button[aria-pressed=true] { border-color:#bfa66b; box-shadow:inset 0 -2px #bfa66b; }
+.darkness-master .dn-visual-sheet .ee-sheet-content { padding-right:16px; scrollbar-color:#bfa66b60 #000; }
+.dn-dossier-hero { display:grid; grid-template-columns:160px minmax(0,1fr); gap:26px; border:1px solid #bfa66b40; padding:20px; margin:4px 0 20px; }
+.dn-dossier-photo { position:relative; height:210px; border:1px solid #bfa66b55; overflow:hidden; display:grid; place-items:center; }
+.dn-dossier-photo>img { width:100%; height:100%; object-fit:cover; object-position:center 25%; }
+.dn-dossier-photo>img.dn-dossier-sigil { width:100px; height:100px; object-fit:contain; opacity:.55; }
+.dn-dossier-photo>span { position:absolute; bottom:10px; left:8px; right:8px; text-align:center; background:#000e; border:1px solid #bfa66b66; padding:7px 3px; font:8px monospace; letter-spacing:1px; }
+.darkness-master .dn-visual-sheet .dn-dossier-identity h3 { font:34px/1.15 Georgia,serif; margin:12px 0 8px; padding:0; overflow-wrap:anywhere; }
+.dn-dossier-identity>p { font:12px/1.7 Arial,sans-serif; margin:0 0 14px; }
+.dn-dossier-tags { display:flex; flex-wrap:wrap; gap:8px; }
+.dn-dossier-tags>span { font:9px monospace; padding:5px 9px; border:1px solid #bfa66b40; }
+.dn-defenses { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0 0; padding-top:16px; border-top:1px solid #bfa66b40; }
+.dn-defenses>div { border-right:1px solid #bfa66b30; }
+.dn-defenses>div:last-child { border:0; }
+.dn-defenses dt { font:9px/1.6 monospace; text-transform:uppercase; }
+.dn-defenses dd { font:30px/1.2 Georgia,serif; margin:5px 0 0; }
+.dn-media-settings { border:1px solid #bfa66b35; padding:12px 14px; margin-bottom:14px; font-size:11px; }
+.dn-media-settings summary { cursor:pointer; font:10px monospace; letter-spacing:.04em; }
+.dn-media-settings[open]>summary { margin-bottom:18px; }
+.darkness-master .dn-visual-sheet .dn-section-title { display:flex; align-items:center; gap:12px; border-top:1px solid #bfa66b35; padding:22px 0 0; margin:24px 0 18px; font:23px Georgia,serif; }
+.dn-section-title>span { border:1px solid #bfa66b55; padding:6px 8px; font:9px monospace; }
+.dn-attribute-cards { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+.dn-attribute { border:1px solid #bfa66b55; padding:18px; min-width:0; }
+.dn-attribute-heading { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.darkness-master .dn-visual-sheet .dn-attribute label { font:20px Georgia,serif; margin:0; }
+.dn-attribute-heading p { font:9px/1.5 Arial,sans-serif; margin:6px 0 0; }
+.dn-attribute-die { width:60px; height:60px; flex-shrink:0; }
+.dn-attribute-die text { fill:currentColor; font:22px Georgia,serif; }
+.dn-stage-dots { display:flex; gap:6px; margin:18px 0; }
+.dn-stage-dots i { width:13px; height:4px; border:1px solid #bfa66b50; flex:1; }
+.dn-stage-dots i.filled { background:#bfa66b; }
+.darkness-master .dn-visual-sheet .dn-attribute select { padding:9px; min-height:36px; font-size:10px; }
+.dn-vitals { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; }
+.dn-vital { border:1px solid #bfa66b40; padding:16px; }
+.darkness-master .dn-visual-sheet .dn-vital label { font:9px monospace; letter-spacing:.04em; margin:0; }
+.dn-vital-value { display:flex; align-items:baseline; gap:6px; margin:12px 0; }
+.dn-vital-value strong { font:32px Georgia,serif; }
+.dn-vital-value span { font-size:11px; }
+.dn-vital progress { width:100%; height:4px; display:block; margin-bottom:14px; }
+.darkness-master .dn-visual-sheet .dn-vital input { min-height:34px; height:34px; font-size:12px; padding:6px 9px; }
+.dn-resource-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.dn-resource { display:flex; align-items:center; justify-content:space-between; gap:16px; border:1px solid #bfa66b30; padding:12px 14px; }
+.darkness-master .dn-visual-sheet .dn-resource label { font:12px Arial,sans-serif; margin-bottom:8px; }
+.dn-resource-dots { display:flex; gap:5px; }
+.dn-resource-dots i { width:7px; height:7px; border:1px solid #bfa66b70; transform:rotate(45deg); }
+.dn-resource-dots i.filled { background:#bfa66b; }
+.darkness-master .dn-visual-sheet .dn-resource select { width:145px; flex-shrink:0; min-height:36px; font-size:11px; padding:8px; }
+.darkness-master .dn-visual-sheet .ee-sheet-footer { margin-top:16px; padding-top:16px; }
+.darkness-master .dn-visual-sheet .ee-sheet-footer button { min-width:150px; padding:13px 20px; border-color:#bfa66b; }
+body[data-darkness-dashboard=true] .mestre-page.darkness-master .dn-attribute-die,body[data-darkness-dashboard=true] .mestre-page.darkness-master .dn-section-title>span { color:#bfa66b!important; }
+@media(max-width:1000px) { .dn-attribute-cards { grid-template-columns:repeat(2,minmax(0,1fr)); } .dn-vitals { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:650px) { .dn-dossier-hero { grid-template-columns:100px minmax(0,1fr); gap:16px; padding:14px; } .dn-dossier-photo { height:160px; } .darkness-master .dn-visual-sheet .dn-dossier-identity h3 { font-size:25px; } .dn-defenses { grid-template-columns:repeat(2,1fr); gap:14px; } .dn-defenses dd { font-size:24px; } .dn-resource-list { grid-template-columns:1fr; } .dn-vitals { grid-template-columns:repeat(2,minmax(0,1fr)); } .darkness-master .ee-sheet.dn-visual-sheet { padding:16px; } .dn-attribute { padding:12px; } .dn-attribute-die { width:42px; height:42px; } }

@@ -1,0 +1,99 @@
+/* Tabletop preparation: a dedicated workspace inside the master's archive. */
+.tabletop-hub,.campaign-workspace.tabletop-workspace { --tw-ink:#eeeeee; --tw-muted:#999999; --tw-line:#ffffff19; --tw-panel:#0a0a0a; --tw-accent:#bfa66b; color:var(--tw-ink); }
+.tabletop-hub *,.tabletop-workspace * { box-sizing:border-box; }
+.tabletop-hub .campanha-dashboard-topo { padding:24px 0 28px; align-items:center; border-bottom:0; }
+.tabletop-hub .campanha-dashboard-topo h2 { font:400 clamp(34px,4vw,48px)/1.1 Georgia,serif; margin:10px 0; }
+.tabletop-hub .campanha-dashboard-topo p { font:13px/1.6 Arial,sans-serif; color:var(--tw-muted); }
+.tabletop-hub .campanha-dashboard-topo > div > span { color:#bfa66b; font:9px monospace; letter-spacing:.13em; }
+.tabletop-hub-toolbar { display:flex; flex-wrap:wrap; align-items:end; gap:16px; padding:16px; border:1px solid var(--tw-line); border-radius:8px; background:#0a0a0a; }
+.tabletop-hub-toolbar label { flex:1; min-width:180px; display:grid; gap:8px; }
+.tabletop-hub-toolbar label > span { color:#aaaaaa; font:9px monospace; text-transform:uppercase; letter-spacing:.1em; }
+.tabletop-hub .tabletop-hub-toolbar input { width:100%; height:40px; padding:0 12px; color:#eeeeee; background:#000000!important; border:1px solid #ffffff24; border-radius:5px; font:12px Arial,sans-serif; }
+.tabletop-hub-toolbar nav { display:flex; gap:4px; padding:3px; border:1px solid var(--tw-line); border-radius:6px; }
+.tabletop-hub .tabletop-hub-toolbar nav button { padding:9px 12px; border:0; border-radius:3px; background:transparent; color:#aaaaaa; font:11px Arial,sans-serif; cursor:pointer; }
+.tabletop-hub .tabletop-hub-toolbar nav button[aria-pressed=true] { background:#bfa66b!important; color:#0a0a0a!important; }
+.tabletop-hub-toolbar > span { align-self:center; color:#999999; font:10px monospace; }
+.tabletop-hub .campanhas-grade { grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:18px; padding:22px 0; }
+.mestre-page .tabletop-hub .campanhas-grade article { min-height:300px; border:1px solid #ffffff21!important; border-radius:9px; overflow:hidden; background:#080808!important; transition:border-color .15s,transform .15s; }
+.mestre-page .tabletop-hub .campanhas-grade article:hover { border-color:#bfa66b88!important; transform:translateY(-3px); }
+.tabletop-hub .campanha-cartao-abrir { background:#080808!important; padding:0 18px 18px; height:100%; }
+.tabletop-hub .campaign-card-art { position:relative; height:155px; margin:0 -18px 18px; display:grid; place-items:center; overflow:hidden; background:#000; border-bottom:1px solid var(--tw-line); }
+.tabletop-hub .campaign-card-art::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(0deg,#080808,transparent 40%); }
+.tabletop-hub .campaign-card-art > img,.tabletop-hub .campaign-card-art > video { width:100%; height:100%; object-fit:cover; }
+.tabletop-hub .campaign-card-art > span:first-child { font:italic 112px/1 Georgia,serif; color:#bcb59d33; }
+.tabletop-hub .campaign-card-art .campaign-card-edition { position:absolute; z-index:1; top:12px; left:12px; padding:5px 7px; border:1px solid #ffffff30; border-radius:3px; background:#000000dc; color:#dddddd; font:9px monospace; letter-spacing:.1em; }
+.tabletop-hub .campanha-cartao-abrir h3 { font:400 24px/1.2 Georgia,serif; color:#eeeeee; margin:6px 0 10px; }
+.tabletop-hub .campanha-cartao-abrir > span { font:9px monospace; color:#999999; letter-spacing:.08em; }
+.tabletop-hub .campanha-cartao-abrir > small { color:#bbbbbb; font:10px monospace; }
+.tabletop-hub .campanha-cartao-abrir > p { margin:8px 0; color:#888888; }
+.tabletop-hub .campanhas-grade article > div { padding:10px 14px; gap:10px; min-height:46px; }
+.tabletop-hub .campanhas-grade article > div a { font:9px monospace; letter-spacing:.02em; }
+.tabletop-empty-search { padding:40px; text-align:center; color:var(--tw-muted); }
+.campaign-workspace.tabletop-workspace { --cw-accent:#bfa66b; --cw-muted:#aaaaaa; --cw-line:#ffffff1c; background:#000000!important; border:1px solid var(--tw-line); border-radius:10px; padding:20px; overflow:visible; }
+.tabletop-workspace[data-system=espiral] { --cw-accent:#bfa66b; }
+.tabletop-workspace .campanha-dashboard-topo { background:transparent; padding:20px 0 24px; }
+.tabletop-workspace .campanha-dashboard-topo h2 { font-size:38px; }
+.tabletop-workspace .campanha-dashboard-topo > div:first-child > span { font:9px monospace; letter-spacing:.12em; }
+.tabletop-workspace .campanha-dashboard-topo > div:last-child { gap:7px; }
+.tabletop-workspace .campanha-dashboard-topo :is(a,button) { min-height:38px; border-radius:4px; }
+.tabletop-workspace .campaign-overview { gap:10px; padding:18px 0 24px; }
+.tabletop-workspace .campaign-overview > div { border:1px solid var(--cw-line); background:#ffffff03; border-radius:5px; padding:14px; gap:7px; }
+.tabletop-workspace .campaign-overview > div:last-child { border:1px solid var(--cw-line); }
+.tabletop-workspace .campaign-overview strong { font-size:20px; }
+.tabletop-preparation-layout { display:grid; grid-template-columns:180px minmax(0,1fr); gap:24px; align-items:start; }
+.tabletop-workspace .campanha-conteudo-abas { position:sticky; top:16px; display:flex; flex-direction:column; align-items:stretch; gap:4px; min-width:0; margin:0; padding:8px; border:1px solid var(--cw-line); border-radius:7px; background:#080808; }
+.tabletop-workspace .campanha-conteudo-abas button { display:flex; align-items:center; justify-content:flex-start; gap:9px; width:100%; min-height:44px; padding:10px!important; border:0; border-radius:4px; color:#aaaaaa!important; background:transparent!important; font:11px Arial,sans-serif!important; box-shadow:none; text-align:left; }
+.tabletop-workspace .campanha-conteudo-abas button.ativo { color:#d6c599!important; background:#bfa66b12!important; box-shadow:inset 2px 0 var(--cw-accent); }
+.tabletop-workspace .campanha-conteudo-abas button:hover { background:#ffffff06!important; }
+.tabletop-workspace .campanha-conteudo-abas small { margin-left:auto; }
+.tabletop-preparation-content { min-width:0; }
+.tabletop-workspace .campaign-area-heading { padding:0 0 22px; min-height:88px; }
+.tabletop-workspace .campaign-area-heading h3 { font-size:29px; margin:6px 0; }
+.tabletop-workspace .campaign-scene-toolbar { border-radius:6px; background:#080808; padding:12px; }
+.tabletop-workspace .campaign-scene-toolbar input { background:#000000; border-color:#ffffff24; border-radius:4px; }
+.tabletop-workspace .campaign-scene-toolbar button { min-height:36px; border-radius:4px; background:#101010; }
+.tabletop-workspace .campaign-scene-toolbar > span { margin:0; font-size:10px; }
+.tabletop-workspace .campanha-pasta { background:#080808!important; border-radius:7px; }
+.tabletop-workspace .campanha-pasta-titulo { background:#0c0c0c; }
+.tabletop-workspace .campanha-cenas article { padding:14px; gap:14px; border:1px solid #ffffff12!important; border-radius:5px; background:#080808!important; grid-template-columns:18px 135px minmax(0,1fr) auto; }
+.tabletop-workspace .campanha-cena-miniatura { width:135px; border-radius:4px; }
+.tabletop-workspace .campanha-cena-info strong { font-size:19px; }
+.tabletop-workspace .campanha-cena-info p { font-size:11px; }
+.tabletop-workspace .campaign-settings-layout { gap:16px; grid-template-columns:minmax(0,1.2fr) minmax(220px,.8fr); }
+.tabletop-workspace .campanha-configuracoes { background:#080808!important; border-radius:7px; padding:22px; gap:16px; }
+.tabletop-settings-kicker { font:9px monospace; color:#bfa66b; letter-spacing:.1em; }
+.tabletop-workspace .tabletop-system-profile { display:flex; align-items:center; gap:16px; padding:16px; border:1px solid #bfa66b4d; border-radius:5px; background:#080808; }
+.tabletop-system-profile > span { flex:0 0 40px; font:italic 42px Georgia,serif; color:#bfa66b; }
+.tabletop-system-profile strong { color:#eeeeee; font:600 13px monospace; letter-spacing:.12em; }
+.tabletop-system-profile p { margin-top:7px!important; font-size:11px!important; }
+.tabletop-workspace .campaign-settings-side section { background:#080808; border-radius:7px; padding:18px; }
+.tabletop-workspace .campaign-settings-side h3 { font-size:21px; }
+.tabletop-workspace .campaign-settings-side :is(button,a) { width:100%; border-radius:4px; }
+.tabletop-workspace .campaign-feedback { border-radius:5px; background:#bfa66b09; }
+@media(max-width:1150px) { .tabletop-preparation-layout { grid-template-columns:155px minmax(0,1fr); gap:16px; } .tabletop-workspace .campaign-settings-layout { grid-template-columns:1fr; } .tabletop-workspace .campanha-cenas article { grid-template-columns:18px 100px minmax(0,1fr) auto; } .tabletop-workspace .campanha-cena-miniatura { width:100px; } }
+@media(max-width:760px) { .campaign-workspace.tabletop-workspace { padding:14px; } .tabletop-preparation-layout { display:block; } .tabletop-workspace .campanha-conteudo-abas { position:static; flex-direction:row; overflow-x:auto; margin-bottom:20px; } .tabletop-workspace .campanha-conteudo-abas button { flex:0 0 auto; width:auto; white-space:nowrap; } .tabletop-workspace .campaign-overview { grid-template-columns:repeat(2,minmax(0,1fr)); } .tabletop-workspace .campanha-cenas article { grid-template-columns:18px 80px minmax(0,1fr); } .tabletop-workspace .campanha-cena-miniatura { width:80px; } .tabletop-workspace .campanha-cena-acoes { grid-column:2 / -1; justify-content:flex-end; } .tabletop-hub-toolbar nav { width:100%; } .tabletop-hub .tabletop-hub-toolbar nav button { flex:1; } }
+@media(prefers-reduced-motion:reduce) { .mestre-page .tabletop-hub .campanhas-grade article { transition:none; } .mestre-page .tabletop-hub .campanhas-grade article:hover { transform:none; } }
+
+/* Shared Darkness archive palette: black, neutral grays and restrained aged gold. */
+.darkness-master :is(.tabletop-hub,.campaign-workspace.tabletop-workspace) { --tw-ink:#eee; --tw-muted:#999; --tw-line:#292929; --tw-panel:#080808; --tw-accent:#bfa66b; --cw-accent:#bfa66b; --cw-muted:#999; --cw-line:#292929; color:#eee!important; background:#000!important; }
+.darkness-master .tabletop-hub { border:1px solid #292929; padding:24px; border-radius:2px; }
+.darkness-master .campaign-workspace.tabletop-workspace { border-radius:2px; }
+.darkness-master :is(.tabletop-hub,.tabletop-workspace) .campanha-dashboard-topo { border-bottom:1px solid #292929; }
+.darkness-master :is(.tabletop-hub,.tabletop-workspace) .campanha-dashboard-topo button { background:#bfa66b; border-color:#bfa66b; color:#080808; border-radius:2px; }
+.darkness-master .tabletop-hub .campanhas-grade article { background:#080808!important; border-color:#303030!important; border-radius:2px; }
+.darkness-master .tabletop-hub .campanhas-grade article:hover { border-color:#bfa66b!important; transform:none; }
+.darkness-master .tabletop-hub .campaign-card-art { height:145px; background:#000; border-color:#292929; }
+.darkness-master .tabletop-hub .campaign-card-art>img.campaign-card-symbol { width:86px; height:86px; object-fit:contain; opacity:.45; }
+.darkness-master .tabletop-hub .campanha-cartao-abrir { background:#080808!important; }
+.darkness-master :is(.tabletop-hub-toolbar,.campaign-scene-toolbar,.campanha-conteudo-abas,.campaign-overview>div,.campanha-pasta,.campanha-configuracoes,.campaign-settings-side section) { border-radius:2px; border-color:#292929; }
+.darkness-master .tabletop-workspace .campanha-pasta-titulo { background:#0c0c0c; color:#ddd; }
+.darkness-master .tabletop-workspace .campanha-cenas article { border:0!important; border-top:1px solid #292929!important; border-radius:0; background:#080808!important; }
+.darkness-master .tabletop-workspace .campanha-cenas article:hover { background:#101010!important; }
+.darkness-master .tabletop-workspace .campanha-conteudo-abas button.ativo { color:#d6c599!important; background:#bfa66b12!important; }
+.darkness-master .tabletop-workspace .campanha-conteudo-abas button { border-radius:0; }
+.darkness-master .tabletop-workspace .campanha-cena-info p { color:#aaa; }
+.darkness-master .tabletop-workspace .campanha-cena-info small { color:#888; }
+.darkness-master :is(.tabletop-hub,.tabletop-workspace) .campanha-tabletop-tipo { color:#bfa66b; border-color:#bfa66b50; }
+.darkness-master :is(.tabletop-hub,.tabletop-workspace) :is(input,select,textarea) { background:#000!important; color:#eee; border-color:#333; color-scheme:dark; }
+.darkness-master :is(.tabletop-hub,.tabletop-workspace) :is(a,button,input,select,textarea,summary):focus-visible { outline:2px solid #bfa66b; outline-offset:3px; }
+@media(max-width:760px) { .darkness-master .tabletop-hub { padding:16px; } }

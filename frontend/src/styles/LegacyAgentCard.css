@@ -1,0 +1,36 @@
+/* O cartão legado também aparece no painel Darkness, sem o contêiner Absoluto. */
+.ad-agent-wrapper { min-width:0; }
+.ad-agent-wrapper .ad-agent { position:relative; isolation:isolate; overflow:hidden; display:grid; gap:18px; padding:18px; margin:0; background:#111; border:1px solid #343234; color:#eee8dd; cursor:pointer; text-align:left; }
+.ad-agent-wrapper .ad-agent:focus-visible { outline:2px solid #c4a779; outline-offset:3px; }
+.ad-agent-wrapper .ad-agent:hover { border-color:#c4a779; }
+.ad-agent-wrapper .ad-agent-cover { position:absolute; inset:0 0 auto; height:220px; overflow:hidden; pointer-events:none; z-index:0; }
+.ad-agent-wrapper .ad-agent-cover > img { display:block; width:100%; height:100%; }
+.ad-agent-wrapper .ad-agent-com-foto { padding-top:238px; }
+.ad-agent-wrapper .ad-agent > :not(.ad-agent-cover) { position:relative; z-index:1; }
+.ad-agent-wrapper .ad-agent-identity { display:flex; align-items:flex-start; gap:10px; padding:0; margin:0; min-width:0; }
+.ad-agent-wrapper .ad-agent-identity > img { width:50px; height:65px; object-fit:cover; }
+.ad-agent-wrapper .ad-agent-com-foto .ad-agent-identity > img { display:none; }
+.ad-agent-wrapper .ad-agent-placeholder { display:grid; place-items:center; width:36px; height:44px; color:#c4a779; font:26px Georgia,serif; flex-shrink:0; }
+.ad-agent-wrapper .ad-eyebrow { color:#c4a779; font:8px 'Courier New',monospace; letter-spacing:1px; }
+.ad-agent-wrapper .ad-agent-identity h3 { margin:8px 0; font:27px/1.15 Georgia,serif; color:#eee8dd; overflow-wrap:anywhere; }
+.ad-agent-wrapper .ad-agent-identity p,.ad-agent-wrapper .ad-agent-identity small { margin:0; color:#aaa; font:10px/1.6 'Courier New',monospace; }
+.ad-agent-wrapper .ad-agent-open { margin-left:auto; color:#c4a779; }
+.ad-agent-wrapper .ad-agent-attributes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px 8px; border-block:1px solid #343234; padding:15px 0; margin:0; }
+.ad-agent-wrapper .ad-agent-attributes dt { font:8px/1.5 'Courier New',monospace; color:#aaa; overflow-wrap:anywhere; }
+.ad-agent-wrapper .ad-agent-attributes dd { margin:4px 0 0; font:22px Georgia,serif; }
+.ad-agent-wrapper .ad-agent-vitals h4 { margin:0 0 15px; font:10px 'Courier New',monospace; color:#c4a779; }
+.ad-agent-wrapper .ad-agent-limbs { display:grid; gap:12px; }
+.ad-agent-wrapper .ad-meter > div:first-child { display:flex; align-items:baseline; justify-content:space-between; gap:8px; font:10px/1.5 'Courier New',monospace; }
+.ad-agent-wrapper .ad-meter b { font-weight:400; white-space:nowrap; }
+.ad-agent-wrapper .ad-meter small { color:#888; }
+.ad-agent-wrapper .ad-meter-track { height:4px; margin-top:5px; background:#303033; overflow:hidden; }
+.ad-agent-wrapper .ad-meter-track > i { display:block; height:100%; background:#bf3d30; }
+.ad-agent-wrapper .ad-sanidade .ad-meter-track > i { background:#6a776b; }
+.ad-agent-wrapper .ad-esperanca .ad-meter-track > i { background:#b4924a; }
+.ad-agent-wrapper .ad-agent-mental { display:grid; gap:12px; margin-top:18px; padding-top:15px; border-top:1px solid #343234; }
+.ad-agent-wrapper .ad-agent > footer { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; border-top:1px solid #343234; padding-top:14px; color:#c4a779; font:9px 'Courier New',monospace; }
+.ad-agent-wrapper .ad-ajustar-foto,.ad-agent-wrapper .ad-foto-editor button { padding:8px; border:1px solid #655b4a; background:#181818; color:#eee8dd; font:10px 'Courier New',monospace; cursor:pointer; }
+.ad-agent-wrapper .ad-foto-editor { display:grid; gap:15px; padding:18px; border:1px solid #343234; background:#161616; color:#ddd; font:11px/1.6 'Courier New',monospace; }
+.ad-agent-wrapper .ad-foto-editor label { display:grid; gap:7px; }
+.ad-agent-wrapper .ad-foto-editor :is(select,input) { min-width:0; width:100%; }
+.ad-agent-wrapper .ad-foto-editor > div { display:flex; flex-wrap:wrap; gap:10px; }

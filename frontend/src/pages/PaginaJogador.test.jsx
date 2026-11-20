@@ -71,8 +71,8 @@ test('adicionar personagem abre sistemas à direita e fecha sem sair da página'
  expect(button).toHaveAttribute('aria-expanded','true');
  const panel=screen.getByRole('complementary',{name:'Adicionar personagem'});
  expect(panel).toBeInTheDocument();
- expect(screen.getByRole('link',{name:/Escolher Absoluto/})).toHaveAttribute('href','?criar=1&sistema=darkness&jogadorOrigem=1234');
- expect(screen.getByRole('link',{name:/Escolher ESPIRAL/})).toHaveAttribute('href','?criar=1&sistema=espiral&jogadorOrigem=1234');
+ expect(screen.queryByRole('link',{name:/Escolher Absoluto/})).not.toBeInTheDocument();
+ expect(screen.getByRole('link',{name:/Criar personagem/ })).toHaveAttribute('href','?criar=1&sistema=espiral&jogadorOrigem=1234');
  fireEvent.keyDown(panel,{key:'Escape'});
  expect(screen.queryByRole('complementary',{name:'Adicionar personagem'})).toBeNull();
  expect(button).toHaveFocus();

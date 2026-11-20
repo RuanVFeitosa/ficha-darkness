@@ -2,7 +2,7 @@ import {useCallback,useEffect,useMemo,useRef} from 'react';
 import {useFrame,useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
-import {shoulderCameraTarget} from '../../utils/shoulderCamera';
+import {shoulderCameraTarget,movementCameraHeading} from '../../utils/shoulderCamera';
 import {cameraDamping,smoothCameraTranslation} from '../../utils/cameraMotion';
 import {normalizeCameraSpeed} from '../../utils/cameraSpeed';
 import {normalizePlayerDistance,minimumPlayerDistance} from './PlayerCameraDistance';
@@ -14,7 +14,7 @@ const CAMERA_PRESETS = {
   detail: { position: [10,8,12], target: [0,0.7,0], fov: 28 },
 };
 
-export default function Camera({view,cameraSpeed=1,allowRightLook=true,characterDistance=null,overShoulder=false,shoulderSide=1,interactionLocked=false,mode="free",followPosition=null,followHeight=0.65,followElevation=0,getFollowPose,sheetFocus=false,getSheetBounds,focusRequest=0,syncedPose=null,onPoseChange,onPoseSample,spawnPose=null,spawnKey="",touchNavigation=false,keyboardFocus=false,cinematicSmoothing=false}) {
+export default function Camera({view,cameraSpeed=1,allowRightLook=true,characterDistance=null,overShoulder=false,shoulderSide=1,autoFollowMovement=false,rightMouseLook=false,interactionLocked=false,mode="free",followPosition=null,followHeight=0.65,followElevation=0,getFollowPose,sheetFocus=false,getSheetBounds,focusRequest=0,syncedPose=null,onPoseChange,onPoseSample,spawnPose=null,spawnKey="",touchNavigation=false,keyboardFocus=false,cinematicSmoothing=false}) {
   const {camera,gl,scene}=useThree();
   const controls=useRef();
   const cameraSpeedRef=useRef(1);
@@ -26,6 +26,9 @@ export default function Camera({view,cameraSpeed=1,allowRightLook=true,character
   const smoothLook=useRef(null);
   const distanceTarget=useRef(null);
   const smoothShoulder=useRef(shoulderSide);
+  const movementHeading=useRef(null);
+  const mouseOrbit=useRef(null);
+  useEffect(()=>{movementHeading.current=null;stationaryLook.current=false;smoothLook.current=null;},[autoFollowMovement,spawnKey,mode]);
   const firstPersonPose=useRef(null);
   useEffect(()=>{firstPersonPose.current=null;},[spawnKey]);
   useEffect(()=>{distanceTarget.current=mode==="character" && characterDistance!==null ? normalizePlayerDistance(characterDistance) : null;},[characterDistance,mode,spawnKey]);
@@ -92,6 +95,40 @@ export default function Camera({view,cameraSpeed=1,allowRightLook=true,character
     // Permit looking above the horizon without flipping over the vertical pole.
     orbit.maxPolarAngle=orbital ? Math.PI-.15 : Math.PI-0.01;
   },[mode,view,followHeight,touchNavigation]);
+  useEffect(()=>{
+    const orbit=controls.current;if(!orbit)return;
+    const automatic=(autoFollowMovement || rightMouseLook) && mode==='character';
+    orbit.enableRotate=!automatic;
+    orbit.mouseButtons.LEFT=automatic ? null : THREE.MOUSE.ROTATE;
+    orbit.touches.ONE=automatic ? null : THREE.TOUCH.ROTATE;
+  },[autoFollowMovement,rightMouseLook,mode]);
+  useEffect(()=>{
+    const canvas=gl.domElement;let last=null,dragId=null;mouseOrbit.current=null;
+    const reset=()=>{last=null;dragId=null;};
+    const down=event=>{
+      if(!rightMouseLook || mode!=='character' || interactionLocked || sheetFocus || event.button!==2 || event.pointerType==='touch')return;
+      event.preventDefault();last=[event.clientX,event.clientY];dragId=event.pointerId;
+    };
+    const up=event=>{if(event.pointerId===dragId)reset();};
+    const menu=event=>{if(rightMouseLook && mode==='character'){event.preventDefault();event.stopPropagation();}};
+    const move=event=>{
+      if(!rightMouseLook || dragId===null || event.pointerId!==dragId || mode!=='character' || interactionLocked || sheetFocus || event.pointerType==='touch')return;
+      if(!last){last=[event.clientX,event.clientY];return;}
+      const dx=event.clientX-last[0],dy=event.clientY-last[1];last=[event.clientX,event.clientY];
+      const orbit=controls.current;if(!orbit)return;
+      if(!mouseOrbit.current){
+        const x=camera.position.x-orbit.target.x,y=camera.position.y-orbit.target.y,z=camera.position.z-orbit.target.z;
+        const distance=Math.max(.01,Math.hypot(x,y,z));
+        const yaw=Math.atan2(x,z),pitch=Math.asin(Math.max(-1,Math.min(1,y/distance)));
+        mouseOrbit.current={yaw,pitch,targetYaw:yaw,targetPitch:pitch};
+      }
+      const look=mouseOrbit.current;look.targetYaw-=dx*.0035;
+      look.targetPitch=Math.max(-1.35,Math.min(1.35,look.targetPitch+dy*.0035));
+    };
+    canvas.addEventListener('pointerdown',down);window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);canvas.addEventListener('contextmenu',menu);
+    window.addEventListener('blur',reset);
+    return()=>{canvas.removeEventListener('pointerdown',down);window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',up);canvas.removeEventListener('contextmenu',menu);window.removeEventListener('blur',reset);mouseOrbit.current=null;};
+  },[camera,gl,rightMouseLook,mode,interactionLocked,sheetFocus,view,spawnKey]);
   useEffect(()=>{if(controls.current)controls.current.mouseButtons.RIGHT=allowRightLook ? THREE.MOUSE.ROTATE : null;},[allowRightLook]);
   useEffect(()=>{const orbit=controls.current;if(!orbit)return;const factor=normalizeCameraSpeed(cameraSpeed);orbit.rotateSpeed=(touchNavigation ? .65 : .18)*factor;orbit.panSpeed=.28*factor;orbit.zoomSpeed=1.6*factor;orbit.keyPanSpeed=18*factor;},[cameraSpeed,touchNavigation]);
   useEffect(() => {
@@ -104,6 +141,8 @@ export default function Camera({view,cameraSpeed=1,allowRightLook=true,character
     };
     const startLook=(event) => {
       if(keyboardFocus)canvas.focus({preventScroll:true});
+      if(rightMouseLook && mode==='character' && event.pointerType!=='touch')return;
+      if((autoFollowMovement || rightMouseLook) && mode==='character' && (event.button===0 || event.pointerType==='touch'))return;
       if(event.button===2 && event.pointerType!=="touch" && !allowRightLook) return;
       if(event.button===0 && event.pointerType!=="touch") smoothLook.current=null;
       if(interactionLocked || !controls.current || !["free","character"].includes(mode)) return;
@@ -186,7 +225,7 @@ export default function Camera({view,cameraSpeed=1,allowRightLook=true,character
       window.removeEventListener("pointercancel",endLook,true);
       window.removeEventListener("blur",finishLook);
     };
-  },[camera,gl,scene,interactionLocked,mode,allowRightLook,view,touchNavigation,keyboardFocus]);
+  },[camera,gl,scene,interactionLocked,mode,allowRightLook,view,touchNavigation,keyboardFocus,autoFollowMovement,rightMouseLook]);
   useEffect(() => {
     if(!keyboardFocus)return;
     const canvas=gl.domElement,previousTabIndex=canvas.tabIndex;
@@ -200,7 +239,7 @@ export default function Camera({view,cameraSpeed=1,allowRightLook=true,character
     const isEditable=(target) => target instanceof HTMLElement && (target.isContentEditable || Boolean(target.closest("input, textarea, select, button")));
     const onKeyDown=(event) => {
       const key=event.key.toLowerCase();
-      if(!navigationKeys.has(key) || isEditable(event.target) || (keyboardFocus && gl.domElement!==document.activeElement)) return;
+      if(rightMouseLook || !navigationKeys.has(key) || isEditable(event.target) || (keyboardFocus && gl.domElement!==document.activeElement)) return;
       pressedKeys.current.add(key);
       event.preventDefault();
     };
@@ -217,7 +256,7 @@ export default function Camera({view,cameraSpeed=1,allowRightLook=true,character
       window.removeEventListener("blur",clearKeys);
       canvas.removeEventListener('blur',clearKeys);
     };
-  },[gl,keyboardFocus]);
+  },[gl,keyboardFocus,rightMouseLook]);
   useEffect(() => {
     if(mode!=="character") {
       characterCameraInitialized.current=false;
@@ -264,6 +303,22 @@ export default function Camera({view,cameraSpeed=1,allowRightLook=true,character
       {
         const panelBounds=getSheetBounds?.();
         const canvasBounds=gl.domElement.getBoundingClientRect();
+        if(panelBounds && !touchNavigation && canvasBounds.width>0) {
+          // Frame the whole character in the actual uncovered part of the canvas.
+          const aspect=Number(camera.aspect)||16/9;
+          const fov=Number(camera.fov)||50;
+          const offset=Math.max(0,Math.min(.9,(panelBounds.right-canvasBounds.left)/canvasBounds.width));
+          const distance=Math.max(height*1.8,height/(2*Math.tan(fov*Math.PI/360)*.75));
+          const lateral=distance*Math.tan(fov*Math.PI/360)*aspect*offset;
+          const rightX=-dz/length,rightZ=dx/length;
+          const target=[x-rightX*lateral,ground+height*.5,z-rightZ*lateral];
+          sheetCameraPose.current.followOffset=[target[0]-x,target[1]-ground,target[2]-z];
+          stationaryLook.current=false;
+          distanceTarget.current=null;
+          sheetCameraTransition.current={from:{position:camera.position.toArray(),target:orbit.target.toArray(),fov:camera.fov},to:{position:[target[0]-dx/length*distance,ground+height*.6,target[2]-dz/length*distance],target,fov},elapsed:0};
+          return;
+        }
+
         // The remaining field starts at the panel's right edge. Its centre has
         // this NDC offset, keeping the character visible beside a compact sheet.
         const screenOffset=panelBounds && canvasBounds.width>0 ? Math.max(0,Math.min(.9,(panelBounds.right-canvasBounds.left)/canvasBounds.width)) : .64;
@@ -337,8 +392,38 @@ export default function Camera({view,cameraSpeed=1,allowRightLook=true,character
     const visualElevation=renderedPose?.elevation ?? followElevation;
     const orbit=controls.current;
     if(!orbit) return;
+    const automatic=autoFollowMovement && mode==='character' && !interactionLocked && !sheetFocus && Array.isArray(visualPosition);
+    if(automatic)movementHeading.current=movementCameraHeading(movementHeading.current,visualPosition,[orbit.target.x-camera.position.x,orbit.target.z-camera.position.z],delta,followHeight);
+    else movementHeading.current=null;
     const samplePose=()=>{if(onPoseSample)onPoseSample({position:camera.position.toArray(),target:orbit.target.toArray(),fov:camera.fov});};
     orbit.dampingFactor=cinematicSmoothing ? 1-Math.exp(-Math.min(delta,.05)/.45) : touchNavigation ? 1-Math.exp(-12*Math.min(delta,.05)) : cameraDamping(delta);
+
+    if(sheetFocus && getSheetBounds && !touchNavigation && Array.isArray(visualPosition) && sheetCameraPose.current) {
+      const panel=getSheetBounds(),canvas=gl.domElement.getBoundingClientRect();
+      if(panel && canvas.width>0) {
+        const height=Math.max(.05,Number(followHeight)||.65),ground=Number(visualElevation)||0;
+        const offset=Math.max(0,Math.min(.9,(panel.right-canvas.left)/canvas.width));
+        const aspect=Number(camera.aspect)||16/9,fov=50,tangent=Math.tan(fov*Math.PI/360);
+        const distance=Math.max(height*1.8,height/(2*tangent*.75),height*.65/(2*tangent*aspect*(1-offset)*.8));
+        const pose=sheetCameraPose.current;
+        const dx=pose.target[0]-pose.position[0],dz=pose.target[2]-pose.position[2],length=Math.hypot(dx,dz);
+        const fx=length>.001?dx/length:0,fz=length>.001?dz/length:-1;
+        const lateral=distance*tangent*aspect*offset;
+        const x=visualPosition[0]+fz*lateral,z=visualPosition[1]-fx*lateral,y=ground+height*.5;
+        pose.openElapsed=(pose.openElapsed || 0)+Math.min(delta,.05);
+        const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+        const t=reduced ? 1 : Math.min(1,pose.openElapsed/.55);
+        const eased=t*t*t*(t*(t*6-15)+10);
+        const blend=(from,to)=>from+(to-from)*eased;
+        const destination=[x-fx*distance,y,z-fz*distance],target=[x,y,z];
+        camera.position.set(...pose.position.map((value,index)=>blend(value,destination[index])));
+        orbit.target.set(...pose.target.map((value,index)=>blend(value,target[index])));
+        camera.fov=blend(pose.fov,fov);camera.updateProjectionMatrix();
+        orbit.enabled=false;const damping=orbit.enableDamping;orbit.enableDamping=false;orbit.update();orbit.enableDamping=damping;
+        sheetCameraTransition.current=null;viewFovTransition.current=null;distanceTarget.current=null;
+        samplePose();return;
+      }
+    }
     const fovTransition=viewFovTransition.current;
     if (fovTransition && mode!=="master" && !sheetCameraTransition.current) {
       fovTransition.elapsed+=Math.min(delta,0.05);
@@ -358,6 +443,8 @@ export default function Camera({view,cameraSpeed=1,allowRightLook=true,character
         sheetCameraTransition.current=null;
       }
       const pose=firstPersonPose.current,look=smoothLook.current;
+      if(rightMouseLook && mouseOrbit.current){const mouse=mouseOrbit.current,alpha=1-Math.exp(-14*Math.min(delta,.05));mouse.yaw+=(mouse.targetYaw-mouse.yaw)*alpha;mouse.pitch+=(mouse.targetPitch-mouse.pitch)*alpha;pose.yaw=mouse.yaw+Math.PI;pose.pitch=-mouse.pitch;}
+      if(automatic && movementHeading.current)pose.yaw=movementHeading.current.yaw;
       if(look){const alpha=1-Math.exp(-12*Math.min(delta,.05));look.yaw+=(look.targetYaw-look.yaw)*alpha;look.pitch+=(look.targetPitch-look.pitch)*alpha;pose.yaw=look.yaw;pose.pitch=look.pitch;}
       const alpha=1-Math.exp(-12*Math.min(delta,.05));
       const eye=[Number(visualPosition[0])||0,(Number(visualElevation)||0)+Math.max(.05,Number(followHeight)||.65)*.9,Number(visualPosition[1])||0];
@@ -413,6 +500,14 @@ export default function Camera({view,cameraSpeed=1,allowRightLook=true,character
         const offset=sheetCameraPose.current.followOffset;
         desiredTarget.set((Number(visualPosition[0])||0)+offset[0],(Number(visualElevation)||0)+offset[1],(Number(visualPosition[1])||0)+offset[2]);
       }
+      if(automatic && movementHeading.current){
+        const yaw=movementHeading.current.yaw,fx=Math.sin(yaw),fz=Math.cos(yaw);
+        const horizontal=Math.max(.05,Math.hypot(camera.position.x-orbit.target.x,camera.position.z-orbit.target.z));
+        const vertical=camera.position.y-orbit.target.y;
+        desiredTarget.set(...shoulderCameraTarget(visualPosition,height,visualElevation,[fx,fz],smoothShoulder.current));
+        camera.position.set(desiredTarget.x-fx*horizontal,desiredTarget.y+vertical,desiredTarget.z-fz*horizontal);
+        orbit.target.copy(desiredTarget);
+      }
       movement.copy(desiredTarget).sub(orbit.target).multiplyScalar(renderedPose ? 1 : 1-Math.exp(-Math.min(delta,0.05)*10));
       camera.position.add(movement);
       orbit.target.add(movement);
@@ -450,6 +545,17 @@ export default function Camera({view,cameraSpeed=1,allowRightLook=true,character
       const factor=next/current;
       camera.position.set(orbit.target.x+dx*factor,orbit.target.y+dy*factor,orbit.target.z+(current<=.0001 ? next : dz*factor));
       if(Math.abs(next-target)<.001)distanceTarget.current=null;
+    }
+    if(rightMouseLook && mode==='character' && !interactionLocked && !sheetFocus && mouseOrbit.current){
+      const look=mouseOrbit.current,alpha=1-Math.exp(-14*Math.min(delta,.05));
+      look.yaw+=(look.targetYaw-look.yaw)*alpha;look.pitch+=(look.targetPitch-look.pitch)*alpha;
+      if(view==='firstPerson' && firstPersonPose.current){
+        firstPersonPose.current.yaw=look.yaw+Math.PI;firstPersonPose.current.pitch=-look.pitch;
+      }else{
+        const distance=Math.max(.08,Math.hypot(camera.position.x-orbit.target.x,camera.position.y-orbit.target.y,camera.position.z-orbit.target.z));
+        const horizontal=Math.cos(look.pitch)*distance;
+        camera.position.set(orbit.target.x+Math.sin(look.yaw)*horizontal,orbit.target.y+Math.sin(look.pitch)*distance,orbit.target.z+Math.cos(look.yaw)*horizontal);
+      }
     }
     const look=smoothLook.current;
     if(look && !interactionLocked && mode!=="master" && !sheetCameraTransition.current) {
