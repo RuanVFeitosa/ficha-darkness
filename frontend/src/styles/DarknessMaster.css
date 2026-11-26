@@ -234,6 +234,7 @@
 .dm-brand img { width:48px; height:48px; object-fit:contain; }
 .dm-brand small { display:block; font:10px/2 sans-serif; letter-spacing:3px; color:#aaa49a; }
 .dm-header-actions { display:flex; align-items:center; gap:12px; }
+.dm-header-actions a { color: #eeeae3; font-size: 12px; }
 .darkness-master .dm-header button,.darkness-master .dm-hero button,.darkness-master .dm-hero a { border:1px solid #ffffff30; border-radius:4px; background:transparent; color:#eeeae3; padding:11px 17px; cursor:pointer; font:inherit; text-decoration:none; }
 .dm-status,.dm-kicker { font-size:10px; letter-spacing:2px; color:#c4a779; }
 .dm-hero { display:grid; grid-template-columns:1.5fr 1fr; padding:46px 0 0; gap:30px; }

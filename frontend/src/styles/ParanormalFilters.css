@@ -1,0 +1,13 @@
+.ordem-element-filters, .ordem-element-filters > div { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.ordem-element-filters > div + div { border-left: 1px solid #653741; padding-left: 7px; margin-left: 3px; }
+.ordem-element-filters button {
+  display: grid; place-items: center; min-width: 35px; min-height: 37px; padding: 3px 5px;
+  border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--om-ink, #f8eeeb);
+  font: 800 18px/1 Georgia, serif;
+}
+.ordem-element-filters .os-element-symbol {
+  display: block; width: 22px; height: 22px; margin: 0;
+  background: currentColor; mask: var(--os-element-image) center / contain no-repeat;
+}
+.ordem-element-filters button:is([aria-pressed="true"], :hover:not(:disabled)) { border-color: var(--om-accent, #ffa0a3); background: #421821; color: var(--om-accent, #ffa0a3); }
+.ordem-element-filters button:disabled { opacity: .35; }

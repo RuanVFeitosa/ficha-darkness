@@ -61,3 +61,8 @@
 .pj .pj-dossie .pj-sistema-marca > img { left:50%; top:50%; width:270px; height:270px; transform:translate(-50%,-50%); object-fit:contain; mix-blend-mode:normal; }
 .pj .pj-dossie > a.pj-retrato > img,.pj .pj-dossie .pj-sem-retrato { position:relative; z-index:1; }
 .pj .pj-dossie .pj-retrato-seta,.pj .pj-dossie .pj-retrato > small { z-index:2; }
+.pj .pj-ordem-creator-link { display: block; margin-top: 10px; padding: 12px; border: 1px solid var(--pj-line); color: var(--pj-ink); }
+.pj .pj-ordem-creator-link:hover { border-color: var(--pj-accent); }
+.pj-join-table { display: flex; flex-wrap: wrap; align-items: end; gap: 9px; margin: 12px 0; }
+.pj-join-table label { display: grid; gap: 5px; flex: 1 1 160px; }
+.pj-join-table :is(input, select, button) { min-height: 36px; }

@@ -72,7 +72,9 @@ export async function vincularAoJogadorAtivo(id, sistema) {
 export function documentoVisivel(documento, ids) {
   return documento.revelada !== false && ((documento.visualizarTodos ?? documento.visualizar_todos ?? true) || (documento.jogadoresVisiveis || documento.jogadores_visiveis || []).some(id => ids.includes(String(id))));
 }
-export const fichaHref = ficha => `?sistema=${ficha.sistema}&ficha=${encodeURIComponent(ficha.id)}`;
+export const fichaHref = ficha => ficha.sistema === 'ordem'
+  ? `?ordem=1&agente=${encodeURIComponent(ficha.id)}${ficha.jogadorOrigem ? `&jogadorOrigem=${encodeURIComponent(ficha.jogadorOrigem)}` : ''}`
+  : `?sistema=${ficha.sistema}&ficha=${encodeURIComponent(ficha.id)}`;
 
 // A sessão pode pertencer a outra ficha aberta pelo mestre nesta mesma aba.
 export async function paginaJogadorDaFicha(id, sistema) {

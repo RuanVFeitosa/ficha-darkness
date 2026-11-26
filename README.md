@@ -62,6 +62,16 @@ http://localhost:3000/?ficha=mestre
 
 ## Deploy
 
+### Ativar o Dashboard Master
+
+1. No backend, configure `DARKNESS_OWNER_CODE` com um código numérico de 8 a 16 dígitos. Em desenvolvimento, use `backend/.env.local` ou defina a variável no terminal antes de iniciar o backend.
+2. Se o backend usa Supabase, aplique a migração `20261124120000_perfis_mestres.sql` e configure `DARKNESS_MASTER_SECRET` com um segredo aleatório e estável no servidor. O backend usa a chave de serviço se o segredo dedicado estiver ausente. A troca desse segredo invalida códigos já cadastrados. Sem Supabase, os perfis ficam no diretório de dados local.
+3. Entre na opção **Mestre** com seu código para abrir o **Dashboard Master**. O menu conecta o painel do proprietário ao Painel de Mestre.
+
+O visitante pode criar sua conta na Área do Mestre com um código numérico de 4 a 16 dígitos. Em **Meus personagens**, o mestre pode criar ou vincular um perfil de jogador e entrar em mesas 2D com suas fichas. O vínculo com o perfil de jogador é lembrado no navegador atual.
+
+Para habilitar campanhas de Ordem Paranormal no Supabase, aplique também `20261125120000_campanhas_ordem_tabletop.sql`. Essa migração libera o sistema Ordem e reserva a criação de mesas 3D à API autenticada do proprietário.
+
 Veja [Deploy](docs/DEPLOY.md) para usar frontend na Vercel e backend sempre ligado em um host Node.
 
 Outros documentos: [Espiral](docs/ESPIRAL.md), [tarefas de infraestrutura](docs/TODO.md) e [índice da documentação](docs/README.md).

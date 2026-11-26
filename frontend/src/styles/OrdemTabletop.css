@@ -1,0 +1,174 @@
+.mesa-shell[data-tabletop-system="ordem"] {
+  --ordem-tabletop-ink: #f3e8da;
+  --ordem-tabletop-muted: #cbb8b1;
+  --ordem-tabletop-accent: #efaa9b;
+  --ordem-tabletop-line: #754840;
+  --ordem-tabletop-panel: #170f12;
+  --mesa-acento: var(--ordem-tabletop-accent) !important;
+}
+
+.mesa-2d[data-tabletop-system="ordem"] .mesa-topo {
+  background: linear-gradient(105deg, #2c161b, #100c0e 55%);
+  border-bottom: 1px solid var(--ordem-tabletop-line);
+}
+
+.mesa-shell[data-tabletop-system="ordem"] .mesa-topo > .ordem-operation-mark {
+  max-width: min(330px, 36vw);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.ordem-operation-mark img { width: 34px; height: 34px; object-fit: contain; }
+.ordem-operation-mark > div, .ordem-player-sheet > header > div { display: grid; min-width: 0; gap: 3px; }
+.ordem-operation-mark strong, .ordem-player-sheet > header strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ordem-operation-mark small, .ordem-player-sheet > header small, .ordem-shield-card small {
+  color: var(--ordem-tabletop-accent);
+  font: 10px/1.2 monospace;
+  letter-spacing: .11em;
+}
+
+.mesa-2d[data-tabletop-system="ordem"] .mesa-contexto-visual {
+  background: #180e13ed;
+  border-color: var(--ordem-tabletop-line);
+  border-radius: 4px;
+}
+
+.mesa-shell.mesa-2d[data-tabletop-system="ordem"]:not(.mesa-embedded) .mesa-palco.modo-cena {
+  background: radial-gradient(ellipse at 50% 40%, #371a21, #0a070a 72%);
+}
+
+.ordem-player-dock, .ordem-player-sheet, .ordem-shield {
+  position: absolute;
+  color: var(--ordem-tabletop-ink);
+  background: var(--ordem-tabletop-panel);
+  border: 1px solid var(--ordem-tabletop-line);
+  box-shadow: 0 14px 45px #0009;
+}
+
+.ordem-player-dock {
+  z-index: 23;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.ordem-player-dock button, .ordem-player-sheet > header button, .ordem-player-sheet select,
+.ordem-shield > header button, .ordem-shield-nav button, .ordem-shield-dice :is(button, input) {
+  border: 1px solid #5e3b38;
+  border-radius: 4px;
+  background: #231519;
+  color: inherit;
+  font: inherit;
+  padding: 8px 10px;
+}
+
+.ordem-player-dock button, .ordem-player-sheet > header button, .ordem-shield > header button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.ordem-player-dock button[aria-pressed="true"], .ordem-shield-nav button[aria-pressed="true"] {
+  color: #fff4e9;
+  background: #512a2c;
+  border-color: var(--ordem-tabletop-accent);
+}
+
+.ordem-player-sheet {
+  inset: calc(var(--mesa-topo-altura) + 12px) 16px 76px auto;
+  z-index: 22;
+  width: min(830px, calc(100% - 32px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.ordem-player-sheet > header, .ordem-shield > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ordem-tabletop-line);
+  background: #211317;
+}
+
+.ordem-player-sheet select { margin-left: auto; min-width: 0; max-width: 44%; }
+.ordem-player-sheet iframe { width: 100%; height: 100%; border: 0; background: #100b0e; }
+.ordem-sheet-empty { padding: 18px; }
+.ordem-sheet-empty a { color: var(--ordem-tabletop-accent); }
+.mesa-foco-visual > :is(.ordem-player-sheet, .ordem-player-dock) { display: none; }
+.mesa-shell[data-tabletop-system="ordem"].jogador-ficha-ativa .mesa-fechar-painel { display: none; }
+.mesa-shell[data-tabletop-system="ordem"].mesa-escudo-aberto .mesa-foco-botao { bottom: calc(50dvh + 12px); }
+
+.ordem-shield {
+  z-index: 24;
+  inset: auto 0 0;
+  height: 50dvh;
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  border-radius: 6px 6px 0 0;
+}
+
+.ordem-shield > header { grid-column: 1 / -1; }
+.ordem-shield .ordem-operation-mark { display: flex; align-items: center; gap: 10px; }
+.ordem-shield-nav {
+  display: grid;
+  gap: 5px;
+  align-content: start;
+  overflow: auto;
+  padding: 10px;
+  border-right: 1px solid var(--ordem-tabletop-line);
+}
+.ordem-shield-nav button { text-align: left; }
+.ordem-shield-content { overflow: auto; min-width: 0; padding: 12px; }
+.ordem-shield-card { background: #201418; border: 1px solid #5e3b38; border-radius: 5px; padding: 14px; min-width: 0; }
+.ordem-shield-card h2, .ordem-shield-card h3 { margin: 0 0 8px; }
+.ordem-shield-card h3 { display: flex; align-items: center; gap: 6px; }
+.ordem-shield-card p, .ordem-shield-card li { color: var(--ordem-tabletop-muted); }
+.ordem-shield-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; margin-top: 12px; }
+.ordem-shield-dice { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.ordem-shield-dice label { display: grid; gap: 4px; }
+.ordem-shield-dice input { width: 76px; }
+.ordem-shield .shield-header-initiative { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; }
+.ordem-shield .shield-header-initiative :is(button, select, input) {
+  background: #231519;
+  color: var(--ordem-tabletop-ink);
+  border: 1px solid #754840;
+  border-radius: 4px;
+  padding: 5px 8px;
+}
+.ordem-shield .shield-header-initiative input { width: 58px; }
+.ordem-shield .shield-header-initiative button[aria-pressed="true"] { background: #512a2c; }
+.ordem-shield .shield-header-initiative button:disabled { opacity: .45; }
+.mesa-shell.mesa-2d[data-tabletop-system="ordem"] .ordem-shield-content :is(.mesa-biblioteca, .mesa-documentos-painel) {
+  position: static;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.ordem-shield .shield-lighting-map { position: relative; }
+.ordem-shield .shield-lighting-map > img { display: block; width: 100%; }
+
+@media (max-width: 680px) {
+  .mesa-shell[data-tabletop-system="ordem"] .mesa-topo > .ordem-operation-mark { max-width: 42vw; }
+  .mesa-topo .ordem-operation-mark img { display: none; }
+  .ordem-player-sheet { inset-inline: 8px; width: auto; }
+  .ordem-player-dock { left: 8px; transform: none; }
+  .ordem-shield { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); }
+  .ordem-shield-nav { display: flex; border-right: 0; border-bottom: 1px solid var(--ordem-tabletop-line); }
+  .ordem-shield-nav button { white-space: nowrap; flex-shrink: 0; }
+  .ordem-shield-columns { grid-template-columns: minmax(0, 1fr); }
+}

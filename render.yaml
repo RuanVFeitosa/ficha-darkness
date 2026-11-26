@@ -19,5 +19,9 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      - key: DARKNESS_OWNER_CODE
+        sync: false
+      - key: DARKNESS_MASTER_SECRET
+        sync: false
       - key: SUPABASE_TABLE
         value: personagens

@@ -10,7 +10,7 @@ test('link mantém a ficha ESPIRAL exata e o papel de jogador', () => {
  expect(params.get('ficha')).toBe('minha ficha');
  expect(params.get('sistema')).toBe('espiral');
  expect(params.get('papel')).toBe('jogador');
- expect(params.get('tabletop3d')).toBe('1');
+ expect(params.has('tabletop3d')).toBe(false);
  expect(params.get('campanha')).toBe('ABCD');
 });
 test('acesso direto encontra a imagem e bloqueia dados corrompidos', () => {

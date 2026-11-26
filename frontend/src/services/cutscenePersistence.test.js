@@ -2,6 +2,7 @@ import {criarCampanhaMesa,salvarCena,buscarCampanhaPorCodigo,ativarCena} from '.
 import {newCutsceneLayer,normalizeCutscene} from '../utils/cutscene';
 import {cutsceneScenePayload} from '../components/cutscene/CutsceneWorkspace';
 import {activeTabletopScene} from '../utils/tabletopScene';
+jest.mock('./masterAccounts', () => ({ sessaoMestre: async () => ({ papel: 'proprietario' }) }));
 test('salva, reabre e apresenta cutscene como cena especial nos tabletops',async()=>{
  localStorage.clear();
  const campaign=await criarCampanhaMesa('Cinema','3d');

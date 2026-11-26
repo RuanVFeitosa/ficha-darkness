@@ -9,6 +9,12 @@ export default function ProtocolRollResult({ result, rolling, onClose }) {
     const remove=setTimeout(()=>setDismissal({result,stage:'hidden'}),1550);
     return ()=>{clearTimeout(fade);clearTimeout(remove);};
   },[result,rolling]);
+  if(result.injuryDie)return <div className="pd-roll-result pd-roll-minimal pd-injury-die-only">
+    <h2 className="pd-roll-screenreader" id="es-roll-modal-title">{result.label}</h2>
+    <button type="button" className="pd-roll-close" aria-label="Fechar rolagem" disabled={rolling} onClick={onClose}>×</button>
+    <div className="pd-roll-dice" aria-label="Dados rolados" aria-busy={rolling}><div className="pd-roll-die"><RollingDie sides={20} value={result.dice[0]} rolling={rolling}/></div></div>
+    <span className="pd-roll-screenreader" role="status">{rolling?'Dados rolando':`Total: ${result.total}`}</span>
+  </div>;
   const cancelledStage=!rolling && dismissal?.result===result ? dismissal.stage : null;
   const test=result.type!=='formula';
   const failed=!rolling && test && /^Falha/i.test(result.outcome || '');

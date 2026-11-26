@@ -14,10 +14,14 @@ import MuralInvestigacao from '../components/campanha/MuralInvestigacao';
 import PlayerAppearance from "../components/jogador/PlayerAppearance";
 import { variaveisPaleta, variaveisEmblema } from "../utils/playerAppearance";
 import CharacterDossier from "../components/jogador/CharacterDossier";
+import PlayerCampaign, { CampaignCards, campaignMemberId } from '../components/jogador/PlayerCampaign';
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { entrarJogador, carregarFicha, fichaKey, fichaHref, documentoVisivel } from '../services/jogadorApi';
-import { salvarJogador } from '../services/personagemApi';
-import { listarCampanhasDaFicha } from '../services/mesaApi';
+import { buscarJogador, salvarJogador } from '../services/personagemApi';
+import { buscarCampanhaPorCodigo, listarCampanhasDaFicha, resolverCapaCampanha } from '../services/mesaApi';
+import { vincularJogadorAoMestre } from '../services/masterAccounts';
+import { campaignSystem, sheetSystem, systemLabel } from '../utils/campaignSystem';
+import { readLocalCampaign } from '../services/localCampaignStorage';
 import { catalogoBuilds } from '../utils/buildCatalog';
 import BuildCatalog from '../components/jogador/BuildCatalog';
 
@@ -46,20 +50,25 @@ function Documento({ doc }) {
   if (mime === 'application/pdf') return <iframe title={doc.nome} src={doc.url}/>;
   return <p>Abra o arquivo para consultar seu conteúdo.</p>;
 }
-export default function PaginaJogador({ codigo, onNavigate = destino => window.location.assign(destino) }) {
+export default function PaginaJogador({ codigo, mestreId, conviteCampanha, campanhaJogador, abrirCampanhas, onNavigate = destino => window.location.assign(destino) }) {
   const [muralSelecionado,setMuralSelecionado]=useState('pessoal');
   const [perfil, setPerfil] = useState(null), [fichas, setFichas] = useState([]), [campanhas, setCampanhas] = useState([]);
+  const [fichasOrdem, setFichasOrdem] = useState([]);
+  const [ordemCarregada, setOrdemCarregada] = useState(false);
+  const [campanhasCarregadas, setCampanhasCarregadas] = useState(false);
+  const [erroOrdem, setErroOrdem] = useState('');
   const [templates,setTemplates]=useState(false),[paginaPersonagens,setPaginaPersonagens]=useState(0);
   const [criandoTemplate,setCriandoTemplate]=useState(false);
   const fichasTemplates=useMemo(characterTemplates,[]);
-  const listaPersonagens=templates?fichasTemplates:fichas;
+  const listaPersonagens=templates?fichasTemplates:[...fichas,...fichasOrdem];
   const totalPaginasPersonagens=Math.max(1,Math.ceil(listaPersonagens.length/PLAYER_CHARACTER_PAGE_SIZE));
   const paginaAtualPersonagens=Math.min(paginaPersonagens,totalPaginasPersonagens-1);
   const fichasVisiveis=listaPersonagens.slice(paginaAtualPersonagens*PLAYER_CHARACTER_PAGE_SIZE,(paginaAtualPersonagens+1)*PLAYER_CHARACTER_PAGE_SIZE);
   const [adicionando,setAdicionando]=useState(false),painelAdicionar=useRef(null),botaoAdicionar=useRef(null);
   useEffect(()=>{if(adicionando){painelAdicionar.current?.querySelector('h2')?.focus({preventScroll:true});if(window.innerWidth<=1000)painelAdicionar.current?.scrollIntoView?.({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth',block:'start'});}},[adicionando]);
   function fecharAdicionar(){setAdicionando(false);botaoAdicionar.current?.focus();}
-  const [aba, setAba] = useState('personagens'), [erro, setErro] = useState(''), [aviso, setAviso] = useState(''), [ocupado, setOcupado] = useState(false);
+  const [aba, setAba] = useState(abrirCampanhas || campanhaJogador ? 'campanhas' : 'personagens'), [erro, setErro] = useState(''), [aviso, setAviso] = useState(''), [ocupado, setOcupado] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState(campanhaJogador || null);
   const [pronome, setPronome] = useState('Elu');
   const [fotoPerfil, setFotoPerfil] = useState('');
   const [processandoFoto, setProcessandoFoto] = useState(false);
@@ -78,18 +87,58 @@ export default function PaginaJogador({ codigo, onNavigate = destino => window.l
   useEffect(() => {
     if (!perfil) return;
     let ativo = true;
+    async function carregarOrdem() {
+      try {
+        const { readOrdemSheets } = await import('../services/ordemSheet');
+        const agentes = readOrdemSheets().filter(dados => dados.jogadorOrigem === codigo);
+        const fichasLocais = await Promise.all(agentes.map(async dados => ({
+          id: dados.id,
+          sistema: 'ordem',
+          jogadorOrigem: codigo,
+          nome: dados.nome?.trim() || 'Novo agente',
+          foto: await readLocalCampaign(`ordem:retrato:${dados.id}`).catch(() => null) || dados.portrait,
+          dados,
+        })));
+        if (ativo) setFichasOrdem(previous => previous.length || fichasLocais.length ? fichasLocais : previous);
+      } catch {
+        if (ativo) setErroOrdem('Não foi possível ler as fichas de Ordem Paranormal salvas neste navegador.');
+      } finally {
+        if (ativo) setOrdemCarregada(true);
+      }
+    }
+    carregarOrdem();
+    return () => { ativo = false; };
+  }, [perfil, codigo, mestreId]);
+  useEffect(() => {
+    if (!perfil) return;
+    let ativo = true;
     Promise.allSettled(perfil.personagens.map(carregarFicha)).then(resultados => {
       if (!ativo) return;
       setFichas(resultados.filter(r => r.status === 'fulfilled').map(r => r.value));
       if (resultados.some(r => r.status === 'rejected')) setAviso('Algumas fichas não puderam ser carregadas. Fichas ESPIRAL precisam estar salvas neste dispositivo.');
     });
-    Promise.allSettled(perfil.personagens.map(p => listarCampanhasDaFicha(p.sistema === 'espiral' ? `espiral:${p.id}` : p.id))).then(resultados => {
+    return () => { ativo = false; };
+  }, [perfil]);
+  useEffect(() => {
+    if (!perfil || !ordemCarregada) return;
+    let ativo = true;
+    const ids = new Set([...perfil.personagens, ...fichasOrdem].map(campaignMemberId));
+    setCampanhasCarregadas(false);
+    const consultas = [
+      ...[...ids].map(listarCampanhasDaFicha),
+      ...(perfil.campanhas || []).map(buscarCampanhaPorCodigo),
+    ];
+    Promise.allSettled(consultas).then(async resultados => {
       if (!ativo) return;
-      setCampanhas([...new Map(resultados.filter(r => r.status === 'fulfilled').flatMap(r => r.value).map(c => [c.id, c])).values()]);
+      const unique = new Map(resultados.filter(r => r.status === 'fulfilled').flatMap(r => r.value).filter(Boolean).map(c => [c.id, c]));
+      const withCovers = await Promise.all([...unique.values()].map(c => resolverCapaCampanha(c).catch(() => c)));
+      if (!ativo) return;
+      setCampanhas(withCovers);
+      setCampanhasCarregadas(true);
       if (resultados.some(r => r.status === 'rejected')) setAviso('Não foi possível consultar todas as campanhas. Tente recarregar a página.');
     });
     return () => { ativo = false; };
-  }, [perfil]);
+  }, [perfil, fichasOrdem, ordemCarregada]);
   async function persistir(proximo) {
     setOcupado(true); setErro('');
     try { const salvo = await salvarJogador(codigo, proximo); setPerfil(salvo); return true; }
@@ -115,11 +164,34 @@ export default function PaginaJogador({ codigo, onNavigate = destino => window.l
     if (ocupado || processandoFoto) return;
     setOcupado(true); setErro('');
     try {
+      if (mestreId && await buscarJogador(novoCodigo)) throw new Error('Esse código já tem um perfil. Volte a Meus personagens para vinculá-lo.');
       const p = await entrarJogador(novoCodigo, true);
       await salvarJogador(novoCodigo, { ...p, nome: nome.trim() || p.nome, pronome: pronome || undefined, fotoPerfil: fotoPerfil || p.fotoPerfil || '', perfilConfigurado: true });
-      onNavigate(`/?jogador=${novoCodigo}`);
+      if (mestreId) vincularJogadorAoMestre(mestreId, novoCodigo);
+      onNavigate(`/?jogador=${novoCodigo}${mestreId ? '&origem=mestre' : ''}`);
     }
     catch(e) { setErro(e.message); setOcupado(false); }
+  }
+  async function entrarEmMesa(event) {
+    event.preventDefault();
+    if (ocupado) return;
+    const form = new FormData(event.currentTarget);
+    const ficha = [...fichas, ...fichasOrdem].find(item => fichaKey(item) === form.get('ficha'));
+    if (!ficha) return;
+    setOcupado(true);
+    setErro('');
+    try {
+      const campanha = await buscarCampanhaPorCodigo(form.get('campanha').trim());
+      if (!campanha) throw new Error('Campanha não encontrada. Confira o código da mesa.');
+      const sistemaMesa = campaignSystem(campanha);
+      if (sheetSystem(ficha) !== sistemaMesa) throw new Error(`Esta campanha usa ${systemLabel(sistemaMesa)}. Escolha uma ficha desse sistema.`);
+      const vinculo = ['espiral', 'ordem'].includes(sistemaMesa) ? `${sistemaMesa}:${ficha.id}` : ficha.id;
+      onNavigate(`/?${new URLSearchParams({ campanha: campanha.codigo, papel: 'jogador', sistema: sistemaMesa, vinculo, origem: 'mestre' })}`);
+    } catch (error) {
+      setErro(error.message);
+    } finally {
+      setOcupado(false);
+    }
   }
   async function carregarFotoCadastro(e) {
     const file = e.target.files?.[0];
@@ -150,18 +222,62 @@ export default function PaginaJogador({ codigo, onNavigate = destino => window.l
   const ids = perfil?.personagens.map(p => p.sistema === 'espiral' ? `espiral:${p.id}` : p.id) || [];
   const documentos = campanhas.filter(c => !campanhaFiltro || c.id === campanhaFiltro).flatMap(c => (c.documentosInvestigacao || []).filter(d => documentoVisivel(d, ids)).map(d => ({ ...d, campanhaId: c.id, campanhaNome: c.nome })));
   const evidenciaInterativa = !!doc && ((doc.mimeType || doc.mime_type || '').includes('modern-pc') || doc.categoria === 'interativa');
-  if (codigo === 'novo') return <main className="pj pj-escuro pj-cadastro"><div className="pj-cadastro-arte" aria-hidden="true"><div className="pj-cadastro-emblema"><HaloEclipse /><img src="/simbolo-darkness.png" alt="" draggable="false"/></div></div><a href="?">← Início</a><p className="pj-eyebrow">UNIVERSO DARKNESS / NOVO ARQUIVO</p><h1>Seu lugar<br/>neste universo.</h1><form className="pj-cadastro-form" onSubmit={criarPerfil}><div className="pj-cadastro-form-heading"><span>01 / IDENTIDADE</span><span>PERFIL DO JOGADOR</span></div><label className="pj-cadastro-foto">{fotoPerfil ? <img src={fotoPerfil} alt="Prévia da foto de perfil"/> : <span className="pj-cadastro-avatar" aria-hidden="true">{nome.trim().slice(0,1).toUpperCase() || '?'}</span>}<span className="pj-cadastro-photo-title">Foto de perfil (opcional)</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={carregarFotoCadastro} disabled={ocupado || processandoFoto}/></label><label>Nome do jogador<input required autoComplete="nickname" placeholder="Como você quer ser chamado?" value={nome} onChange={e => setNome(e.target.value)} maxLength={80}/></label><label>Pronome do jogador<select value={pronome} onChange={e=>setPronome(e.target.value)}><option value="">Prefiro não informar</option>{["Ele","Ela","Elu"].map(p=><option key={p}>{p}</option>)}</select></label><label>Senha do Jogador<input required type="password" autoComplete="new-password" inputMode="numeric" placeholder="Sua chave de acesso" pattern="[0-9]{4,8}" minLength={4} maxLength={8} value={novoCodigo} onChange={e => setNovoCodigo(e.target.value.replace(/\D/g,''))}/></label><p>Escolha uma senha numérica de 4 a 8 dígitos para entrar pelo painel. O código antigo do personagem também funciona como senha do jogador.</p><button disabled={ocupado || processandoFoto}>{processandoFoto ? 'Preparando foto…' : ocupado ? 'Salvando…' : 'Criar / acessar perfil'}</button>{erro && <p role="alert">{erro}</p>}</form></main>;
+  if (codigo === 'novo') return <main className="pj pj-escuro pj-cadastro"><div className="pj-cadastro-arte" aria-hidden="true"><div className="pj-cadastro-emblema"><HaloEclipse /><img src="/simbolo-darkness.png" alt="" draggable="false"/></div></div><a href={mestreId ? "/?mestre=1&personagens=1" : "?"}>{mestreId ? "← Meus personagens" : "← Início"}</a>{!mestreId && <p><a href="/?mestre=novo">Cadastro de mestre</a></p>}<p className="pj-eyebrow">UNIVERSO DARKNESS / NOVO ARQUIVO</p><h1>Seu lugar<br/>neste universo.</h1><form className="pj-cadastro-form" onSubmit={criarPerfil}><div className="pj-cadastro-form-heading"><span>01 / IDENTIDADE</span><span>PERFIL DO JOGADOR</span></div><label className="pj-cadastro-foto">{fotoPerfil ? <img src={fotoPerfil} alt="Prévia da foto de perfil"/> : <span className="pj-cadastro-avatar" aria-hidden="true">{nome.trim().slice(0,1).toUpperCase() || '?'}</span>}<span className="pj-cadastro-photo-title">Foto de perfil (opcional)</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={carregarFotoCadastro} disabled={ocupado || processandoFoto}/></label><label>Nome do jogador<input required autoComplete="nickname" placeholder="Como você quer ser chamado?" value={nome} onChange={e => setNome(e.target.value)} maxLength={80}/></label><label>Pronome do jogador<select value={pronome} onChange={e=>setPronome(e.target.value)}><option value="">Prefiro não informar</option>{["Ele","Ela","Elu"].map(p=><option key={p}>{p}</option>)}</select></label><label>Senha do Jogador<input required type="password" autoComplete="new-password" inputMode="numeric" placeholder="Sua chave de acesso" pattern="[0-9]{4,8}" minLength={4} maxLength={8} value={novoCodigo} onChange={e => setNovoCodigo(e.target.value.replace(/\D/g,''))}/></label><p>Escolha uma senha numérica de 4 a 8 dígitos para entrar pelo painel. O código antigo do personagem também funciona como senha do jogador.</p><button disabled={ocupado || processandoFoto}>{processandoFoto ? 'Preparando foto…' : ocupado ? 'Salvando…' : 'Criar / acessar perfil'}</button>{erro && <p role="alert">{erro}</p>}</form></main>;
   if (!perfil) return <main className="pj pj-escuro"><a href="?">← Início</a><p role={erro ? 'alert' : 'status'}>{erro || 'Abrindo seu arquivo…'}</p></main>;
+  const openCampaign = code => setSelectedCampaign(code);
+  const campaignCodes = new Set([...(perfil.campanhas || []), ...campanhas.map(item => item.codigo).filter(Boolean)]);
+  async function joinByCode(event) {
+    event.preventDefault();
+    if (ocupado || !campanhasCarregadas) return;
+    const code = String(new FormData(event.currentTarget).get('codigoCampanha') || '').trim().toUpperCase();
+    if (!code) return;
+    if (campaignCodes.has(code)) { openCampaign(code); return; }
+    if (campaignCodes.size >= 6) { setErro('Você já está em 6 campanhas.'); return; }
+    setOcupado(true);
+    setErro('');
+    try {
+      const campaign = await buscarCampanhaPorCodigo(code);
+      if (!campaign) throw new Error('Campanha não encontrada. Confira o código.');
+      const saved = await salvarJogador(codigo, { ...perfil, campanhas: [...campaignCodes, campaign.codigo] });
+      setPerfil(saved);
+      openCampaign(campaign.codigo);
+    } catch (failure) {
+      setErro(failure.message || 'Não foi possível entrar na campanha.');
+    } finally {
+      setOcupado(false);
+    }
+  }
+  if (conviteCampanha) return <main className="pj pj-dashboard pj-refined pj-campaign-page">
+    <PlayerCampaign key={conviteCampanha}
+      code={conviteCampanha} invite playerCode={codigo}
+      sheets={[...fichas, ...fichasOrdem]}
+      onOpen={code => onNavigate(`/?${new URLSearchParams({ jogador: codigo, campanhaJogador: code })}`)}
+      onBack={() => onNavigate(`/?${new URLSearchParams({ jogador: codigo, aba: 'campanhas' })}`)} />
+  </main>;
   return <main className={`pj pj-dashboard pj-refined ${perfil.paletaPagina ? 'pj-paleta-personalizada' : ''}`} style={{...variaveisPaleta(perfil.paletaPagina),...variaveisEmblema(perfil.paletaPagina)}}>
     <div className="pj-marca-lateral pj-cadastro-arte pj-dashboard-arte" aria-hidden="true"><div className="pj-cadastro-emblema"><HaloEclipse /><TintedDarknessSymbol cor={perfil.paletaPagina?.simbolo} /></div></div>
-    <header className="pj-topo"><a href="?" className="pj-marca">← UNIVERSO DARKNESS</a><PlayerAppearance perfil={perfil} fichas={fichas} onSavePagina={paleta=>persistir({...perfil,paletaPagina:paleta})} onSavePaletas={paletas=>persistir({...perfil,paletasPersonalizadas:paletas})} onFichaSalva={(ficha,dados)=>setFichas(atuais=>atuais.map(f=>fichaKey(f)===fichaKey(ficha) ? {...f,dados} : f))}/><PlayerProfile key={codigo} perfil={perfil} onSave={persistir}/></header>
+    <header className="pj-topo"><a href={mestreId ? '/?mestre=1' : '?'} className="pj-marca">{mestreId ? '← Painel do Mestre' : '← UNIVERSO DARKNESS'}</a><PlayerAppearance perfil={perfil} fichas={fichas} onSavePagina={paleta=>persistir({...perfil,paletaPagina:paleta})} onSavePaletas={paletas=>persistir({...perfil,paletasPersonalizadas:paletas})} onFichaSalva={(ficha,dados)=>setFichas(atuais=>atuais.map(f=>fichaKey(f)===fichaKey(ficha) ? {...f,dados} : f))}/><PlayerProfile key={codigo} perfil={perfil} onSave={persistir}/></header>
     <div className="pj-file-intro"><div><span className="pj-file-eyebrow">ARQUIVO PESSOAL / JOGADOR</span><h1>Seu arquivo.</h1><p>Personagens, descobertas e os próximos passos da sua história.</p></div><span className="pj-file-index">UNIVERSO<br/><ProtocolLogo /> <i aria-hidden="true">↗</i></span></div>
-    <nav className="pj-abas" aria-label="Áreas do jogador">{[['personagens','01','Personagens'],['investigacao','02','Investigação'],['livros','03','Livros de regras'],['builds','04','Builds']].map(([id,n,label]) => <button key={id} aria-current={aba === id ? 'page' : undefined} onClick={() => {setAba(id); setDoc(null);}}><small>{n}</small>{label}</button>)}</nav>
+    <nav className="pj-abas" aria-label="Áreas do jogador">{[['personagens','01','Personagens'],['campanhas','02','Campanhas'],['investigacao','03','Investigação'],['livros','04','Livros de regras'],['builds','05','Builds']].map(([id,n,label]) => <button key={id} aria-current={aba === id ? 'page' : undefined} onClick={() => {setAba(id); setDoc(null);}}><small>{n}</small>{label}</button>)}</nav>
     {erro && <p className="pj-alerta" role="alert">{erro}</p>}{aviso && <p className="pj-alerta" role="status">{aviso}<button aria-label="Fechar aviso" onClick={() => setAviso('')}>×</button></p>}
+    {aba === 'campanhas' && <CampaignCards campaigns={campanhas} count={campaignCodes.size}
+      onJoin={joinByCode} busy={ocupado || !campanhasCarregadas} onOpen={openCampaign} selectedCode={selectedCampaign}>
+      {selectedCampaign && <PlayerCampaign key={selectedCampaign} code={selectedCampaign} playerCode={codigo}
+        enrolled={Boolean(perfil.campanhas?.includes(selectedCampaign.toUpperCase()))}
+        sheets={[...fichas, ...fichasOrdem]} onBack={() => setSelectedCampaign(null)} />}
+    </CampaignCards>}
     {aba === 'personagens' && <section className={`pj-area-personagens pj-character-roster ${adicionando?'pj-adding-character':''}`} aria-label="Seus personagens">
-      <div className="pj-characters-main"><header className="pj-collection-header"><div><small>DOSSIÊS VINCULADOS</small><h2>{templates?'Templates de teste':'Seus personagens'}</h2></div><span>{listaPersonagens.length} / {PLAYER_CHARACTER_LIMIT} personagens</span></header>
+      <div className="pj-characters-main"><header className="pj-collection-header"><div><small>ARQUIVO DE PERSONAGENS</small><h2>{templates?'Templates de teste':'Seus personagens'}</h2></div><span>{templates ? fichasTemplates.length : perfil.personagens.length} / {PLAYER_CHARACTER_LIMIT} personagens{!templates && fichasOrdem.length > 0 && ` · ${fichasOrdem.length} de Ordem neste navegador`}</span></header>
       {templates && <p className="pj-demo-notice" role="status">Demonstração com 10 templates. Esses modelos não alteram suas fichas nem ocupam vagas no perfil.</p>}
-      <div className="pj-personagens">{fichasVisiveis.map(f=><CharacterDossier key={fichaKey(f)} ficha={f} onDelete={excluirFicha} disabled={ocupado} aberto={revelado===fichaKey(f)} onToggle={()=>setRevelado(revelado===fichaKey(f) ? '' : fichaKey(f))}/>)}</div>
+      {!templates && erroOrdem && <p role="status">{erroOrdem}</p>}
+      {mestreId && !templates && (fichas.length > 0 || fichasOrdem.length > 0) && <form className="pj-join-table" onSubmit={entrarEmMesa}>
+        <label>Código da campanha<input name="campanha" required maxLength={24} /></label>
+        <label>Personagem<select name="ficha" required>
+          {[...fichas, ...fichasOrdem].map(ficha => <option key={fichaKey(ficha)} value={fichaKey(ficha)}>{ficha.nome} · {systemLabel(sheetSystem(ficha))}</option>)}
+        </select></label>
+        <button type="submit" disabled={ocupado}>Entrar como jogador</button>
+      </form>}
+      <div className="pj-personagens">{fichasVisiveis.map(f=><CharacterDossier key={fichaKey(f)} ficha={f} onDelete={f.sistema === 'ordem' ? undefined : excluirFicha} disabled={ocupado} aberto={revelado===fichaKey(f)} onToggle={()=>setRevelado(revelado===fichaKey(f) ? '' : fichaKey(f))}/>)}</div>
       {listaPersonagens.length>PLAYER_CHARACTER_PAGE_SIZE && <nav className="pj-character-pagination" aria-label="Páginas de personagens"><span>Página {paginaAtualPersonagens+1} de {totalPaginasPersonagens}</span><div>{Array.from({length:totalPaginasPersonagens},(_,i)=><button type="button" key={i} aria-label={'Página '+(i+1)+' de personagens'} aria-current={paginaAtualPersonagens===i?'page':undefined} onClick={()=>{setPaginaPersonagens(i);setRevelado('');}}>{i+1}</button>)}</div></nav>}
       {!listaPersonagens.length && <p className="pj-vazio">Seu arquivo começa aqui. Crie um personagem ou vincule uma ficha existente.</p>}
       <div className="pj-gerenciar"><button type="button" className="pj-template-trigger" aria-expanded={criandoTemplate} onClick={()=>{setCriandoTemplate(!criandoTemplate);setAdicionando(false);}}>Criar personagem Template</button><button disabled={perfil.personagens.length>=PLAYER_CHARACTER_LIMIT} ref={botaoAdicionar} type="button" className="pj-add-character-trigger" aria-expanded={adicionando} aria-controls="pj-add-character-panel" onClick={()=>adicionando?fecharAdicionar():setAdicionando(true)}>{perfil.personagens.length>=PLAYER_CHARACTER_LIMIT?'Limite de 10 personagens atingido':'+ Adicionar personagem'}</button><button type="button" className="pj-template-trigger" aria-pressed={templates} onClick={()=>{setTemplates(!templates);setPaginaPersonagens(0);setRevelado('');}}>{templates?'Voltar aos meus personagens':'Testar com 10 templates'}</button></div>
@@ -176,6 +292,7 @@ export default function PaginaJogador({ codigo, onNavigate = destino => window.l
       {adicionando && <aside ref={painelAdicionar} id="pj-add-character-panel" className="pj-system-picker" aria-label="Adicionar personagem" onKeyDown={e=>{if(e.key==='Escape'){e.stopPropagation();fecharAdicionar();}}}>
         <header><div><small>NOVO DOSSIÊ</small><h2 tabIndex={-1}>Abra um novo dossiê.</h2></div><button type="button" onClick={fecharAdicionar} aria-label="Fechar seleção de sistema">×</button></header>
         <div className="pj-system-options"><a className="pj-system-choice pj-system-darkness" href={`?criar=1&sistema=espiral&jogadorOrigem=${encodeURIComponent(codigo)}`} onClick={()=>sessionStorage.setItem('darkness:jogador',codigo)}><div className="pj-system-choice-art" aria-hidden="true"><Simbolo sistema="darkness"/></div><small><ProtocolLogo /></small><h3>Novo investigador</h3><p>Uma ocupação. Uma vertente. Sua maneira de buscar a verdade.</p><strong>Criar personagem <span aria-hidden="true">↗</span></strong></a></div>
+        <a className="pj-ordem-creator-link" href={`?ordem=1&criar=1&jogadorOrigem=${encodeURIComponent(codigo)}`}>Novo agente de Ordem Paranormal ↗</a>
         <details className="pj-link-existing"><summary>Já tenho uma ficha · vincular ao perfil</summary><div className="pj-vincular"><form onSubmit={vincular}><label>Sistema<select value={sistema} onChange={e=>setSistema(e.target.value)}><option value="darkness">Sistema Absoluto</option><option value="espiral">ESPIRAL</option></select></label><label>Código do personagem<input required value={vinculo} onChange={e=>setVinculo(e.target.value)} maxLength={80}/></label><button disabled={ocupado}>Vincular ao perfil</button></form></div></details>
       </aside>}
 

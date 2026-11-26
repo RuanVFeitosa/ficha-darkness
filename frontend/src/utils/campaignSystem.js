@@ -1,6 +1,10 @@
-export const campaignSystem = campaign => campaign?.sistema === 'espiral' ? 'espiral' : 'absoluto';
-export const sheetSystem = sheet => sheet?.sistema === 'espiral' || String(sheet?.fichaId || sheet?.ficha_id || '').startsWith('espiral:') ? 'espiral' : 'absoluto';
-export const systemLabel = system => system === 'espiral' ? 'ESPIRAL' : 'Darkness';
+export const campaignSystems = { absoluto: 'Darkness', espiral: 'ESPIRAL', ordem: 'Ordem Paranormal' };
+export const campaignSystem = campaign => Object.hasOwn(campaignSystems, campaign?.sistema) ? campaign.sistema : 'absoluto';
+export const sheetSystem = sheet => {
+ const prefix = String(sheet?.fichaId || sheet?.ficha_id || '').split(':')[0];
+ return campaignSystem({ sistema: sheet?.sistema || (['ordem', 'espiral'].includes(prefix) ? prefix : 'absoluto') });
+};
+export const systemLabel = system => campaignSystems[system] || campaignSystems.absoluto;
 
 // Membership remains removable even when the original sheet was deleted or is
 // unavailable on this browser.

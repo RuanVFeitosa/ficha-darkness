@@ -1161,3 +1161,32 @@ test('efeitos de Pressão ficam na faixa e Abalo reduz automaticamente a próxim
  expect(screen.getByRole('dialog',{name:'Sentido + Investigação'}).querySelectorAll('.pd-roll-die')).toHaveLength(2);
  expect(screen.queryByRole('dialog',{name:'O que permanece'})).toBeNull();
 });
+
+test('falha de sobrevivência oferece d20 de Lesão puro, sem Pavor, Pressão ou modificadores',async()=>{
+ const sheet={...freshProtocolSheet(),integrity:0,pavor:{active:true,sides:6},pressure:1};
+ localStorage.setItem('espiral:sheet:v1:principal',JSON.stringify(sheet));
+ Object.defineProperty(window,'crypto',{configurable:true,value:{getRandomValues:array=>{array[0]=0;return array;}}});
+ render(<FichaEspiral/>);
+ fireEvent.click(screen.getByRole('button',{name:'Rolar sobrevivência: Pulso + Propósito'}));
+ expect(screen.queryByRole('button',{name:'Rolar Dado de Lesão · d20'})).not.toBeInTheDocument();
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Rolar Dado de Lesão · d20'})).toBeInTheDocument(),{timeout:2500});
+ const failures=JSON.parse(localStorage.getItem('espiral:sheet:v1:principal')).failures;
+ Object.defineProperty(window,'crypto',{configurable:true,value:{getRandomValues:array=>{array[0]=19;return array;}}});
+ fireEvent.click(screen.getByRole('button',{name:'Rolar Dado de Lesão · d20'}));
+ const dialog=screen.getByRole('dialog',{name:'Dado de Lesão · 1d20'});
+ await waitFor(()=>expect(within(dialog).getByRole('img',{name:'d20: 20'})).toBeInTheDocument(),{timeout:2500});
+ expect(within(dialog).getByRole('status')).toHaveTextContent('Total: 20');
+ expect(dialog.querySelectorAll('.pd-roll-die')).toHaveLength(1);
+ expect(dialog.querySelector('.dread')).toBeNull();expect(dialog.querySelector('.pressure')).toBeNull();
+ expect(JSON.parse(localStorage.getItem('espiral:sheet:v1:principal')).failures).toBe(failures);
+ expect(screen.queryByRole('button',{name:'Rolar Dado de Lesão · d20'})).not.toBeInTheDocument();
+});
+test('sucesso de sobrevivência não oferece Dado de Lesão',async()=>{
+ const sheet={...freshProtocolSheet(),integrity:0};
+ localStorage.setItem('espiral:sheet:v1:principal',JSON.stringify(sheet));
+ Object.defineProperty(window,'crypto',{configurable:true,value:{getRandomValues:array=>{array[0]=3;return array;}}});
+ render(<FichaEspiral/>);fireEvent.click(screen.getByRole('button',{name:'Rolar sobrevivência: Pulso + Propósito'}));
+ const dialog=screen.getByRole('dialog',{name:'Pulso + Propósito'});
+ await waitFor(()=>expect(within(dialog).getByRole('button',{name:'Fechar rolagem'})).toBeEnabled(),{timeout:2500});
+ expect(screen.queryByRole('button',{name:'Rolar Dado de Lesão · d20'})).not.toBeInTheDocument();
+});

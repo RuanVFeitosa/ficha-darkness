@@ -1,0 +1,20 @@
+.ordem-pdf {
+  display: grid;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.ordem-pdf input {
+  max-width: 100%;
+}
+
+.ordem-book a {
+  color: var(--rb-gold);
+}
+
+.ordem-page-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.55;
+  margin-block: 24px;
+}

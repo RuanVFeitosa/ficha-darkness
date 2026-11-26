@@ -143,6 +143,9 @@
 .login-is-master .login-master-identity>div{background:#111110;text-align:left;border:1px solid #d8b96f30}
 .login-is-master .login-master-identity input,.login-is-master .login-master-identity select{background:#090909;border-color:#d8b96f66}
 .login-is-master .login-master-identity[open]>div{position:absolute;bottom:100%;left:0;width:100%;z-index:6}
+.login-is-master .login-password{width:min(390px,100%);max-width:100%;height:auto}
+.login-is-master .login-slots{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:clamp(4px,1.4vw,12px)}
+.login-is-master .login-slots span{width:100%;height:auto;aspect-ratio:1}
 .login-screen.login-is-master.login-welcome .login-simbolo{position:absolute;top:43svh;left:50%;width:min(62vh,78vw);height:min(62vh,78vw);transform:translate(-50%,-50%)}
 
 /* Coroa de eclipse: raios finos, fragmentos e borda incandescente. */

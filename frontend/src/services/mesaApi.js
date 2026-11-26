@@ -8,6 +8,8 @@ import {mergeDoorStates} from '../utils/tabletopTokenState';
 import { normalizeMechanics } from '../utils/specialMechanics';
 import {specialSceneMime} from '../utils/specialSceneMedia';
 import {mapCutsceneSources,persistCutsceneSources} from '../utils/cutscene';
+import { campaignSystems, sheetSystem } from '../utils/campaignSystem';
+import { criarMesa3DRemota, sessaoMestre } from './masterAccounts';
 
 const colunaAusente = (error, column) => Boolean(error &&
   ["42703", "PGRST204"].includes(error.code) &&
@@ -335,12 +337,21 @@ export const listarCampanhasDaFicha = async (fichaId) => {
   return Promise.all((campanhas || []).map((campanha) => buscarCampanhaPorCodigo(campanha.codigo)));
 };
 
-export const criarCampanhaMesa = async (nome, tabletopTipo = "2d", sistema = "absoluto") => {
-  if (!['absoluto', 'espiral'].includes(sistema)) throw new Error('Sistema de campanha inválido.');
+export const criarCampanhaMesa = async (nome, tabletopTipo = "2d", sistema = "absoluto", codigoEscolhido = '') => {
+  if (!Object.hasOwn(campaignSystems, sistema)) throw new Error('Sistema de campanha inválido.');
+  const personalizado = codigoEscolhido.trim().toUpperCase();
+  if (personalizado && !/^[A-Z0-9]{6,10}$/.test(personalizado)) {
+    throw new Error('Use de 6 a 10 letras ou números no código da campanha.');
+  }
   const tabletop_tipo = tabletopTipo === "3d" ? "3d" : "2d";
-  const codigo = `${String(nome || "CAMP").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 4).toUpperCase().padEnd(4, "X")}${Math.floor(10 + Math.random() * 90)}`;
+  if (tabletop_tipo === '3d') {
+    if (supabaseConfigurado) return personalizado ? criarMesa3DRemota(nome, sistema, personalizado) : criarMesa3DRemota(nome, sistema);
+    if ((await sessaoMestre())?.papel !== 'proprietario') throw new Error('O Tabletop 3D é exclusivo do proprietário.');
+  }
+  const codigo = personalizado || `${String(nome || "CAMP").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 4).toUpperCase().padEnd(4, "X")}${Math.floor(10 + Math.random() * 90)}`;
   if (!supabaseConfigurado) {
     const campanhas = listarCampanhasDemo();
+    if (campanhas.some(campanha => campanha.codigo === codigo)) throw new Error('Esse código de campanha já está em uso.');
     const campanha = { id: `demo-${Date.now()}`, codigo, nome: String(nome).trim(), sistema, modo: "cena", tabletop_tipo, criado_em: new Date().toISOString() };
     salvarCampanhasDemo([campanha, ...campanhas]);
     await salvarDemo({ cenas: [], cenaAtivaId: null, modo: "cena", combateAtivo: false, investigacaoAtiva: false, iniciativas: {}, documentosInvestigacao: [], membros: [], tokens: [], mapas3D: [] }, campanha.id);
@@ -350,23 +361,26 @@ export const criarCampanhaMesa = async (nome, tabletopTipo = "2d", sistema = "ab
   const payload = { nome: String(nome).trim(), codigo, mestre_id: user?.id || null, tabletop_tipo, sistema };
   let { data, error } = await supabase.from("campanhas").insert(payload).select().single();
   if (colunaAusente(error, 'sistema')) throw new Error('Aplique a migração de sistema da campanha no Supabase.');
+  if (error?.code === '23514' && sistema === 'ordem' && error.message?.includes('campanhas_sistema_check')) {
+    throw new Error('Aplique a migração de campanhas de Ordem Paranormal no Supabase.');
+  }
   if (colunaAusente(error, "tabletop_tipo")) {
-    if (tabletop_tipo === "3d") throw new Error("Aplique a migração 034 no Supabase antes de criar campanhas 3D.");
     delete payload.tabletop_tipo;
     ({ data, error } = await supabase.from("campanhas").insert(payload).select().single());
   }
+  if (error?.code === '23505') throw new Error('Esse código de campanha já está em uso.');
   if (error) throw error;
   return data;
 };
 
 export const salvarSistemaCampanha = async (campanhaId, sistema) => {
-  if (!['absoluto', 'espiral'].includes(sistema)) throw new Error('Sistema de campanha inválido.');
+  if (!Object.hasOwn(campaignSystems, sistema)) throw new Error('Sistema de campanha inválido.');
   if (!supabaseConfigurado) {
     const campanhas = listarCampanhasDemo();
     const atual = campanhas.find(item => item.id === campanhaId);
     if (!atual) throw new Error('Campanha não encontrada.');
     const estado = await carregarDemo(campanhaId);
-    if ((estado.membros || []).some(m => String(m.ficha_id).startsWith('espiral:') !== (sistema === 'espiral'))) throw new Error('Desvincule as fichas de outro sistema antes de alterar o sistema da campanha.');
+    if ((estado.membros || []).some(m => m.ficha_id && sheetSystem(m) !== sistema)) throw new Error('Desvincule as fichas de outro sistema antes de alterar o sistema da campanha.');
     const campanha = {...atual, sistema};
     salvarCampanhasDemo(campanhas.map(item => item.id === campanhaId ? campanha : item));
     await salvarDemo(estado, campanhaId);
@@ -1566,7 +1580,7 @@ export const registrarRolagem = async (campanhaId, autorNome, rolagem) => {
 export const vincularFicha = async (campanhaId, fichaId, personagem) => {
   if (!supabaseConfigurado || campanhaId === 'demo') {
     const campanha = listarCampanhasDemo().find(item => item.id === campanhaId);
-    if (campanha?.sistema && (String(fichaId).startsWith('espiral:') !== (campanha.sistema === 'espiral'))) throw new Error('Esta ficha pertence a outro sistema.');
+    if (campanha?.sistema && sheetSystem({ fichaId }) !== campanha.sistema) throw new Error('Esta ficha pertence a outro sistema.');
   }
   const nome = personagem?.nome || fichaId;
   const hashFicha = Array.from(String(fichaId)).reduce(

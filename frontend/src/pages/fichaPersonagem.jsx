@@ -67,7 +67,6 @@ import {
 } from "../services/syncEvents";
 import { SYNC_INTERVALS, iniciarPollingVisivel } from "../services/syncPolicy";
 import { ULTIMA_FICHA_KEY } from "../constants/session";
-import { TABLETOP_3D_AUTH_KEY } from "../constants/masterAccess";
 import Icon from "@mdi/react";
 import "@mdi/js";
 import { mdiStorefrontOutline, mdiDiceD4, mdiDiceD6, mdiDiceD8, mdiDiceD10, mdiDiceD12, mdiDiceD20, mdiBagPersonalOutline, mdiFlashlight, mdiMedicalBag, mdiTools, mdiShield, mdiMapMarkerPath, mdiClipboardText, mdiHeartPulse, mdiPencilOutline, mdiBomb, mdiFire, mdiFlask, mdiSleep, mdiCircleSmall, mdiMapOutline, mdiClose, mdiMenu, mdiSwapHorizontal } from "@mdi/js";
@@ -1359,10 +1358,6 @@ const FichaPersonagem = () => {
     localStorage.setItem(ULTIMA_FICHA_KEY, fichaId);
     const nomeUrl = normalizarFichaId(personagem?.nome || fichaId);
     const destino = new URLSearchParams({ campanha: campanha.codigo, ficha: nomeUrl, senha: fichaId });
-    if (campanha.tabletop_tipo === "3d") {
-      destino.set("tabletop3d", "1");
-      sessionStorage.setItem(TABLETOP_3D_AUTH_KEY, "true");
-    }
     window.location.href = `/?${destino.toString()}`;
   };
 

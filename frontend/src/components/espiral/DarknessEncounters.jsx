@@ -140,7 +140,7 @@ function EncounterEditor({ record, onSave, onClose }) {
   </form></div>;
 }
 
-export default function DarknessEncounters({ legacyRecords = [] }) {
+export default function DarknessEncounters({ legacyRecords = [], storageKey = ESPIRAL_ENCOUNTERS_KEY }) {
   const [records, setRecords] = useState([]);
   const [notice, setNotice] = useState('');
   const [filter, setFilter] = useState('todos');
@@ -149,23 +149,23 @@ export default function DarknessEncounters({ legacyRecords = [] }) {
   const [editing, setEditing] = useState(null);
   useEffect(() => {
     const refresh = event => {
-      if (event?.key && event.key !== ESPIRAL_ENCOUNTERS_KEY) return;
-      try { setRecords(readEspiralEncounters(localStorage)); } catch (error) { setNotice(error.message || 'Não foi possível abrir os encontros Darkness.'); }
+      if (event?.key && event.key !== storageKey) return;
+      try { setRecords(readEspiralEncounters(localStorage, storageKey)); } catch (error) { setNotice(error.message || 'Não foi possível abrir os encontros Darkness.'); }
     };
     refresh();
     window.addEventListener('storage', refresh);
     return () => window.removeEventListener('storage', refresh);
-  }, []);
+  }, [storageKey]);
   const save = record => {
-    try { setRecords(writeEspiralEncounter(localStorage, record)); setNotice('Ficha Darkness salva.'); return true; }
+    try { setRecords(writeEspiralEncounter(localStorage, record, storageKey)); setNotice('Ficha Darkness salva.'); return true; }
     catch { setNotice('Não foi possível salvar os encontros Darkness. Os dados anteriores foram preservados.'); return false; }
   };
   const duplicate = record => save({ ...structuredClone(record), id: uid(), name: `${record.name} (Cópia)` });
   const remove = async record => {
     if (!await confirmarDialogo(`Excluir a ficha de ${record.name}?`, { titulo: 'Excluir encontro Darkness', confirmarTexto: 'Excluir' })) return;
     try {
-      const next = readEspiralEncounters(localStorage).filter(item => item.id !== record.id);
-      localStorage.setItem(ESPIRAL_ENCOUNTERS_KEY, JSON.stringify({ version: 1, records: next }));
+      const next = readEspiralEncounters(localStorage, storageKey).filter(item => item.id !== record.id);
+      localStorage.setItem(storageKey, JSON.stringify({ version: 1, records: next }));
       setRecords(next); setNotice('Ficha de encontro excluída.');
       window.dispatchEvent(new Event('espiral:encounters-changed'));
     } catch { setNotice('Não foi possível excluir a ficha.'); }

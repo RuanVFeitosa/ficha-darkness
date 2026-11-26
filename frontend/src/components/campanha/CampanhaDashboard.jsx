@@ -4,14 +4,14 @@ import '../../styles/TabletopWorkspace.css';
 import {SPECIAL_SCENE_ACCEPT, specialSceneMediaType} from '../../utils/specialSceneMedia';
 import CutsceneWorkspace from '../cutscene/CutsceneWorkspace';
 import OptionalSystems from './OptionalSystems';
-import {campaignSystem, sheetSystem, systemLabel, campaignSheetOptions, removedCampaignSheets} from '../../utils/campaignSystem';
+import {campaignSystem, campaignSystems, sheetSystem, systemLabel, campaignSheetOptions, removedCampaignSheets} from '../../utils/campaignSystem';
 import SceneCreationPreview from './SceneCreationPreview';
 import SceneCutsceneSettings from './SceneCutsceneSettings';
 import '../../styles/SceneComposer.css';
 import NumberInput from '../ui/NumberInput';
 import SceneAnimationEditor from '../tabletop/SceneAnimationEditor';
 import { ACEITAR_AUDIO } from "../../utils/audioUpload";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Icon from "@mdi/react";
 import {
   mdiAccountMultipleOutline,
@@ -35,6 +35,7 @@ import {
   excluirCampanhaMesa,
   excluirCena,
   listarCampanhas,
+  ouvirCampanha,
   salvarSistemaCampanha,
   ordenarCenasCampanha,
   salvarCena,
@@ -44,12 +45,15 @@ import {
   vincularFicha,
 } from "../../services/mesaApi";
 import { listarFichasParaCampanha } from "../../services/fichasCampanha";
-import { TABLETOP_3D_AUTH_KEY } from "../../constants/masterAccess";
 import AnotacoesCampanha from "./AnotacoesCampanha";
 import MuralInvestigacao from './MuralInvestigacao';
 import { confirmarDialogo } from "../ui/DialogoGlobal";
 import "../../styles/CampanhaDashboard.css";
 import "../../styles/CampaignWorkspace.css";
+import "../../styles/OrdemCampaign.css";
+
+const CampaignPlayerSummaries = lazy(() => import('./CampaignPlayerSummaries'));
+const ordemArt = { '--ordem-operation-art': 'url("/ordem-dashboard-fundo.png")' };
 
 const CAMPAIGN_AREAS = [
   {id:'sistemas', label:'Sistemas opcionais', icon:mdiFolderOutline, description:'Crie e administre regras opcionais, sobrevivência e munição por campanha.'},
@@ -60,6 +64,7 @@ const CAMPAIGN_AREAS = [
   {id:'soundpad', label:'Soundpad', icon:mdiPlaylistMusic, description:'Prepare ambientes e efeitos para dar presença à próxima sessão.'},
   {id:'anotacoes', label:'Anotações', icon:mdiPencilOutline, description:'Seu arquivo de sessão: personagens, planos, documentos e acontecimentos.'},
   {id:'configuracoes', label:'Configurações', icon:mdiAccountMultipleOutline, description:'Defina o sistema da campanha e gerencie quem participa da mesa.'},
+  {id:'fichas', label:'Fichas dos jogadores', icon:mdiAccountMultipleOutline, description:'Consulte os atributos e recursos dos personagens vinculados à mesa.'},
 ];
 
 const campaignCover = campaign => {
@@ -78,11 +83,9 @@ const cenaVazia = {
 const tipoTabletopCampanha = (campanha) => campanha?.tabletop_tipo === "3d" ? "3d" : "2d";
 const urlTabletopCampanha = (campanha, papel = "mestre") => {
   const params = new URLSearchParams({ campanha: campanha.codigo, papel });
-  if (tipoTabletopCampanha(campanha) === "3d") params.set("tabletop3d", "1");
+  if (campaignSystem(campanha) === 'ordem') params.set('sistema', 'ordem');
+  else if (papel === 'mestre' && tipoTabletopCampanha(campanha) === "3d") params.set("tabletop3d", "1");
   return `/?${params.toString()}`;
-};
-const autorizarTabletopCampanha = (campanha) => {
-  if (tipoTabletopCampanha(campanha) === "3d") sessionStorage.setItem(TABLETOP_3D_AUTH_KEY, "true");
 };
 const urlCriadorMapa3D = (campanha) => `/?${new URLSearchParams({
   criarMapa3d: "1",
@@ -93,8 +96,39 @@ const urlCena = (cena, tipo) =>
     ? cena?.mapa_url || cena?.mapaUrl
     : cena?.imagem_url || cena?.imagemUrl;
 
-const CampanhaDashboard = () => {
+const campaignAccountKey = id => `darkness:campanhas:mestre:${id}`;
+const ownCampaignCodes = id => JSON.parse(localStorage.getItem(campaignAccountKey(id)) || '[]');
+
+const CampanhaDashboard = ({ mestreId, sistemaPainel, permite3D = !mestreId } = {}) => {
   const [campanha, setCampanha] = useState(null);
+  const campanhaId = campanha?.id;
+  const campanhaCodigo = campanha?.codigo;
+  useEffect(() => {
+    if (!campanhaId || !campanhaCodigo) return;
+    let request = 0;
+    let active = true;
+    async function atualizarMembros() {
+      const version = ++request;
+      try {
+        const atualizada = await buscarCampanhaPorCodigo(campanhaCodigo);
+        if (active && version === request && atualizada?.id === campanhaId) {
+          setCampanha(current => current?.id === campanhaId ? { ...current, membros: atualizada.membros } : current);
+        }
+      } catch {
+        // Keep the current member list if a background refresh fails.
+      }
+    }
+    const stop = ouvirCampanha(campanhaId, event => {
+      if (!event?.table || event.table === 'membros_campanha') atualizarMembros();
+    });
+    window.addEventListener('focus', atualizarMembros);
+    atualizarMembros();
+    return () => {
+      active = false;
+      stop();
+      window.removeEventListener('focus', atualizarMembros);
+    };
+  }, [campanhaId, campanhaCodigo]);
   const [campaignQuery,setCampaignQuery]=useState('');
   const [campaignFilter,setCampaignFilter]=useState('all');
   const normalizedSearch=value=>String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
@@ -108,6 +142,7 @@ const CampanhaDashboard = () => {
   const [pastasFechadas, setPastasFechadas] = useState({});
   const [criandoCampanha, setCriandoCampanha] = useState(false);
   const [nomeNovaCampanha, setNomeNovaCampanha] = useState("");
+  const [codigoNovaCampanha, setCodigoNovaCampanha] = useState('');
   const [tabletopNovaCampanha, setTabletopNovaCampanha] = useState("2d");
   const [sistemaNovo, setSistemaNovo] = useState("absoluto");
   const [sistemaEditado, setSistemaEditado] = useState("absoluto");
@@ -120,6 +155,7 @@ const CampanhaDashboard = () => {
   const returnRestored=useRef(false);
   const [buscaCenas, setBuscaCenas] = useState('');
   const [aviso, setAviso] = useState('');
+  const [conviteManual, setConviteManual] = useState(null);
   const [musicas, setMusicas] = useState([]);
   const [sonsSoundpad, setSonsSoundpad] = useState([]);
   const [arrastando, setArrastando] = useState(null);
@@ -135,14 +171,24 @@ const CampanhaDashboard = () => {
     setCarregando(true);
     setErro("");
     try {
-      setCampanhas(await listarCampanhas());
-      if(!returnRestored.current){returnRestored.current=true;const code=new URLSearchParams(window.location.search).get('campanhaPainel');if(code)setCampanha(await buscarCampanhaPorCodigo(code));}
+      const catalogo = mestreId
+        ? await Promise.all(ownCampaignCodes(mestreId).map(buscarCampanhaPorCodigo))
+        : await listarCampanhas();
+      const proprias = catalogo.filter(item => item &&
+        (sistemaPainel ? campaignSystem(item) === sistemaPainel : campaignSystem(item) !== 'ordem') &&
+        (permite3D || tipoTabletopCampanha(item) === '2d'));
+      setCampanhas(proprias);
+      if (!returnRestored.current) {
+        returnRestored.current = true;
+        const code = new URLSearchParams(window.location.search).get('campanhaPainel');
+        if (code && proprias.some(item => item.codigo === code)) setCampanha(await buscarCampanhaPorCodigo(code));
+      }
     } catch (error) {
       setErro(error.message || "Nao foi possivel carregar as campanhas.");
     } finally {
       setCarregando(false);
     }
-  }, []);
+  }, [mestreId, sistemaPainel, permite3D]);
   useEffect(() => {
     carregarCampanhas();
   }, [carregarCampanhas]);
@@ -152,15 +198,16 @@ const CampanhaDashboard = () => {
     : campaignSheetOptions(fichasDisponiveis, campanha);
   useEffect(() => { setSistemaEditado(campaignSystem(campanha)); }, [campanha]);
   const abrirCriacaoCampanha = async () => {
-    setSistemaNovo("absoluto");
+    setSistemaNovo(sistemaPainel || "absoluto");
     setCriandoCampanha(true);
     setNomeNovaCampanha("");
+    setCodigoNovaCampanha('');
     setTabletopNovaCampanha("2d");
     setFichasNovaCampanha([]);
     setCarregandoFichas(true);
     setErro("");
     try {
-      setFichasDisponiveis(await listarFichasParaCampanha());
+      setFichasDisponiveis(mestreId || sistemaPainel === 'ordem' ? [] : await listarFichasParaCampanha());
     } catch (error) {
       setErro(error.message || "Nao foi possivel carregar as fichas.");
     } finally {
@@ -186,7 +233,7 @@ const CampanhaDashboard = () => {
         .filter(Boolean),
     );
     try {
-      setFichasDisponiveis(await listarFichasParaCampanha());
+      setFichasDisponiveis(mestreId || campaignSystem(campanha) === 'ordem' ? [] : await listarFichasParaCampanha());
     } catch (error) {
       setErro(error.message || "Nao foi possivel carregar as fichas.");
     } finally {
@@ -235,7 +282,10 @@ const CampanhaDashboard = () => {
     setCarregando(true);
     setErro("");
     try {
-      setCampanha(await buscarCampanhaPorCodigo(codigo));
+      if (mestreId && !ownCampaignCodes(mestreId).includes(codigo)) throw new Error('Esta campanha não pertence ao seu painel.');
+      const encontrada = await buscarCampanhaPorCodigo(codigo);
+      if (encontrada && !permite3D && tipoTabletopCampanha(encontrada) === '3d') throw new Error('O Tabletop 3D é exclusivo do proprietário.');
+      setCampanha(encontrada);
     } catch (error) {
       setErro(error.message || "Nao foi possivel abrir a campanha.");
     } finally {
@@ -249,7 +299,10 @@ const CampanhaDashboard = () => {
     setSalvando(true);
     setErro("");
     try {
-      const nova = await criarCampanhaMesa(nomeNovaCampanha, tabletopNovaCampanha, sistemaNovo);
+      const codigo = codigoNovaCampanha.trim();
+      if (!/^[A-Z0-9]{6,10}$/.test(codigo)) throw new Error('Use de 6 a 10 letras ou números no código da campanha.');
+      const nova = await criarCampanhaMesa(nomeNovaCampanha, permite3D && sistemaNovo !== 'ordem' ? tabletopNovaCampanha : '2d', sistemaNovo, codigo);
+      if (mestreId) localStorage.setItem(campaignAccountKey(mestreId), JSON.stringify([...new Set([...ownCampaignCodes(mestreId), nova.codigo])]));
       await Promise.all(
         fichasNovaCampanha.map((fichaId) => {
           const ficha = fichasDisponiveis.find(
@@ -261,6 +314,7 @@ const CampanhaDashboard = () => {
       await carregarCampanhas();
       setCriandoCampanha(false);
       setNomeNovaCampanha("");
+      setCodigoNovaCampanha('');
       setTabletopNovaCampanha("2d");
       setFichasNovaCampanha([]);
       await abrirCampanha(nova.codigo);
@@ -279,6 +333,7 @@ const CampanhaDashboard = () => {
     )
       return;
     await excluirCampanhaMesa(item.id);
+    if (mestreId) localStorage.setItem(campaignAccountKey(mestreId), JSON.stringify(ownCampaignCodes(mestreId).filter(codigo => codigo !== item.codigo)));
     await carregarCampanhas();
   };
 
@@ -625,12 +680,14 @@ const CampanhaDashboard = () => {
     );
   if (!campanha)
     return (
-      <section className="campanhas-catalogo tabletop-hub">
+      <section className="campanhas-catalogo tabletop-hub" data-system={sistemaPainel} style={sistemaPainel === 'ordem' ? ordemArt : undefined}>
         <header className="campanha-dashboard-topo">
           <div>
-            <span><ProtocolLogo /> / Central de sessões</span>
+            {sistemaPainel === 'ordem'
+              ? <span className="ordem-campaign-brand"><img src="/logo-ordem-paranormal.png" alt="Ordem Paranormal" /> Arquivo de operações</span>
+              : <span><ProtocolLogo /> / Central de sessões</span>}
             <h2>Campanhas</h2>
-            <p>Prepare o próximo capítulo. Sua mesa começa aqui.</p>
+            <p>{sistemaPainel === 'ordem' ? 'Crie operações, prepare investigações e reúna os agentes da sua mesa.' : 'Prepare o próximo capítulo. Sua mesa começa aqui.'}</p>
           </div>
           <button onClick={abrirCriacaoCampanha}>
             <Icon path={mdiPlus} size={0.78} />
@@ -638,7 +695,7 @@ const CampanhaDashboard = () => {
           </button>
         </header>
         {erro && <p className="campanha-dashboard-erro">{erro}</p>}
-        <div className="tabletop-hub-toolbar"><label><span>Encontrar uma mesa</span><input type="search" aria-label="Buscar campanha" placeholder="Nome ou código da campanha" value={campaignQuery} onChange={event=>setCampaignQuery(event.target.value)}/></label><nav aria-label="Filtrar mesas">{[['all','Todas'],['2d','Tabletop 2D'],['3d','Tabletop 3D']].map(([id,label])=><button type="button" key={id} aria-pressed={campaignFilter===id} onClick={()=>setCampaignFilter(id)}>{label}</button>)}</nav><span>{filteredCampaigns.length} de {campanhas.length} mesas</span></div>
+        <div className="tabletop-hub-toolbar"><label><span>Encontrar uma mesa</span><input type="search" aria-label="Buscar campanha" placeholder="Nome ou código da campanha" value={campaignQuery} onChange={event=>setCampaignQuery(event.target.value)}/></label><nav aria-label="Filtrar mesas">{[['all','Todas'],['2d','Tabletop 2D'],['3d','Tabletop 3D']].filter(([id]) => id !== '3d' || permite3D).map(([id,label])=><button type="button" key={id} aria-pressed={campaignFilter===id} onClick={()=>setCampaignFilter(id)}>{label}</button>)}</nav><span>{filteredCampaigns.length} de {campanhas.length} mesas</span></div>
         <div className="campanhas-grade">
           {filteredCampaigns.map((item) => (
             <article key={item.id} data-system={campaignSystem(item)}>
@@ -646,7 +703,7 @@ const CampanhaDashboard = () => {
                 className="campanha-cartao-abrir"
                 onClick={() => abrirCampanha(item.codigo)}
               >
-                <div className="campaign-card-art">{campaignCover(item)?<SceneMedia src={campaignCover(item)} alt=""/>:campaignSystem(item)==='espiral'?<span aria-hidden="true">◎</span>:<img className="campaign-card-symbol" src="/simbolo-darkness.png" alt=""/>}<span className="campaign-card-edition">{tipoTabletopCampanha(item).toUpperCase()} / MESA</span></div>
+                <div className="campaign-card-art">{campaignCover(item)?<SceneMedia src={campaignCover(item)} alt=""/>:campaignSystem(item)==='espiral'?<span aria-hidden="true">◎</span>:<img className="campaign-card-symbol" src={campaignSystem(item) === 'ordem' ? '/ordem-dashboard-fundo.png' : '/simbolo-darkness.png'} alt=""/>}<span className="campaign-card-edition">{tipoTabletopCampanha(item).toUpperCase()} / MESA</span></div>
                 <span>Campanha</span>
                 <h3>{item.nome}</h3><small>{systemLabel(campaignSystem(item))}</small>
                 <p>Código {item.codigo}</p>
@@ -656,9 +713,8 @@ const CampanhaDashboard = () => {
                 {tipoTabletopCampanha(item) === "3d" && <a href={urlCriadorMapa3D(item)}>Editar mapas</a>}
                 <a
                   href={urlTabletopCampanha(item)}
-                  onClick={() => autorizarTabletopCampanha(item)}
                 >
-                  Abrir tabletop
+                  {campaignSystem(item) === 'ordem' ? 'Abrir mesa 2D de Ordem' : 'Abrir tabletop'}
                 </a>
                 <button
                   onClick={() => removerCampanha(item)}
@@ -707,8 +763,14 @@ const CampanhaDashboard = () => {
                   placeholder="Ex.: Prisao Blackgate"
                 />
               </label>
-              <label>Sistema da campanha<select value={sistemaNovo} onChange={e=>{setSistemaNovo(e.target.value);setFichasNovaCampanha([]);}}><option value="absoluto">Darkness</option><option value="espiral">ESPIRAL</option></select></label>
-              <fieldset className="campanha-tabletop-seletor">
+              <label>Código da campanha
+                <input required pattern="[A-Z0-9]{6,10}" maxLength={10} autoComplete="off"
+                  value={codigoNovaCampanha} onChange={event => setCodigoNovaCampanha(event.target.value.toUpperCase())}
+                  placeholder="Ex.: NOITE26" />
+                <small>De 6 a 10 letras ou números. Compartilhe esse código com os jogadores.</small>
+              </label>
+              <label>Sistema da campanha<select value={sistemaNovo} disabled={Boolean(sistemaPainel)} onChange={e=>{setSistemaNovo(e.target.value);setFichasNovaCampanha([]);}}>{Object.entries(campaignSystems).map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}</select></label>
+              {sistemaNovo !== 'ordem' && <fieldset className="campanha-tabletop-seletor">
                 <legend>Tipo de tabletop</legend>
                 <p>Esta será a experiência aberta por padrão para mestre e jogadores.</p>
                 <div>
@@ -716,12 +778,12 @@ const CampanhaDashboard = () => {
                     <input type="radio" name="tabletop" value="2d" checked={tabletopNovaCampanha === "2d"} onChange={() => setTabletopNovaCampanha("2d")}/>
                     <span><strong>Tabletop 2D</strong><small>Mapa tático completo e todas as ferramentas atuais.</small></span>
                   </label>
-                  <label className={tabletopNovaCampanha === "3d" ? "selecionado" : ""}>
+                  {permite3D && <label className={tabletopNovaCampanha === "3d" ? "selecionado" : ""}>
                     <input type="radio" name="tabletop" value="3d" checked={tabletopNovaCampanha === "3d"} onChange={() => setTabletopNovaCampanha("3d")}/>
                     <span><strong>Tabletop 3D</strong><small>Cena cinematográfica com interface reduzida.</small></span>
-                  </label>
+                  </label>}
                 </div>
-              </fieldset>
+              </fieldset>}
               <section className="campanha-fichas-vinculo">
                 <header>
                   <div>
@@ -787,8 +849,12 @@ const CampanhaDashboard = () => {
       </section>
     );
 
+  const isOrdem = campaignSystem(campanha) === 'ordem';
+  const areas = isOrdem
+    ? ['cenas', 'fichas', 'investigacao', 'anotacoes', 'cutscenes', 'musicas', 'soundpad', 'sistemas', 'configuracoes'].map(id => CAMPAIGN_AREAS.find(area => area.id === id))
+    : CAMPAIGN_AREAS;
   return (
-    <section className="campanha-dashboard campaign-workspace tabletop-workspace" data-system={campaignSystem(campanha)}>
+    <section className="campanha-dashboard campaign-workspace tabletop-workspace" data-system={campaignSystem(campanha)} style={isOrdem ? ordemArt : undefined}>
       <button
         className="campanha-voltar-lista"
         onClick={() => {
@@ -802,7 +868,7 @@ const CampanhaDashboard = () => {
       </button>
       <header className="campanha-dashboard-topo">
         <div>
-          <span>MESA DE OPERAÇÕES / {campanha.codigo}</span>
+          <span>{isOrdem ? 'ORDEM PARANORMAL · OPERAÇÃO' : 'MESA DE OPERAÇÕES'} / {campanha.codigo}</span>
           <h2>{campanha.nome}</h2>
           <p>
             {campanha.cenas.length} cenas · {campanha.membros?.length || 0}{" "}
@@ -814,12 +880,19 @@ const CampanhaDashboard = () => {
             <Icon path={mdiMapOutline} size={0.78} />
             Editar mapas
           </a>}
-          <a
-            href={urlTabletopCampanha(campanha)}
-            onClick={() => autorizarTabletopCampanha(campanha)}
-          >
-            Abrir tabletop
-          </a>
+          <a href={urlTabletopCampanha(campanha)}>{isOrdem ? 'Abrir mesa 2D de Ordem' : 'Abrir tabletop'}</a>
+          <button type="button" onClick={async () => {
+            const codigo = campanha.codigo;
+            const url = new URL('/', window.location.origin);
+            url.searchParams.set('conviteCampanha', codigo);
+            try {
+              await navigator.clipboard.writeText(url.href);
+              setConviteManual(null);
+              setAviso('Link copiado. Envie-o aos jogadores da campanha.');
+            } catch {
+              setConviteManual({ codigo, url: url.href });
+            }
+          }}>Copiar link de convite</button>
           <button onClick={abrirGerenciadorFichas}>
             <Icon path={mdiAccountMultipleOutline} size={0.78} />
             Fichas
@@ -841,16 +914,24 @@ const CampanhaDashboard = () => {
       </div>
       <div className="tabletop-preparation-layout">
       <nav className="campanha-conteudo-abas" aria-label="Áreas da campanha">
-        {CAMPAIGN_AREAS.map(area=><button type="button" key={area.id} aria-current={abaCampanha===area.id?'page':undefined} className={abaCampanha===area.id?'ativo':''} onClick={()=>{setAbaCampanha(area.id);setAviso('');}}>
+        {areas.map(area=><button type="button" key={area.id} aria-current={abaCampanha===area.id?'page':undefined} className={abaCampanha===area.id?'ativo':''} onClick={()=>{setAbaCampanha(area.id);setAviso('');}}>
           <Icon path={area.icon} size={.8}/><span>{area.label}</span>
           {area.id==='cenas'&&<small>{campanha.cenas.length}</small>}
           {area.id==='musicas'&&<small>{musicas.length}</small>}
           {area.id==='soundpad'&&<small>{sonsSoundpad.length}</small>}
+          {area.id==='fichas'&&<small>{campanha.membros?.length || 0}</small>}
         </button>)}
       </nav>
       <div className="tabletop-preparation-content">
-      <header className="campaign-area-heading"><div><span>PREPARAÇÃO DA MESA / {String(CAMPAIGN_AREAS.indexOf(areaAtual)+1).padStart(2,'0')}</span><h3>{areaAtual.label}</h3><p>{areaAtual.description}</p></div>{abaCampanha==='anotacoes'&&<span className="campaign-privacy">Arquivo do mestre</span>}</header>
+      <header className="campaign-area-heading"><div>{!isOrdem && <span>PREPARAÇÃO DA MESA / {String(areas.indexOf(areaAtual)+1).padStart(2,'0')}</span>}<h3>{areaAtual.label}</h3><p>{areaAtual.description}</p></div>{abaCampanha==='anotacoes'&&<span className="campaign-privacy">Arquivo do mestre</span>}</header>
       {aviso&&<div className="campaign-feedback" role="status"><span>{aviso}</span><button type="button" aria-label="Dispensar mensagem" onClick={()=>setAviso('')}>×</button></div>}
+      {conviteManual?.codigo === campanha.codigo && <div className="campaign-feedback">
+        <label>Link para os jogadores <input readOnly value={conviteManual.url} onFocus={event => event.target.select()} /></label>
+        <button type="button" aria-label="Fechar link de convite" onClick={() => setConviteManual(null)}>×</button>
+      </div>}
+      {abaCampanha === 'fichas' && <Suspense fallback={<p role="status">Abrindo resumos…</p>}>
+        <CampaignPlayerSummaries key={campanha.id} members={campanha.membros} system={campaignSystem(campanha)} onManage={abrirGerenciadorFichas} />
+      </Suspense>}
       {abaCampanha==='cenas'&&<div className="campaign-scene-toolbar">
         <label>Buscar no arquivo<input type="search" value={buscaCenas} onChange={e=>setBuscaCenas(e.target.value)} placeholder="Nome, descrição ou pasta…"/></label>
         <span>{gruposVisiveis.reduce((total,[,cenas])=>total+cenas.length,0)} de {campanha.cenas.length} cenas</span>
@@ -861,7 +942,7 @@ const CampanhaDashboard = () => {
  event.preventDefault();setSalvando(true);setErro('');
  try {const atualizada=await salvarSistemaCampanha(campanha.id,sistemaEditado);setCampanha({...campanha,...atualizada});await carregarCampanhas();}
  catch(error){setErro(error.message);}finally{setSalvando(false);}
-}}><span className="tabletop-settings-kicker">REGRAS E ACESSO</span><h3>Configure sua mesa</h3><label>Sistema usado<select value={sistemaEditado} onChange={e=>setSistemaEditado(e.target.value)}><option value="absoluto">Darkness</option><option value="espiral">ESPIRAL</option></select></label><div className="tabletop-system-profile" data-system={sistemaEditado}><span>{sistemaEditado==='espiral'?'◎':'D'}</span><div><strong>{sistemaEditado==='espiral'?'ESPIRAL':<ProtocolLogo />}</strong><p>{sistemaEditado==='espiral'?'Fichas, encontros e escudo configurados para ESPIRAL.':'Fichas Darkness, encontros e ferramentas do mestre na mesma campanha.'}</p></div></div><p>O sistema define quais fichas podem entrar na mesa. Para trocar, remova primeiro os vínculos incompatíveis em Gerenciar fichas.</p><button className="campaign-primary" disabled={salvando || sistemaEditado===campaignSystem(campanha)}>{salvando?'Salvando…':'Salvar configurações'}</button></form><aside className="campaign-settings-side"><section><span>ACESSO À MESA</span><h3>Quem faz parte da história</h3><p>{campanha.membros?.length || 0} fichas vinculadas. Gerencie o acesso dos jogadores e remova vínculos de outros sistemas.</p><button type="button" onClick={abrirGerenciadorFichas}><Icon path={mdiAccountMultipleOutline} size={.8}/>Gerenciar fichas</button></section><section><span>IDENTIFICAÇÃO</span><h3>{campanha.codigo}</h3><p>Código da campanha · Tabletop {tipoTabletopCampanha(campanha).toUpperCase()}</p><a href={urlTabletopCampanha(campanha)} onClick={()=>autorizarTabletopCampanha(campanha)}>Entrar na mesa →</a></section></aside></div> : abaCampanha === 'investigacao' ? <MuralInvestigacao key={campanha.id} scope="campanha" id={campanha.id} mestre members={(campanha.membros || []).map(m=>String(m.ficha_id))} nome={`Mural · ${campanha.nome}`}/> : abaCampanha === "cenas" ? (
+}}><span className="tabletop-settings-kicker">REGRAS E ACESSO</span><h3>Configure sua mesa</h3><label>Sistema usado<select value={sistemaEditado} onChange={e=>setSistemaEditado(e.target.value)}>{Object.entries(campaignSystems).map(([id, nome]) => <option key={id} value={id}>{nome}</option>)}</select></label><div className="tabletop-system-profile" data-system={sistemaEditado}><span>{sistemaEditado==='espiral'?'◎':'D'}</span><div><strong>{sistemaEditado==='absoluto'?<ProtocolLogo />:systemLabel(sistemaEditado)}</strong><p>{sistemaEditado==='espiral'?'Fichas, encontros e escudo configurados para ESPIRAL.':sistemaEditado==='ordem'?'Mesa de Ordem Paranormal.':'Fichas Darkness, encontros e ferramentas do mestre na mesma campanha.'}</p></div></div><p>O sistema define quais fichas podem entrar na mesa. Para trocar, remova primeiro os vínculos incompatíveis em Gerenciar fichas.</p><button className="campaign-primary" disabled={salvando || sistemaEditado===campaignSystem(campanha)}>{salvando?'Salvando…':'Salvar configurações'}</button></form><aside className="campaign-settings-side"><section><span>ACESSO À MESA</span><h3>Quem faz parte da história</h3><p>{campanha.membros?.length || 0} fichas vinculadas. Gerencie o acesso dos jogadores e remova vínculos de outros sistemas.</p><button type="button" onClick={abrirGerenciadorFichas}><Icon path={mdiAccountMultipleOutline} size={.8}/>Gerenciar fichas</button></section><section><span>IDENTIFICAÇÃO</span><h3>{campanha.codigo}</h3><p>Código da campanha · Tabletop {tipoTabletopCampanha(campanha).toUpperCase()}</p><a href={urlTabletopCampanha(campanha)} >Entrar na mesa →</a></section></aside></div> : abaCampanha === 'investigacao' ? <MuralInvestigacao key={campanha.id} scope="campanha" id={campanha.id} mestre members={(campanha.membros || []).map(m=>String(m.ficha_id))} nome={`Mural · ${campanha.nome}`}/> : abaCampanha === "cenas" ? (
         <div className="campanha-pastas">
           {gruposVisiveis.length ? (
             gruposVisiveis.map(([pasta, cenas]) => (
@@ -1268,9 +1349,9 @@ const CampanhaDashboard = () => {
             </button>
           </footer>
         </form>
-      ) : (
+      ) : abaCampanha === 'anotacoes' ? (
         <AnotacoesCampanha campanhaId={campanha.id} />
-      )}
+      ) : null}
 
       </div></div>
       {gerenciandoFichas && (

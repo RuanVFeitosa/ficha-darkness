@@ -1,0 +1,71 @@
+:is(.tabletop-hub, .campaign-workspace.tabletop-workspace)[data-system="ordem"] {
+  --tw-ink: #fff0ec;
+  --tw-muted: #c9aeb0;
+  --tw-line: #67343b;
+  --tw-panel: #1a1013;
+  --tw-accent: #ffa0a3;
+  --cw-line: var(--tw-line);
+  --cw-accent: var(--tw-accent);
+  --cw-muted: var(--tw-muted);
+  --operation-button: #972939;
+  color: var(--tw-ink);
+}
+
+.tabletop-workspace[data-system="ordem"].campaign-workspace {
+  background: #10090c !important;
+  padding: clamp(12px, 2vw, 28px);
+}
+
+[data-system="ordem"]:is(.tabletop-hub, .tabletop-workspace) .campanha-dashboard-topo {
+  padding: clamp(18px, 3vw, 42px);
+  margin-bottom: 16px;
+  border: 1px solid var(--tw-line);
+  border-radius: 8px;
+  background: linear-gradient(90deg, #190a10, #190a1090), var(--ordem-operation-art) right center / cover no-repeat;
+}
+
+[data-system="ordem"]:is(.tabletop-hub, .tabletop-workspace) .campanha-dashboard-topo h2 {
+  font-size: clamp(32px, 4vw, 54px);
+  overflow-wrap: anywhere;
+}
+
+[data-system="ordem"]:is(.tabletop-hub, .tabletop-workspace) .campanha-dashboard-topo > div > span,
+.tabletop-workspace[data-system="ordem"] .campanha-voltar-lista {
+  color: var(--tw-accent);
+}
+
+.ordem-campaign-brand { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.ordem-campaign-brand img { width: 94px; height: 32px; object-fit: contain; filter: invert(1); }
+
+.tabletop-hub[data-system="ordem"] .tabletop-hub-toolbar,
+.tabletop-workspace[data-system="ordem"] :is(.campaign-overview > div, .campanha-conteudo-abas, .campaign-scene-toolbar, .campaign-player-card) {
+  background: var(--tw-panel);
+  border-color: var(--tw-line);
+}
+
+.tabletop-hub[data-system="ordem"] .campanhas-grade { grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); }
+.tabletop-hub[data-system="ordem"] .campanhas-grade article { border: 1px solid var(--tw-line) !important; background: var(--tw-panel) !important; }
+.tabletop-hub[data-system="ordem"] .campanha-cartao-abrir { background: var(--tw-panel) !important; }
+.tabletop-hub[data-system="ordem"] .campaign-card-art::after { background: linear-gradient(0deg, var(--tw-panel), transparent 55%); }
+.tabletop-hub[data-system="ordem"] .campaign-card-art .campaign-card-symbol { width: 100%; height: 100%; object-fit: cover; object-position: right center; }
+
+.tabletop-hub[data-system="ordem"] :is(.campanha-dashboard-topo > button, .tabletop-hub-toolbar nav button[aria-pressed="true"]),
+.tabletop-workspace[data-system="ordem"] :is(.campanha-dashboard-topo > div > button, .campaign-primary) {
+  background: var(--operation-button) !important;
+  border-color: #cd5966;
+  color: #fff !important;
+}
+
+.tabletop-workspace[data-system="ordem"] .campanha-conteudo-abas button:is(.ativo, :hover) {
+  background: #411620 !important;
+  color: #ffe4e4 !important;
+  border-color: #a94b57;
+}
+
+.tabletop-workspace[data-system="ordem"] .campaign-area-heading { padding-block: 0 18px; }
+.tabletop-workspace[data-system="ordem"] :is(.campanha-pasta, .campanha-pasta-titulo, .campanha-cenas article, .campanha-sem-cenas, .campanha-configuracoes) {
+  border-color: var(--tw-line);
+  background: var(--tw-panel);
+}
+.tabletop-workspace[data-system="ordem"] .campaign-player-card header > span { color: var(--tw-accent); background: #411620; }
+.tabletop-workspace[data-system="ordem"] .campaign-player-card dl { border-color: var(--tw-line); }

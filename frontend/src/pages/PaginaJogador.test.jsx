@@ -3,24 +3,91 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PaginaJogador, { catalogoBuilds } from './PaginaJogador';
 import { entrarJogador, carregarFicha } from '../services/jogadorApi';
 import { salvarJogador } from '../services/personagemApi';
-import { listarCampanhasDaFicha } from '../services/mesaApi';
+import { buscarCampanhaPorCodigo, listarCampanhasDaFicha } from '../services/mesaApi';
+
+test('lista campanhas vinculadas e abre os detalhes pelo perfil', async () => {
+  const onNavigate = jest.fn();
+  buscarCampanhaPorCodigo.mockResolvedValue({
+    id: 'c1', codigo: 'MESA13', nome: 'Campanha', membros: [{ id: 'm1', ficha_id: '1234', nome: 'Ana' }],
+  });
+  render(<PaginaJogador codigo="1234" onNavigate={onNavigate} />);
+  fireEvent.click(await screen.findByRole('button', { name: /Campanhas/ }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Acessar campanha' }));
+  expect(await screen.findByRole('link', { name: 'Entrar no Tabletop' })).toBeInTheDocument();
+  expect(screen.getByRole('navigation', { name: 'Áreas do jogador' })).toBeInTheDocument();
+  expect(onNavigate).not.toHaveBeenCalled();
+});
+
+test('entra por código sem ficha e salva a campanha no perfil', async () => {
+  entrarJogador.mockResolvedValue({ nome: 'Ruan', tema: 'escuro', personagens: [], builds: [] });
+  buscarCampanhaPorCodigo.mockResolvedValue({ id: 'new', codigo: 'NOIT43', nome: 'Noite', sistema: 'ordem' });
+  const onNavigate = jest.fn();
+  render(<PaginaJogador codigo="1234" onNavigate={onNavigate} />);
+  fireEvent.click(await screen.findByRole('button', { name: /Campanhas/ }));
+  const join = screen.getByRole('button', { name: 'Entrar na campanha' });
+  await waitFor(() => expect(join).toBeEnabled());
+  fireEvent.change(screen.getByLabelText('Código da campanha'), { target: { value: 'noit43' } });
+  fireEvent.click(join);
+  expect(await screen.findByRole('heading', { name: 'Personagens da campanha' })).toBeInTheDocument();
+  expect(onNavigate).not.toHaveBeenCalled();
+  expect(salvarJogador).toHaveBeenCalledWith('1234', expect.objectContaining({ campanhas: ['NOIT43'] }));
+});
+
+test('bloqueia o sétimo código sem impedir o acesso às campanhas já salvas', async () => {
+  const campanhas = ['MESA01', 'MESA02', 'MESA03', 'MESA04', 'MESA05', 'MESA06'];
+  entrarJogador.mockResolvedValue({ nome: 'Ruan', tema: 'escuro', personagens: [], builds: [], campanhas });
+  buscarCampanhaPorCodigo.mockImplementation(async codigo => ({ id: codigo, codigo, nome: codigo }));
+  render(<PaginaJogador codigo="1234" />);
+  fireEvent.click(await screen.findByRole('button', { name: /Campanhas/ }));
+  expect(await screen.findAllByRole('button', { name: 'Acessar campanha' })).toHaveLength(6);
+  fireEvent.change(screen.getByLabelText('Código da campanha'), { target: { value: 'MESA07' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar na campanha' }));
+  expect(screen.getByRole('alert')).toHaveTextContent('Você já está em 6 campanhas.');
+  expect(salvarJogador).not.toHaveBeenCalled();
+});
 import { prepararFotoPerfil } from '../utils/playerProfilePhoto';
 import { confirmarDialogo } from '../components/ui/DialogoGlobal';
 import { excluirFichaJogador } from '../services/excluirFichaJogador';
+import { writeOrdemSheets } from '../services/ordemSheet';
 jest.mock('../services/excluirFichaJogador',()=>({excluirFichaJogador:jest.fn()}));
 jest.mock('../components/ui/DialogoGlobal',()=>({...jest.requireActual('../components/ui/DialogoGlobal'),confirmarDialogo:jest.fn()}));
 jest.mock('../utils/playerProfilePhoto', () => ({ prepararFotoPerfil: jest.fn() }));
 jest.mock('../services/jogadorApi', () => ({ ...jest.requireActual('../services/jogadorApi'), entrarJogador: jest.fn(), carregarFicha: jest.fn() }));
 jest.mock('../services/personagemApi', () => ({ salvarJogador: jest.fn() }));
-jest.mock('../services/mesaApi', () => ({ listarCampanhasDaFicha: jest.fn() }));
+jest.mock('../services/mesaApi', () => ({ listarCampanhasDaFicha: jest.fn(), buscarCampanhaPorCodigo: jest.fn(), resolverCapaCampanha: async campaign => campaign }));
 jest.mock('../components/ui/ComputadorModerno',()=>()=> <div>PC interativo</div>);
 jest.mock('../components/midia/ReprodutorCassete',()=>()=> <div>Fita interativa</div>);
 beforeEach(()=>{
+  localStorage.clear();
   jest.clearAllMocks();
   entrarJogador.mockResolvedValue({nome:'Ruan',tema:'escuro',personagens:[{id:'1234',sistema:'darkness'}],builds:[]});
-  carregarFicha.mockResolvedValue({id:'1234',sistema:'darkness',nome:'Ana',foto:'/ana.png',dados:{}});
-  listarCampanhasDaFicha.mockResolvedValue([{id:'c1',nome:'Campanha',documentosInvestigacao:[{id:'doc1',nome:'Computador',mimeType:'modern-pc',revelada:true},{id:'doc2',nome:'Segredo',revelada:false}]}]);
+  carregarFicha.mockImplementation(async ref => ({...ref,nome:'Ana',foto:'/ana.png',dados:{}}));
+  listarCampanhasDaFicha.mockResolvedValue([{id:'c1',codigo:'MESA13',nome:'Campanha',documentosInvestigacao:[{id:'doc1',nome:'Computador',mimeType:'modern-pc',revelada:true},{id:'doc2',nome:'Segredo',revelada:false}]}]);
   salvarJogador.mockImplementation(async(codigo,p)=>p);
+});
+test('um mestre entra em outra mesa com seu personagem e papel de jogador', async () => {
+  const onNavigate = jest.fn();
+  buscarCampanhaPorCodigo.mockResolvedValue({ codigo: 'TEST12', sistema: 'absoluto', tabletop_tipo: '3d' });
+  render(<PaginaJogador codigo="1234" mestreId="mestre-teste" onNavigate={onNavigate} />);
+  fireEvent.change(await screen.findByLabelText('Código da campanha'), { target: { value: 'TEST12' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar como jogador' }));
+  await waitFor(() => expect(onNavigate).toHaveBeenCalledWith('/?campanha=TEST12&papel=jogador&sistema=absoluto&vinculo=1234&origem=mestre'));
+});
+test('mostra apenas agentes de Ordem vinculados ao perfil', async () => {
+  writeOrdemSheets([{ id: 'agente-1', nome: 'Riley', jogadorOrigem: '1234', classe: 'Especialista', nex: 15,
+    attributes: { AGI: 2 }, resources: { pv: { current: 12, max: 15 } } },
+    { id: 'agente-2', nome: 'Agente avulso' },
+    { id: 'agente-3', nome: 'Outro agente', jogadorOrigem: '5678' }]);
+  render(<PaginaJogador codigo="1234"/>);
+  expect(await screen.findByRole('link', { name: 'Abrir ficha de Riley' })).toHaveAttribute(
+    'href', '?ordem=1&agente=agente-1&jogadorOrigem=1234',
+  );
+  expect(await screen.findByRole('link', { name: 'Abrir ficha de Ana' })).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'Abrir ficha de Agente avulso' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'Abrir ficha de Outro agente' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Ver resumo de Riley' }));
+  expect(screen.getByRole('dialog', { name: 'Riley' })).toHaveTextContent('NEX 15%');
+  expect(salvarJogador).not.toHaveBeenCalled();
 });
 test('dossiê abre resumo no toque e mantém o acesso à ficha',async()=>{
  render(<PaginaJogador codigo="1234"/>);
@@ -37,7 +104,7 @@ test('investigação só oferece documentos revelados e abre o computador',async
 });
 test('build combina habilidades e é salva no perfil sem modificar a ficha',async()=>{
  render(<PaginaJogador codigo="1234"/>);await screen.findByRole('link',{name:'Abrir ficha de Ana'});
- fireEvent.click(screen.getByRole('button',{name:/04 Builds/}));
+ fireEvent.click(screen.getByRole('button',{name:/Builds/}));
  fireEvent.click(screen.getAllByRole('button',{name:/^Adicionar .* à build$/})[0]);
  fireEvent.change(screen.getByLabelText('Nome da build'),{target:{value:'Meu combo'}});
  fireEvent.click(screen.getByRole('button',{name:'Salvar build'}));
@@ -52,7 +119,7 @@ test('catálogo inclui especialidades Darkness e habilidades ESPIRAL',()=>{
 
  test('build salva uma arma junto de uma habilidade sem conceder itens à ficha',async()=>{
  render(<PaginaJogador codigo="1234"/>);await screen.findByRole('link',{name:'Abrir ficha de Ana'});
- fireEvent.click(screen.getByRole('button',{name:/04 Builds/}));
+ fireEvent.click(screen.getByRole('button',{name:/Builds/}));
  fireEvent.click(screen.getAllByRole('button',{name:/^Adicionar .* à build$/})[0]);
  fireEvent.click(screen.getByRole('button',{name:'Armas e equipamentos'}));
  fireEvent.click(screen.getByRole('button',{name:'Adicionar Pistola Sable 9mm à build'}));

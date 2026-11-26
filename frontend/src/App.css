@@ -142,3 +142,5 @@ body {
   .page-transition-espiral.active { animation: none; opacity: 1; }
   .page-transition-espiral.active .page-transition-symbol { animation: none; }
 }
+.master-access-denied { min-height: 100vh; display: grid; align-content: center; justify-items: center; gap: 16px; padding: 20px; background: #11121a; color: #f5f2fe; }
+.master-access-denied a { color: #c6b3ff; }

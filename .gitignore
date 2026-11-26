@@ -16,6 +16,7 @@
 /frontend/build
 /frontend/public/pdfjs/
 backend/data/*.json
+backend/data/mestres/
 
 # misc
 .DS_Store

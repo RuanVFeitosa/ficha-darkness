@@ -1,0 +1,46 @@
+.master-accounts.personal-master {
+  --ma-bg: #090807;
+  --ma-panel: #15120ee8;
+  --ma-line: #59472c;
+  --ma-text: #f5eee2;
+  --ma-muted: #d5c5ad;
+  --ma-accent: #e5c27c;
+  --master-backdrop: #090807;
+  --master-control: #15120ee8;
+  --master-tab-active: #624925;
+  --master-tab-border: #b99355;
+  --master-tab-text: #fff6e6;
+}
+
+.personal-master::before {
+  background:
+    var(--darkness-master-sigil) right -5vw top -9vh / clamp(540px, 58vw, 1100px) auto no-repeat,
+    radial-gradient(ellipse at 84% 25%, #5c3f1b, transparent 62%);
+  opacity: .27;
+  mask-image: linear-gradient(to bottom, #000 30%, transparent 95%);
+}
+
+.personal-master-empty {
+  display: grid;
+  gap: 14px;
+  padding: clamp(16px, 3vw, 27px);
+  border: 1px solid var(--ma-line);
+  border-radius: 12px;
+  background: var(--ma-panel);
+}
+
+.personal-master-empty p { color: var(--ma-muted); }
+.personal-master-empty a {
+  justify-self: start;
+  padding: 7px 11px;
+  border: 1px solid var(--ma-line);
+  border-radius: 3px;
+  color: var(--ma-accent);
+}
+
+@media (max-width: 620px) {
+  .personal-master::before {
+    background-position: right -235px top 0, center top;
+    opacity: .18;
+  }
+}

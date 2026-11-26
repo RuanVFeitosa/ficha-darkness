@@ -13,3 +13,12 @@ test('persiste o sistema e impede misturar fichas ou trocar com fichas incompat�
  await salvarSistemaCampanha(campaign.id,'absoluto');
  expect((await buscarCampanhaPorCodigo(campaign.codigo)).sistema).toBe('absoluto');
 });
+
+test('cria e relê uma campanha vazia de Ordem Paranormal no tabletop 2D', async () => {
+ const campaign = await criarCampanhaMesa('Caso de Ordem', '2d', 'ordem');
+ expect(await buscarCampanhaPorCodigo(campaign.codigo)).toMatchObject({
+   nome: 'Caso de Ordem', sistema: 'ordem', tabletop_tipo: '2d', membros: [], cenas: [],
+ });
+ await expect(vincularFicha(campaign.id, 'espiral:ana', {})).rejects.toThrow('outro sistema');
+ await expect(criarCampanhaMesa('Mesa 3D', '3d', 'ordem')).rejects.toThrow('exclusivo do proprietário');
+});

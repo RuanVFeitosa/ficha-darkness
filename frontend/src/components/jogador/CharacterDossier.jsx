@@ -13,6 +13,17 @@ const numero = value => Number.isFinite(Number(value)) ? Number(value) : null;
 const valor = value => value && typeof value === 'object' ? value.atual ?? value.valor ?? null : value;
 export function resumoFicha(ficha) {
   const d = ficha.dados || {}, espiral = ficha.sistema === 'espiral';
+  if (ficha.sistema === 'ordem') {
+    return {
+      identidade: d.origem,
+      categoria: [d.classe, d.trilha].filter(Boolean).join(' · '),
+      atributos: Object.entries(d.attributes || {}).map(([nome, valor]) => ({ nome, valor })),
+      recursos: [['PV', 'pv'], ['SAN', 'san'], ['PE', 'pe']].map(([nome, chave]) => ({
+        nome, atual: d.resources?.[chave]?.current, max: d.resources?.[chave]?.max,
+      })),
+      progresso: `NEX ${d.nex ?? 5}%`,
+    };
+  }
   const membros = Object.values(d.membros || {});
   const integridade = ehAbsolutoV1(d) ? { atual: Object.keys(REGIOES).filter(k => Number(d.membros?.[k]?.atual) > 0).length, max: 8 } : espiral ? { atual: d.integrity, max: d.attributes?.pulso ? integrityMax(d.attributes.pulso) : undefined } : d.vida?.max > 0 ? d.vida : membros.length ? { atual: membros.reduce((n,m)=>n+(numero(m.atual)||0),0), max: membros.reduce((n,m)=>n+(numero(m.max)||0),0) } : d.integridade;
   return {
@@ -26,21 +37,23 @@ export function resumoFicha(ficha) {
 export default function CharacterDossier({ ficha, aberto, onToggle, onDelete, disabled = false }) {
   const article = useRef(null);
   const resumo = resumoFicha(ficha), id = `resumo-${ficha.sistema}-${ficha.id}`;
+  const ordem = ficha.sistema === 'ordem';
+  const sistema = ordem ? 'ORDEM PARANORMAL' : isProtocolSheet(ficha.dados) ? <ProtocolLogo /> : ficha.sistema === 'espiral' ? 'ESPIRAL' : 'ABSOLUTO';
   return <article ref={article} className={`pj-dossie ${aberto ? 'pj-dossie-aberto' : ''}`}>
     <a href={ficha.demo?'#':fichaHref(ficha)} className="pj-retrato" aria-label={`Abrir ficha de ${ficha.nome}`} onClick={e=>{if(ficha.demo || window.matchMedia?.('(hover: none), (pointer: coarse)')?.matches){e.preventDefault();onToggle();}}}>
       {ficha.foto ? <img src={ficha.foto} alt={ficha.nome} onError={e=>{e.currentTarget.style.visibility='hidden';}}/> : <span className="pj-sem-retrato">{ficha.nome?.slice(0,1) || '?'}</span>}
-      <span className="pj-sistema-marca" role="img" aria-label="Símbolo Darkness">
-        <img src="/simbolo-darkness.png" alt=""/>
+      <span className="pj-sistema-marca" role="img" aria-label={ordem ? 'Símbolo Ordem Paranormal' : 'Símbolo Darkness'}>
+        <img src={ordem ? '/ordem-simbolo-criacao.png' : '/simbolo-darkness.png'} alt=""/>
       </span>
       <span className="pj-retrato-seta" aria-hidden="true">↗</span><small>DOSSIÊ</small>
     </a>
     <section id={id} className="pj-resumo pj-resumo-editorial" aria-label={`Resumo da ficha de ${ficha.nome}`}>
-      <div className="pj-dossier-kicker"><span>{isProtocolSheet(ficha.dados)?<ProtocolLogo />:ficha.sistema==='espiral'?'ESPIRAL':'ABSOLUTO'}</span><small className="pj-resumo-categoria">{resumo.categoria}</small></div><h2>{ficha.nome}</h2><p>{resumo.identidade || 'Identidade não informada'}</p>
+      <div className="pj-dossier-kicker"><span>{sistema}</span><small className="pj-resumo-categoria">{resumo.categoria}</small></div><h2>{ficha.nome}</h2><p>{resumo.identidade || 'Identidade não informada'}</p>
       {!!resumo.atributos.length && <dl className="pj-resumo-atributos">{resumo.atributos.map(a=><div key={a.nome}><dt>{({razao:'Razão',forca:'Força',fonitude:'Fortitude',inteligencia:'Inteligência'})[a.nome] || a.nome}</dt><dd>{ficha.sistema==='espiral'?<EspiralDice value={a.valor}/>:String(a.valor)}</dd></div>)}</dl>}
       <div className="pj-resumo-recursos">{resumo.recursos.map(r=><div key={r.nome}><div><span>{r.nome}</span><span>{r.atual ?? '—'}{r.max !== undefined ? ` / ${r.max}` : ''}</span></div><span className="pj-recurso-trilho"><span style={{width:r.max > 0 && numero(r.atual)!==null ? `${Math.min(100,Math.max(0,r.atual/r.max*100))}%` : '0%'}}/></span></div>)}</div>
       <footer><small>{resumo.progresso}</small>{ficha.demo?<button type="button" onClick={onToggle}>Ver template ↗</button>:<a href={fichaHref(ficha)}>Consultar arquivo ↗</a>}</footer>
     </section>
-    <div className="pj-card-caption"><div><small>{isProtocolSheet(ficha.dados)?<ProtocolLogo />:ficha.sistema==='espiral'?'ESPIRAL':'ABSOLUTO'} · {resumo.categoria}</small><h3>{ficha.nome}</h3><p>{resumo.identidade || 'Identidade não informada'}</p></div><button type="button" onClick={onToggle} aria-label={'Ver resumo de '+ficha.nome}>Resumo ↗</button></div>
+    <div className="pj-card-caption"><div><small>{sistema}{resumo.categoria && ` · ${resumo.categoria}`}</small><h3>{ficha.nome}</h3><p>{resumo.identidade || 'Identidade não informada'}</p></div><button type="button" onClick={onToggle} aria-label={'Ver resumo de '+ficha.nome}>Resumo ↗</button></div>
     {!ficha.demo && onDelete && <button className="pj-delete-character" type="button" onClick={()=>onDelete(ficha)} disabled={disabled} aria-label={`Excluir ficha de ${ficha.nome}`}>Excluir ficha</button>}
     {aberto && <DossierModal ficha={ficha} resumo={resumo} onClose={onToggle} portalRoot={article.current?.closest('.pj') || document.body}/>}
   </article>;

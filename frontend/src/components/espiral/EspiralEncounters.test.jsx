@@ -119,7 +119,7 @@ test('cancelar alterações não grava uma ficha incompleta', async () => {
 test('nova ficha usa Darkness e exibe teste por êxitos', () => {
   render(<EspiralEncounters/>);
   fireEvent.click(screen.getByRole('button', { name: 'Criar inimigo' }));
-  expect(screen.getByText('Darkness / FICHA DE ENCONTRO', { exact: false })).toBeInTheDocument();
+  expect(screen.getByRole('dialog', { name: 'Novo inimigo' })).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Vigia' } });
   fireEvent.click(screen.getByRole('button', { name: 'Rolar teste' }));
   expect(screen.getByText(/êxitos/)).toBeInTheDocument();

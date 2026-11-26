@@ -5,6 +5,14 @@ const path = require("path");
 const { gzip } = require('node:zlib');
 const { createInvestigation } = require('./investigacao');
 
+if (require.main === module) {
+  try {
+    process.loadEnvFile(path.join(__dirname, '.env.local'));
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+}
+
 const PORT = Number(process.env.PORT || 4000);
 const HOST = process.env.HOST || "0.0.0.0";
 const DATA_DIR = process.env.DATA_DIR
@@ -74,7 +82,7 @@ const getCorsHeaders = (req) => {
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, If-None-Match",
+    "Access-Control-Allow-Headers": "Content-Type, If-None-Match, Authorization",
     "Access-Control-Expose-Headers": "ETag",
     "Access-Control-Max-Age": "600",
     Vary: "Origin",
@@ -201,7 +209,7 @@ const sendJson = ({
   const body = statusCode === 204 ? "" : JSON.stringify(payload);
   // Toda leitura JSON pode ser revalidada, inclusive perfis e investigação.
   // Cache privado exige consulta ao servidor antes de reutilizar os dados.
-  if (req.method === 'GET' && statusCode === 200) {
+  if (req.method === 'GET' && statusCode === 200 && cacheControl !== 'no-store') {
     etag = etag || computeEtag(payload);
     cacheControl = cacheControl || 'private, no-cache';
   }
@@ -411,13 +419,13 @@ const executarComBloqueioDeFicha = async (fichaId, operacao) => {
   }
 };
 
-const getSupabaseRestUrl = (pathAndQuery = "") => {
+const getSupabaseRestUrl = (pathAndQuery = "", table = SUPABASE_TABLE) => {
   const baseUrl = SUPABASE_URL.replace(/\/rest\/v1\/?$/, "").replace(/\/$/, "");
-  return `${baseUrl}/rest/v1/${SUPABASE_TABLE}${pathAndQuery}`;
+  return `${baseUrl}/rest/v1/${table}${pathAndQuery}`;
 };
 
-const requestSupabase = async (pathAndQuery, options = {}) => {
-  const response = await fetch(getSupabaseRestUrl(pathAndQuery), {
+const requestSupabase = async (pathAndQuery, options = {}, table) => {
+  const response = await fetch(getSupabaseRestUrl(pathAndQuery, table), {
     ...options,
     headers: {
       apikey: SUPABASE_SERVICE_ROLE_KEY,
@@ -835,6 +843,11 @@ const handleRequest = async (req, res) => {
 
     }
 
+    if (masterAccountRoutes.has(url.pathname)) {
+      return await handleMasterAccounts(req, url, (statusCode, payload) => sendJson({
+        req, res, statusCode, payload, cacheControl: 'no-store',
+      }));
+    }
     if (url.pathname === "/api/destinos" && req.method === "GET") {
       return sendJson({ req, res, statusCode: 200, payload: { destinos: await readDestinos() } });
     }
@@ -901,6 +914,12 @@ const handleRequest = async (req, res) => {
       }
       const body = await readJsonBody(req);
       const jogador = body.jogador;
+      const campanhas = jogador?.campanhas;
+      if (campanhas !== undefined && (!Array.isArray(campanhas) || campanhas.length > 6
+        || campanhas.some(codigo => typeof codigo !== 'string' || !/^[A-Z0-9_-]{1,24}$/.test(codigo))
+        || new Set(campanhas).size !== campanhas.length)) {
+        return sendJson({ req, res, statusCode: 400, payload: { error: 'O perfil permite até 6 códigos de campanha distintos.' } });
+      }
       if (jogador?.templatesPersonagem !== undefined && (!Array.isArray(jogador.templatesPersonagem) || jogador.templatesPersonagem.length > 20 || jogador.templatesPersonagem.some(t => !t || typeof t.id !== 'string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(t.id) || typeof t.nome !== 'string' || !t.nome.trim() || t.nome.length > 60 || !['darkness','espiral'].includes(t.sistema) || !t.dados || typeof t.dados !== 'object' || Array.isArray(t.dados) || JSON.stringify(t.dados).length > 1000000 || (t.sistema === 'espiral' ? !t.dados.attributes || typeof t.dados.name !== 'string' : !t.dados.atributos || typeof t.dados.nome !== 'string')) || new Set(jogador.templatesPersonagem.map(t => t.id)).size !== jogador.templatesPersonagem.length)) {
         return sendJson({ req, res, statusCode: 400, payload: { error: 'Biblioteca de personagens inválida.' } });
       }
@@ -913,7 +932,7 @@ const handleRequest = async (req, res) => {
       if (!jogador || (jogador.fotoPerfil !== undefined && (typeof jogador.fotoPerfil !== "string" || jogador.fotoPerfil.length > 600000 || (jogador.fotoPerfil !== "" && !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(jogador.fotoPerfil)))) || (jogador.perfilConfigurado !== undefined && typeof jogador.perfilConfigurado !== "boolean") || (jogador.paletaPagina !== undefined && (!jogador.paletaPagina || !["primaria","secundaria","texto","fundo","borda"].every(campo=>/^#[0-9a-f]{6}$/i.test(jogador.paletaPagina[campo] || "")) || ["halo","simbolo"].some(campo=>jogador.paletaPagina[campo] !== undefined && !/^#[0-9a-f]{6}$/i.test(jogador.paletaPagina[campo])))) || (jogador.pronome !== undefined && !["Ele", "Ela", "Elu"].includes(jogador.pronome)) || typeof jogador.nome !== "string" || jogador.nome.length > 80 || !["claro", "escuro"].includes(jogador.tema) || !Array.isArray(jogador.personagens) || !Array.isArray(jogador.builds) || jogador.personagens.length > 10 || jogador.builds.length > 100 || jogador.personagens.some(p => !p || !["darkness", "espiral"].includes(p.sistema) || typeof p.id !== "string" || !/^[a-z0-9_-]{1,100}$/.test(p.id) || p.id.startsWith("__")) || jogador.builds.some(b => !b || typeof b.id !== "string" || typeof b.nome !== "string" || b.nome.length > 100 || !Array.isArray(b.habilidades) || b.habilidades.length > 1000 || b.habilidades.some(h => typeof h !== "string") || typeof b.notas !== "string" || b.notas.length > 10000)) {
         return sendJson({ req, res, statusCode: 400, payload: { error: "Perfil de jogador inválido." } });
       }
-      const saved = await writePersonagem(recordId, { nome: jogador.nome, ...(jogador.fotoPerfil !== undefined ? { fotoPerfil: jogador.fotoPerfil } : {}), ...(jogador.perfilConfigurado !== undefined ? { perfilConfigurado: jogador.perfilConfigurado } : {}), ...(jogador.pronome ? { pronome: jogador.pronome } : {}), ...(jogador.paletaPagina ? { paletaPagina: Object.fromEntries(["primaria","secundaria","texto","fundo","borda","halo","simbolo"].filter(campo=>jogador.paletaPagina[campo] !== undefined).map(campo=>[campo,jogador.paletaPagina[campo]])) } : {}), ...(jogador.paletasPersonalizadas !== undefined ? { paletasPersonalizadas: jogador.paletasPersonalizadas.map(p => ({ id: p.id, nome: p.nome.trim(), cores: Object.fromEntries(camposPaleta.filter(c => p.cores[c] !== undefined).map(c => [c,p.cores[c]])) })) } : {}), ...(jogador.templatesPersonagem !== undefined ? { templatesPersonagem: jogador.templatesPersonagem.map(t => ({ id:t.id, nome:t.nome.trim(), sistema:t.sistema, dados:t.dados })) } : {}), tema: jogador.tema, personagens: jogador.personagens, builds: jogador.builds, codigo: jogadorMatch[1], tipo: "perfil-jogador" });
+      const saved = await writePersonagem(recordId, { nome: jogador.nome, ...(jogador.fotoPerfil !== undefined ? { fotoPerfil: jogador.fotoPerfil } : {}), ...(jogador.perfilConfigurado !== undefined ? { perfilConfigurado: jogador.perfilConfigurado } : {}), ...(jogador.pronome ? { pronome: jogador.pronome } : {}), ...(jogador.paletaPagina ? { paletaPagina: Object.fromEntries(["primaria","secundaria","texto","fundo","borda","halo","simbolo"].filter(campo=>jogador.paletaPagina[campo] !== undefined).map(campo=>[campo,jogador.paletaPagina[campo]])) } : {}), ...(jogador.paletasPersonalizadas !== undefined ? { paletasPersonalizadas: jogador.paletasPersonalizadas.map(p => ({ id: p.id, nome: p.nome.trim(), cores: Object.fromEntries(camposPaleta.filter(c => p.cores[c] !== undefined).map(c => [c,p.cores[c]])) })) } : {}), ...(jogador.templatesPersonagem !== undefined ? { templatesPersonagem: jogador.templatesPersonagem.map(t => ({ id:t.id, nome:t.nome.trim(), sistema:t.sistema, dados:t.dados })) } : {}), ...(campanhas !== undefined ? { campanhas } : {}), tema: jogador.tema, personagens: jogador.personagens, builds: jogador.builds, codigo: jogadorMatch[1], tipo: "perfil-jogador" });
       return sendJson({ req, res, statusCode: 200, payload: { jogador: saved } });
     }
 
@@ -1099,6 +1118,49 @@ const handleRequest = async (req, res) => {
 
   }
 };
+
+const { createMasterAccounts, routes: masterAccountRoutes } = require('./masterAccounts');
+const { createMasterStore } = require('./masterStore');
+const masterSecret = process.env.DARKNESS_MASTER_SECRET?.trim() || SUPABASE_SERVICE_ROLE_KEY;
+const handleMasterAccounts = createMasterAccounts({
+  ownerCode: process.env.DARKNESS_OWNER_CODE?.trim(),
+  signingSecret: masterSecret,
+  codeSecret: masterSecret,
+  readBody: readJsonBody,
+  createCampaign3D: USE_SUPABASE ? async payload => {
+    const [campanha] = await requestSupabase('', {
+      method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify(payload),
+    }, 'campanhas');
+    return campanha;
+  } : null,
+  store: createMasterStore(DATA_DIR, USE_SUPABASE
+    ? (query, options) => requestSupabase(query, options, 'darkness_mestres')
+    : null),
+  listPlayers: async (offset, limit) => {
+    if (!USE_SUPABASE) {
+      await fs.mkdir(DATA_DIR, { recursive: true });
+      const files = (await fs.readdir(DATA_DIR)).filter(file => /^__jogador_\d{4,8}\.json$/.test(file)).sort();
+      return Promise.all(files.slice(offset, offset + limit).map(async (file, index) => {
+        const jogador = JSON.parse(await fs.readFile(path.join(DATA_DIR, file), 'utf8'));
+        return { id: offset + index, nome: jogador.nome || 'Jogador', papel: 'jogador' };
+      }));
+    }
+    const query = new URLSearchParams({
+      select: 'nome:personagem->>nome,updated_at',
+      'personagem->>tipo': 'eq.perfil-jogador',
+      order: 'id.asc',
+      offset: String(offset),
+      limit: String(limit),
+    });
+    const rows = await requestSupabase(`?${query}`);
+    return rows.map((row, index) => ({
+      id: offset + index,
+      nome: row.nome || 'Jogador',
+      papel: 'jogador',
+      atualizadoEm: row.updated_at,
+    }));
+  },
+});
 
 const server = http.createServer(handleRequest);
 

@@ -22,6 +22,7 @@ const getApiUrl = () => {
 };
 
 const API_URL = getApiUrl();
+export const urlApi = path => `${API_URL}${path}`;
 const conditionalResponses = new Map();
 const pendingReads = new Map();
 let mutationRevision = 0;

@@ -1,6 +1,8 @@
 import DarknessAbilities from '../components/mestre/DarknessAbilities';
 import DarknessMasterHeader from "../components/mestre/DarknessMasterHeader";
+import { masterSections } from '../constants/masterSections';
 import DarknessEquipment from "../components/mestre/DarknessEquipment";
+import DarknessRulebook from "../components/mestre/DarknessRulebook";
 import { searchMasterSheets } from "../utils/darknessMaster";
 import SystemAbilitiesCatalog from '../components/habilidades/SystemAbilitiesCatalog';
 import RecriacaoRequests from '../components/jogador/RecriacaoRequests';
@@ -25,7 +27,9 @@ import { grantEspiralCatalogEntry } from '../utils/espiralCatalogGrant';
 import { EspiralAgentCard } from "../components/espiral/EspiralDashboard";
 import "../styles/EspiralDashboard.css";
 import React, {
+  lazy,
   memo,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -79,6 +83,7 @@ import {
 } from "../data/evolucaoPersonagem";
 import { ATTRIBUTES, integrityMax } from "../data/espiral";
 
+const OrdemRulebook = lazy(() => import('../components/mestre/OrdemRulebook'));
 const STORAGE_KEY = "fichaRPG_personagem";
 const CATALOGO_STORAGE_KEY = "lojaHelena_catalogo";
 const RECEITAS_STORAGE_KEY = "darkness_receitas_criacao";
@@ -566,7 +571,7 @@ const salvarFichaLocal = (fichaId, personagem) => {
   }
 };
 
-const DashboardMestre = () => {
+const DashboardMestre = ({ usuarioMestre, onAbrirMaster, onSair, abaIntegrada, onNavegar } = {}) => {
   useEffect(() => {
     const previous = document.body.getAttribute('data-darkness-dashboard');
     document.body.setAttribute('data-darkness-dashboard', 'true');
@@ -606,7 +611,13 @@ const DashboardMestre = () => {
   const [novoItemLoja, setNovoItemLoja] = useState(itemLojaVazio);
   const [categoriaLojaAtiva, setCategoriaLojaAtiva] = useState("defesas");
   useState("perfil");
-  const [aba, setAba] = useState(() => ["animacoes","campanha"].includes(new URLSearchParams(window.location.search).get("aba")) ? new URLSearchParams(window.location.search).get("aba") : "fichas");
+  const [abaLocal, setAbaLocal] = useState(() => {
+    const requestedTab = new URLSearchParams(window.location.search).get("aba");
+    return ["animacoes", "campanha", "regras", "ordem"].includes(requestedTab) ? requestedTab : "fichas";
+  });
+  const integrado = Boolean(onNavegar);
+  const aba = integrado ? abaIntegrada : abaLocal;
+  const setAba = integrado ? onNavegar : setAbaLocal;
   const [buscaEspiral, setBuscaEspiral] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -3300,9 +3311,10 @@ const DashboardMestre = () => {
     );
   };
 
+  const Painel = integrado ? 'div' : 'main';
   return (
-    <main className="mestre-page darkness-master">
-      <DarknessMasterHeader agents={fichasJogadores.length} pending={habilidadesPendentes.length + recriacoesPendentes} loading={carregando} onRefresh={carregarTudo} onNavigate={setAba} onMenu={() => setMenuHamburguerAberto(!menuHamburguerAberto)} />
+    <Painel className={`mestre-page darkness-master${integrado ? ' mestre-integrado' : ''}`} data-aba={aba}>
+      <DarknessMasterHeader integrado={integrado} sistemas={Boolean(usuarioMestre)} agents={fichasJogadores.length} pending={habilidadesPendentes.length + recriacoesPendentes} loading={carregando} onRefresh={carregarTudo} onNavigate={setAba} onMenu={() => setMenuHamburguerAberto(!menuHamburguerAberto)} />
       {menuHamburguerAberto && (
         <div className="mestre-hamburguer-menu">
           <button
@@ -3341,7 +3353,10 @@ const DashboardMestre = () => {
 
       {mensagem && <p className="mestre-mensagem">{mensagem}</p>}
 
-      <nav className="mestre-tabs" aria-label="Áreas do arquivo do mestre"><button className={aba === "animacoes" ? "ativa" : ""} onClick={() => setAba("animacoes")}>Estúdio de Tokens</button>
+      {!integrado && <nav className="mestre-tabs" aria-label="Áreas do arquivo do mestre">
+        {masterSections.slice(7).filter(({ id }) => id !== 'ordem' || !usuarioMestre).map(({ id, label }) => <button key={id} className={aba === id ? 'ativa' : ''} onClick={() => setAba(id)}>{label}</button>)}
+        {usuarioMestre?.papel === 'proprietario' && <button onClick={onAbrirMaster}>Dashboard Master ↗</button>}
+        {onSair && <button onClick={onSair}>Sair da conta</button>}
         <button
           className={aba === "campanha" ? "ativa" : ""}
           onClick={() => setAba("campanha")}
@@ -3387,7 +3402,7 @@ const DashboardMestre = () => {
         >
           Marcas
         </button>}
-      </nav>
+      </nav>}
 
       {false && <section className="mestre-dashboard-full"></section>}
       <div className="mestre-layout-com-rolagens">
@@ -3841,6 +3856,12 @@ const DashboardMestre = () => {
           {aba === "inimigos" &&  <DarknessEncounters legacyRecords={[...npcs.map(item => ({ ...item, tipo: "npc" })), ...inimigos.map(item => ({ ...item, tipo: "inimigo" }))]} />}
           {aba === "loja" && <DarknessEquipment fichas={fichasModernas} onGrant={concederEntradaEspiral} />}
           {aba === "habilidades" && <DarknessAbilities fichas={fichasModernas} onGrant={concederEntradaEspiral} />}
+          {aba === "regras" && <DarknessRulebook />}
+          {aba === "ordem" && (
+            <Suspense fallback={<p role="status">Abrindo Ordem Paranormal…</p>}>
+              <OrdemRulebook />
+            </Suspense>
+          )}
 
           {aba === "analises" && (
             <section className="mestre-analises"><RecriacaoRequests fichas={fichas} onSaved={(ficha,saved)=>{setFichas(current=>current.map(item=>item.fichaId===ficha.fichaId?{...item,personagem:saved}:item));setMensagem("Solicitação de recriação analisada.");}}/>
@@ -4381,7 +4402,7 @@ const DashboardMestre = () => {
           </div>,
           document.body,
         )}
-    </main>
+    </Painel>
   );
 };
 

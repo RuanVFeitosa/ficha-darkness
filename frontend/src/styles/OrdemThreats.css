@@ -1,0 +1,74 @@
+.ot-panel .ot-groups { margin: 0; }
+.ot-groups button[aria-pressed="true"] { border-color: #756294; background: #35294b; color: #f0e7ff; }
+.ot-layout { display: grid; gap: 18px; align-items: start; }
+.ot-layout-open { grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr); }
+.ot-directory { display: grid; gap: 10px; min-width: 0; }
+.ot-directory ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 175px), 1fr)); gap: 10px; list-style: none; margin: 0; padding: 3px; }
+.ot-layout-open .ot-directory ul { grid-template-columns: repeat(auto-fill, minmax(min(100%, 126px), 1fr)); max-height: 62vh; overflow: auto; }
+.ot-directory li { min-width: 0; }
+.ot-card { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; gap: 3px; padding: 0 0 9px; overflow: hidden; text-align: left; color: var(--ma-text); background: #232432; border: 1px solid #49465d; border-radius: 9px; }
+.ot-card[aria-expanded="true"], .ot-card:hover { background: #35294b; border-color: #a990d8; }
+.ot-card-art { width: 100%; height: 110px; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 22%, #504365, #22202b 78%); color: #bcafce; }
+.ot-card[data-element="sangue"] .ot-card-art { background: radial-gradient(ellipse at 50% 22%, #82404b, #29212b 83%); }
+.ot-card[data-element="morte"] .ot-card-art { background: radial-gradient(ellipse at 50% 22%, #686969, #222125 83%); }
+.ot-card[data-element="conhecimento"] .ot-card-art { background: radial-gradient(ellipse at 50% 22%, #88653e, #29232c 83%); }
+.ot-card[data-element="energia"] .ot-card-art { background: radial-gradient(ellipse at 50% 22%, #725598, #272035 83%); }
+.ot-card-art img { width: 100%; height: 100%; min-width: 0; min-height: 0; object-fit: contain; }
+.ot-card-vd { position: absolute; inset: 6px 6px auto auto; padding: 2px 5px; background: #16111be8; color: #fff; border-radius: 4px; font-size: 10px; }
+.ot-card-info { display: flex; justify-content: space-between; gap: 3px; align-items: center; width: 100%; padding: 3px 8px 0; font-size: 13px; text-transform: capitalize; }
+.ot-card-info strong { overflow-wrap: anywhere; }
+.ot-card-info svg { flex-shrink: 0; }
+.ot-card > small { padding: 0 8px; font-size: 11px; }
+.ot-detail { min-width: 0; position: sticky; top: 10px; max-height: calc(100vh - 24px); overflow: auto; padding: 2px; scrollbar-gutter: stable; }
+.ot-detail-toolbar { display: flex; align-items: stretch; flex-wrap: wrap; gap: 6px; padding-bottom: 7px; }
+.ot-detail-toolbar button { display: flex; align-items: center; gap: 4px; padding: 5px 8px; border: 1px solid var(--ma-line); border-radius: 6px; color: var(--ma-text); background: var(--ma-panel); }
+.ot-detail-toolbar .ot-close { margin-left: auto; }
+.ot-panel .ot-art-feedback { margin: 0 0 7px; font-size: 13px; color: var(--ma-text); }
+
+.ot-sheet { --ot-ink: #231b1a; --ot-accent: #54456d; --ot-paper: #ece5db; min-width: 0; color: var(--ot-ink); padding: clamp(13px, 2vw, 26px); border-radius: 8px; background: radial-gradient(ellipse at 100% 0, #b88c7e52, transparent 55%), repeating-linear-gradient(119deg, #ffffff12 0 2px, transparent 2px 7px), var(--ot-paper); box-shadow: inset 0 0 50px #3a211224; font-family: Georgia, serif; }
+.ot-sheet[data-element="sangue"] { --ot-accent: #b21418; --ot-paper: #e5c8bf; background: linear-gradient(#e9d9d3dc, #e1c6bfe8), var(--ot-blood-texture, none) center top / cover var(--ot-paper); }
+.ot-sheet[data-element="morte"] { --ot-accent: #353942; --ot-paper: #e2e0d7; }
+.ot-sheet[data-element="conhecimento"] { --ot-accent: #6a4b1a; --ot-paper: #f0e5ce; }
+.ot-sheet[data-element="energia"] { --ot-accent: #553279; --ot-paper: #e9e0eb; }
+.ot-sheet[data-element="medo"] { --ot-accent: #3c5058; }
+.ot-sheet .ot-sheet-heading { display: grid; gap: 6px; margin-bottom: 6px; }
+.ot-title-banner { display: flex; justify-content: space-between; align-items: stretch; min-height: 58px; color: #fff; background: linear-gradient(115deg, #0002, transparent 52%), var(--ot-accent); }
+.ot-title-name { display: flex; align-items: flex-start; gap: 8px; min-width: 0; padding: 8px 10px; }
+.ot-title-symbol { display: inline-flex; flex: 0 0 auto; }
+.ot-title-symbol .os-element-symbol { display: block; width: clamp(18px, 2.4vw, 30px); height: clamp(18px, 2.4vw, 30px); margin: 0; background: #fff; mask: var(--os-element-image) center / contain no-repeat; }
+.ot-sheet h3 { margin: 0; color: inherit; font: 750 clamp(17px, 2.55vw, 30px)/1.08 Georgia, serif; text-transform: uppercase; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.ot-sheet .ot-title-name p, .ot-sheet .ot-sheet-type { margin: 4px 0 0; font: 800 11px/1.2 system-ui, sans-serif; text-transform: uppercase; letter-spacing: .055em; }
+.ot-sheet .ot-title-name p { color: #fff; }
+.ot-sheet .ot-sheet-type { color: var(--ot-ink); }
+.ot-sheet .ot-vd { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; padding: 4px clamp(13px, 2vw, 25px) 4px clamp(16px, 2.7vw, 34px); color: white; background: #110e0f; clip-path: polygon(12% 0, 92% 0, 100% 48%, 91% 100%, 10% 100%, 0 51%); white-space: nowrap; }
+.ot-vd span { font: 700 clamp(11px, 1.35vw, 18px)/1 system-ui, sans-serif; }
+.ot-vd strong { font: 800 clamp(27px, 4vw, 54px)/.9 Georgia, serif; letter-spacing: -.065em; }
+.ot-sheet-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 2.35vw, 32px); border-top: 6px solid #100d0c; }
+.ot-stats { margin: 0; }
+.ot-stat { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 3px 7px; padding: 3px 0 5px; border-top: 1px solid #211817; }
+.ot-stat-stacked { flex-direction: column; }
+.ot-stat > dt, .ot-sheet h4 { width: fit-content; margin: 0; padding: 2px 4px; color: white; background: #100d0c; text-transform: uppercase; font: 900 11px/1.35 system-ui, sans-serif; }
+.ot-stat-secondary { border-top: none; padding-block: 1px 3px; }
+.ot-stat-secondary > dt { min-width: 105px; padding: 0; text-align: right; color: #110e0d; background: transparent; font-family: Georgia, serif; }
+.ot-stat dd { margin: 0; }
+.ot-stat > dd { min-width: 0; }
+.ot-stat dl { margin: 0; }
+.ot-stat > dd, .ot-sheet .ot-actions p, .ot-sheet .ot-hazard p { color: #110e0d; white-space: pre-line; font: 13px/1.3 Georgia, serif; }
+.ot-senses { display: grid; gap: 1px 7px; grid-template-columns: auto minmax(0, 1fr); }
+.ot-senses > span:not(.ot-sense-note) { grid-column: 1; }
+.ot-sense-note { grid-column: 2; grid-row: 1 / span 2; }
+.ot-defense { display: flex; gap: 8px; }
+.ot-defense > b { border-right: 1px solid #211817; padding-right: 7px; }
+.ot-defense strong, .ot-senses strong { text-transform: uppercase; font-size: .88em; }
+.ot-attributes { display: flex; flex-wrap: wrap; gap: 6px; }
+.ot-attributes div { display: flex; align-items: center; gap: 3px; font: 700 10px system-ui, sans-serif; }
+.ot-attributes dd { background: #231b1a; color: white; min-width: 22px; min-height: 22px; display: grid; place-items: center; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+.ot-actions { padding-top: 5px; }
+.ot-attacks { border-top: 1px solid #211817; }
+.ot-actions > div { margin-top: 8px; }
+.ot-actions h5 { margin: 0 0 1px; color: #100d0c; font: 800 13px/1.18 Georgia, serif; }
+.ot-actions h5 span { font-weight: 400; color: inherit; }
+.ot-sheet .ot-actions p { padding-left: clamp(10px, 2vw, 26px); }
+.ot-sheet footer { margin-top: 14px; padding-top: 5px; border-top: 1px solid #35261d77; font: 700 11px system-ui, sans-serif; }
+@media (max-width: 1060px) { .ot-layout-open { grid-template-columns: 1fr; } .ot-layout-open .ot-directory ul { max-height: 245px; } .ot-detail { position: static; max-height: none; overflow: visible; } }
+@media (max-width: 610px) { .ot-sheet-columns { grid-template-columns: 1fr; } }

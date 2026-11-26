@@ -55,6 +55,7 @@ import "../styles/InventarioEspiral.css";
 import "../styles/FichaEspiralResponsive.css";
 import "../styles/EmbeddedCharacterSheet.css";
 import "../styles/AttributeEmergence.css";
+import "../styles/SurvivalInjuryDie.css";
 import { compressProfileImage, prepareTokenImage } from "../services/imageCompression";
 import { buscarPersonagem } from "../services/personagemApi";
 import { obterIconeItem } from "../utils/itemIcons";
@@ -64,7 +65,6 @@ import { APRIMORAMENTOS_HABILIDADES_ESPIRAL, CUSTOS_ESPERANCA_HABILIDADES, HABIL
 import { CATALOGO_ESPIRAL } from "../data/catalogoEspiral";
 
 import { sheetTabletopCampaigns } from "../services/sheetTabletopCampaigns";
-import { TABLETOP_3D_AUTH_KEY } from "../constants/masterAccess";
 import { hasEspiralToken, MISSING_ESPIRAL_TOKEN, espiralTabletopUrl } from "../utils/espiralTabletop";
 const clamp = (value, max) => Math.max(0, Math.min(max, Number(value) || 0));
 const randomDie = (sides) => {
@@ -683,7 +683,6 @@ export default function FichaEspiral({campaign=undefined,tabletopAccessError="",
     if(!hasEspiralToken(sheet)) {setTabletopError(MISSING_ESPIRAL_TOKEN);return;}
     try {
       try { localStorage.setItem(storageKey,JSON.stringify(sheet)); } catch { /* A ficha pode ser carregada do servidor sem cache local. */ }
-      sessionStorage.setItem(TABLETOP_3D_AUTH_KEY,"true");
       window.location.href=espiralTabletopUrl(id,campaign);
     } catch {setTabletopError("Não foi possível salvar a imagem do personagem. Libere espaço neste dispositivo e tente novamente.");}
   }
@@ -828,6 +827,19 @@ export default function FichaEspiral({campaign=undefined,tabletopAccessError="",
     setHistory(previous => [{...attributeResult,attributeOnly:true,label:ATTRIBUTES[key].name+' · somente atributo',sides,at:Date.now()},...previous].slice(0,12));
     setRollModalOpen(true);
     window.setTimeout(() => setRolling(false),protocol ? 1250 : 650);
+  }
+  function rollInjuryDie() {
+    const survivalResult=history[0];
+    if(rolling || !survivalResult?.survival || !(survivalResult.margin<0))return;
+    const value=randomDie(20);
+    setRolling(true);
+    setHistory(previous=>[{
+      type:'formula',tipo:'lesao',injuryDie:true,label:'Dado de Lesão · 1d20',
+      dice:[value],sides:20,pressure:[],total:value,modifier:0,
+      survivalRollAt:survivalResult.at,at:Date.now(),
+    },...previous].slice(0,12));
+    setRollModalOpen(true);
+    window.setTimeout(()=>setRolling(false),protocol?1250:650);
   }
   function rollFormula() {
     if (rolling) return;
@@ -2298,7 +2310,7 @@ export default function FichaEspiral({campaign=undefined,tabletopAccessError="",
           }}
         >
           <section
-            className={`es-roll-modal ${protocol ? "pd-roll-dialog" : ""} ${!rolling && history[0].survival ? history[0].margin < 0 ? `es-survival-failed ${history[0].outcome === 'Falha grave' ? 'es-survival-rupture' : ''}` : 'es-survival-success' : ''}`}
+            className={`es-roll-modal ${protocol ? "pd-roll-dialog" : ""} ${history[0].injuryDie ? (rolling?"pd-injury-roll is-injury-rolling":"pd-injury-roll is-injury-revealed") : ""} ${!rolling && history[0].survival ? history[0].margin < 0 ? `es-survival-failed ${history[0].outcome === 'Falha grave' ? 'es-survival-rupture' : ''}` : 'es-survival-success' : ''}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="es-roll-modal-title"
@@ -2348,8 +2360,8 @@ export default function FichaEspiral({campaign=undefined,tabletopAccessError="",
                 {history[0].type === "formula" ? (
                   <>
                     <strong>{history[0].total}</strong>
-                    <h3>{history[0].attributeOnly ? "Maior dado" : "Dano total"}</h3>
-                    {!history[0].attributeOnly && <EspiralDamageResult damage={history[0].total} />}
+                    <h3>{history[0].injuryDie ? "Dado de Lesão" : history[0].attributeOnly ? "Maior dado" : "Dano total"}</h3>
+                    {!history[0].attributeOnly && !history[0].injuryDie && <EspiralDamageResult damage={history[0].total} />}
                     {history[0].modifier ? <p>Modificador {history[0].modifier > 0 ? "+" : ""}{history[0].modifier}</p> : null}
                   </>
                 ) : (
@@ -2371,6 +2383,7 @@ export default function FichaEspiral({campaign=undefined,tabletopAccessError="",
               Fechar
             </button>
             </>}
+            {!rolling && history[0].survival && history[0].margin<0 && <div className="es-survival-injury-action"><button type="button" onClick={rollInjuryDie}>Rolar Dado de Lesão · d20</button></div>}
           </section>
         </div>
       )}

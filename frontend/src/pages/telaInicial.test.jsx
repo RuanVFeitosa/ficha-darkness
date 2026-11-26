@@ -2,9 +2,10 @@ import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import TelaInicial, { LOGIN_WELCOME_DURATION } from './telaInicial';
 import { entrarJogador } from '../services/jogadorApi';
-import { MESTRE_AUTH_KEY, SENHA_MESTRE } from '../constants/masterAccess';
+import { entrarMestre } from '../services/masterAccounts';
 import { saudacaoJogador } from '../utils/saudacaoJogador';
 jest.mock('../services/jogadorApi', () => ({ entrarJogador: jest.fn() }));
+jest.mock('../services/masterAccounts', () => ({ entrarMestre: jest.fn() }));
 const mockTocar = jest.fn();
 jest.mock('../utils/useLoginSound', () => () => ({ tocar: mockTocar, ativo: true, alternar: jest.fn() }));
 
@@ -42,26 +43,35 @@ test('falha de acesso não anima sucesso nem redireciona', async () => {
  act(()=>jest.advanceTimersByTime(LOGIN_WELCOME_DURATION));
  expect(onNavigate).not.toHaveBeenCalled();
 });
-test('mestre usa o mesmo fluxo animado com nome e pronome próprios', async()=>{
+test('mestre entra só com código e recebe a saudação do perfil', async()=>{
  const onNavigate=jest.fn(); render(<TelaInicial inicializar={false} onNavigate={onNavigate}/>);
+ entrarMestre.mockResolvedValue({ nome: 'Ruan' });
  fireEvent.click(screen.getByRole('button',{name:'MESTRE'}));
- fireEvent.change(screen.getByLabelText('Seu nome'),{target:{value:'Ruan'}});
- fireEvent.change(screen.getByLabelText('Pronome',{exact:true}),{target:{value:'Elu'}});
- fireEvent.change(screen.getByLabelText('Senha do mestre'),{target:{value:SENHA_MESTRE}});
+ expect(screen.queryByLabelText('E-mail')).toBeNull();
+ fireEvent.change(screen.getByLabelText('Código de mestre'),{target:{value:'0123456789012345'}});
  await act(async()=>fireEvent.click(screen.getByRole('button',{name:'ENTRAR'})));
  expect(screen.getByRole('status')).toHaveTextContent('Bem-vinde, Ruan');
- expect(sessionStorage.getItem(MESTRE_AUTH_KEY)).toBe('true');
- expect(JSON.parse(localStorage.getItem('darkness:mestre:perfil'))).toEqual({nome:'Ruan',pronome:'Elu'});
+ expect(entrarMestre).toHaveBeenCalledWith('0123456789012345');
  expect(onNavigate).not.toHaveBeenCalled();
  act(()=>jest.advanceTimersByTime(LOGIN_WELCOME_DURATION));
  expect(onNavigate).toHaveBeenCalledWith('/?mestre=1');
 });
-test('senha errada do mestre não autoriza nem exibe boas-vindas', async()=>{
+test('código errado do mestre não autoriza nem exibe boas-vindas', async()=>{
+ entrarMestre.mockRejectedValue(new Error('Código de mestre inválido.'));
  render(<TelaInicial inicializar={false} onNavigate={jest.fn()}/>);fireEvent.click(screen.getByRole('button',{name:'MESTRE'}));
- fireEvent.change(screen.getByLabelText('Senha do mestre'),{target:{value:'00000000'}});
+ fireEvent.change(screen.getByLabelText('Código de mestre'),{target:{value:'000000000000'}});
  await act(async()=>fireEvent.click(screen.getByRole('button',{name:'ENTRAR'})));
- expect(screen.getByRole('alert')).toHaveTextContent('Senha incorreta');
- expect(sessionStorage.getItem(MESTRE_AUTH_KEY)).toBeNull();
+ expect(screen.getByRole('alert')).toHaveTextContent('Código de mestre inválido.');
+ expect(screen.queryByRole('status')).toBeNull();
+});
+test('o código do proprietário leva ao Dashboard Master', async () => {
+ const onNavigate = jest.fn();
+ entrarMestre.mockResolvedValue({ nome: 'Proprietário', papel: 'proprietario' });
+ render(<TelaInicial inicializar={false} modoInicial="mestre" onNavigate={onNavigate} />);
+ fireEvent.change(screen.getByLabelText('Código de mestre'), { target: { value: '12345678' } });
+ await act(async () => fireEvent.click(screen.getByRole('button', { name: 'ENTRAR' })));
+ act(() => jest.advanceTimersByTime(LOGIN_WELCOME_DURATION));
+ expect(onNavigate).toHaveBeenCalledWith('/?master=1');
 });
 test('teclado virtual aceita zeros iniciais, apaga e limita a oito dígitos',()=>{
  render(<TelaInicial inicializar={false}/>);fireEvent.click(screen.getByRole('button',{name:'Teclado numérico'}));

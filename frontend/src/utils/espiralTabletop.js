@@ -8,5 +8,5 @@ export function readEspiralTabletopSheet(id) {
   } catch { return null; }
 }
 export function espiralTabletopUrl(id,campaign) {
-  return `/?${new URLSearchParams({sistema:"espiral",ficha:id,campanha:campaign.codigo,tabletop3d:"1",papel:"jogador", ...(campaign.linkedSheetId ? { vinculo: campaign.linkedSheetId } : {})}).toString()}`;
+  return `/?${new URLSearchParams({sistema:"espiral",ficha:id,campanha:campaign.codigo,papel:"jogador", ...(campaign.linkedSheetId ? { vinculo: campaign.linkedSheetId } : {})}).toString()}`;
 }

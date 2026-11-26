@@ -1,0 +1,49 @@
+.master-accounts.ordem-master {
+  --ma-bg: #0b0708;
+  --ma-panel: #160a0de8;
+  --ma-line: #5c2a30;
+  --ma-text: #fff0ee;
+  --ma-muted: #d2b1b4;
+  --ma-accent: #ff858a;
+  --master-backdrop: #090607;
+  --master-control: #16090ce8;
+  --master-tab-active: #6b1824;
+  --master-tab-border: #b74a56;
+  --master-tab-text: #fff;
+}
+.master-accounts.master-system-panel {
+  isolation: isolate;
+  display: block;
+  background: var(--master-backdrop);
+}
+.master-system-panel::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.ordem-master::before {
+  background: linear-gradient(to bottom, transparent 22rem, #090607 58rem), var(--ordem-master-sigil) right top / max(1100px, 100vw) auto no-repeat;
+}
+.master-system-inner { width: min(100%, 1690px); margin: 0 auto; padding: 0 clamp(16px, 5vw, 70px) 48px; }
+.master-system-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 0; border-bottom: 1px solid var(--ma-line); }
+.master-system-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.master-system-controls :is(a, button) {
+  padding: 7px 10px; border: 1px solid var(--ma-line); border-radius: 3px;
+  background: var(--master-control); color: var(--ma-text); font: inherit; font-size: 13px;
+}
+.master-system-hero { display: grid; align-content: center; min-height: clamp(156px, 16vw, 230px); gap: 8px; padding-block: 20px; }
+.master-system-hero p { color: var(--ma-accent); font-size: 14px; font-weight: 700; }
+.master-system-hero h1 { max-width: 100%; font: 700 clamp(30px, 4vw, 56px)/1.05 Georgia, serif; letter-spacing: -.045em; }
+.master-system-hero a { display: inline-flex; align-items: center; justify-self: start; gap: 8px; margin-top: 9px; padding: 10px 14px; border-radius: 3px; background: #ac2937; color: #fff; font-weight: 700; }
+.master-accounts .master-system-nav { border-block: 1px solid var(--ma-line); padding: 10px 0; margin-bottom: 16px; }
+.master-system-panel .master-system-nav button { border-radius: 3px; }
+.master-system-panel .master-system-nav button:is([aria-current], :hover) { background: var(--master-tab-active); border-color: var(--master-tab-border); color: var(--master-tab-text); }
+.ordem-master .master-order-panel { background: var(--ma-panel); }
+.ordem-master .ot-card { background: #190e11; border-color: var(--ma-line); }
+.ordem-master .ot-card:is(:hover, [aria-expanded="true"]), .ordem-master .ot-groups button[aria-pressed="true"] { background: #581a24; border-color: #b74a56; }
+.ordem-master .rb-book { --rb-gold: #f48b90; }
+@media (max-width: 620px) {
+  .ordem-master::before { background-position: center, right -145px top; }
+}

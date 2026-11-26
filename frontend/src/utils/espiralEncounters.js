@@ -38,8 +38,8 @@ export function normalizeEspiralEncounter(record) {
   };
 }
 
-export function readEspiralEncounters(storage) {
-  const raw = storage.getItem(ESPIRAL_ENCOUNTERS_KEY);
+export function readEspiralEncounters(storage, storageKey = ESPIRAL_ENCOUNTERS_KEY) {
+  const raw = storage.getItem(storageKey);
   if (!raw) return [];
   const data = JSON.parse(raw);
   if (data.version !== 1 || !Array.isArray(data.records) || data.records.some(record => !record?.id || record.version !== 1 || record.sistema !== 'espiral')) {
@@ -48,12 +48,12 @@ export function readEspiralEncounters(storage) {
   return data.records.map(normalizeEspiralEncounter);
 }
 
-export function writeEspiralEncounter(storage, record) {
-  const records = readEspiralEncounters(storage);
+export function writeEspiralEncounter(storage, record, storageKey = ESPIRAL_ENCOUNTERS_KEY) {
+  const records = readEspiralEncounters(storage, storageKey);
   const normalized = normalizeEspiralEncounter(record);
   const exists = records.some(item => item.id === record.id);
   const next = exists ? records.map(item => item.id === record.id ? normalized : item) : [...records, normalized];
-  storage.setItem(ESPIRAL_ENCOUNTERS_KEY, JSON.stringify({ version: 1, records: next }));
+  storage.setItem(storageKey, JSON.stringify({ version: 1, records: next }));
   if (typeof window !== 'undefined') window.dispatchEvent(new Event(ESPIRAL_ENCOUNTERS_CHANGED));
   return next;
 }

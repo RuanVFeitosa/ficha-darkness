@@ -1,4 +1,5 @@
 import ShieldInitiativeStrip from '../components/tabletop/ShieldInitiativeStrip';
+import { OrdemPlayerDock, OrdemPlayerSheet, OrdemShield } from '../components/tabletop/OrdemTabletop';
 import InlineInitiative from '../components/tabletop/InlineInitiative';
 import ParticipantDossiers from '../components/tabletop/ParticipantDossiers';
 import { nextCombatTurn } from '../utils/combatTurn';
@@ -56,8 +57,6 @@ import { limitarMovimentoToken } from "../utils/tokenCollision";
 import { cenaVisivelParaJogador } from "../utils/sceneVisibility";
 import { isSpecialSceneAvailable, newSpecialPresentationId } from "../utils/tabletopScene";
 import {
-  SENHA_MESTRE,
-  TABLETOP_3D_AUTH_KEY,
 } from "../constants/masterAccess";
 
 const cenaVazia = {
@@ -312,7 +311,7 @@ const corInterfaceDaImagem = (url) =>
     imagem.src = url;
   });
 
-const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tabletopMapId = "", documentsOnly = false, shieldTool = "" }) => {
+const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tabletopMapId = "", documentsOnly = false, shieldTool = "", podeUsar3D = false }) => {
   const turnBusyRef = useRef(false);
   const [turnBusy, setTurnBusy] = useState(false);
   const [mechanicsOpen, setMechanicsOpen] = useState(false);
@@ -321,7 +320,9 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
   const mestre = params.get("papel") === "mestre";
   const fichaUrl = params.get("senha") || params.get("ficha") || "";
   const urlRetorno = useMemo(() => {
-    if (mestre) return "/?mestre=1";
+    if (mestre) return params.get("sistema") === "ordem" ? "/?mestre=1&sistema=ordem" : "/?mestre=1";
+    const jogador = params.get("origem") === "mestre" && sessionStorage.getItem("darkness:jogador");
+    if (jogador) return `/?${new URLSearchParams({ jogador, origem: "mestre" })}`;
     const retorno = new URLSearchParams();
     if (params.get("ficha")) retorno.set("ficha", params.get("ficha"));
     if (params.get("senha")) retorno.set("senha", params.get("senha"));
@@ -342,9 +343,6 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
   const [musicaAberta, setMusicaAberta] = useState(false);
   const [soundpadAberto, setSoundpadAberto] = useState(false);
   const [aplicativoMesaAberto, setAplicativoMesaAberto] = useState(null);
-  const [senha3DAberta, setSenha3DAberta] = useState(false);
-  const [senha3D, setSenha3D] = useState("");
-  const [erroSenha3D, setErroSenha3D] = useState("");
   const [editorAberto, setEditorAberto] = useState(false);
   const [editando, setEditando] = useState(cenaVazia);
   const [arquivos, setArquivos] = useState({ cena: [], mapa: [], especial: [], audio: [] });
@@ -386,7 +384,11 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
   const [abaLateralJogador, setAbaLateralJogador] = useState(
     embedded && !telaMobileInicial ? "participantes" : "",
   );
-  const [focoVisual, setFocoVisual] = useState(!embedded);
+  const [focoVisual, setFocoVisual] = useState(!embedded && params.get('sistema') !== 'ordem');
+  const sistemaCampanha = campanha?.sistema;
+  useEffect(() => {
+    if (!embedded && sistemaCampanha === 'ordem') setFocoVisual(false);
+  }, [embedded, sistemaCampanha]);
   useEffect(() => {
     if (!embedded || !requestedTool) return;
     setBibliotecaAberta(requestedTool === 'scenes');
@@ -785,7 +787,7 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
   useEffect(() => {
     const fichasIds = (campanha?.membros || [])
       .map((membro) => membro.ficha_id)
-      .filter(id => id && !String(id).startsWith("espiral:") && !String(id).startsWith("custom3d:"));
+      .filter(id => id && !/^(espiral|custom3d|ordem):/.test(String(id)));
     if (!fichasIds.length) return undefined;
     return ouvirPersonagens(fichasIds, (fichaId, personagem) => {
       setPersonagens((atuais) => ({ ...atuais, [fichaId]: personagem }));
@@ -2166,6 +2168,17 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
     await vincularInimigo(campanha.id, record);
     await carregar();
   };
+  const mesaOrdem = !embedded && campanha.sistema === 'ordem';
+  const alterarFichaDaMesa = id => {
+    setFichaJogadorId(id);
+    localStorage.setItem(`darkness_mesa_ficha_${codigo}`, id);
+    if (mesaOrdem) {
+      const url = new URL(window.location.href);
+      if (id) url.searchParams.set('vinculo', id);
+      else url.searchParams.delete('vinculo');
+      window.history.replaceState(window.history.state, '', url);
+    }
+  };
   const salvarParticipanteEscudo = async (record) => {
     const saved = await atualizarInimigoCampanha(campanha.id, record);
     setCampanha(current => ({ ...current, inimigos: (current.inimigos || []).map(item => item.id === saved.id ? saved : item) }));
@@ -3040,6 +3053,7 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
   );
   const renderShieldSceneEditor = () => editorAberto ? createPortal(<div className="mesa-shell shield-scene-editor-host"> <TabletopSceneEditor key={editando.id || 'nova'} editando={editando} setEditando={setEditando} arquivos={arquivos} campanha={campanha} nomesPastasCenas={nomesPastasCenas} selecionarArquivosCena={selecionarArquivosCena} alternarJogadorCena={alternarJogadorCena} removerMidiaExistente={removerMidiaExistente} removerArquivoPendente={removerArquivoPendente} atualizarMapaExistente={atualizarMapaExistente} atualizarMapaPendente={atualizarMapaPendente} confirmarCena={confirmarCena} salvando={salvando} erro={erro} onClose={() => setEditorAberto(false)} /></div>, document.body) : null;
   const renderShieldTool = (tool) => {
+    if (tool === 'documents') return renderDocumentosMestre();
     if (tool === 'scenes') return renderShieldScenes(true);
     if (tool === 'notes') return <AnotacoesCampanha campanhaId={campanha.id} />;
     if (tool === 'audio') return <MusicaTabletop campanhaId={campanha.id} musicasCampanha={campanha.musicas || []} estadoRemoto={campanha.musicaEstado} aoAlterarEstado={estado => atualizarEstadoMusica(campanha.id, estado)} />;
@@ -3063,6 +3077,7 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
 
   return (
     <main
+      data-tabletop-system={mesaOrdem ? 'ordem' : undefined}
       data-document-open={embedded && Boolean(documentoAberto) ? "true" : undefined}
       className={`mesa-shell ${embedded ? "mesa-embedded" : "mesa-2d"} ${!embedded && mestre && escudoAberto ? "mesa-escudo-aberto" : ""} ${focoVisual ? 'mesa-foco-visual' : ''} ${mestre ? "visao-mestre" : "visao-jogador"} ${!mestre && abaLateralJogador === "ficha" ? "jogador-ficha-ativa" : ""} ${!(mestre ? abaLateralMestre : abaLateralJogador) ? "painel-lateral-fechado" : ""} modo-atual-${campanha.modo} ${bibliotecaAberta ? "com-biblioteca" : ""}`}
       style={{
@@ -3077,11 +3092,11 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
           : personagemJogador?.temaFicha?.borda || "rgba(212,175,55,.35)",
       }}
     >
-      {!embedded && (mestre || !hasActiveRevolt(campanha.mecanicasEspeciais)) && <SpecialMechanicsBanner state={campanha.mecanicasEspeciais} onOpen={() => setMechanicsOpen(true)} />}
-      {!embedded && !mestre && !mechanicsOpen && <RevoltPlayerHUD campaign={campanha} playerId={fichaJogadorId} onOpen={() => setMechanicsOpen(true)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))} />}
-      {mechanicsOpen && <SpecialMechanicsDialog campaign={campanha} master={mestre} playerId={fichaJogadorId} onClose={() => setMechanicsOpen(false)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))} />}
+      {!embedded && !mesaOrdem && (mestre || !hasActiveRevolt(campanha.mecanicasEspeciais)) && <SpecialMechanicsBanner state={campanha.mecanicasEspeciais} onOpen={() => setMechanicsOpen(true)} />}
+      {!embedded && !mesaOrdem && !mestre && !mechanicsOpen && <RevoltPlayerHUD campaign={campanha} playerId={fichaJogadorId} onOpen={() => setMechanicsOpen(true)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))} />}
+      {!mesaOrdem && mechanicsOpen && <SpecialMechanicsDialog campaign={campanha} master={mestre} playerId={fichaJogadorId} onClose={() => setMechanicsOpen(false)} onState={state => setCampanha(current => ({ ...current, mecanicasEspeciais: state }))} />}
       <div className={`mesa-transicao ${transicao ? "ativa" : ""}`}>
-        <img className="mesa-transicao-simbolo" src="/simbolo-darkness.png" alt="" />
+        <img className="mesa-transicao-simbolo" src={mesaOrdem ? "/ordem-ordo-realitas.png" : "/simbolo-darkness.png"} alt="" />
         <span>
           {campanha.modo === "especial" ? "Iniciando cena especial" : campanha.modo === "mapa" ? "Preparando o mapa" : "Voltando a cena"}
         </span>
@@ -3090,20 +3105,20 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
       {embedded && mestre && ['initiative', 'investigation'].includes(requestedTool) && <div className="tt3-session-mode"><p>{requestedTool === 'initiative' ? 'Organize os turnos e acompanhe os participantes.' : 'Acompanhe a investigação e a iniciativa.'}</p><button type="button" className="tt3-primary" disabled={salvandoCombate || salvandoInvestigacao} onClick={requestedTool === 'initiative' ? alternarModoCombate : alternarModoInvestigacao}>{requestedTool === 'initiative' ? (campanha.combateAtivo ? 'Encerrar combate' : 'Iniciar combate') : (campanha.investigacaoAtiva ? 'Encerrar investigação' : 'Iniciar investigação')}</button></div>}
       <header className="mesa-topo">
         <a
-          href={urlRetorno}
+          href={mesaOrdem ? mestre ? '/?mestre=1&sistema=ordem' : fichaJogadorId.startsWith('ordem:') ? `/?ordem=1&agente=${encodeURIComponent(fichaJogadorId.slice(6))}` : '/?ordem=1' : urlRetorno}
           title={mestre ? "Voltar ao dashboard" : "Voltar para a ficha"}
         >
           <Icon path={mdiArrowLeft} size={0.9} />
         </a>
-        <div>
-          <span>Campanha {campanha.codigo}</span>
-          <strong>{campanha.nome}</strong>
-        </div>
+        {mesaOrdem ? <div className="ordem-operation-mark">
+          <img src="/ordem-ordo-realitas.png" alt="" />
+          <div><small>ORDEM PARANORMAL · OPERAÇÃO {campanha.codigo}</small><strong>{campanha.nome}</strong></div>
+        </div> : <div><span>Campanha {campanha.codigo}</span><strong>{campanha.nome}</strong></div>}
         <div className="mesa-status">
           <i />
           {supabaseConfigurado ? "Ao vivo" : "Demonstracao"}
         </div>
-        <button type="button" className="mesa-cenas-botao" onClick={() => setMechanicsOpen(true)}>Mecânicas especiais</button>
+        {!mesaOrdem && <button type="button" className="mesa-cenas-botao" onClick={() => setMechanicsOpen(true)}>Mecânicas especiais</button>}
         {mestre && (
           <div className="mesa-ferramentas-mestre">
             <button type="button" className={`mesa-cenas-botao mesa-escudo-topo ${escudoAberto ? 'ativo' : ''}`} aria-pressed={escudoAberto} onClick={() => { setEscudoAberto(aberto => !aberto); setAbaLateralMestre(''); setInimigoAberto(null); }} title="Abrir escudo do mestre"><Icon path={mdiShieldCrownOutline} size={0.85} />Escudo do mestre</button>
@@ -3147,7 +3162,7 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
             </div>
           </div>
         )}
-        {!mestre && cena?.lojaDisponivel && (
+        {!mestre && !mesaOrdem && cena?.lojaDisponivel && (
           <div className="mesa-ferramentas-jogador">
             <button
               className={`mesa-cenas-botao ${aplicativoMesaAberto === "loja" ? "ativo" : ""}`}
@@ -3159,18 +3174,11 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
             </button>
           </div>
         )}
-        <button
-          type="button"
-          className="mesa-cenas-botao mesa-3d-botao"
-          onClick={() => {
-            setSenha3D("");
-            setErroSenha3D("");
-            setSenha3DAberta(true);
-          }}
-          title="Abrir mapa 3D experimental"
-        >
-          Experimental
-        </button>
+        {podeUsar3D && !mesaOrdem && <button type="button" className="mesa-cenas-botao mesa-3d-botao" onClick={() => {
+          const destino = new URLSearchParams(window.location.search);
+          destino.set("tabletop3d", "1");
+          window.location.search = destino.toString();
+        }}>Tabletop 3D</button>}
         <button className="mesa-atualizar" onClick={carregar} title="Atualizar">
           <Icon path={mdiRefresh} size={0.82} />
         </button>
@@ -3181,66 +3189,9 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
           <div><span>{campanha.modo === 'mapa' ? 'Mapa de batalha' : campanha.modo === 'especial' ? 'Cena especial' : 'Cena narrativa'}</span><strong>{cena?.nome || campanha.nome}</strong></div>
           {campanha.combateAtivo && <b>Combate</b>}
         </div>
-        {<button type="button" className="mesa-foco-botao" aria-pressed={focoVisual} aria-label={focoVisual ? 'Mostrar interface' : 'Focar no mapa e cena'} title={focoVisual ? 'Mostrar interface' : 'Focar no mapa e cena'} onClick={() => setFocoVisual(value => !value)}><Icon path={focoVisual ? mdiViewDashboardOutline : mdiFitToScreenOutline} size={0.9} aria-hidden="true" /><span>{focoVisual ? 'Mostrar interface' : 'Foco'}</span></button>}
+        {<button type="button" className="mesa-foco-botao" aria-pressed={focoVisual} aria-label={focoVisual ? 'Mostrar interface' : 'Focar no mapa e cena'} title={focoVisual ? 'Mostrar interface' : 'Focar no mapa e cena'} onClick={() => { if (mesaOrdem && !focoVisual) setEscudoAberto(false); setFocoVisual(value => !value); }}><Icon path={focoVisual ? mdiViewDashboardOutline : mdiFitToScreenOutline} size={0.9} aria-hidden="true" /><span>{focoVisual ? 'Mostrar interface' : 'Foco'}</span></button>}
         {(mestre ? abaLateralMestre : abaLateralJogador) && <button type="button" className="mesa-fechar-painel" aria-label="Recolher painel lateral" title="Recolher painel lateral" onClick={() => mestre ? setAbaLateralMestre('') : setAbaLateralJogador('')}><Icon path={mdiClose} size={0.8} /></button>}
       </>}
-      {senha3DAberta && (
-        <div
-          className="mesa-3d-senha-overlay"
-          onClick={() => setSenha3DAberta(false)}
-        >
-          <form
-            className="mesa-3d-senha-painel"
-            aria-label="Senha do mapa 3D experimental"
-            onClick={(evento) => evento.stopPropagation()}
-            onSubmit={(evento) => {
-              evento.preventDefault();
-              if (senha3D !== SENHA_MESTRE) {
-                setErroSenha3D("Senha incorreta.");
-                setSenha3D("");
-                return;
-              }
-              sessionStorage.setItem(TABLETOP_3D_AUTH_KEY, "true");
-              const destino = new URLSearchParams(window.location.search);
-              destino.set("tabletop3d", "1");
-              window.location.href = `?${destino.toString()}`;
-            }}
-          >
-            <header>
-              <Icon path={mdiMapOutline} size={1} />
-              <div>
-                <span>Acesso restrito</span>
-                <h2>Mapa 3D Experimental</h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSenha3DAberta(false)}
-                title="Fechar"
-              >
-                <Icon path={mdiClose} size={0.8} />
-              </button>
-            </header>
-            <label htmlFor="senha-tabletop-3d">Senha do mestre</label>
-            <input
-              id="senha-tabletop-3d"
-              type="password"
-              inputMode="numeric"
-              autoComplete="off"
-              autoFocus
-              maxLength={SENHA_MESTRE.length}
-              value={senha3D}
-              onChange={(evento) => {
-                setSenha3D(evento.target.value.replace(/\D/g, ""));
-                setErroSenha3D("");
-              }}
-            />
-            {erroSenha3D && <p role="alert">{erroSenha3D}</p>}
-            <button type="submit" className="mesa-3d-senha-confirmar">
-              Desbloquear 3D
-            </button>
-          </form>
-        </div>
-      )}
       {mestre && bibliotecaAberta && !escudoAberto && renderShieldScenes()}
       {mestre && !escudoAberto && anotacoesAbertas && (
         <aside className="mesa-anotacoes-painel">
@@ -3327,7 +3278,7 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
       )}
 
       {!embedded && !mestre && <PlayerInitiativeBar campaign={campanha} entries={ordemCombate} />}
-      {!embedded && !mestre && abaLateralJogador !== 'ficha' && <SurvivalIndicators campaign={campanha} playerId={fichaJogadorId} compact />}
+      {!embedded && !mesaOrdem && !mestre && abaLateralJogador !== 'ficha' && <SurvivalIndicators campaign={campanha} playerId={fichaJogadorId} compact />}
       <section className={`mesa-palco modo-${campanha.modo} ${cenaRestrita ? "cena-restrita" : ""}`}>
         {cenaRestrita && (
           <div className="mesa-cena-restrita" role="status">
@@ -3742,7 +3693,8 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
           </div>
         )}
       </section>
-      {mestre && escudoAberto && <aside className="mesa-master-shield-panel" aria-label="Escudo do mestre" onKeyDown={event => { if (event.key === "Escape") setEscudoAberto(false); }}><header><strong>Escudo do mestre</strong><ShieldInitiativeStrip campaign={campanha} onCampaignChange={setCampanha} onRefresh={carregar} /><button type="button" onClick={() => setEscudoAberto(false)} aria-label="Fechar escudo do mestre">Fechar ×</button></header>
+      {mestre && escudoAberto && mesaOrdem && <OrdemShield campaign={campanha} onCampaignChange={setCampanha} onRefresh={carregar} onClose={() => setEscudoAberto(false)} renderTool={renderShieldTool} />}
+      {mestre && escudoAberto && !mesaOrdem && <aside className="mesa-master-shield-panel" aria-label="Escudo do mestre" onKeyDown={event => { if (event.key === "Escape") setEscudoAberto(false); }}><header><strong>Escudo do mestre</strong><ShieldInitiativeStrip campaign={campanha} onCampaignChange={setCampanha} onRefresh={carregar} /><button type="button" onClick={() => setEscudoAberto(false)} aria-label="Fechar escudo do mestre">Fechar ×</button></header>
       <MasterShield
         organized
         extraTools={[["players", "Jogadores"], ["lighting", "Iluminação"]]}
@@ -3764,7 +3716,8 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
         documents={renderDocumentosMestre()}
         renderTool={renderShieldTool}
       /></aside>}
-      {!mestre && (
+      {!mestre && mesaOrdem && <OrdemPlayerDock active={abaLateralJogador} onToggle={tab => setAbaLateralJogador(current => current === tab ? '' : tab)} documentsVisible={mostrarDocumentosJogador} evidenceCount={documentosVisiveisJogador.length} />}
+      {!mestre && !mesaOrdem && (
         <nav
           className={`mesa-lateral-navegacao mesa-jogador-navegacao ${mostrarDocumentosJogador ? "com-documentos" : ""}`}
           aria-label="Conteudo do jogador"
@@ -3853,7 +3806,8 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
           </div>
         </aside>
       )}
-      {!mestre && abaLateralJogador === "ficha" && personagemJogador && (
+      {!mestre && mesaOrdem && abaLateralJogador === "ficha" && <OrdemPlayerSheet members={campanha.membros} selectedId={fichaJogadorId} onSelect={alterarFichaDaMesa} onClose={() => setAbaLateralJogador('')} />}
+      {!mestre && !mesaOrdem && abaLateralJogador === "ficha" && personagemJogador && (
         <section
           className="ficha-tablet-mesa"
           role="dialog"
@@ -3877,18 +3831,14 @@ const Mesa = ({ embedded = false, requestedTool = "", requestVersion = 0, tablet
           />
         </section>
       )}
-      {!mestre && abaLateralJogador === "ficha" && !personagemJogador && (
+      {!mestre && !mesaOrdem && abaLateralJogador === "ficha" && !personagemJogador && (
         <aside className="mesa-jogador-participantes">
           <div className="jogador-escolher-ficha">
             <strong>Qual e a sua ficha?</strong>
             <p>Escolha uma ficha vinculada para abri-la na mesa.</p>
             <select
               value={fichaJogadorId}
-              onChange={(event) => {
-                const id = event.target.value;
-                setFichaJogadorId(id);
-                localStorage.setItem(`darkness_mesa_ficha_${codigo}`, id);
-              }}
+              onChange={event => alterarFichaDaMesa(event.target.value)}
             >
               <option value="">Selecionar ficha...</option>
               {campanha.membros.map((membro) => (

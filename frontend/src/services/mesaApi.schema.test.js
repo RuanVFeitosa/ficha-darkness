@@ -1,5 +1,7 @@
 import { criarCampanhaMesa, salvarCena } from './mesaApi';
 import { supabase } from './supabase';
+import { criarMesa3DRemota } from './masterAccounts';
+jest.mock('./masterAccounts', () => ({ criarMesa3DRemota: jest.fn() }));
 jest.mock('./supabase', () => ({
   supabaseConfigurado: true,
   supabaseObrigatorioAusente: false,
@@ -24,10 +26,16 @@ test('cria campanha 2D em banco anterior à migração 034', async () => {
   expect(writes[0].tabletop_tipo).toBe('2d');
   expect(writes[1]).not.toHaveProperty('tabletop_tipo');
 });
-test('informa a migração necessária sem criar campanha 3D como 2D', async () => {
-  databaseResponses({ error: missing('tabletop_tipo') });
-  await expect(criarCampanhaMesa('Campanha', '3d')).rejects.toThrow('migração 034');
-  expect(writes).toHaveLength(1);
+test('normaliza o código escolhido e informa se já estiver em uso', async () => {
+  databaseResponses({ error: { code: '23505' } });
+  await expect(criarCampanhaMesa('Campanha', '2d', 'ordem', ' noite26 ')).rejects.toThrow('já está em uso');
+  expect(writes[0].codigo).toBe('NOITE26');
+});
+test('encaminha a criação de campanha 3D para a API do proprietário', async () => {
+  criarMesa3DRemota.mockRejectedValue(new Error('Permissão insuficiente.'));
+  await expect(criarCampanhaMesa('Campanha', '3d', 'ordem')).rejects.toThrow('Permissão insuficiente.');
+  expect(criarMesa3DRemota).toHaveBeenCalledWith('Campanha', 'ordem');
+  expect(writes).toHaveLength(0);
 });
 test('salva cena em banco sem dificuldades e loja_disponivel', async () => {
   databaseResponses({ error: missing('dificuldades') }, { error: missing('loja_disponivel') }, { data: { id: 'scene' }, error: null });

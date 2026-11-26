@@ -4,6 +4,7 @@ import { registrarRolagem, salvarTokenCustom3D, salvarEstadoToken3D, obterEstado
 import { salvarMecanicasCampanha } from './mesaApi';
 import { emptyMechanics, applyMechanicAction } from '../utils/specialMechanics';
 import {salvarPorta3DCampanha,ouvirCampanha} from './mesaApi';
+jest.mock('./masterAccounts', () => ({ sessaoMestre: async () => ({ papel: 'proprietario' }) }));
 
 describe("biblioteca local da mesa", () => {
   test('persiste turno, rejeita revisão antiga e limpa ao encerrar combate',async()=>{
